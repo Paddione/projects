@@ -1,223 +1,454 @@
-# Patrick's Projects Repository
+# Patrick's Projects Monorepo
 
-**Unified repository containing multiple full-stack projects**
+A collection of independent full-stack applications including a multiplayer quiz platform, video management system, payment platform, and AI-powered development tools.
 
-[![Repository Size](https://img.shields.io/badge/repo%20size-7.9%20MB-green)]()
-[![Projects](https://img.shields.io/badge/projects-4-blue)]()
-[![License](https://img.shields.io/badge/license-Private-red)]()
+## 📋 Projects Overview
+
+This monorepo contains four independent projects, each with its own technology stack, development workflow, and deployment process:
+
+| Project | Description | Tech Stack | Port(s) |
+|---------|-------------|------------|---------|
+| [**Learn2Play (l2p)**](./l2p/README.md) | Multiplayer quiz platform with real-time gameplay | React, Express, Socket.io, PostgreSQL | 5173, 5001 |
+| [**VideoVault**](./VideoVault/README.md) | Client-first video management with advanced filtering | React, Vite, File System Access API | 5100/5000 |
+| [**Payment**](./payment/README.md) | Payment processing platform with Stripe | Next.js 16, Prisma, NextAuth | 3004 |
+| [**VLLM**](./vllm/README.md) | MCP server for AI inference and code analysis | TypeScript, vLLM, PostgreSQL | 4100 |
 
 ## 🚀 Quick Start
 
-```bash
-# Clone the repository
-git clone https://github.com/YOUR_USERNAME/patrick-projects.git
-cd patrick-projects
+### Prerequisites
 
-# Run automated setup
-chmod +x setup.sh
-./setup.sh
+- **Node.js 20+** and npm
+- **Docker & Docker Compose**
+- **Python 3.10+** (for VLLM AI features)
+- **NVIDIA GPU** (optional, for VLLM and AI image generation)
 
-# Or see SETUP_GUIDE.md for manual setup
-```
+### Initial Setup
 
-## 📁 Projects
-
-### 1. L2P (Learn to Play)
-A comprehensive learning platform with authentication, question sets, and interactive features.
-
-**Tech Stack:**
-- Frontend: React, TypeScript
-- Backend: Node.js, Express
-- Database: PostgreSQL
-- Deployment: Docker, Nginx
-- AI: Gemini 2.0 Flash
-
-**Features:**
-- User authentication & authorization
-- Question set management
-- Interactive learning modules
-- Real-time updates via WebSocket
-- Perk system with badges
-
-### 2. VideoVault
-Video management and storage system with advanced filtering and organization.
-
-**Tech Stack:**
-- Frontend: React, TypeScript
-- Backend: Node.js
-- Features: Video tagging, playlists, advanced search
-
-### 3. Payment
-Payment processing system with Stripe integration.
-
-**Tech Stack:**
-- Frontend: Next.js, TypeScript
-- Backend: Next.js API Routes
-- Database: PostgreSQL (Prisma)
-- Payment: Stripe
-
-**Features:**
-- Stripe checkout integration
-- Wallet system
-- Order management
-- Admin dashboard
-
-### 4. VLLM
-AI/ML project with image generation capabilities using Stable Diffusion Forge.
-
-**Tech Stack:**
-- Backend: Node.js, Python
-- AI: Stable Diffusion, PyTorch
-- Tools: Pinokio, RAG
-
-**Features:**
-- AI Image Generation (Stable Diffusion XL)
-- Pinokio integration
-- RAG (Retrieval-Augmented Generation)
-- Command center dashboard
-- Multiple model support
-
-## 📚 Documentation
-
-- **[SETUP_GUIDE.md](SETUP_GUIDE.md)** - Comprehensive setup instructions
-- **[SIZE_REDUCTION_SUMMARY.md](SIZE_REDUCTION_SUMMARY.md)** - Repository optimization details
-- **[PUBLISHING_GUIDE.md](PUBLISHING_GUIDE.md)** - How to publish to Git platforms
-
-## 🛠️ Setup
-
-### Automated Setup (Recommended)
+Clone and set up all projects at once:
 
 ```bash
+# Run the automated setup script
 ./setup.sh
 ```
 
-This script will:
-- Check prerequisites (Node.js, Python, Docker)
-- Install dependencies for all projects
-- Create Python virtual environments
-- Set up environment files
-- Optionally start Docker services
+This will:
+- ✅ Check for required dependencies (Node.js, npm, Python, Docker)
+- ✅ Install npm dependencies for all projects
+- ✅ Create `.env` files from `.env.example` templates
+- ✅ Set up Python virtual environments (for VLLM)
+- ✅ Optionally start Docker services
 
-### Manual Setup
+### Individual Project Setup
 
-See [SETUP_GUIDE.md](SETUP_GUIDE.md) for detailed manual setup instructions.
-
-### Requirements
-
-- **Node.js:** v18 or higher
-- **Python:** 3.10 or higher
-- **Docker:** Latest version (optional but recommended)
-- **PostgreSQL:** 14 or higher
-- **RAM:** 16 GB minimum (32 GB for AI features)
-- **Storage:** 10 GB minimum (60 GB+ with AI models)
-- **GPU:** NVIDIA GPU with 8GB+ VRAM (for AI image generation)
-
-## 🔧 Development
-
-### Start Individual Projects
+Each project can also be set up independently:
 
 ```bash
-# L2P
-cd l2p && npm run dev
+# Learn2Play
+cd l2p && npm install
+
+# VideoVault
+cd VideoVault && npm install
 
 # Payment
-cd payment && npm run dev
+cd payment && npm install
+
+# VLLM
+cd vllm && npm install && npm run build
+```
+
+## 📚 Project Details
+
+### Learn2Play (l2p)
+
+**Real-time multiplayer quiz platform**
+
+A full-stack application enabling live quiz competitions with Socket.io-powered real-time communication, comprehensive user management, and extensive testing infrastructure.
+
+**Key Features:**
+- Real-time multiplayer gameplay
+- JWT authentication
+- Player progression system
+- Admin panel
+- Comprehensive test suite (Unit, Integration, E2E)
+
+**Quick Start:**
+```bash
+cd l2p
+npm run deploy:dev     # Start Docker stack
+npm run db:migrate     # Run migrations
+npm run dev:frontend   # Start frontend (separate terminal)
+```
+
+👉 [View full L2P documentation](./l2p/README.md)
+
+---
+
+### VideoVault
+
+**Advanced video management application**
+
+A privacy-first video organizer using the File System Access API for local file operations, with optional PostgreSQL backend for shared libraries.
+
+**Key Features:**
+- Directory scanning with drag & drop import
+- Advanced filtering (date, size, duration, categories)
+- Bulk operations (rename, move, delete)
+- Modern video player with shortcuts
+- Virtualized rendering for large libraries
+
+**Quick Start:**
+```bash
+cd VideoVault
+npm run docker:dev     # Docker development with hot reload
+# OR
+npm run dev            # Local development (port 5100)
+```
+
+**Requirements:** Chromium-based browser (Chrome, Edge, Opera) for File System Access API
+
+👉 [View full VideoVault documentation](./VideoVault/README.md)
+
+---
+
+### Payment
+
+**Payment processing platform**
+
+A Next.js application with Stripe integration, featuring secure authentication via NextAuth and Prisma for database operations.
+
+**Key Features:**
+- Stripe payment integration
+- NextAuth v5 authentication
+- Prisma ORM with PostgreSQL
+- Server-side rendering
+- E2E testing with Playwright
+
+**Quick Start:**
+```bash
+cd payment
+cp .env.example .env        # Configure environment
+npx prisma migrate dev      # Run migrations
+npm run dev                 # Start dev server (port 3004)
+```
+
+👉 [View full Payment documentation](./payment/README.md)
+
+---
+
+### VLLM
+
+**AI-powered development tools via MCP**
+
+A Model Context Protocol (MCP) server that provides AI inference, code review, repository analysis, and database management tools for Claude Desktop.
+
+**Key Features:**
+- vLLM integration for LLM inference
+- AI-powered code review and analysis
+- Repository quality scoring
+- PostgreSQL database management
+- Git history analysis
+- Optional RAG stack and AI image generation
+
+**Quick Start:**
+```bash
+cd vllm
+bash deploy.sh             # Deploy vLLM container
+npm install && npm run build
+# Configure Claude Desktop with MCP server path
+```
+
+👉 [View full VLLM documentation](./vllm/README.md)
+
+---
+
+## 🛠 Common Commands
+
+### Development
+
+```bash
+# Learn2Play
+cd l2p && npm run dev:backend && npm run dev:frontend
 
 # VideoVault
 cd VideoVault && npm run dev
 
+# Payment
+cd payment && npm run dev
+
 # VLLM
-cd vllm && npm run dev
+cd vllm && bash deploy.sh
 ```
 
-### Run Tests
+### Testing
 
 ```bash
-# Run tests for all projects
-npm test
-
-# Or run tests for individual projects
-cd l2p && npm test
+# Run tests for specific projects
+cd l2p && npm run test:all
+cd VideoVault && npm test
+cd payment && npm test
 ```
 
-## 📦 What's Included
+### Docker
 
-This repository includes **only source code and configuration** (7.9 MB):
-- ✅ All source code (.ts, .tsx, .js, .py)
-- ✅ Configuration files (package.json, tsconfig.json, etc.)
-- ✅ Documentation and guides
-- ✅ Docker configurations
-- ✅ Test files
+```bash
+# Start Docker stacks
+cd l2p && npm run deploy:dev
+cd VideoVault && npm run docker:dev
+cd payment && docker-compose up
+```
 
-## 🚫 What's Excluded
+### Building
 
-The following are **excluded** from version control (see `.gitignore`):
-- ❌ AI models (~40 GB) - Download separately
-- ❌ Virtual environments (~8 GB) - Created during setup
-- ❌ Node modules - Installed via npm
-- ❌ Database data - Created during setup
-- ❌ Build artifacts - Generated during build
-- ❌ Environment files (.env) - Created from .env.example
+```bash
+# Production builds
+cd l2p && npm run build:all
+cd VideoVault && npm run build
+cd payment && npm run build
+cd vllm && npm run build
+```
 
-**Total excluded:** ~52 GB of downloadable/generated content
+## 📁 Repository Structure
 
-See [SIZE_REDUCTION_SUMMARY.md](SIZE_REDUCTION_SUMMARY.md) for details.
+```
+.
+├── l2p/                    # Learn2Play multiplayer quiz platform
+│   ├── frontend/          # React frontend
+│   ├── backend/           # Express backend
+│   ├── shared/            # Shared utilities
+│   └── README.md
+│
+├── VideoVault/            # Video management application
+│   ├── client/            # React client
+│   ├── server/            # Express server
+│   └── README.md
+│
+├── payment/               # Payment processing platform
+│   ├── app/               # Next.js app directory
+│   ├── prisma/            # Database schema
+│   └── README.md
+│
+├── vllm/                  # AI development tools
+│   ├── src/               # MCP server source
+│   ├── rag/               # RAG implementation
+│   ├── dashboard/         # Optional dashboard
+│   └── README.md
+│
+├── setup.sh               # Automated setup script
+├── CLAUDE.md              # AI development guidelines
+└── README.md              # This file
+```
+
+## 🔧 Technology Stack Overview
+
+### Frontend Technologies
+- **React 18** (l2p, VideoVault)
+- **Next.js 16** (payment)
+- **TypeScript** (all projects)
+- **Vite** (l2p, VideoVault)
+- **Tailwind CSS** (all projects)
+
+### Backend Technologies
+- **Express** (l2p, VideoVault)
+- **Next.js API Routes** (payment)
+- **Socket.io** (l2p)
+- **PostgreSQL** (all projects)
+- **Drizzle ORM** (l2p, VideoVault)
+- **Prisma** (payment)
+
+### AI/ML Technologies
+- **vLLM** for inference
+- **Model Context Protocol (MCP)**
+- **LlamaIndex** for RAG
+- **Qdrant** vector database
+- **Stable Diffusion Forge** (optional)
+
+### Testing
+- **Vitest** (VideoVault, payment)
+- **Jest** (l2p)
+- **Playwright** (all projects)
+- **React Testing Library**
+
+### DevOps
+- **Docker & Docker Compose**
+- **Nginx** (reverse proxy)
+- **GitHub Actions** (if configured)
+
+## 📊 Database Overview
+
+Each project uses PostgreSQL but with different ORMs and schemas:
+
+| Project | ORM | Default Port | Database Name |
+|---------|-----|--------------|---------------|
+| l2p | Drizzle | 5432 (dev), 5433 (test) | learn2play |
+| VideoVault | Drizzle (optional) | 5432 | videovault |
+| payment | Prisma | 5432 | payment |
+| vllm | pg (direct) | 5432 | webui |
 
 ## 🔐 Environment Variables
 
-Each project requires environment variables. Copy `.env.example` to `.env` and configure:
+Each project requires its own `.env` file. Always use the provided `.env.example` as a template:
 
 ```bash
-# L2P
-cp l2p/.env.example l2p/.env
-
-# Payment
-cp payment/.env.example payment/.env
-
-# Configure with your credentials
+# For each project
+cd <project-directory>
+cp .env.example .env
+# Edit .env with your configuration
 ```
 
-## 🐳 Docker Deployment
+**Common variables across projects:**
+- `DATABASE_URL`: PostgreSQL connection string
+- `NODE_ENV`: Environment (development, production, test)
+- `PORT`: Application port
+- Project-specific secrets and API keys
 
-```bash
-# Development
-docker-compose up -d
+**Important:** Use alphanumeric-only values for PostgreSQL credentials (no special characters).
 
-# Production
-docker-compose -f docker-compose.prod.yml up -d
-```
+## 🧪 Testing Infrastructure
 
-## 📊 Repository Stats
+### Learn2Play
+- Unit tests with Jest (ES modules)
+- Integration tests with test database
+- E2E tests with Playwright
+- Coverage tracking and reporting
 
-- **Repository Size:** 7.9 MB (99.3% reduction from original)
-- **Files Tracked:** 1,216
-- **Lines of Code:** ~100,000+
-- **Projects:** 4
-- **Languages:** TypeScript, JavaScript, Python, CSS, HTML
+### VideoVault
+- Unit tests with Vitest
+- Server E2E tests
+- Playwright E2E tests (Docker)
+- Optional MSW for mocking
+
+### Payment
+- Unit tests with Vitest
+- E2E tests with Playwright
+- React component testing
+
+### VLLM
+- Jest unit tests
+- Tool integration testing
+
+## 🐳 Docker Support
+
+All projects include Docker support with compose files:
+
+**Development:**
+- Hot reload enabled
+- Volume mounts for code
+- Separate networks per project
+
+**Production:**
+- Optimized builds
+- Multi-stage Dockerfiles
+- Health checks
+- Resource limits
+
+## 📖 Documentation
+
+- **CLAUDE.md**: Comprehensive development guide for AI assistants
+- **Project READMEs**: Detailed documentation for each project
+- **In-code documentation**: JSDoc comments and TypeScript types
+
+## 🔄 Git Workflow
+
+- Independent versioning per project
+- Conventional commits recommended
+- Large files excluded (models, node_modules, databases)
+- No sensitive data in repository
 
 ## 🤝 Contributing
 
-This is a private repository. For collaborators:
+Each project can be developed independently:
 
-1. Clone the repository
+1. Fork the repository
 2. Create a feature branch
-3. Make your changes
-4. Submit a pull request
+3. Make changes to your target project(s)
+4. Run project-specific tests
+5. Run type checking
+6. Submit a pull request
+
+### Pre-commit Checklist
+
+```bash
+# For the project you modified
+cd <project>
+npm run typecheck     # TypeScript validation
+npm test              # Run tests
+npm run lint          # Linting (if available)
+```
+
+## 🚨 Troubleshooting
+
+### Port Conflicts
+
+If you encounter port conflicts when running multiple projects:
+
+```bash
+# Check what's using a port
+sudo lsof -i :5001
+
+# Or modify the port in project's .env file
+PORT=5002
+```
+
+### Database Connection Issues
+
+```bash
+# Check Docker containers
+docker ps
+
+# View container logs
+docker logs <container-name>
+
+# Restart PostgreSQL container
+cd <project> && docker-compose restart postgres
+```
+
+### Module Resolution Errors
+
+```bash
+# Clear node_modules and reinstall
+rm -rf node_modules package-lock.json
+npm install
+```
+
+### Docker Issues
+
+```bash
+# Clean up Docker resources
+docker system prune -f
+docker volume prune -f
+
+# Rebuild containers
+cd <project>
+docker-compose down -v
+docker-compose up --build
+```
 
 ## 📝 License
 
-Private Repository - All Rights Reserved
+MIT License - Each project may have its own license file.
 
-## 🆘 Support
+## 🔗 Useful Links
 
-For setup issues or questions:
-1. Check [SETUP_GUIDE.md](SETUP_GUIDE.md)
-2. Review project-specific README files
-3. Check the documentation in each project directory
+- [Learn2Play Documentation](./l2p/README.md)
+- [VideoVault Documentation](./VideoVault/README.md)
+- [Payment Documentation](./payment/README.md)
+- [VLLM Documentation](./vllm/README.md)
+- [CLAUDE.md - AI Development Guide](./CLAUDE.md)
+
+## 💡 Quick Tips
+
+1. **Use the setup script**: `./setup.sh` automates initial configuration
+2. **Check project READMEs**: Each has specific requirements and commands
+3. **Environment files**: Always copy from `.env.example`
+4. **Docker first**: Use Docker for databases to avoid local setup
+5. **Test environments**: l2p uses separate test database on port 5433
+6. **Browser compatibility**: VideoVault requires Chromium for full features
+7. **GPU optional**: VLLM works without GPU but performs better with one
+
+## 📞 Support
+
+For project-specific issues, refer to individual project README files. For general monorepo questions, check CLAUDE.md for detailed architectural guidance.
 
 ---
 
-**Last Updated:** 2025-12-27  
-**Repository:** patrick-projects  
-**Maintainer:** Patrick Korczewski
-
+**Built with ❤️ by Patrick**
