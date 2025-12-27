@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VRAM Mastermind Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@500&display=swap"
+        rel="stylesheet">
+    <script src="/socket.io/socket.io.js"></script>
+</head>
+
+<body>
+    <div class="dashboard">
+        <header>
+            <div class="header-main">
+                <h1><i>✦</i> VRAM MASTERMIND</h1>
+                <div class="mass-actions">
+                    <button class="mass-btn start" onclick="massAction('start')">START ALL</button>
+                    <button class="mass-btn restart" onclick="massAction('restart')">RESTART ALL</button>
+                    <button class="mass-btn stop" onclick="massAction('stop')">STOP ALL</button>
+                </div>
+            </div>
+            <div style="display: flex; gap: 1rem; align-items: center;">
+                <div id="connection-status" class="status-badge running" style="margin: 0">Connected</div>
+                <button id="logout-btn" class="status-badge"
+                    style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: var(--text-dim); cursor: pointer; transition: all 0.2s ease;">LOGOUT</button>
+            </div>
+        </header>
+
+        <section class="vram-monitor">
+            <div class="vram-header">
+                <div>
+                    <div class="vram-title">GPU VRAM UTILIATION</div>
+                    <div class="vram-stats"><span id="vram-used">0</span> / <span id="vram-total">0</span> MB</div>
+                </div>
+                <div id="vram-percent">0%</div>
+            </div>
+            <div class="vram-bar-container">
+                <div id="vram-bar" class="vram-bar-fill" style="width: 0%"></div>
+            </div>
+        </section>
+
+        <div id="services-grid" class="services-grid">
+            <!-- Services will be injected here -->
+            <div class="loading-dots">...</div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,14 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "module": "CommonJS",
+    "outDir": "./dist/cjs"
+  },
+  "exclude": [
+    "node_modules",
+    "dist",
+    "*.test.ts",
+    "*.spec.ts",
+    "test-error-handling.ts"
+  ]
+}

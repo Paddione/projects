@@ -1,0 +1,76 @@
+# Test-optimized Dockerfile for backend with faster builds and better caching
+
+# Base stage with common dependencies (pin Node 20 LTS for native module compatibility)
+FROM node:20-bullseye-slim AS base
+WORKDIR /app/backend
+
+# Install system dependencies for testing
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    wget \
+    bash \
+    git \
+    python3 \
+    make \
+    g++ \
+ && rm -rf /var/lib/apt/lists/*
+
+# Create non-root user for security
+RUN groupadd -g 1001 nodejs && \
+    useradd -m -u 1001 -g nodejs nodejs && \
+    mkdir -p /app/logs /app/coverage /app/test-results /app/dist && \
+    chown -R nodejs:nodejs /app
+
+# Dependencies stage - cached separately for better build performance
+FROM base AS dependencies
+WORKDIR /app/backend
+
+# Copy package files first for better layer caching
+COPY backend/package*.json ./
+
+# Install all dependencies (including dev dependencies for testing)
+RUN npm install --include=dev --legacy-peer-deps --prefer-offline --no-audit --progress=false && \
+    npm cache clean --force || true
+
+# Development/Test stage
+FROM base AS test
+WORKDIR /app/backend
+
+# Set environment variables for build
+ENV NODE_ENV=test
+ENV CI=true
+
+# Copy all source code including package files
+COPY --chown=nodejs:nodejs backend/ .
+
+# Copy shared modules
+COPY --chown=nodejs:nodejs shared/ ./shared
+
+# Install all dependencies (including dev dependencies for testing)
+RUN --mount=type=cache,target=/root/.npm \
+    npm install --include=dev --legacy-peer-deps --prefer-offline --no-audit --progress=false && \
+    npm cache clean --force || true
+
+# Set proper permissions
+RUN chown -R nodejs:nodejs /app && \
+    chmod -R 755 /app/logs /app/coverage /app/test-results /app/dist
+
+# Build shared modules
+RUN cd ./shared/error-handling && npm install && npm run build
+RUN cd ./shared/test-config && npm install && npm run build
+
+# Install global test utilities
+RUN npm install -g nodemon ts-node jest @types/jest
+
+# Switch to non-root user
+USER nodejs
+
+# Expose port
+EXPOSE 3001
+
+# Health check
+HEALTHCHECK --interval=10s --timeout=5s --start-period=15s --retries=3 \
+    CMD wget --quiet --tries=1 --spider http://localhost:3001/api/health || exit 1
+
+# Default command for test environment
+CMD ["npm", "run", "dev:tsx"]

@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Report - demo</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 0; padding: 20px; background: #f5f5f5; }
+        .container { max-width: 1200px; margin: 0 auto; background: white; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; border-radius: 8px 8px 0 0; }
+        .header h1 { margin: 0; font-size: 2.5em; }
+        .header .meta { opacity: 0.9; margin-top: 10px; }
+        .summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; padding: 30px; }
+        .metric { background: #f8f9fa; padding: 20px; border-radius: 8px; text-align: center; border-left: 4px solid #007bff; }
+        .metric.success { border-left-color: #28a745; }
+        .metric.danger { border-left-color: #dc3545; }
+        .metric.warning { border-left-color: #ffc107; }
+        .metric .value { font-size: 2em; font-weight: bold; margin-bottom: 5px; }
+        .metric .label { color: #6c757d; font-size: 0.9em; }
+        .section { padding: 0 30px 30px; }
+        .section h2 { color: #333; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+        .test-type { margin-bottom: 30px; border: 1px solid #eee; border-radius: 8px; overflow: hidden; }
+        .test-type-header { background: #f8f9fa; padding: 15px 20px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
+        .test-type-content { padding: 20px; }
+        .status-badge { padding: 4px 12px; border-radius: 20px; font-size: 0.8em; font-weight: bold; }
+        .status-success { background: #d4edda; color: #155724; }
+        .status-danger { background: #f8d7da; color: #721c24; }
+        .coverage-bar { background: #e9ecef; height: 20px; border-radius: 10px; overflow: hidden; margin: 10px 0; }
+        .coverage-fill { height: 100%; background: linear-gradient(90deg, #28a745, #20c997); transition: width 0.3s ease; }
+        .artifacts { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-top: 20px; }
+        .artifact-group { background: #f8f9fa; padding: 15px; border-radius: 8px; }
+        .artifact-group h4 { margin: 0 0 10px 0; color: #495057; }
+        .artifact-list { list-style: none; padding: 0; margin: 0; }
+        .artifact-list li { padding: 5px 0; border-bottom: 1px solid #dee2e6; }
+        .artifact-list li:last-child { border-bottom: none; }
+        .artifact-link { color: #007bff; text-decoration: none; }
+        .artifact-link:hover { text-decoration: underline; }
+        .duration { color: #6c757d; font-size: 0.9em; }
+        .toggle { cursor: pointer; user-select: none; }
+        .collapsible { display: none; }
+        .collapsible.show { display: block; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Test Report</h1>
+            <div class="meta">
+                <div>Environment: <strong>demo</strong></div>
+                <div>Generated: <strong>8/5/2025, 11:23:39 PM</strong></div>
+                <div>Duration: <strong>28.0s</strong></div>
+            </div>
+        </div>
+
+        <div class="summary">
+            <div class="metric danger">
+                <div class="value">❌</div>
+                <div class="label">Overall Status</div>
+            </div>
+            <div class="metric">
+                <div class="value">55</div>
+                <div class="label">Total Tests</div>
+            </div>
+            <div class="metric success">
+                <div class="value">48</div>
+                <div class="label">Passed</div>
+            </div>
+            <div class="metric danger">
+                <div class="value">3</div>
+                <div class="label">Failed</div>
+            </div>
+            <div class="metric warning">
+                <div class="value">4</div>
+                <div class="label">Skipped</div>
+            </div>
+            
+            <div class="metric">
+                <div class="value">79.2%</div>
+                <div class="label">Coverage</div>
+            </div>
+            
+        </div>
+
+        
+        <div class="section">
+            <h2>Coverage Summary</h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
+                
+      <div>
+        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+          <span><strong>Statements:</strong></span>
+          <span>81.8%</span>
+        </div>
+        <div class="coverage-bar">
+          <div class="coverage-fill" style="width: 81.81818181818183%; background-color: #28a745;"></div>
+        </div>
+        <div style="font-size: 0.8em; color: #6c757d;">180/220</div>
+      </div>
+    
+                
+      <div>
+        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+          <span><strong>Branches:</strong></span>
+          <span>76.5%</span>
+        </div>
+        <div class="coverage-bar">
+          <div class="coverage-fill" style="width: 76.47058823529412%; background-color: #ffc107;"></div>
+        </div>
+        <div style="font-size: 0.8em; color: #6c757d;">130/170</div>
+      </div>
+    
+                
+      <div>
+        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+          <span><strong>Functions:</strong></span>
+          <span>78.9%</span>
+        </div>
+        <div class="coverage-bar">
+          <div class="coverage-fill" style="width: 78.94736842105263%; background-color: #ffc107;"></div>
+        </div>
+        <div style="font-size: 0.8em; color: #6c757d;">75/95</div>
+      </div>
+    
+                
+      <div>
+        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+          <span><strong>Lines:</strong></span>
+          <span>79.2%</span>
+        </div>
+        <div class="coverage-bar">
+          <div class="coverage-fill" style="width: 79.16666666666666%; background-color: #ffc107;"></div>
+        </div>
+        <div style="font-size: 0.8em; color: #6c757d;">190/240</div>
+      </div>
+    
+            </div>
+        </div>
+        
+
+        <div class="section">
+            <h2>Test Results by Type</h2>
+            
+                <div class="test-type">
+                    <div class="test-type-header">
+                        <span>UNIT Tests</span>
+                        <span class="status-badge status-danger">
+                            FAILED
+                        </span>
+                    </div>
+                    <div class="test-type-content">
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 15px;">
+                            <div><strong>Passed:</strong> 25</div>
+                            <div><strong>Failed:</strong> 2</div>
+                            <div><strong>Skipped:</strong> 3</div>
+                            <div><strong>Duration:</strong> 5.0s</div>
+                        </div>
+                        
+                        <div class="toggle" onclick="toggleSection('coverage-unit')">
+                            <h4>📊 Coverage Details ▼</h4>
+                        </div>
+                        <div id="coverage-unit" class="collapsible">
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px;">
+                                
+      <div>
+        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+          <span><strong>Statements:</strong></span>
+          <span>85.0%</span>
+        </div>
+        <div class="coverage-bar">
+          <div class="coverage-fill" style="width: 85%; background-color: #28a745;"></div>
+        </div>
+        <div style="font-size: 0.8em; color: #6c757d;">85/100</div>
+      </div>
+    
+                                
+      <div>
+        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+          <span><strong>Branches:</strong></span>
+          <span>77.8%</span>
+        </div>
+        <div class="coverage-bar">
+          <div class="coverage-fill" style="width: 77.8%; background-color: #ffc107;"></div>
+        </div>
+        <div style="font-size: 0.8em; color: #6c757d;">70/90</div>
+      </div>
+    
+                                
+      <div>
+        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+          <span><strong>Functions:</strong></span>
+          <span>80.0%</span>
+        </div>
+        <div class="coverage-bar">
+          <div class="coverage-fill" style="width: 80%; background-color: #28a745;"></div>
+        </div>
+        <div style="font-size: 0.8em; color: #6c757d;">40/50</div>
+      </div>
+    
+                                
+      <div>
+        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+          <span><strong>Lines:</strong></span>
+          <span>81.8%</span>
+        </div>
+        <div class="coverage-bar">
+          <div class="coverage-fill" style="width: 81.8%; background-color: #28a745;"></div>
+        </div>
+        <div style="font-size: 0.8em; color: #6c757d;">90/110</div>
+      </div>
+    
+                            </div>
+                        </div>
+                        
+                        
+                        <div class="toggle" onclick="toggleSection('artifacts-unit')">
+                            <h4>📎 Artifacts (2) ▼</h4>
+                        </div>
+                        <div id="artifacts-unit" class="collapsible">
+                            <ul class="artifact-list">
+                                
+                                    <li><a href="unit-test.log" class="artifact-link" target="_blank">unit-test.log</a></li>
+                                
+                                    <li><a href="coverage-unit.html" class="artifact-link" target="_blank">coverage-unit.html</a></li>
+                                
+                            </ul>
+                        </div>
+                        
+                    </div>
+                </div>
+            
+                <div class="test-type">
+                    <div class="test-type-header">
+                        <span>INTEGRATION Tests</span>
+                        <span class="status-badge status-success">
+                            PASSED
+                        </span>
+                    </div>
+                    <div class="test-type-content">
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 15px;">
+                            <div><strong>Passed:</strong> 15</div>
+                            <div><strong>Failed:</strong> 0</div>
+                            <div><strong>Skipped:</strong> 1</div>
+                            <div><strong>Duration:</strong> 8.0s</div>
+                        </div>
+                        
+                        <div class="toggle" onclick="toggleSection('coverage-integration')">
+                            <h4>📊 Coverage Details ▼</h4>
+                        </div>
+                        <div id="coverage-integration" class="collapsible">
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px;">
+                                
+      <div>
+        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+          <span><strong>Statements:</strong></span>
+          <span>79.2%</span>
+        </div>
+        <div class="coverage-bar">
+          <div class="coverage-fill" style="width: 79.2%; background-color: #ffc107;"></div>
+        </div>
+        <div style="font-size: 0.8em; color: #6c757d;">95/120</div>
+      </div>
+    
+                                
+      <div>
+        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+          <span><strong>Branches:</strong></span>
+          <span>75.0%</span>
+        </div>
+        <div class="coverage-bar">
+          <div class="coverage-fill" style="width: 75%; background-color: #ffc107;"></div>
+        </div>
+        <div style="font-size: 0.8em; color: #6c757d;">60/80</div>
+      </div>
+    
+                                
+      <div>
+        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+          <span><strong>Functions:</strong></span>
+          <span>77.8%</span>
+        </div>
+        <div class="coverage-bar">
+          <div class="coverage-fill" style="width: 77.8%; background-color: #ffc107;"></div>
+        </div>
+        <div style="font-size: 0.8em; color: #6c757d;">35/45</div>
+      </div>
+    
+                                
+      <div>
+        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+          <span><strong>Lines:</strong></span>
+          <span>76.9%</span>
+        </div>
+        <div class="coverage-bar">
+          <div class="coverage-fill" style="width: 76.9%; background-color: #ffc107;"></div>
+        </div>
+        <div style="font-size: 0.8em; color: #6c757d;">100/130</div>
+      </div>
+    
+                            </div>
+                        </div>
+                        
+                        
+                        <div class="toggle" onclick="toggleSection('artifacts-integration')">
+                            <h4>📎 Artifacts (3) ▼</h4>
+                        </div>
+                        <div id="artifacts-integration" class="collapsible">
+                            <ul class="artifact-list">
+                                
+                                    <li><a href="integration-test.log" class="artifact-link" target="_blank">integration-test.log</a></li>
+                                
+                                    <li><a href="api-responses.json" class="artifact-link" target="_blank">api-responses.json</a></li>
+                                
+                                    <li><a href="screenshot1.png" class="artifact-link" target="_blank">screenshot1.png</a></li>
+                                
+                            </ul>
+                        </div>
+                        
+                    </div>
+                </div>
+            
+                <div class="test-type">
+                    <div class="test-type-header">
+                        <span>E2E Tests</span>
+                        <span class="status-badge status-danger">
+                            FAILED
+                        </span>
+                    </div>
+                    <div class="test-type-content">
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 15px;">
+                            <div><strong>Passed:</strong> 8</div>
+                            <div><strong>Failed:</strong> 1</div>
+                            <div><strong>Skipped:</strong> 0</div>
+                            <div><strong>Duration:</strong> 15.0s</div>
+                        </div>
+                        
+                        
+                        <div class="toggle" onclick="toggleSection('artifacts-e2e')">
+                            <h4>📎 Artifacts (3) ▼</h4>
+                        </div>
+                        <div id="artifacts-e2e" class="collapsible">
+                            <ul class="artifact-list">
+                                
+                                    <li><a href="e2e-test.log" class="artifact-link" target="_blank">e2e-test.log</a></li>
+                                
+                                    <li><a href="screenshot2.png" class="artifact-link" target="_blank">screenshot2.png</a></li>
+                                
+                                    <li><a href="video1.mp4" class="artifact-link" target="_blank">video1.mp4</a></li>
+                                
+                            </ul>
+                        </div>
+                        
+                    </div>
+                </div>
+            
+        </div>
+
+        
+        <div class="section">
+            <h2>Artifacts</h2>
+            <div class="artifacts">
+                
+                <div class="artifact-group">
+                    <h4>📸 Screenshots (2)</h4>
+                    <ul class="artifact-list">
+                        
+                            <li><a href="screenshot1.png" class="artifact-link" target="_blank">screenshot1.png</a></li>
+                        
+                            <li><a href="screenshot2.png" class="artifact-link" target="_blank">screenshot2.png</a></li>
+                        
+                    </ul>
+                </div>
+                
+                
+                <div class="artifact-group">
+                    <h4>🎥 Videos (1)</h4>
+                    <ul class="artifact-list">
+                        
+                            <li><a href="video1.mp4" class="artifact-link" target="_blank">video1.mp4</a></li>
+                        
+                    </ul>
+                </div>
+                
+                
+                <div class="artifact-group">
+                    <h4>📋 Logs (3)</h4>
+                    <ul class="artifact-list">
+                        
+                            <li><a href="unit-test.log" class="artifact-link" target="_blank">unit-test.log</a></li>
+                        
+                            <li><a href="integration-test.log" class="artifact-link" target="_blank">integration-test.log</a></li>
+                        
+                            <li><a href="e2e-test.log" class="artifact-link" target="_blank">e2e-test.log</a></li>
+                        
+                    </ul>
+                </div>
+                
+                
+                <div class="artifact-group">
+                    <h4>📊 Coverage Reports (1)</h4>
+                    <ul class="artifact-list">
+                        
+                            <li><a href="coverage-unit.html" class="artifact-link" target="_blank">coverage-unit.html</a></li>
+                        
+                    </ul>
+                </div>
+                
+            </div>
+        </div>
+        
+    </div>
+
+    <script>
+        function toggleSection(id) {
+            const element = document.getElementById(id);
+            element.classList.toggle('show');
+            const toggle = element.previousElementSibling;
+            const arrow = toggle.textContent.includes('▼') ? '▲' : '▼';
+            toggle.innerHTML = toggle.innerHTML.replace(/[▼▲]/, arrow);
+        }
+    </script>
+</body>
+</html>

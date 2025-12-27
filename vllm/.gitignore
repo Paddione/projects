@@ -1,0 +1,27 @@
+node_modules/
+build/
+*.log
+.DS_Store
+.env
+*.txt
+*.db
+*.sqlite
+
+# RAG Content & Data
+rag/storage/
+rag/data/
+rag/output.json
+rag/.env
+
+# Large Binaries & Coverage
+ai-image-gen/*.deb
+coverage/
+node_modules/
+**/node_modules/
+
+# Config & Sensitive
+claude_desktop_config.json
+.analyzer-rules.yml
+*.service
+dashboard/*.log
+ai-image-gen/forge

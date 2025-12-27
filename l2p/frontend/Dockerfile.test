@@ -1,0 +1,82 @@
+# Test-optimized Dockerfile for frontend with faster builds and better caching
+
+# Base stage with common dependencies
+FROM node:20-alpine AS base
+WORKDIR /app
+
+# Install system dependencies for testing
+RUN apk add --no-cache \
+    curl \
+    wget \
+    bash \
+    git \
+    chromium \
+    nss \
+    freetype \
+    freetype-dev \
+    harfbuzz \
+    ca-certificates \
+    ttf-freefont \
+    && rm -rf /var/cache/apk/*
+
+# Create non-root user for security
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S nodejs -u 1001
+
+# Set Puppeteer to use installed Chromium
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
+    PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
+
+# Dependencies stage - cached separately for better build performance
+FROM base AS dependencies
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Install all dependencies (including dev dependencies for testing)
+RUN npm install --include=dev && \
+    npm cache clean --force || true
+
+# Development/Test stage
+FROM base AS test
+WORKDIR /app
+
+# Copy dependencies from previous stage
+COPY --from=dependencies --chown=nodejs:nodejs /app/node_modules ./node_modules
+
+# Copy package files
+COPY --chown=nodejs:nodejs package*.json ./
+
+# Copy configuration files
+COPY --chown=nodejs:nodejs vite.config.ts ./
+COPY --chown=nodejs:nodejs tsconfig*.json ./
+COPY --chown=nodejs:nodejs jest.config.mjs ./
+COPY --chown=nodejs:nodejs playwright.config.ts ./
+
+# Copy source code and public assets
+COPY --chown=nodejs:nodejs src ./src
+COPY --chown=nodejs:nodejs public ./public
+COPY --chown=nodejs:nodejs index.html ./
+COPY --chown=nodejs:nodejs entrypoint-test.sh ./
+
+# Create necessary directories with proper permissions before switching user
+RUN mkdir -p /app/coverage /app/test-results /app/playwright-report /app/.vite && \
+    chown -R nodejs:nodejs /app
+
+# Install global test utilities
+RUN npm install -g vite @vitejs/plugin-react
+
+# Switch to nodejs user
+USER nodejs
+
+
+# Expose port
+EXPOSE 3000
+
+# Health check
+HEALTHCHECK --interval=10s --timeout=5s --start-period=20s --retries=3 \
+    CMD curl -f http://localhost:3000/ || exit 1
+
+# Default command for test environment
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]

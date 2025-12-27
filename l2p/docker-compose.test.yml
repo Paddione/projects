@@ -1,0 +1,186 @@
+# Docker Compose - Test Stack Only
+# Usage:
+#   docker compose -f docker-compose.test.yml up -d --build
+#   docker compose -f docker-compose.test.yml down -v
+
+services:
+  # PostgreSQL Test Database
+  postgres-test:
+    image: postgres:15-alpine
+    container_name: l2p-postgres-test
+    environment:
+      POSTGRES_DB: learn2play_test
+      POSTGRES_USER: l2p_user
+      POSTGRES_PASSWORD: HEHlWwBhTj71Em5GL9qh8G8kXACPrzx3
+      POSTGRES_INITDB_ARGS: "--auth-host=md5"
+    ports:
+      - "5433:5432"
+    volumes:
+      - ./database/init-test.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+      - ./database/test-data.sql:/docker-entrypoint-initdb.d/02-test-data.sql:ro
+      - test_postgres_data:/var/lib/postgresql/data
+    networks:
+      - test-network
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U l2p_user -d learn2play_test" ]
+
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    restart: unless-stopped
+    tmpfs:
+      - /tmp
+      - /var/run/postgresql
+
+  # Backend Test Service
+  backend-test:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile.test
+      cache_from:
+        - node:20-bullseye-slim
+      args:
+        BUILDKIT_INLINE_CACHE: 1
+    container_name: l2p-backend-test
+    # No env_file to keep the test stack self-contained
+    environment:
+      NODE_ENV: test
+      PORT: 3003
+      DATABASE_URL: postgresql://l2p_user:HEHlWwBhTj71Em5GL9qh8G8kXACPrzx3@postgres-test:5432/learn2play_test
+      JWT_SECRET: test-jwt-secret-for-testing-only-do-not-use-in-production
+      JWT_REFRESH_SECRET: test-jwt-refresh-secret-for-testing-only-do-not-use-in-production
+      FRONTEND_URL: http://frontend-test:3000
+      DB_SSL: false
+      LOG_LEVEL: warn
+      GEMINI_API_KEY: test-api-key
+      SMTP_HOST: mailhog-test
+      SMTP_PORT: 1025
+      SMTP_SECURE: false
+      EMAIL_SENDER_ADDRESS: test@learn2play.test
+    depends_on:
+      postgres-test:
+        condition: service_healthy
+    ports:
+      - "3006:3003"
+    volumes:
+      - ./backend/src:/app/src:ro
+      - ./shared:/app/shared:rw
+      - test_backend_logs:/app/logs
+    networks:
+      - test-network
+    healthcheck:
+      test: [ "CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3003/api/health" ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+    restart: unless-stopped
+    tmpfs:
+      - /tmp
+
+  # Frontend Test Service
+  frontend-test:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.test
+      cache_from:
+        - node:20-alpine
+      args:
+        BUILDKIT_INLINE_CACHE: 1
+    container_name: l2p-frontend-test
+    environment:
+      NODE_ENV: test
+      VITE_API_URL: http://localhost:3006/api
+      VITE_SOCKET_URL: http://localhost:3006
+      VITE_TEST_MODE: true
+    command: npm run dev -- --config vite.config.js --host 0.0.0.0
+    depends_on:
+      backend-test:
+        condition: service_healthy
+    ports:
+      - "3007:3000"
+    volumes:
+      - ./frontend/src:/app/src:ro
+      - test_frontend_node_modules:/app/node_modules
+    networks:
+      - test-network
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:3000/" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+    tmpfs:
+      - /tmp
+      - /app/.vite
+
+  # MailHog for Email Testing
+  mailhog-test:
+    image: mailhog/mailhog:latest
+    container_name: l2p-mailhog-test
+    pull_policy: missing
+    ports:
+      - "8025:8025"
+      - "1025:1025"
+    networks:
+      - test-network
+    healthcheck:
+      test: [ "CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8025/" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    restart: unless-stopped
+
+  # Redis for Session/Cache Testing
+  redis-test:
+    image: redis:7-alpine
+    container_name: l2p-redis-test
+    pull_policy: missing
+    ports:
+      - "6380:6379"
+    volumes:
+      - test_redis_data:/data
+    networks:
+      - test-network
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+    restart: unless-stopped
+    command: redis-server --appendonly yes --maxmemory 128mb --maxmemory-policy allkeys-lru
+
+volumes:
+  test_postgres_data:
+    driver: local
+    driver_opts:
+      type: tmpfs
+      device: tmpfs
+      o: size=512m,uid=999,gid=999
+  test_redis_data:
+    driver: local
+    driver_opts:
+      type: tmpfs
+      device: tmpfs
+      o: size=128m,uid=999,gid=999
+  test_backend_node_modules:
+    driver: local
+  test_frontend_node_modules:
+    driver: local
+  test_frontend_temp:
+    driver: local
+  test_backend_logs:
+    driver: local
+
+networks:
+  test-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.25.0.0/16
+    driver_opts:
+      com.docker.network.bridge.name: l2p-test-bridge

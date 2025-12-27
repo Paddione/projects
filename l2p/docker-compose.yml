@@ -1,0 +1,550 @@
+# Unified Docker Compose configuration with environment separation
+# Supports development, testing, and production profiles
+# Usage:
+#   Development: docker-compose --profile development up
+#   Testing: docker-compose --profile test up
+#   Production: docker-compose --profile production up
+
+services:
+  # =============================================================================
+  # PRODUCTION SERVICES
+  # =============================================================================
+
+
+  # PostgreSQL Database - Production
+  postgres:
+    image: postgres:15-alpine
+    container_name: ${POSTGRES_CONTAINER_NAME:-l2p-postgres}
+    pull_policy: missing
+    restart: unless-stopped
+    env_file:
+      - ./.env.production
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-learn2play}
+      POSTGRES_USER: ${POSTGRES_USER:-l2p_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_INITDB_ARGS: "--auth-host=scram-sha-256 --auth-local=scram-sha-256"
+      # Performance tuning
+      POSTGRES_MAX_CONNECTIONS: "200"
+
+    command: [ "postgres", "-c", "config_file=/etc/postgresql/postgresql.conf" ]
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - ./database/postgresql.conf:/etc/postgresql/postgresql.conf:ro
+      - postgres_logs:/var/log/postgresql
+    networks:
+      - l2p-network
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-l2p_user} -d ${POSTGRES_DB:-learn2play}" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '1.0'
+        reservations:
+          memory: 512M
+          cpus: '0.5'
+    security_opt:
+      - no-new-privileges:true
+    profiles:
+      - production
+      - development
+
+  # Backend API - Production (Direct Access)
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+      target: production
+      cache_from:
+        - node:20-bullseye-slim
+      args:
+        BUILDKIT_INLINE_CACHE: 1
+    image: learn2play/backend:${VERSION:-latest}
+    container_name: ${BACKEND_CONTAINER_NAME:-l2p-api}
+    restart: unless-stopped
+    ports:
+      - "${BACKEND_PORT_EXTERNAL:-3001}:3001"
+    env_file:
+      - ./.env.production
+    environment:
+      NODE_ENV: production
+      PORT: ${BACKEND_PORT:-3001}
+      # Database connection details
+      DATABASE_URL: postgresql://${POSTGRES_USER:-l2p_user}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-learn2play}
+      POSTGRES_DB: ${POSTGRES_DB:-learn2play}
+      POSTGRES_USER: ${POSTGRES_USER:-l2p_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      DB_HOST: postgres
+      DB_PORT: 5432
+      # JWT Configuration - Ensure these are set in .env.production
+      JWT_SECRET: ${JWT_SECRET:-dummy-secret-change-me-in-production}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-dummy-refresh-secret-change-me-in-production}
+      # Application Configuration
+      FRONTEND_URL: https://l2p.korczewski.de
+      CORS_ORIGINS: https://l2p.korczewski.de,http://localhost:3000,https://*.korczewski.de
+      COOKIE_DOMAIN: .korczewski.de
+      # Postgres is on the internal Docker network; SSL is not used between containers by default
+      DB_SSL: "${DB_SSL:-false}"
+      # SMTP Configuration
+      SMTP_HOST: ${SMTP_HOST:-smtp.gmail.com}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_SECURE: ${SMTP_SECURE:-false}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      EMAIL_SENDER_ADDRESS: ${EMAIL_SENDER_ADDRESS:-}
+      EMAIL_SENDER_NAME: ${EMAIL_SENDER_NAME:-Learn2Play}
+      # API Keys
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      GOOGLE_CLOUD_PROJECT_ID: ${GOOGLE_CLOUD_PROJECT_ID:-}
+      GOOGLE_SERVICE_ACCOUNT_EMAIL: ${GOOGLE_SERVICE_ACCOUNT_EMAIL:-}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      LOG_FORMAT: json
+      ENABLE_FILE_LOGGING: "true"
+      LOG_FILE_PATH: "/app/logs/error.log"
+      SERVICE_NAME: "backend-api"
+      SLOW_QUERY_MS: 200
+      DB_STATEMENT_TIMEOUT_MS: 30000
+      DB_LOCK_TIMEOUT_MS: 5000
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - l2p-network
+    volumes:
+      - backend_logs:/app/logs:rw
+    healthcheck:
+      test: [ "CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3001/api/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '1.0'
+        reservations:
+          memory: 256M
+          cpus: '0.25'
+    security_opt:
+      - no-new-privileges:true
+    profiles:
+      - production
+
+  # ChromaDB removed - no longer needed
+
+  # Frontend React App - Production (Direct Access)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: production
+      cache_from:
+        - node:20-alpine
+        - nginx:alpine
+      args:
+        BUILDKIT_INLINE_CACHE: 1
+        VITE_API_URL: https://l2p.korczewski.de/api
+        VITE_SOCKET_URL: https://l2p.korczewski.de
+        VITE_NODE_ENV: production
+        VITE_APP_ENVIRONMENT: production
+    image: learn2play/frontend:${VERSION:-latest}
+    container_name: ${FRONTEND_CONTAINER_NAME:-l2p-app}
+    restart: unless-stopped
+    environment:
+      VITE_API_URL: https://l2p.korczewski.de/api
+      VITE_SOCKET_URL: https://l2p.korczewski.de
+    depends_on:
+      - backend
+    networks:
+      - l2p-network
+    volumes:
+      - frontend_logs:/var/log/nginx:rw
+    ports:
+      - "${FRONTEND_PORT_EXTERNAL:-3010}:80"
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:80/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.5'
+        reservations:
+          memory: 64M
+          cpus: '0.1'
+    security_opt:
+      - no-new-privileges:true
+    profiles:
+      - production
+
+  # =============================================================================
+  # DEVELOPMENT SERVICES
+  # =============================================================================
+
+  # Backend Development Service
+  backend-dev:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: development
+    container_name: l2p-backend-dev
+    working_dir: /app
+    env_file:
+      - ./.env
+      - ./.env.development
+    environment:
+      NODE_ENV: development
+      PORT: 3001
+      DATABASE_URL: postgresql://${POSTGRES_USER:-l2p_user}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-learn2play}
+      JWT_SECRET: ${JWT_SECRET:-dev-jwt-secret}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-dev-jwt-refresh-secret}
+      # Allow frontend container and localhost for CORS
+      FRONTEND_URL: http://frontend-dev:3000
+      CORS_ORIGINS: http://localhost:3000,http://frontend-dev:3000,http://127.0.0.1:3000
+      CORS_ORIGIN: http://localhost:3000
+      SOCKET_CORS_ORIGIN: http://localhost:3000
+      # Temporarily allow all CORS origins for development
+      CORS_ALLOW_ALL: "true"
+      DB_SSL: "false"
+      LOG_LEVEL: debug
+      DEBUG: 'app:*'
+      NODE_OPTIONS: --max-old-space-size=4096
+      TZ: Europe/Berlin
+      SLOW_QUERY_MS: "200"
+      DB_STATEMENT_TIMEOUT_MS: "30000"
+      DB_LOCK_TIMEOUT_MS: "5000"
+      # Enable source maps for better debugging
+      TS_NODE_DEV: "true"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "3001:3001"
+      - "9229:9229" # For Node.js debugger
+    volumes:
+      - ./backend/package.json:/app/package.json:rw
+      - ./backend/package-lock.json:/app/package-lock.json:rw
+      - ./backend/tsconfig.json:/app/tsconfig.json:ro
+      - ./backend/src:/app/src:rw
+      - ./backend/migrations:/app/migrations:ro
+      - ./shared:/app/shared:rw
+      - dev_backend_node_modules:/app/node_modules
+      - dev_backend_logs:/app/logs
+    networks:
+      - l2p-network
+    healthcheck:
+      test: [ "CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3001/api/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    # Enable debugging and better logging
+    cap_add:
+      - SYS_PTRACE
+    security_opt:
+      - seccomp:unconfined
+    # Enable hot reloading with direct TypeScript execution (no compilation needed)
+    command: sh -c "npm install && npm run dev:tsx"
+    user: "0:0"
+    profiles:
+      - development
+
+  # Frontend Development Service
+  frontend-dev:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: development
+    container_name: l2p-frontend-dev
+    environment:
+      NODE_ENV: development
+      # Use proxy for API calls to avoid CORS issues
+      # The Vite proxy will forward /api requests to the backend container
+      VITE_API_URL: /api
+      # Use empty string to let socket.io connect to the same origin
+      VITE_SOCKET_URL: ""
+      VITE_BACKEND_URL: http://backend-dev:3001
+      VITE_DEV_MODE: "true"
+      # Ensure test mode is disabled so proxy works correctly
+      VITE_TEST_MODE: "false"
+    depends_on:
+      backend-dev:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend/src:/app/src:rw
+      - ./frontend/public:/app/public:ro
+      - ./frontend/package.json:/app/package.json:ro
+      - ./frontend/vite.config.ts:/app/vite.config.ts:ro
+      - dev_frontend_node_modules:/app/node_modules
+    networks:
+      - l2p-network
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:3000/" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    command: sh -c "npm run dev -- --host 0.0.0.0"
+    user: "0:0"
+    profiles:
+      - development
+
+  # =============================================================================
+  # TEST SERVICES
+  # =============================================================================
+
+  # PostgreSQL Test Database
+  postgres-test:
+    image: postgres:15-alpine
+    container_name: l2p-postgres-test
+    environment:
+      POSTGRES_DB: learn2play_test
+      POSTGRES_USER: test_user
+      POSTGRES_PASSWORD: test_password
+      POSTGRES_INITDB_ARGS: "--auth-host=md5"
+    ports:
+      - "5433:5432"
+    volumes:
+      - ./database/init-test.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+      - ./database/test-data.sql:/docker-entrypoint-initdb.d/02-test-data.sql:ro
+      - test_postgres_data:/var/lib/postgresql/data
+    networks:
+      - test-network
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U test_user -d learn2play_test" ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    restart: unless-stopped
+    tmpfs:
+      - /tmp
+      - /var/run/postgresql
+    profiles:
+      - test
+
+  # ChromaDB Test Service removed - no longer needed
+
+  # Backend Test Service
+  backend-test:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.test
+      cache_from:
+        - node:20-bullseye-slim
+      args:
+        BUILDKIT_INLINE_CACHE: 1
+    container_name: l2p-backend-test
+    env_file:
+      - ./backend/.env.test
+    environment:
+      NODE_ENV: test
+      PORT: 3001
+      DATABASE_URL: postgresql://test_user:test_password@postgres-test:5432/learn2play_test
+      JWT_SECRET: test-jwt-secret-for-testing-only-do-not-use-in-production
+      JWT_REFRESH_SECRET: test-jwt-refresh-secret-for-testing-only-do-not-use-in-production
+      FRONTEND_URL: http://frontend-test:3000
+      DB_SSL: "false"
+      LOG_LEVEL: warn
+      # CHROMA_URL removed - no longer needed
+      GEMINI_API_KEY: test-api-key
+      SMTP_HOST: mailhog-test
+      SMTP_PORT: 1025
+      SMTP_SECURE: "false"
+      EMAIL_SENDER_ADDRESS: test@learn2play.test
+      SLOW_QUERY_MS: 200
+      DB_STATEMENT_TIMEOUT_MS: 30000
+      DB_LOCK_TIMEOUT_MS: 5000
+    depends_on:
+      postgres-test:
+        condition: service_healthy
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./backend/src:/app/src:ro
+      - ./backend/migrations:/app/migrations:ro
+      - ./shared:/app/shared:rw
+      - test_backend_logs:/app/logs
+    networks:
+      - test-network
+    healthcheck:
+      test: [ "CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3001/api/health" ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+    restart: unless-stopped
+    tmpfs:
+      - /tmp
+    profiles:
+      - test
+
+  # Frontend Test Service
+  frontend-test:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.test
+      cache_from:
+        - node:18-alpine
+      args:
+        BUILDKIT_INLINE_CACHE: 1
+    container_name: l2p-frontend-test
+    environment:
+      NODE_ENV: test
+      VITE_API_URL: http://localhost:3001/api
+      VITE_SOCKET_URL: http://localhost:3001
+      VITE_TEST_MODE: "true"
+    depends_on:
+      backend-test:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend/src:/app/src:ro
+      - ./frontend/public:/app/public:ro
+      - test_frontend_node_modules:/app/node_modules
+    networks:
+      - test-network
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:3000/" ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    restart: unless-stopped
+    tmpfs:
+      - /tmp
+    profiles:
+      - test
+
+  # MailHog for Email Testing
+  mailhog-test:
+    image: mailhog/mailhog:latest
+    container_name: l2p-mailhog-test
+    pull_policy: missing
+    ports:
+      - "8025:8025" # Web UI
+      - "1025:1025" # SMTP
+    networks:
+      - test-network
+    healthcheck:
+      test: [ "CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8025/" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    restart: unless-stopped
+    profiles:
+      - test
+
+  # Redis for Session/Cache Testing
+  redis-test:
+    image: redis:7-alpine
+    container_name: l2p-redis-test
+    pull_policy: missing
+    ports:
+      - "6380:6379"
+    volumes:
+      - test_redis_data:/data
+    networks:
+      - test-network
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+    restart: unless-stopped
+    command: redis-server --appendonly yes --maxmemory 128mb --maxmemory-policy allkeys-lru
+    profiles:
+      - test
+
+volumes:
+  # Production volumes
+  postgres_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /home/patrick/l2p/data/postgres
+  backend_logs:
+    driver: local
+  frontend_logs:
+    driver: local
+  postgres_logs:
+    driver: local
+
+  # Development volumes
+  dev_backend_node_modules:
+    driver: local
+  dev_frontend_node_modules:
+    driver: local
+  dev_backend_logs:
+    driver: local
+
+  # Test volumes (using tmpfs for speed)
+  test_postgres_data:
+    driver: local
+    driver_opts:
+      type: tmpfs
+      device: tmpfs
+      o: size=512m,uid=999,gid=999
+  # test_chroma_data removed - no longer needed
+  test_redis_data:
+    driver: local
+    driver_opts:
+      type: tmpfs
+      device: tmpfs
+      o: size=128m,uid=999,gid=999
+  test_backend_node_modules:
+    driver: local
+  test_frontend_node_modules:
+    driver: local
+  test_backend_logs:
+    driver: local
+
+# Secrets are managed via bind mounts to /run/secrets
+
+networks:
+  l2p-network:
+    external: ${L2P_NETWORK_EXTERNAL:-true}
+    name: ${L2P_NETWORK_NAME:-l2p-network}
+    driver_opts:
+      com.docker.network.bridge.name: l2p-bridge
+  test-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.21.0.0/16
+    driver_opts:
+      com.docker.network.bridge.name: l2p-test-bridge

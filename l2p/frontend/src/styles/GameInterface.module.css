@@ -1,0 +1,272 @@
+.gameInterface {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.title {
+  font-size: 2.5rem;
+  font-weight: bold;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+}
+
+.subtitle {
+  font-size: 1.125rem;
+  color: var(--text-secondary);
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.section {
+  background: var(--card-bg);
+  border-radius: 12px;
+  padding: 1.5rem;
+  border: 2px solid var(--border-color);
+}
+
+.section h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 1rem;
+}
+
+.lobbySettings,
+.joinSettings {
+  margin-top: 1rem;
+  padding: 1rem;
+  border: 2px dashed var(--border-color);
+  border-radius: 10px;
+  background: var(--input-bg);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.checkboxRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.95rem;
+  color: var(--text-primary);
+}
+
+.checkboxRow input {
+  width: auto;
+  accent-color: var(--primary-color);
+}
+
+.inputGroup {
+  margin-bottom: 1rem;
+}
+
+.inputGroup label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+}
+
+.input,
+.select {
+  width: 100%;
+  padding: 0.75rem;
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
+  background: var(--input-bg);
+  color: var(--text-primary);
+  font-size: 1rem;
+  transition: border-color 0.3s ease;
+}
+
+.input:focus,
+.select:focus {
+  outline: none;
+  border-color: var(--primary-color);
+}
+
+.characterSelection {
+  margin-bottom: 1rem;
+}
+
+.characterSelection label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+}
+
+.characterGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: 0.75rem;
+}
+
+.characterButton {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1rem;
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
+  background: var(--input-bg);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.characterButton:hover {
+  border-color: var(--primary-color);
+  transform: translateY(-2px);
+}
+
+.characterButton.selected {
+  border-color: var(--primary-color);
+  background: var(--primary-color);
+  color: white;
+}
+
+.characterEmoji {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+.characterName {
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+.button {
+  width: 100%;
+  padding: 0.875rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.button.primary {
+  background: var(--primary-color);
+  color: white;
+}
+
+.button.primary:hover:not(:disabled) {
+  background: var(--primary-hover);
+  transform: translateY(-2px);
+}
+
+.button.secondary {
+  background: var(--secondary-color);
+  color: white;
+}
+
+.button.secondary:hover:not(:disabled) {
+  background: var(--secondary-hover);
+  transform: translateY(-2px);
+}
+
+.error {
+  background: var(--error-bg);
+  color: var(--error-color);
+  padding: 1rem;
+  border-radius: 8px;
+  border: 2px solid var(--error-color);
+  font-weight: 600;
+  text-align: center;
+}
+
+.statusMessage {
+  margin-top: 1rem;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  background: var(--success-bg, rgba(34, 197, 94, 0.15));
+  border: 2px solid var(--success-border, #22c55e);
+  color: var(--success-color, #047857);
+  font-weight: 600;
+  text-align: center;
+}
+
+.errorMessage {
+  background: var(--error-bg);
+  border-color: var(--error-color);
+  color: var(--error-color);
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .gameInterface {
+    padding: 1rem;
+  }
+  
+  .title {
+    font-size: 2rem;
+  }
+  
+  .subtitle {
+    font-size: 1rem;
+  }
+  
+  .section {
+    padding: 1rem;
+  }
+  
+  .characterGrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  
+  .characterEmoji {
+    font-size: 1.5rem;
+  }
+  
+  .characterName {
+    font-size: 0.75rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .gameInterface {
+    padding: 0.5rem;
+  }
+  
+  .title {
+    font-size: 1.75rem;
+  }
+  
+  .section {
+    padding: 0.75rem;
+  }
+  
+  .characterGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .characterEmoji {
+    font-size: 1.25rem;
+  }
+  
+  .characterName {
+    font-size: 0.625rem;
+  }
+} 

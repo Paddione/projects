@@ -1,0 +1,29 @@
+{
+  "timestamp": "2025-11-14T19:46:23.004Z",
+  "duration": 779980.7829999999,
+  "total": 0,
+  "passed": 0,
+  "failed": 0,
+  "skipped": 21,
+  "flaky": 0,
+  "projects": [
+    {
+      "name": "perks-management.spec.ts",
+      "tests": 0,
+      "passed": 0,
+      "failed": 0
+    },
+    {
+      "name": "smoke/basic-functionality-mock.spec.ts",
+      "tests": 0,
+      "passed": 0,
+      "failed": 0
+    },
+    {
+      "name": "smoke/basic-functionality.spec.ts",
+      "tests": 0,
+      "passed": 0,
+      "failed": 0
+    }
+  ]
+}

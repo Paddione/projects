@@ -1,0 +1,25 @@
+name: Repository Lint
+
+on:
+  pull_request:
+  push:
+    branches: [ main, master ]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install workspaces
+        run: npm run install:all
+
+      - name: Run structure lint
+        run: npm run lint

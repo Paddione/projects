@@ -1,0 +1,351 @@
+# Unified Test Configuration
+# Centralized configuration for all test types and environments
+
+global:
+  max_test_timeout: 300000  # 5 minutes
+  setup_timeout: 120000     # 2 minutes
+  teardown_timeout: 60000   # 1 minute
+  retry_attempts: 3
+  retry_delay: 2000         # 2 seconds
+  clear_mocks: true
+  reset_mocks: true
+  restore_mocks: true
+
+environments:
+  local:
+    database:
+      url: "postgresql://test_user:test_pass@localhost:5433/test_db"
+      timeout: 30
+      pool_size: 5
+      ssl: false
+    
+    services:
+      backend:
+        base_url: "http://localhost:3001"
+        health_endpoint: "/api/health"
+        timeout: 30
+        startup_timeout: 90
+      
+      frontend:
+        base_url: "http://localhost:3000"
+        health_endpoint: "/"
+        timeout: 30
+        startup_timeout: 120
+      
+
+      
+      mailhog:
+        base_url: "http://localhost:8025"
+        health_endpoint: "/"
+        timeout: 10
+        startup_timeout: 30
+      
+      redis:
+        base_url: "http://localhost:6380"
+        health_endpoint: "/ping"
+        timeout: 10
+        startup_timeout: 30
+    
+    coverage:
+      threshold:
+        statements: 80
+        branches: 75
+        functions: 80
+        lines: 80
+      exclude:
+        - "**/*.test.ts"
+        - "**/*.test.tsx"
+        - "**/*.spec.ts"
+        - "**/*.spec.tsx"
+        - "**/node_modules/**"
+        - "**/dist/**"
+        - "**/build/**"
+        - "**/coverage/**"
+        - "**/__tests__/**"
+        - "**/test-artifacts/**"
+        - "**/test-results/**"
+        - "**/playwright-report/**"
+        - "**/*.d.ts"
+        - "**/setupTests.ts"
+        - "**/test-setup.ts"
+        - "**/jest.config.*"
+        - "**/playwright.config.*"
+        - "**/vite.config.*"
+        - "**/tsconfig.*"
+    
+    reporting:
+      formats: ["html", "lcov", "json", "text"]
+      output_dir: "coverage"
+      open_browser: false
+    
+    environment_variables:
+      NODE_ENV: "test"
+      TEST_ENVIRONMENT: "local"
+      DATABASE_URL: "postgresql://test_user:test_pass@localhost:5433/test_db"
+      BACKEND_URL: "http://localhost:3001"
+      FRONTEND_URL: "http://localhost:3000"
+      
+      # SMTP Configuration (set TEST_REAL_SMTP=true to use actual Gmail SMTP)
+      SMTP_HOST: "smtp.gmail.com"
+      SMTP_PORT: "587"
+      SMTP_SECURE: "false"
+      SMTP_USER: "p.korczewski@gmail.com"
+      SMTP_PASS: "mxbd2kfpnqwer8st"
+      EMAIL_SENDER_ADDRESS: "noreply@l2p.korczewski.de"
+      EMAIL_SENDER_NAME: "Learn2Play"
+      TEST_REAL_SMTP: "false"
+
+      MAILHOG_URL: "http://localhost:8025"
+      REDIS_URL: "redis://localhost:6380"
+
+  ci:
+    database:
+      url: "postgresql://test_user:test_pass@postgres-test:5432/test_db"
+      timeout: 45
+      pool_size: 3
+      ssl: false
+    
+    services:
+      backend:
+        base_url: "http://backend-test:3001"
+        health_endpoint: "/api/health"
+        timeout: 45
+        startup_timeout: 120
+      
+      frontend:
+        base_url: "http://frontend-test:3000"
+        health_endpoint: "/"
+        timeout: 45
+        startup_timeout: 150
+      
+
+      
+      mailhog:
+        base_url: "http://mailhog-test:8025"
+        health_endpoint: "/"
+        timeout: 15
+        startup_timeout: 45
+      
+      redis:
+        base_url: "http://redis-test:6379"
+        health_endpoint: "/ping"
+        timeout: 15
+        startup_timeout: 45
+    
+    coverage:
+      threshold:
+        statements: 85
+        branches: 80
+        functions: 85
+        lines: 85
+      exclude:
+        - "**/*.test.ts"
+        - "**/*.test.tsx"
+        - "**/*.spec.ts"
+        - "**/*.spec.tsx"
+        - "**/node_modules/**"
+        - "**/dist/**"
+        - "**/build/**"
+        - "**/coverage/**"
+        - "**/__tests__/**"
+        - "**/test-artifacts/**"
+        - "**/test-results/**"
+        - "**/playwright-report/**"
+        - "**/*.d.ts"
+        - "**/setupTests.ts"
+        - "**/test-setup.ts"
+        - "**/jest.config.*"
+        - "**/playwright.config.*"
+        - "**/vite.config.*"
+        - "**/tsconfig.*"
+    
+    reporting:
+      formats: ["lcov", "json", "text"]
+      output_dir: "coverage"
+      open_browser: false
+    
+    environment_variables:
+      NODE_ENV: "test"
+      TEST_ENVIRONMENT: "ci"
+      DATABASE_URL: "postgresql://test_user:test_pass@postgres-test:5432/test_db"
+      BACKEND_URL: "http://backend-test:3001"
+      FRONTEND_URL: "http://frontend-test:3000"
+      
+      # SMTP Configuration (set TEST_REAL_SMTP=true to use actual Gmail SMTP)
+      SMTP_HOST: "smtp.gmail.com"
+      SMTP_PORT: "587"
+      SMTP_SECURE: "false"
+      SMTP_USER: "p.korczewski@gmail.com"
+      SMTP_PASS: "mxbd2kfpnqwer8st"
+      EMAIL_SENDER_ADDRESS: "noreply@l2p.korczewski.de"
+      EMAIL_SENDER_NAME: "Learn2Play"
+      TEST_REAL_SMTP: "false"
+
+      MAILHOG_URL: "http://mailhog-test:8025"
+      REDIS_URL: "redis://redis-test:6379"
+
+  docker:
+    database:
+      url: "postgresql://test_user:test_pass@localhost:5433/test_db"
+      timeout: 60
+      pool_size: 5
+      ssl: false
+    
+    services:
+      backend:
+        base_url: "http://localhost:3001"
+        health_endpoint: "/api/health"
+        timeout: 60
+        startup_timeout: 180
+      
+      frontend:
+        base_url: "http://localhost:3000"
+        health_endpoint: "/"
+        timeout: 60
+        startup_timeout: 240
+      
+      mailhog:
+        base_url: "http://localhost:8025"
+        health_endpoint: "/"
+        timeout: 20
+        startup_timeout: 60
+      
+      redis:
+        base_url: "http://localhost:6380"
+        health_endpoint: "/ping"
+        timeout: 20
+        startup_timeout: 60
+    
+    coverage:
+      threshold:
+        statements: 80
+        branches: 75
+        functions: 80
+        lines: 80
+      exclude:
+        - "**/*.test.ts"
+        - "**/*.test.tsx"
+        - "**/*.spec.ts"
+        - "**/*.spec.tsx"
+        - "**/node_modules/**"
+        - "**/dist/**"
+        - "**/build/**"
+        - "**/coverage/**"
+        - "**/__tests__/**"
+        - "**/test-artifacts/**"
+        - "**/test-results/**"
+        - "**/playwright-report/**"
+        - "**/*.d.ts"
+        - "**/setupTests.ts"
+        - "**/test-setup.ts"
+        - "**/jest.config.*"
+        - "**/playwright.config.*"
+        - "**/vite.config.*"
+        - "**/tsconfig.*"
+    
+    reporting:
+      formats: ["html", "lcov", "json"]
+      output_dir: "coverage"
+      open_browser: false
+    
+    environment_variables:
+      NODE_ENV: "test"
+      TEST_ENVIRONMENT: "docker"
+      DATABASE_URL: "postgresql://test_user:test_pass@localhost:5433/test_db"
+      BACKEND_URL: "http://localhost:3001"
+      FRONTEND_URL: "http://localhost:3000"
+      
+      # SMTP Configuration (set TEST_REAL_SMTP=true to use actual Gmail SMTP)
+      SMTP_HOST: "smtp.gmail.com"
+      SMTP_PORT: "587"
+      SMTP_SECURE: "false"
+      SMTP_USER: "p.korczewski@gmail.com"
+      SMTP_PASS: "mxbd2kfpnqwer8st"
+      EMAIL_SENDER_ADDRESS: "noreply@l2p.korczewski.de"
+      EMAIL_SENDER_NAME: "Learn2Play"
+      TEST_REAL_SMTP: "false"
+
+      MAILHOG_URL: "http://localhost:8025"
+      REDIS_URL: "redis://localhost:6380"
+
+test_types:
+  unit:
+    timeout: 30000        # 30 seconds
+    parallel: true
+    max_workers: "50%"
+    bail: false
+    verbose: false
+    collect_coverage: true
+    watch: false
+    
+  integration:
+    timeout: 60000        # 1 minute
+    parallel: false       # Sequential to avoid conflicts
+    max_workers: 1
+    bail: false
+    verbose: true
+    collect_coverage: true
+    watch: false
+    
+  e2e:
+    timeout: 120000       # 2 minutes
+    parallel: true
+    max_workers: 2
+    bail: false
+    verbose: true
+    collect_coverage: false
+    headless: true
+    browsers: ["chromium", "firefox", "webkit"]
+    viewport:
+      width: 1280
+      height: 720
+    video: "retain-on-failure"
+    screenshot: "only-on-failure"
+    
+  performance:
+    timeout: 300000       # 5 minutes
+    parallel: false
+    max_workers: 1
+    bail: true
+    verbose: true
+    collect_coverage: false
+    scenarios:
+      - name: "load_test"
+        users: 10
+        duration: 60
+        ramp_up: 10
+      - name: "stress_test"
+        users: 50
+        duration: 120
+        ramp_up: 30
+      - name: "spike_test"
+        users: 100
+        duration: 30
+        ramp_up: 5
+    thresholds:
+      response_time_p95: 2000    # 2 seconds
+      response_time_p99: 5000    # 5 seconds
+      error_rate: 0.01           # 1%
+      throughput_min: 10         # requests per second
+    
+  accessibility:
+    timeout: 90000        # 1.5 minutes
+    parallel: true
+    max_workers: 2
+    bail: false
+    verbose: true
+    collect_coverage: false
+    headless: true
+    browsers: ["chromium"]
+    standards: ["WCAG21AA"]
+    rules:
+      - "color-contrast"
+      - "keyboard-navigation"
+      - "aria-labels"
+      - "heading-hierarchy"
+      - "focus-management"
+      - "screen-reader"
+    viewport:
+      width: 1280
+      height: 720
+    zoom_levels: [100, 150, 200]

@@ -1,0 +1,205 @@
+# Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+package-lock.json
+yarn.lock
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.production
+*.env
+
+# Build outputs
+dist/
+build/
+out/
+.next/
+.nuxt/
+.cache/
+.parcel-cache/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# IDE files
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+.project
+.classpath
+.settings/
+
+# Database
+*.sqlite
+*.sqlite3
+*.db
+postgres-data/
+pgdata/
+
+# Docker
+docker-compose.override.yml
+.docker/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+ENV/
+env/
+.venv/
+pip-log.txt
+pip-delete-this-directory.txt
+
+# AI/ML models and large files - CRITICAL EXCLUSIONS
+*.pth
+*.ckpt
+*.safetensors
+*.bin
+*.h5
+*.pb
+*.onnx
+*.tflite
+*.mlmodel
+*.pt
+
+# AI Model directories - EXCLUDE ALL MODELS
+models/
+checkpoints/
+weights/
+pretrained/
+
+# Virtual Environments - MASSIVE SIZE REDUCTION
+venv/
+env/
+ENV/
+.venv/
+vllm/ai-image-gen/forge/venv/
+*/venv/
+*/env/
+
+# Pinokio - EXCLUDE ENTIRE CACHE AND BINARIES
+vllm/pinokio/
+pinokio/
+
+# Forge/Stable Diffusion - EXCLUDE ALL GENERATED/DOWNLOADED CONTENT
+vllm/ai-image-gen/forge/models/
+vllm/ai-image-gen/forge/outputs/
+vllm/ai-image-gen/forge/embeddings/
+vllm/ai-image-gen/forge/extensions/
+vllm/ai-image-gen/forge/textual_inversion/
+vllm/ai-image-gen/forge/venv/
+vllm/ai-image-gen/forge/cache/
+vllm/ai-image-gen/forge/config_states/
+vllm/ai-image-gen/forge/repositories/
+
+# RAG Content and Data
+rag-content/
+rag_content/
+vllm/rag/data/
+l2p/rag/
+*/rag/data/
+
+# Database Data Directories
+postgres-data/
+pgdata/
+data/postgres/
+*/data/postgres/
+l2p/data/
+vllm/data/
+
+# ChromaDB and Vector Databases
+chroma/
+chromadb/
+*.chroma
+vectordb/
+
+# Large Node Modules Binaries
+node_modules/chromadb-js-bindings*/
+node_modules/@next/swc-*/
+node_modules/esbuild-*/
+node_modules/sharp/
+
+# Video files (if too large)
+*.mp4
+*.avi
+*.mov
+*.mkv
+*.flv
+*.wmv
+*.webm
+outputs/*.mp4
+outputs/*.avi
+
+# Large archives
+*.zip
+*.tar
+*.tar.gz
+*.rar
+*.7z
+*.gz
+*.bz2
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.bak
+*.backup
+
+# Test coverage
+coverage/
+.nyc_output/
+*.lcov
+
+# Certificates and keys
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+
+# Nginx logs and configs (if sensitive)
+nginx/logs/
+
+# Build artifacts that can be regenerated
+build/
+dist/
+out/
+.next/
+.nuxt/
+
+# Cache directories
+.cache/
+cache/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Miniconda/Conda
+miniconda/
+conda/
+anaconda/
+vllm/pinokio/bin/miniconda/

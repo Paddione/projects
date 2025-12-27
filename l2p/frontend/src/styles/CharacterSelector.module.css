@@ -1,0 +1,138 @@
+.characterSelector {
+  margin: 1.5rem 0;
+}
+
+.label {
+  display: block;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+}
+
+.description {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  margin-bottom: 1rem;
+  line-height: 1.4;
+}
+
+.characterGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.characterButton {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem 0.75rem;
+  border: 2px solid var(--border-color);
+  border-radius: 12px;
+  background: var(--background-secondary);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-height: 80px;
+  position: relative;
+  overflow: hidden;
+}
+
+.characterButton:hover {
+  border-color: var(--primary-color);
+  background: var(--background-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.characterButton.selected {
+  border-color: var(--primary-color);
+  background: var(--primary-color);
+  color: white;
+  box-shadow: 0 4px 12px rgba(var(--primary-color-rgb), 0.3);
+}
+
+/* Export a standalone selected class for CSS Modules mapping */
+.selected {
+  /* Intentionally empty: visual styles are defined by the combined
+     selector .characterButton.selected above. This class exists so that
+     styles.selected is available in JS and tests. */
+}
+
+.characterButton.selected:hover {
+  background: var(--primary-color-dark);
+  transform: translateY(-2px);
+}
+
+.characterEmoji {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+  display: block;
+}
+
+.characterName {
+  font-size: 0.85rem;
+  font-weight: 500;
+  text-align: center;
+  line-height: 1.2;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .characterGrid {
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    gap: 0.5rem;
+  }
+  
+  .characterButton {
+    padding: 0.75rem 0.5rem;
+    min-height: 70px;
+  }
+  
+  .characterEmoji {
+    font-size: 1.5rem;
+    margin-bottom: 0.25rem;
+  }
+  
+  .characterName {
+    font-size: 0.8rem;
+  }
+}
+
+.loading {
+  text-align: center;
+  color: var(--text-secondary);
+  font-style: italic;
+  padding: 2rem;
+}
+
+.updating {
+  text-align: center;
+  color: var(--text-secondary);
+  font-style: italic;
+  margin-top: 1rem;
+  padding: 0.5rem;
+  background: var(--background-secondary);
+  border-radius: 8px;
+}
+
+@media (max-width: 480px) {
+  .characterGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .characterButton {
+    min-height: 60px;
+  }
+  
+  .characterEmoji {
+    font-size: 1.25rem;
+  }
+  
+  .characterName {
+    font-size: 0.75rem;
+  }
+} 

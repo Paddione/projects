@@ -1,0 +1,122 @@
+services:
+  videovault-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: videovault-dev
+    ports:
+      - '0.0.0.0:5000:5000'
+    volumes:
+      # Mount source code for hot reload
+      - ./client:/app/client:cached
+      - ./server:/app/server:cached
+      - ./shared:/app/shared:cached
+      - ./docs:/app/docs:cached
+
+      # Mount config files
+      - ./package.json:/app/package.json:ro
+      - ./package-lock.json:/app/package-lock.json:ro
+      - ./tsconfig.json:/app/tsconfig.json:ro
+      - ./vite.config.ts:/app/vite.config.ts:ro
+      - ./tailwind.config.cjs:/app/tailwind.config.cjs:ro
+
+      # Mount media directory
+      - ${MEDIA_ROOT:-./Bibliothek}:/app/media
+
+      # Preserve node_modules in container (don't mount host node_modules)
+      - /app/node_modules
+    environment:
+      - MEDIA_ROOT=/app/media
+    env_file:
+      - env/.env-app
+    stdin_open: true
+    tty: true
+    command: sh -lc "npm ci && npm run dev"
+    restart: unless-stopped
+    networks:
+      - l2p-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ['CMD-SHELL', 'curl -fsS http://localhost:5000/api/health || exit 1']
+      interval: 5s
+      timeout: 3s
+      retries: 30
+
+  # Optional PostgreSQL for future server persistence
+  postgres:
+    image: postgres:16-alpine
+    container_name: videovault-postgres
+    env_file:
+      - env/.env-postgres
+    ports:
+      - '0.0.0.0:5432:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - l2p-network
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U $$POSTGRES_USER']
+      interval: 5s
+      timeout: 3s
+      retries: 30
+
+  playwright:
+    image: mcr.microsoft.com/playwright:v1.55.0-jammy
+    container_name: videovault-playwright
+    working_dir: /work
+    networks:
+      - l2p-network
+    env_file:
+      - env/.env-playwright
+    depends_on:
+      videovault-dev:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    shm_size: 1g
+    environment:
+      - CI=1
+      - PW_SKIP_WEB_SERVER=1
+      - PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
+      - BASE_URL=http://videovault-dev:5000
+      - NODE_ENV=development
+    volumes:
+      - ./:/work:cached
+      - /work/node_modules
+    # Install deps and run Playwright tests
+    command: bash -lc "npm ci && npm run test:pw"
+
+  playwright-ui:
+    image: mcr.microsoft.com/playwright:v1.55.0-jammy
+    container_name: videovault-playwright-ui
+    working_dir: /work
+    networks:
+      - l2p-network
+    env_file:
+      - env/.env-playwright
+    depends_on:
+      videovault-dev:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    shm_size: 1g
+    environment:
+      - CI=1
+      - PW_SKIP_WEB_SERVER=1
+      - PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
+      - BASE_URL=http://videovault-dev:5000
+      - NODE_ENV=development
+    ports:
+      - '0.0.0.0:9323:9323'
+    volumes:
+      - ./:/work:cached
+      - /work/node_modules
+    command: bash -lc "npm ci && npm run test:pw:ui -- --ui-host 0.0.0.0 --ui-port 9323"
+
+networks:
+  driver: bridge
+volumes:
+  postgres_data:
+    driver: local

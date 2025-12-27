@@ -1,0 +1,46 @@
+{
+  "scenario": "api-baseline",
+  "timestamp": "2025-08-14T06:38:28.898Z",
+  "metrics": {
+    "responseTime": {
+      "min": 32.29639057475837,
+      "max": 322.9639057475837,
+      "avg": 64.59278114951674,
+      "p50": 51.674224919613394,
+      "p95": 193.77834344855023,
+      "p99": 322.9639057475837
+    },
+    "throughput": {
+      "requestsPerSecond": 25,
+      "totalRequests": 300,
+      "successfulRequests": 298,
+      "failedRequests": 2
+    },
+    "memory": {
+      "heapUsed": 137.38268551970162,
+      "heapTotal": 199.41340470416145,
+      "external": 49.27165162346387,
+      "rss": 186.2187847953228,
+      "peak": 199.3329197328447
+    },
+    "cpu": {
+      "usage": 11.237,
+      "loadAverage": [
+        0.6828258547833526,
+        0.80867258932592,
+        0.9010878692174481
+      ]
+    },
+    "network": {
+      "bytesReceived": 0,
+      "bytesSent": 0,
+      "connections": 99
+    },
+    "errors": {
+      "total": 2,
+      "byType": {},
+      "errorRate": 0.6666666666666667
+    }
+  },
+  "environment": "local"
+}

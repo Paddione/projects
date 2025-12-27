@@ -1,0 +1,12 @@
+# Add directories or file patterns to ignore during indexing (e.g. foo/ or *.csv)
+# Environment files - allow Cursor to read all of them
+!.env
+!.env.dev
+!.env.development
+!.env.production
+!.gemini/.env
+!backend/.env
+!backend/.env.development
+!backend/.env.test
+!frontend/.env
+!frontend/.env.local

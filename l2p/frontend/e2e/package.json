@@ -1,0 +1,23 @@
+{
+  "name": "learn2play-frontend-e2e",
+  "version": "1.0.0",
+  "description": "E2E tests for Learn2Play frontend",
+  "scripts": {
+    "test": "playwright test",
+    "test:smoke": "playwright test tests/smoke",
+    "test:integration": "playwright test tests/integration",
+    "test:performance": "playwright test tests/performance",
+    "test:accessibility": "playwright test tests/accessibility",
+    "test:error-handling": "playwright test tests/error-handling",
+    "test:debug": "playwright test --debug",
+    "test:ui": "node ./scripts/run-playwright-ui.js",
+    "test:ui:xvfb": "xvfb-run -a -s '-screen 0 1280x1024x24' playwright test --ui",
+    "test:report": "playwright show-report",
+    "install:browsers": "playwright install --with-deps",
+    "test:headed": "playwright test --headed"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.40.0",
+    "playwright": "^1.40.0"
+  }
+} 

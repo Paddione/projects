@@ -1,0 +1,141 @@
+data
+.env
+.env.local
+.env.production
+.env.test
+.env.test.backup
+.env.test.prod-enabled
+.env.development
+.env.dev
+# Secrets directory
+secrets/
+.env.secrets
+.env.combined
+
+# Dependencies
+node_modules/
+frontend/node_modules/
+backend/node_modules/
+testing/node_modules/
+
+# Build outputs
+
+# Logs
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage/
+*.lcov
+
+# nyc test coverage
+.nyc_output
+
+# Dependency directories
+jspm_packages/
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# Microbundle cache
+.rpt2_cache/
+.rts2_cache_cjs/
+.rts2_cache_es/
+.rts2_cache_umd/
+
+# Optional REPL history
+.node_repl_history
+
+# Output of 'npm pack'
+*.tgz
+
+# Yarn Integrity file
+.yarn-integrity
+
+# parcel-bundler cache (https://parceljs.org/)
+.cache
+.parcel-cache
+
+# Next.js build output
+.next
+
+# Nuxt.js build / generate output
+.nuxt
+
+# Storybook build outputs
+.out
+.storybook-out
+
+# Temporary folders
+tmp/
+temp/
+
+# Editor directories and files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Docker volumes data
+postgres_data/
+letsencrypt_data/
+
+# Test results and reports
+test-results/
+playwright-report/
+*.xml
+jest-failures.json
+test-results.json
+test-reports/
+test-reports/archive/
+test-inventory-report.html
+test-inventory-report.json
+
+# Backup files
+backup_*.sql
+
+# Temporary files
+*.tmp
+*.temp
+
+# Chroma vector database data
+chroma/
+
+# Cursor IDE files
+.cursor/
+frontend/public/audio
+frontend/public/images
+test-artifacts/performance/reports
+backend/test-artifacts/performance/reports
+backend/coverage-reports
+backend/.env.development
+frontend/coverage-reports
+coverage-reports
+backend/test-artifacts/performance/reports
+frontend/test-artifacts
+backend/test-artifacts/performance/reports
+.env.dev
+.env.dev
+set_gemini_env.sh

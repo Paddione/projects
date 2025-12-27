@@ -1,0 +1,28 @@
+services:
+  web:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=postgresql://patrick:password@db:5432/payment_db?schema=public
+      - NEXTAUTH_URL=http://localhost:3000
+      - NEXTAUTH_SECRET=supersecretchangeinprod
+      - AUTH_SECRET=supersecretchangeinprod
+      - AUTH_TRUST_HOST=true
+      # Add Stripe keys here for prod, or pass via .env file
+    depends_on:
+      - db
+
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: patrick
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: payment_db
+    ports:
+      - "5435:5432" # Exposed to host on 5435, internal 5432
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+volumes:
+  db_data:

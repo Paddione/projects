@@ -1,0 +1,68 @@
+{
+  "app": {
+    "title": "Video Category Manager"
+  },
+  "common": {
+    "scan": "Scan",
+    "import": "Import",
+    "export": "Export",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "close": "Close",
+    "search": "Search",
+    "loading": "Loading...",
+    "success": "Success",
+    "error": "Error"
+  },
+  "header": {
+    "scanDirectory": "Scan Directory",
+    "importData": "Import Data",
+    "exportLibrary": "Export Library",
+    "exportPlaylist": "Export Playlist",
+    "batchRename": "Batch Rename",
+    "duplicates": "Duplicates",
+    "tags": "Tags",
+    "analytics": "Analytics",
+    "presets": "Presets",
+    "backup": "Backup",
+    "newFolder": "New Folder",
+    "deleteFolder": "Delete Folder",
+    "filters": "Filters",
+    "adminLogin": "Admin Login",
+    "adminLogout": "Logout admin",
+    "settings": "Settings",
+    "toggleTheme": "Toggle theme"
+  },
+  "sidebar": {
+    "searchPlaceholder": "Search videos...",
+    "categories": "Categories",
+    "dateRange": "Date Range",
+    "clearAll": "Clear All",
+    "savePreset": "Save Preset",
+    "loadPreset": "Load Preset",
+    "noCategories": "No categories found",
+    "filters": "Filters",
+    "active": "active",
+    "apply": "Apply",
+    "clear": "Clear"
+  },
+  "categories": {
+    "age": "Age",
+    "physical": "Physical",
+    "ethnicity": "Ethnicity",
+    "relationship": "Relationship",
+    "acts": "Acts",
+    "setting": "Setting",
+    "quality": "Quality",
+    "performer": "Performer",
+    "custom": "Custom"
+  },
+  "actions": {
+    "rename": "Rename",
+    "move": "Move",
+    "split": "Split",
+    "play": "Play"
+  }
+}

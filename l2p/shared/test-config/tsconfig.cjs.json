@@ -1,0 +1,23 @@
+{
+	"extends": "./tsconfig.json",
+	"compilerOptions": {
+		"module": "CommonJS",
+		"outDir": "./dist/cjs"
+	},
+	"exclude": [
+		"node_modules",
+		"dist",
+		"__tests__/**",
+		"**/*.test.ts",
+		"**/*.spec.ts",
+		"**/*.e2e.ts",
+		"**/*.playwright.ts",
+		"**/playwright.config.*",
+		"test-results",
+		"playwright-report",
+		"coverage",
+		"TestEnvironmentCLI.ts",
+		"example-usage.ts",
+		"simple-demo.ts"
+	]
+}

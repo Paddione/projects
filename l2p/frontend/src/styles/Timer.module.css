@@ -1,0 +1,119 @@
+.timerContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem;
+  background: var(--card-bg);
+  border-radius: 12px;
+  border: 2px solid var(--border-color);
+  min-width: 120px;
+}
+
+.timerDisplay {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.timeText {
+  font-size: 2rem;
+  font-weight: bold;
+  font-family: 'Courier New', monospace;
+  color: var(--text-primary);
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.timeText.warning {
+  color: var(--warning-color);
+  animation: pulse 1s infinite;
+}
+
+.timeText.critical {
+  color: var(--error-color);
+  animation: shake 0.5s infinite;
+}
+
+.progressContainer {
+  width: 100%;
+  height: 8px;
+  background: var(--border-color);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progressBar {
+  height: 100%;
+  background: var(--primary-color);
+  border-radius: 4px;
+  transition: width 0.3s ease, background-color 0.3s ease;
+}
+
+.progressBar.warning {
+  background: var(--warning-color);
+}
+
+.progressBar.critical {
+  background: var(--error-color);
+}
+
+.statusIndicator {
+  font-size: 1rem;
+  transition: all 0.3s ease;
+}
+
+.statusIndicator.running {
+  color: var(--success-color);
+  animation: blink 1s infinite;
+}
+
+/* Animations */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-2px); }
+  75% { transform: translateX(2px); }
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .timerContainer {
+    padding: 0.75rem;
+    min-width: 100px;
+  }
+  
+  .timeText {
+    font-size: 1.5rem;
+  }
+  
+  .progressContainer {
+    height: 6px;
+  }
+}
+
+@media (max-width: 480px) {
+  .timerContainer {
+    padding: 0.5rem;
+    min-width: 80px;
+  }
+  
+  .timeText {
+    font-size: 1.25rem;
+  }
+  
+  .progressContainer {
+    height: 4px;
+  }
+} 

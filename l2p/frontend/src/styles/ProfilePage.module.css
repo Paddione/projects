@@ -1,0 +1,491 @@
+.profileContainer {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+  background: var(--background-color);
+  min-height: 100vh;
+}
+
+.profileHeader {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.profileHeader h1 {
+  color: var(--primary-color);
+  margin: 0 0 0.5rem 0;
+  font-size: 2.5rem;
+  font-weight: 700;
+}
+
+.profileHeader p {
+  color: var(--text-secondary);
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.profileContent {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+/* Character Section */
+.characterSection {
+  background: var(--card-background);
+  border-radius: 12px;
+  padding: 2rem;
+  border: 1px solid var(--border-color);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.sectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.sectionHeader h2 {
+  color: var(--text-primary);
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.changeCharacterButton {
+  background: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.changeCharacterButton:hover:not(:disabled) {
+  background: var(--primary-hover);
+  transform: translateY(-1px);
+}
+
+.changeCharacterButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.changePasswordButton {
+  background: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.changePasswordButton:hover:not(:disabled) {
+  background: var(--primary-hover);
+  transform: translateY(-1px);
+}
+
+.changePasswordButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.characterSelectorContainer {
+  margin-top: 1rem;
+}
+
+.currentCharacter {
+  display: flex;
+  justify-content: center;
+  padding: 1rem 0;
+}
+
+/* Progress Section */
+.progressSection {
+  background: var(--card-background);
+  border-radius: 12px;
+  padding: 2rem;
+  border: 1px solid var(--border-color);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.progressSection h2 {
+  color: var(--text-primary);
+  margin: 0 0 1.5rem 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.levelInfo {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.levelBadge {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+  font-size: 1.5rem;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.levelNumber {
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.levelDetails h3 {
+  color: var(--text-primary);
+  margin: 0 0 0.5rem 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.levelDetails p {
+  color: var(--text-secondary);
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.progressBar {
+  margin-bottom: 1rem;
+}
+
+.progressLabel {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+.progressBarContainer {
+  width: 100%;
+  height: 12px;
+  background: var(--background-color);
+  border-radius: 6px;
+  overflow: hidden;
+  margin-bottom: 0.5rem;
+}
+
+.progressBarFill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--primary-color), var(--primary-hover));
+  border-radius: 6px;
+  transition: width 0.3s ease;
+}
+
+.progressPercentage {
+  text-align: center;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.nextLevelInfo {
+  text-align: center;
+  padding: 1rem;
+  background: var(--background-color);
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+}
+
+.nextLevelInfo p {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 0.9rem;
+}
+
+/* Perks Section */
+.perksSection {
+  background: var(--card-background);
+  border-radius: 12px;
+  padding: 2rem;
+  border: 1px solid var(--border-color);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.closeButton {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-secondary);
+  font-size: 1.2rem;
+  padding: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.closeButton:hover {
+  background: var(--background-color);
+  color: var(--text-primary);
+  transform: scale(1.1);
+}
+
+/* Available Characters Section */
+.availableCharactersSection {
+  background: var(--card-background);
+  border-radius: 12px;
+  padding: 2rem;
+  border: 1px solid var(--border-color);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.availableCharactersSection h2 {
+  color: var(--text-primary);
+  margin: 0 0 0.5rem 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.availableCharactersSection > p {
+  color: var(--text-secondary);
+  margin: 0 0 1.5rem 0;
+  font-size: 0.9rem;
+}
+
+.charactersGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1rem;
+}
+
+.characterCard {
+  background: var(--background-color);
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
+  padding: 1.5rem;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.characterCard:hover:not(.locked) {
+  border-color: var(--primary-color);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.characterCard.current {
+  border-color: var(--primary-color);
+  background: rgba(79, 70, 229, 0.05);
+}
+
+.characterCard.locked {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.characterCardContent {
+  text-align: center;
+}
+
+.characterEmoji {
+  font-size: 3rem;
+  display: block;
+  margin-bottom: 1rem;
+}
+
+.characterCard h4 {
+  color: var(--text-primary);
+  margin: 0 0 0.5rem 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.characterCard p {
+  color: var(--text-secondary);
+  margin: 0 0 1rem 0;
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
+
+.unlockStatus {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  align-items: center;
+}
+
+.unlocked {
+  color: #10b981;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.locked {
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.currentBadge {
+  background: var(--primary-color);
+  color: white;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 500;
+}
+
+/* Small select button for character cards */
+.selectButton {
+  background: var(--primary-color);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.selectButton:hover:not(:disabled) {
+  background: var(--primary-hover);
+  transform: translateY(-1px);
+}
+
+.selectButton:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* Inline updating label next to section header */
+.updatingLabel {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+/* Loading and Error States */
+.loadingContainer,
+.errorContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  text-align: center;
+}
+
+.loadingSpinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--border-color);
+  border-top: 3px solid var(--primary-color);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1rem;
+}
+
+.loadingContainer p,
+.errorContainer p {
+  color: var(--text-secondary);
+  margin: 0;
+  font-size: 1rem;
+}
+
+.retryButton {
+  background: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-top: 1rem;
+}
+
+.retryButton:hover {
+  background: var(--primary-hover);
+  transform: translateY(-1px);
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .profileContainer {
+    padding: 1rem;
+  }
+  
+  .profileHeader h1 {
+    font-size: 2rem;
+  }
+  
+  .characterSection,
+  .progressSection,
+  .availableCharactersSection {
+    padding: 1.5rem;
+  }
+  
+  .sectionHeader {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+  
+  .levelInfo {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .charactersGrid {
+    grid-template-columns: 1fr;
+  }
+  
+  .progressLabel {
+    flex-direction: column;
+    gap: 0.25rem;
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 480px) {
+  .profileContainer {
+    padding: 0.5rem;
+  }
+  
+  .profileHeader h1 {
+    font-size: 1.75rem;
+  }
+  
+  .characterSection,
+  .progressSection,
+  .availableCharactersSection {
+    padding: 1rem;
+  }
+  
+  .levelBadge {
+    width: 60px;
+    height: 60px;
+  }
+  
+  .levelNumber {
+    font-size: 1.5rem;
+  }
+} 

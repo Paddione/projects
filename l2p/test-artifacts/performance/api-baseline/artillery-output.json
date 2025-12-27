@@ -1,0 +1,55 @@
+{
+  "aggregate": {
+    "counters": {
+      "vusers.created_by_name.api-baseline": 42,
+      "vusers.created": 42,
+      "plugins.metrics-by-endpoint./:undefined/api/health.errors.ERR_INVALID_URL": 42,
+      "errors.ERR_INVALID_URL": 42,
+      "vusers.failed": 42
+    },
+    "rates": {},
+    "firstCounterAt": 1756194572545,
+    "lastCounterAt": 1756194586643,
+    "firstMetricAt": 1756194572545,
+    "lastMetricAt": 1756194586643,
+    "period": 1756194580000,
+    "summaries": {},
+    "histograms": {}
+  },
+  "intermediate": [
+    {
+      "counters": {
+        "vusers.created_by_name.api-baseline": 21,
+        "vusers.created": 21,
+        "plugins.metrics-by-endpoint./:undefined/api/health.errors.ERR_INVALID_URL": 21,
+        "errors.ERR_INVALID_URL": 21,
+        "vusers.failed": 21
+      },
+      "rates": {},
+      "firstCounterAt": 1756194572545,
+      "lastCounterAt": 1756194579643,
+      "firstMetricAt": 1756194572545,
+      "lastMetricAt": 1756194579643,
+      "period": "1756194570000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "vusers.created_by_name.api-baseline": 21,
+        "vusers.created": 21,
+        "plugins.metrics-by-endpoint./:undefined/api/health.errors.ERR_INVALID_URL": 21,
+        "errors.ERR_INVALID_URL": 21,
+        "vusers.failed": 21
+      },
+      "rates": {},
+      "firstCounterAt": 1756194580542,
+      "lastCounterAt": 1756194586643,
+      "firstMetricAt": 1756194580542,
+      "lastMetricAt": 1756194586643,
+      "period": "1756194580000",
+      "summaries": {},
+      "histograms": {}
+    }
+  ]
+}

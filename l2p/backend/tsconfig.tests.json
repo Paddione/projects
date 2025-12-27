@@ -1,0 +1,21 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "strict": false,
+    "noImplicitAny": false,
+    "skipLibCheck": true,
+    "isolatedModules": false,
+    "module": "CommonJS",
+    "target": "ES2022",
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "types": ["jest", "node"]
+  },
+  "include": [
+    "src/**/*.ts",
+    "src/**/__tests__/**/*.ts",
+    "src/__tests__/**/*.ts"
+  ]
+}
+

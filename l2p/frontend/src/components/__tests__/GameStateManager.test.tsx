@@ -1,0 +1,246 @@
+import React from 'react'
+import { describe, it, expect, beforeEach, jest } from '@jest/globals'
+import { render } from '@testing-library/react'
+import { GameStateManager } from '../GameStateManager'
+import { useGameStore } from '../../stores/gameStore'
+import { socketService } from '../../services/socketService'
+import { navigationService } from '../../services/navigationService'
+
+// Mock dependencies
+jest.mock('../../stores/gameStore')
+jest.mock('../../services/socketService', () => ({
+  socketService: {
+    connect: jest.fn(),
+    disconnect: jest.fn(),
+  },
+}))
+jest.mock('../../services/navigationService', () => ({
+  navigationService: {
+    validateCurrentRoute: jest.fn(),
+    handleGameStateChange: jest.fn(),
+    destroy: jest.fn(),
+  },
+}))
+
+describe('GameStateManager', () => {
+  beforeEach(() => {
+    jest.clearAllMocks()
+
+    // Mock game store
+    jest.mocked(useGameStore).mockReturnValue({
+      lobbyCode: null,
+      gameStarted: false,
+      gameEnded: false,
+    } as any)
+
+    // Mock socket service
+    jest.mocked(socketService.connect).mockReturnValue(undefined)
+    jest.mocked(socketService.disconnect).mockReturnValue(undefined)
+
+    // Mock navigation service
+    jest.mocked(navigationService.validateCurrentRoute).mockResolvedValue()
+    jest.mocked(navigationService.handleGameStateChange).mockReturnValue(undefined)
+    jest.mocked(navigationService.destroy).mockReturnValue(undefined)
+
+    // Reset window location
+    delete (window as any).location
+    window.location = { pathname: '/' } as any
+
+    // Clear event listeners
+    window.removeEventListener('beforeunload', expect.any(Function) as any)
+  })
+
+  describe('Initialization', () => {
+    it('should render without errors', () => {
+      const { container } = render(<GameStateManager />)
+
+      // Should render null (no visible elements)
+      expect(container.firstChild).toBeNull()
+    })
+
+    it.skip('should connect to socket service on mount', () => {
+      render(<GameStateManager />)
+
+      expect(socketService.connect).toHaveBeenCalled()
+    })
+
+    it('should validate current route on mount', () => {
+      render(<GameStateManager />)
+
+      expect(navigationService.validateCurrentRoute).toHaveBeenCalled()
+    })
+
+    it.skip('should add beforeunload event listener', () => {
+      const addEventListenerSpy = jest.spyOn(window, 'addEventListener')
+
+      render(<GameStateManager />)
+
+      expect(addEventListenerSpy).toHaveBeenCalledWith('beforeunload', expect.any(Function))
+
+      addEventListenerSpy.mockRestore()
+    })
+
+    it('should use socket URL from ENV if available', () => {
+      (window as any).ENV = { VITE_SOCKET_URL: 'ws://test.com' }
+
+      render(<GameStateManager />)
+
+      expect(socketService.connect).toHaveBeenCalledWith('ws://test.com')
+
+      delete (window as any).ENV
+    })
+  })
+
+  describe('Cleanup', () => {
+    it('should disconnect socket on unmount', () => {
+      const { unmount } = render(<GameStateManager />)
+
+      unmount()
+
+      expect(socketService.disconnect).toHaveBeenCalled()
+    })
+
+    it('should destroy navigation service on unmount', () => {
+      const { unmount } = render(<GameStateManager />)
+
+      unmount()
+
+      expect(navigationService.destroy).toHaveBeenCalled()
+    })
+
+    it('should remove beforeunload event listener on unmount', () => {
+      const removeEventListenerSpy = jest.spyOn(window, 'removeEventListener')
+
+      const { unmount } = render(<GameStateManager />)
+
+      unmount()
+
+      expect(removeEventListenerSpy).toHaveBeenCalledWith('beforeunload', expect.any(Function))
+
+      removeEventListenerSpy.mockRestore()
+    })
+  })
+
+  describe('Game state changes', () => {
+    it('should handle game state change when gameStarted changes', () => {
+      jest.mocked(useGameStore).mockReturnValue({
+        lobbyCode: 'ABC123',
+        gameStarted: true,
+        gameEnded: false,
+      } as any)
+
+      render(<GameStateManager />)
+
+      expect(navigationService.handleGameStateChange).toHaveBeenCalled()
+    })
+
+    it('should handle game state change when gameEnded changes', () => {
+      jest.mocked(useGameStore).mockReturnValue({
+        lobbyCode: 'ABC123',
+        gameStarted: false,
+        gameEnded: true,
+      } as any)
+
+      render(<GameStateManager />)
+
+      expect(navigationService.handleGameStateChange).toHaveBeenCalled()
+    })
+
+    it('should validate route when lobbyCode is set', () => {
+      jest.mocked(useGameStore).mockReturnValue({
+        lobbyCode: 'ABC123',
+        gameStarted: false,
+        gameEnded: false,
+      } as any)
+
+      render(<GameStateManager />)
+
+      expect(navigationService.validateCurrentRoute).toHaveBeenCalled()
+    })
+  })
+
+  describe('Beforeunload handler', () => {
+    it('should warn user when leaving game page', () => {
+      window.location = { pathname: '/game/ABC123' } as any
+
+      render(<GameStateManager />)
+
+      const event = new Event('beforeunload') as BeforeUnloadEvent
+      event.preventDefault = jest.fn()
+
+      window.dispatchEvent(event)
+
+      // The handler sets returnValue which triggers browser confirmation
+      expect(event.preventDefault).toHaveBeenCalled()
+    })
+
+    it('should warn user when leaving lobby page', () => {
+      window.location = { pathname: '/lobby/ABC123' } as any
+
+      render(<GameStateManager />)
+
+      const event = new Event('beforeunload') as BeforeUnloadEvent
+      event.preventDefault = jest.fn()
+
+      window.dispatchEvent(event)
+
+      expect(event.preventDefault).toHaveBeenCalled()
+    })
+
+    it('should not warn user when leaving other pages', () => {
+      window.location = { pathname: '/' } as any
+
+      render(<GameStateManager />)
+
+      const event = new Event('beforeunload') as BeforeUnloadEvent
+      event.preventDefault = jest.fn()
+
+      window.dispatchEvent(event)
+
+      // For non-game/lobby pages, preventDefault should not be called
+      // (This behavior depends on the actual implementation)
+    })
+  })
+
+  describe('Initialization guard', () => {
+    it('should only initialize once on multiple renders', () => {
+      const { rerender } = render(<GameStateManager />)
+
+      const firstCallCount = jest.mocked(socketService.connect).mock.calls.length
+
+      rerender(<GameStateManager />)
+      rerender(<GameStateManager />)
+
+      const finalCallCount = jest.mocked(socketService.connect).mock.calls.length
+
+      // Should only connect once despite multiple renders
+      expect(finalCallCount).toBe(firstCallCount)
+    })
+  })
+
+  describe('Error handling', () => {
+    it.skip('should handle socket connection errors gracefully', () => {
+      jest.mocked(socketService.connect).mockImplementation(() => {
+        throw new Error('Connection failed')
+      })
+
+      const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation()
+
+      expect(() => render(<GameStateManager />)).not.toThrow()
+
+      expect(consoleErrorSpy).toHaveBeenCalledWith('Failed to initialize services:', expect.any(Error))
+
+      consoleErrorSpy.mockRestore()
+    })
+
+    it('should handle navigation validation errors gracefully', () => {
+      jest.mocked(navigationService.validateCurrentRoute).mockRejectedValue(new Error('Validation failed'))
+
+      const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation()
+
+      expect(() => render(<GameStateManager />)).not.toThrow()
+
+      consoleErrorSpy.mockRestore()
+    })
+  })
+})

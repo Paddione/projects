@@ -1,0 +1,201 @@
+# Root Docker ignore file
+# Optimizes build context for builds using repo root as context (e.g., backend production)
+
+# Version control
+.git
+.gitattributes
+.gitignore
+.gitmodules
+
+# Dependencies (installed in containers)
+node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Build outputs
+/dist
+/build
+.next
+.nuxt
+out/
+.vercel
+.netlify
+
+# Test outputs and artifacts
+coverage
+test-results
+playwright-report
+jest-failures.json
+.nyc_output
+.nyc_output/
+test/
+tests/
+__tests__/
+*.test.js
+*.test.ts
+*.spec.js
+*.spec.ts
+
+# Environment files (use container env instead)
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+.env.staging
+.env.example
+.env.template
+
+# IDE and editor files
+.vscode
+.idea
+*.swp
+*.swo
+*~
+.sublime-*
+.atom/
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs
+logs
+data/
+*.log
+lerna-debug.log*
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+*.lcov
+
+# Dependency directories
+jspm_packages/
+bower_components/
+
+# Optional npm cache directory
+.npm
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
+
+# Optional eslint cache
+.eslintcache
+.eslintcache.*
+
+# Optional REPL history
+.node_repl_history
+
+# Output of 'npm pack'
+*.tgz
+
+# Yarn Integrity file
+.yarn-integrity
+
+# parcel-bundler cache (https://parceljs.org/)
+.cache
+.parcel-cache
+
+# Temporary folders
+tmp/
+temp/
+.tmp/
+
+# Documentation (exclude from build context)
+README.md
+CHANGELOG.md
+LICENSE
+docs/
+*.md
+CONTRIBUTING.md
+CODE_OF_CONDUCT.md
+
+# Docker files (avoid recursive copying when context is root)
+Dockerfile*
+docker-compose*.yml
+.dockerignore*
+.dockerignore
+
+# Test configuration files that aren't needed in container
+jest.config.js
+jest.config.cjs
+jest.config.ts
+playwright.config.ts
+playwright.config.js
+vitest.config.ts
+vitest.config.js
+cypress.config.js
+cypress.config.ts
+karma.conf.js
+karma.conf.ts
+
+# CI/CD files
+.github/
+.gitlab-ci.yml
+.travis.yml
+.circleci/
+azure-pipelines.yml
+Jenkinsfile
+
+# Development tools
+.eslintrc*
+.prettierrc*
+.prettier.config.*
+.editorconfig
+.babelrc*
+tsconfig.json
+tsconfig.*.json
+webpack.config.*
+rollup.config.*
+vite.config.*
+tailwind.config.*
+postcss.config.*
+browserslist
+
+# Backups
+*.bak
+*.backup
+*.orig
+*.rej
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Archive files
+*.zip
+*.tar
+*.gz
+*.rar
+*.7z
+
+# Lock files (keep only the one for the specific service being built)
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml
+
+# Local development files
+.local
+.local.*
+
+
+

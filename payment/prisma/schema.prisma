@@ -1,0 +1,143 @@
+generator client {
+  provider = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum TxType {
+  DEPOSIT
+  PURCHASE
+  ADJUSTMENT
+  REFUND
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String?
+  passwordHash  String?
+  role          Role      @default(USER)
+  image         String?
+  emailVerified DateTime?
+  accounts      Account[]
+  sessions      Session[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  wallet        Wallet?
+  orders        Order[]
+  bookings      Booking[]
+}
+
+model Account {
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+ 
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+ 
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+ 
+  @@id([provider, providerAccountId])
+}
+
+model Session {
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+ 
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model VerificationToken {
+  identifier String
+  token      String
+  expires    DateTime
+ 
+  @@id([identifier, token])
+}
+
+
+model Wallet {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id])
+  balance     Decimal  @default(0.00) @db.Decimal(10, 2)
+  transactions Transaction[]
+}
+
+model Transaction {
+  id          String   @id @default(cuid())
+  walletId    String
+  wallet      Wallet   @relation(fields: [walletId], references: [id])
+  amount      Decimal  @db.Decimal(10, 2)
+  type        TxType
+  referenceId String?
+  description String?
+  createdAt   DateTime @default(now())
+}
+
+model Product {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  imageUrl    String?
+  price       Decimal  @db.Decimal(10, 2) // Price in PatrickCoins
+  stock       Int
+  isService   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  orderItems  OrderItem[]
+}
+
+model Order {
+  id        String      @id @default(cuid())
+  userId    String
+  user      User        @relation(fields: [userId], references: [id])
+  total     Decimal     @db.Decimal(10, 2)
+  status    String      @default("COMPLETED")
+  createdAt DateTime    @default(now())
+  items     OrderItem[]
+}
+
+model OrderItem {
+  id        String  @id @default(cuid())
+  orderId   String
+  order     Order   @relation(fields: [orderId], references: [id])
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+  quantity  Int
+  price     Decimal @db.Decimal(10, 2) // Price at time of purchase
+}
+
+model Booking {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  serviceId String?  // Optional link to Product if it's a service product
+  startTime DateTime
+  endTime   DateTime
+  status    String   @default("CONFIRMED") // CONFIRMED, CANCELLED
+  createdAt DateTime @default(now())
+}

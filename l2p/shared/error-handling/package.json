@@ -1,0 +1,26 @@
+{
+  "name": "error-handling",
+  "version": "1.0.0",
+  "description": "Error handling utilities for Learn2Play",
+  "type": "module",
+  "main": "dist/cjs/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/cjs/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "npm run build:esm && npm run build:cjs",
+    "build:esm": "tsc",
+    "build:cjs": "tsc --project tsconfig.cjs.json"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "@types/jest": "^29.5.5",
+    "@types/node": "^18.15.11"
+  }
+}

@@ -1,0 +1,125 @@
+name: ci
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node: [20, 22]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+
+      - name: Cache npm directory
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: npm-${{ runner.os }}-${{ matrix.node }}-${{ hashFiles('package-lock.json') }}
+
+      - name: Restore node_modules cache
+        id: node-modules-cache
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: nm-${{ runner.os }}-${{ matrix.node }}-${{ hashFiles('package-lock.json') }}
+
+      - name: Install deps
+        run: npm ci
+
+      - name: Save node_modules cache
+        if: steps.node-modules-cache.outputs.cache-hit != 'true'
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: nm-${{ runner.os }}-${{ matrix.node }}-${{ hashFiles('package-lock.json') }}
+
+      - name: Typecheck
+        run: npm run check
+
+      - name: Run unit tests with coverage
+        run: npm run test:coverage
+
+      - name: Upload coverage reports to Codecov
+        if: matrix.node == 20  # Only upload once
+        uses: codecov/codecov-action@v4
+        with:
+          directory: ./coverage
+          fail_ci_if_error: false
+          files: ./coverage/lcov.info
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
+      - name: Upload coverage artifacts
+        if: always() && matrix.node == 20  # Only upload once
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: |
+            coverage/
+            !coverage/**/*.tmp
+
+      - name: Run E2E tests
+        run: npm run test:e2e
+
+      - name: Build documentation
+        run: npm run docs:build
+
+      - name: Build
+        run: npm run build
+
+      - name: Upload documentation
+        if: always() && matrix.node == 20  # Only upload once
+        uses: actions/upload-artifact@v4
+        with:
+          name: documentation
+          path: docs/COMBINED.md
+
+  playwright:
+    runs-on: ubuntu-latest
+    needs: verify
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install deps
+        run: npm ci
+
+      - name: Verify Playwright version/image match
+        run: node scripts/ensure-playwright-match.mjs
+
+      - name: Run Playwright in Docker
+        run: npm run docker:pw:all
+
+      - name: Upload Playwright HTML report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: test-results/playwright/html
+
+      - name: Upload Playwright test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: test-results/playwright
+
