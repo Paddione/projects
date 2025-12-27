@@ -96,9 +96,11 @@ venv/
 env/
 ENV/
 .venv/
+.venv-*/
 vllm/ai-image-gen/forge/venv/
 */venv/
 */env/
+*/.venv-*/
 
 # Pinokio - EXCLUDE ENTIRE CACHE AND BINARIES
 vllm/pinokio/
@@ -203,3 +205,11 @@ miniconda/
 conda/
 anaconda/
 vllm/pinokio/bin/miniconda/
+
+# Debug and temporary files
+debug-*.png
+debug-*.jpg
+debug-*.jpeg
+*-debug.png
+*-debug.jpg
+*.debug.log

@@ -139,3 +139,12 @@ backend/test-artifacts/performance/reports
 .env.dev
 .env.dev
 set_gemini_env.sh
+
+# Debug files and screenshots
+debug-*.png
+debug-*.jpg
+*-debug.png
+*-debug.jpg
+*.debug.log
+debug-*.spec.ts
+*-debug.test.ts
