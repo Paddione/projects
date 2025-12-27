@@ -1,11 +1,14 @@
 
 import { describe, beforeAll, afterAll, it, expect } from '@jest/globals';
+import { createServer, Server } from 'http';
 import request from 'supertest';
 import express from 'express';
 import { DatabaseService } from '../../services/DatabaseService.js';
 
 describe('Basic Integration Tests', () => {
   let app: express.Application;
+  let server: Server;
+  let api: ReturnType<typeof request>;
 
   beforeAll(async () => {
     // Create a simple test app for basic integration tests
@@ -23,10 +26,26 @@ describe('Basic Integration Tests', () => {
     app.use('*', (req, res) => {
       res.status(404).json({ error: 'Not found' });
     });
+
+    server = createServer(app);
+    await new Promise<void>((resolve, reject) => {
+      const onError = (error: Error) => reject(error);
+      server.once('error', onError);
+      server.listen(0, '127.0.0.1', () => {
+        server.off('error', onError);
+        resolve();
+      });
+    });
+    api = request(server);
+  });
+
+  afterAll(async () => {
+    if (!server) return;
+    await new Promise<void>(resolve => server.close(() => resolve()));
   });
 
   test('should respond to health check', async () => {
-    const response = await request(app)
+    const response = await api
       .get('/api/health')
       .expect(200);
 
@@ -35,7 +54,7 @@ describe('Basic Integration Tests', () => {
   });
 
   test('should handle 404 for unknown routes', async () => {
-    const response = await request(app)
+    const response = await api
       .get('/api/unknown-route')
       .expect(404);
 

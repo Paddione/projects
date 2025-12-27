@@ -48,6 +48,15 @@ const newUserEmail = document.getElementById('new-user-email');
 const newUserRole = document.getElementById('new-user-role');
 const userCreate = document.getElementById('user-create');
 
+const browserHubToggle = document.getElementById('browser-hub-toggle');
+const browserHubPanel = document.getElementById('browser-hub-panel');
+const browserHubBackdrop = document.getElementById('browser-hub-backdrop');
+const browserHubClose = document.getElementById('browser-hub-close');
+const browserGroupsList = document.getElementById('browser-groups-list');
+const browserTaskDetail = document.getElementById('browser-task-detail');
+const currentTaskListName = document.getElementById('current-task-group-name');
+const currentTaskList = document.getElementById('current-task-list');
+
 const groupLabels = {
     core: 'Core AI',
     data: 'Data Layer',
@@ -61,6 +70,7 @@ const serviceState = {};
 let activeFilter = 'all';
 let activeLogServiceId = null;
 let usersData = [];
+let availableModels = {}; // Store available models per service
 
 async function fetchServices() {
     try {
@@ -77,6 +87,22 @@ async function fetchServices() {
             throw new Error('Failed to load services');
         }
         servicesData = await res.json();
+
+        // Fetch available models for each service
+        for (const service of servicesData) {
+            try {
+                const modelsRes = await fetch(`/api/models/${service.id}`);
+                if (modelsRes.ok) {
+                    const data = await modelsRes.json();
+                    if (data.models && data.models.length > 0) {
+                        availableModels[service.id] = data.models;
+                    }
+                }
+            } catch (err) {
+                console.error(`Failed to fetch models for ${service.id}`, err);
+            }
+        }
+
         renderServices();
     } catch (err) {
         console.error('Unable to fetch services', err);
@@ -107,6 +133,23 @@ function renderServices() {
             service.url ? `<button class="action-btn" onclick="copyServiceUrl('${service.url}')">COPY URL</button>` : ''
         ].filter(Boolean).join('');
 
+        // Model selector dropdown if available
+        const hasModelSelection = availableModels[service.id] && availableModels[service.id].length > 0;
+        const modelSelectorMarkup = hasModelSelection ? `
+            <div class="model-selector">
+                <label class="model-selector-label">
+                    <span>Model:</span>
+                    <select id="model-select-${service.id}" class="model-select" onchange="handleModelChange('${service.id}', this.value)">
+                        ${availableModels[service.id].map(model => `
+                            <option value="${model.id}" ${model.id === service.model ? 'selected' : ''}>
+                                ${model.name} (${model.vram}, Context: ${model.contextSize})
+                            </option>
+                        `).join('')}
+                    </select>
+                </label>
+            </div>
+        ` : '';
+
         return `
         <div class="card" id="card-${service.id}" data-group="${group}">
             <div class="card-header">
@@ -123,6 +166,8 @@ function renderServices() {
                 <div class="status-badge stopped" id="status-${service.id}">Stopped</div>
             </div>
             <p class="card-desc">${service.description}</p>
+
+            ${modelSelectorMarkup}
 
             <div class="card-metrics">
                 <div class="metric-item">
@@ -201,6 +246,57 @@ function controlService(id, action) {
 
 function clearError(id) {
     socket.emit('clear_error', id);
+}
+
+async function handleModelChange(serviceId, modelId) {
+    try {
+        const res = await fetch(`/api/models/${serviceId}/select`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ modelId })
+        });
+
+        if (!res.ok) {
+            throw new Error('Failed to update model');
+        }
+
+        const data = await res.json();
+
+        // Update local service data
+        const service = servicesData.find(s => s.id === serviceId);
+        if (service) {
+            service.model = modelId;
+
+            // Update the model display in the card
+            const modelDisplay = document.querySelector(`#card-${serviceId} .card-model`);
+            if (modelDisplay) {
+                modelDisplay.textContent = modelId;
+            }
+
+            // Update VRAM estimate
+            const modelInfo = availableModels[serviceId]?.find(m => m.id === modelId);
+            if (modelInfo) {
+                service.vramEstimate = modelInfo.vram;
+                const vramDisplay = document.querySelector(`#card-${serviceId} .card-metrics .metric-item:last-child .metric-value`);
+                if (vramDisplay) {
+                    vramDisplay.textContent = modelInfo.vram;
+                }
+            }
+        }
+
+        console.log(`Model for ${serviceId} updated to ${modelId}`);
+    } catch (err) {
+        console.error('Failed to update model:', err);
+        alert('Failed to update model. Please try again.');
+        // Revert the dropdown selection
+        const select = document.getElementById(`model-select-${serviceId}`);
+        if (select) {
+            const service = servicesData.find(s => s.id === serviceId);
+            if (service) {
+                select.value = service.model;
+            }
+        }
+    }
 }
 
 function formatDuration(ms) {
@@ -333,6 +429,60 @@ userAdminList.addEventListener('click', async (event) => {
         await deleteUser(userId);
     }
 });
+
+function openBrowserHub() {
+    browserHubPanel.classList.add('open');
+    browserHubBackdrop.classList.add('visible');
+    fetchBrowserGroups();
+}
+
+function closeBrowserHub() {
+    browserHubPanel.classList.remove('open');
+    browserHubBackdrop.classList.remove('visible');
+}
+
+browserHubToggle.addEventListener('click', openBrowserHub);
+browserHubClose.addEventListener('click', closeBrowserHub);
+browserHubBackdrop.addEventListener('click', closeBrowserHub);
+
+async function fetchBrowserGroups() {
+    browserGroupsList.innerHTML = '<div class="loading-dots">...</div>';
+    try {
+        const res = await fetch('/api/browser/groups');
+        const groups = await res.json();
+        renderBrowserGroups(groups);
+    } catch (err) {
+        browserGroupsList.innerHTML = '<div class="error-msg">Failed to load groups.</div>';
+    }
+}
+
+function renderBrowserGroups(groups) {
+    browserGroupsList.innerHTML = Object.entries(groups).map(([id, group]) => `
+        <div class="browser-group-card" id="browser-group-${id}">
+            <div class="group-info">
+                <h4>${group.name}</h4>
+                <p>${group.description}</p>
+            </div>
+            <button class="ghost-btn" onclick="runBrowserGroup('${id}')">RUN</button>
+        </div>
+    `).join('');
+}
+
+async function runBrowserGroup(groupId) {
+    try {
+        const res = await fetch(`/api/browser/run/${groupId}`, { method: 'POST' });
+        const data = await res.json();
+        if (data.success) {
+            browserTaskDetail.classList.remove('hidden');
+            currentTaskListName.textContent = `Running: ${groupId}`;
+            currentTaskList.innerHTML = '';
+        } else {
+            alert(data.error);
+        }
+    } catch (err) {
+        alert('Failed to start task group');
+    }
+}
 
 async function fetchUsers() {
     showUserMessage('Loading users...', false);
@@ -567,6 +717,28 @@ socket.on('connect', () => {
 socket.on('disconnect', () => {
     document.getElementById('connection-status').className = 'status-badge stopped';
     document.getElementById('connection-status').textContent = 'Disconnected';
+});
+
+socket.on('browser_task_start', (data) => {
+    browserTaskDetail.classList.remove('hidden');
+    currentTaskListName.textContent = `Running: ${data.groupId}`;
+    currentTaskList.innerHTML = '';
+});
+
+socket.on('browser_task_update', (data) => {
+    const { taskName, status } = data;
+    const taskEl = document.createElement('div');
+    taskEl.className = 'task-item';
+    taskEl.innerHTML = `
+        <div class="task-status-dot ${status}"></div>
+        <span>${taskName}</span>
+    `;
+    currentTaskList.appendChild(taskEl);
+});
+
+socket.on('browser_task_complete', (data) => {
+    const { groupId, result } = data;
+    currentTaskListName.textContent = `Completed: ${groupId} (${result.status})`;
 });
 
 fetchServices();

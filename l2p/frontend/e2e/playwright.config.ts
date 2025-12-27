@@ -32,6 +32,16 @@ export default defineConfig({
     '**/tests/question-set-management.spec.*',
     '**/tests/auth-flow.spec.*'
   ],
+  webServer: {
+    command: 'npm --prefix .. run dev -- --host 127.0.0.1 --port 3000',
+    url: process.env.BASE_URL || 'http://localhost:3000',
+    reuseExistingServer: !process.env.CI,
+    timeout: 120000,
+    env: {
+      ...process.env,
+      VITE_TEST_MODE: 'true'
+    }
+  },
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Base URL to use in actions like `await page.goto('/')`. */
@@ -87,17 +97,4 @@ export default defineConfig({
     timeout: 15000,
   },
 
-  /* Run your local dev server before starting the tests */
-  webServer: process.env.CI ? undefined : {
-    command: 'npm --prefix .. run start:test-env',
-    url: 'http://localhost:3000',
-    reuseExistingServer: !process.env.CI,
-    timeout: 120000,
-    stdout: 'pipe',
-    stderr: 'pipe',
-    env: {
-      VITE_TEST_MODE: 'true',
-      API_BASE_URL: 'http://localhost:3001',
-    },
-  },
-}); 
+});

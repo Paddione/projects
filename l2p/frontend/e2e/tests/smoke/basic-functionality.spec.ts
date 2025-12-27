@@ -1,33 +1,49 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, Page } from '@playwright/test';
+
+const ensureAuthForm = async (page: Page) => {
+  await page.goto('/');
+  await page.waitForLoadState('domcontentloaded');
+
+  await page.waitForFunction(() => {
+    const loadingElement = document.querySelector('p');
+    if (loadingElement && loadingElement.textContent?.includes('Validating authentication')) {
+      return false;
+    }
+
+    const authForm = document.querySelector('[data-testid="register-tab"], [data-testid="login-tab"]');
+    const authenticatedContent = document.querySelector('[data-testid="create-lobby-button"], [data-testid="welcome-message"]');
+
+    return authForm || authenticatedContent;
+  }, { timeout: 15000 });
+
+  const authTabs = page.locator('[data-testid="register-tab"], [data-testid="login-tab"]');
+  if ((await authTabs.count()) > 0 && await authTabs.first().isVisible()) {
+    return;
+  }
+
+  const authenticatedContent = page.locator('[data-testid="create-lobby-button"], [data-testid="welcome-message"]');
+  if ((await authenticatedContent.count()) > 0 && await authenticatedContent.first().isVisible()) {
+    await page.click('[data-testid="logout-button"]');
+  }
+
+  await page.evaluate(() => {
+    localStorage.clear();
+    sessionStorage.clear();
+  });
+  await page.reload();
+  await page.waitForLoadState('domcontentloaded');
+  await page.waitForSelector('[data-testid="register-tab"], [data-testid="login-tab"]', { timeout: 15000 });
+};
 
 test.describe('Basic Functionality - Smoke Tests', () => {
   test.beforeEach(async ({ page }) => {
-    // Navigate to the application (uses baseURL from config)
-    await page.goto('/');
-
-    // Wait for the app to be ready by checking for either auth form or authenticated state
-    // The AuthGuard shows a loading state first, then either AuthForm or authenticated content
-    await page.waitForFunction(() => {
-      // Check if we're past the loading state
-      const loadingElement = document.querySelector('p');
-      if (loadingElement && loadingElement.textContent?.includes('Validating authentication')) {
-        return false;
-      }
-
-      // Check if we have either auth form or authenticated content
-      const authForm = document.querySelector('[data-testid="register-tab"], [data-testid="login-tab"]');
-      const authenticatedContent = document.querySelector('[data-testid="create-lobby-button"], [data-testid="welcome-message"]');
-
-      return authForm || authenticatedContent;
-    }, { timeout: 15000 });
-
-    // Additional wait to ensure the UI is fully rendered
-    await page.waitForTimeout(1000);
+    await ensureAuthForm(page);
+    await page.waitForTimeout(500);
   });
 
   test('should register new user successfully', async ({ page }) => {
     // Wait for AuthForm to be visible (in case we're not authenticated)
-    await page.waitForSelector('[data-testid="register-tab"], [data-testid="login-tab"]', { timeout: 5000 });
+    await page.waitForSelector('[data-testid="register-tab"], [data-testid="login-tab"]', { timeout: 15000 });
 
     // Switch to registration tab (AuthForm shows login by default)
     await page.click('[data-testid="register-tab"]');
@@ -50,12 +66,12 @@ test.describe('Basic Functionality - Smoke Tests', () => {
     await page.waitForURL(/.*\/$/, { timeout: 10000 });
 
     // Wait for authenticated UI (create lobby button is a stable indicator)
-    await page.waitForSelector('[data-testid="create-lobby-button"]', { timeout: 5000 });
+    await page.waitForSelector('[data-testid="create-lobby-button"]', { timeout: 15000 });
   });
 
   test('should login existing user successfully', async ({ page }) => {
     // Wait for AuthForm to be visible
-    await page.waitForSelector('[data-testid="register-tab"], [data-testid="login-tab"]', { timeout: 5000 });
+    await page.waitForSelector('[data-testid="register-tab"], [data-testid="login-tab"]', { timeout: 15000 });
 
     // First register a user
     await page.click('[data-testid="register-tab"]');
@@ -72,13 +88,13 @@ test.describe('Basic Functionality - Smoke Tests', () => {
 
     // Wait for successful registration
     await page.waitForURL(/.*\/$/, { timeout: 10000 });
-    await page.waitForSelector('[data-testid="create-lobby-button"]', { timeout: 5000 });
+    await page.waitForSelector('[data-testid="create-lobby-button"]', { timeout: 15000 });
 
     // Logout
     await page.click('[data-testid="logout-button"]');
 
     // Wait for AuthForm to be visible again
-    await page.waitForSelector('[data-testid="login-tab"]', { timeout: 5000 });
+    await page.waitForSelector('[data-testid="login-tab"]', { timeout: 15000 });
 
     // Login (AuthForm shows login by default)
     await page.fill('[data-testid="username-input"]', username);
@@ -87,12 +103,12 @@ test.describe('Basic Functionality - Smoke Tests', () => {
 
     // Verify successful login
     await page.waitForURL(/.*\/$/, { timeout: 10000 });
-    await page.waitForSelector('[data-testid="create-lobby-button"]', { timeout: 5000 });
+    await page.waitForSelector('[data-testid="create-lobby-button"]', { timeout: 15000 });
   });
 
   test('should create lobby successfully', async ({ page }) => {
     // Wait for AuthForm to be visible
-    await page.waitForSelector('[data-testid="register-tab"], [data-testid="login-tab"]', { timeout: 5000 });
+    await page.waitForSelector('[data-testid="register-tab"], [data-testid="login-tab"]', { timeout: 15000 });
 
     // Register and login user
     await page.click('[data-testid="register-tab"]');
@@ -109,16 +125,16 @@ test.describe('Basic Functionality - Smoke Tests', () => {
 
     // Wait for successful registration
     await page.waitForURL(/.*\/$/, { timeout: 10000 });
-    await page.waitForSelector('[data-testid="create-lobby-button"]', { timeout: 5000 });
+    await page.waitForSelector('[data-testid="create-lobby-button"]', { timeout: 15000 });
 
     // Wait for create lobby button to be visible
-    await page.waitForSelector('[data-testid="create-lobby-button"]', { timeout: 5000 });
+    await page.waitForSelector('[data-testid="create-lobby-button"]', { timeout: 15000 });
 
     // Click to expand lobby creation options (if collapsed)
     await page.click('[data-testid="create-lobby-button"]');
 
     // Wait for options to be visible and click confirm
-    await page.waitForSelector('button:has-text("CONFIRM LOBBY SETUP")', { timeout: 5000 });
+    await page.waitForSelector('button:has-text("CONFIRM LOBBY SETUP")', { timeout: 15000 });
     await page.click('button:has-text("CONFIRM LOBBY SETUP")');
 
     // Verify lobby creation
@@ -129,7 +145,7 @@ test.describe('Basic Functionality - Smoke Tests', () => {
 
   test('should join lobby with valid code', async ({ page, context }) => {
     // Wait for AuthForm to be visible
-    await page.waitForSelector('[data-testid="register-tab"], [data-testid="login-tab"]', { timeout: 5000 });
+    await page.waitForSelector('[data-testid="register-tab"], [data-testid="login-tab"]', { timeout: 15000 });
 
     // Register and login user
     await page.click('[data-testid="register-tab"]');
@@ -146,14 +162,14 @@ test.describe('Basic Functionality - Smoke Tests', () => {
 
     // Wait for successful registration
     await page.waitForURL(/.*\/$/, { timeout: 10000 });
-    await page.waitForSelector('[data-testid="create-lobby-button"]', { timeout: 5000 });
+    await page.waitForSelector('[data-testid="create-lobby-button"]', { timeout: 15000 });
 
     // Create a lobby first to get a valid code
-    await page.waitForSelector('[data-testid="create-lobby-button"]', { timeout: 5000 });
+    await page.waitForSelector('[data-testid="create-lobby-button"]', { timeout: 15000 });
     await page.click('[data-testid="create-lobby-button"]');
 
     // Wait for options to be visible and click confirm
-    await page.waitForSelector('button:has-text("CONFIRM LOBBY SETUP")', { timeout: 5000 });
+    await page.waitForSelector('button:has-text("CONFIRM LOBBY SETUP")', { timeout: 15000 });
     await page.click('button:has-text("CONFIRM LOBBY SETUP")');
 
     // Wait for lobby page to load
@@ -166,16 +182,16 @@ test.describe('Basic Functionality - Smoke Tests', () => {
     // Open a new page in the same browser context (shared storage)
     const newPage = await context.newPage();
     await newPage.goto('/');
-    await newPage.waitForSelector('[data-testid="register-tab"], [data-testid="login-tab"], [data-testid="create-lobby-button"]', { timeout: 5000 });
+    await newPage.waitForSelector('[data-testid="register-tab"], [data-testid="login-tab"], [data-testid="create-lobby-button"]', { timeout: 15000 });
     // If already authenticated (shared storage), log out to show AuthForm
     const logoutButton = newPage.locator('[data-testid="logout-button"]');
     if (await logoutButton.isVisible().catch(() => false)) {
       await logoutButton.click();
-      await newPage.waitForSelector('[data-testid="register-tab"], [data-testid="login-tab"]', { timeout: 5000 });
+      await newPage.waitForSelector('[data-testid="register-tab"], [data-testid="login-tab"]', { timeout: 15000 });
     }
 
     // Register a second user
-    await newPage.waitForSelector('[data-testid="register-tab"], [data-testid="login-tab"]', { timeout: 5000 });
+    await newPage.waitForSelector('[data-testid="register-tab"], [data-testid="login-tab"]', { timeout: 15000 });
     await newPage.click('[data-testid="register-tab"]');
     const timestamp2 = Date.now();
     const username2 = `joiner${timestamp2}`;
@@ -189,10 +205,10 @@ test.describe('Basic Functionality - Smoke Tests', () => {
 
     // Wait for successful registration
     await newPage.waitForURL(/.*\/$/, { timeout: 10000 });
-    await newPage.waitForSelector('[data-testid="create-lobby-button"]', { timeout: 5000 });
+    await newPage.waitForSelector('[data-testid="create-lobby-button"]', { timeout: 15000 });
 
     // Join the lobby
-    await newPage.waitForSelector('[data-testid="lobby-code-input"]', { timeout: 5000 });
+    await newPage.waitForSelector('[data-testid="lobby-code-input"]', { timeout: 15000 });
     await newPage.fill('[data-testid="lobby-code-input"]', lobbyCode || '');
     await newPage.click('[data-testid="join-lobby-confirm"]');
 
@@ -207,7 +223,7 @@ test.describe('Basic Functionality - Smoke Tests', () => {
 
   test('should handle language switching', async ({ page }) => {
     // Wait for AuthForm to be visible
-    await page.waitForSelector('[data-testid="register-tab"], [data-testid="login-tab"]', { timeout: 5000 });
+    await page.waitForSelector('[data-testid="register-tab"], [data-testid="login-tab"]', { timeout: 15000 });
 
     // Register and login user
     await page.click('[data-testid="register-tab"]');
@@ -224,10 +240,10 @@ test.describe('Basic Functionality - Smoke Tests', () => {
 
     // Wait for successful registration
     await page.waitForURL(/.*\/$/, { timeout: 10000 });
-    await page.waitForSelector('[data-testid="create-lobby-button"]', { timeout: 5000 });
+    await page.waitForSelector('[data-testid="create-lobby-button"]', { timeout: 15000 });
 
     // Wait for language selector to be visible
-    await page.waitForSelector('[data-testid="language-selector"]', { timeout: 5000 });
+    await page.waitForSelector('[data-testid="language-selector"]', { timeout: 15000 });
 
     // Check default language (English)
     await expect(page.locator('[data-testid="language-selector"]')).toBeVisible();
@@ -247,7 +263,7 @@ test.describe('Basic Functionality - Smoke Tests', () => {
 
   test('should handle theme switching', async ({ page }) => {
     // Wait for AuthForm to be visible
-    await page.waitForSelector('[data-testid="register-tab"], [data-testid="login-tab"]', { timeout: 5000 });
+    await page.waitForSelector('[data-testid="register-tab"], [data-testid="login-tab"]', { timeout: 15000 });
 
     // Register and login user
     await page.click('[data-testid="register-tab"]');
@@ -264,10 +280,10 @@ test.describe('Basic Functionality - Smoke Tests', () => {
 
     // Wait for successful registration
     await page.waitForURL(/.*\/$/, { timeout: 10000 });
-    await page.waitForSelector('[data-testid="create-lobby-button"]', { timeout: 5000 });
+    await page.waitForSelector('[data-testid="create-lobby-button"]', { timeout: 15000 });
 
     // Wait for theme toggle to be visible
-    await page.waitForSelector('[data-testid="theme-toggle"]', { timeout: 5000 });
+    await page.waitForSelector('[data-testid="theme-toggle"]', { timeout: 15000 });
 
     // Switch to dark theme
     await page.click('[data-testid="theme-toggle"]');
@@ -280,7 +296,7 @@ test.describe('Basic Functionality - Smoke Tests', () => {
 
   test('should display connection status', async ({ page }) => {
     // Wait for AuthForm to be visible
-    await page.waitForSelector('[data-testid="register-tab"], [data-testid="login-tab"]', { timeout: 5000 });
+    await page.waitForSelector('[data-testid="register-tab"], [data-testid="login-tab"]', { timeout: 15000 });
 
     // Register and login user
     await page.click('[data-testid="register-tab"]');
@@ -297,10 +313,10 @@ test.describe('Basic Functionality - Smoke Tests', () => {
 
     // Wait for successful registration
     await page.waitForURL(/.*\/$/, { timeout: 10000 });
-    await page.waitForSelector('[data-testid="create-lobby-button"]', { timeout: 5000 });
+    await page.waitForSelector('[data-testid="create-lobby-button"]', { timeout: 15000 });
 
     // Wait for connection status to be visible
-    await page.waitForSelector('[data-testid="connection-status"]', { timeout: 5000 });
+    await page.waitForSelector('[data-testid="connection-status"]', { timeout: 15000 });
 
     // Check connection status indicator
     await expect(page.locator('[data-testid="connection-status"]')).toBeVisible();

@@ -8,6 +8,29 @@ import { TestDataManager } from './test-data-manager';
 export class TestHelpers {
   private static dataManager = TestDataManager.getInstance();
 
+  private static async ensureAuthForm(page: Page): Promise<void> {
+    await page.goto('/');
+    await page.waitForLoadState('domcontentloaded');
+
+    const authTabs = page.locator('[data-testid="register-tab"], [data-testid="login-tab"]');
+    if ((await authTabs.count()) > 0 && await authTabs.first().isVisible()) {
+      return;
+    }
+
+    const authenticatedContent = page.locator('[data-testid="create-lobby-button"], [data-testid="welcome-message"]');
+    if ((await authenticatedContent.count()) > 0 && await authenticatedContent.first().isVisible()) {
+      await page.click('[data-testid="logout-button"]');
+    }
+
+    await page.evaluate(() => {
+      localStorage.clear();
+      sessionStorage.clear();
+    });
+    await page.reload();
+    await page.waitForLoadState('domcontentloaded');
+    await page.waitForSelector('[data-testid="register-tab"], [data-testid="login-tab"]', { timeout: 15000 });
+  }
+
   /**
    * Authentication helpers
    */
@@ -20,12 +43,9 @@ export class TestHelpers {
     
     try {
       const user = TestDataGenerator.generateUser(userData);
-      
-      await page.goto('/');
-      await page.waitForLoadState('networkidle');
-      
-      // Navigate to registration
-      await page.click('text=Register', { timeout: 5000 });
+
+      await this.ensureAuthForm(page);
+      await page.click('[data-testid="register-tab"]');
       
       // Fill registration form
       await page.fill('[data-testid="username-input"]', user.username);
@@ -90,8 +110,8 @@ export class TestHelpers {
     const { takeScreenshot = false, timeout = 10000 } = options;
     
     try {
-      await page.goto('/');
-      await page.click('text=Login');
+      await this.ensureAuthForm(page);
+      await page.click('[data-testid="login-tab"]');
       
       await page.fill('[data-testid="username-input"]', user.username);
       await page.fill('[data-testid="password-input"]', user.password);

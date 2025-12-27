@@ -12,7 +12,7 @@ fi
 IMAGE=${IMAGE:-vllm/vllm-openai:latest}
 PLATFORM=${PLATFORM:-linux/amd64}
 PORT=${PORT:-8888}
-MODEL=${MODEL:-Qwen/Qwen3-0.6B}
+MODEL=${MODEL:-Qwen/Qwen2.5-Coder-1.5B}
 
 # Check for HF_TOKEN
 if [ -z "$HF_TOKEN" ]; then

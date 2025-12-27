@@ -45,6 +45,7 @@ describe('ApiService Perks Methods', () => {
       const result = await apiService.getAllPerks();
 
       expect(mockFetch).toHaveBeenCalledWith('/api/perks/all', {
+        credentials: 'include',
         headers: {
           'Authorization': `Bearer ${mockToken}`,
           'Content-Type': 'application/json'
@@ -110,6 +111,7 @@ describe('ApiService Perks Methods', () => {
       const result = await apiService.getUserPerks();
 
       expect(mockFetch).toHaveBeenCalledWith('/api/perks/user', {
+        credentials: 'include',
         headers: {
           'Authorization': `Bearer ${mockToken}`,
           'Content-Type': 'application/json'
@@ -136,6 +138,7 @@ describe('ApiService Perks Methods', () => {
       const result = await apiService.unlockPerk(perkId);
 
       expect(mockFetch).toHaveBeenCalledWith(`/api/perks/unlock/${perkId}`, {
+        credentials: 'include',
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${mockToken}`,
@@ -182,6 +185,7 @@ describe('ApiService Perks Methods', () => {
       const result = await apiService.activatePerk(perkId, configuration);
 
       expect(mockFetch).toHaveBeenCalledWith(`/api/perks/activate/${perkId}`, {
+        credentials: 'include',
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${mockToken}`,
@@ -209,6 +213,7 @@ describe('ApiService Perks Methods', () => {
       const result = await apiService.activatePerk(perkId);
 
       expect(mockFetch).toHaveBeenCalledWith(`/api/perks/activate/${perkId}`, {
+        credentials: 'include',
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${mockToken}`,
@@ -254,6 +259,7 @@ describe('ApiService Perks Methods', () => {
       const result = await apiService.deactivatePerk(perkId);
 
       expect(mockFetch).toHaveBeenCalledWith(`/api/perks/deactivate/${perkId}`, {
+        credentials: 'include',
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${mockToken}`,
@@ -305,6 +311,7 @@ describe('ApiService Perks Methods', () => {
       const result = await apiService.getUserLoadout();
 
       expect(mockFetch).toHaveBeenCalledWith('/api/perks/loadout', {
+        credentials: 'include',
         headers: {
           'Authorization': `Bearer ${mockToken}`,
           'Content-Type': 'application/json'
@@ -362,6 +369,7 @@ describe('ApiService Perks Methods', () => {
       const result = await apiService.getPerksByCategory(category);
 
       expect(mockFetch).toHaveBeenCalledWith(`/api/perks/category/${category}`, {
+        credentials: 'include',
         headers: {
           'Authorization': `Bearer ${mockToken}`,
           'Content-Type': 'application/json'
@@ -404,6 +412,7 @@ describe('ApiService Perks Methods', () => {
       const result = await apiService.checkPerkUnlocks();
 
       expect(mockFetch).toHaveBeenCalledWith('/api/perks/check-unlocks', {
+        credentials: 'include',
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${mockToken}`,

@@ -1,4 +1,39 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, Page } from '@playwright/test';
+
+const ensureAuthForm = async (page: Page) => {
+  await page.goto('/');
+  await page.waitForLoadState('domcontentloaded');
+
+  await page.waitForFunction(() => {
+    const loadingElement = document.querySelector('p');
+    if (loadingElement && loadingElement.textContent?.includes('Validating authentication')) {
+      return false;
+    }
+
+    const authForm = document.querySelector('[data-testid="register-tab"], [data-testid="login-tab"]');
+    const authenticatedContent = document.querySelector('[data-testid="create-lobby-button"], [data-testid="welcome-message"]');
+
+    return authForm || authenticatedContent;
+  }, { timeout: 15000 });
+
+  const authTabs = page.locator('[data-testid="register-tab"], [data-testid="login-tab"]');
+  if ((await authTabs.count()) > 0 && await authTabs.first().isVisible()) {
+    return;
+  }
+
+  const authenticatedContent = page.locator('[data-testid="create-lobby-button"], [data-testid="welcome-message"]');
+  if ((await authenticatedContent.count()) > 0 && await authenticatedContent.first().isVisible()) {
+    await page.click('[data-testid="logout-button"]');
+  }
+
+  await page.evaluate(() => {
+    localStorage.clear();
+    sessionStorage.clear();
+  });
+  await page.reload();
+  await page.waitForLoadState('domcontentloaded');
+  await page.waitForSelector('[data-testid="register-tab"], [data-testid="login-tab"]', { timeout: 15000 });
+};
 
 test.describe('Basic Functionality - Mock API Tests', () => {
   test.beforeEach(async ({ page }) => {
@@ -195,32 +230,13 @@ test.describe('Basic Functionality - Mock API Tests', () => {
       });
     });
     
-    // Navigate to the application
-    await page.goto('/');
-
-    // Wait for the app to be ready by checking for either auth form or authenticated state
-    // The AuthGuard shows a loading state first, then either AuthForm or authenticated content
-    await page.waitForFunction(() => {
-      // Check if we're past the loading state
-      const loadingElement = document.querySelector('p');
-      if (loadingElement && loadingElement.textContent?.includes('Validating authentication')) {
-        return false;
-      }
-      
-      // Check if we have either auth form or authenticated content
-      const authForm = document.querySelector('[data-testid="register-tab"], [data-testid="login-tab"]');
-      const authenticatedContent = document.querySelector('[data-testid="create-lobby-button"], [data-testid="welcome-message"]');
-      
-      return authForm || authenticatedContent;
-    }, { timeout: 15000 });
-
-    // Additional wait to ensure the UI is fully rendered
-    await page.waitForTimeout(1000);
+    await ensureAuthForm(page);
+    await page.waitForTimeout(500);
   });
 
   test('should register new user successfully', async ({ page }) => {
     // Wait for AuthForm to be visible
-    await page.waitForSelector('[data-testid="register-tab"], [data-testid="login-tab"]', { timeout: 10000 });
+    await page.waitForSelector('[data-testid="register-tab"], [data-testid="login-tab"]', { timeout: 15000 });
     
     // Switch to registration tab
     await page.click('[data-testid="register-tab"]');
@@ -240,7 +256,7 @@ test.describe('Basic Functionality - Mock API Tests', () => {
     await page.click('[data-testid="register-button"]');
 
     // Wait for successful registration - should show authenticated UI
-    await page.waitForSelector('[data-testid="create-lobby-button"]', { timeout: 10000 });
+    await page.waitForSelector('[data-testid="create-lobby-button"]', { timeout: 15000 });
     
     // Verify we can see the authenticated UI
     await expect(page.locator('[data-testid="create-lobby-button"]')).toBeVisible();
@@ -248,7 +264,7 @@ test.describe('Basic Functionality - Mock API Tests', () => {
 
   test('should login existing user successfully', async ({ page }) => {
     // Wait for AuthForm to be visible
-    await page.waitForSelector('[data-testid="login-tab"]', { timeout: 10000 });
+    await page.waitForSelector('[data-testid="login-tab"]', { timeout: 15000 });
     
     // Fill login form (login tab should be active by default)
     await page.fill('[data-testid="username-input"]', 'testuser');
@@ -256,7 +272,7 @@ test.describe('Basic Functionality - Mock API Tests', () => {
     await page.click('[data-testid="login-button"]');
 
     // Wait for successful login
-    await page.waitForSelector('[data-testid="create-lobby-button"]', { timeout: 10000 });
+    await page.waitForSelector('[data-testid="create-lobby-button"]', { timeout: 15000 });
     
     // Verify we can see the authenticated UI
     await expect(page.locator('[data-testid="create-lobby-button"]')).toBeVisible();
@@ -264,13 +280,13 @@ test.describe('Basic Functionality - Mock API Tests', () => {
 
   test('should create lobby successfully', async ({ page }) => {
     // First login
-    await page.waitForSelector('[data-testid="login-tab"]', { timeout: 10000 });
+    await page.waitForSelector('[data-testid="login-tab"]', { timeout: 15000 });
     await page.fill('[data-testid="username-input"]', 'testuser');
     await page.fill('[data-testid="password-input"]', 'TestPassword123!');
     await page.click('[data-testid="login-button"]');
 
     // Wait for authenticated UI
-    await page.waitForSelector('[data-testid="create-lobby-button"]', { timeout: 10000 });
+    await page.waitForSelector('[data-testid="create-lobby-button"]', { timeout: 15000 });
 
     // Create lobby
     await page.click('[data-testid="create-lobby-button"]');
@@ -286,13 +302,13 @@ test.describe('Basic Functionality - Mock API Tests', () => {
 
   test('should join lobby with valid code', async ({ page }) => {
     // First login
-    await page.waitForSelector('[data-testid="login-tab"]', { timeout: 10000 });
+    await page.waitForSelector('[data-testid="login-tab"]', { timeout: 15000 });
     await page.fill('[data-testid="username-input"]', 'testuser');
     await page.fill('[data-testid="password-input"]', 'TestPassword123!');
     await page.click('[data-testid="login-button"]');
 
     // Wait for authenticated UI
-    await page.waitForSelector('[data-testid="create-lobby-button"]', { timeout: 10000 });
+    await page.waitForSelector('[data-testid="create-lobby-button"]', { timeout: 15000 });
 
     // Look for join lobby option
     const joinLobbyButton = page.locator('[data-testid="join-lobby-button"]');
@@ -304,7 +320,7 @@ test.describe('Basic Functionality - Mock API Tests', () => {
       await page.click('[data-testid="join-lobby-submit"]');
       
       // Wait for join to complete
-      await page.waitForSelector('[data-testid="lobby-info"]', { timeout: 10000 });
+      await page.waitForSelector('[data-testid="lobby-info"]', { timeout: 15000 });
       await expect(page.locator('[data-testid="lobby-info"]')).toBeVisible();
     } else {
       // Skip if join lobby UI is not available

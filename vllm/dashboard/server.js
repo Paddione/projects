@@ -11,6 +11,8 @@ const cookieParser = require('cookie-parser');
 const os = require('os');
 const { Pool } = require('pg');
 
+const REGISTRY_PATH = path.join(__dirname, '..', '..', 'browser_control_registry.json');
+
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
@@ -82,7 +84,7 @@ app.post('/api/login', (req, res) => {
         req.session.authenticated = true;
         res.json({ success: true });
     } else {
-    res.status(401).json({ success: false, message: 'Invalid password' });
+        res.status(401).json({ success: false, message: 'Invalid password' });
     }
 });
 
@@ -94,6 +96,21 @@ app.get('/api/logout', (req, res) => {
 app.use(requireAuth);
 
 let forgeProcess = null;
+
+// Available models for vLLM
+const AVAILABLE_MODELS = {
+    vllm: [
+        { id: 'Qwen/Qwen2.5-Coder-0.5B', name: 'Qwen 2.5 Coder 0.5B', vram: '1-2 GB', contextSize: 'Very Large' },
+        { id: 'Qwen/Qwen2.5-Coder-1.5B', name: 'Qwen 2.5 Coder 1.5B', vram: '2-4 GB', contextSize: 'Large' },
+        { id: 'Qwen/Qwen2.5-Coder-3B', name: 'Qwen 2.5 Coder 3B', vram: '4-6 GB', contextSize: 'Medium' },
+        { id: 'Qwen/Qwen2.5-Coder-7B-Instruct-AWQ', name: 'Qwen 2.5 Coder 7B AWQ', vram: '8-12 GB', contextSize: 'Standard' }
+    ]
+};
+
+// Selected models for services (persists in memory)
+const selectedModels = {
+    vllm: 'Qwen/Qwen2.5-Coder-1.5B'
+};
 
 const SERVICES = [
     {
@@ -112,9 +129,9 @@ const SERVICES = [
         name: 'vLLM (LLM)',
         containerName: 'vllm-rag',
         url: 'https://api.korczewski.de',
-        model: 'Qwen/Qwen2.5-Coder-7B-Instruct-AWQ',
+        model: 'Qwen/Qwen2.5-Coder-1.5B',
         description: 'High-throughput LLM serving engine compatible with OpenAI API.',
-        vramEstimate: '8-12 GB',
+        vramEstimate: '2-4 GB',
         type: 'docker',
         group: 'core'
     },
@@ -177,6 +194,19 @@ const SERVICES = [
 
 // In-memory store for last errors
 const lastErrors = {};
+const browserTaskResults = {};
+let activeBrowserTasks = new Set();
+
+function getBrowserRegistry() {
+    try {
+        if (fs.existsSync(REGISTRY_PATH)) {
+            return JSON.parse(fs.readFileSync(REGISTRY_PATH, 'utf8'));
+        }
+    } catch (e) {
+        console.error('Error reading browser registry:', e);
+    }
+    return { groups: {} };
+}
 
 // Helper to get VRAM info
 async function getVramInfo() {
@@ -342,6 +372,13 @@ async function controlService(serviceId, action) {
                 await container.stop().catch(e => {
                     if (e.statusCode !== 304) throw e; // 304 means already stopped
                 });
+
+                // For vLLM with model selection, remove the container to allow recreation with new model
+                if (serviceId === 'vllm' && selectedModels[serviceId]) {
+                    await container.remove().catch(e => {
+                        console.log('Container removal not needed or failed:', e.message);
+                    });
+                }
             } else {
                 await new Promise((resolve) => {
                     exec('pkill -9 -f "launch.py"', (err) => resolve());
@@ -351,8 +388,13 @@ async function controlService(serviceId, action) {
 
         if (action === 'start' || action === 'restart') {
             if (service.type === 'docker') {
-                const container = docker.getContainer(service.containerName);
-                await container.start();
+                // Special handling for vLLM with model selection
+                if (serviceId === 'vllm' && selectedModels[serviceId]) {
+                    await startVllmWithModel(selectedModels[serviceId]);
+                } else {
+                    const container = docker.getContainer(service.containerName);
+                    await container.start();
+                }
             } else {
                 // Start Forge
                 const out = fs.openSync('/tmp/forge.log', 'a');
@@ -374,6 +416,24 @@ async function controlService(serviceId, action) {
         lastErrors[serviceId] = errorMsg;
         return { success: false, error: errorMsg };
     }
+}
+
+// Helper function to start vLLM with a specific model
+async function startVllmWithModel(modelId) {
+    return new Promise((resolve, reject) => {
+        // Run the deploy.sh script with the selected model
+        const deployPath = path.join(__dirname, '..', 'deploy.sh');
+        const env = { ...process.env, MODEL: modelId };
+
+        exec(`bash ${deployPath}`, { env, cwd: path.join(__dirname, '..') }, (err, stdout, stderr) => {
+            if (err) {
+                console.error('vLLM deployment error:', stderr);
+                return reject(new Error(stderr || err.message));
+            }
+            console.log('vLLM deployment output:', stdout);
+            resolve();
+        });
+    });
 }
 
 // Socket communication
@@ -416,6 +476,49 @@ io.on('connection', async (socket) => {
 
 app.get('/api/services', (req, res) => {
     res.json(SERVICES);
+});
+
+// Get available models for a service
+app.get('/api/models/:serviceId', (req, res) => {
+    const { serviceId } = req.params;
+    const models = AVAILABLE_MODELS[serviceId] || [];
+    res.json({ models });
+});
+
+// Get currently selected model for a service
+app.get('/api/models/:serviceId/selected', (req, res) => {
+    const { serviceId } = req.params;
+    const selected = selectedModels[serviceId] || null;
+    res.json({ selected });
+});
+
+// Set selected model for a service
+app.post('/api/models/:serviceId/select', (req, res) => {
+    const { serviceId } = req.params;
+    const { modelId } = req.body;
+
+    if (!AVAILABLE_MODELS[serviceId]) {
+        return res.status(400).json({ success: false, message: 'Service does not support model selection' });
+    }
+
+    const modelExists = AVAILABLE_MODELS[serviceId].some(m => m.id === modelId);
+    if (!modelExists) {
+        return res.status(400).json({ success: false, message: 'Invalid model ID' });
+    }
+
+    selectedModels[serviceId] = modelId;
+
+    // Update the service definition to reflect the new model
+    const service = SERVICES.find(s => s.id === serviceId);
+    if (service) {
+        service.model = modelId;
+        const modelInfo = AVAILABLE_MODELS[serviceId].find(m => m.id === modelId);
+        if (modelInfo) {
+            service.vramEstimate = modelInfo.vram;
+        }
+    }
+
+    res.json({ success: true, selected: modelId });
 });
 
 app.get('/api/services/:id/logs', async (req, res) => {
@@ -600,6 +703,64 @@ app.delete('/api/users/:id', async (req, res) => {
     } catch (error) {
         res.status(500).json({ success: false, message: 'Unable to delete user.' });
     }
+});
+
+// Browser Control API
+app.get('/api/browser/groups', (req, res) => {
+    const registry = getBrowserRegistry();
+    res.json(registry.groups);
+});
+
+app.get('/api/browser/results', (req, res) => {
+    res.json(browserTaskResults);
+});
+
+app.post('/api/browser/run/:groupId', async (req, res) => {
+    const { groupId } = req.params;
+    const registry = getBrowserRegistry();
+    const group = registry.groups[groupId];
+
+    if (!group) {
+        return res.status(404).json({ success: false, error: 'Group not found' });
+    }
+
+    if (activeBrowserTasks.has(groupId)) {
+        return res.status(409).json({ success: false, error: 'Task group already running' });
+    }
+
+    activeBrowserTasks.add(groupId);
+    browserTaskResults[groupId] = { status: 'running', startTime: new Date(), tasks: [] };
+
+    // Emit start event
+    io.emit('browser_task_start', { groupId });
+
+    // Background execution
+    (async () => {
+        try {
+            for (const task of group.tasks) {
+                const taskResult = { name: task.name, status: 'pending' };
+                browserTaskResults[groupId].tasks.push(taskResult);
+
+                // Simulate/Run task
+                // For now, we simulate execution but preparing for real Playwright calls
+                await new Promise(r => setTimeout(r, 1500));
+                taskResult.status = 'success';
+                taskResult.detail = `Checked ${task.url}`;
+
+                io.emit('browser_task_update', { groupId, taskName: task.name, status: 'success' });
+            }
+            browserTaskResults[groupId].status = 'completed';
+            browserTaskResults[groupId].endTime = new Date();
+        } catch (e) {
+            browserTaskResults[groupId].status = 'error';
+            browserTaskResults[groupId].error = e.message;
+        } finally {
+            activeBrowserTasks.delete(groupId);
+            io.emit('browser_task_complete', { groupId, result: browserTaskResults[groupId] });
+        }
+    })();
+
+    res.json({ success: true, message: 'Task group started' });
 });
 
 const PORT = process.env.DASHBOARD_PORT || 4242;

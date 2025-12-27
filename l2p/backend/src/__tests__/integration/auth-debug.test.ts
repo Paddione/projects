@@ -1,12 +1,34 @@
-import { describe, it, expect } from '@jest/globals';
+import { describe, beforeAll, afterAll, it, expect } from '@jest/globals';
+import { createServer, Server } from 'http';
 import request from 'supertest';
 import { AuthService, TokenPayload } from '../../services/AuthService.js';
 import { app } from '../../server.js';
 
 describe('Auth Debug Tests', () => {
+  let server: Server;
+  let api: ReturnType<typeof request>;
+
+  beforeAll(async () => {
+    server = createServer(app);
+    await new Promise<void>((resolve, reject) => {
+      const onError = (error: Error) => reject(error);
+      server.once('error', onError);
+      server.listen(0, '127.0.0.1', () => {
+        server.off('error', onError);
+        resolve();
+      });
+    });
+    api = request(server);
+  });
+
+  afterAll(async () => {
+    if (!server) return;
+    await new Promise<void>(resolve => server.close(() => resolve()));
+  });
+
   it('should test admin endpoint without JWT token (expect 401)', async () => {
     // Test admin endpoint without token - should get 401
-    const response = await request(app)
+    const response = await api
       .get('/api/admin/info');
 
     console.log('Response status (no token):', response.status);
@@ -17,7 +39,7 @@ describe('Auth Debug Tests', () => {
 
   it('should test admin endpoint with invalid JWT token (expect 401)', async () => {
     // Test admin endpoint with invalid token - should get 401
-    const response = await request(app)
+    const response = await api
       .get('/api/admin/info')
       .set('Authorization', 'Bearer invalid-token');
 
@@ -47,7 +69,7 @@ describe('Auth Debug Tests', () => {
     console.log('Token preview:', token.substring(0, 50) + '...');
 
     // Test with mock JWT token
-    const response = await request(app)
+    const response = await api
       .get('/api/admin/info')
       .set('Authorization', `Bearer ${token}`);
 

@@ -1,0 +1,76 @@
+{
+    "name": "Antigravity Browser Control Model (BCM)",
+    "version": "1.0.0",
+    "groups": {
+        "health_check": {
+            "id": "health_check",
+            "description": "Rapid pulse check of all service UIs",
+            "tasks": [
+                {
+                    "name": "L2P Frontend",
+                    "url": "http://localhost:5173",
+                    "expected": "h1:contains('Learn2Play')"
+                },
+                {
+                    "name": "VideoVault UI",
+                    "url": "http://localhost:5100",
+                    "expected": "title:contains('VideoVault')"
+                },
+                {
+                    "name": "Payment Portal",
+                    "url": "http://localhost:3004",
+                    "expected": "button:contains('Get Started')"
+                },
+                {
+                    "name": "VRAM Dashboard",
+                    "url": "http://localhost:4242",
+                    "expected": "h1:contains('VRAM')"
+                }
+            ]
+        },
+        "auth_flow": {
+            "id": "auth_flow",
+            "description": "End-to-end authentication verification",
+            "tasks": [
+                {
+                    "name": "Login to L2P",
+                    "url": "http://localhost:5173/login",
+                    "steps": [
+                        "type email",
+                        "type password",
+                        "click submit"
+                    ]
+                },
+                {
+                    "name": "Check Session on Payment",
+                    "url": "http://localhost:3004/profile",
+                    "expected": "text:contains('Welcome')"
+                }
+            ]
+        },
+        "vllm_group": {
+            "id": "vllm_group",
+            "description": "Tasks specific to vLLM project",
+            "tasks": [
+                {
+                    "name": "RAG Verification",
+                    "url": "http://localhost:4242/rag",
+                    "expected": "div:contains('Search')"
+                },
+                {
+                    "name": "Dashboard Services",
+                    "url": "http://localhost:4242",
+                    "expected": "div.service-card"
+                }
+            ]
+        }
+    },
+    "configurations": {
+        "headless": true,
+        "viewport": {
+            "width": 1280,
+            "height": 720
+        },
+        "timeout": 30000
+    }
+}

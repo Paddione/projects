@@ -270,7 +270,24 @@ export class TestDataManager {
    */
   private async registerUser(page: Page, user: UserData): Promise<void> {
     await page.goto('/');
-    await page.click('text=Register');
+    await page.waitForLoadState('domcontentloaded');
+
+    const authTabs = page.locator('[data-testid="register-tab"], [data-testid="login-tab"]');
+    if (!(await authTabs.first().isVisible())) {
+      const authenticatedContent = page.locator('[data-testid="create-lobby-button"], [data-testid="welcome-message"]');
+      if (await authenticatedContent.first().isVisible()) {
+        await page.click('[data-testid="logout-button"]');
+      }
+      await page.evaluate(() => {
+        localStorage.clear();
+        sessionStorage.clear();
+      });
+      await page.reload();
+      await page.waitForLoadState('domcontentloaded');
+    }
+
+    await page.waitForSelector('[data-testid="register-tab"]', { timeout: 15000 });
+    await page.click('[data-testid="register-tab"]');
     
     await page.fill('[data-testid="username-input"]', user.username);
     await page.fill('[data-testid="email-input"]', user.email);

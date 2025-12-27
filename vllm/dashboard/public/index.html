@@ -27,6 +27,7 @@
             </div>
             <div class="header-actions">
                 <div id="connection-status" class="status-badge running">Connected</div>
+                <button id="browser-hub-toggle" class="status-pill">BROWSER HUB</button>
                 <button id="user-admin-toggle" class="status-pill">USER ADMIN</button>
                 <button id="logout-btn" class="status-pill">LOGOUT</button>
             </div>
@@ -155,6 +156,27 @@
         </div>
     </div>
     <div id="user-admin-backdrop" class="user-admin-backdrop"></div>
+
+    <div id="browser-hub-panel" class="browser-hub-panel">
+        <div class="browser-hub-header">
+            <div>
+                <div class="section-eyebrow">Modular Automation</div>
+                <h2>Browser Control Hub</h2>
+            </div>
+            <button id="browser-hub-close" class="icon-btn">✕</button>
+        </div>
+        <div class="browser-hub-intro">
+            Orchestrate browser tasks across the entire monorepo. Run health checks, auth flows, and cross-project scenarios in "Smaller Groups".
+        </div>
+        <div id="browser-groups-list" class="browser-groups-list">
+            <div class="loading-dots">...</div>
+        </div>
+        <div id="browser-task-detail" class="browser-task-detail hidden">
+            <div class="section-eyebrow" id="current-task-group-name">Running: --</div>
+            <div id="current-task-list" class="current-task-list"></div>
+        </div>
+    </div>
+    <div id="browser-hub-backdrop" class="user-admin-backdrop"></div>
 
     <script src="app.js"></script>
 </body>

@@ -5,18 +5,22 @@ const runtimeEnv = (() => {
   if (typeof globalThis !== 'undefined' && (globalThis as any).importMetaEnv) {
     return (globalThis as any).importMetaEnv as Record<string, any>
   }
-  try {
-    
-const env = import.meta.env;
-return env;
-  } catch {
-    const globalProcess = typeof globalThis !== 'undefined' ? (globalThis as any).process : undefined
-    const nodeEnv = globalProcess?.env?.NODE_ENV
 
-    return {
-      MODE: nodeEnv ?? 'development',
-      PROD: nodeEnv === 'production'
+  try {
+    const importMeta = eval('typeof import !== "undefined" ? import.meta : undefined')
+    if (importMeta?.env) {
+      return importMeta.env as Record<string, any>
     }
+  } catch {
+    // Fall through to Node env fallback.
+  }
+
+  const globalProcess = typeof globalThis !== 'undefined' ? (globalThis as any).process : undefined
+  const nodeEnv = globalProcess?.env?.NODE_ENV
+
+  return {
+    MODE: nodeEnv ?? 'development',
+    PROD: nodeEnv === 'production'
   }
 })()
 

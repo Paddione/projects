@@ -347,7 +347,7 @@ describe('UserRepository', () => {
         const result = await userRepository.findByUsername('testuser');
 
         expect(mockDb.query).toHaveBeenCalledWith(
-          'SELECT * FROM users WHERE username = $1',
+          'SELECT * FROM users WHERE LOWER(username) = LOWER($1)',
           ['testuser']
         );
         expect(result).toEqual(mockUser);
@@ -359,7 +359,7 @@ describe('UserRepository', () => {
         const result = await userRepository.findByUsername('nonexistent');
 
         expect(mockDb.query).toHaveBeenCalledWith(
-          'SELECT * FROM users WHERE username = $1',
+          'SELECT * FROM users WHERE LOWER(username) = LOWER($1)',
           ['nonexistent']
         );
         expect(result).toBeNull();
@@ -371,7 +371,7 @@ describe('UserRepository', () => {
         await userRepository.findByUsername('TestUser');
 
         expect(mockDb.query).toHaveBeenCalledWith(
-          'SELECT * FROM users WHERE username = $1',
+          'SELECT * FROM users WHERE LOWER(username) = LOWER($1)',
           ['TestUser']
         );
       });
@@ -384,7 +384,7 @@ describe('UserRepository', () => {
         const result = await userRepository.findByEmail('test@example.com');
 
         expect(mockDb.query).toHaveBeenCalledWith(
-          'SELECT * FROM users WHERE email = $1',
+          'SELECT * FROM users WHERE LOWER(email) = LOWER($1)',
           ['test@example.com']
         );
         expect(result).toEqual(mockUser);
@@ -396,7 +396,7 @@ describe('UserRepository', () => {
         const result = await userRepository.findByEmail('nonexistent@example.com');
 
         expect(mockDb.query).toHaveBeenCalledWith(
-          'SELECT * FROM users WHERE email = $1',
+          'SELECT * FROM users WHERE LOWER(email) = LOWER($1)',
           ['nonexistent@example.com']
         );
         expect(result).toBeNull();
@@ -408,7 +408,7 @@ describe('UserRepository', () => {
         await userRepository.findByEmail('TEST@EXAMPLE.COM');
 
         expect(mockDb.query).toHaveBeenCalledWith(
-          'SELECT * FROM users WHERE email = $1',
+          'SELECT * FROM users WHERE LOWER(email) = LOWER($1)',
           ['TEST@EXAMPLE.COM']
         );
       });
@@ -1094,7 +1094,7 @@ describe('UserRepository', () => {
       await userRepository.findByEmail('invalid-email-format');
 
       expect(mockDb.query).toHaveBeenCalledWith(
-        'SELECT * FROM users WHERE email = $1',
+        'SELECT * FROM users WHERE LOWER(email) = LOWER($1)',
         ['invalid-email-format']
       );
     });
@@ -1106,7 +1106,7 @@ describe('UserRepository', () => {
       await userRepository.findByUsername(specialUsername);
 
       expect(mockDb.query).toHaveBeenCalledWith(
-        'SELECT * FROM users WHERE username = $1',
+        'SELECT * FROM users WHERE LOWER(username) = LOWER($1)',
         [specialUsername]
       );
     });
@@ -1118,7 +1118,7 @@ describe('UserRepository', () => {
       await userRepository.findByUsername(unicodeUsername);
 
       expect(mockDb.query).toHaveBeenCalledWith(
-        'SELECT * FROM users WHERE username = $1',
+        'SELECT * FROM users WHERE LOWER(username) = LOWER($1)',
         [unicodeUsername]
       );
     });
@@ -1130,7 +1130,7 @@ describe('UserRepository', () => {
       await userRepository.findByUsername(longUsername);
 
       expect(mockDb.query).toHaveBeenCalledWith(
-        'SELECT * FROM users WHERE username = $1',
+        'SELECT * FROM users WHERE LOWER(username) = LOWER($1)',
         [longUsername]
       );
     });

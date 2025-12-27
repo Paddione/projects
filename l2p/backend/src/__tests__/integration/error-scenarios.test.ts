@@ -1,9 +1,12 @@
 import { describe, beforeAll, afterAll, it, expect } from '@jest/globals';
+import { createServer, Server } from 'http';
 import request from 'supertest';
 import express from 'express';
 
 describe('Error Handling Scenarios', () => {
   let app: express.Application;
+  let server: Server;
+  let api: ReturnType<typeof request>;
 
   beforeAll(async () => {
     // Create a simple test app for error scenario tests
@@ -28,11 +31,27 @@ describe('Error Handling Scenarios', () => {
     app.get('/api/test/not-found', (req, res) => {
       res.status(404).json({ error: 'Resource not found' });
     });
+
+    server = createServer(app);
+    await new Promise<void>((resolve, reject) => {
+      const onError = (error: Error) => reject(error);
+      server.once('error', onError);
+      server.listen(0, '127.0.0.1', () => {
+        server.off('error', onError);
+        resolve();
+      });
+    });
+    api = request(server);
+  });
+
+  afterAll(async () => {
+    if (!server) return;
+    await new Promise<void>(resolve => server.close(() => resolve()));
   });
 
   describe('Database Connection Errors', () => {
     it('should handle database connection timeout', async () => {
-      const response = await request(app)
+      const response = await api
         .get('/api/test/db-error');
 
       expect(response.status).toBe(500);
@@ -40,7 +59,7 @@ describe('Error Handling Scenarios', () => {
     });
 
     it('should handle database query errors', async () => {
-      const response = await request(app)
+      const response = await api
         .get('/api/test/db-error');
 
       expect(response.status).toBe(500);
@@ -48,7 +67,7 @@ describe('Error Handling Scenarios', () => {
     });
 
     it('should handle transaction rollback on error', async () => {
-      const response = await request(app)
+      const response = await api
         .get('/api/test/db-error');
 
       expect(response.status).toBe(500);
@@ -56,9 +75,7 @@ describe('Error Handling Scenarios', () => {
     });
 
     it('should handle concurrent database operations', async () => {
-      const promises = Array.from({ length: 5 }, () =>
-        request(app).get('/api/test/db-error')
-      );
+      const promises = Array.from({ length: 5 }, () => api.get('/api/test/db-error'));
 
       const responses = await Promise.all(promises);
       
@@ -71,7 +88,7 @@ describe('Error Handling Scenarios', () => {
 
   describe('Authentication and Authorization Errors', () => {
     it('should handle expired JWT tokens', async () => {
-      const response = await request(app)
+      const response = await api
         .get('/api/test/auth-error');
 
       expect(response.status).toBe(401);
@@ -79,7 +96,7 @@ describe('Error Handling Scenarios', () => {
     });
 
     it('should handle malformed JWT tokens', async () => {
-      const response = await request(app)
+      const response = await api
         .get('/api/test/auth-error');
 
       expect(response.status).toBe(401);
@@ -87,7 +104,7 @@ describe('Error Handling Scenarios', () => {
     });
 
     it('should handle missing authorization header', async () => {
-      const response = await request(app)
+      const response = await api
         .get('/api/test/auth-error');
 
       expect(response.status).toBe(401);
@@ -95,7 +112,7 @@ describe('Error Handling Scenarios', () => {
     });
 
     it('should handle user not found scenarios', async () => {
-      const response = await request(app)
+      const response = await api
         .get('/api/test/not-found');
 
       expect(response.status).toBe(404);
@@ -103,7 +120,7 @@ describe('Error Handling Scenarios', () => {
     });
 
     it('should handle insufficient permissions', async () => {
-      const response = await request(app)
+      const response = await api
         .get('/api/test/auth-error');
 
       expect(response.status).toBe(401);
@@ -113,7 +130,7 @@ describe('Error Handling Scenarios', () => {
 
   describe('Input Validation Errors', () => {
     it('should handle SQL injection attempts', async () => {
-      const response = await request(app)
+      const response = await api
         .get('/api/test/validation-error');
 
       expect(response.status).toBe(400);
@@ -121,7 +138,7 @@ describe('Error Handling Scenarios', () => {
     });
 
     it('should handle XSS attempts in input', async () => {
-      const response = await request(app)
+      const response = await api
         .get('/api/test/validation-error');
 
       expect(response.status).toBe(400);
@@ -129,7 +146,7 @@ describe('Error Handling Scenarios', () => {
     });
 
     it('should handle extremely large payloads', async () => {
-      const response = await request(app)
+      const response = await api
         .get('/api/test/validation-error');
 
       expect(response.status).toBe(400);
@@ -137,7 +154,7 @@ describe('Error Handling Scenarios', () => {
     });
 
     it('should handle invalid JSON payloads', async () => {
-      const response = await request(app)
+      const response = await api
         .get('/api/test/validation-error');
 
       expect(response.status).toBe(400);
@@ -145,7 +162,7 @@ describe('Error Handling Scenarios', () => {
     });
 
     it('should handle null and undefined values', async () => {
-      const response = await request(app)
+      const response = await api
         .get('/api/test/validation-error');
 
       expect(response.status).toBe(400);
@@ -155,7 +172,7 @@ describe('Error Handling Scenarios', () => {
 
   describe('Business Logic Errors', () => {
     it('should handle joining full lobby', async () => {
-      const response = await request(app)
+      const response = await api
         .get('/api/test/validation-error');
 
       expect(response.status).toBe(400);
@@ -163,7 +180,7 @@ describe('Error Handling Scenarios', () => {
     });
 
     it('should handle joining non-existent lobby', async () => {
-      const response = await request(app)
+      const response = await api
         .get('/api/test/not-found');
 
       expect(response.status).toBe(404);
@@ -171,7 +188,7 @@ describe('Error Handling Scenarios', () => {
     });
 
     it('should handle starting game without enough players', async () => {
-      const response = await request(app)
+      const response = await api
         .get('/api/test/validation-error');
 
       expect(response.status).toBe(400);
@@ -179,7 +196,7 @@ describe('Error Handling Scenarios', () => {
     });
 
     it('should handle answering after time limit', async () => {
-      const response = await request(app)
+      const response = await api
         .get('/api/test/validation-error');
 
       expect(response.status).toBe(400);
@@ -189,7 +206,7 @@ describe('Error Handling Scenarios', () => {
 
   describe('Rate Limiting Errors', () => {
     it('should handle rapid registration attempts', async () => {
-      const response = await request(app)
+      const response = await api
         .get('/api/test/validation-error');
 
       expect(response.status).toBe(400);
@@ -197,7 +214,7 @@ describe('Error Handling Scenarios', () => {
     });
 
     it('should handle rapid lobby creation attempts', async () => {
-      const response = await request(app)
+      const response = await api
         .get('/api/test/validation-error');
 
       expect(response.status).toBe(400);
@@ -207,7 +224,7 @@ describe('Error Handling Scenarios', () => {
 
   describe('Memory and Resource Errors', () => {
     it('should handle memory exhaustion gracefully', async () => {
-      const response = await request(app)
+      const response = await api
         .get('/api/test/db-error');
 
       expect(response.status).toBe(500);
@@ -215,7 +232,7 @@ describe('Error Handling Scenarios', () => {
     });
 
     it('should handle file descriptor exhaustion', async () => {
-      const response = await request(app)
+      const response = await api
         .get('/api/test/db-error');
 
       expect(response.status).toBe(500);
@@ -225,7 +242,7 @@ describe('Error Handling Scenarios', () => {
 
   describe('External Service Errors', () => {
     it('should handle third-party API failures', async () => {
-      const response = await request(app)
+      const response = await api
         .get('/api/test/db-error');
 
       expect(response.status).toBe(500);
@@ -235,7 +252,7 @@ describe('Error Handling Scenarios', () => {
 
   describe('Concurrency and Race Condition Errors', () => {
     it('should handle concurrent lobby joins', async () => {
-      const response = await request(app)
+      const response = await api
         .get('/api/test/validation-error');
 
       expect(response.status).toBe(400);
@@ -243,7 +260,7 @@ describe('Error Handling Scenarios', () => {
     });
 
     it('should handle concurrent game state updates', async () => {
-      const response = await request(app)
+      const response = await api
         .get('/api/test/validation-error');
 
       expect(response.status).toBe(400);

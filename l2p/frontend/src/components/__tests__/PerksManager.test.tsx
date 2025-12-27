@@ -149,15 +149,17 @@ describe('PerksManager', () => {
     ;(apiService.getUserPerks as jest.Mock).mockResolvedValueOnce({ success: false, error: 'Failed to fetch perks' })
 
     render(<PerksManager />)
-    expect(await screen.findByText('Error: Failed to fetch perks')).toBeInTheDocument()
-    expect(screen.getByText('Retry')).toBeInTheDocument()
+    expect(await screen.findByText('Unable to Load Perks')).toBeInTheDocument()
+    expect(screen.getByText('Failed to fetch perks')).toBeInTheDocument()
+    expect(screen.getByText('Retry Now')).toBeInTheDocument()
   })
 
   it('handles network errors gracefully', async () => {
     ;(apiService.getUserPerks as jest.Mock).mockRejectedValueOnce(new Error('Network error'))
 
     render(<PerksManager />)
-    expect(await screen.findByText('Error: Network error')).toBeInTheDocument()
+    expect(await screen.findByText('Unable to Load Perks')).toBeInTheDocument()
+    expect(screen.getByText('Network error')).toBeInTheDocument()
   })
 
   it('renders nothing when the user is not authenticated', () => {
