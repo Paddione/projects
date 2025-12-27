@@ -1,7 +1,8 @@
 #!/bin/bash
 
 # Configuration
-INSTALL_DIR="/home/patrick/vllm/ai-image-gen"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+INSTALL_DIR="$SCRIPT_DIR/ai-image-gen"
 FORGE_DIR="$INSTALL_DIR/forge"
 MODEL_DIR="$FORGE_DIR/models/Stable-diffusion"
 VAE_DIR="$FORGE_DIR/models/VAE"

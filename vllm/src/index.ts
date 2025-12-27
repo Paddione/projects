@@ -60,7 +60,7 @@ class VLLMServer {
     constructor() {
         this.vllmBaseUrl = process.env.VLLM_BASE_URL || "http://localhost:4100";
         this.vllmApiKey = process.env.VLLM_API_KEY || "";
-        const dbUrl = process.env.DATABASE_URL || "postgresql://webui:webui@localhost:5432/webui";
+        const dbUrl = process.env.DATABASE_URL || "postgresql://webui:webui@localhost:5438/webui";
 
         this.dbPool = new pg.Pool({
             connectionString: dbUrl,

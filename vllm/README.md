@@ -80,10 +80,10 @@ To use these tools in Claude Desktop, add the server to your configuration:
   "mcpServers": {
     "vllm": {
       "command": "node",
-      "args": ["/home/patrick/vllm/build/index.js"],
+      "args": ["/home/patrick/projects/vllm/build/src/index.js"],
       "env": {
         "VLLM_BASE_URL": "http://localhost:4100",
-        "DATABASE_URL": "postgresql://webui:webui@localhost:5432/webui"
+        "DATABASE_URL": "postgresql://webui:webui@localhost:5438/webui"
       }
     }
   }
@@ -154,4 +154,3 @@ The RAG stack (located in `/rag`) provides a robust document retrieval system:
 
 ## 📄 License
 MIT
-

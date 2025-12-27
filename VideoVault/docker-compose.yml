@@ -65,6 +65,8 @@ services:
   playwright:
     image: mcr.microsoft.com/playwright:v1.55.0-jammy
     container_name: videovault-playwright
+    profiles:
+      - playwright
     working_dir: /work
     networks:
       - l2p-network
@@ -91,6 +93,8 @@ services:
   playwright-ui:
     image: mcr.microsoft.com/playwright:v1.55.0-jammy
     container_name: videovault-playwright-ui
+    profiles:
+      - playwright
     working_dir: /work
     networks:
       - l2p-network

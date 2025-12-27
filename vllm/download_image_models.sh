@@ -1,7 +1,8 @@
 #!/bin/bash
 set -e
 
-FORGE_DIR="/home/patrick/vllm/ai-image-gen/forge"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+FORGE_DIR="$SCRIPT_DIR/ai-image-gen/forge"
 MODEL_DIR="$FORGE_DIR/models/Stable-diffusion"
 VAE_DIR="$FORGE_DIR/models/VAE"
 ENCODER_DIR="$FORGE_DIR/models/text_encoder"

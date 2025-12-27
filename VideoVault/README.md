@@ -200,6 +200,7 @@ Notes:
   - Local runs write to `test-results/playwright` in the repo.
 - To open the HTML report: `npm run test:pw:report` (uses `test-results/playwright-report`).
 - To run Playwright locally (outside Docker): `npm run test:pw`.
+- The Playwright services are in the `playwright` Docker Compose profile; use the npm scripts or add `--profile playwright` if running `docker-compose` directly.
 
 Optional: MSW (Mock Service Worker)
 - You can enable browser-side network mocking for E2E by setting `VITE_E2E_MSW=true` in `env/.env-playwright`.

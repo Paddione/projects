@@ -48,6 +48,22 @@
                 }
             ]
         },
+        "l2p_group": {
+            "id": "l2p_group",
+            "description": "Tasks specific to the L2P project",
+            "tasks": [
+                {
+                    "name": "L2P Frontend",
+                    "url": "http://localhost:5173",
+                    "expected": "h1:contains('Learn2Play')"
+                },
+                {
+                    "name": "L2P Backend Health",
+                    "url": "http://localhost:5001/api/health",
+                    "expected": "text:contains('healthy')"
+                }
+            ]
+        },
         "vllm_group": {
             "id": "vllm_group",
             "description": "Tasks specific to vLLM project",

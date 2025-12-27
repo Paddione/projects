@@ -180,10 +180,10 @@ if command -v docker &> /dev/null; then
         fi
         
         # Start Payment database
-        if [ -f "$SCRIPT_DIR/payment/docker-compose.yml" ]; then
+        if [ -f "$SCRIPT_DIR/payment/compose.yaml" ]; then
             print_info "Starting Payment database..."
             cd "$SCRIPT_DIR/payment"
-            docker-compose up -d postgres
+            docker-compose up -d db
             print_success "Payment database started"
             cd - > /dev/null
         fi

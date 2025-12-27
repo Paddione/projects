@@ -493,10 +493,6 @@ volumes:
   # Production volumes
   postgres_data:
     driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: /home/patrick/l2p/data/postgres
   backend_logs:
     driver: local
   frontend_logs:

@@ -24,7 +24,9 @@ const io = new Server(server, {
 const docker = new Docker({ socketPath: '/var/run/docker.sock' });
 
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'password123';
-const DB_URL = process.env.DATABASE_URL || 'postgresql://webui:webui@localhost:5432/webui';
+const DB_URL = process.env.DATABASE_URL || 'postgresql://webui:webui@localhost:5438/webui';
+const PROJECT_ROOT = path.resolve(__dirname, '..');
+const FORGE_PATH = process.env.FORGE_PATH || path.join(PROJECT_ROOT, 'ai-image-gen', 'forge');
 const dbPool = new Pool({
     connectionString: DB_URL,
     connectionTimeoutMillis: 5000,
@@ -143,7 +145,7 @@ const SERVICES = [
         description: 'Advanced image generation interface with Stable Diffusion Forge.',
         vramEstimate: '12 GB+',
         type: 'process',
-        path: '/home/patrick/vllm/ai-image-gen/forge',
+        path: FORGE_PATH,
         startCmd: './webui.sh',
         logPath: '/tmp/forge.log',
         group: 'creative'
