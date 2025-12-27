@@ -2,6 +2,10 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## LLM Rules
+
+Read `LLM_RULES.md` first. It defines cross-project scope, safety, testing, and communication expectations for all assistants.
+
 ## Repository Overview
 
 This is a monorepo containing four independent projects with shared infrastructure:

@@ -1,7 +1,8 @@
 #!/bin/bash
 
 # Configuration
-PROJECT_DIR="/home/patrick/vllm"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_DIR="$SCRIPT_DIR"
 DASHBOARD_DIR="$PROJECT_DIR/dashboard"
 LOG_FILE="$DASHBOARD_DIR/dashboard.log"
 

@@ -51,7 +51,7 @@ services:
     env_file:
       - env/.env-postgres
     ports:
-      - '0.0.0.0:5432:5432'
+      - '0.0.0.0:5437:5432'
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
@@ -116,7 +116,8 @@ services:
     command: bash -lc "npm ci && npm run test:pw:ui -- --ui-host 0.0.0.0 --ui-port 9323"
 
 networks:
-  driver: bridge
+  l2p-network:
+    driver: bridge
 volumes:
   postgres_data:
     driver: local

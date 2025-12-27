@@ -2,6 +2,10 @@
 
 A collection of independent full-stack applications including a multiplayer quiz platform, video management system, payment platform, and AI-powered development tools.
 
+## 🤖 LLM Rules
+
+All automated assistants should read `LLM_RULES.md` before making changes. It covers scope, safety, testing, and communication expectations.
+
 ## 📋 Projects Overview
 
 This monorepo contains four independent projects, each with its own technology stack, development workflow, and deployment process:

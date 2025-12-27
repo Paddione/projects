@@ -2,7 +2,7 @@ services:
   web:
     build: .
     ports:
-      - "3000:3000"
+      - "3004:3000"
     environment:
       - DATABASE_URL=postgresql://patrick:password@db:5432/payment_db?schema=public
       - NEXTAUTH_URL=http://localhost:3000
@@ -20,7 +20,7 @@ services:
       POSTGRES_PASSWORD: password
       POSTGRES_DB: payment_db
     ports:
-      - "5435:5432" # Exposed to host on 5435, internal 5432
+      - "5436:5432" # Exposed to host on 5436, internal 5432
     volumes:
       - db_data:/var/lib/postgresql/data
 

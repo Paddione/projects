@@ -25,17 +25,17 @@
                     <button class="mass-btn stop" onclick="massAction('stop')">STOP ALL</button>
                 </div>
             </div>
-            <div style="display: flex; gap: 1rem; align-items: center;">
-                <div id="connection-status" class="status-badge running" style="margin: 0">Connected</div>
-                <button id="logout-btn" class="status-badge"
-                    style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: var(--text-dim); cursor: pointer; transition: all 0.2s ease;">LOGOUT</button>
+            <div class="header-actions">
+                <div id="connection-status" class="status-badge running">Connected</div>
+                <button id="user-admin-toggle" class="status-pill">USER ADMIN</button>
+                <button id="logout-btn" class="status-pill">LOGOUT</button>
             </div>
         </header>
 
         <section class="vram-monitor">
             <div class="vram-header">
                 <div>
-                    <div class="vram-title">GPU VRAM UTILIATION</div>
+                    <div class="vram-title">GPU VRAM UTILIZATION</div>
                     <div class="vram-stats"><span id="vram-used">0</span> / <span id="vram-total">0</span> MB</div>
                 </div>
                 <div id="vram-percent">0%</div>
@@ -45,11 +45,116 @@
             </div>
         </section>
 
-        <div id="services-grid" class="services-grid">
-            <!-- Services will be injected here -->
+        <section class="system-grid">
+            <div class="system-card">
+                <div class="system-label">CPU LOAD</div>
+                <div class="system-value"><span id="cpu-usage">0</span>%</div>
+                <div class="system-bar">
+                    <div id="cpu-bar" class="system-bar-fill" style="width: 0%"></div>
+                </div>
+            </div>
+            <div class="system-card">
+                <div class="system-label">SYSTEM RAM</div>
+                <div class="system-value"><span id="ram-used">0</span> / <span id="ram-total">0</span> GB</div>
+                <div class="system-bar">
+                    <div id="ram-bar" class="system-bar-fill" style="width: 0%"></div>
+                </div>
+            </div>
+            <div class="system-card">
+                <div class="system-label">PRIMARY DISK</div>
+                <div class="system-value"><span id="disk-used">0</span> / <span id="disk-total">0</span> GB</div>
+                <div class="system-bar">
+                    <div id="disk-bar" class="system-bar-fill" style="width: 0%"></div>
+                </div>
+            </div>
+            <div class="system-card">
+                <div class="system-label">STACK STATUS</div>
+                <div class="system-value"><span id="stack-running">0</span> / <span id="stack-total">0</span> ONLINE</div>
+                <div class="system-meta">Last sync <span id="stack-updated">--</span></div>
+            </div>
+        </section>
+
+        <section class="components-section">
+            <div class="section-header">
+                <div>
+                    <div class="section-eyebrow">Components</div>
+                    <h2>Command Matrix</h2>
+                </div>
+                <div class="filter-group">
+                    <button class="filter-btn active" data-filter="all">All</button>
+                    <button class="filter-btn" data-filter="core">Core</button>
+                    <button class="filter-btn" data-filter="data">Data</button>
+                    <button class="filter-btn" data-filter="pipeline">Pipeline</button>
+                    <button class="filter-btn" data-filter="creative">Creative</button>
+                    <button class="filter-btn" data-filter="portal">Portal</button>
+                </div>
+            </div>
+            <div id="services-grid" class="services-grid">
+                <!-- Services will be injected here -->
+                <div class="loading-dots">...</div>
+            </div>
+        </section>
+    </div>
+
+    <div id="log-modal" class="modal hidden">
+        <div class="modal-card">
+            <div class="modal-header">
+                <div>
+                    <div class="modal-title" id="log-title">Service Logs</div>
+                    <div class="modal-subtitle" id="log-subtitle">--</div>
+                </div>
+                <button id="log-close" class="icon-btn">✕</button>
+            </div>
+            <pre id="log-output" class="log-output">Loading...</pre>
+            <div class="modal-actions">
+                <button id="log-refresh" class="ghost-btn">REFRESH</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="user-admin-panel" class="user-admin-panel">
+        <div class="user-admin-header">
+            <div>
+                <div class="section-eyebrow">Central User Management</div>
+                <h2>User Administration</h2>
+            </div>
+            <button id="user-admin-close" class="icon-btn">✕</button>
+        </div>
+        <div class="user-admin-controls">
+            <input id="user-search" type="text" placeholder="Search name or email">
+            <select id="user-role-filter">
+                <option value="all">All roles</option>
+                <option value="admin">Admin</option>
+                <option value="user">User</option>
+                <option value="pending">Pending</option>
+            </select>
+            <button id="user-refresh" class="ghost-btn">REFRESH</button>
+        </div>
+        <div class="user-admin-create">
+            <div class="section-eyebrow">Create New User</div>
+            <div class="create-grid">
+                <input id="new-user-name" type="text" placeholder="Full name">
+                <input id="new-user-email" type="email" placeholder="Email address">
+                <select id="new-user-role">
+                    <option value="user">User</option>
+                    <option value="admin">Admin</option>
+                    <option value="pending">Pending</option>
+                </select>
+                <button id="user-create" class="ghost-btn">CREATE USER</button>
+            </div>
+            <div class="create-note">If account creation fails, use the Open WebUI signup flow instead.</div>
+        </div>
+        <div class="user-admin-summary">
+            <div><span>Admins</span><strong id="user-count-admin">0</strong></div>
+            <div><span>Users</span><strong id="user-count-user">0</strong></div>
+            <div><span>Pending</span><strong id="user-count-pending">0</strong></div>
+        </div>
+        <div id="user-admin-message" class="user-admin-message"></div>
+        <div id="user-admin-list" class="user-admin-list">
             <div class="loading-dots">...</div>
         </div>
     </div>
+    <div id="user-admin-backdrop" class="user-admin-backdrop"></div>
 
     <script src="app.js"></script>
 </body>
