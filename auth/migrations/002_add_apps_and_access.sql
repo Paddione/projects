@@ -36,7 +36,7 @@ CREATE TRIGGER update_apps_updated_at
 INSERT INTO auth.apps (key, name, description, url)
 VALUES
     ('l2p', 'Learn2Play', 'Multiplayer quiz platform', 'http://localhost:5173'),
-    ('videovault', 'VideoVault', 'Video manager', 'http://localhost:5100'),
+    ('videovault', 'VideoVault', 'Video manager', 'https://videovault.korczewski.de'),
     ('payment', 'Payment', 'Payments and wallet dashboard', 'http://localhost:3000'),
     ('vllm-dashboard', 'VRAM Mastermind', 'vLLM dashboard', 'http://localhost:4242')
 ON CONFLICT (key) DO UPDATE SET

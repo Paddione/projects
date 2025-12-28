@@ -4,10 +4,12 @@ import { db } from '../config/database.js';
 import { users, type User, type NewUser } from '../db/schema.js';
 import { eq, or, sql, and } from 'drizzle-orm';
 import { TokenService } from './TokenService.js';
+import { EmailService } from './EmailService.js';
 import type { LoginCredentials, RegisterData, AuthResult } from '../types/auth.js';
 
 export class AuthService {
   private tokenService: TokenService;
+  private emailService: EmailService;
   private readonly SALT_ROUNDS: number;
   private readonly MAX_LOGIN_ATTEMPTS: number;
   private readonly LOCKOUT_DURATION: number; // in milliseconds
@@ -16,6 +18,7 @@ export class AuthService {
 
   constructor() {
     this.tokenService = new TokenService();
+    this.emailService = new EmailService();
     this.SALT_ROUNDS = parseInt(process.env.BCRYPT_ROUNDS || '12', 10);
     this.MAX_LOGIN_ATTEMPTS = parseInt(process.env.MAX_LOGIN_ATTEMPTS || '5', 10);
     this.LOCKOUT_DURATION = parseInt(process.env.ACCOUNT_LOCKOUT_DURATION || '900000', 10); // 15 min default
@@ -171,7 +174,7 @@ export class AuthService {
     // Create user
     const newUser: NewUser = {
       email: data.email.toLowerCase(),
-      username: data.username,
+      username: data.username.toLowerCase(), // Enforce lowercase username
       password_hash: passwordHash,
       name: data.name,
       email_verification_token: verificationToken,
@@ -187,6 +190,14 @@ export class AuthService {
 
     if (!createdUser) {
       throw new Error('Failed to create user');
+    }
+
+    // Send verification email
+    try {
+      await this.emailService.sendVerificationEmail(createdUser.email, verificationToken);
+    } catch (error) {
+      console.error('Failed to send verification email:', error);
+      // We don't fail registration if email fails, but in production we might want to queue it
     }
 
     // Generate tokens
@@ -318,9 +329,14 @@ export class AuthService {
       })
       .where(eq(users.id, user.id));
 
-    // In production, send email here
-    // For now, return the token (remove in production)
-    return resetToken;
+    // Send reset email
+    try {
+      await this.emailService.sendPasswordResetEmail(user.email, resetToken);
+    } catch (error) {
+      console.error('Failed to send password reset email:', error);
+    }
+
+    return 'If the email exists, a password reset link has been sent';
   }
 
   /**
@@ -361,6 +377,13 @@ export class AuthService {
         updated_at: new Date(),
       })
       .where(eq(users.id, user.id));
+
+    // Send security alert
+    try {
+      await this.emailService.sendSecurityAlert(user.email, 'Password Reset Success');
+    } catch (error) {
+      console.error('Failed to send security alert:', error);
+    }
 
     return true;
   }
@@ -444,6 +467,13 @@ export class AuthService {
         updated_at: new Date(),
       })
       .where(eq(users.id, userId));
+
+    // Send security alert
+    try {
+      await this.emailService.sendSecurityAlert(user.email, 'Password Changed');
+    } catch (error) {
+      console.error('Failed to send security alert:', error);
+    }
 
     return true;
   }

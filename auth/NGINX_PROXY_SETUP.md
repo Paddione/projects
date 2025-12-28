@@ -163,6 +163,77 @@ If auth service is on a different server (e.g., 192.168.1.100):
 | Force SSL | ✅ |
 | HTTP/2 Support | ✅ |
 
+## VideoVault Proxy Host (videovault.korczewski.de)
+
+If VideoVault is running, add a second proxy host so the public domain points to it.
+
+### Prerequisite
+
+- ✅ Domain: `videovault.korczewski.de` pointing to your Nginx Proxy Manager server
+
+### Details Tab Configuration
+
+**Domain Names:**
+```
+videovault.korczewski.de
+```
+
+**Scheme:**
+```
+http
+```
+
+**Forward Hostname / IP:**
+```
+<YOUR_VIDEOVAULT_SERVER_IP>
+```
+- If VideoVault is on the same machine as NPM: `localhost` or `127.0.0.1`
+- If VideoVault is on a different machine: Use the machine's IP address (e.g., `192.168.1.120`)
+- If VideoVault is accessible via hostname: Use the hostname
+
+**Forward Port:**
+```
+5100
+```
+
+**Options:**
+- ✅ **Cache Assets**: Enabled
+- ✅ **Block Common Exploits**: Enabled
+- ✅ **Websockets Support**: Enable if VideoVault uses realtime features
+
+### SSL Tab Configuration
+
+**SSL Certificate:**
+- Select: **"Request a new SSL Certificate"**
+- Or use existing wildcard certificate for `*.korczewski.de`
+
+**Options:**
+- ✅ **Force SSL**: Enabled
+- ✅ **HTTP/2 Support**: Enabled
+- ✅ **HSTS Enabled**: Enabled
+
+**Email Address for Let's Encrypt:**
+```
+your-email@example.com
+```
+
+**Terms of Service:**
+- ✅ I Agree to the Let's Encrypt Terms of Service
+
+### Advanced Tab (Optional)
+
+You can reuse the same advanced config as the auth service. If VideoVault handles large uploads, increase the limit:
+
+```nginx
+client_max_body_size 200M;
+```
+
+### Test the Proxy
+
+```bash
+curl -I https://videovault.korczewski.de
+```
+
 ## Update Auth Service Configuration
 
 After setting up the proxy, update your auth service configuration:

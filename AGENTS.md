@@ -1,5 +1,8 @@
 # Repository Guidelines
 
+> [!IMPORTANT]
+> **Task Management**: Use [TASKS.md](./TASKS.md) to track active work and coordinate with other agents.
+
 This monorepo contains four independent applications (`l2p`, `VideoVault`, `payment`, `vllm`). Each project has its own README, `package.json`, and workflow; use the root docs for cross-project context.
 
 ## Project Structure & Module Organization
