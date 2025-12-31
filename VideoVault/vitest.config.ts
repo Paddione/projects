@@ -97,10 +97,6 @@ export default defineConfig({
     environment: 'jsdom',
     globals: true,
     setupFiles: ['src/test/setup.ts'],
-    exclude: [
-      // Exclude experimental suite that pulls heavy WebCodecs/thumbnail types
-      'src/services/enhanced-thumbnail.test.ts',
-    ],
     pool: 'threads',
     poolOptions: {
       threads: {

@@ -1,10 +1,10 @@
+import './env.js';
 import express from 'express';
 import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
 import session from 'express-session';
 import passport from 'passport';
 import rateLimit from 'express-rate-limit';
-import dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { corsMiddleware } from './middleware/cors.js';
@@ -18,8 +18,7 @@ import adminRoutes from './routes/admin.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// Load environment variables
-dotenv.config();
+// Load environment variables (now handled by import './env.js')
 
 const app = express();
 const PORT = process.env.PORT || 5500;
@@ -191,7 +190,7 @@ const server = app.listen(PORT, () => {
   console.log('================================================================================');
   console.log(`✅ Server running on port ${PORT}`);
   console.log(`✅ Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`✅ API URL: http://localhost:${PORT}`);
+  console.log(`✅ API URL: ${process.env.APP_URL || `http://localhost:${PORT}`}`);
   console.log('================================================================================');
   console.log('Available endpoints:');
   console.log(`  - Health Check:    GET  http://localhost:${PORT}/health`);

@@ -236,7 +236,7 @@ describe('Deployment Targets', () => {
       const serviceNames = STAGING_TARGET.config.services.map(s => s.name);
       
       expect(serviceNames).toContain('postgres');
-      expect(serviceNames).toContain('chromadb');
+      expect(serviceNames).toContain('redis');
       expect(serviceNames).toContain('backend');
       expect(serviceNames).toContain('frontend');
     });

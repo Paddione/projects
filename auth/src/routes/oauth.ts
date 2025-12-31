@@ -91,7 +91,7 @@ router.get(
       });
 
       // Get redirect URL from session or default to auth service login page
-      const redirectUrl = (req.session as any)?.oauthRedirect || 'http://localhost:5500/apps';
+      const redirectUrl = (req.session as any)?.oauthRedirect || `${process.env.APP_URL || 'http://localhost:5500'}/apps`;
       delete (req.session as any)?.oauthRedirect;
 
       // Redirect with tokens in URL (for cross-origin scenarios)

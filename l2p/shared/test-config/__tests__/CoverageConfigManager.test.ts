@@ -72,10 +72,10 @@ describe('CoverageConfigManager', () => {
     it('should exclude test files and build artifacts', () => {
       const config = coverageManager.getFrontendJestConfig();
       
-      expect(config.coveragePathIgnorePatterns).toContain('**/*.test.ts');
-      expect(config.coveragePathIgnorePatterns).toContain('**/*.test.tsx');
-      expect(config.coveragePathIgnorePatterns).toContain('**/node_modules/**');
-      expect(config.coveragePathIgnorePatterns).toContain('**/dist/**');
+      expect(config.coveragePathIgnorePatterns).toContain('.*.test.ts$');
+      expect(config.coveragePathIgnorePatterns).toContain('.*.test.tsx$');
+      expect(config.coveragePathIgnorePatterns).toContain('/node_modules/');
+      expect(config.coveragePathIgnorePatterns).toContain('/dist/');
     });
   });
 

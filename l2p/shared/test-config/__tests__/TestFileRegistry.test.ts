@@ -384,7 +384,7 @@ describe('TestFileRegistry', () => {
     });
 
     it('should detect files without test patterns', async () => {
-      const files = ['src/no-tests.js'];
+      const files = ['src/__tests__/no-tests.js'];
       mockReadFile.mockResolvedValue('console.log("no tests here");');
 
       const result = await registry.categorizeTests(files);

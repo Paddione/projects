@@ -1,19 +1,14 @@
 import React from 'react'
-import { describe, it, expect, jest } from '@jest/globals'
+import { describe, it, expect } from '@jest/globals'
 import { render, screen } from '@testing-library/react'
 import '@testing-library/jest-dom'
 import AdminLogsPage from '../AdminLogsPage'
 
-// Mock LogStream
-jest.mock('../../components/LogStream', () => ({
-  __esModule: true,
-  default: () => <div data-testid="log-stream">Log Stream</div>,
-}))
-
 describe('AdminLogsPage', () => {
-  it.skip('should render LogStream component', () => {
+  it('should render static admin logs content', () => {
     render(<AdminLogsPage />)
 
-    expect(screen.getByTestId('log-stream')).toBeInTheDocument()
+    expect(screen.getByText('Admin Logs')).toBeInTheDocument()
+    expect(screen.getByText('Admin logs page content')).toBeInTheDocument()
   })
 })

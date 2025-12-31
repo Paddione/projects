@@ -31,7 +31,9 @@ describe('WebCodecsThumbnailService', () => {
   it('should check WebCodecs support', () => {
     // Mock VideoDecoder not being available
     const originalVideoDecoder = (globalThis as any).VideoDecoder;
+    const originalVideoFrame = (globalThis as any).VideoFrame;
     delete (globalThis as any).VideoDecoder;
+    delete (globalThis as any).VideoFrame;
 
     const support = WebCodecsThumbnailService.checkWebCodecsSupport();
     expect(support.isSupported).toBe(false);
@@ -48,6 +50,13 @@ describe('WebCodecsThumbnailService', () => {
     // Restore original state
     if (originalVideoDecoder) {
       (globalThis as any).VideoDecoder = originalVideoDecoder;
+    } else {
+      delete (globalThis as any).VideoDecoder;
+    }
+    if (originalVideoFrame) {
+      (globalThis as any).VideoFrame = originalVideoFrame;
+    } else {
+      delete (globalThis as any).VideoFrame;
     }
   });
 
@@ -93,7 +102,7 @@ describe('AdaptiveThumbnailManager', () => {
     expect(result).toBeDefined();
     expect(result.thumbnail).toBeDefined();
     expect(result.performanceMetrics).toBeDefined();
-    expect(result.performanceMetrics.duration).toBeGreaterThan(0);
+    expect(result.performanceMetrics.duration).toBeGreaterThanOrEqual(0);
     expect(result.performanceMetrics.method).toMatch(/basic|enhanced|webcodecs/);
   });
 

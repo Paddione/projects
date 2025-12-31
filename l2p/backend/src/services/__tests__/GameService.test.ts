@@ -516,15 +516,9 @@ describe('GameService', () => {
       // Mock the endQuestion method to prevent it from actually running
       const endQuestionSpy = jest.spyOn(gameService as any, 'endQuestion').mockResolvedValue(undefined);
 
-      // Debug: Check game state before submitting answer
-      const gameStateBefore = (gameService as any).activeGames.get('ABC123');
-      console.log('Game state before submitAnswer:', gameStateBefore);
-
       await gameService.submitAnswer('ABC123', 'player1', '4');
 
-      // Debug: Check game state after submitting answer
       const updatedGameState = (gameService as any).activeGames.get('ABC123');
-      console.log('Game state after submitAnswer:', updatedGameState);
 
       if (!updatedGameState) {
         throw new Error('Game state is undefined after submitAnswer');
@@ -687,6 +681,7 @@ describe('GameService', () => {
 
   describe('endGameSession', () => {
     let mockGameState: GameState;
+    let savePlayerResultsSpy: jest.SpyInstance;
 
     beforeEach(() => {
       mockGameState = {
@@ -761,39 +756,41 @@ describe('GameService', () => {
       // Mock the UserRepository instance that GameService creates
       (gameService as any).userRepository = mockUserRepository;
       (gameService as any).lobbyRepository = mockLobbyRepository;
+      savePlayerResultsSpy = jest.spyOn(gameService as any, 'savePlayerResults').mockResolvedValue(undefined);
     });
 
-    it.skip('should end game session successfully', async () => {
+    afterEach(() => {
+      savePlayerResultsSpy.mockRestore();
+    });
+
+    it('should end game session successfully', async () => {
       await gameService.endGameSession('ABC123');
 
-      expect(mockGameSessionRepository.endGameSession).toHaveBeenCalled();
+      expect(mockGameSessionRepository.endGameSession).toHaveBeenCalledWith(
+        mockGameState.gameSessionId,
+        expect.objectContaining({
+          scores: expect.any(Array)
+        })
+      );
       expect(mockIo.to).toHaveBeenCalledWith('ABC123');
-      expect(mockIo.emit).toHaveBeenCalledWith('game-ended', expect.any(Object));
+      expect(mockIo.emit).toHaveBeenCalledWith('game-over', expect.any(Object));
+      expect(mockLobbyService.updateLobbyStatus).toHaveBeenCalledWith('ABC123', 'waiting');
       expect((gameService as any).activeGames.has('ABC123')).toBe(false);
     });
 
-    it.skip('should handle player level-up notifications', async () => {
+    it('should update lobby status when ending game', async () => {
       await gameService.endGameSession('ABC123');
 
-      expect(mockIo.emit).toHaveBeenCalledWith('player-level-up', expect.any(Object));
+      expect(mockLobbyService.updateLobbyStatus).toHaveBeenCalledWith('ABC123', 'waiting');
     });
 
-    it.skip('should update lobby status to ended', async () => {
-      // This test is skipped because the GameService uses dynamic imports
-      // which are difficult to mock properly in this test environment
-      await gameService.endGameSession('ABC123');
+    it('should handle errors when saving player results', async () => {
+      savePlayerResultsSpy.mockRejectedValue(new Error('Save failed'));
 
-      // The test passes if no error is thrown
-      expect(true).toBe(true);
-    });
+      await expect(gameService.endGameSession('ABC123')).resolves.not.toThrow();
 
-    it.skip('should handle errors when saving player results', async () => {
-      mockScoringService.savePlayerResult.mockRejectedValue(new Error('Save failed'));
-
-      await gameService.endGameSession('ABC123');
-
-      // Should still complete without throwing
-      expect(mockIo.emit).toHaveBeenCalledWith('game-ended', expect.any(Object));
+      expect(mockLobbyService.updateLobbyStatus).toHaveBeenCalledWith('ABC123', 'waiting');
+      expect((gameService as any).activeGames.has('ABC123')).toBe(false);
     });
   });
 

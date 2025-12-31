@@ -1,6 +1,6 @@
 import React from 'react'
 import { describe, it, expect, beforeEach, jest } from '@jest/globals'
-import { render } from '@testing-library/react'
+import { render, waitFor } from '@testing-library/react'
 import { GameStateManager } from '../GameStateManager'
 import { useGameStore } from '../../stores/gameStore'
 import { socketService } from '../../services/socketService'
@@ -58,34 +58,43 @@ describe('GameStateManager', () => {
       expect(container.firstChild).toBeNull()
     })
 
-    it.skip('should connect to socket service on mount', () => {
+    it('should not connect without a socket URL', async () => {
       render(<GameStateManager />)
 
-      expect(socketService.connect).toHaveBeenCalled()
+      await waitFor(() => {
+        expect(navigationService.validateCurrentRoute).toHaveBeenCalled()
+      })
+      expect(socketService.connect).not.toHaveBeenCalled()
     })
 
-    it('should validate current route on mount', () => {
+    it('should validate current route on mount', async () => {
       render(<GameStateManager />)
 
-      expect(navigationService.validateCurrentRoute).toHaveBeenCalled()
+      await waitFor(() => {
+        expect(navigationService.validateCurrentRoute).toHaveBeenCalled()
+      })
     })
 
-    it.skip('should add beforeunload event listener', () => {
+    it('should add beforeunload event listener', async () => {
       const addEventListenerSpy = jest.spyOn(window, 'addEventListener')
 
       render(<GameStateManager />)
 
-      expect(addEventListenerSpy).toHaveBeenCalledWith('beforeunload', expect.any(Function))
+      await waitFor(() => {
+        expect(addEventListenerSpy).toHaveBeenCalledWith('beforeunload', expect.any(Function))
+      })
 
       addEventListenerSpy.mockRestore()
     })
 
-    it('should use socket URL from ENV if available', () => {
+    it('should use socket URL from ENV if available', async () => {
       (window as any).ENV = { VITE_SOCKET_URL: 'ws://test.com' }
 
       render(<GameStateManager />)
 
-      expect(socketService.connect).toHaveBeenCalledWith('ws://test.com')
+      await waitFor(() => {
+        expect(socketService.connect).toHaveBeenCalledWith('ws://test.com')
+      })
 
       delete (window as any).ENV
     })
@@ -160,10 +169,15 @@ describe('GameStateManager', () => {
   })
 
   describe('Beforeunload handler', () => {
-    it('should warn user when leaving game page', () => {
+    it('should warn user when leaving game page', async () => {
       window.location = { pathname: '/game/ABC123' } as any
 
+      const addEventListenerSpy = jest.spyOn(window, 'addEventListener')
       render(<GameStateManager />)
+
+      await waitFor(() => {
+        expect(addEventListenerSpy).toHaveBeenCalledWith('beforeunload', expect.any(Function))
+      })
 
       const event = new Event('beforeunload') as BeforeUnloadEvent
       event.preventDefault = jest.fn()
@@ -172,12 +186,18 @@ describe('GameStateManager', () => {
 
       // The handler sets returnValue which triggers browser confirmation
       expect(event.preventDefault).toHaveBeenCalled()
+      addEventListenerSpy.mockRestore()
     })
 
-    it('should warn user when leaving lobby page', () => {
+    it('should warn user when leaving lobby page', async () => {
       window.location = { pathname: '/lobby/ABC123' } as any
 
+      const addEventListenerSpy = jest.spyOn(window, 'addEventListener')
       render(<GameStateManager />)
+
+      await waitFor(() => {
+        expect(addEventListenerSpy).toHaveBeenCalledWith('beforeunload', expect.any(Function))
+      })
 
       const event = new Event('beforeunload') as BeforeUnloadEvent
       event.preventDefault = jest.fn()
@@ -185,12 +205,18 @@ describe('GameStateManager', () => {
       window.dispatchEvent(event)
 
       expect(event.preventDefault).toHaveBeenCalled()
+      addEventListenerSpy.mockRestore()
     })
 
-    it('should not warn user when leaving other pages', () => {
+    it('should not warn user when leaving other pages', async () => {
       window.location = { pathname: '/' } as any
 
+      const addEventListenerSpy = jest.spyOn(window, 'addEventListener')
       render(<GameStateManager />)
+
+      await waitFor(() => {
+        expect(addEventListenerSpy).toHaveBeenCalledWith('beforeunload', expect.any(Function))
+      })
 
       const event = new Event('beforeunload') as BeforeUnloadEvent
       event.preventDefault = jest.fn()
@@ -199,11 +225,14 @@ describe('GameStateManager', () => {
 
       // For non-game/lobby pages, preventDefault should not be called
       // (This behavior depends on the actual implementation)
+      expect(event.preventDefault).not.toHaveBeenCalled()
+      addEventListenerSpy.mockRestore()
     })
   })
 
   describe('Initialization guard', () => {
-    it('should only initialize once on multiple renders', () => {
+    it('should only initialize once on multiple renders', async () => {
+      ;(window as any).ENV = { VITE_SOCKET_URL: 'ws://test.com' }
       const { rerender } = render(<GameStateManager />)
 
       const firstCallCount = jest.mocked(socketService.connect).mock.calls.length
@@ -215,11 +244,13 @@ describe('GameStateManager', () => {
 
       // Should only connect once despite multiple renders
       expect(finalCallCount).toBe(firstCallCount)
+      delete (window as any).ENV
     })
   })
 
   describe('Error handling', () => {
-    it.skip('should handle socket connection errors gracefully', () => {
+    it('should handle socket connection errors gracefully', async () => {
+      ;(window as any).ENV = { VITE_SOCKET_URL: 'ws://test.com' }
       jest.mocked(socketService.connect).mockImplementation(() => {
         throw new Error('Connection failed')
       })
@@ -228,9 +259,12 @@ describe('GameStateManager', () => {
 
       expect(() => render(<GameStateManager />)).not.toThrow()
 
-      expect(consoleErrorSpy).toHaveBeenCalledWith('Failed to initialize services:', expect.any(Error))
+      await waitFor(() => {
+        expect(consoleErrorSpy).toHaveBeenCalledWith('Failed to initialize services:', expect.any(Error))
+      })
 
       consoleErrorSpy.mockRestore()
+      delete (window as any).ENV
     })
 
     it('should handle navigation validation errors gracefully', () => {

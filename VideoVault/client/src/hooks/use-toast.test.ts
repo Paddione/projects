@@ -1,14 +1,16 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { renderHook, act, waitFor } from '@testing-library/react';
-import { useToast, toast, reducer, toastWithUndo } from './use-toast';
+import { useToast, toast, reducer, toastWithUndo, __testing } from './use-toast';
 import { undoService } from '@/services/undo-service';
 
 describe('useToast', () => {
   beforeEach(() => {
     vi.useFakeTimers();
+    __testing.resetToastState();
   });
 
   afterEach(() => {
+    __testing.resetToastState();
     vi.restoreAllMocks();
     vi.useRealTimers();
   });
@@ -218,9 +220,7 @@ describe('useToast', () => {
     it('should initialize with empty toasts', () => {
       const { result } = renderHook(() => useToast());
 
-      // Note: toasts might not be empty if previous tests added any
-      // In a real scenario, you'd need to reset the global state
-      expect(result.current.toasts).toBeDefined();
+      expect(result.current.toasts).toEqual([]);
     });
 
     it('should provide toast function', () => {

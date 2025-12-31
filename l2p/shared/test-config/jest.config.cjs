@@ -32,7 +32,7 @@ module.exports = {
   testMatch: [
     '**/__tests__/**/*.test.ts'
   ],
-  moduleFileExtensions: ['js', 'ts', 'json', 'node'],
+  moduleFileExtensions: ['ts', 'js', 'json', 'node'],
   testEnvironment: 'node',
   globals: {
     'ts-jest': {

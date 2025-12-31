@@ -1,8 +1,9 @@
 export const WebCodecsThumbnailService = {
   checkWebCodecsSupport() {
     const hasVideoDecoder = typeof (globalThis as any).VideoDecoder !== 'undefined';
-    const hasImageBitmap = typeof (globalThis as any).createImageBitmap !== 'undefined';
-    return { isSupported: hasVideoDecoder && hasImageBitmap, hasVideoDecoder, hasImageBitmap };
+    const hasVideoFrame = typeof (globalThis as any).VideoFrame !== 'undefined';
+    const hasAudioDecoder = typeof (globalThis as any).AudioDecoder !== 'undefined';
+    return { isSupported: hasVideoDecoder, hasVideoDecoder, hasVideoFrame, hasAudioDecoder };
   },
   getOptimalThumbnailMethod() {
     return 'basic';

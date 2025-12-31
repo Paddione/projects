@@ -1,6 +1,10 @@
 {
     "name": "Antigravity Browser Control Model (BCM)",
     "version": "1.0.0",
+    "test_credentials": {
+        "email": "test@example.com",
+        "password": "password123"
+    },
     "groups": {
         "health_check": {
             "id": "health_check",
@@ -61,6 +65,22 @@
                     "name": "L2P Backend Health",
                     "url": "http://localhost:5001/api/health",
                     "expected": "text:contains('healthy')"
+                }
+            ]
+        },
+        "videovault_group": {
+            "id": "videovault_group",
+            "description": "Tasks specific to VideoVault",
+            "tasks": [
+                {
+                    "name": "VideoVault UI",
+                    "url": "http://localhost:5100",
+                    "expected": "title:contains('VideoVault')"
+                },
+                {
+                    "name": "Check Video List",
+                    "url": "http://localhost:5100",
+                    "expected": "div:contains('Videos')"
                 }
             ]
         },

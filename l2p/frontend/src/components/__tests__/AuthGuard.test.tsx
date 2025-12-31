@@ -12,6 +12,7 @@ jest.mock('../../services/apiService', () => ({
     isAuthenticated: jest.fn(),
     validateToken: jest.fn(),
     getCurrentUser: jest.fn(),
+    getCurrentUserFromServer: jest.fn(),
     getToken: jest.fn(),
     clearAuth: jest.fn(),
   },
@@ -41,6 +42,7 @@ describe('AuthGuard', () => {
     jest.clearAllMocks()
     // Reset auth store
     useAuthStore.getState().clearAuth()
+    jest.mocked(apiService.getCurrentUserFromServer).mockResolvedValue({ success: false })
   })
 
   describe('Authentication validation', () => {
@@ -96,7 +98,7 @@ describe('AuthGuard', () => {
       })
     })
 
-    it.skip('should show auth form when token validation fails', async () => {
+    it('should show auth form when token validation fails', async () => {
       jest.mocked(apiService.isAuthenticated).mockReturnValue(true)
       jest.mocked(apiService.validateToken).mockResolvedValue({
         success: false,
@@ -110,7 +112,7 @@ describe('AuthGuard', () => {
       }, { timeout: 5000 })
     })
 
-    it.skip('should handle validation errors', async () => {
+    it('should handle validation errors', async () => {
       jest.mocked(apiService.isAuthenticated).mockReturnValue(true)
       jest.mocked(apiService.validateToken).mockRejectedValue(new Error('Network error'))
 
@@ -295,7 +297,7 @@ describe('AuthGuard', () => {
   })
 
   describe('Edge cases', () => {
-    it.skip('should handle validation response without data', async () => {
+    it('should handle validation response without data', async () => {
       jest.mocked(apiService.isAuthenticated).mockReturnValue(true)
       jest.mocked(apiService.validateToken).mockResolvedValue({
         success: true,

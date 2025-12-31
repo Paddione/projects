@@ -43,6 +43,29 @@ services:
       interval: 5s
       timeout: 3s
       retries: 30
+    # Docker Compose watch mode for automatic file sync
+    develop:
+      watch:
+        - action: sync
+          path: ./client
+          target: /app/client
+          ignore:
+            - "**/*.test.ts"
+            - "**/*.test.tsx"
+            - "**/__tests__"
+        - action: sync
+          path: ./server
+          target: /app/server
+          ignore:
+            - "**/*.test.ts"
+        - action: sync
+          path: ./shared
+          target: /app/shared
+        - action: rebuild
+          path: ./package.json
+        - action: sync+restart
+          path: ./vite.config.ts
+          target: /app/vite.config.ts
 
   # Optional PostgreSQL for future server persistence
   postgres:

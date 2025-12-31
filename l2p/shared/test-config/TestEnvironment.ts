@@ -8,6 +8,7 @@ import { promises as fs } from 'fs';
 import * as fsSync from 'fs';
 import * as path from 'path';
 import * as yaml from 'js-yaml';
+import { ServiceDiscovery } from './ServiceDiscovery.js';
 
 export interface ServiceHealth {
   name: string;
@@ -334,28 +335,24 @@ export class TestEnvironment {
    * Check if a port is in use
    */
   private async isPortInUse(port: number): Promise<boolean> {
-    return new Promise((resolve) => {
-      const net = require('net');
-      const server = net.createServer();
+    if (port < 0 || port > 65535) {
+      return true;
+    }
 
-      server.listen(port, () => {
-        server.once('close', () => resolve(false));
-        server.close();
-      });
-
-      server.on('error', () => resolve(true));
-    });
+    const available = await ServiceDiscovery.isPortAvailable(port);
+    return !available;
   }
 
   /**
    * Find an available port starting from the given port
    */
   private async findAvailablePort(startPort: number): Promise<number> {
-    let port = startPort;
-    while (await this.isPortInUse(port)) {
-      port++;
+    const safeStart = Math.max(0, startPort);
+    if (safeStart > 65535) {
+      throw new Error(`Invalid start port: ${startPort}`);
     }
-    return port;
+
+    return ServiceDiscovery.findAvailablePort(safeStart, { start: safeStart, end: 65535 });
   }
 
   /**

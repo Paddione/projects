@@ -181,7 +181,7 @@ describe('EditTagsModal', () => {
     expect(screen.queryByTestId('category-badge-age-adult')).not.toBeInTheDocument();
   });
 
-  it.skip('supports quick category search and assignment', async () => {
+  it('supports quick category search and assignment', async () => {
     const onSave = vi.fn();
 
     render(
@@ -219,7 +219,7 @@ describe('EditTagsModal', () => {
     });
   });
 
-  it.skip('supports quick search for custom categories', async () => {
+  it('supports quick search for custom categories', async () => {
     const onSave = vi.fn();
 
     render(<EditTagsModal {...defaultProps} onSave={onSave} />);

@@ -340,6 +340,16 @@ export class DeploymentPipeline {
     const healthChecks: HealthCheckResult[] = [];
 
     try {
+      const configValidation = await this.validateConfiguration(target);
+      if (!configValidation.isValid) {
+        throw new Error(
+          `Target configuration invalid: ${configValidation.errors.map((error) => error.message).join(', ')}`,
+        );
+      }
+      if (configValidation.warnings.length > 0) {
+        logs.push(...configValidation.warnings);
+      }
+
       if (options.dryRun) {
         console.log('🔍 Dry run mode - no actual deployment will occur');
         logs.push('Dry run mode enabled');
@@ -366,8 +376,10 @@ export class DeploymentPipeline {
       }
 
       // 3. Run pre-deployment hooks
-      console.log('🪝 Running pre-deployment hooks...');
-      if (target.config.preDeploymentHooks) {
+      if (!options.dryRun) {
+        console.log('🪝 Running pre-deployment hooks...');
+      }
+      if (target.config.preDeploymentHooks && !options.dryRun) {
         for (const hook of target.config.preDeploymentHooks) {
           const hookResult = await this.executeHook(hook, 'pre-deployment');
           logs.push(`Pre-deployment hook executed: ${hook}`);
@@ -379,7 +391,7 @@ export class DeploymentPipeline {
 
       if (options.dryRun) {
         console.log('✅ Dry run completed successfully');
-        return {
+        const result: DeploymentResult = {
           success: true,
           target,
           duration: Date.now() - startTime,
@@ -390,6 +402,8 @@ export class DeploymentPipeline {
           logs: [...logs, 'Dry run completed'],
           rollbackAvailable: false
         };
+        this.deploymentHistory.set(deploymentId, result);
+        return result;
       }
 
       // 4. Deploy services

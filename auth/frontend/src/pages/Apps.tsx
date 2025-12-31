@@ -99,18 +99,54 @@ export default function Apps() {
 
         {!loading && !error && (
           <>
+            <div className="mb-8">
+              <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                <span className="p-2 bg-indigo-100 rounded-lg">🤖</span>
+                AI Functionalities
+              </h2>
+              <div className="grid gap-4 sm:grid-cols-3">
+                <a
+                  href="https://chat.korczewski.de"
+                  className="group bg-white p-5 rounded-xl shadow-sm border border-transparent hover:border-indigo-300 transition-all hover:shadow-md"
+                >
+                  <div className="text-2xl mb-2">💬</div>
+                  <h3 className="font-semibold text-gray-900 group-hover:text-indigo-600">AI Chat (RAG)</h3>
+                  <p className="text-xs text-gray-500 mt-1">Chat with documents and local models.</p>
+                </a>
+                <a
+                  href="https://videovault.korczewski.de"
+                  className="group bg-white p-5 rounded-xl shadow-sm border border-transparent hover:border-indigo-300 transition-all hover:shadow-md"
+                >
+                  <div className="text-2xl mb-2">🎬</div>
+                  <h3 className="font-semibold text-gray-900 group-hover:text-indigo-600">Video Vault</h3>
+                  <p className="text-xs text-gray-500 mt-1">AI-powered media transcription & management.</p>
+                </a>
+                <a
+                  href="https://forge.korczewski.de"
+                  className="group bg-white p-5 rounded-xl shadow-sm border border-transparent hover:border-indigo-300 transition-all hover:shadow-md"
+                >
+                  <div className="text-2xl mb-2">🎨</div>
+                  <h3 className="font-semibold text-gray-900 group-hover:text-indigo-600">Image Gen</h3>
+                  <p className="text-xs text-gray-500 mt-1">Generate stunning images with Stable Diffusion.</p>
+                </a>
+              </div>
+            </div>
+
+            <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+              <span className="p-2 bg-blue-100 rounded-lg">📱</span>
+              Your Applications
+            </h2>
             {apps.length === 0 ? (
               <div className="bg-white rounded-lg shadow p-6 text-gray-600">
-                No apps are available yet. Ask an admin to grant access.
+                No extra apps are available yet. Ask an admin to grant access.
               </div>
             ) : (
               <div className="grid gap-4 sm:grid-cols-2">
                 {apps.map((app) => (
                   <div
                     key={app.id}
-                    className={`border rounded-lg p-5 bg-white shadow-sm ${
-                      app.hasAccess ? 'border-transparent' : 'border-gray-200 opacity-70'
-                    }`}
+                    className={`border rounded-lg p-5 bg-white shadow-sm ${app.hasAccess ? 'border-transparent' : 'border-gray-200 opacity-70'
+                      }`}
                   >
                     <div className="flex items-start justify-between">
                       <div>

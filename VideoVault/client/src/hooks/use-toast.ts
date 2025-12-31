@@ -126,6 +126,14 @@ const listeners: Array<(state: State) => void> = [];
 
 let memoryState: State = { toasts: [] };
 
+const resetToastState = () => {
+  memoryState = { toasts: [] };
+  toastTimeouts.forEach((timeout) => clearTimeout(timeout));
+  toastTimeouts.clear();
+  listeners.length = 0;
+  count = 0;
+};
+
 function dispatch(action: Action) {
   memoryState = reducer(memoryState, action);
   listeners.forEach((listener) => {
@@ -262,5 +270,7 @@ function useToast() {
     dismiss: (toastId?: string) => dispatch({ type: 'DISMISS_TOAST', toastId }),
   };
 }
+
+export const __testing = { resetToastState };
 
 export { useToast, toast, toastWithUndo };

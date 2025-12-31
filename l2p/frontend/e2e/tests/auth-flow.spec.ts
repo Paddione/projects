@@ -75,10 +75,6 @@ test.describe('Authentication Flow - End to End', () => {
     await expect(page.locator('[data-testid="user-menu"]')).not.toBeVisible();
   });
 
-  test.skip('Login validation - unverified email (not enforced in current mock env)', async ({ page }) => {
-    // TODO: Implement email verification enforcement in mock API and UI, then unskip.
-  });
-
   test('Character selection and profile management', async ({ page }) => {
     // Login first
     await page.click('text=Login');

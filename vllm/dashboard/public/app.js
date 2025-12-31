@@ -59,6 +59,7 @@ const currentTaskList = document.getElementById('current-task-list');
 
 const groupLabels = {
     core: 'Core AI',
+    business: 'Business Apps',
     data: 'Data Layer',
     pipeline: 'Pipeline',
     creative: 'Creative',

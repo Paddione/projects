@@ -72,7 +72,8 @@ export default function Login() {
         url.searchParams.set('refresh_token', response.tokens.refreshToken);
         window.location.href = url.toString();
       } else {
-        navigate('/apps', { replace: true });
+        // Redirect local logins to the apps page
+        window.location.href = '/apps';
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login failed');

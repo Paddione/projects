@@ -191,6 +191,54 @@ const SERVICES = [
         vramEstimate: 'Low (CPU/Shared)',
         type: 'docker',
         group: 'pipeline'
+    },
+    {
+        id: 'auth',
+        name: 'Auth Service',
+        url: 'https://auth.korczewski.de',
+        port: 5500,
+        description: 'Central identity and access management service.',
+        type: 'process',
+        path: path.resolve(PROJECT_ROOT, '..', 'auth'),
+        startCmd: 'npm start',
+        logPath: path.resolve(PROJECT_ROOT, '..', 'auth', 'auth_prod.log'),
+        group: 'core'
+    },
+    {
+        id: 'l2p',
+        name: 'Learn2Play',
+        url: 'https://l2p.korczewski.de',
+        port: 3001,
+        description: 'AI-powered learning platform for gaming.',
+        type: 'process',
+        path: path.resolve(PROJECT_ROOT, '..', 'l2p'),
+        startCmd: 'npm run dev',
+        logPath: path.resolve(PROJECT_ROOT, '..', 'l2p', 'logs', 'dev.log'),
+        group: 'business'
+    },
+    {
+        id: 'payment',
+        name: 'Payment Service',
+        url: 'http://localhost:3004',
+        port: 3004,
+        description: 'Subscription and payment processing service.',
+        type: 'process',
+        path: path.resolve(PROJECT_ROOT, '..', 'payment'),
+        startCmd: 'npm run dev',
+        logPath: path.resolve(PROJECT_ROOT, '..', 'payment', 'dev.log'),
+        group: 'business'
+    },
+    {
+        id: 'videovault',
+        name: 'VideoVault',
+        url: 'https://videovault.korczewski.de',
+        port: 5100,
+        description: 'AI-powered media management and transcription vault.',
+        type: 'process',
+        path: path.resolve(PROJECT_ROOT, '..', 'VideoVault'),
+        startCmd: 'npm run dev',
+        logPath: path.resolve(PROJECT_ROOT, '..', 'VideoVault', 'dev.log'),
+        group: 'creative'
     }
 ];
 
@@ -221,10 +269,20 @@ async function getVramInfo() {
     });
 }
 
-// Helper to check if a process is running (for Forge)
-async function isForgeRunning() {
+// Helper to check if a process is running
+async function isProcessRunning(service) {
     return new Promise((resolve) => {
-        exec('ps aux | grep -v grep | grep "launch.py"', (err, stdout) => {
+        if (service.id === 'forge') {
+            exec('ps aux | grep -v grep | grep "launch.py"', (err, stdout) => {
+                resolve(!!stdout.trim());
+            });
+            return;
+        }
+
+        // For other services, we check for processes running in their specific path
+        // This is a bit heuristic - we look for the startCmd or node processes in that path
+        const searchPattern = service.path.split('/').pop();
+        exec(`ps aux | grep -v grep | grep "${searchPattern}" | grep "node"`, (err, stdout) => {
             resolve(!!stdout.trim());
         });
     });
@@ -242,7 +300,7 @@ async function getServiceStatus() {
                 statuses[service.id] = false;
             }
         } else if (service.type === 'process') {
-            statuses[service.id] = await isForgeRunning();
+            statuses[service.id] = await isProcessRunning(service);
         }
     }
     return statuses;
@@ -383,7 +441,13 @@ async function controlService(serviceId, action) {
                 }
             } else {
                 await new Promise((resolve) => {
-                    exec('pkill -9 -f "launch.py"', (err) => resolve());
+                    if (service.id === 'forge') {
+                        exec('pkill -9 -f "launch.py"', (err) => resolve());
+                    } else {
+                        // Kill node processes running in the service path
+                        const searchPattern = service.path.split('/').pop();
+                        exec(`pkill -9 -f "${searchPattern}"`, (err) => resolve());
+                    }
                 });
             }
         }
@@ -398,13 +462,40 @@ async function controlService(serviceId, action) {
                     await container.start();
                 }
             } else {
-                // Start Forge
-                const out = fs.openSync('/tmp/forge.log', 'a');
-                const err = fs.openSync('/tmp/forge.log', 'a');
-                const child = spawn('./webui.sh', ['--listen', '--port', '7863', '--cuda-malloc', '--always-gpu', '--share', '--enable-insecure-extension-access'], {
+                // Start generic process
+                const logFile = service.logPath || `/tmp/${service.id}.log`;
+                const logDir = path.dirname(logFile);
+                if (!fs.existsSync(logDir)) {
+                    fs.mkdirSync(logDir, { recursive: true });
+                }
+
+                const out = fs.openSync(logFile, 'a');
+                const err = fs.openSync(logFile, 'a');
+
+                let cmd, args;
+                if (service.id === 'forge') {
+                    cmd = './webui.sh';
+                    args = ['--listen', '--port', '7863', '--cuda-malloc', '--always-gpu', '--share', '--enable-insecure-extension-access'];
+                } else {
+                    const parts = service.startCmd.split(' ');
+                    cmd = parts[0];
+                    args = parts.slice(1);
+                }
+
+                // Determine port to pass to the process
+                let envPort = service.port;
+                if (!envPort && service.url) {
+                    const portMatch = service.url.match(/:(\d+)/);
+                    if (portMatch) {
+                        envPort = parseInt(portMatch[1], 10);
+                    }
+                }
+
+                const child = spawn(cmd, args, {
                     cwd: service.path,
                     detached: true,
-                    stdio: ['ignore', out, err]
+                    stdio: ['ignore', out, err],
+                    env: { ...process.env, PORT: envPort ? envPort.toString() : undefined }
                 });
                 child.unref();
             }
@@ -736,30 +827,54 @@ app.post('/api/browser/run/:groupId', async (req, res) => {
     // Emit start event
     io.emit('browser_task_start', { groupId });
 
-    // Background execution
+    // Background execution with real runner
     (async () => {
-        try {
-            for (const task of group.tasks) {
-                const taskResult = { name: task.name, status: 'pending' };
-                browserTaskResults[groupId].tasks.push(taskResult);
+        const runnerPath = path.join(PROJECT_ROOT, '..', 'browser-control', 'runner.js');
+        const runnerDir = path.dirname(runnerPath);
 
-                // Simulate/Run task
-                // For now, we simulate execution but preparing for real Playwright calls
-                await new Promise(r => setTimeout(r, 1500));
-                taskResult.status = 'success';
-                taskResult.detail = `Checked ${task.url}`;
+        const child = spawn('node', [runnerPath, groupId], { cwd: runnerDir });
 
-                io.emit('browser_task_update', { groupId, taskName: task.name, status: 'success' });
+        child.stdout.on('data', (data) => {
+            const lines = data.toString().split('\n');
+            for (const line of lines) {
+                if (!line.trim()) continue;
+                try {
+                    const msg = JSON.parse(line);
+                    if (msg.type === 'task_start') {
+                        const taskResult = { name: msg.name, status: 'running' };
+                        browserTaskResults[groupId].tasks.push(taskResult);
+                        io.emit('browser_task_update', { groupId, taskName: msg.name, status: 'running' });
+                    } else if (msg.type === 'task_success') {
+                        const task = browserTaskResults[groupId].tasks.find(t => t.name === msg.name);
+                        if (task) {
+                            task.status = 'success';
+                            task.detail = msg.detail;
+                        }
+                        io.emit('browser_task_update', { groupId, taskName: msg.name, status: 'success', detail: msg.detail });
+                    } else if (msg.type === 'task_error') {
+                        const task = browserTaskResults[groupId].tasks.find(t => t.name === msg.name);
+                        if (task) {
+                            task.status = 'error';
+                            task.error = msg.error;
+                        }
+                        io.emit('browser_task_update', { groupId, taskName: msg.name, status: 'error', error: msg.error });
+                    }
+                } catch (e) {
+                    // console.log('Runner non-json output:', line);
+                }
             }
-            browserTaskResults[groupId].status = 'completed';
+        });
+
+        child.stderr.on('data', (data) => {
+            console.error(`Runner Error [${groupId}]:`, data.toString());
+        });
+
+        child.on('close', (code) => {
+            browserTaskResults[groupId].status = code === 0 ? 'completed' : 'error';
             browserTaskResults[groupId].endTime = new Date();
-        } catch (e) {
-            browserTaskResults[groupId].status = 'error';
-            browserTaskResults[groupId].error = e.message;
-        } finally {
             activeBrowserTasks.delete(groupId);
             io.emit('browser_task_complete', { groupId, result: browserTaskResults[groupId] });
-        }
+        });
     })();
 
     res.json({ success: true, message: 'Task group started' });

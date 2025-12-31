@@ -1,23 +1,25 @@
+import '../env.js';
 import cors from 'cors';
 
-const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || [
-  'http://localhost:5500', // auth service itself
-  'http://localhost:3002', // l2p frontend
-  'http://localhost:5100', // videovault
-  'http://localhost:3004', // payment
-];
 
 export const corsMiddleware = cors({
   origin: (origin, callback) => {
-    // Allow requests with no origin (like mobile apps, curl, Postman)
+    // Dynamically get allowed origins from environment
+    const currentAllowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || [];
+    const isPublic = process.env.CORS_ORIGIN === '*';
+
+    console.log(`[CORS] Request from: ${origin || 'Same-Origin/Direct'}, Allowed: ${currentAllowedOrigins.length} origins, Public: ${isPublic}`);
+
     if (!origin) {
       callback(null, true);
       return;
     }
 
-    if (allowedOrigins.includes(origin) || process.env.CORS_ORIGIN === '*') {
+    if (currentAllowedOrigins.includes(origin) || isPublic) {
       callback(null, true);
     } else {
+      console.warn(`[CORS] REJECTED: ${origin}`);
+      console.warn(`[CORS] Expected one of: ${currentAllowedOrigins.join(', ')}`);
       callback(new Error('Not allowed by CORS'));
     }
   },

@@ -11,6 +11,7 @@ describe('UndoService', () => {
 
   afterEach(() => {
     service.clear();
+    vi.useRealTimers();
     vi.restoreAllMocks();
   });
 

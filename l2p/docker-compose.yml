@@ -276,6 +276,20 @@ services:
     user: "0:0"
     profiles:
       - development
+    # Docker Compose watch mode for automatic file sync
+    develop:
+      watch:
+        - action: sync
+          path: ./backend/src
+          target: /app/src
+          ignore:
+            - "**/*.test.ts"
+            - "**/__tests__"
+        - action: sync
+          path: ./shared
+          target: /app/shared
+        - action: rebuild
+          path: ./backend/package.json
 
   # Frontend Development Service
   frontend-dev:
@@ -318,6 +332,24 @@ services:
     user: "0:0"
     profiles:
       - development
+    # Docker Compose watch mode for automatic file sync
+    develop:
+      watch:
+        - action: sync
+          path: ./frontend/src
+          target: /app/src
+          ignore:
+            - "**/*.test.tsx"
+            - "**/*.test.ts"
+            - "**/__tests__"
+        - action: sync
+          path: ./frontend/public
+          target: /app/public
+        - action: rebuild
+          path: ./frontend/package.json
+        - action: sync+restart
+          path: ./frontend/vite.config.ts
+          target: /app/vite.config.ts
 
   # =============================================================================
   # TEST SERVICES

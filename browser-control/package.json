@@ -1,5 +1,5 @@
 {
-  "name": "dashboard",
+  "name": "browser-control",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -11,12 +11,7 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
-    "cookie-parser": "^1.4.7",
-    "cors": "^2.8.5",
-    "dockerode": "^4.0.9",
-    "express": "^5.2.1",
-    "express-session": "^1.18.2",
-    "pg": "^8.16.3",
-    "socket.io": "^4.8.3"
+    "playwright": "^1.57.0",
+    "playwright-core": "^1.57.0"
   }
 }

@@ -1,4 +1,4 @@
-import { describe, beforeEach, afterEach, it, expect, jest } from '@jest/globals';
+import { describe, beforeAll, beforeEach, afterEach, it, expect, jest } from '@jest/globals';
 
 // Mock fs module
 const mockFs = {
@@ -57,7 +57,7 @@ const mockMammoth = {
 
 jest.mock('mammoth', () => ({
   __esModule: true,
-  default: mockMammoth
+  extractRawText: mockMammoth.extractRawText
 }));
 
 // Mock marked
@@ -71,8 +71,7 @@ jest.mock('marked', () => ({
 }));
 
 // Mock JSDOM for HTML processing
-const mockJSDOM = jest.fn().mockImplementation((html: string) => {
-  console.log('JSDOM mock called with:', html);
+const mockJSDOM = jest.fn().mockImplementation(() => {
   const mockInstance = {
     window: {
       document: {
@@ -82,7 +81,6 @@ const mockJSDOM = jest.fn().mockImplementation((html: string) => {
       }
     }
   };
-  console.log('JSDOM mock returning:', mockInstance);
   return mockInstance;
 });
 
@@ -92,16 +90,14 @@ jest.mock('jsdom', () => ({
 
 // Put service import at end to ensure mocks are applied
 let FileProcessingService: any;
-let ProcessingOptions: any;
 
 beforeAll(async () => {
   const module = await import('../FileProcessingService');
   FileProcessingService = module.FileProcessingService;
-  ProcessingOptions = module.ProcessingOptions;
 });
 
 describe('FileProcessingService', () => {
-  let fileProcessingService: FileProcessingService;
+  let fileProcessingService: any;
   let mockFilePath: string;
   let mockOriginalName: string;
 
@@ -165,7 +161,7 @@ describe('FileProcessingService', () => {
       // Set up buffer content for PDF fallback
       mockReadFileSync.mockReturnValue(Buffer.from('Test PDF Content'));
       
-      const options: ProcessingOptions = {
+      const options = {
         chunkSize: 1000,
         chunkOverlap: 200
       };
@@ -203,7 +199,7 @@ describe('FileProcessingService', () => {
       expect(fs.statSync).toHaveBeenCalledWith(mockFilePath);
     }, 5000);
 
-    it.skip('should process an HTML file successfully', async () => {
+    it('should process an HTML file successfully', async () => {
       mockExtname.mockReturnValue('.html');
       mockReadFileSync.mockReturnValue(Buffer.from('<html><body>Test HTML Content</body></html>'));
 
@@ -237,7 +233,7 @@ describe('FileProcessingService', () => {
       mockExtname.mockReturnValue('.pdf');
       mockReadFileSync.mockReturnValue(Buffer.from(longContent));
 
-      const options: ProcessingOptions = {
+      const options = {
         chunkSize: 1000,
         chunkOverlap: 200
       };

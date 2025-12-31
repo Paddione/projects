@@ -36,7 +36,7 @@ describe('LocalizationService', () => {
       expect(service.getCurrentLanguage()).toBe('en')
     })
 
-    it.skip('should load saved language preference from localStorage', () => {
+    it('should load saved language preference from localStorage', () => {
       localStorageMock['language'] = 'de'
       const newService = new LocalizationService()
 
@@ -64,7 +64,7 @@ describe('LocalizationService', () => {
       expect(service.getCurrentLanguage()).toBe('en')
     })
 
-    it.skip('should always check localStorage for the most current value', () => {
+    it('should always check localStorage for the most current value', () => {
       expect(service.getCurrentLanguage()).toBe('en')
 
       // Manually update localStorage
@@ -239,7 +239,7 @@ describe('LocalizationService', () => {
       expect(service.translate('nav.home')).toBe('Home')
     })
 
-    it.skip('should persist language across instances', () => {
+    it('should persist language across instances', () => {
       service.setLanguage('de')
 
       const newService = new LocalizationService()
