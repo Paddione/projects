@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 
 import { apiService } from '../services/apiService'
 import { ErrorDisplay } from './ErrorBoundary'
+import { buildAuthorizationUrl, generateRandomState, storeOAuthState } from '../utils/oauth'
 import styles from '../styles/AuthForm.module.css'
 
 interface AuthFormProps {
@@ -18,6 +19,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({ onAuthSuccess, onShowPasswor
     confirmPassword: ''
   })
   const [isLoading, setIsLoading] = useState(false)
+  const [isOAuthLoading, setIsOAuthLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [passwordValidation, setPasswordValidation] = useState({
     length: false,
@@ -140,7 +142,40 @@ export const AuthForm: React.FC<AuthFormProps> = ({ onAuthSuccess, onShowPasswor
     })
   }
 
+  const handleOAuthLogin = async () => {
+    setIsOAuthLoading(true)
+    setError(null)
 
+    try {
+      // Get OAuth configuration from backend
+      const config = await apiService.getOAuthConfig()
+
+      if (!config) {
+        setError('OAuth configuration not available')
+        setIsOAuthLoading(false)
+        return
+      }
+
+      // Generate and store CSRF state
+      const state = generateRandomState()
+      storeOAuthState(state)
+
+      // Build authorization URL
+      const authUrl = buildAuthorizationUrl(
+        config.authServiceUrl,
+        config.clientId,
+        config.redirectUri,
+        state
+      )
+
+      // Redirect to auth service
+      window.location.href = authUrl
+    } catch (error) {
+      console.error('OAuth login error:', error)
+      setError(error instanceof Error ? error.message : 'Failed to initiate OAuth login')
+      setIsOAuthLoading(false)
+    }
+  }
 
   return (
     <div className={styles.authContainer}>
@@ -312,11 +347,28 @@ export const AuthForm: React.FC<AuthFormProps> = ({ onAuthSuccess, onShowPasswor
           <button
             type="submit"
             className={`${styles.button} ${styles.primary}`}
-            disabled={isLoading || (!isLogin && formData.password.length > 0 && Object.values(passwordValidation).some(v => !v))}
+            disabled={isLoading || isOAuthLoading || (!isLogin && formData.password.length > 0 && Object.values(passwordValidation).some(v => !v))}
             data-testid={isLogin ? "login-button" : "register-button"}
           >
             {isLoading ? (isLogin ? 'Logging in...' : 'Registering...') : (isLogin ? 'Login' : 'Register')}
           </button>
+
+          {isLogin && (
+            <>
+              <div className={styles.divider}>
+                <span>OR</span>
+              </div>
+              <button
+                type="button"
+                className={`${styles.button} ${styles.secondary}`}
+                onClick={handleOAuthLogin}
+                disabled={isLoading || isOAuthLoading}
+                data-testid="oauth-login-button"
+              >
+                {isOAuthLoading ? 'Redirecting...' : 'Login with Auth Service'}
+              </button>
+            </>
+          )}
         </form>
 
         <div className={styles.switchMode}>

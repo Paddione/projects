@@ -1,28 +1,34 @@
 services:
   web:
     build: .
-    ports:
-      - "3004:3000"
+    expose:
+      - "3000"
+    env_file:
+      - .env-prod
     environment:
-      - DATABASE_URL=postgresql://patrick:password@db:5432/payment_db?schema=public
-      - NEXTAUTH_URL=http://localhost:3000
-      - NEXTAUTH_SECRET=supersecretchangeinprod
-      - AUTH_SECRET=supersecretchangeinprod
-      - AUTH_TRUST_HOST=true
-      # Add Stripe keys here for prod, or pass via .env file
-    depends_on:
-      - db
+      # Using centralized PostgreSQL instance from .env-prod
+      # Additional runtime overrides can go here if needed
+    networks:
+      - traefik-public
+    external_links:
+      - shared-postgres
+    labels:
+      # Enable Traefik
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik-public"
 
-  db:
-    image: postgres:15-alpine
-    environment:
-      POSTGRES_USER: patrick
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: payment_db
-    ports:
-      - "5436:5432" # Exposed to host on 5436, internal 5432
-    volumes:
-      - db_data:/var/lib/postgresql/data
+      # HTTP Router
+      - "traefik.http.routers.payment.rule=Host(`payment.korczewski.de`)"
+      - "traefik.http.routers.payment.entrypoints=websecure"
+      - "traefik.http.routers.payment.tls=true"
 
-volumes:
-  db_data:
+      # Service configuration
+      - "traefik.http.services.payment.loadbalancer.server.port=3000"
+
+      # Middlewares
+      - "traefik.http.routers.payment.middlewares=default-chain@file"
+
+networks:
+  traefik-public:
+    external: true
+    name: traefik-public

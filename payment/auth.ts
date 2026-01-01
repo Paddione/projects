@@ -1,25 +1,17 @@
 import NextAuth from 'next-auth';
-import { PrismaAdapter } from '@auth/prisma-adapter';
-import Google from 'next-auth/providers/google';
-import { authConfig } from './auth.config';
 import Credentials from 'next-auth/providers/credentials';
 import { z } from 'zod';
+import { authConfig } from './auth.config';
 import { db } from '@/lib/db';
-import bcrypt from 'bcryptjs';
 
-async function getUser(email: string) {
-    try {
-        const user = await db.user.findUnique({ where: { email } });
-        return user;
-    } catch (error) {
-        console.error('Failed to fetch user:', error);
-        throw new Error('Failed to fetch user.');
-    }
-}
+const authServiceUrlRaw = process.env.AUTH_SERVICE_URL || 'http://localhost:5500';
+const authServiceUrl = authServiceUrlRaw.replace(/\/+$/, '');
+const authServiceApiUrl = authServiceUrl.endsWith('/api')
+    ? authServiceUrl
+    : `${authServiceUrl}/api`;
 
 export const { auth, signIn, signOut, handlers } = NextAuth({
     ...authConfig,
-    adapter: PrismaAdapter(db) as any, // eslint-disable-line @typescript-eslint/no-explicit-any
     session: { strategy: 'jwt' },
     debug: true,
     trustHost: true,
@@ -56,32 +48,81 @@ export const { auth, signIn, signOut, handlers } = NextAuth({
             return true;
         },
     },
+    events: {
+        async signOut(message) {
+            const token = (message as any)?.token?.accessToken as string | undefined;
+            if (!token) return;
+            try {
+                await fetch(`${authServiceApiUrl}/auth/logout`, {
+                    method: 'POST',
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+            } catch (error) {
+                console.warn('Failed to revoke central auth token during sign-out');
+            }
+        },
+    },
     secret: process.env.AUTH_SECRET,
     providers: [
-        Google({
-            clientId: process.env.AUTH_GOOGLE_ID,
-            clientSecret: process.env.AUTH_GOOGLE_SECRET,
-            allowDangerousEmailAccountLinking: true,
-        }),
         Credentials({
             async authorize(credentials) {
                 const parsedCredentials = z
                     .object({ email: z.string().email(), password: z.string().min(6) })
                     .safeParse(credentials);
 
-                if (parsedCredentials.success) {
-                    const { email, password } = parsedCredentials.data;
-                    const user = await getUser(email);
-                    if (!user) return null;
-
-                    if (!user.passwordHash) return null;
-
-                    const passwordsMatch = await bcrypt.compare(password, user.passwordHash);
-                    if (passwordsMatch) return user;
+                if (!parsedCredentials.success) {
+                    return null;
                 }
 
-                console.log('Invalid credentials');
-                return null;
+                const { email, password } = parsedCredentials.data;
+
+                const response = await fetch(`${authServiceApiUrl}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ usernameOrEmail: email, password }),
+                });
+
+                if (!response.ok) {
+                    console.warn('Auth service rejected credentials:', response.status);
+                    return null;
+                }
+
+                const data = await response.json().catch(() => null);
+                const authUser = data?.user;
+
+                if (!authUser) {
+                    return null;
+                }
+
+                const role = authUser.role === 'ADMIN' ? 'ADMIN' : 'USER';
+                const emailVerified = authUser.email_verified || authUser.emailVerified ? new Date() : null;
+
+                const localUser = await db.user.upsert({
+                    where: { email: authUser.email },
+                    update: {
+                        name: authUser.name ?? null,
+                        role,
+                        emailVerified,
+                        image: authUser.avatar_url ?? null,
+                    },
+                    create: {
+                        email: authUser.email,
+                        name: authUser.name ?? null,
+                        role,
+                        emailVerified,
+                        image: authUser.avatar_url ?? null,
+                    },
+                });
+
+                return {
+                    id: localUser.id,
+                    email: localUser.email,
+                    name: localUser.name,
+                    role: localUser.role,
+                    accessToken: data?.tokens?.accessToken,
+                    refreshToken: data?.tokens?.refreshToken,
+                    authUserId: authUser.id ?? authUser.userId,
+                };
             },
         }),
     ],

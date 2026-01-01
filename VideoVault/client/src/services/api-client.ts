@@ -53,6 +53,13 @@ export class ApiClient {
       if (token) headers['X-CSRF-Token'] = token;
     }
 
+    if (typeof window !== 'undefined') {
+      const accessToken = window.localStorage.getItem('accessToken');
+      if (accessToken) {
+        headers['Authorization'] = `Bearer ${accessToken}`;
+      }
+    }
+
     const res = await fetch(path, {
       method,
       headers,

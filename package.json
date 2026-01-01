@@ -4,16 +4,19 @@
   "private": true,
   "description": "Monorepo containing l2p, VideoVault, payment, and vllm projects",
   "scripts": {
-    "dev:l2p": "cd l2p && npm run dev:frontend & npm run dev:backend",
-    "dev:l2p:parallel": "cd l2p && concurrently -n \"frontend,backend\" -c \"green,blue\" \"npm run dev:frontend\" \"npm run dev:backend\"",
-    "dev:videovault": "cd VideoVault && npm run dev",
-    "dev:payment": "cd payment && npm run dev",
-    "dev:vllm": "cd vllm && npm run dev:watch",
+    "build:all": "cd l2p && npm run build:all && cd ../VideoVault && npm run build && cd ../payment && npm run build && cd ../vllm && npm run build",
     "dev:all": "concurrently -n \"l2p-fe,l2p-be,vault,payment,vllm\" -c \"green,blue,yellow,magenta,cyan\" \"cd l2p && npm run dev:frontend\" \"cd l2p && npm run dev:backend\" \"cd VideoVault && npm run dev\" \"cd payment && npm run dev\" \"cd vllm && npm run dev:watch\"",
     "dev:all:web": "concurrently -n \"l2p-fe,l2p-be,vault,payment\" -c \"green,blue,yellow,magenta\" \"cd l2p && npm run dev:frontend\" \"cd l2p && npm run dev:backend\" \"cd VideoVault && npm run dev\" \"cd payment && npm run dev\"",
+    "dev:l2p": "npm run dev:l2p:parallel",
+    "dev:l2p:parallel": "cd l2p && concurrently -n \"frontend,backend\" -c \"green,blue\" \"npm run dev:frontend\" \"npm run dev:backend\"",
+    "dev:payment": "cd payment && npm run dev",
+    "dev:videovault": "cd VideoVault && npm run dev",
+    "dev:vllm": "cd vllm && npm run dev:watch",
     "install:all": "cd l2p && npm run install:all && cd ../VideoVault && npm install && cd ../payment && npm install && cd ../vllm && npm install",
-    "build:all": "cd l2p && npm run build:all && cd ../VideoVault && npm run build && cd ../payment && npm run build && cd ../vllm && npm run build",
-    "test:all": "cd l2p && npm run test:all && cd ../VideoVault && npm run test:all && cd ../payment && npm test"
+    "test:all": "cd l2p && npm run test:all && cd ../VideoVault && npm run test:all && cd ../payment && npm test",
+    "validate:env": "node scripts/validate-env.js all",
+    "validate:env:dev": "node scripts/validate-env.js dev",
+    "validate:env:prod": "node scripts/validate-env.js prod"
   },
   "devDependencies": {
     "concurrently": "^8.2.2"

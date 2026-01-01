@@ -1,10 +1,20 @@
 import { Router, Request, Response } from 'express';
 import Joi from 'joi';
 import { AuthService, RegisterData, LoginCredentials } from '../services/AuthService.js';
-import { authenticate, validateRefreshToken } from '../middleware/auth.js';
+import { authenticate } from '../middleware/auth.js';
+import { oauthAuthenticate } from '../middleware/oauth-auth.js';
+import { OAuthService } from '../services/OAuthService.js';
+import { GameProfileService } from '../services/GameProfileService.js';
 
 const router = Router();
 const authService = new AuthService();
+const oauthService = new OAuthService();
+const gameProfileService = new GameProfileService();
+const authServiceUrlRaw = process.env['AUTH_SERVICE_URL'];
+const authServiceUrl = authServiceUrlRaw ? authServiceUrlRaw.replace(/\/+$/, '') : '';
+const authApiBaseUrl = authServiceUrl
+  ? (authServiceUrl.endsWith('/api') ? authServiceUrl : `${authServiceUrl}/api`)
+  : '';
 
 // Validation schemas
 const registerSchema = Joi.object({
@@ -41,9 +51,10 @@ const registerSchema = Joi.object({
 });
 
 const loginSchema = Joi.object({
-  username: Joi.string().required(),
+  username: Joi.string().optional(),
+  usernameOrEmail: Joi.string().optional(),
   password: Joi.string().required()
-});
+}).or('username', 'usernameOrEmail');
 
 const changePasswordSchema = Joi.object({
   currentPassword: Joi.string().required(),
@@ -84,6 +95,79 @@ const getCookieOptions = (maxAge: number) => ({
 const ACCESS_TOKEN_COOKIE_MAX_AGE = 15 * 60 * 1000; // 15 minutes
 const REFRESH_TOKEN_COOKIE_MAX_AGE = 7 * 24 * 60 * 60 * 1000; // 7 days
 
+const hasCentralAuth = !!authApiBaseUrl;
+
+const extractAccessToken = (req: Request): string | null => {
+  const authHeader = req.headers?.authorization;
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    return authHeader.substring(7);
+  }
+  return req.cookies?.['accessToken'] || null;
+};
+
+const setAuthCookies = (res: Response, tokens?: { accessToken?: string; refreshToken?: string }) => {
+  if (!tokens?.accessToken) {
+    return;
+  }
+
+  res.cookie('accessToken', tokens.accessToken, getCookieOptions(ACCESS_TOKEN_COOKIE_MAX_AGE));
+  if (tokens.refreshToken) {
+    res.cookie('refreshToken', tokens.refreshToken, getCookieOptions(REFRESH_TOKEN_COOKIE_MAX_AGE));
+  }
+};
+
+type AuthProxyOptions = {
+  path: string;
+  method?: string;
+  body?: Record<string, unknown>;
+  includeAuth?: boolean;
+};
+
+const proxyAuthService = async (
+  req: Request,
+  res: Response,
+  options: AuthProxyOptions
+): Promise<boolean> => {
+  if (!hasCentralAuth) {
+    return false;
+  }
+
+  const headers: Record<string, string> = {};
+  if (options.body) {
+    headers['Content-Type'] = 'application/json';
+  }
+
+  if (options.includeAuth) {
+    const token = extractAccessToken(req);
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+  }
+
+  try {
+    const response = await fetch(`${authApiBaseUrl}${options.path}`, {
+      method: options.method ?? req.method,
+      headers,
+      body: options.body ? JSON.stringify(options.body) : undefined
+    });
+
+    const data = await response.json().catch(() => null);
+
+    if (data?.tokens?.accessToken) {
+      setAuthCookies(res, data.tokens);
+    }
+
+    res.status(response.status).json(data ?? {});
+    return true;
+  } catch (error) {
+    res.status(503).json({
+      error: 'Authentication service unavailable',
+      message: 'Authentication service unavailable'
+    });
+    return true;
+  }
+};
+
 /**
  * POST /api/auth/register
  * Register a new user
@@ -102,6 +186,22 @@ router.post('/register', async (req: Request, res: Response): Promise<void> => {
     }
 
     const registerData: RegisterData = value;
+
+    if (hasCentralAuth) {
+      const proxied = await proxyAuthService(req, res, {
+        path: '/auth/register',
+        method: 'POST',
+        body: {
+          username: registerData.username,
+          email: registerData.email,
+          password: registerData.password,
+          name: (registerData as any).name
+        }
+      });
+      if (proxied) {
+        return;
+      }
+    }
 
     // Register user
     const result = await authService.register(registerData);
@@ -159,7 +259,25 @@ router.post('/login', async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    const credentials: LoginCredentials = value;
+    const usernameOrEmail = value.usernameOrEmail || value.username;
+    const credentials: LoginCredentials = {
+      username: usernameOrEmail,
+      password: value.password
+    };
+
+    if (hasCentralAuth) {
+      const proxied = await proxyAuthService(req, res, {
+        path: '/auth/login',
+        method: 'POST',
+        body: {
+          usernameOrEmail,
+          password: value.password
+        }
+      });
+      if (proxied) {
+        return;
+      }
+    }
 
     // Login user
     const result = await authService.login(credentials);
@@ -197,9 +315,36 @@ router.post('/login', async (req: Request, res: Response): Promise<void> => {
  * POST /api/auth/refresh
  * Refresh access token using refresh token
  */
-router.post('/refresh', validateRefreshToken, async (req: Request, res: Response): Promise<void> => {
+router.post('/refresh', async (req: Request, res: Response): Promise<void> => {
   try {
     const refreshToken = req.cookies?.['refreshToken'] || (req.body as Record<string, unknown>)['refreshToken'];
+
+    if (hasCentralAuth) {
+      if (!refreshToken) {
+        res.status(401).json({
+          error: 'Refresh token required',
+          message: 'No refresh token provided'
+        });
+        return;
+      }
+
+      const proxied = await proxyAuthService(req, res, {
+        path: '/auth/refresh',
+        method: 'POST',
+        body: { refreshToken }
+      });
+      if (proxied) {
+        return;
+      }
+    }
+
+    if (!refreshToken) {
+      res.status(401).json({
+        error: 'Refresh token required',
+        message: 'No refresh token provided'
+      });
+      return;
+    }
 
     // Refresh tokens
     const tokens = await authService.refreshToken(refreshToken);
@@ -214,6 +359,26 @@ router.post('/refresh', validateRefreshToken, async (req: Request, res: Response
       tokens
     });
   } catch (error) {
+    if (error instanceof Error) {
+      if (error.message === 'Refresh token expired') {
+        res.status(401).json({
+          error: 'Refresh token expired',
+          message: 'Refresh token has expired, please login again',
+          code: 'REFRESH_TOKEN_EXPIRED'
+        });
+        return;
+      }
+
+      if (error.message === 'Invalid refresh token') {
+        res.status(401).json({
+          error: 'Invalid refresh token',
+          message: 'Refresh token is invalid',
+          code: 'REFRESH_TOKEN_INVALID'
+        });
+        return;
+      }
+    }
+
     console.error('Token refresh error:', error);
     res.status(401).json({
       error: 'Token refresh failed',
@@ -226,7 +391,27 @@ router.post('/refresh', validateRefreshToken, async (req: Request, res: Response
  * POST /api/auth/logout
  * Logout user by clearing cookies
  */
-router.post('/logout', (req: Request, res: Response): void => {
+router.post('/logout', async (req: Request, res: Response): Promise<void> => {
+  if (hasCentralAuth) {
+    const token = extractAccessToken(req);
+    if (token) {
+      res.clearCookie('accessToken', { path: '/' });
+      res.clearCookie('refreshToken', { path: '/' });
+      try {
+        await fetch(`${authApiBaseUrl}/auth/logout`, {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${token}` }
+        });
+      } catch {
+        // Ignore logout errors from auth service; local logout should still succeed.
+      }
+      res.status(200).json({
+        message: 'Logout successful'
+      });
+      return;
+    }
+  }
+
   // Clear cookies
   res.clearCookie('accessToken', { path: '/' });
   res.clearCookie('refreshToken', { path: '/' });
@@ -242,6 +427,17 @@ router.post('/logout', (req: Request, res: Response): void => {
  */
 router.get('/me', authenticate, async (req: Request, res: Response): Promise<void> => {
   try {
+    if (hasCentralAuth) {
+      const proxied = await proxyAuthService(req, res, {
+        path: '/user/me',
+        method: 'GET',
+        includeAuth: true
+      });
+      if (proxied) {
+        return;
+      }
+    }
+
     const user = await authService.getUserByToken(
       req.cookies?.['accessToken'] || req.headers.authorization?.substring(7) || ''
     );
@@ -292,6 +488,18 @@ router.post('/change-password', authenticate, async (req: Request, res: Response
       return;
     }
 
+    if (hasCentralAuth) {
+      const proxied = await proxyAuthService(req, res, {
+        path: '/auth/change-password',
+        method: 'POST',
+        includeAuth: true,
+        body: { currentPassword, newPassword }
+      });
+      if (proxied) {
+        return;
+      }
+    }
+
     // Change password
     await authService.changePassword(req.user.userId, currentPassword, newPassword);
 
@@ -331,6 +539,14 @@ router.post('/change-password', authenticate, async (req: Request, res: Response
  */
 router.post('/deactivate', authenticate, async (req: Request, res: Response): Promise<void> => {
   try {
+    if (hasCentralAuth) {
+      res.status(501).json({
+        error: 'Not supported',
+        message: 'Account deactivation is handled by the central auth service'
+      });
+      return;
+    }
+
     if (!req.user) {
       res.status(401).json({
         error: 'Authentication required',
@@ -361,7 +577,18 @@ router.post('/deactivate', authenticate, async (req: Request, res: Response): Pr
  * GET /api/auth/validate
  * Validate current token
  */
-router.get('/validate', authenticate, (req: Request, res: Response): void => {
+router.get('/validate', authenticate, async (req: Request, res: Response): Promise<void> => {
+  if (hasCentralAuth) {
+    const proxied = await proxyAuthService(req, res, {
+      path: '/auth/verify',
+      method: 'GET',
+      includeAuth: true
+    });
+    if (proxied) {
+      return;
+    }
+  }
+
   if (!req.user) {
     res.status(401).json({
       error: 'Authentication required',
@@ -397,6 +624,17 @@ router.post('/verify-email', async (req: Request, res: Response): Promise<void> 
     }
 
     const { token } = value;
+
+    if (hasCentralAuth) {
+      const proxied = await proxyAuthService(req, res, {
+        path: '/auth/verify-email',
+        method: 'POST',
+        body: { token }
+      });
+      if (proxied) {
+        return;
+      }
+    }
 
     // Verify email
     const user = await authService.verifyEmail(token);
@@ -455,6 +693,17 @@ router.post('/resend-verification', async (req: Request, res: Response): Promise
 
     const { email } = value;
 
+    if (hasCentralAuth) {
+      const proxied = await proxyAuthService(req, res, {
+        path: '/auth/resend-verification',
+        method: 'POST',
+        body: { email }
+      });
+      if (proxied) {
+        return;
+      }
+    }
+
     // Resend verification email
     await authService.resendEmailVerification(email);
 
@@ -506,6 +755,17 @@ router.post('/forgot-password', async (req: Request, res: Response): Promise<voi
 
     const { email } = value;
 
+    if (hasCentralAuth) {
+      const proxied = await proxyAuthService(req, res, {
+        path: '/auth/forgot-password',
+        method: 'POST',
+        body: { email }
+      });
+      if (proxied) {
+        return;
+      }
+    }
+
     // Request password reset
     await authService.requestPasswordReset(email);
 
@@ -550,6 +810,17 @@ router.post('/reset-password', async (req: Request, res: Response): Promise<void
 
     const { token, newPassword } = value;
 
+    if (hasCentralAuth) {
+      const proxied = await proxyAuthService(req, res, {
+        path: '/auth/reset-password',
+        method: 'POST',
+        body: { token, newPassword }
+      });
+      if (proxied) {
+        return;
+      }
+    }
+
     // Complete password reset
     await authService.completePasswordReset(token, newPassword);
 
@@ -589,6 +860,14 @@ router.post('/reset-password', async (req: Request, res: Response): Promise<void
  */
 router.get('/needs-password-change', authenticate, async (req: Request, res: Response): Promise<void> => {
   try {
+    if (hasCentralAuth) {
+      res.status(501).json({
+        error: 'Not supported',
+        message: 'Password change checks are handled by the central auth service'
+      });
+      return;
+    }
+
     if (!req.user) {
       res.status(401).json({
         error: 'Authentication required',
@@ -617,6 +896,14 @@ router.get('/needs-password-change', authenticate, async (req: Request, res: Res
  */
 router.post('/force-password-change', authenticate, async (req: Request, res: Response): Promise<void> => {
   try {
+    if (hasCentralAuth) {
+      res.status(501).json({
+        error: 'Not supported',
+        message: 'Password changes are handled by the central auth service'
+      });
+      return;
+    }
+
     // Validate request body
     const { error, value } = forcePasswordChangeSchema.validate(req.body);
     if (error) {
@@ -678,6 +965,179 @@ router.post('/force-password-change', authenticate, async (req: Request, res: Re
 router.get('/forward-auth', authenticate, (req: Request, res: Response): void => {
   // If the authenticate middleware succeeded, we just return 200
   res.status(200).send('Authenticated');
+});
+
+// ============================================================================
+// OAuth 2.0 Endpoints
+// ============================================================================
+
+/**
+ * POST /api/auth/oauth/exchange
+ * Exchange authorization code for tokens
+ * This is called by the frontend after receiving the code from auth service
+ */
+router.post('/oauth/exchange', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { code, state } = req.body;
+
+    if (!code) {
+      res.status(400).json({
+        error: 'Validation failed',
+        message: 'Authorization code is required'
+      });
+      return;
+    }
+
+    // Exchange code for tokens via OAuth service
+    const tokenResponse = await oauthService.exchangeCode(code);
+
+    // Create or update game profile for the user
+    await gameProfileService.getOrCreateProfile(tokenResponse.user.userId);
+
+    // Set tokens in cookies
+    res.cookie('accessToken', tokenResponse.access_token, getCookieOptions(ACCESS_TOKEN_COOKIE_MAX_AGE));
+    res.cookie('refreshToken', tokenResponse.refresh_token, getCookieOptions(REFRESH_TOKEN_COOKIE_MAX_AGE));
+
+    // Return tokens and user data
+    res.status(200).json({
+      message: 'OAuth login successful',
+      user: tokenResponse.user,
+      tokens: {
+        accessToken: tokenResponse.access_token,
+        refreshToken: tokenResponse.refresh_token
+      }
+    });
+  } catch (error) {
+    console.error('OAuth exchange error:', error);
+    res.status(400).json({
+      error: 'OAuth exchange failed',
+      message: error instanceof Error ? error.message : 'Failed to exchange authorization code'
+    });
+  }
+});
+
+/**
+ * POST /api/auth/oauth/refresh
+ * Refresh access token using refresh token
+ */
+router.post('/oauth/refresh', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const refreshToken = req.cookies.refreshToken || req.body.refresh_token;
+
+    if (!refreshToken) {
+      res.status(400).json({
+        error: 'Validation failed',
+        message: 'Refresh token is required'
+      });
+      return;
+    }
+
+    // Refresh tokens via OAuth service
+    const tokenResponse = await oauthService.refreshToken(refreshToken);
+
+    // Set new tokens in cookies
+    res.cookie('accessToken', tokenResponse.access_token, getCookieOptions(ACCESS_TOKEN_COOKIE_MAX_AGE));
+    res.cookie('refreshToken', tokenResponse.refresh_token, getCookieOptions(REFRESH_TOKEN_COOKIE_MAX_AGE));
+
+    // Return new tokens
+    res.status(200).json({
+      message: 'Tokens refreshed successfully',
+      tokens: {
+        accessToken: tokenResponse.access_token,
+        refreshToken: tokenResponse.refresh_token
+      },
+      user: tokenResponse.user
+    });
+  } catch (error) {
+    console.error('OAuth refresh error:', error);
+    res.status(401).json({
+      error: 'Token refresh failed',
+      message: error instanceof Error ? error.message : 'Failed to refresh tokens'
+    });
+  }
+});
+
+/**
+ * GET /api/auth/oauth/me
+ * Get current user info with game profile (OAuth version)
+ * Uses OAuth authentication middleware
+ */
+router.get('/oauth/me', oauthAuthenticate, async (req: Request, res: Response): Promise<void> => {
+  try {
+    if (!req.user) {
+      res.status(401).json({
+        error: 'Authentication required',
+        message: 'User not authenticated'
+      });
+      return;
+    }
+
+    // Get game profile
+    const gameProfile = await gameProfileService.getOrCreateProfile(req.user.userId);
+
+    // Combine auth user data with game profile
+    res.status(200).json({
+      user: {
+        userId: req.user.userId,
+        username: req.user.username,
+        email: req.user.email,
+        role: req.user.role,
+        emailVerified: req.user.emailVerified,
+        // Game-specific fields from profile
+        selectedCharacter: gameProfile.selectedCharacter,
+        characterLevel: gameProfile.characterLevel,
+        experiencePoints: gameProfile.experiencePoints,
+        preferences: gameProfile.preferences
+      }
+    });
+  } catch (error) {
+    console.error('OAuth me error:', error);
+    res.status(500).json({
+      error: 'Failed to get user info',
+      message: 'An unexpected error occurred'
+    });
+  }
+});
+
+/**
+ * POST /api/auth/oauth/logout
+ * Logout user and revoke tokens
+ */
+router.post('/oauth/logout', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const accessToken = req.cookies.accessToken || req.headers.authorization?.replace('Bearer ', '');
+
+    // Revoke token with auth service
+    if (accessToken) {
+      await oauthService.revokeToken(accessToken, 'access_token');
+    }
+
+    // Clear cookies
+    res.clearCookie('accessToken');
+    res.clearCookie('refreshToken');
+
+    res.status(200).json({
+      message: 'Logged out successfully'
+    });
+  } catch (error) {
+    console.error('OAuth logout error:', error);
+    // Still clear cookies even if revoke fails
+    res.clearCookie('accessToken');
+    res.clearCookie('refreshToken');
+
+    res.status(200).json({
+      message: 'Logged out successfully'
+    });
+  }
+});
+
+/**
+ * GET /api/auth/oauth/config
+ * Get OAuth configuration for frontend
+ */
+router.get('/oauth/config', (req: Request, res: Response): void => {
+  const config = oauthService.getConfig();
+  res.status(200).json(config);
 });
 
 export default router;

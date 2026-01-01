@@ -93,6 +93,11 @@ const validateJwtToken = (token: string, secret: string) => {
   }
 }
 
+const normalizeAuthServiceUrl = (authUrl: string) => {
+  const trimmed = authUrl.trim().replace(/\/+$/, '')
+  return trimmed.endsWith('/api') ? trimmed : `${trimmed}/api`
+}
+
 
 
 interface MockUser {
@@ -112,6 +117,7 @@ interface MockUser {
 
 class ApiService {
   private baseURL: string
+  private authBaseURL: string
   private token: string | null = null
 
   // Enable lightweight front-end mocks for e2e when VITE_TEST_MODE=true
@@ -152,7 +158,26 @@ class ApiService {
     // Default to relative /api path to use Vite proxy in development
     // In production behind Traefik, calls go to same-origin `/api`
     this.baseURL = (envUrl && envUrl.trim()) || '/api'
-    console.log('ApiService initialized with baseURL:', this.baseURL, 'envUrl:', envUrl)
+
+    let authEnvUrl: string | undefined;
+    try {
+      const importMeta = eval('typeof import !== "undefined" ? import.meta : undefined');
+      if (importMeta?.env?.VITE_AUTH_SERVICE_URL) {
+        authEnvUrl = importMeta.env.VITE_AUTH_SERVICE_URL;
+      }
+    } catch {
+      // import.meta not available
+    }
+
+    if (!authEnvUrl && typeof process !== 'undefined' && process.env?.VITE_AUTH_SERVICE_URL) {
+      authEnvUrl = process.env.VITE_AUTH_SERVICE_URL;
+    }
+
+    this.authBaseURL = authEnvUrl && authEnvUrl.trim()
+      ? normalizeAuthServiceUrl(authEnvUrl)
+      : this.baseURL
+
+    console.log('ApiService initialized with baseURL:', this.baseURL, 'authBaseURL:', this.authBaseURL, 'envUrl:', envUrl)
     this.token = localStorage.getItem('auth_token')
 
     // Determine if mock mode should be enabled for tests
@@ -200,7 +225,8 @@ class ApiService {
 
   private async request<T>(
     endpoint: string,
-    options: RequestInit = {}
+    options: RequestInit = {},
+    baseUrlOverride?: string
   ): Promise<ApiResponse<T>> {
     // Use lightweight front-end mocks in test mode to avoid backend dependency
     const useMock = this.mockOverride ?? this.isMockEnabled
@@ -209,7 +235,8 @@ class ApiService {
       return this.mockRequest<T>(endpoint, options)
     }
 
-    const url = `${this.baseURL}${endpoint}`
+    const baseUrl = baseUrlOverride || this.baseURL
+    const url = `${baseUrl}${endpoint}`
     console.log('Making API request to:', url)
 
     const headers: Record<string, string> = {
@@ -240,7 +267,7 @@ class ApiService {
           const refreshResponse = await this.refreshToken()
           if (refreshResponse.success) {
             // Retry the original request with new token
-            return this.request(endpoint, options)
+            return this.request(endpoint, options, baseUrlOverride)
           }
         }
 
@@ -277,6 +304,13 @@ class ApiService {
         error: 'An unexpected error occurred',
       }
     }
+  }
+
+  private async authRequest<T>(
+    endpoint: string,
+    options: RequestInit = {}
+  ): Promise<ApiResponse<T>> {
+    return this.request(endpoint, options, this.authBaseURL)
   }
 
   setMockMode(enable: boolean | null) {
@@ -817,7 +851,7 @@ class ApiService {
 
   // Authentication methods
   async register(data: AuthRequest): Promise<ApiResponse<AuthResponse>> {
-    const response = await this.request<AuthResponse>('/auth/register', {
+    const response = await this.authRequest<AuthResponse>('/auth/register', {
       method: 'POST',
       body: JSON.stringify(data),
     })
@@ -829,7 +863,7 @@ class ApiService {
       const userData = {
         ...authData.user,
         id: String(authData.user?.id || ''),
-        isAdmin: Boolean(authData.user?.isAdmin ?? authData.user?.is_admin)
+        isAdmin: Boolean(authData.user?.isAdmin ?? authData.user?.is_admin ?? authData.user?.role === 'ADMIN')
       }
       this.setAuth(authData.tokens?.accessToken, authData.tokens?.refreshToken, userData)
     }
@@ -838,9 +872,12 @@ class ApiService {
   }
 
   async login(data: Omit<AuthRequest, 'email'>): Promise<ApiResponse<AuthResponse>> {
-    const response = await this.request<AuthResponse>('/auth/login', {
+    const response = await this.authRequest<AuthResponse>('/auth/login', {
       method: 'POST',
-      body: JSON.stringify(data),
+      body: JSON.stringify({
+        usernameOrEmail: data.username,
+        password: data.password
+      }),
     })
 
     if (response.success && response.data) {
@@ -851,7 +888,7 @@ class ApiService {
         ...authData.user,
         id: String(authData.user?.id || ''),
         // Normalize admin flag from backend (is_admin) to camelCase for the frontend
-        isAdmin: Boolean(authData.user?.isAdmin ?? authData.user?.is_admin)
+        isAdmin: Boolean(authData.user?.isAdmin ?? authData.user?.is_admin ?? authData.user?.role === 'ADMIN')
       }
       this.setAuth(authData.tokens?.accessToken, authData.tokens?.refreshToken, userData)
     }
@@ -860,7 +897,7 @@ class ApiService {
   }
 
   async logout(): Promise<ApiResponse<void>> {
-    const response = await this.request<void>('/auth/logout', {
+    const response = await this.authRequest<void>('/auth/logout', {
       method: 'POST',
     })
 
@@ -869,11 +906,23 @@ class ApiService {
   }
 
   async validateToken(): Promise<ApiResponse<{ valid: boolean }>> {
-    return this.request<{ valid: boolean }>('/auth/validate')
+    const response = await this.authRequest<any>('/auth/verify')
+    if (response.success) {
+      return {
+        success: true,
+        data: { valid: true }
+      }
+    }
+
+    return {
+      success: false,
+      error: response.error,
+      data: { valid: false }
+    }
   }
 
   async getCurrentUserFromServer(): Promise<ApiResponse<any>> {
-    const response = await this.request<any>('/auth/me')
+    const response = await this.authRequest<any>('/user/me')
     if (response.success && response.data?.user) {
       // If we got a user, but didn't have a token in local memory/storage, 
       // it means we are authenticated via cookies.
@@ -895,7 +944,7 @@ class ApiService {
       }
     }
 
-    const response = await this.request<AuthResponse>('/auth/refresh', {
+    const response = await this.authRequest<AuthResponse>('/auth/refresh', {
       method: 'POST',
       body: JSON.stringify({ refreshToken }),
     })
@@ -911,14 +960,14 @@ class ApiService {
 
   // Password reset methods
   async requestPasswordReset(email: string): Promise<ApiResponse<{ message: string }>> {
-    return this.request('/auth/forgot-password', {
+    return this.authRequest('/auth/forgot-password', {
       method: 'POST',
       body: JSON.stringify({ email })
     })
   }
 
   async completePasswordReset(token: string, newPassword: string): Promise<ApiResponse<{ message: string }>> {
-    return this.request('/auth/reset-password', {
+    return this.authRequest('/auth/reset-password', {
       method: 'POST',
       body: JSON.stringify({ token, newPassword }),
     })
@@ -928,7 +977,7 @@ class ApiService {
    * Change password for authenticated user
    */
   async changePassword(currentPassword: string, newPassword: string): Promise<ApiResponse<{ message: string }>> {
-    return this.request('/auth/change-password', {
+    return this.authRequest('/auth/change-password', {
       method: 'POST',
       body: JSON.stringify({ currentPassword, newPassword })
     })
@@ -936,17 +985,64 @@ class ApiService {
 
   // Email verification methods
   async verifyEmail(token: string): Promise<ApiResponse<{ message: string }>> {
-    return this.request('/auth/verify-email', {
+    return this.authRequest('/auth/verify-email', {
       method: 'POST',
       body: JSON.stringify({ token })
     })
   }
 
   async resendEmailVerification(email: string): Promise<ApiResponse<{ message: string }>> {
-    return this.request('/auth/resend-verification', {
+    return this.authRequest('/auth/resend-verification', {
       method: 'POST',
       body: JSON.stringify({ email })
     })
+  }
+
+  // OAuth 2.0 methods
+  async exchangeOAuthCode(code: string, state: string): Promise<ApiResponse<any>> {
+    const response = await this.request<any>('/auth/oauth/exchange', {
+      method: 'POST',
+      body: JSON.stringify({ code, state })
+    })
+
+    if (response.success && response.data) {
+      const authData = response.data as any
+      const userData = {
+        ...authData.user,
+        id: String(authData.user?.userId || authData.user?.id || ''),
+        isAdmin: Boolean(authData.user?.isAdmin ?? authData.user?.is_admin)
+      }
+      this.setAuth(authData.tokens?.accessToken, authData.tokens?.refreshToken, userData)
+    }
+
+    return response
+  }
+
+  async refreshOAuthToken(): Promise<ApiResponse<any>> {
+    const response = await this.request<any>('/auth/oauth/refresh', {
+      method: 'POST'
+    })
+
+    if (response.success && response.data) {
+      const authData = response.data as any
+      this.setAuth(authData.tokens?.accessToken, authData.tokens?.refreshToken, authData.user)
+    }
+
+    return response
+  }
+
+  async oauthLogout(): Promise<ApiResponse<void>> {
+    const response = await this.request<void>('/auth/oauth/logout', {
+      method: 'POST'
+    })
+
+    this.clearAuth()
+    return response
+  }
+
+  async getOAuthConfig(): Promise<any> {
+    const response = await this.request<any>('/auth/oauth/config')
+    return response.success ? response.data : null
   }
 
   // Lobby methods

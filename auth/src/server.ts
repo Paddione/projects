@@ -23,6 +23,9 @@ const __dirname = dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 5500;
 
+// Trust the first proxy so rate limiting and secure cookies work behind reverse proxies.
+app.set('trust proxy', 1);
+
 // ============================================================================
 // MIDDLEWARE
 // ============================================================================

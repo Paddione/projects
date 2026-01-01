@@ -1,80 +1,74 @@
-# vLLM MCP Server: Repository Mastermind 🚀
+# vLLM MCP Server: Repository Mastermind
 
-An advanced Model Context Protocol (MCP) server for **vLLM**, designed to bridge AI assistants (like Claude Desktop) with your vLLM instance. It doesn't just provide LLM inference; it acts as a **Repository Mastermind** for code review, analysis, quality assurance, and database management.
+An advanced Model Context Protocol (MCP) server for vLLM, designed to bridge AI assistants (like Claude Desktop) with your vLLM instance. It provides LLM inference plus repository review, analysis, and database tooling.
 
----
+## Key Features
 
-## 🌟 Key Features
+### LLM Inference Integration
+- `chat_completion`: Multi-turn conversations
+- `completion`: Text completions
+- `list_models`: List available models
 
-### 1. **LLM Inference Integration**
-*   **`chat_completion`**: Multi-turn conversations with system, user, and assistant messages.
-*   **`completion`**: Simple text completions.
-*   **`list_models`**: List all models available on your vLLM instance.
+### Repository Mastermind (Audit & Analysis)
+- `analyze_repository`: Repository scan with quality score
+- `review_code_with_ai`: AI code review
+- `check_guidelines`: Validate against guidelines
+- `suggest_improvements`: Prioritized suggestions
+- `generate_pr_comment`: PR-ready summaries
 
-### 2. **Repository Mastermind (Audit & Analysis)**
-*   **`analyze_repository`**: Comprehensive repository scan including structure, issues, and a quality score (0-100).
-*   **`review_code_with_ai`**: AI-powered code reviews with focus on security, performance, and readability.
-*   **`check_guidelines`**: Validate repository compliance against specific guidelines (e.g., this README or custom docs).
-*   **`suggest_improvements`**: Get prioritized suggestions with optional **Auto-Fixes** for common issues.
-*   **`generate_pr_comment`**: Automatically format findings into professional GitHub/GitLab-ready comments.
+### Advanced Analytics & Security
+- Git history analysis
+- Vulnerability scan via `npm audit`
+- Coverage analysis for LCOV/JSON
+- Custom rule engine via `.analyzer-rules.yml`
 
-### 3. **Advanced Analytics & Security**
-*   **Git History Analysis**: Analyze commit quality, hot spots, contributor stats, and repository evolution.
-*   **Vulnerability Scanning**: Integration with `npm audit` with severity categorization and fix recommendations.
-*   **Coverage Analysis**: Parse LCOV/JSON reports to identify untested code paths and suggest tests.
-*   **Custom Rule Engine**: Define your own YAML-based linting and project rules in `.analyzer-rules.yml`.
+### Database Management (PostgreSQL)
+- Schema exploration
+- User management (Open-WebUI)
+- Safe SELECT queries
 
-### 4. **Database Management (PostgreSQL)**
-*   **Schema Exploration**: Inspect your database structure, tables, and columns.
-*   **User Management**: List and manage users in the Open-WebUI database (set roles to admin, user, or pending).
-*   **Query Execution**: Run safe `SELECT` queries to explore your data directly from the AI assistant.
+### Multi-Media & RAG
+- Optional AI image generation stack (Stable Diffusion Forge)
+- RAG stack with Qdrant + LlamaIndex (`rag/`)
 
-### 5. **Multi-Media & RAG**
-*   **AI Image Generation**: Local stack setup for Stable Diffusion (Forge) and automatic model downloading.
-*   **RAG Stack**: Full retrieval-augmented generation pipeline with Qdrant and LlamaIndex (located in `rag/`).
+## Quick Start
 
----
+### Prerequisites
+- Node.js (LTS)
+- Docker & Docker Compose
+- NVIDIA GPU (recommended)
+- PostgreSQL (for Open-WebUI tasks)
 
-## 🚀 Quick Start
+### Deploy vLLM
 
-### 1. Prerequisites
-*   **Node.js** (LTS version)
-*   **Docker & Docker Compose**
-*   **NVIDIA GPU** (recommended for vLLM and Image Gen performance)
-*   **PostgreSQL** (running locally or via Docker for Open-WebUI tasks)
+Configure `.env` (copy from `.env.example`) with `HF_TOKEN`, `MODEL`, and `PORT`, then run:
 
-### 2. Deploy vLLM
-Configure your `.env` file with your `HF_TOKEN`, `MODEL`, and `PORT`. Then run:
 ```bash
-# Start the vLLM API container
-bash deploy.sh
+bash scripts/deploy.sh
 ```
 
-### 3. Setup AI Image Stack (Optional)
+### AI Image Stack (Optional)
+
 ```bash
-# Installs Stable Diffusion Forge and necessary dependencies
-bash setup_ai_image_stack.sh
-# Download recommended models (SDXL, etc.)
-bash download_image_models.sh
+bash scripts/setup_ai_image_stack.sh
+bash scripts/download_image_models.sh
 ```
 
-### 4. Install & Build MCP Server
+### Build MCP Server
+
 ```bash
 npm install
 npm run build
 ```
 
----
+## Claude Desktop Integration
 
-## 💻 Claude Desktop Integration
+Configuration path:
+- Windows: `%APPDATA%\Claude\claude_desktop_config.json`
+- macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
 
-To use these tools in Claude Desktop, add the server to your configuration:
+Configuration:
 
-**Configuration Path:**
-*   **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
-*   **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
-
-**Configuration:**
 ```json
 {
   "mcpServers": {
@@ -90,67 +84,105 @@ To use these tools in Claude Desktop, add the server to your configuration:
 }
 ```
 
----
+## Dashboard (VRAM Mastermind)
 
-## 🛠 Available Tools & Usage
+The dashboard controls vLLM, Forge, and Infinity containers.
+
+```bash
+cd dashboard
+node server.js
+```
+
+Open http://localhost:4242.
+
+Tech stack:
+- Backend: Node.js, Express, Socket.io, Dockerode
+- Frontend: Vanilla HTML/JS/CSS
+- Monitoring: `nvidia-smi`
+
+## RAG Stack
+
+Quick start:
+1. Ensure `.env` has a valid `HF_TOKEN`.
+2. Run `./scripts/start_rag.sh`.
+3. Open http://localhost:3000.
+
+Directory dump (inbox):
+1. Drop files into `rag/storage/inbox/`.
+2. The ingestion engine vectorizes and moves them to `rag/storage/processed/`.
+
+Components:
+- Inference: vLLM (GPU)
+- Embeddings: Infinity (BGE-M3)
+- Vector DB: Qdrant
+- Frontend: Open WebUI
+- Processor: LlamaIndex watcher
+
+API endpoints:
+- vLLM: http://localhost:8888/v1
+- Embeddings: http://localhost:7997/v1
+- Qdrant: http://localhost:6333
+
+## Tool Catalog
 
 | Category | Tool | Description | Example Parameters |
-| :--- | :--- | :--- | :--- |
-| **Inference** | `chat_completion` | Multi-turn chat | `{"messages": [{"role": "user", "content": "Explain quantum computing"}]}` |
-| | `completion` | Text completion | `{"prompt": "The future of AI is"}` |
-| | `list_models` | List models | `(no parameters)` |
-| **Analysis** | `analyze_repository` | Deep repo scan | `{"repository_path": "/home/user/project"}` |
-| | `review_code_ai` | AI Code Review | `{"file_path": "src/app.ts", "focus_areas": ["security"]}` |
-| | `check_guidelines`| Guideline check | `{"repository_path": "/path/to/repo", "guidelines_file": "CONTRIBUTING.md"}` |
-| | `suggest_fixes` | Improvement list | `{"repository_path": "/path/to/repo", "auto_fix": true}` |
-| | `generate_pr` | PR Comment Gen | `{"repository_path": "/path/to/repo", "format": "github"}` |
-| **Advanced** | `scan_vulnerability`| Security scan | `{"repository_path": "/path/to/repo"}` |
-| | `analyze_git` | Git stats | `{"repository_path": "/path/to/repo", "commit_limit": 50}` |
-| | `analyze_coverage`| Test coverage | `{"repository_path": "/path/to/repo"}` |
-| | `validate_rules` | Custom YAML rules | `{"repository_path": "/path/to/repo"}` |
-| **Database** | `db_describe` | Schema info | `(no parameters)` |
-| | `db_list_users` | List registered users| `(no parameters)` |
-| | `db_run_query` | Run SELECT query | `{"sql": "SELECT count(*) FROM \"user\""}` |
-| | `db_set_role` | Update user role | `{"email": "user@example.com", "role": "admin"}` |
+| --- | --- | --- | --- |
+| Inference | `chat_completion` | Multi-turn chat | `{"messages": [{"role": "user", "content": "Explain quantum computing"}]}` |
+|  | `completion` | Text completion | `{"prompt": "The future of AI is"}` |
+|  | `list_models` | List models | `(no parameters)` |
+| Analysis | `analyze_repository` | Deep repo scan | `{"repository_path": "/home/user/project"}` |
+|  | `review_code_ai` | AI Code Review | `{"file_path": "src/app.ts", "focus_areas": ["security"]}` |
+|  | `check_guidelines` | Guideline check | `{"repository_path": "/path/to/repo", "guidelines_file": "README.md"}` |
+|  | `suggest_fixes` | Improvement list | `{"repository_path": "/path/to/repo", "auto_fix": true}` |
+|  | `generate_pr` | PR comment | `{"repository_path": "/path/to/repo", "format": "github"}` |
+| Advanced | `scan_vulnerability` | Security scan | `{"repository_path": "/path/to/repo"}` |
+|  | `analyze_git` | Git stats | `{"repository_path": "/path/to/repo", "commit_limit": 50}` |
+|  | `analyze_coverage` | Test coverage | `{"repository_path": "/path/to/repo"}` |
+|  | `validate_rules` | Custom YAML rules | `{"repository_path": "/path/to/repo"}` |
+| Database | `db_describe` | Schema info | `(no parameters)` |
+|  | `db_list_users` | List users | `(no parameters)` |
+|  | `db_run_query` | Run SELECT query | `{"sql": "SELECT count(*) FROM \"user\""}` |
+|  | `db_set_role` | Update role | `{"email": "user@example.com", "role": "admin"}` |
 
----
+## Architecture & Patterns
 
-## 📋 Repository Guidelines
+- MCP server communicates via stdio with Claude Desktop
+- Tool handlers are written in TypeScript
+- Axios used for vLLM API calls
+- PostgreSQL connection for database tools
 
-### Project Standards
-*   **Module Organization**: Logic resides in `src/`, compiled assets in `build/`.
-*   **Environment**: Always use `.env.example` as a template for new deployments.
-*   **Security**: Database tools only allow `SELECT` queries by default (except for specific role management tools).
+## Environment Files
 
-### Coding Style
-*   **TypeScript**: Explicit return types and interfaces for all MCP tool handlers.
-*   **Naming**: Use snake_case for tool names and descriptive descriptions for the LLM to understand intent.
+Recommended structure:
+- `.env.example` (template)
+- `.env-dev` (development)
+- `.env-prod` (production)
 
----
+The deployment script reads `.env`. For local work, copy `.env-dev` to `.env` as needed.
 
-## 🎯 RAG Implementation (In Progress)
+RAG stack (production):
+- `vllm/rag/.env-prod` from `.env.example`
+- Generate `WEBUI_SECRET_KEY` with `openssl rand -hex 32`
+- Update `CORS_ALLOW_ORIGIN` with production domains
 
-The RAG stack (located in `/rag`) provides a robust document retrieval system:
-1.  **Storage**: Qdrant Vector DB.
-2.  **Engine**: LlamaIndex with `BAAI/bge-m3` embeddings.
-3.  **UI**: Open WebUI integration for interactive chatting with your documents.
+Required values:
+- `HF_TOKEN` (Hugging Face access token)
+- `VLLM_API_KEY` (API key for vLLM)
+- `ADMIN_PASSWORD` (dashboard/admin password)
+- `INFINITY_API_KEY` (embeddings API key)
 
----
+## Critical Constraints
 
-## 📜 Changelog
+- Database tools only allow SELECT queries (security)
+- GPU recommended for optimal performance
+- MCP server path must be absolute in Claude config
 
-### v2.1.0 (Current)
-*   **Added**: PostgreSQL Database Management suite.
-*   **Added**: Local AI Image Generation automation scripts.
-*   **Added**: Test coverage and PR comment generation tools.
+## Important Files
 
-### v2.0.0
-*   Initial Repository Mastermind features (Code review, Git history, Vulnerability canning).
+- `scripts/deploy.sh`: vLLM container deployment
+- `.analyzer-rules.yml`: custom linting rules
+- `claude_desktop_config.json`: example MCP config
 
-### v1.0.0
-*   Basic vLLM integration for chat and text completion.
+## License
 
----
-
-## 📄 License
 MIT

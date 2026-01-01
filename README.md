@@ -1,458 +1,392 @@
 # Patrick's Projects Monorepo
 
-A collection of independent full-stack applications including a multiplayer quiz platform, video management system, payment platform, and AI-powered development tools.
+A collection of independent full-stack applications, shared infrastructure, and AI tooling.
 
-## 🤖 LLM Rules
-
-All automated assistants should read `LLM_RULES.md` before making changes. It covers scope, safety, testing, and communication expectations.
-
-## 📋 Projects Overview
-
-This monorepo contains four independent projects, each with its own technology stack, development workflow, and deployment process:
+## Projects Overview
 
 | Project | Description | Tech Stack | Port(s) |
-|---------|-------------|------------|---------|
-| [**Learn2Play (l2p)**](./l2p/README.md) | Multiplayer quiz platform with real-time gameplay | React, Express, Socket.io, PostgreSQL | 5173, 5001 |
-| [**VideoVault**](./VideoVault/README.md) | Client-first video management with advanced filtering | React, Vite, File System Access API | 5100/5000 |
-| [**Payment**](./payment/README.md) | Payment processing platform with Stripe | Next.js 16, Prisma, NextAuth | 3004 |
-| [**VLLM**](./vllm/README.md) | MCP server for AI inference and code analysis | TypeScript, vLLM, PostgreSQL | 4100 |
+| --- | --- | --- | --- |
+| [Learn2Play (l2p)](./l2p/README.md) | Multiplayer quiz platform | React, Express, Socket.io, PostgreSQL | 5173, 5001 |
+| [VideoVault](./VideoVault/README.md) | Client-first video management | React, Vite, File System Access API | 5100/5000 |
+| [Payment](./payment/README.md) | Payment platform with Stripe | Next.js 16, Prisma, NextAuth | 3004 |
+| [VLLM](./vllm/README.md) | MCP server for AI inference and analysis | TypeScript, vLLM, PostgreSQL | 4100 |
+| [Auth](./auth/README.md) | Unified authentication service | Node, JWT, OAuth, PostgreSQL | 5500 |
+| [Reverse Proxy](./reverse-proxy/README.md) | Traefik routing and TLS | Traefik, Docker | 443/80 |
+| [Shared Infrastructure](./shared-infrastructure/README.md) | Centralized Postgres | PostgreSQL, Docker | 5432 |
 
-## 🚀 Quick Start
+## Repository Guidelines
 
-### Prerequisites
+### Project Structure & Module Organization
 
-- **Node.js 20+** and npm
-- **Docker & Docker Compose**
-- **Python 3.10+** (for VLLM AI features)
-- **NVIDIA GPU** (optional, for VLLM and AI image generation)
+- `l2p/`: quiz platform with `frontend/`, `backend/`, and `shared/`
+- `VideoVault/`: video manager with `client/`, `server/`, and `e2e/`
+- `payment/`: Next.js app with Prisma in `prisma/` and tests in `test/`
+- `vllm/`: MCP server with `src/`, `tests/`, optional `dashboard/` and `rag/`
+- Root utilities live in `scripts/`
 
-### Initial Setup
+### Coding Style & Naming
 
-Clone and set up all projects at once:
+- TypeScript across projects; follow each ESLint config
+- VideoVault uses Prettier (`VideoVault/.prettierrc.json`); other projects rely on ESLint
+- Keep 2-space indentation and single quotes where the codebase uses them
+- React components in `PascalCase`, hooks in `useThing`, tests in `__tests__/`, `test/`, or `e2e/`
 
-```bash
-# Run the automated setup script
-./setup.sh
-```
+### Testing Guidelines
 
-This will:
-- ✅ Check for required dependencies (Node.js, npm, Python, Docker)
-- ✅ Install npm dependencies for all projects
-- ✅ Create `.env` files from `.env.example` templates
-- ✅ Set up Python virtual environments (for VLLM)
-- ✅ Optionally start Docker services
+- L2P: Jest unit/integration tests under `l2p/backend/src/**/__tests__` and `l2p/frontend/src/**/__tests__`, Playwright E2E under `l2p/frontend/e2e/`
+- VideoVault: Vitest unit tests in `VideoVault/client/src/**.test.ts`, Playwright E2E in `VideoVault/e2e/`
+- Payment: Vitest + Playwright in `payment/test/`
+- VLLM: Jest tests in `vllm/tests/`
 
-### Individual Project Setup
+Add or update tests with every functional change.
 
-Each project can also be set up independently:
+### Commit & PR Guidelines
 
-```bash
-# Learn2Play
-cd l2p && npm install
+- Commit messages are short and imperative (include project name when helpful)
+- PRs should list affected projects, summary, tests run, and env/migration changes
+- Include screenshots for UI updates
 
-# VideoVault
-cd VideoVault && npm install
-
-# Payment
-cd payment && npm install
-
-# VLLM
-cd vllm && npm install && npm run build
-```
-
-## 📚 Project Details
-
-### Learn2Play (l2p)
-
-**Real-time multiplayer quiz platform**
-
-A full-stack application enabling live quiz competitions with Socket.io-powered real-time communication, comprehensive user management, and extensive testing infrastructure.
-
-**Key Features:**
-- Real-time multiplayer gameplay
-- JWT authentication
-- Player progression system
-- Admin panel
-- Comprehensive test suite (Unit, Integration, E2E)
-
-**Quick Start:**
-```bash
-cd l2p
-npm run deploy:dev     # Start Docker stack
-npm run db:migrate     # Run migrations
-npm run dev:frontend   # Start frontend (separate terminal)
-```
-
-👉 [View full L2P documentation](./l2p/README.md)
-
----
-
-### VideoVault
-
-**Advanced video management application**
-
-A privacy-first video organizer using the File System Access API for local file operations, with optional PostgreSQL backend for shared libraries.
-
-**Key Features:**
-- Directory scanning with drag & drop import
-- Advanced filtering (date, size, duration, categories)
-- Bulk operations (rename, move, delete)
-- Modern video player with shortcuts
-- Virtualized rendering for large libraries
-
-**Quick Start:**
-```bash
-cd VideoVault
-npm run docker:dev     # Docker development with hot reload
-# OR
-npm run dev            # Local development (port 5100)
-```
-
-**Requirements:** Chromium-based browser (Chrome, Edge, Opera) for File System Access API
-
-👉 [View full VideoVault documentation](./VideoVault/README.md)
-
----
-
-### Payment
-
-**Payment processing platform**
-
-A Next.js application with Stripe integration, featuring secure authentication via NextAuth and Prisma for database operations.
-
-**Key Features:**
-- Stripe payment integration
-- NextAuth v5 authentication
-- Prisma ORM with PostgreSQL
-- Server-side rendering
-- E2E testing with Playwright
-
-**Quick Start:**
-```bash
-cd payment
-cp .env.example .env        # Configure environment
-npx prisma migrate dev      # Run migrations
-npm run dev                 # Start dev server (port 3004)
-```
-
-👉 [View full Payment documentation](./payment/README.md)
-
----
-
-### VLLM
-
-**AI-powered development tools via MCP**
-
-A Model Context Protocol (MCP) server that provides AI inference, code review, repository analysis, and database management tools for Claude Desktop.
-
-**Key Features:**
-- vLLM integration for LLM inference
-- AI-powered code review and analysis
-- Repository quality scoring
-- PostgreSQL database management
-- Git history analysis
-- Optional RAG stack and AI image generation
-
-**Quick Start:**
-```bash
-cd vllm
-bash deploy.sh             # Deploy vLLM container
-npm install && npm run build
-# Configure Claude Desktop with MCP server path
-```
-
-👉 [View full VLLM documentation](./vllm/README.md)
-
----
-
-## 🛠 Common Commands
-
-### Development
+## Quick Start
 
 ```bash
-# Learn2Play
+# Root setup
+./scripts/setup.sh
+
+# Development
 cd l2p && npm run dev:backend && npm run dev:frontend
-
-# VideoVault
 cd VideoVault && npm run dev
-
-# Payment
 cd payment && npm run dev
-
-# VLLM
-cd vllm && bash deploy.sh
+cd vllm && npm run dev:watch
 ```
 
-### Testing
+## Root Scripts
+
+- `scripts/setup.sh`: install dependencies and seed env files
+- `scripts/start-all-services.sh`: start shared Postgres + services
+- `scripts/stop-all-services.sh`: stop services in order
+- `scripts/restart_all_services.sh`: restart stacks and dashboard
+- `scripts/db-viewer.sh`: inspect running DB containers and ports
+
+## Environment Setup (General)
+
+Standard env layout per service:
+- `.env.example` (template)
+- `.env-dev` (development, gitignored)
+- `.env-prod` (production, gitignored)
+
+Rules:
+- Never commit `.env-dev` or `.env-prod`
+- Use alphanumeric-only database passwords (avoid Docker/Postgres escaping issues)
+- Secrets must be unique per environment
+
+Validation:
+```bash
+npm run validate:env
+npm run validate:env:dev
+npm run validate:env:prod
+```
+
+Service-specific environment details live in each service README.
+
+### Secret Generation
 
 ```bash
-# Run tests for specific projects
+# JWT/session secrets
+openssl rand -hex 32
+
+# Alphanumeric DB passwords
+openssl rand -base64 32 | tr -dc 'A-Za-z0-9' | head -c 32 && echo
+```
+
+### Security Best Practices
+
+1. Never commit `.env-dev` or `.env-prod`
+2. Use strong, unique secrets per environment
+3. Keep DB passwords alphanumeric only
+4. Store API keys in a password manager or secrets store
+5. Rotate production secrets regularly
+
+### Troubleshooting
+
+- If Postgres connections fail: verify `shared-infrastructure` is running and env passwords match
+- If env vars are ignored: check file names and restart services
+- If Docker can't find env files: use `docker-compose --env-file .env-prod up`
+
+### API Keys
+
+- Google Gemini AI: https://makersuite.google.com/app/apikey
+- Stripe: https://dashboard.stripe.com
+- Google OAuth: https://console.cloud.google.com/apis/credentials
+- Hugging Face: https://huggingface.co/settings/tokens
+
+### Backup Env Files
+
+```bash
+tar -czf env-backup-$(date +%Y%m%d).tar.gz \\
+  shared-infrastructure/.env-prod \\
+  auth/.env-{dev,prod} \\
+  l2p/.env-{dev,prod} \\
+  VideoVault/.env-{dev,prod} \\
+  payment/.env-{dev,prod} \\
+  vllm/.env-{dev,prod} \\
+  vllm/rag/.env-prod \\
+  reverse-proxy/.env-prod
+```
+
+Restore:
+
+```bash
+gpg -d env-backup-YYYYMMDD.tar.gz.gpg > env-backup-YYYYMMDD.tar.gz
+tar -xzf env-backup-YYYYMMDD.tar.gz
+```
+
+## Centralized Database (Shared Infrastructure)
+
+All services use a single PostgreSQL instance with separate databases and users. Details, migration steps, and credentials live in `shared-infrastructure/README.md`.
+
+Start/stop all services:
+```bash
+./scripts/start-all-services.sh
+./scripts/stop-all-services.sh
+```
+
+## Common Commands
+
+```bash
+# Build
+cd l2p && npm run build:all
+cd VideoVault && npm run build
+cd payment && npm run build
+cd vllm && npm run build
+
+# Tests
 cd l2p && npm run test:all
 cd VideoVault && npm test
 cd payment && npm test
 ```
 
-### Docker
+## Docker Usage
 
-```bash
-# Start Docker stacks
-cd l2p && npm run deploy:dev
-cd VideoVault && npm run docker:dev
-cd payment && docker-compose up
+- Start shared Postgres first: `cd shared-infrastructure && docker-compose up -d`
+- Each service has its own compose config
+- Reverse proxy uses Traefik with the `traefik-public` network
+
+## Testing Philosophy
+
+- Run the smallest relevant test suite for your change
+- If tests are not run, say so and explain why
+- Prefer unit tests for logic, integration tests for service boundaries, E2E for workflows
+
+## Change Discipline (LLM Rules)
+
+- Prefer small, targeted edits; avoid sweeping refactors
+- Match existing patterns and lint rules
+- Do not add dependencies, run migrations, or change infra without explicit approval
+- Keep secrets out of the repo
+- Update docs instead of creating new ones
+- Avoid destructive operations unless explicitly requested
+
+## LLM Rules (Detailed)
+
+### Scope & Context
+
+- Confirm the target project and work only in its directory unless asked otherwise
+- Read the relevant project README and this root README before changes
+
+### Multi-Agent Coordination
+
+Task declaration:
+- Check for `.agent-tasks.md` at repo root
+- Add task entries with timestamp, project, status, and description
+- Format: `[YYYY-MM-DD HH:MM] [project-name] [IN_PROGRESS|BLOCKED|DONE] Description`
+
+Project isolation:
+- Prefer working in different projects
+- If sharing a project, coordinate on different subsystems
+- Avoid simultaneous edits to the same file
+
+Critical sections (require exclusive access):
+- Git operations (commit/merge/branch)
+- Docker operations (rebuild/restart containers)
+- Database migrations
+- Dependency updates
+- Root-level changes
+- Deployments
+
+Conflict resolution:
+- Mark conflicts as `[BLOCKED]`
+- Yield to active critical operations
+- Communicate blockers clearly
+
+Status communication:
+- Update task status between major steps
+- Mark tasks `[DONE]` immediately when complete
+
+Example:
+```
+[2025-12-27 14:30] [l2p] [IN_PROGRESS] Adding profile feature (frontend/src/components/Profile.tsx)
+[2025-12-27 14:35] [vllm] [DONE] Updated MCP server configuration, container restarted
 ```
 
-### Building
+### Testing Expectations
 
-```bash
-# Production builds
-cd l2p && npm run build:all
-cd VideoVault && npm run build
-cd payment && npm run build
-cd vllm && npm run build
-```
+- Run the smallest relevant test suite
+- If tests are skipped, say why
 
-## 📁 Repository Structure
+### Communication
+
+- Provide a concise summary
+- List files modified
+- Include commands run and assumptions
+
+## Git Workflow
+
+- Conventional commits recommended
+- Large files excluded via `.gitignore`
+- Each project maintains independent versioning
+
+## Special Considerations
+
+- Services are independent except for shared Postgres
+- L2P and VideoVault are performance-sensitive
+- VLLM tools allow SELECT-only database queries
+
+## Repository Structure
 
 ```
 .
-├── l2p/                    # Learn2Play multiplayer quiz platform
-│   ├── frontend/          # React frontend
-│   ├── backend/           # Express backend
-│   ├── shared/            # Shared utilities
-│   └── README.md
-│
-├── VideoVault/            # Video management application
-│   ├── client/            # React client
-│   ├── server/            # Express server
-│   └── README.md
-│
-├── payment/               # Payment processing platform
-│   ├── app/               # Next.js app directory
-│   ├── prisma/            # Database schema
-│   └── README.md
-│
-├── vllm/                  # AI development tools
-│   ├── src/               # MCP server source
-│   ├── rag/               # RAG implementation
-│   ├── dashboard/         # Optional dashboard
-│   └── README.md
-│
-├── setup.sh               # Automated setup script
-├── CLAUDE.md              # AI development guidelines
-└── README.md              # This file
+├── auth/                      # Auth service
+├── l2p/                       # Learn2Play
+├── payment/                   # Payment
+├── reverse-proxy/             # Traefik
+├── shared-infrastructure/     # Centralized Postgres
+├── vllm/                      # MCP server + tooling
+├── VideoVault/                # VideoVault app
+├── scripts/                   # Root scripts
+└── README.md
 ```
 
-## 🔧 Technology Stack Overview
+## Task Management
 
-### Frontend Technologies
-- **React 18** (l2p, VideoVault)
-- **Next.js 16** (payment)
-- **TypeScript** (all projects)
-- **Vite** (l2p, VideoVault)
-- **Tailwind CSS** (all projects)
+This section is the source of truth for active tasks and consolidated checklists.
 
-### Backend Technologies
-- **Express** (l2p, VideoVault)
-- **Next.js API Routes** (payment)
-- **Socket.io** (l2p)
-- **PostgreSQL** (all projects)
-- **Drizzle ORM** (l2p, VideoVault)
-- **Prisma** (payment)
+### Active Tasks
 
-### AI/ML Technologies
-- **vLLM** for inference
-- **Model Context Protocol (MCP)**
-- **LlamaIndex** for RAG
-- **Qdrant** vector database
-- **Stable Diffusion Forge** (optional)
+| Task ID | Status | Owner | Description | Last Update |
+| :--- | :--- | :--- | :--- | :--- |
+| `TASK-012` | 🟡 In Progress | Codex | Investigate why l2p.korczewski.de is not responding | 2025-12-31 |
+| `TASK-016` | 🟡 In Progress | Codex | Complete OAuth migration/testing checklist (consolidated from `OAUTH_IMPLEMENTATION_STATUS.md`) | 2026-01-01 |
+| `TASK-017` | 🟡 In Progress | Codex | Complete auth deployment checklist (consolidated from `auth/DEPLOYMENT_CHECKLIST.md`) | 2026-01-01 |
+| `TASK-018` | 🟡 In Progress | Codex | Deliver vllm Command Center expansion plan (consolidated from `vllm/COMMAND_CENTER_PLAN.md`) | 2026-01-01 |
+| `TASK-019` | 🟡 In Progress | Codex | Address Playwright follow-up recommendations (consolidated from `PLAYWRIGHT_FIXES.md`) | 2026-01-01 |
+| `TASK-020` | 🟡 In Progress | Codex | Implement l2p backend test improvements (consolidated from `l2p/backend/TEST_FIXES.md`) | 2026-01-01 |
+| `TASK-021` | ✅ Done | Codex | Review and reorder npm scripts across monorepo | 2026-01-01 |
+| `TASK-013` | ✅ Done | Codex | Review auth process and align services to the central auth service | 2026-01-01 |
+| `TASK-014` | ✅ Done | Codex | Finalize OAuth best-practice fixes and include existing OAuth files | 2026-01-01 |
+| `TASK-015` | ✅ Done | Codex | Run end-to-end OAuth login test across auth + l2p | 2026-01-01 |
+| `TASK-008` | ✅ Done | Codex | Investigate failing VideoVault and l2p/shared/test-config tests from latest runs | 2025-12-30 |
+| `TASK-009` | ✅ Done | Codex | Align WebCodecs thumbnail service mock support detection with production behavior | 2025-12-30 |
+| `TASK-001` | ✅ Done | Antigravity | Estalishing Reverse Proxy Bridge (Local Sync/Mount) | 2025-12-28 |
+| `TASK-002` | ✅ Done | Antigravity | Auth Service Logic & Email Integration | 2025-12-28 |
+| `TASK-003` | ✅ Done | Codex | Project-wide dependency audit and cleanup | 2025-12-30 |
+| `TASK-004` | ✅ Done | Codex | Set VideoVault public domain and add NPM proxy guidance | 2025-12-28 |
+| `TASK-005` | ✅ Done | Codex | Audit l2p tests that are skipped/ignored and decide whether to re-enable or remove | 2025-12-28 |
+| `TASK-006` | ✅ Done | Codex | Enable VideoVault server tests and resolve excluded/enforced skips | 2025-12-30 |
+| `TASK-007` | ✅ Done | Codex | Reconcile l2p/shared/test-config test coverage | 2025-12-30 |
+| `TASK-010` | ✅ Done | Codex | Review unit tests across monorepo | 2025-12-31 |
+| `TASK-011` | ✅ Done | Codex | Stabilize useToast unit tests and remove debug logs in GameService tests | 2025-12-31 |
 
-### Testing
-- **Vitest** (VideoVault, payment)
-- **Jest** (l2p)
-- **Playwright** (all projects)
-- **React Testing Library**
+### Consolidated Task Checklists
 
-### DevOps
-- **Docker & Docker Compose**
-- **Nginx** (reverse proxy)
-- **GitHub Actions** (if configured)
+#### TASK-016: OAuth migration/testing checklist
+- [ ] Run auth service migrations
+- [ ] Run L2P backend migrations
+- [ ] Start auth service (port 5500)
+- [ ] Start L2P backend (port 5001)
+- [ ] Start L2P frontend (port 5173)
+- [ ] Test OAuth flow: visit l2p.korczewski.de, login via auth service, exchange code for tokens, verify game profile load
+- [ ] Test token refresh
+- [ ] Test logout
+- [ ] Test protected routes
 
-## 📊 Database Overview
+#### TASK-017: Auth deployment checklist
+- [ ] Step 1: Google OAuth configuration (add production redirect URI)
+- [ ] Step 2: Nginx Proxy Manager setup for auth.korczewski.de
+- [ ] Step 3: Build and deploy auth service
+- [ ] Step 4: Test OAuth flow
+- [ ] Step 5: Security hardening (rotate secrets, strong DB password, NODE_ENV=production)
+- [ ] Step 6: Database migration (optional)
+- [ ] Step 7: Update project integrations (l2p, VideoVault, payment)
+- [ ] Step 8: Final testing checklist
+- [ ] Final testing: health endpoint responds
+- [ ] Final testing: API info endpoint responds
+- [ ] Final testing: login page loads
+- [ ] Final testing: register page loads
+- [ ] Final testing: OAuth redirect works
+- [ ] Final testing: can register new user
+- [ ] Final testing: can login with email/password
+- [ ] Final testing: can login with Google OAuth
+- [ ] Final testing: JWT tokens issued
+- [ ] Final testing: token refresh works
+- [ ] Final testing: logout works
+- [ ] Final testing: password reset works
+- [ ] Final testing: CORS works from project domains
+- [ ] Final testing: SSL certificate is valid
+- [ ] Final testing: HTTPS redirect works
+- [ ] Step 9: Monitoring & backup setup (optional)
+- [ ] Step 10: Documentation & handoff (update ALLOWED_ORIGINS + production URLs)
 
-Each project uses PostgreSQL but with different ORMs and schemas:
+#### TASK-018: vllm Command Center expansion
+- [ ] Mass operations: Start All / Stop All / Restart All controls
+- [ ] Mass operations: dependency-aware startup prompts
+- [ ] Advanced monitoring: real-time log streaming per service
+- [ ] Advanced monitoring: CPU & system RAM tracking
+- [ ] Advanced monitoring: process list for process-type services
+- [ ] Alerts & automation: VRAM threshold alerts (90%/95%)
+- [ ] Alerts & automation: auto-restart on failure toggle
+- [ ] Alerts & automation: scheduled maintenance for restarts/updates
+- [ ] Configuration management: environment variable editor with restart workflow
+- [ ] Configuration management: Docker Compose sync
+- [ ] Security & multi-user: role-based access
+- [ ] Security & multi-user: activity log
+- Priority: mass operations, log streaming, CPU/RAM tracking, env editor
 
-| Project | ORM | Default Port | Database Name |
-|---------|-----|--------------|---------------|
-| l2p | Drizzle | 5432 (dev), 5433 (test) | learn2play |
-| VideoVault | Drizzle (optional) | 5432 | videovault |
-| payment | Prisma | 5432 | payment |
-| vllm | pg (direct) | 5432 | webui |
+#### TASK-019: Playwright follow-ups
+- [ ] L2P: re-enable perks-management tests once UI is complete
+- [x] VideoVault: fix failing unit test in `enhanced-thumbnail.test.ts`
+- [ ] Payment: add E2E coverage for registration and purchasing flows
+- [ ] All projects: set up CI/CD to run tests on pull requests
 
-## 🔐 Environment Variables
+#### TASK-020: l2p backend test improvements
+- [ ] Integration tests: set up test database for integration tests
+- [ ] Integration tests: configure database seeding for test data
+- [ ] Integration tests: implement proper cleanup between tests
+- [ ] E2E tests: configure end-to-end test environment
+- [ ] E2E tests: set up test user accounts
+- [ ] E2E tests: implement test data management
+- [ ] Performance: add performance benchmarks
+- [ ] Performance: implement load testing scenarios
+- [ ] Performance: monitor test execution times
+- [ ] Maintenance: update test data as needed
+- [ ] Maintenance: review/update mocks when services change
+- [ ] Maintenance: maintain test environment configuration
 
-Each project requires its own `.env` file. Always use the provided `.env.example` as a template:
+### Ongoing System Maintenance
+- [x] Establish Reverse Proxy Bridge (Local Sync/Mount)
+- [x] Implement Email Service for Auth (Nodemailer/SMTP)
+- [x] Enforce Username Normalization (lowercase)
+- [x] Secure Password Reset Flow (Removed token leaks)
+- [x] Add Security Email Alerts (Standard Practice)
+- [ ] Monitor Nginx Proxy Manager logs
+- [ ] Ensure all services in monorepo are running correctly
 
-```bash
-# For each project
-cd <project-directory>
-cp .env.example .env
-# Edit .env with your configuration
-```
+### Task History
 
-**Common variables across projects:**
-- `DATABASE_URL`: PostgreSQL connection string
-- `NODE_ENV`: Environment (development, production, test)
-- `PORT`: Application port
-- Project-specific secrets and API keys
-
-**Important:** Use alphanumeric-only values for PostgreSQL credentials (no special characters).
-
-## 🧪 Testing Infrastructure
-
-### Learn2Play
-- Unit tests with Jest (ES modules)
-- Integration tests with test database
-- E2E tests with Playwright
-- Coverage tracking and reporting
-
-### VideoVault
-- Unit tests with Vitest
-- Server E2E tests
-- Playwright E2E tests (Docker)
-- Optional MSW for mocking
-
-### Payment
-- Unit tests with Vitest
-- E2E tests with Playwright
-- React component testing
-
-### VLLM
-- Jest unit tests
-- Tool integration testing
-
-## 🐳 Docker Support
-
-All projects include Docker support with compose files:
-
-**Development:**
-- Hot reload enabled
-- Volume mounts for code
-- Separate networks per project
-
-**Production:**
-- Optimized builds
-- Multi-stage Dockerfiles
-- Health checks
-- Resource limits
-
-## 📖 Documentation
-
-- **CLAUDE.md**: Comprehensive development guide for AI assistants
-- **Project READMEs**: Detailed documentation for each project
-- **In-code documentation**: JSDoc comments and TypeScript types
-
-## 🔄 Git Workflow
-
-- Independent versioning per project
-- Conventional commits recommended
-- Large files excluded (models, node_modules, databases)
-- No sensitive data in repository
-
-## 🤝 Contributing
-
-Each project can be developed independently:
-
-1. Fork the repository
-2. Create a feature branch
-3. Make changes to your target project(s)
-4. Run project-specific tests
-5. Run type checking
-6. Submit a pull request
-
-### Pre-commit Checklist
-
-```bash
-# For the project you modified
-cd <project>
-npm run typecheck     # TypeScript validation
-npm test              # Run tests
-npm run lint          # Linting (if available)
-```
-
-## 🚨 Troubleshooting
-
-### Port Conflicts
-
-If you encounter port conflicts when running multiple projects:
-
-```bash
-# Check what's using a port
-sudo lsof -i :5001
-
-# Or modify the port in project's .env file
-PORT=5002
-```
-
-### Database Connection Issues
-
-```bash
-# Check Docker containers
-docker ps
-
-# View container logs
-docker logs <container-name>
-
-# Restart PostgreSQL container
-cd <project> && docker-compose restart postgres
-```
-
-### Module Resolution Errors
-
-```bash
-# Clear node_modules and reinstall
-rm -rf node_modules package-lock.json
-npm install
-```
-
-### Docker Issues
-
-```bash
-# Clean up Docker resources
-docker system prune -f
-docker volume prune -f
-
-# Rebuild containers
-cd <project>
-docker-compose down -v
-docker-compose up --build
-```
-
-## 📝 License
-
-MIT License - Each project may have its own license file.
-
-## 🔗 Useful Links
-
-- [Learn2Play Documentation](./l2p/README.md)
-- [VideoVault Documentation](./VideoVault/README.md)
-- [Payment Documentation](./payment/README.md)
-- [VLLM Documentation](./vllm/README.md)
-- [CLAUDE.md - AI Development Guide](./CLAUDE.md)
-
-## 💡 Quick Tips
-
-1. **Use the setup script**: `./setup.sh` automates initial configuration
-2. **Check project READMEs**: Each has specific requirements and commands
-3. **Environment files**: Always copy from `.env.example`
-4. **Docker first**: Use Docker for databases to avoid local setup
-5. **Test environments**: l2p uses separate test database on port 5433
-6. **Browser compatibility**: VideoVault requires Chromium for full features
-7. **GPU optional**: VLLM works without GPU but performs better with one
-
-## 📞 Support
-
-For project-specific issues, refer to individual project README files. For general monorepo questions, check CLAUDE.md for detailed architectural guidance.
-
----
-
-**Built with ❤️ by Patrick**
+| Task ID | Status | Completion Date | Summary |
+| :--- | :--- | :--- | :--- |
+| `TASK-000` | ✅ Done | 2025-12-28 | Initialized task tracking |
+| `TASK-003` | ✅ Done | 2025-12-30 | Audited dependencies, removed unused/duplicate entries, and aligned lockfiles |
+| `TASK-006` | ✅ Done | 2025-12-30 | Enabled VideoVault server tests and re-enabled enhanced-thumbnail + edit-tags-modal coverage |
+| `TASK-007` | ✅ Done | 2025-12-30 | Removed stale test artifacts from test-config |
+| `TASK-010` | ✅ Done | 2025-12-31 | Reviewed unit tests across monorepo |
+| `TASK-011` | ✅ Done | 2025-12-31 | Reset toast test state and removed GameService debug logs |

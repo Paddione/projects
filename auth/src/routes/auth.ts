@@ -26,6 +26,10 @@ const verifyEmailSchema = z.object({
   token: z.string().min(1),
 });
 
+const resendVerificationSchema = z.object({
+  email: z.string().email(),
+});
+
 const requestPasswordResetSchema = z.object({
   email: z.string().email(),
 });
@@ -214,6 +218,27 @@ router.post('/verify-email', async (req: Request, res: Response) => {
     res.status(200).json({ message: 'Email verified successfully' });
   } catch (error) {
     res.status(400).json({ error: error instanceof Error ? error.message : 'Verification failed' });
+  }
+});
+
+/**
+ * POST /api/auth/resend-verification
+ * Resend verification email
+ */
+router.post('/resend-verification', async (req: Request, res: Response) => {
+  try {
+    const { email } = resendVerificationSchema.parse(req.body);
+
+    await authService.resendEmailVerification(email);
+
+    res.status(200).json({ message: 'Verification email resent successfully' });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      res.status(400).json({ error: 'Validation failed', details: error.errors });
+      return;
+    }
+
+    res.status(400).json({ error: error instanceof Error ? error.message : 'Resend failed' });
   }
 });
 

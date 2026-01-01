@@ -51,8 +51,7 @@ export class DatabaseService {
   private parseConnectionString(): DatabaseConfig {
     // Check if we're in a test environment
     const isTestEnvironment = process.env['NODE_ENV'] === 'test' ||
-      process.env['TEST_ENVIRONMENT'] === 'local' ||
-      process.env['TEST_TYPE'] === 'integration';
+      !!process.env['JEST_WORKER_ID'];
 
     let databaseUrl = process.env['DATABASE_URL'];
 
@@ -221,8 +220,6 @@ export class DatabaseService {
     if (this.isClosing) {
       // In test environments, attempt to reconnect if the service was closed
       const isTestEnvironment = process.env['NODE_ENV'] === 'test' ||
-        process.env['TEST_ENVIRONMENT'] === 'local' ||
-        process.env['TEST_TYPE'] === 'integration' ||
         !!process.env['JEST_WORKER_ID'];
       
       if (isTestEnvironment) {

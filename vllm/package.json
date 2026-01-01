@@ -10,8 +10,8 @@
   "scripts": {
     "build": "tsc -p tsconfig.build.json && chmod +x build/src/index.js",
     "dev": "tsc --watch",
-    "dev:watch": "tsx watch src/index.ts",
     "dev:server": "node --watch build/src/index.js",
+    "dev:watch": "tsx watch src/index.ts",
     "prepare": "npm run build",
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js"
   },

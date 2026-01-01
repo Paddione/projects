@@ -5,15 +5,15 @@
   "main": "dist/server.js",
   "type": "module",
   "scripts": {
-    "dev": "tsx watch src/server.ts",
     "build": "tsc",
-    "start": "node dist/server.js",
-    "db:migrate": "tsx migrations/run-migrations.ts",
     "db:generate": "drizzle-kit generate:pg",
+    "db:migrate": "tsx migrations/run-migrations.ts",
     "db:push": "drizzle-kit push:pg",
     "db:studio": "drizzle-kit studio",
-    "test": "NODE_OPTIONS=--experimental-vm-modules jest",
+    "dev": "tsx watch src/server.ts",
     "lint": "eslint src --ext .ts",
+    "start": "node dist/server.js",
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest",
     "typecheck": "tsc --noEmit"
   },
   "keywords": [

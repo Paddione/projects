@@ -145,6 +145,44 @@ export const userMigrationLog = authSchema.table('user_migration_log', {
 });
 
 // ============================================================================
+// OAUTH CLIENTS TABLE - OAuth 2.0 client registrations (for L2P, etc.)
+// ============================================================================
+export const oauthClients = authSchema.table('oauth_clients', {
+  id: serial('id').primaryKey(),
+  client_id: varchar('client_id', { length: 255 }).notNull().unique(),
+  client_secret: varchar('client_secret', { length: 255 }).notNull(),
+  name: varchar('name', { length: 255 }).notNull(),
+  redirect_uris: jsonb('redirect_uris').notNull().$type<string[]>(), // Array of allowed redirect URIs
+  grant_types: jsonb('grant_types').default(['authorization_code', 'refresh_token']).$type<string[]>(),
+  is_active: boolean('is_active').default(true).notNull(),
+  created_at: timestamp('created_at').defaultNow().notNull(),
+  updated_at: timestamp('updated_at').defaultNow().notNull(),
+}, (table) => ({
+  clientIdIdx: index('oauth_clients_client_id_idx').on(table.client_id),
+  activeIdx: index('oauth_clients_active_idx').on(table.is_active),
+}));
+
+// ============================================================================
+// OAUTH AUTHORIZATION CODES TABLE - Short-lived codes for OAuth 2.0 flow
+// ============================================================================
+export const oauthAuthorizationCodes = authSchema.table('oauth_authorization_codes', {
+  id: serial('id').primaryKey(),
+  code: varchar('code', { length: 255 }).notNull().unique(),
+  client_id: varchar('client_id', { length: 255 }).notNull().references(() => oauthClients.client_id, { onDelete: 'cascade' }),
+  user_id: integer('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  redirect_uri: text('redirect_uri').notNull(),
+  scope: varchar('scope', { length: 255 }).default('openid profile email'),
+  expires_at: timestamp('expires_at').notNull(),
+  used_at: timestamp('used_at'), // NULL if not used, prevents reuse
+  created_at: timestamp('created_at').defaultNow().notNull(),
+}, (table) => ({
+  codeIdx: index('oauth_codes_code_idx').on(table.code),
+  expiresIdx: index('oauth_codes_expires_idx').on(table.expires_at),
+  clientIdIdx: index('oauth_codes_client_id_idx').on(table.client_id),
+  userIdIdx: index('oauth_codes_user_id_idx').on(table.user_id),
+}));
+
+// ============================================================================
 // APPS & ACCESS TABLES - App catalog and per-user access
 // ============================================================================
 export const apps = authSchema.table('apps', {
@@ -153,6 +191,7 @@ export const apps = authSchema.table('apps', {
   name: varchar('name', { length: 255 }).notNull(),
   description: text('description'),
   url: varchar('url', { length: 500 }).notNull(),
+  metadata: jsonb('metadata').default({}),
   is_active: boolean('is_active').default(true).notNull(),
   created_at: timestamp('created_at').defaultNow().notNull(),
   updated_at: timestamp('updated_at').defaultNow().notNull(),
@@ -185,3 +224,7 @@ export type App = typeof apps.$inferSelect;
 export type NewApp = typeof apps.$inferInsert;
 export type UserAppAccess = typeof userAppAccess.$inferSelect;
 export type NewUserAppAccess = typeof userAppAccess.$inferInsert;
+export type OAuthClient = typeof oauthClients.$inferSelect;
+export type NewOAuthClient = typeof oauthClients.$inferInsert;
+export type OAuthAuthorizationCode = typeof oauthAuthorizationCodes.$inferSelect;
+export type NewOAuthAuthorizationCode = typeof oauthAuthorizationCodes.$inferInsert;

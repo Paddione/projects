@@ -11,11 +11,11 @@ describe('LocalizationService', () => {
   beforeEach(() => {
     // Mock localStorage
     localStorageMock = {}
-    getItemSpy = jest.spyOn(Storage.prototype, 'getItem').mockImplementation((key: string) => localStorageMock[key] || null)
-    setItemSpy = jest.spyOn(Storage.prototype, 'setItem').mockImplementation((key: string, value: string) => {
+    getItemSpy = jest.spyOn(window.localStorage, 'getItem').mockImplementation((key: string) => localStorageMock[key] || null)
+    setItemSpy = jest.spyOn(window.localStorage, 'setItem').mockImplementation((key: string, value: string) => {
       localStorageMock[key] = value
     })
-    removeItemSpy = jest.spyOn(Storage.prototype, 'removeItem').mockImplementation((key: string) => {
+    removeItemSpy = jest.spyOn(window.localStorage, 'removeItem').mockImplementation((key: string) => {
       delete localStorageMock[key]
     })
 

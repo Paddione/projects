@@ -1,7 +1,7 @@
 'use client'
 
 import { useActionState } from 'react'
-import { authenticate, googleAuthenticate } from '@/lib/actions/auth'
+import { authenticate } from '@/lib/actions/auth'
 
 export default function Page() {
     const [errorMessage, dispatch] = useActionState(authenticate, undefined)
@@ -72,29 +72,6 @@ export default function Page() {
                     </div>
                 </form>
 
-                <div className="relative">
-                    <div className="absolute inset-0 flex items-center">
-                        <div className="w-full border-t border-gray-300" />
-                    </div>
-                    <div className="relative flex justify-center text-sm">
-                        <span className="bg-white px-2 text-gray-500">Or continue with</span>
-                    </div>
-                </div>
-
-                <form action={googleAuthenticate}>
-                    <button
-                        type="submit"
-                        className="flex w-full items-center justify-center gap-3 rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus-visible:ring-transparent"
-                    >
-                        <svg className="h-5 w-5" aria-hidden="true" viewBox="0 0 24 24">
-                            <path
-                                d="M12.0003 20.4502C16.8003 20.4502 20.8503 17.0502 22.3503 12.7502H12.0003V9.75019H22.9003C23.0503 10.3002 23.1503 10.9502 23.1503 11.6002C23.1503 18.0002 18.2503 22.5002 12.0003 22.5002C6.20033 22.5002 1.50033 17.8002 1.50033 12.0002C1.50033 6.20019 6.20033 1.50019 12.0003 1.50019C14.8003 1.50019 17.1503 2.50019 18.9503 4.20019L16.2003 6.95019C15.4503 6.25019 14.1003 5.40019 12.0003 5.40019C8.35033 5.40019 5.40033 8.35019 5.40033 12.0002C5.40033 15.6502 8.35033 18.6002 12.0003 18.6002C15.6003 18.6002 17.6503 16.1002 18.1503 13.7002H12.0003V12.7502V20.4502Z"
-                                fill="#4285F4"
-                            />
-                        </svg>
-                        <span className="text-sm font-semibold leading-6">Sign in with Google</span>
-                    </button>
-                </form>
                 <div className="text-center text-sm text-gray-500">
                     <p>Admin: admin@patrickcoin.com / password</p>
                     <p>User: user@example.com / password</p>

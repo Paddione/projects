@@ -3,6 +3,14 @@ import { Request, Response, NextFunction } from 'express';
 import { AuthMiddleware } from '../auth';
 import { AuthService, TokenPayload } from '../../services/AuthService';
 
+global.fetch = jest.fn();
+const mockFetch = global.fetch as jest.MockedFunction<typeof fetch>;
+
+const createMockFetchResponse = (data: unknown, options: { ok?: boolean; status?: number } = {}) => ({
+  ok: options.ok ?? true,
+  status: options.status ?? 200,
+  json: jest.fn().mockResolvedValue(data),
+} as Response);
 
 // Mock AuthService
 jest.mock('../../services/AuthService');
@@ -13,6 +21,7 @@ describe('AuthMiddleware', () => {
   let mockRequest: Partial<Request>;
   let mockResponse: Partial<Response>;
   let mockNext: jest.MockedFunction<NextFunction>;
+  const originalAuthServiceUrl = process.env['AUTH_SERVICE_URL'];
 
   const mockTokenPayload: TokenPayload = {
     userId: 123,
@@ -21,6 +30,7 @@ describe('AuthMiddleware', () => {
     selectedCharacter: 'warrior',
     characterLevel: 1,
     isAdmin: false,
+    role: 'USER',
     iat: Math.floor(Date.now() / 1000),
     exp: Math.floor(Date.now() / 1000) + 3600
   };
@@ -28,6 +38,8 @@ describe('AuthMiddleware', () => {
   beforeEach(() => {
     // Clear all mocks
     jest.clearAllMocks();
+    mockFetch.mockReset();
+    process.env['AUTH_SERVICE_URL'] = 'http://auth.test';
 
     // Create mock auth service
     mockAuthService = {
@@ -69,6 +81,14 @@ describe('AuthMiddleware', () => {
 
     // Create mock next function
     mockNext = jest.fn() as unknown as jest.MockedFunction<NextFunction>;
+  });
+
+  afterEach(() => {
+    if (originalAuthServiceUrl === undefined) {
+      delete process.env['AUTH_SERVICE_URL'];
+    } else {
+      process.env['AUTH_SERVICE_URL'] = originalAuthServiceUrl;
+    }
   });
 
   describe('Token Extraction', () => {
@@ -144,7 +164,9 @@ describe('AuthMiddleware', () => {
         authorization: 'Bearer valid-token'
       };
 
-      mockAuthService.verifyAccessToken.mockReturnValue(mockTokenPayload);
+      mockFetch.mockResolvedValue(
+        createMockFetchResponse({ user: mockTokenPayload })
+      );
 
       await authMiddleware.authenticate(
         mockRequest as Request,
@@ -152,8 +174,16 @@ describe('AuthMiddleware', () => {
         mockNext
       );
 
-      expect(mockAuthService.verifyAccessToken).toHaveBeenCalledWith('valid-token');
-      expect(mockRequest.user).toEqual(mockTokenPayload);
+      expect(mockFetch).toHaveBeenCalled();
+      expect(mockRequest.user).toEqual(expect.objectContaining({
+        userId: mockTokenPayload.userId,
+        username: mockTokenPayload.username,
+        email: mockTokenPayload.email,
+        selectedCharacter: mockTokenPayload.selectedCharacter,
+        characterLevel: mockTokenPayload.characterLevel,
+        isAdmin: false,
+        role: 'USER',
+      }));
       expect(mockNext).toHaveBeenCalled();
     });
 
@@ -177,9 +207,9 @@ describe('AuthMiddleware', () => {
         authorization: 'Bearer expired-token'
       };
 
-      mockAuthService.verifyAccessToken.mockImplementation(() => {
-        throw new Error('Access token expired');
-      });
+      mockFetch.mockResolvedValue(
+        createMockFetchResponse({ code: 'TOKEN_EXPIRED' }, { ok: false, status: 401 })
+      );
 
       await authMiddleware.authenticate(
         mockRequest as Request,
@@ -201,9 +231,9 @@ describe('AuthMiddleware', () => {
         authorization: 'Bearer invalid-token'
       };
 
-      mockAuthService.verifyAccessToken.mockImplementation(() => {
-        throw new Error('Invalid access token');
-      });
+      mockFetch.mockResolvedValue(
+        createMockFetchResponse({ code: 'INVALID_TOKEN' }, { ok: false, status: 401 })
+      );
 
       await authMiddleware.authenticate(
         mockRequest as Request,
@@ -225,9 +255,9 @@ describe('AuthMiddleware', () => {
         authorization: 'Bearer bad-token'
       };
 
-      mockAuthService.verifyAccessToken.mockImplementation(() => {
-        throw new Error('Unknown token error');
-      });
+      mockFetch.mockResolvedValue(
+        createMockFetchResponse({ error: 'Token verification failed' }, { ok: false, status: 401 })
+      );
 
       await authMiddleware.authenticate(
         mockRequest as Request,
@@ -250,7 +280,9 @@ describe('AuthMiddleware', () => {
         authorization: 'Bearer valid-token'
       };
 
-      mockAuthService.verifyAccessToken.mockReturnValue(mockTokenPayload);
+      mockFetch.mockResolvedValue(
+        createMockFetchResponse({ user: mockTokenPayload })
+      );
 
       await authMiddleware.optionalAuthenticate(
         mockRequest as Request,
@@ -258,8 +290,12 @@ describe('AuthMiddleware', () => {
         mockNext
       );
 
-      expect(mockAuthService.verifyAccessToken).toHaveBeenCalledWith('valid-token');
-      expect(mockRequest.user).toEqual(mockTokenPayload);
+      expect(mockRequest.user).toEqual(expect.objectContaining({
+        userId: mockTokenPayload.userId,
+        username: mockTokenPayload.username,
+        email: mockTokenPayload.email,
+        role: 'USER',
+      }));
       expect(mockNext).toHaveBeenCalled();
     });
 
@@ -279,9 +315,9 @@ describe('AuthMiddleware', () => {
         authorization: 'Bearer invalid-token'
       };
 
-      mockAuthService.verifyAccessToken.mockImplementation(() => {
-        throw new Error('Invalid token');
-      });
+      mockFetch.mockResolvedValue(
+        createMockFetchResponse({ code: 'INVALID_TOKEN' }, { ok: false, status: 401 })
+      );
 
       await authMiddleware.optionalAuthenticate(
         mockRequest as Request,

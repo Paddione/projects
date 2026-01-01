@@ -11,58 +11,17 @@ services:
   # =============================================================================
 
 
-  # PostgreSQL Database - Production
-  postgres:
-    image: postgres:15-alpine
-    container_name: ${POSTGRES_CONTAINER_NAME:-l2p-postgres}
-    pull_policy: missing
-    restart: unless-stopped
-    env_file:
-      - ./.env.production
-    environment:
-      POSTGRES_DB: ${POSTGRES_DB:-learn2play}
-      POSTGRES_USER: ${POSTGRES_USER:-l2p_user}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_INITDB_ARGS: "--auth-host=scram-sha-256 --auth-local=scram-sha-256"
-      # Performance tuning
-      POSTGRES_MAX_CONNECTIONS: "200"
+  # PostgreSQL Database - Production/Development
+  # NOW USING CENTRALIZED POSTGRES INSTANCE
+  # The shared-postgres instance is managed in /shared-infrastructure
+  # This service definition is kept as a reference but not started
+  # Use: docker-compose -f ../shared-infrastructure/docker-compose.yml up -d
+  # postgres:
+  #   image: postgres:15-alpine
+  #   container_name: ${POSTGRES_CONTAINER_NAME:-l2p-postgres}
+  #   ... (removed, using shared-postgres instead)
 
-    command: [ "postgres", "-c", "config_file=/etc/postgresql/postgresql.conf" ]
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
-      - ./database/postgresql.conf:/etc/postgresql/postgresql.conf:ro
-      - postgres_logs:/var/log/postgresql
-    networks:
-      - l2p-network
-    ports:
-      - "${POSTGRES_PORT:-5432}:5432"
-    healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-l2p_user} -d ${POSTGRES_DB:-learn2play}" ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 60s
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
-    deploy:
-      resources:
-        limits:
-          memory: 1G
-          cpus: '1.0'
-        reservations:
-          memory: 512M
-          cpus: '0.5'
-    security_opt:
-      - no-new-privileges:true
-    profiles:
-      - production
-      - development
-
-  # Backend API - Production (Direct Access)
+  # Backend API - Production (via Traefik)
   backend:
     build:
       context: .
@@ -75,19 +34,19 @@ services:
     image: learn2play/backend:${VERSION:-latest}
     container_name: ${BACKEND_CONTAINER_NAME:-l2p-api}
     restart: unless-stopped
-    ports:
-      - "${BACKEND_PORT_EXTERNAL:-3001}:3001"
+    expose:
+      - "3001"
     env_file:
-      - ./.env.production
+      - ./.env-prod
     environment:
       NODE_ENV: production
       PORT: ${BACKEND_PORT:-3001}
-      # Database connection details
-      DATABASE_URL: postgresql://${POSTGRES_USER:-l2p_user}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-learn2play}
-      POSTGRES_DB: ${POSTGRES_DB:-learn2play}
-      POSTGRES_USER: ${POSTGRES_USER:-l2p_user}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      DB_HOST: postgres
+      # Database connection details (using centralized PostgreSQL)
+      DATABASE_URL: postgresql://${L2P_DB_USER:-l2p_user}:${L2P_DB_PASSWORD:-l2p_password}@shared-postgres:5432/l2p_db
+      POSTGRES_DB: l2p_db
+      POSTGRES_USER: ${L2P_DB_USER:-l2p_user}
+      POSTGRES_PASSWORD: ${L2P_DB_PASSWORD:-l2p_password}
+      DB_HOST: shared-postgres
       DB_PORT: 5432
       # JWT Configuration - Ensure these are set in .env.production
       JWT_SECRET: ${JWT_SECRET:-dummy-secret-change-me-in-production}
@@ -119,13 +78,29 @@ services:
       DB_STATEMENT_TIMEOUT_MS: 30000
       DB_LOCK_TIMEOUT_MS: 5000
 
-    depends_on:
-      postgres:
-        condition: service_healthy
+    external_links:
+      - shared-postgres
     networks:
       - l2p-network
+      - traefik-public
     volumes:
       - backend_logs:/app/logs:rw
+    labels:
+      # Enable Traefik
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik-public"
+
+      # HTTP Router for API
+      - "traefik.http.routers.l2p-backend.rule=Host(`l2p.korczewski.de`) && (PathPrefix(`/api`) || PathPrefix(`/socket.io`))"
+      - "traefik.http.routers.l2p-backend.priority=100"
+      - "traefik.http.routers.l2p-backend.entrypoints=websecure"
+      - "traefik.http.routers.l2p-backend.tls=true"
+
+      # Service configuration
+      - "traefik.http.services.l2p-backend.loadbalancer.server.port=3001"
+
+      # Middlewares
+      - "traefik.http.routers.l2p-backend.middlewares=default-chain@file"
     healthcheck:
       test: [ "CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3001/api/health" ]
       interval: 30s
@@ -152,7 +127,7 @@ services:
 
   # ChromaDB removed - no longer needed
 
-  # Frontend React App - Production (Direct Access)
+  # Frontend React App - Production (via Traefik)
   frontend:
     build:
       context: ./frontend
@@ -177,10 +152,27 @@ services:
       - backend
     networks:
       - l2p-network
+      - traefik-public
     volumes:
       - frontend_logs:/var/log/nginx:rw
-    ports:
-      - "${FRONTEND_PORT_EXTERNAL:-3010}:80"
+    expose:
+      - "80"
+    labels:
+      # Enable Traefik
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik-public"
+
+      # HTTP Router for Frontend
+      - "traefik.http.routers.l2p-frontend.rule=Host(`l2p.korczewski.de`)"
+      - "traefik.http.routers.l2p-frontend.priority=10"
+      - "traefik.http.routers.l2p-frontend.entrypoints=websecure"
+      - "traefik.http.routers.l2p-frontend.tls=true"
+
+      # Service configuration
+      - "traefik.http.services.l2p-frontend.loadbalancer.server.port=80"
+
+      # Middlewares
+      - "traefik.http.routers.l2p-frontend.middlewares=default-chain@file"
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:80/health" ]
       interval: 30s
@@ -218,12 +210,11 @@ services:
     container_name: l2p-backend-dev
     working_dir: /app
     env_file:
-      - ./.env
-      - ./.env.development
+      - ./.env-dev
     environment:
       NODE_ENV: development
       PORT: 3001
-      DATABASE_URL: postgresql://${POSTGRES_USER:-l2p_user}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-learn2play}
+      DATABASE_URL: postgresql://${L2P_DB_USER:-l2p_user}:${L2P_DB_PASSWORD:-l2p_password}@shared-postgres:5432/l2p_db
       JWT_SECRET: ${JWT_SECRET:-dev-jwt-secret}
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-dev-jwt-refresh-secret}
       # Allow frontend container and localhost for CORS
@@ -243,9 +234,8 @@ services:
       DB_LOCK_TIMEOUT_MS: "5000"
       # Enable source maps for better debugging
       TS_NODE_DEV: "true"
-    depends_on:
-      postgres:
-        condition: service_healthy
+    external_links:
+      - shared-postgres
     ports:
       - "3001:3001"
       - "9229:9229" # For Node.js debugger
@@ -260,6 +250,7 @@ services:
       - dev_backend_logs:/app/logs
     networks:
       - l2p-network
+      - traefik-public
     healthcheck:
       test: [ "CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3001/api/health" ]
       interval: 30s
@@ -322,6 +313,7 @@ services:
       - dev_frontend_node_modules:/app/node_modules
     networks:
       - l2p-network
+      - traefik-public
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:3000/" ]
       interval: 30s
@@ -522,14 +514,10 @@ services:
       - test
 
 volumes:
-  # Production volumes
-  postgres_data:
-    driver: local
+  # Production volumes (postgres_data and postgres_logs removed - using centralized instance)
   backend_logs:
     driver: local
   frontend_logs:
-    driver: local
-  postgres_logs:
     driver: local
 
   # Development volumes
@@ -569,6 +557,9 @@ networks:
     name: ${L2P_NETWORK_NAME:-l2p-network}
     driver_opts:
       com.docker.network.bridge.name: l2p-bridge
+  traefik-public:
+    external: true
+    name: traefik-public
   test-network:
     driver: bridge
     ipam:

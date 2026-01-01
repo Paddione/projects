@@ -4,13 +4,13 @@ import { setupVite, serveStatic, log } from './vite';
 import { logger } from './lib/logger';
 import { ensureDbReady } from './db';
 import cookieParser from 'cookie-parser';
-import csurf from 'csurf';
 import { globalErrorHandler } from './middleware/errorHandler';
 import { requestId, requestLogger, metricsMiddleware } from './middleware/observability';
 import { setupSecurityHeaders } from './middleware/security';
 import { setupRateLimiting } from './middleware/rate-limit';
 import { createSessionMiddleware } from './config/session';
 import { createCorsMiddleware } from './config/cors';
+import { attachCsrfToken, csrfProtection } from './middleware/csrf';
 import compression from 'compression';
 
 import path from 'path';
@@ -70,16 +70,10 @@ app.use(cookieParser());
 
 // CSRF protection for mutating routes under /api except in tests and development
 const enableCsrf = process.env.NODE_ENV === 'production' && process.env.FAST_TESTS !== '1';
+app.locals.csrfEnabled = enableCsrf;
 if (enableCsrf) {
-  const csrfProtection = csurf({
-    cookie: {
-      httpOnly: true,
-      sameSite: 'lax',
-      secure: process.env.NODE_ENV === 'production',
-    },
-    ignoreMethods: ['GET', 'HEAD', 'OPTIONS'],
-  });
-  app.use('/api', csrfProtection as any);
+  app.use('/api', attachCsrfToken);
+  app.use('/api', csrfProtection);
 }
 
 app.use(requestId);

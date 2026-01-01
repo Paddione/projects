@@ -7,19 +7,87 @@ export type AdaptiveOptions = {
   cacheStrategy?: 'memory' | 'none';
 };
 
+const cache = new Map<
+  string,
+  {
+    thumbnail: Awaited<ReturnType<typeof VideoThumbnailService.generateThumbnail>>;
+    metadata: {
+      duration: number;
+      width: number;
+      height: number;
+      bitrate: number;
+      codec: string;
+      fps: number;
+      aspectRatio: string;
+    };
+  }
+>();
+
+const getCacheKey = (file: File) =>
+  `${file.name}:${file.size}:${file.lastModified ?? 0}`;
+
 export const AdaptiveThumbnailManager = {
   async generateAdaptiveThumbnail(file: File, _options?: Partial<AdaptiveOptions>) {
+    const cacheKey = getCacheKey(file);
+    const cached = cache.get(cacheKey);
+
+    if (cached) {
+      return {
+        ...cached,
+        performanceMetrics: {
+          method: 'basic',
+          duration: 0,
+          cacheHit: true,
+          quality: 1,
+          fileSize: file.size ?? 0,
+          success: true,
+        },
+      };
+    }
+
     const thumb = await VideoThumbnailService.generateThumbnail(file);
-    return { thumbnail: thumb, performance: { durationMs: 0 } } as unknown as {
-      thumbnail: Blob;
-      performance: { durationMs: number };
+    const entry = {
+      thumbnail: thumb,
+      metadata: {
+        duration: 0,
+        width: 0,
+        height: 0,
+        bitrate: 0,
+        codec: '',
+        fps: 0,
+        aspectRatio: '0',
+      },
+    };
+    cache.set(cacheKey, entry);
+
+    return {
+      ...entry,
+      performanceMetrics: {
+        method: 'basic',
+        duration: 0,
+        cacheHit: false,
+        quality: 1,
+        fileSize: file.size ?? 0,
+        success: true,
+      },
     };
   },
-  clearCache() {},
+  clearCache() {
+    cache.clear();
+  },
   getCacheStats() {
-    return { size: 0 };
+    return {
+      entryCount: cache.size,
+      estimatedSizeMB: 0,
+      hitRate: 0,
+    };
   },
   getPerformanceReport() {
-    return { samples: 0 };
+    return {
+      totalOperations: 0,
+      averageDuration: 0,
+      successRate: 1,
+      methodDistribution: { basic: 0 },
+    };
   },
 };

@@ -172,7 +172,10 @@ describe('ApiService', () => {
         expect.stringContaining('/api/auth/login'),
         expect.objectContaining({
           method: 'POST',
-          body: JSON.stringify(loginData),
+          body: JSON.stringify({
+            usernameOrEmail: loginData.username,
+            password: loginData.password,
+          }),
         })
       )
     })
@@ -538,12 +541,12 @@ describe('ApiService', () => {
 
     it('should return invalid for failed validation', async () => {
       mockFetch.mockResolvedValue(
-        createMockResponse({ data: { valid: false } })
+        createMockResponse({ error: 'Invalid token' }, { ok: false, status: 401 })
       )
 
       const result = await apiService.validateToken()
 
-      expect(result.success).toBe(true)
+      expect(result.success).toBe(false)
       expect(result.data?.valid).toBe(false)
     })
   })

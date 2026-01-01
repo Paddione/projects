@@ -7,8 +7,8 @@ import { serverHealth } from './server-health';
 vi.mock('./api-client');
 vi.mock('./server-health');
 
-const mockApiClient = vi.mocked(ApiClient);
-const mockServerHealth = vi.mocked(serverHealth);
+const mockApiClient = vi.mocked(ApiClient, true);
+const mockServerHealth = vi.mocked(serverHealth, true);
 
 describe('AppSettingsService', () => {
   beforeEach(() => {

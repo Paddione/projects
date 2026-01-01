@@ -1,0 +1,68 @@
+# Centralized PostgreSQL instance for all services
+# This single PostgreSQL instance hosts multiple databases:
+# - auth_db (auth service)
+# - l2p_db (learn2play production/development)
+# - payment_db (payment service)
+# - videovault_db (VideoVault optional persistence)
+#
+# Test databases remain separate in their respective services
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: shared-postgres
+    restart: unless-stopped
+    env_file: .env-prod
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_INITDB_ARGS: "--auth-host=scram-sha-256 --auth-local=scram-sha-256"
+      # Performance tuning for multiple databases
+      POSTGRES_MAX_CONNECTIONS: "300"
+    command: ["postgres", "-c", "config_file=/etc/postgresql/postgresql.conf", "-c", "hba_file=/etc/postgresql/pg_hba.conf"]
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-databases.sql:/docker-entrypoint-initdb.d/01-init-databases.sql:ro
+      - ./postgresql.conf:/etc/postgresql/postgresql.conf:ro
+      - ./pg_hba.conf:/etc/postgresql/pg_hba.conf:ro
+      - postgres_logs:/var/log/postgresql
+    networks:
+      - traefik-public
+      - l2p-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: '2.0'
+        reservations:
+          memory: 1G
+          cpus: '1.0'
+    security_opt:
+      - no-new-privileges:true
+
+networks:
+  traefik-public:
+    external: true
+    name: traefik-public
+  l2p-network:
+    external: true
+    name: l2p-network
+
+volumes:
+  postgres_data:
+    driver: local
+  postgres_logs:
+    driver: local

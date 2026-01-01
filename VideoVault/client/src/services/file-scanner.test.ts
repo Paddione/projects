@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeAll } from 'vitest';
+import { describe, it, expect, vi, beforeAll, beforeEach } from 'vitest';
 import { FileScanner } from './file-scanner';
 import { VideoThumbnailService } from './video-thumbnail';
 import { VideoUrlRegistry } from './video-url-registry';
@@ -12,6 +12,10 @@ beforeAll(() => {
   // URL.createObjectURL mocks
   (globalThis as any).URL.createObjectURL = vi.fn(() => 'blob:mock');
   (globalThis as any).URL.revokeObjectURL = vi.fn();
+});
+
+beforeEach(() => {
+  vi.clearAllMocks();
 });
 
 describe('FileScanner.scanDirectory abort handling', () => {

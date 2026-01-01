@@ -22,6 +22,9 @@ export const authConfig = {
                 console.log('JWT Callback - User:', user);
                 token.role = user.role;
                 token.id = user.id;
+                token.accessToken = (user as any).accessToken;
+                token.refreshToken = (user as any).refreshToken;
+                token.authUserId = (user as any).authUserId;
             }
             return token;
         },

@@ -58,7 +58,7 @@ COPY --chown=nodejs:nodejs playwright.config.ts ./
 COPY --chown=nodejs:nodejs src ./src
 COPY --chown=nodejs:nodejs public ./public
 COPY --chown=nodejs:nodejs index.html ./
-COPY --chown=nodejs:nodejs entrypoint-test.sh ./
+COPY --chown=nodejs:nodejs scripts/entrypoint-test.sh ./entrypoint-test.sh
 
 # Create necessary directories with proper permissions before switching user
 RUN mkdir -p /app/coverage /app/test-results /app/playwright-report /app/.vite && \

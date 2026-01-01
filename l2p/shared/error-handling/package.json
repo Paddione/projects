@@ -15,8 +15,8 @@
   },
   "scripts": {
     "build": "npm run build:esm && npm run build:cjs",
-    "build:esm": "tsc",
-    "build:cjs": "tsc --project tsconfig.cjs.json"
+    "build:cjs": "tsc --project tsconfig.cjs.json",
+    "build:esm": "tsc"
   },
   "devDependencies": {
     "typescript": "^5.0.0",

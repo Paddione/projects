@@ -303,6 +303,34 @@ export class AuthService {
   }
 
   /**
+   * Resend email verification
+   */
+  async resendEmailVerification(email: string): Promise<void> {
+    const user = await this.getUserByEmail(email);
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    if (user.email_verified) {
+      throw new Error('Email is already verified');
+    }
+
+    const verificationToken = crypto.randomBytes(32).toString('hex');
+    const verificationExpires = new Date(Date.now() + this.EMAIL_VERIFICATION_EXPIRY);
+
+    await db
+      .update(users)
+      .set({
+        email_verification_token: verificationToken,
+        email_verification_expires: verificationExpires,
+        updated_at: new Date(),
+      })
+      .where(eq(users.id, user.id));
+
+    await this.emailService.sendVerificationEmail(user.email, verificationToken);
+  }
+
+  /**
    * Request password reset
    */
   async requestPasswordReset(email: string): Promise<string> {

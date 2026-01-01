@@ -9,9 +9,9 @@ vi.mock('./api-client');
 vi.mock('./server-health');
 vi.mock('./app-settings');
 
-const mockApiClient = vi.mocked(ApiClient);
-const mockServerHealth = vi.mocked(serverHealth);
-const mockAppSettings = vi.mocked(AppSettingsService);
+const mockApiClient = vi.mocked(ApiClient, true);
+const mockServerHealth = vi.mocked(serverHealth, true);
+const mockAppSettings = vi.mocked(AppSettingsService, true);
 
 // Helper to reset internal state
 function resetInternalState() {

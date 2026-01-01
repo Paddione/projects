@@ -9,9 +9,11 @@ export interface TokenPayload {
   userId: number;
   username: string;
   email: string;
-  selectedCharacter: string;
-  characterLevel: number;
-  isAdmin: boolean;
+  selectedCharacter?: string;
+  characterLevel?: number;
+  isAdmin?: boolean;
+  role?: string;
+  emailVerified?: boolean;
   iat?: number;
   exp?: number;
 }

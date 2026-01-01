@@ -3,6 +3,8 @@ build/
 *.log
 .DS_Store
 .env
+.env-dev
+.env-prod
 *.txt
 *.db
 *.sqlite
@@ -12,6 +14,8 @@ rag/storage/
 rag/data/
 rag/output.json
 rag/.env
+rag/.env-dev
+rag/.env-prod
 
 # Large Binaries & Coverage
 ai-image-gen/*.deb

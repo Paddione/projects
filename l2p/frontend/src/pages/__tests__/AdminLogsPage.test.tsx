@@ -2,7 +2,7 @@ import React from 'react'
 import { describe, it, expect } from '@jest/globals'
 import { render, screen } from '@testing-library/react'
 import '@testing-library/jest-dom'
-import AdminLogsPage from '../AdminLogsPage'
+import { AdminLogsPage } from '../AdminLogsPage'
 
 describe('AdminLogsPage', () => {
   it('should render static admin logs content', () => {

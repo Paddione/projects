@@ -1,0 +1,17 @@
+# Environment variables with secrets
+.env
+.env-dev
+.env-prod
+
+# Database data volumes
+data/
+postgres_data/
+postgres_logs/
+
+# Backup files
+*.sql
+*.dump
+*.backup
+
+# Docker compose overrides
+docker-compose.override.yml

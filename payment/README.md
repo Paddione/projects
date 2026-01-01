@@ -1,49 +1,79 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Payment
 
-## Getting Started
+Next.js 16 payment platform with Stripe integration, NextAuth v5 authentication, and Prisma ORM.
 
-### Prerequisites
+## Overview
 
-- Node.js (v20 or higher)
-- Docker (for database)
+- Framework: Next.js 16 (App Router)
+- Auth: NextAuth v5 (beta)
+- Database: PostgreSQL via Prisma
+- Payments: Stripe
 
-### Installation
+## Quick Start
 
-1. **Clone the repository:**
-   ```bash
-   git clone <repository_url>
-   cd payment
-   ```
+```bash
+npm install
+cp .env.example .env-dev
+cp .env.example .env-prod
 
-2. **Install dependencies:**
-   ```bash
-   npm install
-   ```
+# Development database migration
+npx prisma migrate dev
 
-3. **Environment Setup:**
-   Copy the example environment file:
-   ```bash
-   cp .env.example .env
-   ```
-   Update `.env` with your actual credentials.
+# Start dev server (default: http://localhost:3004)
+npm run dev
+```
 
-4. **Database Setup:**
-   Ensure Docker is running, then verify the database container (if using the provided compose file) or point to your Postgres instance.
-   
-   Initialize the database:
-   ```bash
-   npx prisma migrate dev
-   ```
+## Environment Configuration
 
-5. **Run the development server:**
-   ```bash
-   npm run dev
-   ```
+Recommended structure:
+- `.env.example` (template)
+- `.env-dev` (development)
+- `.env-prod` (production)
 
-Open [http://localhost:3000](http://localhost:3000) with your browser.
+Required values:
+- `DATABASE_URL` (points to shared Postgres: `shared-postgres:5432/payment_db`)
+- `NEXTAUTH_SECRET` (32-char hex, unique per env)
+- `AUTH_SECRET` (32-char hex, unique per env)
+- `NEXTAUTH_URL` (dev: `http://localhost:3004`, prod: `https://payment.korczewski.de`)
+- `AUTH_SERVICE_URL` (dev: `http://localhost:5500`, prod: `https://auth.korczewski.de`)
+- Stripe keys (test keys in dev, production keys in prod)
+- `STRIPE_WEBHOOK_SECRET` (required for webhooks)
+- `AUTH_TRUST_HOST=true` (production)
 
-## Deploy on Vercel
+## Commands
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```bash
+# Development
+npm run dev
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+# Build & run production
+npm run build
+npm run start
+
+# Testing
+npm test
+npm run test:e2e
+npm run lint
+
+# Prisma
+npx prisma migrate dev
+npx prisma migrate deploy
+npx prisma studio
+```
+
+## Critical Constraints
+
+- Prisma migrations require a valid `DATABASE_URL`.
+- NextAuth requires `NEXTAUTH_SECRET` and `NEXTAUTH_URL`.
+- Stripe webhooks require `STRIPE_WEBHOOK_SECRET`.
+
+## Important Files
+
+- `compose.yaml`: database stack
+- `auth.config.ts` and `auth.ts`: NextAuth configuration
+
+## Deployment
+
+- Dev: `npm run dev`
+- Production: `npm run build` then `npm run start`
+- Use `.env-prod` for production settings

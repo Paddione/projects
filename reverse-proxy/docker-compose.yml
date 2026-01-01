@@ -1,42 +1,63 @@
-version: '3.8'
-
 services:
-  nginx-proxy-manager:
-    image: 'jc21/nginx-proxy-manager:latest'
-    container_name: nginx-proxy-manager
+  traefik:
+    image: traefik:latest # Use v3.6.6+ for Docker Engine 29+ support
+    container_name: traefik
     restart: unless-stopped
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+    privileged: true
+    user: "0:0"
+    group_add:
+      - "1001"
     ports:
-      # Public HTTP
-      - '80:80'
-      # Public HTTPS
-      - '443:443'
-      # Admin Web Port
-      - '81:81'
+      - "80:80"
+      - "443:443"
+      - "8080:8080"
+    env_file:
+      - .env
     environment:
-      # Database connection
-      DB_SQLITE_FILE: "/data/database.sqlite"
-      # Uncomment below if using MySQL/MariaDB instead
-      # DB_MYSQL_HOST: "db"
-      # DB_MYSQL_PORT: 3306
-      # DB_MYSQL_USER: "npm"
-      # DB_MYSQL_PASSWORD: "npm"
-      # DB_MYSQL_NAME: "npm"
+      - DOCKER_API_VERSION=1.52
+      - LEGO_PROPAGATION_TIMEOUT=600
+      - LEGO_EXPERIMENTAL_CNAME_SUPPORT=true
+    command:
+      - "--global.checknewversion=true"
+      - "--global.sendanonymoususage=false"
+      - "--api.dashboard=true"
+      - "--ping=true"
+      - "--log.level=DEBUG"
+      - "--log.filepath=/var/log/traefik/traefik.log"
+      - "--log.format=json"
+      - "--accesslog.filepath=/var/log/traefik/access.log"
+      - "--accesslog.format=json"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--providers.docker.network=traefik-public"
+      - "--providers.file.directory=/etc/traefik/dynamic"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
+      - "--entrypoints.websecure.address=:443"
     volumes:
-      - ./data:/data
-      - ./letsencrypt:/etc/letsencrypt
+      - /var/run/docker.sock:/var/run/docker.sock:rw
+      - ./config/dynamic:/etc/traefik/dynamic:ro
+      - /etc/ssl/korczewski.de:/etc/traefik/certs:ro
+      - ./logs:/var/log/traefik
     networks:
-      - proxy-network
+      - traefik-public
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.traefik-dashboard.rule=Host(`traefik.korczewski.de`)"
+      - "traefik.http.routers.traefik-dashboard.entrypoints=websecure"
+      - "traefik.http.routers.traefik-dashboard.tls=true"
+      - "traefik.http.routers.traefik-dashboard.service=api@internal"
+      - "traefik.http.routers.traefik-dashboard.middlewares=dashboard-auth"
+      - "traefik.http.middlewares.dashboard-auth.basicauth.users=${TRAEFIK_DASHBOARD_USER}:${TRAEFIK_DASHBOARD_PASSWORD_HASH}"
     healthcheck:
-      test: ["CMD", "/bin/check-health"]
-      interval: 10s
-      timeout: 3s
+      test: ["CMD", "traefik", "healthcheck", "--ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
 
 networks:
-  proxy-network:
-    driver: bridge
-    ipam:
-      config:
-        - subnet: 10.10.0.0/24
-          gateway: 10.10.0.1
+  traefik-public:
+    external: true
+    name: traefik-public

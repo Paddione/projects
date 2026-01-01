@@ -3,10 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --webpack -p 3004",
     "build": "next build --webpack",
-    "start": "next start",
+    "dev": "next dev --webpack -p 3004",
     "lint": "eslint",
+    "start": "next start",
     "test": "vitest run",
     "test:e2e": "playwright test"
   },

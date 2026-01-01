@@ -177,10 +177,10 @@ export class InfrastructureAnalyzer {
      */
     async findLegacyScripts() {
         const legacyScripts = [];
-        const potentialLegacyFiles = [
-            'test-runner.sh',
-            'run-tests.sh',
-            'test.sh',
+            const potentialLegacyFiles = [
+                'scripts/test-runner.sh',
+                'backend/scripts/run-tests.sh',
+                'test.sh',
             'testing/run-tests.js',
             'scripts/test.js',
             'test-setup.js',

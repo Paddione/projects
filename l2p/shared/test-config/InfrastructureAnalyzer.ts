@@ -257,8 +257,8 @@ export class InfrastructureAnalyzer {
   private async findLegacyScripts(): Promise<string[]> {
     const legacyScripts: string[] = [];
     const potentialLegacyFiles = [
-      'test-runner.sh',
-      'run-tests.sh',
+      'scripts/test-runner.sh',
+      'backend/scripts/run-tests.sh',
       'test.sh',
       'testing/run-tests.js',
       'scripts/test.js',

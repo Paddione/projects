@@ -25,7 +25,7 @@ for (const relPath of requiredDirs) {
   }
 }
 
-const requiredDocs = ['docs/PROJECT_STRUCTURE.md', 'docs/architecture-diagram.svg', 'docs/CONTRIBUTING.md'];
+const requiredDocs = ['README.md', 'docs/architecture-diagram.svg'];
 for (const relPath of requiredDocs) {
   const fullPath = path.join(rootDir, relPath);
   if (!fs.existsSync(fullPath)) {

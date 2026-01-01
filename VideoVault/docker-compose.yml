@@ -4,8 +4,8 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: videovault-dev
-    ports:
-      - '0.0.0.0:5000:5000'
+    expose:
+      - "5000"
     volumes:
       # Mount source code for hot reload
       - ./client:/app/client:cached
@@ -28,16 +28,32 @@ services:
     environment:
       - MEDIA_ROOT=/app/media
     env_file:
-      - env/.env-app
+      - .env-prod
     stdin_open: true
     tty: true
     command: sh -lc "npm ci && npm run dev"
     restart: unless-stopped
     networks:
       - l2p-network
-    depends_on:
-      postgres:
-        condition: service_healthy
+      - traefik-public
+    labels:
+      # Enable Traefik
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik-public"
+
+      # HTTP Router
+      - "traefik.http.routers.videovault.rule=Host(`videovault.korczewski.de`, `video.korczewski.de`)"
+      - "traefik.http.routers.videovault.priority=10"
+      - "traefik.http.routers.videovault.entrypoints=websecure"
+      - "traefik.http.routers.videovault.tls=true"
+
+      # Service configuration
+      - "traefik.http.services.videovault.loadbalancer.server.port=5000"
+
+      # Middlewares
+      - "traefik.http.routers.videovault.middlewares=default-chain@file"
+    external_links:
+      - shared-postgres
     healthcheck:
       test: ['CMD-SHELL', 'curl -fsS http://localhost:5000/api/health || exit 1']
       interval: 5s
@@ -68,22 +84,12 @@ services:
           target: /app/vite.config.ts
 
   # Optional PostgreSQL for future server persistence
-  postgres:
-    image: postgres:16-alpine
-    container_name: videovault-postgres
-    env_file:
-      - env/.env-postgres
-    ports:
-      - '0.0.0.0:5437:5432'
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    networks:
-      - l2p-network
-    healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U $$POSTGRES_USER']
-      interval: 5s
-      timeout: 3s
-      retries: 30
+  # NOW USING CENTRALIZED POSTGRES INSTANCE
+  # The shared-postgres instance is managed in /shared-infrastructure
+  # This service definition is removed - using shared-postgres instead
+  # postgres:
+  #   image: postgres:16-alpine
+  #   ... (removed, using shared-postgres instead)
 
   playwright:
     image: mcr.microsoft.com/playwright:v1.55.0-jammy
@@ -98,8 +104,8 @@ services:
     depends_on:
       videovault-dev:
         condition: service_healthy
-      postgres:
-        condition: service_healthy
+    external_links:
+      - shared-postgres
     shm_size: 1g
     environment:
       - CI=1
@@ -126,8 +132,8 @@ services:
     depends_on:
       videovault-dev:
         condition: service_healthy
-      postgres:
-        condition: service_healthy
+    external_links:
+      - shared-postgres
     shm_size: 1g
     environment:
       - CI=1
@@ -144,7 +150,9 @@ services:
 
 networks:
   l2p-network:
-    driver: bridge
-volumes:
-  postgres_data:
-    driver: local
+    external: true
+    name: l2p-network
+  traefik-public:
+    external: true
+    name: traefik-public
+# Volumes removed - using centralized postgres instance

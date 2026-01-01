@@ -8,454 +8,442 @@ Learn2Play is a full-stack web application that enables users to participate in 
 
 ## Features
 
-- **Real-time Multiplayer**: Socket.io-powered live quiz sessions
-- **User Authentication**: JWT-based auth with secure password hashing
-- **Lobby System**: Create and join game lobbies with real-time updates
-- **Question Management**: Rich question database with multiple categories
-- **Player Progression**: Level-up system with experience points and badges
-- **Admin Panel**: User management and game moderation tools
-- **Comprehensive Testing**: Unit, integration, and E2E test coverage
-- **Docker Deployment**: Production-ready containerized setup
+- Real-time multiplayer gameplay with Socket.io
+- JWT-based authentication with secure password hashing
+- Lobby system for live game sessions
+- Question management with multiple categories
+- Player progression (XP, badges)
+- Admin tooling for moderation
+- Unit, integration, and E2E test coverage
+- Docker-based deployments
 
 ## Tech Stack
 
 ### Frontend
-- **React 18** with TypeScript
-- **Vite** for fast development and optimized builds
-- **Wouter** for client-side routing
-- **Tailwind CSS** for styling
-- **Radix UI** for accessible components
-- **Socket.io Client** for real-time communication
+- React 18 + TypeScript
+- Vite
+- Wouter routing
+- Tailwind CSS
+- Radix UI
+- Socket.io client
 
 ### Backend
-- **Express** with TypeScript
-- **Socket.io** for WebSocket communication
-- **Drizzle ORM** for database operations
-- **PostgreSQL** for data persistence
-- **Passport.js** with JWT strategy
-- **Rate limiting** and security middleware
+- Express + TypeScript
+- Socket.io
+- Drizzle ORM
+- PostgreSQL
+- Passport.js (JWT)
+- Security middleware + rate limiting
 
 ### Testing
-- **Vitest** for unit tests
-- **Playwright** for E2E tests
-- **Jest** with ES modules support
-- **Custom test environment** scripts
-
-## Prerequisites
-
-- **Node.js 20+** and npm
-- **Docker & Docker Compose**
-- **PostgreSQL 15+** (or use Docker)
+- Jest (ESM) + Testing Library
+- Playwright (E2E)
+- Vitest (unit helpers)
+- Custom test environment scripts
 
 ## Quick Start
 
-### 1. Environment Setup
+### 1) Environment Setup
 
 ```bash
-# Copy environment templates
-cp .env.example .env
-cp .env.dev .env.development
-cp .env.production.example .env.production
-
-# Edit .env files with your configuration
-# Important: Use alphanumeric-only values for Postgres credentials
+cp .env.example .env-dev
+cp .env.example .env-prod
 ```
 
-### 2. Install Dependencies
+- Use alphanumeric-only values for Postgres credentials.
+- L2P uses centralized Postgres by default (`shared-postgres:5432/l2p_db`).
+- Test database remains separate on port 5433 for isolation.
+
+### Environment Configuration
+
+Required values (dev and prod):
+- `DATABASE_URL` (points to `shared-postgres:5432/l2p_db`)
+- `L2P_DB_USER`, `L2P_DB_PASSWORD` (match `shared-infrastructure/.env`)
+- `JWT_SECRET`, `JWT_REFRESH_SECRET` (32-char hex, unique per env)
+- `FRONTEND_URL` (dev: `http://localhost:5173`, prod: `https://l2p.korczewski.de`)
+- `CORS_ORIGINS` (dev: `http://localhost:5173,http://localhost:3000`, prod: `https://l2p.korczewski.de`)
+- `GOOGLE_AI_API_KEY` (Gemini API key)
+
+Production-only:
+- `COOKIE_DOMAIN=.korczewski.de`
+- `COOKIE_SECURE=true`
+- `L2P_NETWORK_EXTERNAL=true`
+
+The deployment script reads `.env`; copy `.env-prod` to `.env` when deploying with `scripts/deploy.sh`.
+
+### 2) Install Dependencies
 
 ```bash
-# Install all dependencies (root, frontend, backend)
 npm run install:all
-
-# Or install individually
-npm install
-cd frontend && npm install
-cd ../backend && npm install
 ```
 
-### 3. Database Setup
+### 3) Database Setup
 
-**Option A: Docker (Recommended)**
 ```bash
-# Start PostgreSQL container
 npm run deploy:dev
-
-# Run migrations
 npm run db:migrate
 ```
 
-**Option B: Local PostgreSQL**
-```bash
-# Ensure PostgreSQL is running on port 5432
-# Create database: learn2play
-# Update .env with connection details
-
-# Run migrations
-npm run db:migrate
-```
-
-### 4. Start Development
+### 4) Start Development
 
 ```bash
-# Start backend (port 5001)
 npm run dev:backend
-
-# In another terminal, start frontend (port 5173)
 npm run dev:frontend
 ```
 
-Access the application at http://localhost:5173
+App: http://localhost:5173
 
 ## Development Commands
 
-### Development Servers
 ```bash
-npm run dev:frontend          # Frontend dev server (Vite)
-npm run dev:backend           # Backend dev server
-npm run dev:backend:tsx       # Backend with tsx hot reload
+# Dev servers
+npm run dev:frontend
+npm run dev:backend
+npm run dev:backend:tsx
+
+# Build
+npm run build:all
+npm run build:frontend
+npm run build:backend
+
+# Typecheck
+npm run typecheck
 ```
 
-### Building
-```bash
-npm run build:all             # Build both frontend and backend
-npm run build:frontend        # Build frontend only
-npm run build:backend         # Build backend only
-```
+## Testing
 
-### Testing
-
-**Unit Tests**
 ```bash
-npm run test:unit             # Run all unit tests
-npm run test:unit:frontend    # Frontend unit tests only
-npm run test:unit:backend     # Backend unit tests only
-npm run test:watch            # Watch mode for unit tests
-```
+# Unit
+npm run test:unit
+npm run test:unit:frontend
+npm run test:unit:backend
+npm run test:watch
 
-**Integration Tests**
-```bash
-npm run test:integration           # All integration tests
-npm run test:integration:frontend  # Frontend integration tests
-npm run test:integration:backend   # Backend integration tests
-```
+# Integration
+npm run test:integration
+npm run test:integration:frontend
+npm run test:integration:backend
 
-**E2E Tests**
-```bash
-# Install Playwright browsers first
+# E2E
 npm run test:browsers:install
+npm run test:e2e
+npm run test:e2e:headed
+npm run test:e2e:ui
 
-# Run E2E tests
-npm run test:e2e              # Headless mode
-npm run test:e2e:headed       # With browser UI
-npm run test:e2e:ui           # Playwright UI mode
+# Full suite
+npm run test:all
+npm run test:all:ci
 ```
 
-**Full Test Suite**
+Coverage:
 ```bash
-npm run test:all              # Unit + Integration + E2E
-npm run test:all:ci           # CI-optimized test run
-npm run typecheck             # TypeScript type checking
+npm run coverage:all
+npm run coverage:report
+npm run coverage:badge
 ```
 
-**Coverage**
+## Deployment
+
+Development:
 ```bash
-npm run coverage:all          # Generate coverage reports
-npm run coverage:report       # View coverage summary
-npm run coverage:badge        # Generate coverage badge
+npm run deploy:dev
+npm run deploy:logs
+npm run deploy:down
 ```
 
-### Docker Deployment
-
-**Development**
+Production:
 ```bash
-npm run deploy:dev            # Start dev stack
-npm run deploy:logs           # View logs
-npm run deploy:down           # Stop containers
+npm run deploy:prod
+npm run stop
 ```
 
-**Production**
+Rebuild:
 ```bash
-npm run deploy:prod           # Start production stack
-npm run stop                  # Stop production stack
+./scripts/rebuild.sh
 ```
 
-**Rebuild**
+## Database Guide
+
+### Environment Variables
+
 ```bash
-./rebuild.sh                  # Full rebuild (stop, build, start)
+# Option 1: Full connection string
+DATABASE_URL=postgresql://user:password@host:port/database
+
+# Option 2: Individual variables
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=learn2play
+DB_USER=l2p_user
+DB_PASSWORD=l2p_password
 ```
 
-### Database Operations
+### Migrations
+
 ```bash
-npm run db:migrate            # Run Drizzle migrations
-npm run db:health             # Check database connectivity
+npm run db:migrate
+npm run db:status
+npm run db validate
+npm run db:rollback
+npm run db:rollback 20240101_000001
 ```
 
-### Test Environment Management
+### CLI Commands
+
 ```bash
-npm run test:env:start        # Start test containers
-npm run test:env:stop         # Stop test containers
-npm run test:env:health       # Health check
-npm run test:env:status       # View status
-npm run test:env:logs         # View test logs
-npm run test:env:reset        # Reset test environment
+npm run db migrate
+npm run db rollback
+npm run db status
+npm run db validate
+npm run db health
+npm run db test
 ```
 
-### Utility Scripts
-```bash
-npm run lint:structure        # Verify project structure
-npm run import:questions      # Import questions to database
-npm run smtp:test             # Test SMTP configuration
-npm run diagnostics:ts        # Count TypeScript diagnostics
-```
+### Health Endpoints
+
+- `GET /health`
+- `GET /health/database`
+- `GET /api/database/test`
 
 ## Project Structure
 
 ```
 l2p/
-├── frontend/                 # React application
-│   ├── src/
-│   │   ├── components/      # React components
-│   │   ├── services/        # Business logic services
-│   │   ├── hooks/           # Custom React hooks
-│   │   ├── types/           # TypeScript types
-│   │   └── __tests__/       # Frontend tests
-│   ├── public/              # Static assets
-│   └── package.json
-│
-├── backend/                  # Express API server
-│   ├── src/
-│   │   ├── routes/          # API routes
-│   │   ├── services/        # Backend services
-│   │   ├── middleware/      # Express middleware
-│   │   ├── repositories/    # Data access layer
-│   │   ├── socket/          # Socket.io handlers
-│   │   └── __tests__/       # Backend tests
-│   ├── drizzle/             # Database migrations
-│   └── package.json
-│
-├── shared/                   # Shared code
-│   ├── test-config/         # Test configuration utilities
-│   └── types/               # Shared TypeScript types
-│
-├── scripts/                  # Build and utility scripts
-├── config/                   # Configuration files
-├── database/                 # SQL schemas and data
-├── docs/                     # Documentation
-│
-├── docker-compose.yml        # Development stack
-├── docker-compose.prod.yml   # Production overrides
-├── docker-compose.test.yml   # Test environment
-├── test-config.yml           # Test configuration
-├── rebuild.sh                # Full rebuild script
-├── setup.sh                  # Setup automation
-└── package.json              # Root workspace config
+├── backend/           # Express + TS API
+├── frontend/          # React + Vite application
+├── shared/            # Cross-package utilities and tooling
+├── config/            # Env templates, linting, tooling presets
+├── scripts/           # Helper scripts (DB, email, CI helpers)
+├── database/          # SQL migrations and seed data
+├── data/              # Static datasets
+├── docs/              # Legacy docs (now consolidated here)
+├── coverage*/         # Jest coverage artifacts
+├── test-*/            # Test assets
+└── package.json       # Workspaces + root npm scripts
 ```
 
-## Architecture
+Supporting files such as `docker-compose*.yml`, `scripts/deploy.sh`, and `scripts/validate-deployment.sh` orchestrate local/prod environments. Root npm scripts proxy to workspace commands (`install:all`, `build:all`, `dev:*`, `test:*`).
 
-### Workspace Structure
+## Backend Guide
 
-This is a monorepo using npm workspaces. The root `package.json` orchestrates the frontend and backend workspaces, allowing commands to be run from the root or from individual workspace directories.
+### Directory Layout
 
-### Backend Architecture
+```
+backend/src
+├── routes/         # HTTP endpoints (auth, admin, lobbies, etc.)
+├── services/       # Domain logic (AuthService, LobbyService, ...)
+├── repositories/   # Data access abstractions
+├── middleware/     # Express middleware (auth, validation, logging)
+├── cli/            # tsx-powered scripts (migrations, tooling)
+├── health/         # Health-check helpers
+├── __tests__/      # Jest unit + integration specs
+└── utils/, types/  # Shared helpers and type declarations
+```
 
-**Key Services:**
-- `AuthService`: User authentication and authorization
-- `GameService`: Multiplayer game logic and state management
-- `LobbyService`: Lobby creation and management
-- `SocketService`: Real-time Socket.io event handling
-- `DatabaseService`: Drizzle ORM wrapper with connection pooling
-- `EmailService`: SMTP email notifications
+### Common Scripts
 
-**Database Schema (Drizzle ORM):**
-- Users with authentication and profiles
-- Game sessions and question management
-- Player statistics and progression
-- Lobby and multiplayer state
+| Command | Purpose |
+| --- | --- |
+| `npm run dev:tsx` | Start Express via tsx with live reload |
+| `npm run build` | Compile TypeScript to `dist/` |
+| `npm run start` | Serve compiled build |
+| `npm run test:unit` | Jest unit suite |
+| `npm run test:integration` | Jest integration suite |
+| `npm run db:migrate` | Run database migrations |
 
-**API Routes:**
-- `/api/auth/*` - Authentication endpoints
-- `/api/users/*` - User management
-- `/api/games/*` - Game operations
-- `/api/lobbies/*` - Lobby management
-- `/api/admin/*` - Admin operations
+### Backend Testing
 
-### Frontend Architecture
-
-**Core Components:**
-- `GameRoom`: Main game interface
-- `Lobby`: Multiplayer lobby management
-- `PlayerGrid`: Real-time player display
-- `QuestionCard`: Question rendering
-- `Leaderboard`: Score tracking
-
-**Services:**
-- `navigationService`: Client-side routing
-- `socketService`: Socket.io client wrapper
-- `authService`: Authentication state management
-
-### Real-time Communication
-
-Socket.io events handle real-time multiplayer:
-- `join-lobby`: Player joins a lobby
-- `leave-lobby`: Player leaves
-- `game-start`: Game session begins
-- `submit-answer`: Player submits answer
-- `game-state-update`: Broadcast game state
-- `player-update`: Player status changes
-
-## Testing
-
-### Test Environment
-
-Tests use a separate test database (port 5433) and require specific environment setup:
+Integration tests boot the real Express app and hit routes through Supertest. Ensure Postgres is available (see `jest.setup.integration.mjs` for `DATABASE_URL`).
 
 ```bash
-NODE_OPTIONS="--experimental-vm-modules" TEST_ENVIRONMENT=local TEST_TYPE=unit
+npm --prefix backend run test:unit
+npm --prefix backend run test:integration
 ```
 
-### Test Types
+## Frontend Guide
 
-**Unit Tests**: Mock external dependencies, test individual components/services
-**Integration Tests**: Use test database, test service interactions
-**E2E Tests**: Full application testing with Playwright
+### Overview
 
-### Important Testing Notes
+- Framework: React 18 + Vite + TypeScript
+- State: Zustand stores + providers
+- Networking: REST helpers in `src/services/apiService.ts` + Socket.IO client
+- Testing: Jest + Testing Library, Playwright for E2E
 
-1. **ES Modules**: All tests require `NODE_OPTIONS=--experimental-vm-modules`
-2. **Test Database**: Must run on port 5433 (dev uses 5432)
-3. **Integration Tests**: Need `--forceExit --detectOpenHandles` flags
-4. **Coverage**: Collected via custom CoverageConfigCLI in `/shared/test-config`
+### Directory Layout
 
-### Running Specific Tests
+```
+src/
+├── components/   # Reusable UI widgets (PascalCase)
+├── pages/        # Route-level screens
+├── hooks/        # Custom hooks (useThing)
+├── services/     # API + domain helpers
+├── stores/       # Zustand stores
+├── __tests__/    # App-level specs
+├── test-utils.tsx# RTL helpers
+└── styles/, types/, etc.
+```
+
+### Useful Commands
 
 ```bash
-# Run specific test file
-NODE_OPTIONS="--experimental-vm-modules" npx jest path/to/test.ts
-
-# Run with pattern
-npm run test:unit -- --testNamePattern="should validate user"
-
-# Run integration test
-npm run test:integration:backend -- --testPathPattern="AuthRoutes"
+npm --prefix frontend install
+npm --prefix frontend run dev
+npm --prefix frontend run build
+npm --prefix frontend run test:unit
+npm --prefix frontend run test:e2e
 ```
 
-## Configuration
+## Testing Reference
 
-### Environment Variables
+### Backend Tests
 
-**Required:**
-- `DATABASE_URL`: PostgreSQL connection string
-- `JWT_SECRET`: Secret for JWT token signing
-- `SESSION_SECRET`: Express session secret
+Structure:
+- `unit/`
+- `integration/`
+- `e2e/`
 
-**Optional:**
-- `SMTP_*`: Email configuration (host, port, user, pass)
-- `FRONTEND_URL`: Frontend URL for CORS
-- `NODE_ENV`: Environment (development, production, test)
-
-### Test Configuration
-
-`test-config.yml` defines test environment settings:
-- Port configurations
-- Timeout values
-- Browser settings for E2E
-- Coverage thresholds
-
-## Deployment
-
-### Docker Production Deployment
-
+Commands:
 ```bash
-# Build and start production stack
-npm run deploy:prod
-
-# Services started:
-# - PostgreSQL (port 5432)
-# - Backend API (port 5001)
-# - Frontend (port 5173, proxied via nginx)
-# - Nginx reverse proxy (port 80)
+npm run test:unit
+npm run test:integration
+npm run test:e2e
+npm run test:coverage
 ```
 
-### Manual Deployment
+### Frontend Tests
 
-1. Build the application:
-   ```bash
-   npm run build:all
-   ```
+Structure:
+- `unit/`
+- `integration/`
+- `e2e/`
 
-2. Set production environment variables
-
-3. Run database migrations:
-   ```bash
-   NODE_ENV=production npm run db:migrate
-   ```
-
-4. Start the backend:
-   ```bash
-   cd backend && npm start
-   ```
-
-5. Serve frontend static files (from `frontend/dist`)
-
-### Health Checks
-
+Commands:
 ```bash
-# Database health
-npm run db:health
-
-# Test environment health
-npm run test:env:health
-
-# Manual curl check
-curl http://localhost:5001/health
+npm run test:unit
+npm run test:integration
+npm run test:e2e
+npm run test:coverage
 ```
 
-## Troubleshooting
+### E2E Suite (Playwright)
 
-### Common Issues
+Local dev:
+```bash
+cd frontend/e2e
+npm install
+npm run install:browsers
+npm test
+npm run test:ui
+```
 
-**Tests failing with module errors:**
-- Ensure `NODE_OPTIONS="--experimental-vm-modules"` is set
-- Check that you're using the correct Jest command from package.json
+Docker test stack:
+```bash
+cd frontend
+npm run start:docker-test
+npm run test:e2e:docker
+npm run stop:docker-test
+```
 
-**Database connection errors:**
-- Verify PostgreSQL is running
-- Check DATABASE_URL in .env
-- Ensure database exists and migrations are run
-- For tests, verify test database on port 5433
+Ports:
+- Frontend: http://localhost:3007 (Docker), http://localhost:3000 (local)
+- Backend API: http://localhost:3006/api (Docker), http://localhost:3001/api (local)
+- Postgres (test): localhost:5433
+- Redis: localhost:6380
+- MailHog: http://localhost:8025
 
-**Socket.io connection issues:**
-- Check CORS configuration in backend
-- Verify frontend is using correct backend URL
-- Check browser console for connection errors
+## Unified Test Configuration System
 
-**Docker port conflicts:**
-- Stop existing containers: `npm run deploy:down`
-- Check for processes on ports 5432, 5001, 5173, 80
-- Use `docker ps` to see running containers
+A centralized test configuration system provides consistent settings across frontend/backend.
 
-**Test environment not starting:**
-- Run `npm run test:env:cleanup` to reset
-- Check Docker daemon is running
-- Review logs with `npm run test:env:logs`
+Highlights:
+- Single `test-config.yml` file
+- Environment-specific settings (local/CI/Docker)
+- Test-type configs (unit/integration/E2E)
+- Jest config generation
+- Health checks
 
-## Contributing
+Basic usage:
+```typescript
+import { TestConfigManager, TestUtilities } from 'test-config';
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Run the full test suite: `npm run test:all`
-5. Run type checking: `npm run typecheck`
-6. Submit a pull request
+const configManager = TestConfigManager.getInstance();
+const config = configManager.loadConfig();
+const validation = configManager.validateConfig();
 
-## License
+const context = configManager.createExecutionContext('local', 'unit');
+await TestUtilities.initializeTestEnvironment('local', 'unit');
+```
 
-MIT
+## Coverage Configuration System
 
-## Support
+Features:
+- Multi-format reports (HTML, LCOV, JSON, XML, SVG badges)
+- Per-surface thresholds (frontend/backend/global)
+- Historical tracking
+- CLI support
 
-For issues and questions, please check:
-- `docs/` directory for detailed documentation
-- `CLAUDE.md` for development guidelines
-- GitHub Issues (if applicable)
+Quick start:
+```bash
+cd shared/test-config
+npm install
+npm run build
+npm run coverage:collect
+npm run coverage:badge
+```
+
+## Jest + TypeScript Guide
+
+Key points:
+- `tsconfig.test.json` extends the base config
+- Jest config uses `ts-jest/presets/default-esm`
+- Use `moduleNameMapper` for aliases
+- Store manual mocks in `__mocks__/`
+
+## Error Handling System (Shared)
+
+Centralized error handling provides:
+- Structured error formatting + context enrichment
+- Recovery strategies
+- Logging (console/file/remote)
+- Health monitoring and alerts
+- Notification channels (email/Slack/SMS/webhooks)
+
+Initialize:
+```typescript
+import { initializeErrorHandling } from './shared/error-handling';
+
+await initializeErrorHandling({
+  logLevel: 'info',
+  enableFileLogging: true,
+  enableHealthMonitoring: true,
+  enableNotifications: true
+});
+```
+
+## Contributing & Placement Rules
+
+- Frontend components in `frontend/src/components`, routes in `frontend/src/pages`.
+- Backend routes in `backend/src/routes`, logic in `backend/src/services`.
+- DB access in `backend/src/repositories`.
+- Tests live in `__tests__` folders near the code.
+- Shared packages under `shared/` must include `package.json`.
+
+Run structure checks:
+```bash
+npm run lint
+```
+
+## Critical Constraints
+
+- Do not skip `NODE_OPTIONS=--experimental-vm-modules` for tests.
+- Production/dev uses centralized Postgres (`shared-postgres:5432/l2p_db`).
+- Test DB stays on port 5433 for isolation.
+- Integration tests require `--forceExit --detectOpenHandles`.
+- Socket.io tests need real socket connections.
+
+## Important Files
+
+- `scripts/rebuild.sh`: Full rebuild script
+- `scripts/test-runner.sh`: Interactive test menu
+- `test-config.yml`: Test configuration
+- `.claude/settings.local.json`: Claude permissions

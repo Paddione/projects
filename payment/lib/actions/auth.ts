@@ -21,8 +21,3 @@ export async function authenticate(
         throw error
     }
 }
-
-export async function googleAuthenticate() {
-    console.log('Attempting Google Sign-In');
-    await signIn('google')
-}

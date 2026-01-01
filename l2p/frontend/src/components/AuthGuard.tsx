@@ -3,6 +3,7 @@ import { apiService } from '../services/apiService'
 import { useAuthStore } from '../stores/authStore'
 import { AuthForm } from './AuthForm'
 import { PasswordResetForm } from './PasswordResetForm'
+import { extractOAuthParams, validateState, getOAuthState, clearOAuthState, clearOAuthParamsFromUrl } from '../utils/oauth'
 
 interface AuthGuardProps {
   children: React.ReactNode
@@ -12,9 +13,20 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null)
   const [isValidating, setIsValidating] = useState(true)
   const [showPasswordReset, setShowPasswordReset] = useState(false)
+  const [oauthError, setOauthError] = useState<string | null>(null)
   const { setUser, setToken, clearAuth } = useAuthStore()
 
+  // Handle OAuth callback first (before any other validation)
   useEffect(() => {
+    const { code, state } = extractOAuthParams()
+
+    if (code && state) {
+      console.log('AuthGuard: OAuth callback detected')
+      handleOAuthCallback(code, state)
+      return // Skip normal validation
+    }
+
+    // If no OAuth callback, proceed with normal validation
     console.log('AuthGuard: Component mounted, isAuthenticated:', isAuthenticated, 'isValidating:', isValidating)
     if (isAuthenticated === null) {
       console.log('AuthGuard: Not authenticated, validating...')
@@ -36,6 +48,65 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
     window.addEventListener('storage', handleStorageChange)
     return () => window.removeEventListener('storage', handleStorageChange)
   }, [])
+
+  const handleOAuthCallback = async (code: string, state: string) => {
+    console.log('AuthGuard: Processing OAuth callback')
+    setIsValidating(true)
+    setOauthError(null)
+
+    try {
+      // Validate state parameter (CSRF protection)
+      const storedState = getOAuthState()
+      if (!validateState(state, storedState)) {
+        console.error('AuthGuard: Invalid OAuth state parameter')
+        setOauthError('Invalid OAuth state. Possible CSRF attack.')
+        clearOAuthState()
+        clearOAuthParamsFromUrl()
+        setIsValidating(false)
+        setIsAuthenticated(false)
+        return
+      }
+
+      console.log('AuthGuard: State validated, exchanging code for tokens')
+
+      // Exchange authorization code for tokens
+      const response = await apiService.exchangeOAuthCode(code, state)
+
+      if (response.success && response.data) {
+        console.log('AuthGuard: OAuth login successful')
+
+        // Store tokens and user data
+        const { user, tokens } = response.data
+        apiService.setAuth(tokens.accessToken, tokens.refreshToken, user)
+
+        // Update Zustand store
+        setUser({
+          id: String(user.userId),
+          username: user.username,
+          email: user.email,
+          character: user.selectedCharacter || 'student',
+          level: user.characterLevel || 1
+        })
+        setToken(tokens.accessToken)
+
+        // Clear OAuth state and URL params
+        clearOAuthState()
+        clearOAuthParamsFromUrl()
+
+        setIsAuthenticated(true)
+      } else {
+        console.error('AuthGuard: OAuth exchange failed', response)
+        setOauthError('Failed to complete OAuth login')
+        setIsAuthenticated(false)
+      }
+    } catch (error) {
+      console.error('AuthGuard: OAuth callback error:', error)
+      setOauthError(error instanceof Error ? error.message : 'OAuth login failed')
+      setIsAuthenticated(false)
+    } finally {
+      setIsValidating(false)
+    }
+  }
 
   const validateAuthentication = async () => {
     console.log('AuthGuard: Starting validation, current token:', apiService.getToken())
@@ -177,7 +248,27 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
 
   // Show login form if not authenticated
   if (!isAuthenticated) {
-    return <AuthForm onAuthSuccess={handleAuthSuccess} onShowPasswordReset={handleShowPasswordReset} />
+    return (
+      <>
+        {oauthError && (
+          <div style={{
+            position: 'fixed',
+            top: '20px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            background: 'var(--error-color, #dc2626)',
+            color: 'white',
+            padding: '1rem 2rem',
+            borderRadius: '8px',
+            boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+            zIndex: 1000
+          }}>
+            {oauthError}
+          </div>
+        )}
+        <AuthForm onAuthSuccess={handleAuthSuccess} onShowPasswordReset={handleShowPasswordReset} />
+      </>
+    )
   }
 
   // Show protected content if authenticated

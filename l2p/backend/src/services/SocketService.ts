@@ -1,9 +1,7 @@
 import { Server, Socket } from 'socket.io';
 import { LobbyService } from './LobbyService.js';
 import { GameService } from './GameService.js';
-import { UserRepository } from '../repositories/UserRepository.js';
 import { RequestLogger } from '../middleware/logging.js';
-import jwt from 'jsonwebtoken';
 
 export interface SocketUser {
   id: string;
@@ -24,14 +22,12 @@ export class SocketService {
   private io: Server;
   private lobbyService: LobbyService;
   private gameService: GameService;
-  private userRepository: UserRepository;
   private connectedUsers: Map<string, SocketUser> = new Map();
 
   constructor(io: Server) {
     this.io = io;
     this.lobbyService = new LobbyService();
     this.gameService = new GameService(io);
-    this.userRepository = new UserRepository();
     this.setupAuthenticationMiddleware();
     this.setupEventHandlers();
   }
@@ -47,23 +43,32 @@ export class SocketService {
           return next();
         }
 
-        // Verify JWT token
-        const jwtSecret = process.env['JWT_SECRET'];
-        if (!jwtSecret) {
-          console.error('JWT_SECRET not configured');
+        const authServiceUrl = process.env['AUTH_SERVICE_URL'] || 'http://localhost:5500';
+        const response = await fetch(`${authServiceUrl}/api/auth/verify`, {
+          method: 'GET',
+          headers: { Authorization: `Bearer ${token}` }
+        });
+
+        if (!response.ok) {
+          console.warn('Socket auth rejected by auth service:', response.status);
           return next();
         }
 
-        const decoded = jwt.verify(token, jwtSecret) as any;
-        
-        // Attach user info to socket
+        const data = await response.json().catch(() => null);
+        const user = data?.user;
+
+        if (!user) {
+          console.warn('Socket auth response missing user payload');
+          return next();
+        }
+
         socket.data.user = {
-          id: decoded.id,
-          username: decoded.username,
-          email: decoded.email
+          id: String(user.userId),
+          username: user.username,
+          email: user.email
         };
-        
-        console.log('Socket authenticated for user:', decoded.username);
+
+        console.log('Socket authenticated for user:', user.username);
         next();
       } catch (error) {
         console.warn('Socket authentication failed:', error instanceof Error ? error.message : 'Unknown error');

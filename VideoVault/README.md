@@ -198,6 +198,39 @@ Notes:
 - Test artifacts are written under `test-results/playwright`.
   - In Docker runs, artifacts are kept inside the container (not bind-mounted), avoiding permissions issues.
   - Local runs write to `test-results/playwright` in the repo.
+
+## Environment Configuration
+
+Recommended structure:
+- `.env.example` (template)
+- `.env-dev` (development)
+- `.env-prod` (production)
+
+Required values:
+- `SESSION_SECRET` (32-char hex, separate for dev/prod)
+- `ADMIN_PASS` (strong password for prod)
+- `MEDIA_ROOT` (path to media library)
+- `DATABASE_URL` (only if using Postgres persistence)
+
+Postgres-related files live under `env/`:
+- `env/.env-postgres` with `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD`
+- `env/.env-app` with `DATABASE_URL` and `SESSION_SECRET`
+
+## Notes & Constraints
+
+- Requires a Chromium-based browser for File System Access API features.
+- File handles are session-based; rescan after reload.
+- Thumbnails are generated on demand (not persisted).
+- Docker Playwright runs keep artifacts inside the container to avoid permissions issues.
+
+## Important Files
+
+- `docker-compose.yml`: Dev + E2E environment definitions
+- `scripts/ensure-playwright-match.mjs`: Playwright version validation
+
+## Documentation & Task Tracking
+
+Use `/home/patrick/VideoVault/docs` to track tasks, documentation, and plans, and keep them updated regularly.
 - To open the HTML report: `npm run test:pw:report` (uses `test-results/playwright-report`).
 - To run Playwright locally (outside Docker): `npm run test:pw`.
 - The Playwright services are in the `playwright` Docker Compose profile; use the npm scripts or add `--profile playwright` if running `docker-compose` directly.
@@ -338,8 +371,7 @@ Compose Playwright image is pinned to `v1.55.0-jammy` to match `@playwright/test
 
 ## 🧪 Testing
 
-### Manual Testing Guide
-See `docs/manual-testing-guide.md` for comprehensive testing instructions including:
+### Manual Testing
 - Advanced filtering system testing
 - Bulk operations validation
 - Performance monitoring verification

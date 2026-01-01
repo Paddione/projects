@@ -14,11 +14,24 @@ export interface AuthenticatedRequest extends Request {
   user: TokenPayload;
 }
 
+interface AuthServiceUser {
+  userId: number;
+  username: string;
+  email: string;
+  role?: string;
+  emailVerified?: boolean;
+  selectedCharacter?: string;
+  characterLevel?: number;
+}
+
 export class AuthMiddleware {
   private authService: AuthService;
+  private authServiceUrl: string | null;
 
   constructor() {
     this.authService = new AuthService();
+    const configuredUrl = process.env['AUTH_SERVICE_URL'];
+    this.authServiceUrl = configuredUrl && configuredUrl.trim() ? configuredUrl.trim() : null;
   }
 
   /**
@@ -41,6 +54,58 @@ export class AuthMiddleware {
   }
 
   /**
+   * Verify token with the central auth service.
+   */
+  private async verifyWithAuthService(token: string): Promise<TokenPayload> {
+    if (!this.authServiceUrl) {
+      throw new Error('AUTH_SERVICE_UNAVAILABLE');
+    }
+
+    let response: globalThis.Response;
+    try {
+      response = await fetch(`${this.authServiceUrl}/api/auth/verify`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+    } catch (error) {
+      throw new Error('AUTH_SERVICE_UNAVAILABLE');
+    }
+
+    let data: any = null;
+    try {
+      data = await response.json();
+    } catch {
+      data = null;
+    }
+
+    if (!response.ok) {
+      const code = typeof data?.code === 'string' ? data.code : undefined;
+      const error = new Error(code || 'AUTH_FAILED');
+      (error as any).status = response.status;
+      (error as any).code = code;
+      throw error;
+    }
+
+    const user = data?.user as AuthServiceUser | undefined;
+    if (!user) {
+      throw new Error('AUTH_FAILED');
+    }
+
+    return {
+      userId: user.userId,
+      username: user.username,
+      email: user.email,
+      selectedCharacter: user.selectedCharacter,
+      characterLevel: user.characterLevel,
+      isAdmin: user.role === 'ADMIN',
+      role: user.role,
+      emailVerified: user.emailVerified
+    };
+  }
+
+  /**
    * Middleware to authenticate requests using JWT
    */
   authenticate = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
@@ -56,35 +121,93 @@ export class AuthMiddleware {
         return;
       }
 
-      // Verify token
-      const payload = this.authService.verifyAccessToken(token);
-
-      // Attach user info to request
-      req.user = payload;
-
-      next();
-    } catch (error) {
-      if (error instanceof Error) {
-        if (error.message === 'Access token expired') {
-          res.status(401).json({
-            error: 'Token expired',
-            message: 'Access token has expired',
-            code: 'TOKEN_EXPIRED'
-          });
+      if (!this.authServiceUrl) {
+        try {
+          const payload = this.authService.verifyAccessToken(token);
+          req.user = payload;
+          next();
           return;
-        }
+        } catch (error) {
+          if (error instanceof Error) {
+            if (error.message === 'Access token expired') {
+              res.status(401).json({
+                error: 'Token expired',
+                message: 'Access token has expired',
+                code: 'TOKEN_EXPIRED'
+              });
+              return;
+            }
 
-        if (error.message === 'Invalid access token') {
-          // Match test expectations for error field value
+            if (error.message === 'Invalid access token') {
+              res.status(401).json({
+                error: 'Invalid token',
+                message: 'Access token is invalid',
+                code: 'TOKEN_INVALID'
+              });
+              return;
+            }
+          }
+
           res.status(401).json({
-            error: 'Invalid token',
-            message: 'Access token is invalid',
-            code: 'TOKEN_INVALID'
+            error: 'Authentication failed',
+            message: 'Token verification failed'
           });
           return;
         }
       }
 
+      try {
+        const payload = await this.verifyWithAuthService(token);
+        req.user = payload;
+        next();
+        return;
+      } catch (error) {
+        if (error instanceof Error) {
+          const status = (error as any).status as number | undefined;
+          const code = (error as any).code as string | undefined;
+
+          if (code === 'TOKEN_EXPIRED') {
+            res.status(401).json({
+              error: 'Token expired',
+              message: 'Access token has expired',
+              code: 'TOKEN_EXPIRED'
+            });
+            return;
+          }
+
+          if (code === 'INVALID_TOKEN') {
+            res.status(401).json({
+              error: 'Invalid token',
+              message: 'Access token is invalid',
+              code: 'TOKEN_INVALID'
+            });
+            return;
+          }
+
+          if (error.message === 'AUTH_SERVICE_UNAVAILABLE') {
+            res.status(503).json({
+              error: 'Authentication service unavailable',
+              message: 'Authentication service unavailable',
+              code: 'AUTH_SERVICE_UNAVAILABLE'
+            });
+            return;
+          }
+
+          if (status === 401) {
+            res.status(401).json({
+              error: 'Authentication failed',
+              message: 'Token verification failed'
+            });
+            return;
+          }
+        }
+
+        res.status(401).json({
+          error: 'Authentication failed',
+          message: 'Token verification failed'
+        });
+      }
+    } catch (error) {
       res.status(401).json({
         error: 'Authentication failed',
         message: 'Token verification failed'
@@ -100,8 +223,21 @@ export class AuthMiddleware {
       const token = this.extractToken(req);
 
       if (token) {
-        const payload = this.authService.verifyAccessToken(token);
-        req.user = payload;
+        if (!this.authServiceUrl) {
+          try {
+            const payload = this.authService.verifyAccessToken(token);
+            req.user = payload;
+          } catch {
+            // Ignore auth failures for optional auth.
+          }
+        } else {
+          try {
+            const payload = await this.verifyWithAuthService(token);
+            req.user = payload;
+          } catch {
+            // Ignore auth failures for optional auth.
+          }
+        }
       }
 
       next();
@@ -187,7 +323,8 @@ export class AuthMiddleware {
       return;
     }
 
-    if (!req.user.isAdmin) {
+    const isAdmin = !!req.user.isAdmin || req.user.role === 'ADMIN';
+    if (!isAdmin) {
       res.status(403).json({
         error: 'Forbidden',
         message: 'Admin privileges required'

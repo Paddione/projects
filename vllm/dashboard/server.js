@@ -239,6 +239,28 @@ const SERVICES = [
         startCmd: 'npm run dev',
         logPath: path.resolve(PROJECT_ROOT, '..', 'VideoVault', 'dev.log'),
         group: 'creative'
+    },
+    {
+        id: 'shared-postgres',
+        name: 'Shared PostgreSQL',
+        containerName: 'shared-postgres',
+        url: 'postgresql://localhost:5432',
+        model: 'PostgreSQL 15',
+        description: 'Centralized database for auth, l2p, payment, and videovault services.',
+        vramEstimate: '< 2 GB',
+        type: 'docker',
+        group: 'infrastructure'
+    },
+    {
+        id: 'traefik',
+        name: 'Traefik Proxy',
+        containerName: 'traefik',
+        url: 'https://traefik.korczewski.de',
+        model: 'Traefik v3',
+        description: 'Reverse proxy and load balancer with automatic SSL/TLS certificates.',
+        vramEstimate: '< 500 MB',
+        type: 'docker',
+        group: 'infrastructure'
     }
 ];
 
@@ -515,7 +537,7 @@ async function controlService(serviceId, action) {
 async function startVllmWithModel(modelId) {
     return new Promise((resolve, reject) => {
         // Run the deploy.sh script with the selected model
-        const deployPath = path.join(__dirname, '..', 'deploy.sh');
+        const deployPath = path.join(__dirname, '..', 'scripts', 'deploy.sh');
         const env = { ...process.env, MODEL: modelId };
 
         exec(`bash ${deployPath}`, { env, cwd: path.join(__dirname, '..') }, (err, stdout, stderr) => {

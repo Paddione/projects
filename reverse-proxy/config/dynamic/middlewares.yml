@@ -1,0 +1,62 @@
+# Dynamic Configuration - Common Middlewares
+# https://doc.traefik.io/traefik/middlewares/overview/
+
+http:
+  middlewares:
+    # Security headers
+    security-headers:
+      headers:
+        browserXssFilter: true
+        contentTypeNosniff: true
+        forceSTSHeader: true
+        stsIncludeSubdomains: true
+        stsPreload: true
+        stsSeconds: 31536000
+        customFrameOptionsValue: "SAMEORIGIN"
+        customResponseHeaders:
+          X-Robots-Tag: "none,noarchive,nosnippet,notranslate,noimageindex"
+          server: ""
+
+    # Rate limiting
+    rate-limit:
+      rateLimit:
+        average: 100
+        burst: 200
+        period: 1s
+
+    # Compress responses
+    compression:
+      compress:
+        excludedContentTypes:
+          - "text/event-stream"
+
+    # CORS headers (adjust as needed per service)
+    cors-headers:
+      headers:
+        accessControlAllowMethods:
+          - GET
+          - POST
+          - PUT
+          - DELETE
+          - OPTIONS
+        accessControlAllowOriginList:
+          - "https://*.korczewski.de"
+        accessControlAllowHeaders:
+          - "Content-Type"
+          - "Authorization"
+        accessControlAllowCredentials: true
+        accessControlMaxAge: 3600
+
+    # IP whitelist (example - adjust as needed)
+    # ip-whitelist:
+    #   ipWhiteList:
+    #     sourceRange:
+    #       - "127.0.0.1/32"
+    #       - "192.168.1.0/24"
+
+    # Chain common middlewares
+    default-chain:
+      chain:
+        middlewares:
+          - security-headers
+          - compression
