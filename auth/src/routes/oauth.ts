@@ -91,6 +91,7 @@ router.get(
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
         maxAge: 15 * 60 * 1000, // 15 minutes
+        domain: process.env.COOKIE_DOMAIN || undefined,
       });
 
       res.cookie('refreshToken', result.tokens.refreshToken, {
@@ -98,6 +99,7 @@ router.get(
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+        domain: process.env.COOKIE_DOMAIN || undefined,
       });
 
       // Get redirect URL from session or default to auth service login page

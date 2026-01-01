@@ -60,6 +60,7 @@ router.post('/register', async (req: Request, res: Response) => {
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       maxAge: 15 * 60 * 1000, // 15 minutes
+      domain: process.env.COOKIE_DOMAIN || undefined,
     });
 
     res.cookie('refreshToken', result.tokens.refreshToken, {
@@ -67,6 +68,7 @@ router.post('/register', async (req: Request, res: Response) => {
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      domain: process.env.COOKIE_DOMAIN || undefined,
     });
 
     res.status(201).json({
@@ -100,6 +102,7 @@ router.post('/login', async (req: Request, res: Response) => {
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       maxAge: 15 * 60 * 1000, // 15 minutes
+      domain: process.env.COOKIE_DOMAIN || undefined,
     });
 
     res.cookie('refreshToken', result.tokens.refreshToken, {
@@ -107,6 +110,7 @@ router.post('/login', async (req: Request, res: Response) => {
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      domain: process.env.COOKIE_DOMAIN || undefined,
     });
 
     res.status(200).json({
@@ -179,6 +183,7 @@ router.post('/refresh', async (req: Request, res: Response) => {
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       maxAge: 15 * 60 * 1000,
+      domain: process.env.COOKIE_DOMAIN || undefined,
     });
 
     res.cookie('refreshToken', tokens.refreshToken, {
@@ -186,6 +191,7 @@ router.post('/refresh', async (req: Request, res: Response) => {
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       maxAge: 7 * 24 * 60 * 60 * 1000,
+      domain: process.env.COOKIE_DOMAIN || undefined,
     });
 
     res.status(200).json({ tokens });

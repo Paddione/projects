@@ -125,8 +125,8 @@ export class AuthService {
     try {
       const token = jwt.sign(payload, this.JWT_SECRET, {
         expiresIn: this.ACCESS_TOKEN_EXPIRY,
-        issuer: 'learn2play-api',
-        audience: 'learn2play-client'
+        issuer: 'unified-auth',
+        audience: 'korczewski-services'
       });
 
       if (!token) {
@@ -152,8 +152,8 @@ export class AuthService {
     try {
       return jwt.sign(payload, this.JWT_REFRESH_SECRET, {
         expiresIn: this.REFRESH_TOKEN_EXPIRY,
-        issuer: 'learn2play-api',
-        audience: 'learn2play-client'
+        issuer: 'unified-auth',
+        audience: 'korczewski-services'
       });
     } catch (error) {
       console.error('Failed to generate JWT refresh token:', error);
@@ -186,8 +186,8 @@ export class AuthService {
   verifyAccessToken(token: string): TokenPayload {
     try {
       const payload = jwt.verify(token, this.JWT_SECRET, {
-        issuer: 'learn2play-api',
-        audience: 'learn2play-client'
+        issuer: 'unified-auth',
+        audience: 'korczewski-services'
       }) as TokenPayload;
 
       return payload;
@@ -196,8 +196,8 @@ export class AuthService {
       if (process.env['JWT_PREVIOUS_SECRET']) {
         try {
           return jwt.verify(token, process.env['JWT_PREVIOUS_SECRET'] as string, {
-            issuer: 'learn2play-api',
-            audience: 'learn2play-client'
+            issuer: 'unified-auth',
+            audience: 'korczewski-services'
           }) as TokenPayload;
         } catch (secondError) {
           // Continue with original error handling
@@ -220,8 +220,8 @@ export class AuthService {
   verifyRefreshToken(token: string): TokenPayload {
     try {
       return jwt.verify(token, this.JWT_REFRESH_SECRET, {
-        issuer: 'learn2play-api',
-        audience: 'learn2play-client'
+        issuer: 'unified-auth',
+        audience: 'korczewski-services'
       }) as TokenPayload;
     } catch (error) {
       if (error instanceof jwt.TokenExpiredError) {

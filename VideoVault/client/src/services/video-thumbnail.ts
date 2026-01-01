@@ -371,16 +371,18 @@ export class VideoThumbnailService {
           create: false,
         });
         if (thumbsDir) {
-          const thumbName = `${base}-thumb.jpg`;
-          const fh = await thumbsDir.getFileHandle?.(thumbName, { create: false });
-          if (fh) {
-            const file: File = await fh.getFile();
-            const dataUrl = await this.readFileAsDataUrl(file);
-            return {
-              dataUrl,
-              generated: true,
-              timestamp: new Date().toISOString(),
-            };
+          const thumbCandidates = [`${base}_thumb.jpg`, `${base}-thumb.jpg`];
+          for (const name of thumbCandidates) {
+            const fh = await thumbsDir.getFileHandle?.(name, { create: false });
+            if (fh) {
+              const file: File = await fh.getFile();
+              const dataUrl = await this.readFileAsDataUrl(file);
+              return {
+                dataUrl,
+                generated: true,
+                timestamp: new Date().toISOString(),
+              };
+            }
           }
         }
       } catch (_e) {
@@ -457,6 +459,29 @@ export class VideoThumbnailService {
           // try next candidate
         }
       }
+
+      // Fallback: Check 'Thumbnails' subdirectory (server generated)
+      try {
+        const thumbsDir = await (parentDirHandle as any).getDirectoryHandle?.('Thumbnails', {
+          create: false,
+        });
+        if (thumbsDir) {
+          for (const name of candidates) {
+            try {
+              const fh = await thumbsDir.getFileHandle?.(name, { create: false });
+              if (fh) {
+                const file: File = await fh.getFile();
+                return await this.readFileAsDataUrl(file);
+              }
+            } catch (_e) {
+              // try next candidate
+            }
+          }
+        }
+      } catch (_e) {
+        // ignore
+      }
+
       return null;
     } catch (_e) {
       return null;
@@ -509,10 +534,12 @@ export class VideoThumbnailService {
 
       // Fallback: check thumbnails subdirectory
       try {
-        const thumbsDir = await (info.parent as any).getDirectoryHandle?.('thumbnails', {
-          create: false,
-        });
-        if (thumbsDir) {
+        const thumbDirs = ['Thumbnails', 'thumbnails'];
+        for (const dirName of thumbDirs) {
+          const thumbsDir = await (info.parent as any).getDirectoryHandle?.(dirName, {
+            create: false,
+          });
+          if (!thumbsDir) continue;
           for (const n of names) {
             try {
               const fh = await thumbsDir.getFileHandle?.(n, { create: false });
@@ -525,6 +552,7 @@ export class VideoThumbnailService {
               // ignore missing
             }
           }
+          if (out.length > 0) break;
         }
       } catch (_e) {
         // ignore

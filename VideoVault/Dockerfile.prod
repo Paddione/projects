@@ -1,0 +1,52 @@
+# Production Dockerfile for VideoVault
+
+FROM node:20-bookworm-slim AS build
+
+WORKDIR /app
+
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends \
+    ca-certificates \
+    curl \
+    python3 \
+    build-essential \
+  && rm -rf /var/lib/apt/lists/*
+
+COPY package*.json ./
+COPY tsconfig.json ./
+COPY vite.config.ts ./
+
+RUN npm install -g npm@11 && npm ci
+
+COPY client/ ./client/
+COPY server/ ./server/
+COPY shared/ ./shared/
+COPY scripts/ ./scripts/
+
+RUN npm run build
+
+FROM node:20-bookworm-slim AS runtime
+
+WORKDIR /app
+
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends \
+    ca-certificates \
+    curl \
+    ffmpeg \
+  && rm -rf /var/lib/apt/lists/*
+
+ENV NODE_ENV=production
+
+COPY package*.json ./
+RUN npm install -g npm@11 && npm ci --omit=dev
+
+COPY --from=build /app/dist /app/dist
+COPY scripts/ ./scripts/
+
+EXPOSE 5000
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
+  CMD curl -fsS http://localhost:5000/api/health || exit 1
+
+CMD ["npm", "run", "start"]

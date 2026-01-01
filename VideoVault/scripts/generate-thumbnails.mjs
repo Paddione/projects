@@ -20,6 +20,8 @@ const options = {
 
 const root = process.cwd();
 const defaultMediaRoot = process.env.MEDIA_ROOT || path.join(root, 'Bibliothek');
+const processedRoot = process.env.PROCESSED_DIR || process.env.PROCESSED_MEDIA_PATH;
+const thumbnailsRoot = process.env.THUMBNAILS_DIR;
 const targetDir = dirArg ? dirArg : defaultMediaRoot;
 
 function cmdExists(cmd) {
@@ -79,6 +81,20 @@ async function ensureDir(p) {
   await fs.mkdir(p, { recursive: true });
 }
 
+function isSubPath(parent, child) {
+  if (!parent) return false;
+  const rel = path.relative(parent, child);
+  return rel === '' || (!rel.startsWith('..') && !path.isAbsolute(rel));
+}
+
+function resolveThumbsDir(inputDir) {
+  if (thumbnailsRoot && processedRoot && isSubPath(processedRoot, inputDir)) {
+    const rel = path.relative(processedRoot, inputDir);
+    return path.join(thumbnailsRoot, rel);
+  }
+  return path.join(inputDir, 'Thumbnails');
+}
+
 async function* walkDir(dir, base = '') {
   const entries = await fs.readdir(dir, { withFileTypes: true });
   for (const e of entries) {
@@ -111,12 +127,15 @@ export async function generateThumbnail(inputPath, options = {}) {
   const name = path.basename(inputPath);
   const baseName = name.replace(/\.[^.]+$/, '');
 
-  // Use 'Thumbnails' directory (Capitalized)
-  const thumbsDir = path.join(dir, 'Thumbnails');
+  // Use central thumbnails directory for processed files when configured
+  const thumbsDir = resolveThumbsDir(dir);
   await ensureDir(thumbsDir);
 
-  const spriteOut = path.join(thumbsDir, `${baseName}-sprite.jpg`);
-  const thumbOut = path.join(thumbsDir, `${baseName}-thumb.jpg`);
+  const useProcessedNaming = processedRoot && isSubPath(processedRoot, dir);
+  const spriteSuffix = useProcessedNaming ? '_sprite.jpg' : '-sprite.jpg';
+  const thumbSuffix = useProcessedNaming ? '_thumb.jpg' : '-thumb.jpg';
+  const spriteOut = path.join(thumbsDir, `${baseName}${spriteSuffix}`);
+  const thumbOut = path.join(thumbsDir, `${baseName}${thumbSuffix}`);
 
   // Check if files exist
   let spriteExists = false;

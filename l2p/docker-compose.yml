@@ -65,6 +65,8 @@ services:
       SMTP_PASS: ${SMTP_PASS:-}
       EMAIL_SENDER_ADDRESS: ${EMAIL_SENDER_ADDRESS:-}
       EMAIL_SENDER_NAME: ${EMAIL_SENDER_NAME:-Learn2Play}
+      # Centralized Auth Service
+      AUTH_SERVICE_URL: ${AUTH_SERVICE_URL:-}
       # API Keys
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
       GOOGLE_CLOUD_PROJECT_ID: ${GOOGLE_CLOUD_PROJECT_ID:-}
@@ -140,6 +142,7 @@ services:
         BUILDKIT_INLINE_CACHE: 1
         VITE_API_URL: https://l2p.korczewski.de/api
         VITE_SOCKET_URL: https://l2p.korczewski.de
+        VITE_AUTH_SERVICE_URL: https://auth.korczewski.de
         VITE_NODE_ENV: production
         VITE_APP_ENVIRONMENT: production
     image: learn2play/frontend:${VERSION:-latest}

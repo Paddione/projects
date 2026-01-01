@@ -219,7 +219,7 @@ const SERVICES = [
     {
         id: 'payment',
         name: 'Payment Service',
-        url: 'http://localhost:3004',
+        url: 'https://payment.korczewski.de',
         port: 3004,
         description: 'Subscription and payment processing service.',
         type: 'process',

@@ -4,8 +4,7 @@ import fs from 'fs/promises';
 import { db } from '../db';
 import { directoryRoots } from '@shared/schema';
 import { eq } from 'drizzle-orm';
-// @ts-expect-error - No types available for this module
-import { generateThumbnail } from '../../scripts/generate-thumbnails.mjs';
+import { pathToFileURL } from 'url';
 import { jobQueue } from '../lib/job-queue';
 
 type ThumbnailRequestBody = {
@@ -19,14 +18,35 @@ type GenerateThumbnailResult = {
   message?: string;
 };
 
-const generateThumbnailTyped = generateThumbnail as (
+type GenerateThumbnailFn = (
   inputPath: string,
   options: { overwrite: boolean },
 ) => Promise<GenerateThumbnailResult>;
 
+let generateThumbnailCached: GenerateThumbnailFn | null = null;
+
+async function loadGenerateThumbnail(): Promise<GenerateThumbnailFn> {
+  if (generateThumbnailCached) {
+    return generateThumbnailCached;
+  }
+
+  const modulePath = path.resolve(
+    import.meta.dirname,
+    '..',
+    '..',
+    'scripts',
+    'generate-thumbnails.mjs',
+  );
+  const moduleUrl = pathToFileURL(modulePath).href;
+  const mod = await import(moduleUrl);
+  generateThumbnailCached = mod.generateThumbnail as GenerateThumbnailFn;
+  return generateThumbnailCached;
+}
+
 // Register handler
 jobQueue.registerHandler('generate-thumbnail', async (data: { inputPath: string }) => {
-  return await generateThumbnailTyped(data.inputPath, { overwrite: false });
+  const generateThumbnail = await loadGenerateThumbnail();
+  return await generateThumbnail(data.inputPath, { overwrite: false });
 });
 
 export async function generateThumbnailRoute(

@@ -1,4 +1,52 @@
 services:
+  videovault:
+    build:
+      context: .
+      dockerfile: Dockerfile.prod
+    container_name: videovault
+    expose:
+      - "5000"
+    volumes:
+      # Mount media directory
+      - ${MEDIA_ROOT:-//PK-DESKTOP/e}:/app/media
+      # Mount processed thumbnails (separate share)
+      - ${THUMBNAILS_ROOT:-//PK-DESKTOP/Processed/Thumbnails}:/app/media/Processed/Thumbnails
+    environment:
+      - MEDIA_ROOT=/app/media
+      - PROCESSED_MEDIA_PATH=/app/media/Processed
+      - INBOX_DIR=/app/media/Inbox
+      - PROCESSED_DIR=/app/media/Processed
+      - THUMBNAILS_DIR=/app/media/Processed/Thumbnails
+    env_file:
+      - .env-prod
+    restart: unless-stopped
+    networks:
+      - l2p-network
+      - traefik-public
+    labels:
+      # Enable Traefik
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik-public"
+
+      # HTTP Router
+      - "traefik.http.routers.videovault.rule=Host(`videovault.korczewski.de`) || Host(`video.korczewski.de`)"
+      - "traefik.http.routers.videovault.priority=10"
+      - "traefik.http.routers.videovault.entrypoints=websecure"
+      - "traefik.http.routers.videovault.tls=true"
+
+      # Service configuration
+      - "traefik.http.services.videovault.loadbalancer.server.port=5000"
+
+      # Middlewares
+      - "traefik.http.routers.videovault.middlewares=default-chain@file"
+    external_links:
+      - shared-postgres
+    healthcheck:
+      test: ['CMD-SHELL', 'curl -fsS http://localhost:5000/api/health || exit 1']
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
   videovault-dev:
     build:
       context: .
@@ -21,12 +69,18 @@ services:
       - ./tailwind.config.cjs:/app/tailwind.config.cjs:ro
 
       # Mount media directory
-      - ${MEDIA_ROOT:-./Bibliothek}:/app/media
+      - ${MEDIA_ROOT:-//PK-DESKTOP/e}:/app/media
+      # Mount processed thumbnails (separate share)
+      - ${THUMBNAILS_ROOT:-//PK-DESKTOP/Processed/Thumbnails}:/app/media/Processed/Thumbnails
 
       # Preserve node_modules in container (don't mount host node_modules)
       - /app/node_modules
     environment:
       - MEDIA_ROOT=/app/media
+      - PROCESSED_MEDIA_PATH=/app/media/Processed
+      - INBOX_DIR=/app/media/Inbox
+      - PROCESSED_DIR=/app/media/Processed
+      - THUMBNAILS_DIR=/app/media/Processed/Thumbnails
     env_file:
       - .env-prod
     stdin_open: true
@@ -35,23 +89,6 @@ services:
     restart: unless-stopped
     networks:
       - l2p-network
-      - traefik-public
-    labels:
-      # Enable Traefik
-      - "traefik.enable=true"
-      - "traefik.docker.network=traefik-public"
-
-      # HTTP Router
-      - "traefik.http.routers.videovault.rule=Host(`videovault.korczewski.de`, `video.korczewski.de`)"
-      - "traefik.http.routers.videovault.priority=10"
-      - "traefik.http.routers.videovault.entrypoints=websecure"
-      - "traefik.http.routers.videovault.tls=true"
-
-      # Service configuration
-      - "traefik.http.services.videovault.loadbalancer.server.port=5000"
-
-      # Middlewares
-      - "traefik.http.routers.videovault.middlewares=default-chain@file"
     external_links:
       - shared-postgres
     healthcheck:

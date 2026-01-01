@@ -137,7 +137,7 @@ GOOGLE_AI_API_KEY=your-gemini-api-key
 # Application Configuration
 NODE_ENV=development
 PORT=3001
-FRONTEND_PORT=5174
+FRONTEND_PORT=3000
 
 # Development Settings
 ALLOW_PROD_DB_IN_TESTS=false
@@ -270,7 +270,7 @@ health_check() {
     fi
     
     # Check frontend
-    if curl -s http://localhost:5174 >/dev/null 2>&1; then
+    if curl -s http://localhost:3000 >/dev/null 2>&1; then
         print_success "Frontend is healthy"
         frontend_health=true
     else
@@ -291,7 +291,7 @@ show_completion() {
     echo -e "${GREEN}🎉 Learn2Play is now ready!${NC}\n"
     
     echo -e "${BLUE}Access URLs:${NC}"
-    echo -e "  📱 Frontend:  ${GREEN}http://localhost:5174${NC}"
+    echo -e "  📱 Frontend:  ${GREEN}http://localhost:3000${NC}"
     echo -e "  🔧 Backend:   ${GREEN}http://localhost:3001${NC}"
     echo -e "  🗄️  Database:  ${GREEN}localhost:5434${NC}"
     
@@ -303,7 +303,7 @@ show_completion() {
     echo -e "  🚀 Production deploy:  ${YELLOW}docker-compose --profile production up -d${NC}"
     
     echo -e "\n${BLUE}Next Steps:${NC}"
-    echo -e "  1. Visit ${GREEN}http://localhost:5174${NC} to access the application"
+    echo -e "  1. Visit ${GREEN}http://localhost:3000${NC} to access the application"
     echo -e "  2. Register a new account to get started"
     echo -e "  3. Edit ${YELLOW}.env${NC} to configure email and AI features (optional)"
     echo -e "  4. Read ${YELLOW}DEPLOYMENT.md${NC} for advanced configuration"

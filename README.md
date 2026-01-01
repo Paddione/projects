@@ -6,7 +6,7 @@ A collection of independent full-stack applications, shared infrastructure, and 
 
 | Project | Description | Tech Stack | Port(s) |
 | --- | --- | --- | --- |
-| [Learn2Play (l2p)](./l2p/README.md) | Multiplayer quiz platform | React, Express, Socket.io, PostgreSQL | 5173, 5001 |
+| [Learn2Play (l2p)](./l2p/README.md) | Multiplayer quiz platform | React, Express, Socket.io, PostgreSQL | 3000, 3001 |
 | [VideoVault](./VideoVault/README.md) | Client-first video management | React, Vite, File System Access API | 5100/5000 |
 | [Payment](./payment/README.md) | Payment platform with Stripe | Next.js 16, Prisma, NextAuth | 3004 |
 | [VLLM](./vllm/README.md) | MCP server for AI inference and analysis | TypeScript, vLLM, PostgreSQL | 4100 |
@@ -303,7 +303,7 @@ This section is the source of truth for active tasks and consolidated checklists
 - [ ] Run L2P backend migrations
 - [ ] Start auth service (port 5500)
 - [ ] Start L2P backend (port 5001)
-- [ ] Start L2P frontend (port 5173)
+- [ ] Start L2P frontend (port 3000)
 - [ ] Test OAuth flow: visit l2p.korczewski.de, login via auth service, exchange code for tokens, verify game profile load
 - [ ] Test token refresh
 - [ ] Test logout

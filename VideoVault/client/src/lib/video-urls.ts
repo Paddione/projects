@@ -60,8 +60,8 @@ export const getThumbnailSrc = (video: Video): string | undefined => {
       const rel = parts[1];
       const dir = rel.substring(0, rel.lastIndexOf('/'));
       // Construct path relative to /media/processed
-      // e.g. /media/processed/subdir/video_thumb.jpg
-      const path = `/media/processed/${dir ? dir + '/' : ''}${baseName}_thumb.jpg`;
+      // e.g. /media/processed/Thumbnails/subdir/video_thumb.jpg
+      const path = `/media/processed/Thumbnails/${dir ? dir + '/' : ''}${baseName}_thumb.jpg`;
       return path
         .split('/')
         .map(encodeURIComponent)
@@ -99,7 +99,7 @@ export const getSpriteSrc = (video: Video): string | undefined => {
       const rel = parts[1];
       const dir = rel.substring(0, rel.lastIndexOf('/'));
       // Processed usually uses _sprite.jpg
-      const path = `/media/processed/${dir ? dir + '/' : ''}${baseName}_sprite.jpg`;
+      const path = `/media/processed/Thumbnails/${dir ? dir + '/' : ''}${baseName}_sprite.jpg`;
       return path
         .split('/')
         .map(encodeURIComponent)

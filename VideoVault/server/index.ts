@@ -39,7 +39,12 @@ app.use(compression({
 
 // Serve media files from MEDIA_ROOT or default to Bibliothek
 const mediaRoot = process.env.MEDIA_ROOT || path.join(process.cwd(), 'Bibliothek');
-const processedPath = process.env.PROCESSED_MEDIA_PATH || path.join(mediaRoot, 'processed');
+const processedEnvPath = process.env.PROCESSED_MEDIA_PATH;
+const processedPath =
+  processedEnvPath ||
+  (fs.existsSync(path.join(mediaRoot, 'processed'))
+    ? path.join(mediaRoot, 'processed')
+    : path.join(mediaRoot, 'Processed'));
 
 // Only mount processed media if path exists
 if (fs.existsSync(processedPath)) {

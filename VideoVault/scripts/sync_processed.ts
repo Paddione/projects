@@ -15,7 +15,9 @@ const __dirname = path.dirname(__filename);
 const envPath = path.resolve(__dirname, '../env/.env-app.local');
 dotenv.config({ path: envPath });
 
-const PROCESSED_DIR = '/mnt/e/Processed';
+const PROCESSED_DIR =
+  process.env.PROCESSED_DIR || process.env.PROCESSED_MEDIA_PATH || '/mnt/e/Processed';
+const THUMBNAILS_DIR = process.env.THUMBNAILS_DIR || path.join(PROCESSED_DIR, 'Thumbnails');
 const ROOT_KEY = 'processed-root';
 const DEFAULT_CATEGORIES = {
   age: [],
@@ -111,8 +113,9 @@ async function sync() {
   for (const filePath of files) {
     const id = generateId(filePath);
     const filename = path.basename(filePath);
-    const base = filePath.replace(/\.[^.]+$/, '');
-    const thumbPath = `${base}_thumb.jpg`;
+    const rel = path.relative(PROCESSED_DIR, filePath);
+    const relBase = rel.replace(/\.[^.]+$/, '');
+    const thumbPath = path.join(THUMBNAILS_DIR, `${relBase}_thumb.jpg`);
 
     let hasThumb = false;
     try {
@@ -120,11 +123,9 @@ async function sync() {
       hasThumb = true;
     } catch {}
 
-    // Construct web path: /media/processed/filename_thumb.jpg
-    // Note: we assume flat structure or relative path from PROCESSED_DIR
-    const rel = path.relative(PROCESSED_DIR, filePath);
+    // Construct web path: /media/processed/Thumbnails/.../filename_thumb.jpg
     const relThumb = path.relative(PROCESSED_DIR, thumbPath);
-    const webThumbPath = `/media/processed/${relThumb}`;
+    const webThumbPath = `/media/processed/${relThumb.split(path.sep).join('/')}`;
 
     const stat = await fs.stat(filePath);
     const metadata = await getVideoMetadata(filePath);

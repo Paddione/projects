@@ -8,7 +8,7 @@
  * 3. Creates a single thumbnail from the middle frame
  * 4. Analyzes with Ollama LLaVA for categorization and renaming
  * 5. Renames the video file based on AI suggestion
- * 6. Moves the renamed video, sprite, and thumbnail to Bibliothek/Categorization/
+ * 6. Moves the renamed video to Processed/ and saves sprite + thumbnail to Thumbnails/
  *
  * Usage:
  *   npm run process-inbox
@@ -37,7 +37,14 @@ const CONFIG = {
 
   // Directories
   INBOX_DIR: process.env.INBOX_DIR || '/home/patrick/VideoVault/Bibliothek/Inbox',
-  CATEGORIZED_DIR: process.env.CATEGORIZED_DIR || '/home/patrick/VideoVault/Bibliothek/Categorized',
+  PROCESSED_DIR:
+    process.env.PROCESSED_DIR ||
+    process.env.CATEGORIZED_DIR ||
+    '/home/patrick/VideoVault/Bibliothek/Categorized',
+  THUMBNAILS_DIR:
+    process.env.THUMBNAILS_DIR ||
+    process.env.CATEGORIZED_DIR ||
+    '/home/patrick/VideoVault/Bibliothek/Categorized',
 };
 
 // Category schema (reused from ai-video-processor.mjs)
@@ -396,28 +403,29 @@ function parseAIResponse(text, originalFilename) {
 // ============================================================================
 
 async function moveFiles(videoPath, spriteBuffer, thumbBuffer, suggestedName) {
-  await ensureDir(CONFIG.CATEGORIZED_DIR);
+  await ensureDir(CONFIG.PROCESSED_DIR);
+  await ensureDir(CONFIG.THUMBNAILS_DIR);
 
   const ext = path.extname(videoPath);
   const baseName = sanitizeFilename(suggestedName);
 
-  let targetBase = path.join(CONFIG.CATEGORIZED_DIR, baseName);
+  let targetBase = path.join(CONFIG.PROCESSED_DIR, baseName);
   let counter = 0;
 
   // Ensure unique filename
   while (
     (await fileExists(`${targetBase}${ext}`)) ||
-    (await fileExists(`${targetBase}_sprite.jpg`)) ||
-    (await fileExists(`${targetBase}_thumb.jpg`))
+    (await fileExists(path.join(CONFIG.THUMBNAILS_DIR, `${path.basename(targetBase)}_sprite.jpg`))) ||
+    (await fileExists(path.join(CONFIG.THUMBNAILS_DIR, `${path.basename(targetBase)}_thumb.jpg`)))
   ) {
     counter++;
-    targetBase = path.join(CONFIG.CATEGORIZED_DIR, `${baseName}_${counter}`);
+    targetBase = path.join(CONFIG.PROCESSED_DIR, `${baseName}_${counter}`);
   }
 
   const finalBaseName = path.basename(targetBase);
   const newVideoPath = `${targetBase}${ext}`;
-  const spritePath = `${targetBase}_sprite.jpg`;
-  const thumbPath = `${targetBase}_thumb.jpg`;
+  const spritePath = path.join(CONFIG.THUMBNAILS_DIR, `${finalBaseName}_sprite.jpg`);
+  const thumbPath = path.join(CONFIG.THUMBNAILS_DIR, `${finalBaseName}_thumb.jpg`);
 
   // Write images
   await fs.writeFile(spritePath, spriteBuffer);
@@ -426,7 +434,7 @@ async function moveFiles(videoPath, spriteBuffer, thumbBuffer, suggestedName) {
   // Move video
   await fs.rename(videoPath, newVideoPath);
 
-  logger.info('Files moved to Categorized', {
+  logger.info('Files moved to Processed/Thumbnails', {
     video: newVideoPath,
     sprite: spritePath,
     thumb: thumbPath,

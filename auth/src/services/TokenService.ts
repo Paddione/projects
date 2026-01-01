@@ -46,8 +46,8 @@ export class TokenService {
       this.JWT_SECRET,
       {
         expiresIn: this.ACCESS_TOKEN_EXPIRY,
-        issuer: 'auth-service',
-        audience: 'unified-auth',
+        issuer: 'unified-auth',
+        audience: 'korczewski-services',
       } as jwt.SignOptions
     );
 
@@ -56,8 +56,8 @@ export class TokenService {
       this.JWT_REFRESH_SECRET,
       {
         expiresIn: this.REFRESH_TOKEN_EXPIRY,
-        issuer: 'auth-service',
-        audience: 'unified-auth',
+        issuer: 'unified-auth',
+        audience: 'korczewski-services',
       } as jwt.SignOptions
     );
 
@@ -70,8 +70,8 @@ export class TokenService {
   verifyAccessToken(token: string): TokenPayload {
     try {
       const payload = jwt.verify(token, this.JWT_SECRET, {
-        issuer: 'auth-service',
-        audience: 'unified-auth',
+        issuer: 'unified-auth',
+        audience: 'korczewski-services',
       }) as TokenPayload;
 
       return payload;
@@ -91,8 +91,8 @@ export class TokenService {
   verifyRefreshToken(token: string): { userId: number; email: string } {
     try {
       const payload = jwt.verify(token, this.JWT_REFRESH_SECRET, {
-        issuer: 'auth-service',
-        audience: 'unified-auth',
+        issuer: 'unified-auth',
+        audience: 'korczewski-services',
       }) as { userId: number; email: string };
 
       return payload;

@@ -34,7 +34,7 @@
     "smb:mount:unix": "bash scripts/mount-smb.sh",
     "smb:umount:unix": "bash scripts/umount-smb.sh",
     "smb:unlink:win": "powershell -ExecutionPolicy Bypass -File scripts/unlink-smb.ps1",
-    "start": "cross-env NODE_ENV=production DOTENV_CONFIG_PATH=env/.env-app.local node -r dotenv/config dist/index.js",
+    "start": "node -r dotenv/config dist/index.js",
     "test": "npm run test:client && npm run test:server",
     "test:all": "npm run check && npm run test:coverage && npm run docker:pw:all",
     "test:client": "cross-env FAST_TESTS=1 vitest run --bail=1",
@@ -48,6 +48,7 @@
     "test:unit:coverage": "npm run test:coverage",
     "test:watch": "vitest",
     "thumbs": "node scripts/generate-thumbnails.mjs",
+    "thumbs:prune": "node scripts/prune-thumbnails.mjs",
     "verify": "npm run check && npm test && npm run test:e2e && npm run build"
   },
   "dependencies": {
