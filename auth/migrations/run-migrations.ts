@@ -38,9 +38,19 @@ async function runMigrations() {
       console.log('Running migration 002_add_apps_and_access.sql...');
       const migration002 = readFileSync(join(__dirname, '002_add_apps_and_access.sql'), 'utf-8');
       await sql.unsafe(migration002);
-      console.log('✅ Migration 002 completed successfully\\n');
+      console.log('✅ Migration 002 completed successfully\n');
     } else {
-      console.log('Skipping migration 002 (auth.apps already exists)\\n');
+      console.log('Skipping migration 002 (auth.apps already exists)\n');
+    }
+
+    const [{ to_regclass: clientsTable }] = await sql`SELECT to_regclass('auth.oauth_clients')`;
+    if (!clientsTable) {
+      console.log('Running migration 003_add_oauth_tables.sql...');
+      const migration003 = readFileSync(join(__dirname, '003_add_oauth_tables.sql'), 'utf-8');
+      await sql.unsafe(migration003);
+      console.log('✅ Migration 003 completed successfully\n');
+    } else {
+      console.log('Skipping migration 003 (auth.oauth_clients already exists)\n');
     }
 
     console.log('🎉 All migrations completed successfully!');

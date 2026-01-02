@@ -1,7 +1,7 @@
 import React from 'react'
 import { describe, it, expect, jest } from '@jest/globals'
 import { render, screen } from '@testing-library/react'
-import '@testing-library/jest-dom'
+import '@testing-library/jest-dom/jest-globals'
 import ResetPasswordPage from '../ResetPasswordPage'
 import { BrowserRouter } from 'react-router-dom'
 

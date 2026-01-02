@@ -1,5 +1,6 @@
 // Backend-specific Jest configuration
 const isIntegration = process.env.TEST_TYPE === 'integration';
+const collectCoverage = !isIntegration && process.env.TEST_COVERAGE === '1';
 
 const config = {
   preset: 'ts-jest',
@@ -94,9 +95,8 @@ const config = {
   globalTeardown: isIntegration ? '<rootDir>/jest.teardown.mjs' : undefined,
   testPathIgnorePatterns: ['/node_modules/', '/dist/', '/build/', '/coverage/', '/frontend/'],
   testEnvironmentOptions: { customExportConditions: ['node', 'node-addons'] },
-  collectCoverageFrom: isIntegration
-    ? []
-    : [
+  collectCoverageFrom: collectCoverage
+    ? [
         'src/services/**/*.ts',
         'src/repositories/**/*.ts',
         'src/middleware/**/*.ts',
@@ -108,20 +108,23 @@ const config = {
         '!**/__tests__/**',
         '!**/__mocks__/**',
         '!**/test-utils/**',
-      ],
-  collectCoverage: !isIntegration,
-  coverageDirectory: 'coverage',
-  coverageReporters: ['text', 'lcov', 'html', 'json-summary'],
-  coveragePathIgnorePatterns: [
-    '.*\\.test\\.ts$',
-    '.*\\.spec\\.ts$',
-    '/node_modules/',
-    '/dist/',
-    '/coverage/',
-    '/__tests__/',
-    '/__mocks__/',
-  ],
-  coverageThreshold: !isIntegration
+      ]
+    : [],
+  collectCoverage,
+  coverageDirectory: collectCoverage ? 'coverage' : undefined,
+  coverageReporters: collectCoverage ? ['text', 'lcov', 'html', 'json-summary'] : undefined,
+  coveragePathIgnorePatterns: collectCoverage
+    ? [
+        '.*\\.test\\.ts$',
+        '.*\\.spec\\.ts$',
+        '/node_modules/',
+        '/dist/',
+        '/coverage/',
+        '/__tests__/',
+        '/__mocks__/',
+      ]
+    : [],
+  coverageThreshold: collectCoverage
     ? {
         global: { statements: 30, branches: 25, functions: 30, lines: 30 },
       }
@@ -133,6 +136,7 @@ const config = {
   injectGlobals: true,
   workerIdleMemoryLimit: '512MB',
   detectOpenHandles: true,
+  forceExit: isIntegration, // Force exit for integration tests with persistent connections
 };
 
 export default config;

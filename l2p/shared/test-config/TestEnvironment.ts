@@ -71,7 +71,7 @@ export class TestEnvironment {
       services: {
         'postgres-test': {
           container_name: 'l2p-postgres-test',
-          port: 5433,
+          port: 5432,
           health_endpoint: '',
           health_timeout: 30,
           startup_timeout: 60,
@@ -315,7 +315,7 @@ export class TestEnvironment {
 
     for (const [serviceName, serviceConfig] of Object.entries(this.config.services)) {
       const isPortInUse = await this.isPortInUse(serviceConfig.port);
-      
+
       if (isPortInUse) {
         const newPort = await this.findAvailablePort(serviceConfig.port + 1000);
         conflicts.push({
@@ -427,7 +427,7 @@ export class TestEnvironment {
 
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
       const health = await this.checkServiceHealth(serviceName, serviceConfig);
-      
+
       if (health.status === 'healthy') {
         console.log(`${serviceName} is healthy`);
         return;
@@ -477,12 +477,12 @@ export class TestEnvironment {
 
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), serviceConfig.health_timeout * 1000);
-        
+
         const response = await fetch(url, {
           signal: controller.signal,
           method: 'GET'
         });
-        
+
         clearTimeout(timeoutId);
 
         if (response.ok) {
@@ -508,7 +508,7 @@ export class TestEnvironment {
       try {
         const healthStatuses = await this.healthCheck();
         const unhealthyServices = healthStatuses.filter(h => h.status === 'unhealthy');
-        
+
         if (unhealthyServices.length > 0) {
           console.warn('Unhealthy services detected:', unhealthyServices.map(h => h.name));
         }
@@ -531,7 +531,7 @@ export class TestEnvironment {
       ]);
 
       const imageIds = result.split('\n').filter(id => id.trim());
-      
+
       if (imageIds.length > 0) {
         await this.executeCommand('docker', ['rmi', '-f', ...imageIds]);
       }
@@ -585,7 +585,7 @@ export class TestEnvironment {
    */
   private findProjectRoot(): string {
     let currentDir = process.cwd();
-    
+
     while (currentDir !== path.dirname(currentDir)) {
       const packageJsonPath = path.join(currentDir, 'package.json');
       if (fsSync.existsSync(packageJsonPath)) {
@@ -601,7 +601,7 @@ export class TestEnvironment {
       }
       currentDir = path.dirname(currentDir);
     }
-    
+
     // Fallback to current directory if root package.json not found
     return process.cwd();
   }

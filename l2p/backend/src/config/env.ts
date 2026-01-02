@@ -25,8 +25,10 @@ if (explicit && fs.existsSync(explicit)) {
       candidates.push(path.join(cwd, '.env.test'));
     } else if (env === 'development') {
       candidates.push(path.join(cwd, '.env.dev'));
+      candidates.push(path.join(cwd, '.env-dev'));
     } else if (env === 'production') {
       candidates.push(path.join(cwd, '.env.production'));
+      candidates.push(path.join(cwd, '.env-prod'));
     }
     candidates.push(path.join(cwd, '.env'));
 

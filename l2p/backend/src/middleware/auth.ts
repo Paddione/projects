@@ -93,16 +93,28 @@ export class AuthMiddleware {
       throw new Error('AUTH_FAILED');
     }
 
-    return {
+    const payload: TokenPayload = {
       userId: user.userId,
       username: user.username,
       email: user.email,
-      selectedCharacter: user.selectedCharacter,
-      characterLevel: user.characterLevel,
-      isAdmin: user.role === 'ADMIN',
-      role: user.role,
-      emailVerified: user.emailVerified
+      isAdmin: user.role === 'ADMIN'
     };
+
+    // Only add optional properties if they have defined values
+    if (user.selectedCharacter !== undefined) {
+      payload.selectedCharacter = user.selectedCharacter;
+    }
+    if (user.characterLevel !== undefined) {
+      payload.characterLevel = user.characterLevel;
+    }
+    if (user.role !== undefined) {
+      payload.role = user.role;
+    }
+    if (user.emailVerified !== undefined) {
+      payload.emailVerified = user.emailVerified;
+    }
+
+    return payload;
   }
 
   /**
@@ -290,7 +302,7 @@ export class AuthMiddleware {
       }
 
       const resourceUserId = parseInt(userIdString);
-      
+
       if (isNaN(resourceUserId)) {
         res.status(400).json({
           error: 'Invalid user ID',

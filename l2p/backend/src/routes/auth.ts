@@ -148,7 +148,7 @@ const proxyAuthService = async (
     const response = await fetch(`${authApiBaseUrl}${options.path}`, {
       method: options.method ?? req.method,
       headers,
-      body: options.body ? JSON.stringify(options.body) : undefined
+      body: options.body ? JSON.stringify(options.body) : null
     });
 
     const data = await response.json().catch(() => null);
@@ -1022,7 +1022,7 @@ router.post('/oauth/exchange', async (req: Request, res: Response): Promise<void
  */
 router.post('/oauth/refresh', async (req: Request, res: Response): Promise<void> => {
   try {
-    const refreshToken = req.cookies.refreshToken || req.body.refresh_token;
+    const refreshToken = req.cookies['refreshToken'] || req.body.refresh_token;
 
     if (!refreshToken) {
       res.status(400).json({
@@ -1105,7 +1105,7 @@ router.get('/oauth/me', oauthAuthenticate, async (req: Request, res: Response): 
  */
 router.post('/oauth/logout', async (req: Request, res: Response): Promise<void> => {
   try {
-    const accessToken = req.cookies.accessToken || req.headers.authorization?.replace('Bearer ', '');
+    const accessToken = req.cookies['accessToken'] || req.headers.authorization?.replace('Bearer ', '');
 
     // Revoke token with auth service
     if (accessToken) {

@@ -14,7 +14,7 @@ global:
 environments:
   local:
     database:
-      url: "postgresql://test_user:test_pass@localhost:5433/test_db"
+      url: "postgresql://l2p_user:06752fc9637d5fe896cd88b858d2cf2eff112de5cf4769e69927009f5d45d581@localhost:5432/l2p_db"
       timeout: 30
       pool_size: 5
       ssl: false
@@ -81,7 +81,7 @@ environments:
     environment_variables:
       NODE_ENV: "test"
       TEST_ENVIRONMENT: "local"
-      DATABASE_URL: "postgresql://test_user:test_pass@localhost:5433/test_db"
+      DATABASE_URL: "postgresql://l2p_user:06752fc9637d5fe896cd88b858d2cf2eff112de5cf4769e69927009f5d45d581@localhost:5432/l2p_db"
       BACKEND_URL: "http://localhost:3001"
       FRONTEND_URL: "http://localhost:3000"
       
@@ -100,7 +100,7 @@ environments:
 
   ci:
     database:
-      url: "postgresql://test_user:test_pass@postgres-test:5432/test_db"
+      url: "postgresql://l2p_user:06752fc9637d5fe896cd88b858d2cf2eff112de5cf4769e69927009f5d45d581@postgres-test:5432/l2p_db"
       timeout: 45
       pool_size: 3
       ssl: false
@@ -167,7 +167,7 @@ environments:
     environment_variables:
       NODE_ENV: "test"
       TEST_ENVIRONMENT: "ci"
-      DATABASE_URL: "postgresql://test_user:test_pass@postgres-test:5432/test_db"
+      DATABASE_URL: "postgresql://l2p_user:06752fc9637d5fe896cd88b858d2cf2eff112de5cf4769e69927009f5d45d581@postgres-test:5432/l2p_db"
       BACKEND_URL: "http://backend-test:3001"
       FRONTEND_URL: "http://frontend-test:3000"
       
@@ -186,7 +186,7 @@ environments:
 
   docker:
     database:
-      url: "postgresql://test_user:test_pass@localhost:5433/test_db"
+      url: "postgresql://l2p_user:06752fc9637d5fe896cd88b858d2cf2eff112de5cf4769e69927009f5d45d581@localhost:5432/l2p_db"
       timeout: 60
       pool_size: 5
       ssl: false
@@ -251,7 +251,7 @@ environments:
     environment_variables:
       NODE_ENV: "test"
       TEST_ENVIRONMENT: "docker"
-      DATABASE_URL: "postgresql://test_user:test_pass@localhost:5433/test_db"
+      DATABASE_URL: "postgresql://l2p_user:06752fc9637d5fe896cd88b858d2cf2eff112de5cf4769e69927009f5d45d581@localhost:5432/l2p_db"
       BACKEND_URL: "http://localhost:3001"
       FRONTEND_URL: "http://localhost:3000"
       

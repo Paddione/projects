@@ -1,7 +1,7 @@
 import React from 'react'
 import { describe, it, expect, beforeEach, jest } from '@jest/globals'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
-import '@testing-library/jest-dom'
+import '@testing-library/jest-dom/jest-globals'
 import { GameInterface } from '../GameInterface'
 import { useGameStore } from '../../stores/gameStore'
 import { socketService } from '../../services/socketService'

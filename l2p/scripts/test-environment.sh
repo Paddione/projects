@@ -163,7 +163,7 @@ show_service_urls() {
     log_info "Service URLs:"
     echo "  Frontend:     http://localhost:3007"
     echo "  Backend API:  http://localhost:3006/api"
-    echo "  Database:     postgresql://l2p_user:HEHlWwBhTj71Em5GL9qh8G8kXACPrzx3@localhost:5433/learn2play_test"
+    echo "  Database:     postgresql://l2p_user:06752fc9637d5fe896cd88b858d2cf2eff112de5cf4769e69927009f5d45d581@localhost:5432/l2p_db"
 
     echo "  MailHog UI:   http://localhost:8025"
     echo "  Redis:        redis://localhost:6380"

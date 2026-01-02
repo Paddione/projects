@@ -69,7 +69,7 @@ class ErrorBoundary extends Component<Props, State> {
     }
 
     // Log to external service in production
-    if (runtimeEnv.PROD) {
+    if (runtimeEnv['PROD']) {
       this.logErrorToService(error, errorInfo);
     }
 
@@ -139,7 +139,7 @@ class ErrorBoundary extends Component<Props, State> {
                 Please try refreshing the page or contact support if the problem persists.
               </p>
 
-              {runtimeEnv.MODE === 'development' && this.state.error && (
+              {runtimeEnv['MODE'] === 'development' && this.state.error && (
                 <details className="error-boundary__details" data-testid="error-details">
                   <summary>Error Details (Development Only)</summary>
                   <div className="error-boundary__error">

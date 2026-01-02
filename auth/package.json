@@ -5,7 +5,8 @@
   "main": "dist/server.js",
   "type": "module",
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && npm run build:frontend",
+    "build:frontend": "cd frontend && npm install && npm run build",
     "db:generate": "drizzle-kit generate:pg",
     "db:migrate": "tsx migrations/run-migrations.ts",
     "db:push": "drizzle-kit push:pg",

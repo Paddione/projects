@@ -699,7 +699,9 @@ describe('AuthMiddleware', () => {
         authorization: `Bearer ${longToken}`
       };
 
-      mockAuthService.verifyAccessToken.mockReturnValue(mockTokenPayload);
+      mockFetch.mockResolvedValue(
+        createMockFetchResponse({ user: mockTokenPayload })
+      );
 
       await authMiddleware.authenticate(
         mockRequest as Request,
@@ -707,7 +709,15 @@ describe('AuthMiddleware', () => {
         mockNext
       );
 
-      expect(mockAuthService.verifyAccessToken).toHaveBeenCalledWith(longToken);
+      expect(mockFetch).toHaveBeenCalledWith(
+        'http://auth.test/api/auth/verify',
+        expect.objectContaining({
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${longToken}`
+          }
+        })
+      );
       expect(mockNext).toHaveBeenCalled();
     });
   });
@@ -739,9 +749,9 @@ describe('AuthMiddleware', () => {
         authorization: 'Bearer malformed.token.here'
       };
 
-      mockAuthService.verifyAccessToken.mockImplementation(() => {
-        throw new Error('Invalid access token');
-      });
+      mockFetch.mockResolvedValue(
+        createMockFetchResponse({ code: 'INVALID_TOKEN' }, { ok: false, status: 401 })
+      );
 
       await authMiddleware.authenticate(
         mockRequest as Request,

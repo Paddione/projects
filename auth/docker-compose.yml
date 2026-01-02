@@ -31,6 +31,7 @@ services:
 
       # Service configuration
       - "traefik.http.services.auth.loadbalancer.server.port=5500"
+      - "traefik.http.services.auth.loadbalancer.server.scheme=http"
 
       # Middlewares
       - "traefik.http.routers.auth.middlewares=default-chain@file"

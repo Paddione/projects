@@ -537,6 +537,10 @@ describe('ApiService', () => {
 
       expect(result.success).toBe(true)
       expect(result.data).toEqual({ valid: true })
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.stringContaining('/api/auth/validate'),
+        expect.anything()
+      )
     })
 
     it('should return invalid for failed validation', async () => {

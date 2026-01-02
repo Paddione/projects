@@ -355,12 +355,12 @@ services:
     image: postgres:15-alpine
     container_name: l2p-postgres-test
     environment:
-      POSTGRES_DB: learn2play_test
-      POSTGRES_USER: test_user
-      POSTGRES_PASSWORD: test_password
+      POSTGRES_DB: l2p_db
+      POSTGRES_USER: l2p_user
+      POSTGRES_PASSWORD: 06752fc9637d5fe896cd88b858d2cf2eff112de5cf4769e69927009f5d45d581
       POSTGRES_INITDB_ARGS: "--auth-host=md5"
     ports:
-      - "5433:5432"
+      - "5432:5432"
     volumes:
       - ./database/init-test.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
       - ./database/test-data.sql:/docker-entrypoint-initdb.d/02-test-data.sql:ro
@@ -368,7 +368,7 @@ services:
     networks:
       - test-network
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U test_user -d learn2play_test" ]
+      test: [ "CMD-SHELL", "pg_isready -U l2p_user -d l2p_db" ]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -397,7 +397,7 @@ services:
     environment:
       NODE_ENV: test
       PORT: 3001
-      DATABASE_URL: postgresql://test_user:test_password@postgres-test:5432/learn2play_test
+      DATABASE_URL: postgresql://l2p_user:06752fc9637d5fe896cd88b858d2cf2eff112de5cf4769e69927009f5d45d581@postgres-test:5432/l2p_db
       JWT_SECRET: test-jwt-secret-for-testing-only-do-not-use-in-production
       JWT_REFRESH_SECRET: test-jwt-refresh-secret-for-testing-only-do-not-use-in-production
       FRONTEND_URL: http://frontend-test:3000

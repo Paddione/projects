@@ -46,8 +46,8 @@ function mockApiMiddleware() {
             const base = path.resolve(process.cwd(), 'logs', 'frontend')
             fs.mkdirSync(base, { recursive: true })
             const payload = body || '{}'
-            fs.appendFile(path.join(base, 'dev.log'), payload + '\n', () => {})
-          } catch {}
+            fs.appendFile(path.join(base, 'dev.log'), payload + '\n', () => { })
+          } catch { }
           res.statusCode = 204
           res.end()
         })
@@ -263,5 +263,14 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     sourcemap: true,
+  },
+  preview: {
+    port: 4173,
+    host: true,
+    allowedHosts: [
+      'l2p.korczewski.de',
+      'localhost',
+      '127.0.0.1',
+    ],
   },
 })

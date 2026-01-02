@@ -1,5 +1,13 @@
 name: CI
-on: [push]
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+defaults:
+  run:
+    working-directory: payment
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -8,6 +16,8 @@ jobs:
       - uses: actions/setup-node@v3
         with:
             node-version: 18
+            cache: npm
+            cache-dependency-path: payment/package-lock.json
       - run: npm ci
       - run: npx playwright install --with-deps
       - run: npm run test

@@ -16,14 +16,21 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
   const [oauthError, setOauthError] = useState<string | null>(null)
   const { setUser, setToken, clearAuth } = useAuthStore()
 
+  const processingOAuth = React.useRef(false)
+
   // Handle OAuth callback first (before any other validation)
   useEffect(() => {
     const { code, state } = extractOAuthParams()
 
-    if (code && state) {
+    if (code && state && !processingOAuth.current) {
       console.log('AuthGuard: OAuth callback detected')
+      processingOAuth.current = true
       handleOAuthCallback(code, state)
       return // Skip normal validation
+    }
+
+    if (code && state && processingOAuth.current) {
+      return // Already processing or processed
     }
 
     // If no OAuth callback, proceed with normal validation
@@ -97,13 +104,18 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
       } else {
         console.error('AuthGuard: OAuth exchange failed', response)
         setOauthError('Failed to complete OAuth login')
+        clearOAuthState()
+        clearOAuthParamsFromUrl()
         setIsAuthenticated(false)
       }
     } catch (error) {
       console.error('AuthGuard: OAuth callback error:', error)
       setOauthError(error instanceof Error ? error.message : 'OAuth login failed')
+      clearOAuthState()
+      clearOAuthParamsFromUrl()
       setIsAuthenticated(false)
     } finally {
+      processingOAuth.current = false
       setIsValidating(false)
     }
   }

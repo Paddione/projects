@@ -351,7 +351,10 @@ export class FileProcessingService {
   /**
    * Get file type from extension
    */
-  private getFileType(extension: string): string {
+  private getFileType(fileNameOrExtension: string): string {
+    const extension = fileNameOrExtension.startsWith('.')
+      ? fileNameOrExtension.toLowerCase()
+      : path.extname(fileNameOrExtension).toLowerCase();
     const typeMap: { [key: string]: string } = {
       '.pdf': 'pdf',
       '.docx': 'docx',
@@ -419,6 +422,10 @@ export class FileProcessingService {
     
     if (content.length > 1000000) { // 1MB text limit
       errors.push('Content is too long (maximum 1MB)');
+      return {
+        isValid: false,
+        errors
+      };
     }
     
     // Check for null bytes and other invalid characters

@@ -113,7 +113,7 @@ export class PerksManager {
       WHERE level_required <= $1 AND is_active = true 
       ORDER BY level_required ASC, category ASC
     `;
-    
+
     const result = await this.db.query(query, [level]);
     return result.rows as Perk[];
   }
@@ -200,7 +200,7 @@ export class PerksManager {
       WHERE up.user_id = $1 AND up.is_unlocked = true
       ORDER BY p.level_required ASC, p.category ASC
     `;
-    
+
     const result = await this.db.query(query, [userId]);
     return result.rows as UserPerk[];
   }
@@ -216,7 +216,7 @@ export class PerksManager {
       WHERE up.user_id = $1 AND up.is_unlocked = true AND up.is_active = true
       ORDER BY p.level_required ASC, p.category ASC
     `;
-    
+
     const result = await this.db.query(query, [userId]);
     return result.rows as UserPerk[];
   }
@@ -228,7 +228,7 @@ export class PerksManager {
     // Get user's current level
     const userQuery = `SELECT character_level FROM users WHERE id = $1`;
     const userResult = await this.db.query(userQuery, [userId]);
-    
+
     if (userResult.rows.length === 0) {
       return false;
     }
@@ -238,17 +238,17 @@ export class PerksManager {
     // Get perk requirements
     const perkQuery = `SELECT level_required FROM perks WHERE id = $1 AND is_active = true`;
     const perkResult = await this.db.query(perkQuery, [perkId]);
-    
+
     if (perkResult.rows.length === 0) {
       return false;
     }
 
     const requiredLevel = perkResult.rows[0]!['level_required'];
-    
+
     // Check if already unlocked
     const unlockedQuery = `SELECT id FROM user_perks WHERE user_id = $1 AND perk_id = $2 AND is_unlocked = true`;
     const unlockedResult = await this.db.query(unlockedQuery, [userId, perkId]);
-    
+
     return userLevel >= requiredLevel && unlockedResult.rows.length === 0;
   }
 
@@ -257,7 +257,7 @@ export class PerksManager {
    */
   async unlockPerk(userId: number, perkId: number): Promise<boolean> {
     const canUnlock = await this.canUnlockPerk(userId, perkId);
-    
+
     if (!canUnlock) {
       return false;
     }
@@ -272,7 +272,7 @@ export class PerksManager {
         updated_at = CURRENT_TIMESTAMP
       RETURNING id
     `;
-    
+
     const result = await this.db.query(query, [userId, perkId]);
     return result.rows.length > 0;
   }
@@ -287,7 +287,7 @@ export class PerksManager {
       WHERE user_id = $1 AND perk_id = $2 AND is_unlocked = true
     `;
     const unlockedResult = await this.db.query(unlockedQuery, [userId, perkId]);
-    
+
     if (unlockedResult.rows.length === 0) {
       return false;
     }
@@ -295,7 +295,7 @@ export class PerksManager {
     // Deactivate other perks of the same type (only one active per type)
     const perkTypeQuery = `SELECT type FROM perks WHERE id = $1`;
     const perkTypeResult = await this.db.query(perkTypeQuery, [perkId]);
-    
+
     if (perkTypeResult.rows.length === 0) {
       return false;
     }
@@ -318,14 +318,14 @@ export class PerksManager {
       WHERE user_id = $1 AND perk_id = $2
       RETURNING id
     `;
-    
+
     const result = await this.db.query(activateQuery, [userId, perkId, JSON.stringify(configuration)]);
-    
+
     // Update user's active settings based on perk type
     if (result.rows.length > 0) {
       await this.updateUserActiveSettings(userId, perkId, perkType, configuration);
     }
-    
+
     return result.rows.length > 0;
   }
 
@@ -339,7 +339,7 @@ export class PerksManager {
       WHERE user_id = $1 AND perk_id = $2
       RETURNING id
     `;
-    
+
     const result = await this.db.query(query, [userId, perkId]);
     return result.rows.length > 0;
   }
@@ -353,9 +353,9 @@ export class PerksManager {
       FROM users 
       WHERE id = $1
     `;
-    
+
     const result = await this.db.query(query, [userId]);
-    
+
     if (result.rows.length === 0) {
       return null;
     }
@@ -415,6 +415,9 @@ export class PerksManager {
     // Build UserPerk objects with perk details
     const newlyUnlocked: UserPerk[] = unlockResult.rows.map((row) => {
       const perkDetails = perksResult.rows.find(p => p['id'] === row['perk_id']);
+      if (!perkDetails) {
+        throw new Error(`Perk details not found for perk_id ${row['perk_id']}`);
+      }
       return {
         id: row['id'],
         user_id: row['user_id'],
@@ -425,7 +428,7 @@ export class PerksManager {
         unlocked_at: row['unlocked_at'],
         activated_at: row['activated_at'],
         updated_at: row['updated_at'],
-        perk: perkDetails ? {
+        perk: {
           id: perkDetails['id'],
           name: perkDetails['name'],
           category: perkDetails['category'],
@@ -437,7 +440,7 @@ export class PerksManager {
           is_active: true,
           created_at: new Date(),
           updated_at: new Date()
-        } as Perk : undefined
+        } as Perk
       };
     });
 
@@ -629,7 +632,10 @@ export class PerksManager {
       }
     }
 
-    return { valid: errors.length === 0, errors: errors.length > 0 ? errors : undefined };
+    if (errors.length > 0) {
+      return { valid: false, errors };
+    }
+    return { valid: true };
   }
 
   /**
@@ -641,7 +647,7 @@ export class PerksManager {
       WHERE category = $1 AND is_active = true 
       ORDER BY level_required ASC
     `;
-    
+
     const result = await this.db.query(query, [category]);
     return result.rows as Perk[];
   }

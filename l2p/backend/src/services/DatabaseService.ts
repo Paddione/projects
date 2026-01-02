@@ -64,7 +64,7 @@ export class DatabaseService {
           const url = new URL(testDatabaseUrl);
           return {
             host: url.hostname,
-            port: parseInt(url.port) || 5433,
+            port: parseInt(url.port) || 5432,
             database: url.pathname.slice(1),
             user: decodeURIComponent(url.username),
             password: decodeURIComponent(url.password),
@@ -79,11 +79,11 @@ export class DatabaseService {
 
       // Fallback to test database defaults
       return {
-        host: process.env['TEST_DB_HOST'] || 'localhost',
-        port: parseInt(process.env['TEST_DB_PORT'] || '5433'),
-        database: process.env['TEST_DB_NAME'] || 'learn2play_test',
+        host: process.env['TEST_DB_HOST'] || '127.0.0.1',
+        port: parseInt(process.env['TEST_DB_PORT'] || '5432'),
+        database: process.env['TEST_DB_NAME'] || 'l2p_db',
         user: process.env['TEST_DB_USER'] || 'l2p_user',
-        password: process.env['TEST_DB_PASSWORD'] || 'HEHlWwBhTj71Em5GL9qh8G8kXACPrzx3',
+        password: process.env['TEST_DB_PASSWORD'] || '06752fc9637d5fe896cd88b858d2cf2eff112de5cf4769e69927009f5d45d581',
         ssl: false,
         max: 10,
         min: 2
@@ -221,7 +221,7 @@ export class DatabaseService {
       // In test environments, attempt to reconnect if the service was closed
       const isTestEnvironment = process.env['NODE_ENV'] === 'test' ||
         !!process.env['JEST_WORKER_ID'];
-      
+
       if (isTestEnvironment) {
         console.warn('Database service was closed, attempting to reconnect for test...');
         // Reset the singleton instance to allow reconnection

@@ -1,0 +1,73 @@
+http:
+  routers:
+
+    # L2P Backend - Local Fallback (lower priority than Docker)
+    l2p-backend-local:
+      rule: "Host(`l2p.korczewski.de`) && (PathPrefix(`/api`) || PathPrefix(`/socket.io`))"
+      entryPoints:
+        - websecure
+      service: l2p-backend-local
+      tls: true
+      middlewares:
+        - default-chain@file
+      priority: 50
+
+    # L2P Frontend - Local Fallback (lower priority than Docker)
+    l2p-frontend-local:
+      rule: "Host(`l2p.korczewski.de`)"
+      entryPoints:
+        - websecure
+      service: l2p-frontend-local
+      tls: true
+      middlewares:
+        - default-chain@file
+      priority: 5
+
+    # Payment Service - Local Fallback (lower priority than Docker)
+    payment-local:
+      rule: "Host(`payment.korczewski.de`)"
+      entryPoints:
+        - websecure
+      service: payment-local
+      tls: true
+      middlewares:
+        - default-chain@file
+      priority: 5
+
+    # VideoVault - Local Fallback (lower priority than Docker)
+    videovault-local:
+      rule: "Host(`videovault.korczewski.de`)"
+      entryPoints:
+        - websecure
+      service: videovault-local
+      tls: true
+      middlewares:
+        - default-chain@file
+      priority: 5
+
+  services:
+    # Local service endpoints (fallback to host machine)
+
+    l2p-backend-local:
+      loadBalancer:
+        servers:
+          - url: "http://172.17.0.1:5001"
+        passHostHeader: true
+
+    l2p-frontend-local:
+      loadBalancer:
+        servers:
+          - url: "http://172.17.0.1:4173"
+        passHostHeader: true
+
+    payment-local:
+      loadBalancer:
+        servers:
+          - url: "http://172.17.0.1:3004"
+        passHostHeader: true
+
+    videovault-local:
+      loadBalancer:
+        servers:
+          - url: "http://172.17.0.1:5100"
+        passHostHeader: true

@@ -1,0 +1,32 @@
+name: L2P Tests
+
+on:
+  pull_request:
+  push:
+    branches: [ main, master ]
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: l2p
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: l2p/package-lock.json
+
+      - name: Install workspaces
+        run: npm run install:all
+
+      - name: Install Playwright browsers
+        run: npm run test:browsers:install:all
+
+      - name: Run test suite (CI)
+        run: npm run test:all:ci

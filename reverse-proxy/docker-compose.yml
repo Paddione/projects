@@ -14,13 +14,14 @@ services:
     env_file:
       - .env
     environment:
-      - DOCKER_API_VERSION=1.52
+      - DOCKER_API_VERSION=1.51
       - LEGO_PROPAGATION_TIMEOUT=600
       - LEGO_EXPERIMENTAL_CNAME_SUPPORT=true
     command:
       - "--global.checknewversion=true"
       - "--global.sendanonymoususage=false"
       - "--api.dashboard=true"
+      - "--api.insecure=true"
       - "--ping=true"
       - "--log.level=DEBUG"
       - "--log.filepath=/var/log/traefik/traefik.log"

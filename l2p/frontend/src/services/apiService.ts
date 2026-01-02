@@ -169,8 +169,8 @@ class ApiService {
       // import.meta not available
     }
 
-    if (!authEnvUrl && typeof process !== 'undefined' && process.env?.VITE_AUTH_SERVICE_URL) {
-      authEnvUrl = process.env.VITE_AUTH_SERVICE_URL;
+    if (!authEnvUrl && typeof process !== 'undefined' && process.env?.['VITE_AUTH_SERVICE_URL']) {
+      authEnvUrl = process.env['VITE_AUTH_SERVICE_URL'];
     }
 
     this.authBaseURL = authEnvUrl && authEnvUrl.trim()
@@ -906,7 +906,7 @@ class ApiService {
   }
 
   async validateToken(): Promise<ApiResponse<{ valid: boolean }>> {
-    const response = await this.authRequest<any>('/auth/verify')
+    const response = await this.authRequest<any>('/auth/validate')
     if (response.success) {
       return {
         success: true,
@@ -916,7 +916,7 @@ class ApiService {
 
     return {
       success: false,
-      error: response.error,
+      error: response.error || 'Validation failed',
       data: { valid: false }
     }
   }

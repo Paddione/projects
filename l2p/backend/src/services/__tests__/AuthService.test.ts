@@ -269,8 +269,8 @@ describe('AuthService', () => {
           'test-jwt-secret',
           {
             expiresIn: '15m',
-            issuer: 'learn2play-api',
-            audience: 'learn2play-client'
+            issuer: 'unified-auth',
+            audience: 'korczewski-services'
           }
         );
         expect(token).toBe('mock-access-token');
@@ -294,8 +294,8 @@ describe('AuthService', () => {
           'test-refresh-secret',
           {
             expiresIn: '7d',
-            issuer: 'learn2play-api',
-            audience: 'learn2play-client'
+            issuer: 'unified-auth',
+            audience: 'korczewski-services'
           }
         );
         expect(token).toBe('mock-refresh-token');
@@ -321,8 +321,8 @@ describe('AuthService', () => {
           'valid-token',
           'test-jwt-secret',
           {
-            issuer: 'learn2play-api',
-            audience: 'learn2play-client'
+            issuer: 'unified-auth',
+            audience: 'korczewski-services'
           }
         );
         expect(result).toEqual({
@@ -350,8 +350,8 @@ describe('AuthService', () => {
           'valid-refresh-token',
           'test-refresh-secret',
           {
-            issuer: 'learn2play-api',
-            audience: 'learn2play-client'
+            issuer: 'unified-auth',
+            audience: 'korczewski-services'
           }
         );
         expect(result).toEqual({
@@ -511,8 +511,8 @@ describe('AuthService', () => {
           'valid-refresh-token',
           'test-refresh-secret',
           { 
-            issuer: 'learn2play-api',
-            audience: 'learn2play-client'
+            issuer: 'unified-auth',
+            audience: 'korczewski-services'
           }
         );
         expect(mockUserRepository.findUserById).toHaveBeenCalledWith(1);
@@ -552,8 +552,8 @@ describe('AuthService', () => {
           'valid-token',
           'test-jwt-secret',
           { 
-            issuer: 'learn2play-api',
-            audience: 'learn2play-client'
+            issuer: 'unified-auth',
+            audience: 'korczewski-services'
           }
         );
         expect(mockUserRepository.findUserById).toHaveBeenCalledWith(1);

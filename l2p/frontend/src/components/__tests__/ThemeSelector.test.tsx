@@ -1,7 +1,7 @@
 import React from 'react'
 import { describe, it, expect, beforeEach, jest } from '@jest/globals'
 import { render, screen, fireEvent } from '@testing-library/react'
-import '@testing-library/jest-dom'
+import '@testing-library/jest-dom/jest-globals'
 import { ThemeSelector } from '../ThemeSelector'
 
 // Mock hooks

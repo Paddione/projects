@@ -52,7 +52,7 @@ export const QuestionSetSelector: React.FC<QuestionSetSelectorProps> = ({
     if (!Array.isArray(availableQuestionSets) || selectedSetIds.length === 0) return 0
     return availableQuestionSets
       .filter(set => selectedSetIds.includes(set.id) && set.is_active)
-      .reduce((sum, set) => sum + (set.questions?.length || (set.metadata?.questionCount as number) || 0), 0)
+      .reduce((sum, set) => sum + (set.questions?.length || (set.metadata?.['questionCount'] as number) || 0), 0)
   }, [availableQuestionSets, selectedSetIds])
 
   useEffect(() => {
@@ -163,7 +163,7 @@ export const QuestionSetSelector: React.FC<QuestionSetSelectorProps> = ({
       .map(set => ({
         id: set.id,
         name: set.name,
-        questionCount: set.questions?.length || (set.metadata?.questionCount as number) || 0
+        questionCount: set.questions?.length || (set.metadata?.['questionCount'] as number) || 0
       }))
 
     const totalQuestions = selectedSets.reduce((sum, set) => sum + set.questionCount, 0)
@@ -303,7 +303,7 @@ export const QuestionSetSelector: React.FC<QuestionSetSelectorProps> = ({
                     <div className={styles.cardMeta}>
                       <span className={styles.categoryLabel}>{set.category}</span>
                       <span className={styles.countLabel}>
-                        {set.questions?.length || (set.metadata?.questionCount as number) || 0} questions
+                        {set.questions?.length || (set.metadata?.['questionCount'] as number) || 0} questions
                       </span>
                     </div>
 

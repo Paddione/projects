@@ -21,7 +21,10 @@ CMD ["npm", "run", "dev"]
 FROM base AS build
 RUN npm ci
 COPY . .
+# Build backend
 RUN npm run build
+# Build frontend
+RUN cd frontend && npm install && npm run build
 
 # Production stage
 FROM node:20-bullseye-slim AS production

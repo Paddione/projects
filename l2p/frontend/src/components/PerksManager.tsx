@@ -327,11 +327,11 @@ const PerksManager: React.FC = () => {
     const config = userPerk.configuration || {};
     if (userPerk.perk.type === 'avatar') {
       setConfigSelection({
-        avatar: config.selected_avatar || perksData?.loadout.active_avatar || AVATAR_OPTIONS[0].id,
+        avatar: config.selected_avatar || perksData?.loadout.active_avatar || AVATAR_OPTIONS[0]?.id || 'student',
       });
     } else if (userPerk.perk.type === 'theme') {
       setConfigSelection({
-        theme: config.theme_name || perksData?.loadout.active_theme || THEME_OPTIONS[0].id,
+        theme: config.theme_name || perksData?.loadout.active_theme || THEME_OPTIONS[0]?.id || 'default',
       });
     } else if (userPerk.perk.type === 'badge') {
       setConfigSelection({
@@ -354,11 +354,11 @@ const PerksManager: React.FC = () => {
   const getConfigPayload = (perkType: string) => {
     switch (perkType) {
       case 'avatar':
-        return { selected_avatar: configSelection.avatar || AVATAR_OPTIONS[0].id };
+        return { selected_avatar: configSelection['avatar'] || AVATAR_OPTIONS[0]?.id || 'student' };
       case 'theme':
-        return { theme_name: configSelection.theme || THEME_OPTIONS[0].id };
+        return { theme_name: configSelection['theme'] || THEME_OPTIONS[0]?.id || 'default' };
       case 'badge':
-        return { badge_style: configSelection.badgeStyle || 'classic' };
+        return { badge_style: configSelection['badgeStyle'] || 'classic' };
       default:
         return {};
     }
@@ -400,7 +400,7 @@ const PerksManager: React.FC = () => {
                 <button
                   type="button"
                   key={option.id}
-                  className={`avatar-option ${configSelection.avatar === option.id ? 'selected' : ''}`}
+                  className={`avatar-option ${configSelection['avatar'] === option.id ? 'selected' : ''}`}
                   onClick={() => setConfigSelection(prev => ({ ...prev, avatar: option.id }))}
                 >
                   <span className="avatar-emoji">{option.emoji}</span>
@@ -419,7 +419,7 @@ const PerksManager: React.FC = () => {
                 <button
                   type="button"
                   key={option.id}
-                  className={`theme-option ${configSelection.theme === option.id ? 'selected' : ''}`}
+                  className={`theme-option ${configSelection['theme'] === option.id ? 'selected' : ''}`}
                   onClick={() => setConfigSelection(prev => ({ ...prev, theme: option.id }))}
                 >
                   <div className={`theme-swatch ${option.previewClass}`} />
@@ -438,7 +438,7 @@ const PerksManager: React.FC = () => {
                 <button
                   type="button"
                   key={option.id}
-                  className={`badge-option ${option.className} ${configSelection.badgeStyle === option.id ? 'selected' : ''}`}
+                  className={`badge-option ${option.className} ${configSelection['badgeStyle'] === option.id ? 'selected' : ''}`}
                   onClick={() => setConfigSelection(prev => ({ ...prev, badgeStyle: option.id }))}
                 >
                   <span>{option.label}</span>
@@ -529,7 +529,7 @@ const PerksManager: React.FC = () => {
     }
 
     const [perkIdStr, style] = value.split('-');
-    const perkId = parseInt(perkIdStr);
+    const perkId = parseInt(perkIdStr || '0');
 
     try {
       const response = await apiService.activatePerk(perkId, { badge_style: style });

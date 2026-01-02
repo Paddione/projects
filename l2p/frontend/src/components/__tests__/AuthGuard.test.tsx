@@ -1,7 +1,7 @@
 import React from 'react'
 import { describe, it, expect, beforeEach, jest } from '@jest/globals'
 import { render, screen, waitFor } from '@testing-library/react'
-import '@testing-library/jest-dom'
+import '@testing-library/jest-dom/jest-globals'
 import { AuthGuard } from '../AuthGuard'
 import { apiService } from '../../services/apiService'
 import { useAuthStore } from '../../stores/authStore'

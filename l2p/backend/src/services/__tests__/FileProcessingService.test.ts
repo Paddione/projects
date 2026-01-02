@@ -1,4 +1,4 @@
-import { describe, beforeAll, beforeEach, afterEach, it, expect, jest } from '@jest/globals';
+import { describe, beforeAll, beforeEach, it, expect, jest } from '@jest/globals';
 
 // Mock fs module
 const mockFs = {
@@ -28,31 +28,27 @@ jest.mock('path', () => ({
   ...mockPath
 }));
 
-// Import fs and path after mocking
-import fs from 'fs';
-import path from 'path';
+type PdfParseResult = {
+  text: string;
+  numpages: number;
+  info?: Record<string, string>;
+};
 
-// Mock pdf-parse
-const mockParsePdf = jest.fn(() => Promise.resolve({
-  text: 'Test PDF Content',
-  numpages: 1,
-  info: {
-    Title: 'Test Document',
-    Author: 'Test Author',
-    CreationDate: 'D:20230101120000',
-    ModDate: 'D:20230101120000'
-  }
-}));
+// Mock pdf-parse to prevent loading the actual 35MB module during tests
+// This must be done before defining mockParsePdf to avoid hoisting issues
+let mockParsePdf: jest.MockedFunction<(buffer: Buffer) => Promise<PdfParseResult>>;
 
-// Mock pdf-parse with static import approach
-jest.mock('pdf-parse', () => mockParsePdf);
+jest.mock('pdf-parse', () => {
+  const mockFn = jest.fn() as any;
+  return {
+    __esModule: true,
+    default: mockFn
+  };
+});
 
 // Mock mammoth
 const mockMammoth = {
-  extractRawText: jest.fn(() => Promise.resolve({
-    value: 'Test DOCX Content',
-    messages: []
-  }))
+  extractRawText: jest.fn() as jest.MockedFunction<(args: { buffer: Buffer }) => Promise<{ value: string; messages: string[] }>>
 };
 
 jest.mock('mammoth', () => ({
@@ -71,18 +67,7 @@ jest.mock('marked', () => ({
 }));
 
 // Mock JSDOM for HTML processing
-const mockJSDOM = jest.fn().mockImplementation(() => {
-  const mockInstance = {
-    window: {
-      document: {
-        body: {
-          textContent: 'Test HTML Content'
-        }
-      }
-    }
-  };
-  return mockInstance;
-});
+const mockJSDOM = jest.fn();
 
 jest.mock('jsdom', () => ({
   JSDOM: mockJSDOM
@@ -94,6 +79,10 @@ let FileProcessingService: any;
 beforeAll(async () => {
   const module = await import('../FileProcessingService');
   FileProcessingService = module.FileProcessingService;
+
+  // Get the mocked pdf-parse function
+  const pdfParseModule = await import('pdf-parse');
+  mockParsePdf = (pdfParseModule.default || pdfParseModule) as any;
 });
 
 describe('FileProcessingService', () => {
@@ -102,13 +91,14 @@ describe('FileProcessingService', () => {
   let mockOriginalName: string;
 
   // Mock references
-  let mockExistsSync: jest.MockedFunction<typeof fs.existsSync>;
-  let mockStatSync: jest.MockedFunction<typeof fs.statSync>;
-  let mockReadFileSync: jest.MockedFunction<typeof fs.readFileSync>;
-  let mockMkdirSync: jest.MockedFunction<typeof fs.mkdirSync>;
-  let mockUnlinkSync: jest.MockedFunction<typeof fs.unlinkSync>;
-  let mockExtname: jest.MockedFunction<typeof path.extname>;
-  let mockBasename: jest.MockedFunction<typeof path.basename>;
+  let mockExistsSync: jest.MockedFunction<typeof mockFs.existsSync>;
+  let mockStatSync: jest.MockedFunction<typeof mockFs.statSync>;
+  let mockReadFileSync: jest.MockedFunction<typeof mockFs.readFileSync>;
+  let mockMkdirSync: jest.MockedFunction<typeof mockFs.mkdirSync>;
+  let mockUnlinkSync: jest.MockedFunction<typeof mockFs.unlinkSync>;
+  let mockExtname: jest.MockedFunction<typeof mockPath.extname>;
+  let mockBasename: jest.MockedFunction<typeof mockPath.basename>;
+  let mockJoin: jest.MockedFunction<typeof mockPath.join>;
 
   beforeEach(() => {
     fileProcessingService = new FileProcessingService();
@@ -126,6 +116,33 @@ describe('FileProcessingService', () => {
     mockUnlinkSync = mockFs.unlinkSync as any;
     mockExtname = mockPath.extname as any;
     mockBasename = mockPath.basename as any;
+    mockJoin = mockPath.join as any;
+
+    mockParsePdf.mockResolvedValue({
+      text: 'Test PDF Content',
+      numpages: 1,
+      info: {
+        Title: 'Test Document',
+        Author: 'Test Author',
+        CreationDate: 'D:20230101120000',
+        ModDate: 'D:20230101120000'
+      }
+    });
+    mockMammoth.extractRawText.mockResolvedValue({
+      value: 'Test DOCX Content',
+      messages: []
+    });
+    mockJSDOM.mockImplementation(() => ({
+      window: {
+        document: {
+          title: '',
+          body: {
+            textContent: 'Test HTML Content'
+          },
+          querySelectorAll: jest.fn(() => [])
+        }
+      }
+    }));
 
     // Set default return values for fs mocks
     mockExistsSync.mockReturnValue(true);
@@ -148,7 +165,7 @@ describe('FileProcessingService', () => {
     mockBasename.mockReturnValue('test-document');
     
     // Set up path.join mock
-    (mockPath.join as any).mockImplementation((...args: string[]) => args.join('/'));
+    mockJoin.mockImplementation((...args: string[]) => args.join('/'));
     
     // Set up unlinkSync to not throw by default
     mockUnlinkSync.mockImplementation(() => {
@@ -174,7 +191,7 @@ describe('FileProcessingService', () => {
       expect(result.metadata).toBeDefined();
       expect(result.metadata.language).toBe('en');
       expect(result.chunks).toBeInstanceOf(Array);
-      expect(fs.statSync).toHaveBeenCalledWith(mockFilePath);
+      expect(mockStatSync).toHaveBeenCalledWith(mockFilePath);
     }, 5000);
 
     it('should process a DOCX file successfully', async () => {
@@ -185,7 +202,7 @@ describe('FileProcessingService', () => {
 
       expect(result.fileType).toBe('docx');
       expect(result.content).toContain('Test DOCX Content');
-      expect(fs.statSync).toHaveBeenCalledWith(mockFilePath);
+      expect(mockStatSync).toHaveBeenCalledWith(mockFilePath);
     }, 5000);
 
     it('should process a Markdown file successfully', async () => {
@@ -196,7 +213,7 @@ describe('FileProcessingService', () => {
 
       expect(result.fileType).toBe('markdown');
       expect(result.content).toContain('Test Markdown');
-      expect(fs.statSync).toHaveBeenCalledWith(mockFilePath);
+      expect(mockStatSync).toHaveBeenCalledWith(mockFilePath);
     }, 5000);
 
     it('should process an HTML file successfully', async () => {
@@ -207,7 +224,7 @@ describe('FileProcessingService', () => {
 
       expect(result.fileType).toBe('html');
       expect(result.content).toContain('Test HTML Content');
-      expect(fs.statSync).toHaveBeenCalledWith(mockFilePath);
+      expect(mockStatSync).toHaveBeenCalledWith(mockFilePath);
     }, 5000);
 
     it('should handle unsupported file types', async () => {
@@ -216,7 +233,7 @@ describe('FileProcessingService', () => {
       await expect(
         fileProcessingService.processFile(mockFilePath, 'test.txt')
       ).rejects.toThrow('Unsupported file type');
-      expect(fs.statSync).toHaveBeenCalledWith(mockFilePath);
+      expect(mockStatSync).toHaveBeenCalledWith(mockFilePath);
     }, 5000);
 
     it('should generate unique file IDs', async () => {
@@ -232,6 +249,11 @@ describe('FileProcessingService', () => {
       const longContent = 'x'.repeat(5000);
       mockExtname.mockReturnValue('.pdf');
       mockReadFileSync.mockReturnValue(Buffer.from(longContent));
+      mockParsePdf.mockResolvedValue({
+        text: longContent,
+        numpages: 1,
+        info: {}
+      });
 
       const options = {
         chunkSize: 1000,
@@ -287,7 +309,7 @@ describe('FileProcessingService', () => {
 
       await fileProcessingService.cleanupFile(mockFilePath);
 
-      expect(fs.unlinkSync).toHaveBeenCalledWith(mockFilePath);
+      expect(mockUnlinkSync).toHaveBeenCalledWith(mockFilePath);
     });
 
     it('should handle file deletion errors gracefully', () => {
@@ -305,7 +327,7 @@ describe('FileProcessingService', () => {
 
       fileProcessingService.cleanupFile(mockFilePath);
 
-      expect(fs.unlinkSync).not.toHaveBeenCalled();
+      expect(mockUnlinkSync).not.toHaveBeenCalled();
     });
   });
 

@@ -4,13 +4,54 @@ export class OAuthService {
   private authServiceUrl: string;
   private clientId: string;
   private redirectUri: string;
+  private clientSecret: string;
 
   constructor() {
-    this.authServiceUrl = process.env['AUTH_SERVICE_URL'] || 'https://auth.korczewski.de';
-    // L2P is registered as a client in the auth service
-    this.clientId = 'l2p_client_prod';
-    this.redirectUri = `${process.env['FRONTEND_URL'] || 'https://l2p.korczewski.de'}/auth/callback`;
+    const nodeEnv = process.env['NODE_ENV'];
+    const authServiceEnv = process.env['AUTH_SERVICE_URL'];
+    const frontendEnv = process.env['FRONTEND_URL'];
+    const isProduction = nodeEnv === 'production'
+      || (!nodeEnv && ((authServiceEnv && authServiceEnv.startsWith('https://')) || (frontendEnv && frontendEnv.startsWith('https://'))));
+    const defaultAuthServiceUrl = isProduction
+      ? 'https://auth.korczewski.de'
+      : 'http://localhost:5500';
+    const rawAuthServiceUrl = authServiceEnv || defaultAuthServiceUrl;
+    const trimmedAuthServiceUrl = rawAuthServiceUrl.trim().replace(/\/+$/, '');
+    this.authServiceUrl = trimmedAuthServiceUrl.endsWith('/api')
+      ? trimmedAuthServiceUrl.slice(0, -4)
+      : trimmedAuthServiceUrl;
+
+    // Use environment variables or defaults
+    this.clientId = process.env['OAUTH_CLIENT_ID'] || 'l2p_client_prod';
+    const defaultFrontendUrl = isProduction
+      ? 'https://l2p.korczewski.de'
+      : 'http://localhost:3000';
+    this.redirectUri = process.env['OAUTH_REDIRECT_URI']
+      || `${(process.env['FRONTEND_URL'] || defaultFrontendUrl).trim().replace(/\/+$/, '')}/auth/callback`;
+    this.clientSecret = this.resolveClientSecret(nodeEnv);
   }
+
+  private resolveClientSecret(nodeEnv?: string): string {
+    const secret = process.env['OAUTH_CLIENT_SECRET'];
+    if (secret && secret.trim()) {
+      return secret.trim();
+    }
+
+    if (nodeEnv !== 'production') {
+      // Development fallback matches the seeded OAuth client secret placeholder.
+      return 'L2PclientSecretChangeInProduction12345';
+    }
+
+    return '';
+  }
+
+  private getClientSecret(): string {
+    if (!this.clientSecret) {
+      throw new Error('OAuth client secret is not configured');
+    }
+    return this.clientSecret;
+  }
+
 
   async exchangeCode(code: string): Promise<any> {
     // Exchange authorization code for tokens via auth service
@@ -23,6 +64,7 @@ export class OAuthService {
         grant_type: 'authorization_code',
         code,
         client_id: this.clientId,
+        client_secret: this.getClientSecret(),
         redirect_uri: this.redirectUri
       })
     });
@@ -45,7 +87,8 @@ export class OAuthService {
       body: JSON.stringify({
         grant_type: 'refresh_token',
         refresh_token: refreshToken,
-        client_id: this.clientId
+        client_id: this.clientId,
+        client_secret: this.getClientSecret()
       })
     });
 

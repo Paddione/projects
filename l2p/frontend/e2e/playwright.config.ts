@@ -31,7 +31,6 @@ export default defineConfig({
     '**/tests/debug-*.spec.*',
     '**/tests/question-set-management.spec.*',
     '**/tests/auth-flow.spec.*',
-    '**/tests/perks-management.spec.*',
     '**/tests/smoke/basic-functionality.spec.ts'
   ],
   webServer: {

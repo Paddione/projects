@@ -1,7 +1,7 @@
 import React from 'react'
 import { describe, it, expect, beforeEach, jest } from '@jest/globals'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
-import '@testing-library/jest-dom'
+import '@testing-library/jest-dom/jest-globals'
 import { LevelUpNotification } from '../LevelUpNotification'
 
 // Mock timers
@@ -10,6 +10,7 @@ jest.useFakeTimers()
 describe('LevelUpNotification', () => {
   const mockOnClose = jest.fn()
   const mockNotification = {
+    playerId: 'test-player-id',
     username: 'TestUser',
     character: 'student' as const,
     oldLevel: 5,

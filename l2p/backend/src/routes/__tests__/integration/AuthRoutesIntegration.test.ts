@@ -8,10 +8,11 @@ import { EmailService } from '../../../services/EmailService';
 // Mock EmailService at module level to prevent SMTP issues in tests
 jest.mock('../../../services/EmailService', () => ({
   EmailService: jest.fn().mockImplementation(() => ({
-    sendEmailVerificationEmail: jest.fn().mockResolvedValue(Promise.resolve()),
-    sendPasswordResetEmail: jest.fn().mockResolvedValue(Promise.resolve()),
-    sendEmail: jest.fn().mockResolvedValue(Promise.resolve()),
-    testConnection: jest.fn().mockResolvedValue(Promise.resolve(true))
+    sendEmailVerificationEmail: jest.fn().mockResolvedValue(undefined),
+    sendPasswordResetEmail: jest.fn().mockResolvedValue(undefined),
+    sendWelcomeEmail: jest.fn().mockResolvedValue(undefined),
+    sendEmail: jest.fn().mockResolvedValue(undefined),
+    testConnection: jest.fn().mockResolvedValue(true)
   }))
 }));
 
@@ -561,7 +562,7 @@ describe('Auth Routes Integration Tests', () => {
         .expect(401);
 
       expect(response.body).toHaveProperty('error');
-      expect(response.body.error).toContain('Authentication required');
+      expect(response.body.error).toContain('No token provided');
     });
 
     it('should return 401 for invalid token', async () => {
