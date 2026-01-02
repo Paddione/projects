@@ -79,7 +79,7 @@ describe('Test Database Configuration', () => {
 
   test('should load configuration from environment', () => {
     expect(process.env.DB_NAME).toBe('l2p_db');
-    expect(process.env.DB_HOST).toBe('localhost');
+    expect(process.env.DB_HOST).toBe('127.0.0.1');
     expect(process.env.DB_PORT).toBe('5432');
     expect(process.env.DATABASE_URL).toContain('postgresql://');
   });

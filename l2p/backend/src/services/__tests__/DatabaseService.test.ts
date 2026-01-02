@@ -197,7 +197,7 @@ describe('DatabaseService', () => {
       if (usingProdDb) {
         // When using production database, expect production defaults
         expect(Pool).toHaveBeenCalledWith(expect.objectContaining({
-          host: 'localhost',
+          host: '127.0.0.1',
           port: 5432,
           database: 'l2p_db',
           user: 'l2p_user',
@@ -206,7 +206,7 @@ describe('DatabaseService', () => {
       } else {
         // When using test database, expect test defaults
         expect(Pool).toHaveBeenCalledWith(expect.objectContaining({
-          host: 'localhost',
+          host: '127.0.0.1',
           port: 5432,
           database: 'l2p_db',
           user: 'l2p_user',
