@@ -1,6 +1,7 @@
 import { LobbyRepository, Lobby, CreateLobbyData } from '../repositories/LobbyRepository.js';
 import { UserRepository } from '../repositories/UserRepository.js';
 import { QuestionService } from './QuestionService.js';
+import { GameProfileService } from './GameProfileService.js';
 
 export interface Player {
   id: string;
@@ -44,10 +45,12 @@ export class LobbyService {
   private lobbyRepository: LobbyRepository;
   private userRepository: UserRepository;
   private questionService: QuestionService;
+  private gameProfileService: GameProfileService;
 
   constructor() {
     this.lobbyRepository = new LobbyRepository();
     this.userRepository = new UserRepository();
+    this.gameProfileService = new GameProfileService();
     this.questionService = new QuestionService();
   }
 
@@ -79,12 +82,29 @@ export class LobbyService {
 
   /**
    * Create a new lobby
+   * Supports both OAuth users (game profiles) and legacy users
    */
   async createLobby(request: CreateLobbyRequest): Promise<LobbyWithPlayers> {
-    // Validate host exists
-    const host = await this.userRepository.findUserById(request.hostId);
-    if (!host) {
-      throw new Error('Host user not found');
+    let hostUsername = `user_${request.hostId}`;
+    let hostCharacter = 'student';
+    let hostCharacterLevel = 1;
+
+    // Try to get game profile first (OAuth users)
+    try {
+      const profile = await this.gameProfileService.getOrCreateProfile(request.hostId);
+      // For OAuth users, we need to get username from somewhere else (req.user)
+      // For now, use a default - this should ideally be passed from the route handler
+      hostCharacter = profile.selectedCharacter;
+      hostCharacterLevel = profile.characterLevel;
+    } catch (error) {
+      // Fall back to legacy user
+      const host = await this.userRepository.findUserById(request.hostId);
+      if (!host) {
+        throw new Error('Host user not found');
+      }
+      hostUsername = host.username;
+      hostCharacter = host.selected_character || 'student';
+      hostCharacterLevel = host.character_level;
     }
 
     // Generate unique code
@@ -109,9 +129,9 @@ export class LobbyService {
     // Add host as first player
     const hostPlayer: Player = {
       id: String(request.hostId),
-      username: host.username,
-      character: host.selected_character || 'student',
-      characterLevel: host.character_level,
+      username: hostUsername,
+      character: hostCharacter,
+      characterLevel: hostCharacterLevel,
       isReady: false,
       isHost: true,
       score: 0,

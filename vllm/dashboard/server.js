@@ -17,7 +17,7 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
     cors: {
-        origin: ["http://localhost:4242", "http://dashboard.korczewski.de", "https://dashboard.korczewski.de"],
+        origin: ["http://localhost:4242", "http://dashboard.korczewski.de", "https://dashboard.korczewski.de", "https://auth.korczewski.de", "https://*.korczewski.de"],
         credentials: true
     }
 });
@@ -27,6 +27,7 @@ const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'password123';
 const DB_URL = process.env.DATABASE_URL || 'postgresql://webui:webui@localhost:5438/webui';
 const PROJECT_ROOT = path.resolve(__dirname, '..');
 const FORGE_PATH = process.env.FORGE_PATH || path.join(PROJECT_ROOT, 'ai-image-gen', 'forge');
+const AUTH_SERVICE_URL = process.env.AUTH_SERVICE_URL || null;
 const dbPool = new Pool({
     connectionString: DB_URL,
     connectionTimeoutMillis: 5000,
@@ -52,21 +53,88 @@ app.use(sessionMiddleware);
 io.engine.use(sessionMiddleware);
 
 app.use(cors({
-    origin: ["http://localhost:4242", "http://dashboard.korczewski.de", "https://dashboard.korczewski.de"],
+    origin: ["http://localhost:4242", "http://dashboard.korczewski.de", "https://dashboard.korczewski.de", "https://auth.korczewski.de", "https://*.korczewski.de"],
     credentials: true
 }));
 
+// OAuth authentication helper
+async function verifyOAuthToken(token) {
+    if (!AUTH_SERVICE_URL) {
+        return null;
+    }
+
+    try {
+        const response = await fetch(`${AUTH_SERVICE_URL}/api/auth/verify`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        if (!response.ok) {
+            return null;
+        }
+
+        const data = await response.json();
+        return data?.user || null;
+    } catch (error) {
+        console.error('OAuth verification error:', error);
+        return null;
+    }
+}
+
+// Extract token from request
+function extractToken(req) {
+    // Check Authorization header
+    const authHeader = req.headers?.authorization;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+        return authHeader.substring(7);
+    }
+
+    // Check cookies
+    const cookieToken = req.cookies?.['accessToken'];
+    if (cookieToken) {
+        return cookieToken;
+    }
+
+    return null;
+}
+
 // Authentication middleware
-const requireAuth = (req, res, next) => {
+const requireAuth = async (req, res, next) => {
+    // Try OAuth authentication first
+    const token = extractToken(req);
+    if (token && AUTH_SERVICE_URL) {
+        const user = await verifyOAuthToken(token);
+        if (user) {
+            req.user = user;
+            req.session.user = user;
+            req.session.authenticated = true;
+            return next();
+        }
+    }
+
+    // Fallback to session-based authentication
     if (req.session && req.session.authenticated) {
         return next();
     }
-    if (req.path === '/login.html' || req.path === '/api/login') {
+
+    // Allow access to login endpoints
+    if (req.path === '/login.html' || req.path === '/api/login' || req.path === '/api/auth/callback') {
         return next();
     }
+
+    // Reject API requests
     if (req.path.startsWith('/api/')) {
         return res.status(401).json({ success: false, message: 'Unauthorized' });
     }
+
+    // Redirect to auth service if available, otherwise to login page
+    if (AUTH_SERVICE_URL) {
+        const redirectUrl = encodeURIComponent(`https://dashboard.korczewski.de${req.path}`);
+        return res.redirect(`${AUTH_SERVICE_URL}/login?redirect=${redirectUrl}`);
+    }
+
     return res.redirect('/login.html');
 };
 
@@ -554,13 +622,31 @@ async function startVllmWithModel(modelId) {
 // Socket communication
 io.on('connection', async (socket) => {
     const session = socket.request.session;
-    if (!session || !session.authenticated) {
+
+    // Try OAuth authentication from handshake
+    let authenticated = false;
+    const token = socket.handshake.auth?.token || socket.handshake.headers?.cookie?.match(/accessToken=([^;]+)/)?.[1];
+
+    if (token && AUTH_SERVICE_URL) {
+        const user = await verifyOAuthToken(token);
+        if (user) {
+            authenticated = true;
+            socket.user = user;
+            console.log('OAuth authenticated client connected:', user.username);
+        }
+    }
+
+    // Fallback to session-based authentication
+    if (!authenticated && session && session.authenticated) {
+        authenticated = true;
+        console.log('Session authenticated client connected');
+    }
+
+    if (!authenticated) {
         console.log('Unauthorized socket connection attempt');
         socket.disconnect();
         return;
     }
-
-    console.log('Authenticated client connected');
 
     const sendUpdate = async () => {
         const vram = await getVramInfo();

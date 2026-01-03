@@ -137,6 +137,21 @@ class OAuthMiddleware {
       try {
         const payload = await this.verifyWithAuthService(token);
         req.user = payload;
+
+        // Auto-create game profile for OAuth users
+        try {
+          const { GameProfileService } = await import('../services/GameProfileService.js');
+          const gameProfileService = new GameProfileService();
+          await gameProfileService.getOrCreateProfile(payload.userId);
+        } catch (error) {
+          console.error('Failed to create game profile:', error);
+          res.status(500).json({
+            error: 'Profile creation failed',
+            message: 'Failed to initialize user profile'
+          });
+          return;
+        }
+
         next();
         return;
       } catch (error) {

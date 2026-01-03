@@ -1,5 +1,7 @@
 import { UserRepository, User } from '../repositories/UserRepository.js';
 import { PerksManager, UserPerk } from './PerksManager.js';
+import { GameProfileService, GameProfile } from './GameProfileService.js';
+import { DatabaseService } from './DatabaseService.js';
 
 export interface Character {
   id: string;
@@ -27,6 +29,8 @@ export interface ExperienceAwardData {
 export class CharacterService {
   private userRepository: UserRepository;
   private perksManager: PerksManager;
+  private gameProfileService: GameProfileService;
+  private db: DatabaseService;
 
   // University-themed characters
   private readonly characters: Character[] = [
@@ -91,6 +95,8 @@ export class CharacterService {
   constructor() {
     this.userRepository = new UserRepository();
     this.perksManager = PerksManager.getInstance();
+    this.gameProfileService = new GameProfileService();
+    this.db = DatabaseService.getInstance();
   }
 
   /**
@@ -174,88 +180,179 @@ export class CharacterService {
 
   /**
    * Update user's selected character
+   * Supports both OAuth users (game profiles) and legacy users
    */
-  async updateCharacter(userId: number, characterId: string): Promise<User | null> {
+  async updateCharacter(userId: number, characterId: string): Promise<User | GameProfile | null> {
     // Validate character exists
     const character = this.getCharacterById(characterId);
     if (!character) {
       throw new Error('Invalid character ID');
     }
 
-    // Get user to check their level
-    const user = await this.userRepository.findUserById(userId);
-    if (!user) {
-      throw new Error('User not found');
-    }
+    // Try to update game profile first (OAuth users)
+    try {
+      const profile = await this.gameProfileService.getOrCreateProfile(userId);
 
-    // Check if character is unlocked for user's level
-    if (character.unlockLevel > user.character_level) {
-      throw new Error(`Character requires level ${character.unlockLevel} to unlock`);
-    }
+      // Check if character is unlocked for user's level
+      if (character.unlockLevel > profile.characterLevel) {
+        throw new Error(`Character requires level ${character.unlockLevel} to unlock`);
+      }
 
-    // Update user's selected character
-    return await this.userRepository.updateUser(userId, {
-      selected_character: characterId
-    });
+      // Update profile with new character
+      const updateQuery = `
+        UPDATE user_game_profiles
+        SET selected_character = $1, updated_at = CURRENT_TIMESTAMP
+        WHERE auth_user_id = $2
+        RETURNING *
+      `;
+      const result = await this.db.query(updateQuery, [characterId, userId]);
+
+      if (!result.rows[0]) {
+        throw new Error('Failed to update character');
+      }
+
+      return {
+        authUserId: result.rows[0]['auth_user_id'],
+        selectedCharacter: result.rows[0]['selected_character'],
+        characterLevel: result.rows[0]['character_level'],
+        experiencePoints: result.rows[0]['experience_points'],
+        preferences: result.rows[0]['preferences'],
+        createdAt: result.rows[0]['created_at'],
+        updatedAt: result.rows[0]['updated_at']
+      };
+    } catch (error) {
+      // Fall back to legacy user repository
+      const user = await this.userRepository.findUserById(userId);
+      if (!user) {
+        throw new Error('User not found');
+      }
+
+      // Check if character is unlocked for user's level
+      if (character.unlockLevel > user.character_level) {
+        throw new Error(`Character requires level ${character.unlockLevel} to unlock`);
+      }
+
+      // Update user's selected character
+      return await this.userRepository.updateUser(userId, {
+        selected_character: characterId
+      });
+    }
   }
 
   /**
    * Award experience points to a user
+   * Supports both OAuth users (game profiles) and legacy users
    */
-  async awardExperience(userId: number, experiencePoints: number): Promise<{ 
-    user: User; 
-    levelUp: boolean; 
-    newLevel: number; 
+  async awardExperience(userId: number, experiencePoints: number): Promise<{
+    user: User | GameProfile;
+    levelUp: boolean;
+    newLevel: number;
     oldLevel: number;
     progress: { currentLevel: number; progress: number; expInLevel: number; expForNextLevel: number };
     newlyUnlockedPerks: UserPerk[];
   }> {
-    // Get current user data
-    const user = await this.userRepository.findUserById(userId);
-    if (!user) {
-      throw new Error('User not found');
-    }
+    // Try to update game profile first (OAuth users)
+    try {
+      const profile = await this.gameProfileService.getOrCreateProfile(userId);
 
-    const oldLevel = user.character_level;
-    const newExperiencePoints = user.experience_points + experiencePoints;
-    const newLevel = this.calculateLevel(newExperiencePoints);
-    const levelUp = newLevel > oldLevel;
+      const oldLevel = profile.characterLevel;
+      const newExperiencePoints = profile.experiencePoints + experiencePoints;
+      const newLevel = this.calculateLevel(newExperiencePoints);
+      const levelUp = newLevel > oldLevel;
 
-    // Update user's experience points and level
-    const updatedUser = await this.userRepository.updateUser(userId, {
-      experience_points: newExperiencePoints,
-      character_level: newLevel
-    });
+      // Update profile
+      const updateQuery = `
+        UPDATE user_game_profiles
+        SET experience_points = $1, character_level = $2, updated_at = CURRENT_TIMESTAMP
+        WHERE auth_user_id = $3
+        RETURNING *
+      `;
+      const result = await this.db.query(updateQuery, [newExperiencePoints, newLevel, userId]);
 
-    if (!updatedUser) {
-      throw new Error('Failed to update user experience');
-    }
-
-    const progress = this.calculateLevelProgress(newExperiencePoints);
-
-    // Check for newly unlocked perks if user leveled up
-    let newlyUnlockedPerks: UserPerk[] = [];
-    if (levelUp) {
-      try {
-        newlyUnlockedPerks = await this.perksManager.checkAndUnlockPerksForLevel(userId, newLevel);
-      } catch (error) {
-        console.warn('Failed to unlock perks for user level up:', error);
-        newlyUnlockedPerks = [];
+      if (!result.rows[0]) {
+        throw new Error('Failed to update experience');
       }
-    }
 
-    return {
-      user: updatedUser,
-      levelUp,
-      newLevel,
-      oldLevel,
-      progress,
-      newlyUnlockedPerks
-    };
+      const updatedProfile: GameProfile = {
+        authUserId: result.rows[0]['auth_user_id'],
+        selectedCharacter: result.rows[0]['selected_character'],
+        characterLevel: result.rows[0]['character_level'],
+        experiencePoints: result.rows[0]['experience_points'],
+        preferences: result.rows[0]['preferences'],
+        createdAt: result.rows[0]['created_at'],
+        updatedAt: result.rows[0]['updated_at']
+      };
+
+      const progress = this.calculateLevelProgress(newExperiencePoints);
+
+      // Check for newly unlocked perks if user leveled up
+      let newlyUnlockedPerks: UserPerk[] = [];
+      if (levelUp) {
+        try {
+          newlyUnlockedPerks = await this.perksManager.checkAndUnlockPerksForLevel(userId, newLevel);
+        } catch (error) {
+          console.warn('Failed to unlock perks for user level up:', error);
+          newlyUnlockedPerks = [];
+        }
+      }
+
+      return {
+        user: updatedProfile,
+        levelUp,
+        newLevel,
+        oldLevel,
+        progress,
+        newlyUnlockedPerks
+      };
+    } catch (error) {
+      // Fall back to legacy user repository
+      const user = await this.userRepository.findUserById(userId);
+      if (!user) {
+        throw new Error('User not found');
+      }
+
+      const oldLevel = user.character_level;
+      const newExperiencePoints = user.experience_points + experiencePoints;
+      const newLevel = this.calculateLevel(newExperiencePoints);
+      const levelUp = newLevel > oldLevel;
+
+      // Update user's experience points and level
+      const updatedUser = await this.userRepository.updateUser(userId, {
+        experience_points: newExperiencePoints,
+        character_level: newLevel
+      });
+
+      if (!updatedUser) {
+        throw new Error('Failed to update user experience');
+      }
+
+      const progress = this.calculateLevelProgress(newExperiencePoints);
+
+      // Check for newly unlocked perks if user leveled up
+      let newlyUnlockedPerks: UserPerk[] = [];
+      if (levelUp) {
+        try {
+          newlyUnlockedPerks = await this.perksManager.checkAndUnlockPerksForLevel(userId, newLevel);
+        } catch (error) {
+          console.warn('Failed to unlock perks for user level up:', error);
+          newlyUnlockedPerks = [];
+        }
+      }
+
+      return {
+        user: updatedUser,
+        levelUp,
+        newLevel,
+        oldLevel,
+        progress,
+        newlyUnlockedPerks
+      };
+    }
   }
 
   /**
    * Get user's character information including level and progress
+   * Supports both OAuth users (game profiles) and legacy users
    */
   async getUserCharacterInfo(userId: number): Promise<{
     character: Character;
@@ -264,26 +361,47 @@ export class CharacterService {
     progress: { currentLevel: number; progress: number; expInLevel: number; expForNextLevel: number };
     availableCharacters: Character[];
   } | null> {
-    const user = await this.userRepository.findUserById(userId);
-    if (!user) {
-      return null;
+    // Try to get game profile first (OAuth users)
+    try {
+      const profile = await this.gameProfileService.getOrCreateProfile(userId);
+      const character = this.getCharacterById(profile.selectedCharacter);
+      if (!character) {
+        return null;
+      }
+
+      const progress = this.calculateLevelProgress(profile.experiencePoints);
+      const availableCharacters = this.getAvailableCharacters(profile.characterLevel);
+
+      return {
+        character,
+        level: profile.characterLevel,
+        experience: profile.experiencePoints,
+        progress,
+        availableCharacters
+      };
+    } catch (error) {
+      // Fall back to legacy user repository
+      const user = await this.userRepository.findUserById(userId);
+      if (!user) {
+        return null;
+      }
+
+      const character = this.getCharacterById(user.selected_character);
+      if (!character) {
+        return null;
+      }
+
+      const progress = this.calculateLevelProgress(user.experience_points);
+      const availableCharacters = this.getAvailableCharacters(user.character_level);
+
+      return {
+        character,
+        level: user.character_level,
+        experience: user.experience_points,
+        progress,
+        availableCharacters
+      };
     }
-
-    const character = this.getCharacterById(user.selected_character);
-    if (!character) {
-      return null;
-    }
-
-    const progress = this.calculateLevelProgress(user.experience_points);
-    const availableCharacters = this.getAvailableCharacters(user.character_level);
-
-    return {
-      character,
-      level: user.character_level,
-      experience: user.experience_points,
-      progress,
-      availableCharacters
-    };
   }
 
   /**

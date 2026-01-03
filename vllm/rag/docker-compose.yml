@@ -112,3 +112,50 @@ services:
       - LLM_MODEL=${MODEL:-Qwen/Qwen3-0.6B}
       - LLM_API_KEY=${VLLM_API_KEY:-sk-dummy}
     restart: "no"
+
+  dashboard:
+    build:
+      context: ../dashboard
+      dockerfile: Dockerfile
+    container_name: vllm-dashboard
+    environment:
+      - NODE_ENV=production
+      - DASHBOARD_PORT=4242
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-webui}:${POSTGRES_PASSWORD:-webui}@db:5432/${POSTGRES_DB:-webui}
+      - AUTH_SERVICE_URL=${AUTH_SERVICE_URL:-https://auth.korczewski.de}
+      - ADMIN_PASSWORD=${DASHBOARD_ADMIN_PASSWORD}
+    expose:
+      - "4242"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - dashboard_logs:/var/log/dashboard
+    depends_on:
+      - db
+    networks:
+      - default
+      - traefik-public
+    labels:
+      # Enable Traefik
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik-public"
+
+      # HTTP Router for Dashboard
+      - "traefik.http.routers.vllm-dashboard.rule=Host(`dashboard.korczewski.de`)"
+      - "traefik.http.routers.vllm-dashboard.entrypoints=websecure"
+      - "traefik.http.routers.vllm-dashboard.tls=true"
+
+      # Service configuration
+      - "traefik.http.services.vllm-dashboard.loadbalancer.server.port=4242"
+
+      # Middlewares
+      - "traefik.http.routers.vllm-dashboard.middlewares=default-chain@file"
+    restart: unless-stopped
+
+volumes:
+  dashboard_logs:
+    driver: local
+
+networks:
+  traefik-public:
+    external: true
+    name: traefik-public

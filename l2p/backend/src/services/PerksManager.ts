@@ -105,6 +105,20 @@ export class PerksManager {
   }
 
   /**
+   * Get or create legacy user ID for OAuth users
+   * This is a bridge function to allow OAuth users to use the perks system
+   * which currently requires a legacy user_id from the users table
+   */
+  private async getLegacyUserId(authUserId: number): Promise<number> {
+    const query = 'SELECT get_or_create_legacy_user_id($1) as legacy_user_id';
+    const result = await this.db.query(query, [authUserId]);
+    if (!result.rows[0]) {
+      throw new Error('Failed to get legacy user ID for OAuth user');
+    }
+    return result.rows[0]['legacy_user_id'];
+  }
+
+  /**
    * Get perks available for a specific level
    */
   async getPerksForLevel(level: number): Promise<Perk[]> {
@@ -378,6 +392,9 @@ export class PerksManager {
    * OPTIMIZED: Uses batch insert for better performance
    */
   async checkAndUnlockPerksForLevel(userId: number, newLevel: number): Promise<UserPerk[]> {
+    // Get legacy user ID for OAuth users (bridge to support both user types)
+    const legacyUserId = await this.getLegacyUserId(userId);
+
     // Get all perks that should be unlocked at this level
     const perksQuery = `
       SELECT id, type, name, title, description, category, level_required, asset_data
@@ -389,7 +406,7 @@ export class PerksManager {
       )
     `;
 
-    const perksResult = await this.db.query(perksQuery, [newLevel, userId]);
+    const perksResult = await this.db.query(perksQuery, [newLevel, legacyUserId]);
 
     if (perksResult.rows.length === 0) {
       return [];
@@ -410,7 +427,7 @@ export class PerksManager {
       RETURNING id, user_id, perk_id, is_unlocked, is_active, configuration, unlocked_at, activated_at, updated_at
     `;
 
-    const unlockResult = await this.db.query(batchUnlockQuery, [userId, ...perkIds]);
+    const unlockResult = await this.db.query(batchUnlockQuery, [legacyUserId, ...perkIds]);
 
     // Build UserPerk objects with perk details
     const newlyUnlocked: UserPerk[] = unlockResult.rows.map((row) => {
