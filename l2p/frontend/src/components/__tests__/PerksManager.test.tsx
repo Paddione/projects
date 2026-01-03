@@ -120,7 +120,7 @@ describe('PerksManager', () => {
       setError: jest.fn()
     } as any)
 
-    ;(apiService.getUserPerks as jest.Mock).mockResolvedValue({ success: true, data: mockPerksPayload })
+      ; (apiService.getUserPerks as jest.Mock).mockResolvedValue({ success: true, data: mockPerksPayload })
   })
 
   it('shows a loading indicator before data resolves', () => {
@@ -146,7 +146,7 @@ describe('PerksManager', () => {
   })
 
   it('handles API errors gracefully', async () => {
-    ;(apiService.getUserPerks as jest.Mock).mockResolvedValueOnce({ success: false, error: 'Failed to fetch perks' })
+    ; (apiService.getUserPerks as jest.Mock).mockResolvedValueOnce({ success: false, error: 'Failed to fetch perks' })
 
     render(<PerksManager />)
     expect(await screen.findByText('Unable to Load Perks')).toBeInTheDocument()
@@ -155,7 +155,7 @@ describe('PerksManager', () => {
   })
 
   it('handles network errors gracefully', async () => {
-    ;(apiService.getUserPerks as jest.Mock).mockRejectedValueOnce(new Error('Network error'))
+    ; (apiService.getUserPerks as jest.Mock).mockRejectedValueOnce(new Error('Network error'))
 
     render(<PerksManager />)
     expect(await screen.findByText('Unable to Load Perks')).toBeInTheDocument()
@@ -163,7 +163,7 @@ describe('PerksManager', () => {
   })
 
   it('renders nothing when the user is not authenticated', () => {
-    mockUseAuthStore.mockReturnValue({
+    const mockStoreState = {
       user: null,
       token: null,
       isAuthenticated: false,
@@ -177,7 +177,15 @@ describe('PerksManager', () => {
       clearAuth: jest.fn(),
       setLoading: jest.fn(),
       setError: jest.fn()
-    } as any)
+    }
+
+    // Mock implementation that properly handles Zustand selectors
+    mockUseAuthStore.mockImplementation((selector: any) => {
+      if (typeof selector === 'function') {
+        return selector(mockStoreState)
+      }
+      return mockStoreState
+    })
 
     const { container } = render(<PerksManager />)
     expect(apiService.getUserPerks).not.toHaveBeenCalled()

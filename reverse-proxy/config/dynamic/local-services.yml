@@ -7,7 +7,7 @@ http:
       entryPoints:
         - websecure
       service: l2p-backend-local
-      tls: true
+      tls: {}
       middlewares:
         - default-chain@file
       priority: 50
@@ -18,7 +18,7 @@ http:
       entryPoints:
         - websecure
       service: l2p-frontend-local
-      tls: true
+      tls: {}
       middlewares:
         - default-chain@file
       priority: 5
@@ -29,7 +29,7 @@ http:
       entryPoints:
         - websecure
       service: payment-local
-      tls: true
+      tls: {}
       middlewares:
         - default-chain@file
       priority: 5
@@ -40,7 +40,7 @@ http:
       entryPoints:
         - websecure
       service: videovault-local
-      tls: true
+      tls: {}
       middlewares:
         - default-chain@file
       priority: 5
