@@ -105,7 +105,7 @@ describe('PerksManager', () => {
   beforeEach(() => {
     jest.clearAllMocks()
 
-    mockUseAuthStore.mockReturnValue({
+    const mockStoreState = {
       user: mockUser,
       token: mockToken,
       isAuthenticated: true,
@@ -118,7 +118,15 @@ describe('PerksManager', () => {
       clearAuth: jest.fn(),
       setLoading: jest.fn(),
       setError: jest.fn()
-    } as any)
+    }
+
+    // Mock implementation that properly handles Zustand selectors
+    mockUseAuthStore.mockImplementation((selector: any) => {
+      if (typeof selector === 'function') {
+        return selector(mockStoreState)
+      }
+      return mockStoreState
+    })
 
       ; (apiService.getUserPerks as jest.Mock).mockResolvedValue({ success: true, data: mockPerksPayload })
   })
