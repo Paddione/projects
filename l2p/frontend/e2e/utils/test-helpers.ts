@@ -9,134 +9,141 @@ export class TestHelpers {
   private static dataManager = TestDataManager.getInstance();
 
   private static async ensureAuthForm(page: Page): Promise<void> {
-    await page.goto('/');
-    await page.waitForLoadState('domcontentloaded');
+    await page.context().clearCookies();
 
-    const authTabs = page.locator('[data-testid="register-tab"], [data-testid="login-tab"]');
-    if ((await authTabs.count()) > 0 && await authTabs.first().isVisible()) {
-      return;
-    }
+    // Visit with test mode to enable mocks initially
+    await page.goto('/?test=true', { waitUntil: 'domcontentloaded' });
 
-    const authenticatedContent = page.locator('[data-testid="create-lobby-button"], [data-testid="welcome-message"]');
-    if ((await authenticatedContent.count()) > 0 && await authenticatedContent.first().isVisible()) {
-      await page.click('[data-testid="logout-button"]');
-    }
-
+    // Clear storage to ensure clean state and persist test mode
     await page.evaluate(() => {
       localStorage.clear();
       sessionStorage.clear();
+      sessionStorage.setItem('test_mode', 'true');
     });
-    await page.reload();
-    await page.waitForLoadState('domcontentloaded');
-    await page.waitForSelector('[data-testid="register-tab"], [data-testid="login-tab"]', { timeout: 15000 });
+
+    // Final reload to apply cleared state and ensure we are on /?test=true still
+    await page.goto('/?test=true', { waitUntil: 'domcontentloaded' });
+
+    // Wait for login tabs
+    await page.waitForSelector('[data-testid="login-tab"]', { timeout: 15000 });
   }
 
   /**
    * Authentication helpers
    */
   static async registerUser(
-    page: Page, 
+    page: Page,
     userData?: Partial<UserData>,
     options: { takeScreenshot?: boolean; timeout?: number } = {}
-  ): Promise<UserData> {
+  ): Promise<{ user: UserData; token: string }> {
+    // Pipe browser console to host console for debugging
+    page.on('console', msg => {
+      console.log(`[BROWSER ${msg.type()}] ${msg.text()}`);
+    });
+
     const { takeScreenshot = false, timeout = 15000 } = options;
-    
+
     try {
       const user = TestDataGenerator.generateUser(userData);
 
       await this.ensureAuthForm(page);
       await page.click('[data-testid="register-tab"]');
-      
+
       // Fill registration form
       await page.fill('[data-testid="username-input"]', user.username);
       await page.fill('[data-testid="email-input"]', user.email);
       await page.fill('[data-testid="password-input"]', user.password);
       await page.fill('[data-testid="confirm-password-input"]', user.password);
-      
+
       // Select character if available
       const characterSelector = '[data-testid="character-1"]';
       if (await page.locator(characterSelector).isVisible()) {
         await page.click(characterSelector);
       }
-      
+
       // Submit registration
+      await expect(page.locator('[data-testid="register-button"]')).toBeEnabled({ timeout });
       await page.click('[data-testid="register-button"]');
-      
+
       // Wait for registration to complete
       await page.waitForFunction(() => {
         const userMenu = document.querySelector('[data-testid="user-menu"]');
         const errorMessage = document.querySelector('[data-testid="registration-error"]');
         return userMenu || errorMessage;
       }, { timeout });
-      
+
       // Check for registration errors
       const errorElement = page.locator('[data-testid="registration-error"]');
       if (await errorElement.isVisible()) {
         const errorText = await errorElement.textContent();
         throw new Error(`Registration failed: ${errorText}`);
       }
-      
+
       // Verify successful authentication
       await expect(page.locator('[data-testid="user-menu"]')).toBeVisible();
-      
+
+      // Retrieve token from localStorage
+      const token = await page.evaluate(() => localStorage.getItem('auth_token')) || '';
+
       if (takeScreenshot) {
-        await page.screenshot({ 
+        await page.screenshot({
           path: `registration-success-${user.username}-${Date.now()}.png`,
-          fullPage: true 
+          fullPage: true
         });
       }
-      
-      return user;
-      
+
+      console.log(`[E2E] registration successful for ${user.username}, token length: ${token.length}`);
+      return { user, token };
+
     } catch (error) {
       console.error('Registration failed:', error);
-      
+
       if (takeScreenshot) {
-        await page.screenshot({ 
+        await page.screenshot({
           path: `registration-error-${Date.now()}.png`,
-          fullPage: true 
+          fullPage: true
         });
       }
-      
+
       throw error;
     }
   }
 
   static async loginUser(
-    page: Page, 
+    page: Page,
     user: UserData,
     options: { takeScreenshot?: boolean; timeout?: number } = {}
   ): Promise<void> {
     const { takeScreenshot = false, timeout = 10000 } = options;
-    
+
     try {
       await this.ensureAuthForm(page);
       await page.click('[data-testid="login-tab"]');
-      
+
       await page.fill('[data-testid="username-input"]', user.username);
       await page.fill('[data-testid="password-input"]', user.password);
       await page.click('[data-testid="login-button"]');
-      
+
       // Wait for login to complete
       await expect(page.locator('[data-testid="user-menu"]')).toBeVisible({ timeout });
-      
+
       if (takeScreenshot) {
-        await page.screenshot({ 
+        await page.screenshot({
           path: `login-success-${user.username}-${Date.now()}.png`,
-          fullPage: true 
+          fullPage: true
         });
       }
-      
+
     } catch (error) {
       console.error('Login failed:', error);
-      
+
       if (takeScreenshot) {
-        await page.screenshot({ 
+        await page.screenshot({
           path: `login-error-${Date.now()}.png`,
-          fullPage: true 
+          fullPage: true
         });
       }
-      
+
       throw error;
     }
   }
@@ -145,11 +152,11 @@ export class TestHelpers {
     try {
       await page.click('[data-testid="user-menu"]');
       await page.click('[data-testid="logout-button"]');
-      
+
       // Verify logout
       await expect(page.locator('[data-testid="user-menu"]')).not.toBeVisible();
       await expect(page.locator('text=Login')).toBeVisible();
-      
+
     } catch (error) {
       console.error('Logout failed:', error);
       throw error;
@@ -175,87 +182,87 @@ export class TestHelpers {
       isPrivate = false,
       takeScreenshot = false
     } = options;
-    
+
     try {
       await page.click('[data-testid="create-lobby-button"]');
-      
+
       // Configure lobby settings
       await page.selectOption('[data-testid="question-count-select"]', questionCount.toString());
       await page.selectOption('[data-testid="question-set-select"]', questionSet);
-      
+
       if (isPrivate) {
         await page.check('[data-testid="private-lobby-checkbox"]');
       }
-      
+
       // Confirm lobby creation
       await page.click('[data-testid="confirm-create-lobby"]');
-      
+
       // Wait for lobby to be created
       await expect(page.locator('[data-testid="lobby-code"]')).toBeVisible({ timeout: 10000 });
-      
+
       // Get lobby code
       const lobbyCodeElement = page.locator('[data-testid="lobby-code"]');
       const lobbyCode = await lobbyCodeElement.textContent();
-      
+
       if (!lobbyCode) {
         throw new Error('Failed to get lobby code');
       }
-      
+
       if (takeScreenshot) {
-        await page.screenshot({ 
+        await page.screenshot({
           path: `lobby-created-${lobbyCode.trim()}-${Date.now()}.png`,
-          fullPage: true 
+          fullPage: true
         });
       }
-      
+
       return lobbyCode.trim();
-      
+
     } catch (error) {
       console.error('Failed to create lobby:', error);
-      
+
       if (takeScreenshot) {
-        await page.screenshot({ 
+        await page.screenshot({
           path: `lobby-creation-error-${Date.now()}.png`,
-          fullPage: true 
+          fullPage: true
         });
       }
-      
+
       throw error;
     }
   }
 
   static async joinLobby(
-    page: Page, 
+    page: Page,
     lobbyCode: string,
     options: { takeScreenshot?: boolean; timeout?: number } = {}
   ): Promise<void> {
     const { takeScreenshot = false, timeout = 10000 } = options;
-    
+
     try {
       await page.click('[data-testid="join-lobby-button"]');
       await page.fill('[data-testid="lobby-code-input"]', lobbyCode);
       await page.click('[data-testid="join-lobby-confirm"]');
-      
+
       // Wait for successful join
       await expect(page.locator('[data-testid="lobby-players"]')).toBeVisible({ timeout });
-      
+
       if (takeScreenshot) {
-        await page.screenshot({ 
+        await page.screenshot({
           path: `lobby-joined-${lobbyCode}-${Date.now()}.png`,
-          fullPage: true 
+          fullPage: true
         });
       }
-      
+
     } catch (error) {
       console.error('Failed to join lobby:', error);
-      
+
       if (takeScreenshot) {
-        await page.screenshot({ 
+        await page.screenshot({
           path: `join-lobby-error-${Date.now()}.png`,
-          fullPage: true 
+          fullPage: true
         });
       }
-      
+
       throw error;
     }
   }
@@ -265,18 +272,18 @@ export class TestHelpers {
     options: { takeScreenshot?: boolean; timeout?: number } = {}
   ): Promise<void> {
     const { takeScreenshot = false, timeout = 15000 } = options;
-    
+
     try {
       await page.click('[data-testid="start-game-button"]');
       await expect(page.locator('[data-testid="question-container"]')).toBeVisible({ timeout });
-      
+
       if (takeScreenshot) {
-        await page.screenshot({ 
+        await page.screenshot({
           path: `game-started-${Date.now()}.png`,
-          fullPage: true 
+          fullPage: true
         });
       }
-      
+
     } catch (error) {
       console.error('Failed to start game:', error);
       throw error;
@@ -287,39 +294,39 @@ export class TestHelpers {
    * Game interaction helpers
    */
   static async answerQuestion(
-    page: Page, 
+    page: Page,
     optionIndex: number = 0,
     options: { takeScreenshot?: boolean; timeout?: number } = {}
   ): Promise<{ correct: boolean; score: number }> {
     const { takeScreenshot = false, timeout = 5000 } = options;
-    
+
     try {
       // Get current score before answering
       const currentScore = await this.getCurrentScore(page);
-      
+
       // Click answer option
       await page.click(`[data-testid="answer-option-${optionIndex}"]`);
-      
+
       // Wait for feedback
       await expect(page.locator('[data-testid="answer-feedback"]')).toBeVisible({ timeout });
-      
+
       // Check if answer was correct
       const feedbackElement = page.locator('[data-testid="answer-feedback"]');
       const feedbackText = await feedbackElement.textContent();
       const correct = feedbackText?.toLowerCase().includes('correct') || false;
-      
+
       // Get new score
       const newScore = await this.getCurrentScore(page);
-      
+
       if (takeScreenshot) {
-        await page.screenshot({ 
+        await page.screenshot({
           path: `question-answered-${correct ? 'correct' : 'wrong'}-${Date.now()}.png`,
-          fullPage: true 
+          fullPage: true
         });
       }
-      
+
       return { correct, score: newScore - currentScore };
-      
+
     } catch (error) {
       console.error('Failed to answer question:', error);
       throw error;
@@ -331,7 +338,7 @@ export class TestHelpers {
     options: { timeout?: number } = {}
   ): Promise<boolean> {
     const { timeout = 15000 } = options;
-    
+
     try {
       // Wait for either next question or game end screen
       await page.waitForFunction(() => {
@@ -339,10 +346,10 @@ export class TestHelpers {
         const gameEnd = document.querySelector('[data-testid="game-results"]');
         return nextQuestion || gameEnd;
       }, { timeout });
-      
+
       // Return true if there's a next question, false if game ended
       return await page.locator('[data-testid="question-container"]').isVisible();
-      
+
     } catch (error) {
       console.error('Failed to wait for next question:', error);
       return false;
@@ -378,21 +385,21 @@ export class TestHelpers {
       takeScreenshot = false,
       timeout = 10000
     } = options;
-    
+
     try {
       await page.setInputFiles(inputSelector, filePath);
-      
+
       if (waitForUpload) {
         await page.waitForSelector('[data-testid="upload-success"]', { timeout });
       }
-      
+
       if (takeScreenshot) {
-        await page.screenshot({ 
+        await page.screenshot({
           path: `file-uploaded-${Date.now()}.png`,
-          fullPage: true 
+          fullPage: true
         });
       }
-      
+
     } catch (error) {
       console.error('Failed to upload file:', error);
       throw error;
@@ -406,15 +413,15 @@ export class TestHelpers {
   ): Promise<string> {
     const fs = require('fs');
     const path = require('path');
-    
+
     const testDataDir = path.join(__dirname, '../test-data');
     if (!fs.existsSync(testDataDir)) {
       fs.mkdirSync(testDataDir, { recursive: true });
     }
-    
+
     const filePath = path.join(testDataDir, fileName);
     fs.writeFileSync(filePath, content);
-    
+
     return filePath;
   }
 
@@ -489,7 +496,7 @@ export class TestHelpers {
         const id = await input.getAttribute('id');
         const ariaLabel = await input.getAttribute('aria-label');
         const ariaLabelledBy = await input.getAttribute('aria-labelledby');
-        
+
         if (id) {
           const label = await page.locator(`label[for="${id}"]`).count();
           if (label === 0 && !ariaLabel && !ariaLabelledBy) {
@@ -540,7 +547,7 @@ export class TestHelpers {
     const metrics = await page.evaluate(() => {
       const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
       const paint = performance.getEntriesByType('paint');
-      
+
       return {
         loadTime: navigation.loadEventEnd - navigation.fetchStart,
         domContentLoaded: navigation.domContentLoadedEventEnd - navigation.fetchStart,
@@ -576,12 +583,12 @@ export class TestHelpers {
     const { fullPage = true, path } = options;
     const timestamp = Date.now();
     const screenshotPath = path || `screenshots/${name}-${timestamp}.png`;
-    
-    await page.screenshot({ 
+
+    await page.screenshot({
       path: screenshotPath,
-      fullPage 
+      fullPage
     });
-    
+
     return screenshotPath;
   }
 
@@ -606,7 +613,7 @@ export class TestHelpers {
     delay: number = 1000
   ): Promise<T> {
     let lastError: Error;
-    
+
     for (let i = 0; i < maxRetries; i++) {
       try {
         return await operation();
@@ -617,7 +624,7 @@ export class TestHelpers {
         }
       }
     }
-    
+
     throw lastError!;
   }
 
@@ -629,7 +636,7 @@ export class TestHelpers {
       await page.evaluate(() => {
         localStorage.clear();
         sessionStorage.clear();
-        
+
         // Clear IndexedDB if present
         if ('indexedDB' in window) {
           indexedDB.databases?.().then(databases => {
@@ -645,7 +652,7 @@ export class TestHelpers {
       // Clear cookies
       const context = page.context();
       await context.clearCookies();
-      
+
     } catch (error) {
       console.warn('Failed to cleanup test data:', error);
     }
@@ -658,7 +665,7 @@ export class TestHelpers {
         const sessionStorage = window.sessionStorage.length > 0;
         return localStorage || sessionStorage;
       });
-      
+
       return !hasTestData;
     } catch (error) {
       return false;

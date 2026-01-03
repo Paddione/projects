@@ -180,6 +180,12 @@ describe('DatabaseService', () => {
     it('should use default values when environment variables are not set', () => {
       // Clear previous mocks and reset environment
       jest.clearAllMocks();
+      delete process.env.TEST_DATABASE_URL;
+      delete process.env.TEST_DB_HOST;
+      delete process.env.TEST_DB_PORT;
+      delete process.env.TEST_DB_NAME;
+      delete process.env.TEST_DB_USER;
+      delete process.env.TEST_DB_PASSWORD;
       delete process.env.DATABASE_URL;
       delete process.env.DB_HOST;
       delete process.env.DB_PORT;

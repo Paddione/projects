@@ -9,20 +9,20 @@ const config = {
   testMatch:
     process.env.TEST_TYPE === 'unit'
       ? [
-          '**/?(*.)+(spec|test).ts',
-          '**/__tests__/**/*.test.ts',
-          '**/src/__tests__/**/*.test.ts',
-          '!**/*integration*.test.ts',
-          '!**/*performance*.test.ts',
-          '!**/integration/**/*.test.ts',
-          '!**/performance/**/*.test.ts',
-          '!**/*smtp-fix*.test.ts',
-        ]
+        '**/?(*.)+(spec|test).ts',
+        '**/__tests__/**/*.test.ts',
+        '**/src/__tests__/**/*.test.ts',
+        '!**/*integration*.test.ts',
+        '!**/*performance*.test.ts',
+        '!**/integration/**/*.test.ts',
+        '!**/performance/**/*.test.ts',
+        '!**/*smtp-fix*.test.ts',
+      ]
       : process.env.TEST_TYPE === 'integration'
-      ? ['**/*integration*.test.ts', '**/integration/**/*.test.ts']
-      : process.env.TEST_TYPE === 'performance'
-      ? ['**/*performance*.test.ts', '**/performance/**/*.test.ts']
-      : ['**/?(*.)+(spec|test).ts', '**/__tests__/**/*.test.ts', '**/src/__tests__/**/*.test.ts'],
+        ? ['**/*integration*.test.ts', '**/integration/**/*.test.ts']
+        : process.env.TEST_TYPE === 'performance'
+          ? ['**/*performance*.test.ts', '**/performance/**/*.test.ts']
+          : ['**/?(*.)+(spec|test).ts', '**/__tests__/**/*.test.ts', '**/src/__tests__/**/*.test.ts'],
   testPathIgnorePatterns: ['/node_modules/', '/dist/', '/build/', '/coverage/'],
   transform: {
     '^.+\\.ts$': [
@@ -97,37 +97,37 @@ const config = {
   testEnvironmentOptions: { customExportConditions: ['node', 'node-addons'] },
   collectCoverageFrom: collectCoverage
     ? [
-        'src/services/**/*.ts',
-        'src/repositories/**/*.ts',
-        'src/middleware/**/*.ts',
-        // Exclusions
-        '!**/*.d.ts',
-        '!**/node_modules/**',
-        '!**/dist/**',
-        '!**/coverage/**',
-        '!**/__tests__/**',
-        '!**/__mocks__/**',
-        '!**/test-utils/**',
-      ]
+      'src/services/**/*.ts',
+      'src/repositories/**/*.ts',
+      'src/middleware/**/*.ts',
+      // Exclusions
+      '!**/*.d.ts',
+      '!**/node_modules/**',
+      '!**/dist/**',
+      '!**/coverage/**',
+      '!**/__tests__/**',
+      '!**/__mocks__/**',
+      '!**/test-utils/**',
+    ]
     : [],
   collectCoverage,
   coverageDirectory: collectCoverage ? 'coverage' : undefined,
   coverageReporters: collectCoverage ? ['text', 'lcov', 'html', 'json-summary'] : undefined,
   coveragePathIgnorePatterns: collectCoverage
     ? [
-        '.*\\.test\\.ts$',
-        '.*\\.spec\\.ts$',
-        '/node_modules/',
-        '/dist/',
-        '/coverage/',
-        '/__tests__/',
-        '/__mocks__/',
-      ]
+      '.*\\.test\\.ts$',
+      '.*\\.spec\\.ts$',
+      '/node_modules/',
+      '/dist/',
+      '/coverage/',
+      '/__tests__/',
+      '/__mocks__/',
+    ]
     : [],
   coverageThreshold: collectCoverage
     ? {
-        global: { statements: 30, branches: 25, functions: 30, lines: 30 },
-      }
+      global: { statements: 30, branches: 25, functions: 30, lines: 30 },
+    }
     : undefined,
   clearMocks: true,
   resetMocks: true,

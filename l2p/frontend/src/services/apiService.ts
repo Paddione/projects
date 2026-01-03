@@ -180,19 +180,41 @@ class ApiService {
     console.log('ApiService initialized with baseURL:', this.baseURL, 'authBaseURL:', this.authBaseURL, 'envUrl:', envUrl)
     this.token = localStorage.getItem('auth_token')
 
+    // Check for test mode via URL or localStorage to enable mocks even if env vars are missing
+    let urlTestMode = false;
+    let storageTestMode = false;
+    try {
+      if (typeof window !== 'undefined') {
+        const urlParams = new URLSearchParams(window.location.search);
+        urlTestMode = urlParams.get('test') === 'true' || urlParams.get('mock') === 'true';
+
+        // Persist test mode in sessionStorage so it survives navigations within the same session
+        if (urlTestMode) {
+          sessionStorage.setItem('test_mode', 'true');
+        }
+
+        storageTestMode = localStorage.getItem('test_mode') === 'true' || sessionStorage.getItem('test_mode') === 'true';
+      }
+    } catch {
+      // ignore
+    }
+
     // Determine if mock mode should be enabled for tests
     let viteTestFlag = false;
     try {
       // Use eval to avoid Jest parsing import.meta at compile time
       const importMeta = eval('typeof import !== "undefined" ? import.meta : undefined');
-      viteTestFlag = (importMeta?.env?.VITE_TEST_MODE === 'true');
+      if (importMeta?.env?.VITE_TEST_MODE === 'true') {
+        viteTestFlag = true;
+      }
     } catch {
       // import.meta not available
     }
     const nodeEnvTest = (typeof process !== 'undefined' && process?.env?.NODE_ENV === 'test')
     const viteEnvTest = (typeof process !== 'undefined' && process?.env?.VITE_TEST_MODE === 'true')
 
-    this.isMockEnabled = !!viteTestFlag || !!nodeEnvTest || !!viteEnvTest
+    this.isMockEnabled = !!viteTestFlag || !!nodeEnvTest || !!viteEnvTest || urlTestMode || storageTestMode
+    console.log('ApiService: isMockEnabled =', this.isMockEnabled, { viteTestFlag, nodeEnvTest, viteEnvTest, urlTestMode, storageTestMode })
 
 
     // In test/mock mode, hydrate mock data from localStorage to persist across reloads/tabs
@@ -319,8 +341,9 @@ class ApiService {
 
   // Lightweight mock handler for test mode
   private async mockRequest<T>(endpoint: string, options: RequestInit = {}): Promise<ApiResponse<T>> {
+    const method = (options.method || 'GET').toUpperCase()
+    console.log(`ApiService Mock: ${method} ${endpoint}`)
     try {
-      const method = (options.method || 'GET').toUpperCase()
       const parseBody = () => {
         try {
           if (!options.body) return {}
@@ -336,6 +359,26 @@ class ApiService {
           // ignore parse errors
           return {}
         }
+      }
+
+      // Profile mock
+      if (endpoint === '/characters/profile' && method === 'GET') {
+        const character = ApiService.mockData.characters[0]
+        return {
+          success: true,
+          data: {
+            character: character,
+            level: 10,
+            experience: 15400,
+            progress: {
+              currentLevel: 10,
+              progress: 45,
+              expInLevel: 450,
+              expForNextLevel: 1000
+            },
+            availableCharacters: ApiService.mockData.characters
+          }
+        } as ApiResponse<T>;
       }
 
       // Perks endpoints
@@ -356,7 +399,6 @@ class ApiService {
             updated_at: new Date().toISOString()
           }
         ]
-
         return { success: true, data: perks as any } as ApiResponse<T>
       }
 
@@ -459,12 +501,7 @@ class ApiService {
             active_perks: perks.filter(perk => perk.is_active)
           }
         }
-
         return { success: true, data: response as any } as ApiResponse<T>
-      }
-
-      if (endpoint.startsWith('/perks/unlock/') && method === 'POST') {
-        return { success: true, data: { message: 'Perk unlocked' } as any } as ApiResponse<T>
       }
 
       if (endpoint.startsWith('/perks/activate/') && method === 'POST') {
@@ -473,6 +510,26 @@ class ApiService {
 
       if (endpoint.startsWith('/perks/deactivate/') && method === 'POST') {
         return { success: true, data: { message: 'Perk deactivated' } as any } as ApiResponse<T>
+      }
+
+      if (endpoint.startsWith('/perks/options/') && method === 'GET') {
+        return {
+          success: true,
+          data: {
+            options: [
+              { id: 'opt1', label: 'Option 1', value: 'val1' },
+              { id: 'opt2', label: 'Option 2', value: 'val2' }
+            ]
+          } as any
+        } as ApiResponse<T>
+      }
+
+      if (endpoint.startsWith('/perks/unlock/') && method === 'POST') {
+        return { success: true, data: { message: 'Perk unlocked' } as any } as ApiResponse<T>
+      }
+
+      if (endpoint === '/user/me' && method === 'GET') {
+        return { success: false, error: 'Unauthorized', status: 401 } as ApiResponse<T>;
       }
 
       // Auth endpoints
@@ -488,17 +545,14 @@ class ApiService {
         }
         const id = String(ApiService.mockData.users.length + 1)
         ApiService.mockData.users.push({ id, username, email, password, isAdmin: false, verified: true })
-        // Persist users so they survive reloads/new tabs in e2e
         try {
           localStorage.setItem('mock_users', JSON.stringify(ApiService.mockData.users))
-        } catch {
-          // ignore storage errors
-        }
+        } catch { /* ignore */ }
         const accessToken = generateAccessToken(id, username, email, false)
         const refreshToken = generateRefreshToken(id)
-        const data: { tokens: { accessToken: string; refreshToken: string }; user: { id: string; username: string; email: string; isAdmin: boolean } } = {
+        const data = {
           tokens: { accessToken, refreshToken },
-          user: { id, username, email, isAdmin: false }
+          user: { id, username, email, isAdmin: false, characterLevel: 10, selectedCharacter: 'student' }
         }
         return { success: true, data } as ApiResponse<T>
       }
@@ -512,9 +566,9 @@ class ApiService {
         }
         const accessToken = generateAccessToken(user.id, user.username, user.email, !!user.isAdmin)
         const refreshToken = generateRefreshToken(user.id)
-        const data: { tokens: { accessToken: string; refreshToken: string }; user: { id: string; username: string; email: string; isAdmin: boolean } } = {
+        const data = {
           tokens: { accessToken, refreshToken },
-          user: { id: user.id, username: user.username, email: user.email, isAdmin: !!user.isAdmin }
+          user: { id: user.id, username: user.username, email: user.email, isAdmin: !!user.isAdmin, characterLevel: 10, selectedCharacter: 'student' }
         }
         return { success: true, data } as ApiResponse<T>
       }
@@ -525,19 +579,15 @@ class ApiService {
       }
 
       if (endpoint === '/auth/validate' && method === 'GET') {
-        // Always check localStorage for the most current token state
         const currentToken = localStorage.getItem('auth_token')
         if (currentToken && currentToken !== this.token) {
           this.token = currentToken
         }
-
         if (!this.token) {
-          return { success: true, data: { valid: false } as Record<string, unknown> } as ApiResponse<T>
+          return { success: true, data: { valid: false } as any } as ApiResponse<T>
         }
-
-        // Validate JWT token using the correct secret
         const validation = validateJwtToken(this.token, JWT_SECRET)
-        return { success: true, data: { valid: validation.valid } as Record<string, unknown> } as ApiResponse<T>
+        return { success: true, data: { valid: validation.valid } as any } as ApiResponse<T>
       }
 
       if (endpoint === '/auth/refresh' && method === 'POST') {
@@ -545,37 +595,20 @@ class ApiService {
         if (!refreshToken) {
           return { success: false, error: 'No refresh token available' } as ApiResponse<T>
         }
-
-        // Validate refresh token
         const validation = validateJwtToken(refreshToken, JWT_REFRESH_SECRET)
         if (!validation.valid || !validation.payload) {
           return { success: false, error: 'Invalid refresh token' } as ApiResponse<T>
         }
-
-        // Generate new tokens
         const payload = validation.payload as Record<string, unknown>
         const newAccessToken = generateAccessToken(payload['id'] as string, (payload['username'] as string) || 'user', (payload['email'] as string) || 'user@example.com', Boolean(payload['isAdmin']))
         const newRefreshToken = generateRefreshToken(payload['id'] as string)
-
-        const data: { tokens: { accessToken: string; refreshToken: string } } = { tokens: { accessToken: newAccessToken, refreshToken: newRefreshToken } }
+        const data = { tokens: { accessToken: newAccessToken, refreshToken: newRefreshToken } }
         return { success: true, data } as ApiResponse<T>
       }
 
       // Characters
       if (endpoint === '/characters' && method === 'GET') {
-        return { success: true, data: ApiService.mockData.characters as Array<{ id: string; name: string; emoji: string; description: string; unlockLevel: number }> } as ApiResponse<T>
-      }
-
-      if (endpoint === '/characters/profile' && method === 'GET') {
-        const character = ApiService.mockData.characters[0]
-        const profile = {
-          character,
-          level: 1,
-          experience: 0,
-          progress: { currentLevel: 1, progress: 0, expInLevel: 0, expForNextLevel: 100 },
-          availableCharacters: ApiService.mockData.characters
-        }
-        return { success: true, data: profile as Record<string, unknown> } as ApiResponse<T>
+        return { success: true, data: ApiService.mockData.characters as any } as ApiResponse<T>
       }
 
       if (endpoint === '/characters/select' && method === 'PUT') {
@@ -585,7 +618,7 @@ class ApiService {
           user: { ...(this.getCurrentUser() || { id: '0', username: 'guest', email: 'guest@example.com' }) },
           characterInfo: {
             character,
-            level: 1,
+            level: 10,
             experience: 0,
             progress: { currentLevel: 1, progress: 0, expInLevel: 0, expForNextLevel: 100 },
             availableCharacters: ApiService.mockData.characters
@@ -595,7 +628,7 @@ class ApiService {
       }
 
       // Lobbies
-      if ((endpoint === '/lobbies' || endpoint.startsWith('/api/lobbies')) && method === 'GET') {
+      if ((endpoint.startsWith('/lobbies') || endpoint.startsWith('/api/lobbies')) && method === 'GET') {
         // Parse query parameters for limit
         const url = new URL(`http://localhost${endpoint}`)
         const limit = parseInt(url.searchParams.get('limit') || '10', 10)
@@ -841,8 +874,8 @@ class ApiService {
       }
 
       // Fallback for unmocked endpoints
-      console.warn(`[MockAPI] No mock handler for ${method} ${endpoint}. Returning generic success.`)
-      return { success: true, data: undefined } as unknown as ApiResponse<T>
+      console.warn(`[MockAPI] No mock handler for ${method} ${endpoint}. Returning failure.`)
+      return { success: false, error: `No mock handler for ${endpoint}` } as ApiResponse<T>
     } catch (err) {
       console.error('[MockAPI] Error handling mock request:', err)
       return { success: false, error: 'Mock request failed' } as ApiResponse<T>

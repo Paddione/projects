@@ -15,24 +15,24 @@ process.env.TEST_ENVIRONMENT = 'local';
 process.env.TEST_TYPE = 'integration';
 process.env.AUTH_SERVICE_URL = '';
 
-// Ensure we use local test database
-process.env.DATABASE_URL = 'postgresql://l2p_user:06752fc9637d5fe896cd88b858d2cf2eff112de5cf4769e69927009f5d45d581@127.0.0.1:5432/l2p_db';
-process.env.TEST_DATABASE_URL = 'postgresql://l2p_user:06752fc9637d5fe896cd88b858d2cf2eff112de5cf4769e69927009f5d45d581@127.0.0.1:5432/l2p_db';
+// Ensure we use local test database (l2p_test_db instead of l2p_db)
+process.env.DATABASE_URL = process.env.TEST_DATABASE_URL || 'postgresql://l2p_user:06752fc9637d5fe896cd88b858d2cf2eff112de5cf4769e69927009f5d45d581@127.0.0.1:5432/l2p_test_db';
+process.env.TEST_DATABASE_URL = process.env.TEST_DATABASE_URL || 'postgresql://l2p_user:06752fc9637d5fe896cd88b858d2cf2eff112de5cf4769e69927009f5d45d581@127.0.0.1:5432/l2p_test_db';
 
 // Database configuration
-process.env.DB_HOST = '127.0.0.1';
-process.env.DB_PORT = '5432';
-process.env.DB_NAME = 'l2p_db';
-process.env.DB_USER = 'l2p_user';
-process.env.DB_PASSWORD = '06752fc9637d5fe896cd88b858d2cf2eff112de5cf4769e69927009f5d45d581';
-process.env.DB_SSL = 'false';
+process.env.DB_HOST = process.env.TEST_DB_HOST || '127.0.0.1';
+process.env.DB_PORT = process.env.TEST_DB_PORT || '5432';
+process.env.DB_NAME = process.env.TEST_DB_NAME || 'l2p_test_db';
+process.env.DB_USER = process.env.TEST_DB_USER || 'l2p_user';
+process.env.DB_PASSWORD = process.env.TEST_DB_PASSWORD || '06752fc9637d5fe896cd88b858d2cf2eff112de5cf4769e69927009f5d45d581';
+process.env.DB_SSL = process.env.DB_SSL || 'false';
 
 // Test database configuration
-process.env.TEST_DB_HOST = '127.0.0.1';
-process.env.TEST_DB_PORT = '5432';
-process.env.TEST_DB_NAME = 'l2p_db';
-process.env.TEST_DB_USER = 'l2p_user';
-process.env.TEST_DB_PASSWORD = '06752fc9637d5fe896cd88b858d2cf2eff112de5cf4769e69927009f5d45d581';
+process.env.TEST_DB_HOST = process.env.TEST_DB_HOST || '127.0.0.1';
+process.env.TEST_DB_PORT = process.env.TEST_DB_PORT || '5432';
+process.env.TEST_DB_NAME = process.env.TEST_DB_NAME || 'l2p_test_db';
+process.env.TEST_DB_USER = process.env.TEST_DB_USER || 'l2p_user';
+process.env.TEST_DB_PASSWORD = process.env.TEST_DB_PASSWORD || '06752fc9637d5fe896cd88b858d2cf2eff112de5cf4769e69927009f5d45d581';
 
 // JWT configuration for tests - use longer secrets
 process.env.JWT_SECRET = 'test_jwt_secret_for_testing_only_not_secure_but_long_enough_for_jwt';

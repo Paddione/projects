@@ -1,0 +1,318 @@
+
+Running 1 test using 1 worker
+
+[1A[2K[1/1] [chromium] › tests/perks-management.spec.ts:32:7 › Perks Management E2E › should display perks manager page
+[1A[2K[chromium] › tests/perks-management.spec.ts:32:7 › Perks Management E2E › should display perks manager page
+[BROWSER log] ApiService initialized with baseURL: /api authBaseURL: /api envUrl: undefined
+
+[1A[2K[BROWSER log] ApiService: isMockEnabled = true {viteTestFlag: false, nodeEnvTest: false, viteEnvTest: false, urlTestMode: true, storageTestMode: true}
+
+[1A[2K[BROWSER log] AuthGuard: Component mounted, isAuthenticated: null isValidating: true
+
+[1A[2K[BROWSER log] AuthGuard: Not authenticated, validating...
+
+[1A[2K[BROWSER log] AuthGuard: Starting validation, current token: null
+
+[1A[2K[BROWSER log] AuthGuard: Has token in localStorage: false
+
+[1A[2K[BROWSER log] AuthGuard: No token in localStorage, checking for session cookie...
+
+[1A[2K[BROWSER log] AuthGuard: Component mounted, isAuthenticated: null isValidating: true
+
+[1A[2K[BROWSER log] AuthGuard: Not authenticated, validating...
+
+[1A[2K[BROWSER log] AuthGuard: Starting validation, current token: null
+
+[1A[2K[BROWSER log] AuthGuard: Has token in localStorage: false
+
+[1A[2K[BROWSER log] AuthGuard: No token in localStorage, checking for session cookie...
+
+[1A[2K[BROWSER log] AuthGuard: Component mounted, isAuthenticated: false isValidating: false
+
+[1A[2K[BROWSER log] AuthGuard: State already determined (isAuthenticated: false), skipping validation
+
+[1A[2K[BROWSER log] ApiService initialized with baseURL: /api authBaseURL: /api envUrl: undefined
+
+[1A[2K[BROWSER log] ApiService: isMockEnabled = true {viteTestFlag: false, nodeEnvTest: false, viteEnvTest: false, urlTestMode: true, storageTestMode: true}
+
+[1A[2K[BROWSER log] AuthGuard: Component mounted, isAuthenticated: null isValidating: true
+
+[1A[2K[BROWSER log] AuthGuard: Not authenticated, validating...
+
+[1A[2K[BROWSER log] AuthGuard: Starting validation, current token: null
+
+[1A[2K[BROWSER log] AuthGuard: Has token in localStorage: false
+
+[1A[2K[BROWSER log] AuthGuard: No token in localStorage, checking for session cookie...
+
+[1A[2K[BROWSER log] AuthGuard: Component mounted, isAuthenticated: null isValidating: true
+
+[1A[2K[BROWSER log] AuthGuard: Not authenticated, validating...
+
+[1A[2K[BROWSER log] AuthGuard: Starting validation, current token: null
+
+[1A[2K[BROWSER log] AuthGuard: Has token in localStorage: false
+
+[1A[2K[BROWSER log] AuthGuard: No token in localStorage, checking for session cookie...
+
+[1A[2K[BROWSER log] AuthGuard: Component mounted, isAuthenticated: false isValidating: false
+
+[1A[2K[BROWSER log] AuthGuard: State already determined (isAuthenticated: false), skipping validation
+
+[1A[2K[BROWSER log] AuthForm: Attempting registration for user: rowansowfpt
+
+[1A[2K[BROWSER log] AuthForm: Registration response: {success: true, data: Object}
+
+[1A[2K[BROWSER log] AuthForm: Registration successful, calling onAuthSuccess
+
+[1A[2K[BROWSER log] AuthGuard: Auth success callback called
+
+[1A[2K[BROWSER log] AuthGuard: Current token after auth success: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjEiLCJ1c2VybmFtZSI6InJvd2Fuc293ZnB0IiwiZW1haWwiOiJyb3dhbi5nYXJjaWExNzY3NDAwNDQ1ODQyQGV4YW1wbGUuY29tIiwiaXNBZG1pbiI6ZmFsc2UsInR5cGUiOiJhY2Nlc3MiLCJleHAiOjE3Njc0MDEzNDYsImlhdCI6MTc2NzQwMDQ0Nn0=.ZXlKaGJHY2lPaUpJVXpJMU5pSXNJblI1Y0NJNklrcFhWQ0o5LmV5SnBaQ0k2SWpFaUxDSjFjMlZ5Ym1GdFpTSTZJbkp2ZDJGdWMyOTNabkIwSWl3aVpXMWhhV3dpT2lKeWIzZGhiaTVuWVhKamFXRXhOelkzTkRBd05EUTFPRFF5UUdWNFlXMXdiR1V1WTI5dElpd2lhWE5CWkcxcGJpSTZabUZzYzJVc0luUjVjR1VpT2lKaFkyTmxjM01pTENKbGVIQWlPakUzTmpjME1ERXpORFlzSW1saGRDSTZNVGMyTnpRd01EUTBObjA9Lk44bUsyeFI5cVc0ZVQ2eVUzb1A3c0ExZEY1Z0g4akwwY1Y5Yk02blE0d0U3clkydEk1dU8zcEE4c0QxZkc2aEo=
+
+[1A[2K[BROWSER log] AuthGuard: Updating Zustand store after auth success: {id: 1, username: rowansowfpt, email: rowan.garcia1767400445842@example.com, isAdmin: false, characterLevel: 10}
+
+[1A[2K[BROWSER log] AuthGuard: Component mounted, isAuthenticated: true isValidating: false
+
+[1A[2K[BROWSER log] AuthGuard: State already determined (isAuthenticated: true), skipping validation
+
+[1A[2K[E2E] registration successful for rowansowfpt, token length: 642
+
+[1A[2K✅ All test data cleaned up
+
+[1A[2K[2/1] (retries) [chromium] › tests/perks-management.spec.ts:32:7 › Perks Management E2E › should display perks manager page (retry #1)
+[1A[2K[BROWSER log] ApiService initialized with baseURL: /api authBaseURL: /api envUrl: undefined
+
+[1A[2K[BROWSER log] ApiService: isMockEnabled = true {viteTestFlag: false, nodeEnvTest: false, viteEnvTest: false, urlTestMode: true, storageTestMode: true}
+
+[1A[2K[BROWSER log] AuthGuard: Component mounted, isAuthenticated: null isValidating: true
+
+[1A[2K[BROWSER log] AuthGuard: Not authenticated, validating...
+
+[1A[2K[BROWSER log] AuthGuard: Starting validation, current token: null
+
+[1A[2K[BROWSER log] AuthGuard: Has token in localStorage: false
+
+[1A[2K[BROWSER log] AuthGuard: No token in localStorage, checking for session cookie...
+
+[1A[2K[BROWSER log] AuthGuard: Component mounted, isAuthenticated: null isValidating: true
+
+[1A[2K[BROWSER log] AuthGuard: Not authenticated, validating...
+
+[1A[2K[BROWSER log] AuthGuard: Starting validation, current token: null
+
+[1A[2K[BROWSER log] AuthGuard: Has token in localStorage: false
+
+[1A[2K[BROWSER log] AuthGuard: No token in localStorage, checking for session cookie...
+
+[1A[2K[BROWSER log] AuthGuard: Component mounted, isAuthenticated: false isValidating: false
+
+[1A[2K[BROWSER log] AuthGuard: State already determined (isAuthenticated: false), skipping validation
+
+[1A[2K[BROWSER log] ApiService initialized with baseURL: /api authBaseURL: /api envUrl: undefined
+
+[1A[2K[BROWSER log] ApiService: isMockEnabled = true {viteTestFlag: false, nodeEnvTest: false, viteEnvTest: false, urlTestMode: true, storageTestMode: true}
+
+[1A[2K[BROWSER log] AuthGuard: Component mounted, isAuthenticated: null isValidating: true
+
+[1A[2K[BROWSER log] AuthGuard: Not authenticated, validating...
+
+[1A[2K[BROWSER log] AuthGuard: Starting validation, current token: null
+
+[1A[2K[BROWSER log] AuthGuard: Has token in localStorage: false
+
+[1A[2K[BROWSER log] AuthGuard: No token in localStorage, checking for session cookie...
+
+[1A[2K[BROWSER log] AuthGuard: Component mounted, isAuthenticated: null isValidating: true
+
+[1A[2K[BROWSER log] AuthGuard: Not authenticated, validating...
+
+[1A[2K[BROWSER log] AuthGuard: Starting validation, current token: null
+
+[1A[2K[BROWSER log] AuthGuard: Has token in localStorage: false
+
+[1A[2K[BROWSER log] AuthGuard: No token in localStorage, checking for session cookie...
+
+[1A[2K[BROWSER log] AuthGuard: Component mounted, isAuthenticated: false isValidating: false
+
+[1A[2K[BROWSER log] AuthGuard: State already determined (isAuthenticated: false), skipping validation
+
+[1A[2KRegistration failed: page.click: Timeout 15000ms exceeded.
+Call log:
+[2m  - waiting for locator('[data-testid="register-button"]')[22m
+[2m    - locator resolved to <button disabled type="submit" data-testid="register-button" class="_button_1brqz_154 _primary_1brqz_165">Register</button>[22m
+[2m  - attempting click action[22m
+[2m    2 × waiting for element to be visible, enabled and stable[22m
+[2m      - element is not enabled[22m
+[2m    - retrying click action[22m
+[2m    - waiting 20ms[22m
+[2m    2 × waiting for element to be visible, enabled and stable[22m
+[2m      - element is not enabled[22m
+[2m    - retrying click action[22m
+[2m      - waiting 100ms[22m
+[2m    29 × waiting for element to be visible, enabled and stable[22m
+[2m       - element is not enabled[22m
+[2m     - retrying click action[22m
+[2m       - waiting 500ms[22m
+
+    at Function.registerUser [90m(/home/patrick/projects/l2p/frontend/e2e/[39mutils/test-helpers.ts:69:18[90m)[39m
+    at [90m/home/patrick/projects/l2p/frontend/e2e/[39mtests/perks-management.spec.ts:14:26 {
+  name: [32m'TimeoutError'[39m,
+  [[32mSymbol(step)[39m]: {
+    location: {
+      file: [32m'/home/patrick/projects/l2p/frontend/e2e/utils/test-helpers.ts'[39m,
+      line: [33m69[39m,
+      column: [33m18[39m,
+      function: [32m'Function.registerUser'[39m
+    },
+    category: [32m'pw:api'[39m,
+    title: [32m`Click locator('[data-testid="register-button"]')`[39m,
+    apiName: [32m'page.click'[39m,
+    params: { selector: [32m'[data-testid="register-button"]'[39m, timeout: [33m15000[39m },
+    group: [90mundefined[39m,
+    stepId: [32m'pw:api@42'[39m,
+    boxedStack: [90mundefined[39m,
+    steps: [],
+    attachmentIndices: [],
+    info: TestStepInfoImpl {
+      annotations: [],
+      _testInfo: [36m[TestInfoImpl][39m,
+      _stepId: [32m'pw:api@42'[39m,
+      _title: [32m`Click locator('[data-testid="register-button"]')`[39m,
+      _parentStep: [36m[TestStepInfoImpl][39m,
+      skip: [36m[Function (anonymous)][39m
+    },
+    recoverFromStepError: [36m[AsyncFunction: recoverFromStepError][39m,
+    complete: [36m[Function: complete][39m,
+    endWallTime: [33m1767400479582[39m,
+    error: {
+      message: [32m'TimeoutError: page.click: Timeout 15000ms exceeded.\n'[39m +
+        [32m'Call log:\n'[39m +
+        [32m`\x1B[2m  - waiting for locator('[data-testid="register-button"]')\x1B[22m\n`[39m +
+        [32m'\x1B[2m    - locator resolved to <button disabled type="submit" data-testid="register-button" class="_button_1brqz_154 _primary_1brqz_165">Register</button>\x1B[22m\n'[39m +
+        [32m'\x1B[2m  - attempting click action\x1B[22m\n'[39m +
+        [32m'\x1B[2m    2 × waiting for element to be visible, enabled and stable\x1B[22m\n'[39m +
+        [32m'\x1B[2m      - element is not enabled\x1B[22m\n'[39m +
+        [32m'\x1B[2m    - retrying click action\x1B[22m\n'[39m +
+        [32m'\x1B[2m    - waiting 20ms\x1B[22m\n'[39m +
+        [32m'\x1B[2m    2 × waiting for element to be visible, enabled and stable\x1B[22m\n'[39m +
+        [32m'\x1B[2m      - element is not enabled\x1B[22m\n'[39m +
+        [32m'\x1B[2m    - retrying click action\x1B[22m\n'[39m +
+        [32m'\x1B[2m      - waiting 100ms\x1B[22m\n'[39m +
+        [32m'\x1B[2m    29 × waiting for element to be visible, enabled and stable\x1B[22m\n'[39m +
+        [32m'\x1B[2m       - element is not enabled\x1B[22m\n'[39m +
+        [32m'\x1B[2m     - retrying click action\x1B[22m\n'[39m +
+        [32m'\x1B[2m       - waiting 500ms\x1B[22m\n'[39m,
+      stack: [32m'TimeoutError: page.click: Timeout 15000ms exceeded.\n'[39m +
+        [32m'Call log:\n'[39m +
+        [32m`\x1B[2m  - waiting for locator('[data-testid="register-button"]')\x1B[22m\n`[39m +
+        [32m'\x1B[2m    - locator resolved to <button disabled type="submit" data-testid="register-button" class="_button_1brqz_154 _primary_1brqz_165">Register</button>\x1B[22m\n'[39m +
+        [32m'\x1B[2m  - attempting click action\x1B[22m\n'[39m +
+        [32m'\x1B[2m    2 × waiting for element to be visible, enabled and stable\x1B[22m\n'[39m +
+        [32m'\x1B[2m      - element is not enabled\x1B[22m\n'[39m +
+        [32m'\x1B[2m    - retrying click action\x1B[22m\n'[39m +
+        [32m'\x1B[2m    - waiting 20ms\x1B[22m\n'[39m +
+        [32m'\x1B[2m    2 × waiting for element to be visible, enabled and stable\x1B[22m\n'[39m +
+        [32m'\x1B[2m      - element is not enabled\x1B[22m\n'[39m +
+        [32m'\x1B[2m    - retrying click action\x1B[22m\n'[39m +
+        [32m'\x1B[2m      - waiting 100ms\x1B[22m\n'[39m +
+        [32m'\x1B[2m    29 × waiting for element to be visible, enabled and stable\x1B[22m\n'[39m +
+        [32m'\x1B[2m       - element is not enabled\x1B[22m\n'[39m +
+        [32m'\x1B[2m     - retrying click action\x1B[22m\n'[39m +
+        [32m'\x1B[2m       - waiting 500ms\x1B[22m\n'[39m +
+        [32m'\n'[39m +
+        [32m'    at Function.registerUser (/home/patrick/projects/l2p/frontend/e2e/utils/test-helpers.ts:69:18)\n'[39m +
+        [32m'    at /home/patrick/projects/l2p/frontend/e2e/tests/perks-management.spec.ts:14:26'[39m,
+      cause: [90mundefined[39m
+    }
+  }
+}
+
+[1A[2KInternal error: step id not found: fixture@43
+
+[1A[2K✅ All test data cleaned up
+
+[1A[2K  1) [chromium] › tests/perks-management.spec.ts:32:7 › Perks Management E2E › should display perks manager page 
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m()[22m failed
+
+    Locator:  getByRole('button', { name: /^Perks$/i })
+    Expected: visible
+    Received: <element(s) not found>
+    Timeout:  15000ms
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 15000ms[22m
+    [2m  - waiting for getByRole('button', { name: /^Perks$/i })[22m
+
+
+      41 |     if (!(await perksHeader.isVisible())) {
+      42 |       const perksButton = page.getByRole('button', { name: /^Perks$/i });
+    > 43 |       await expect(perksButton).toBeVisible();
+         |                                 ^
+      44 |       await perksButton.click();
+      45 |     }
+      46 |
+        at /home/patrick/projects/l2p/frontend/e2e/tests/perks-management.spec.ts:43:33
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/perks-management-Perks-Man-86778--display-perks-manager-page-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/perks-management-Perks-Man-86778--display-perks-manager-page-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/perks-management-Perks-Man-86778--display-perks-manager-page-chromium/error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    TimeoutError: page.click: Timeout 15000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('[data-testid="register-button"]')[22m
+    [2m    - locator resolved to <button disabled type="submit" data-testid="register-button" class="_button_1brqz_154 _primary_1brqz_165">Register</button>[22m
+    [2m  - attempting click action[22m
+    [2m    2 × waiting for element to be visible, enabled and stable[22m
+    [2m      - element is not enabled[22m
+    [2m    - retrying click action[22m
+    [2m    - waiting 20ms[22m
+    [2m    2 × waiting for element to be visible, enabled and stable[22m
+    [2m      - element is not enabled[22m
+    [2m    - retrying click action[22m
+    [2m      - waiting 100ms[22m
+    [2m    29 × waiting for element to be visible, enabled and stable[22m
+    [2m       - element is not enabled[22m
+    [2m     - retrying click action[22m
+    [2m       - waiting 500ms[22m
+
+
+       at ../utils/test-helpers.ts:69
+
+      67 |
+      68 |       // Submit registration
+    > 69 |       await page.click('[data-testid="register-button"]');
+         |                  ^
+      70 |
+      71 |       // Wait for registration to complete
+      72 |       await page.waitForFunction(() => {
+        at Function.registerUser (/home/patrick/projects/l2p/frontend/e2e/utils/test-helpers.ts:69:18)
+        at /home/patrick/projects/l2p/frontend/e2e/tests/perks-management.spec.ts:14:26
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/perks-management-Perks-Man-86778--display-perks-manager-page-chromium-retry1/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/perks-management-Perks-Man-86778--display-perks-manager-page-chromium-retry1/error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/perks-management-Perks-Man-86778--display-perks-manager-page-chromium-retry1/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/perks-management-Perks-Man-86778--display-perks-manager-page-chromium-retry1/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+[1A[2K  1 failed
+    [chromium] › tests/perks-management.spec.ts:32:7 › Perks Management E2E › should display perks manager page 
+
+[36m  Serving HTML report at http://localhost:45155. Press Ctrl+C to quit.[39m

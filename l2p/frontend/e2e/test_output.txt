@@ -1,0 +1,237 @@
+
+Running 1 test using 1 worker
+
+[1A[2K[1/1] [chromium] › tests/perks-management.spec.ts:32:7 › Perks Management E2E › should display perks manager page
+[1A[2K[chromium] › tests/perks-management.spec.ts:32:7 › Perks Management E2E › should display perks manager page
+[BROWSER log] ApiService initialized with baseURL: /api authBaseURL: /api envUrl: undefined
+
+[1A[2K[BROWSER log] ApiService: isMockEnabled = true {viteTestFlag: false, nodeEnvTest: false, viteEnvTest: false, urlTestMode: true, storageTestMode: true}
+
+[1A[2K[BROWSER log] AuthGuard: Component mounted, isAuthenticated: null isValidating: true
+
+[1A[2K[BROWSER log] AuthGuard: Not authenticated, validating...
+
+[1A[2K[BROWSER log] AuthGuard: Starting validation, current token: null
+
+[1A[2K[BROWSER log] AuthGuard: Has token in localStorage: false
+
+[1A[2K[BROWSER log] AuthGuard: No token in localStorage, checking for session cookie...
+
+[1A[2K[BROWSER log] AuthGuard: Component mounted, isAuthenticated: null isValidating: true
+
+[1A[2K[BROWSER log] AuthGuard: Not authenticated, validating...
+
+[1A[2K[BROWSER log] AuthGuard: Starting validation, current token: null
+
+[1A[2K[BROWSER log] AuthGuard: Has token in localStorage: false
+
+[1A[2K[BROWSER log] AuthGuard: No token in localStorage, checking for session cookie...
+
+[1A[2K[BROWSER log] AuthGuard: Component mounted, isAuthenticated: false isValidating: false
+
+[1A[2K[BROWSER log] AuthGuard: State already determined (isAuthenticated: false), skipping validation
+
+[1A[2K[BROWSER log] ApiService initialized with baseURL: /api authBaseURL: /api envUrl: undefined
+
+[1A[2K[BROWSER log] ApiService: isMockEnabled = true {viteTestFlag: false, nodeEnvTest: false, viteEnvTest: false, urlTestMode: true, storageTestMode: true}
+
+[1A[2K[BROWSER log] AuthGuard: Component mounted, isAuthenticated: null isValidating: true
+
+[1A[2K[BROWSER log] AuthGuard: Not authenticated, validating...
+
+[1A[2K[BROWSER log] AuthGuard: Starting validation, current token: null
+
+[1A[2K[BROWSER log] AuthGuard: Has token in localStorage: false
+
+[1A[2K[BROWSER log] AuthGuard: No token in localStorage, checking for session cookie...
+
+[1A[2K[BROWSER log] AuthGuard: Component mounted, isAuthenticated: null isValidating: true
+
+[1A[2K[BROWSER log] AuthGuard: Not authenticated, validating...
+
+[1A[2K[BROWSER log] AuthGuard: Starting validation, current token: null
+
+[1A[2K[BROWSER log] AuthGuard: Has token in localStorage: false
+
+[1A[2K[BROWSER log] AuthGuard: No token in localStorage, checking for session cookie...
+
+[1A[2K[BROWSER log] AuthGuard: Component mounted, isAuthenticated: false isValidating: false
+
+[1A[2K[BROWSER log] AuthGuard: State already determined (isAuthenticated: false), skipping validation
+
+[1A[2K[BROWSER log] AuthForm: Attempting registration for user: jordanxnbxu2
+
+[1A[2K[BROWSER log] AuthForm: Registration response: {success: true, data: Object}
+
+[1A[2K[BROWSER log] AuthForm: Registration successful, calling onAuthSuccess
+
+[1A[2K[BROWSER log] AuthGuard: Auth success callback called
+
+[1A[2K[BROWSER log] AuthGuard: Current token after auth success: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjEiLCJ1c2VybmFtZSI6ImpvcmRhbnhuYnh1MiIsImVtYWlsIjoiam9yZGFuLm1hcnRpbmV6MTc2NzM5OTQ4NDY3M0B0ZXN0LmNvbSIsImlzQWRtaW4iOmZhbHNlLCJ0eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzY3NDAwMzg1LCJpYXQiOjE3NjczOTk0ODV9.ZXlKaGJHY2lPaUpJVXpJMU5pSXNJblI1Y0NJNklrcFhWQ0o5LmV5SnBaQ0k2SWpFaUxDSjFjMlZ5Ym1GdFpTSTZJbXB2Y21SaGJuaHVZbmgxTWlJc0ltVnRZV2xzSWpvaWFtOXlaR0Z1TG0xaGNuUnBibVY2TVRjMk56TTVPVFE0TkRZM00wQjBaWE4wTG1OdmJTSXNJbWx6UVdSdGFXNGlPbVpoYkhObExDSjBlWEJsSWpvaVlXTmpaWE56SWl3aVpYaHdJam94TnpZM05EQXdNemcxTENKcFlYUWlPakUzTmpjek9UazBPRFY5Lk44bUsyeFI5cVc0ZVQ2eVUzb1A3c0ExZEY1Z0g4akwwY1Y5Yk02blE0d0U3clkydEk1dU8zcEE4c0QxZkc2aEo=
+
+[1A[2K[BROWSER log] AuthGuard: Updating Zustand store after auth success: {id: 1, username: jordanxnbxu2, email: jordan.martinez1767399484673@test.com, isAdmin: false, characterLevel: 10}
+
+[1A[2K[BROWSER log] AuthGuard: Component mounted, isAuthenticated: true isValidating: false
+
+[1A[2K[BROWSER log] AuthGuard: State already determined (isAuthenticated: true), skipping validation
+
+[1A[2K[E2E] registration successful for jordanxnbxu2, token length: 642
+
+[1A[2K✅ All test data cleaned up
+
+[1A[2K[2/1] (retries) [chromium] › tests/perks-management.spec.ts:32:7 › Perks Management E2E › should display perks manager page (retry #1)
+[1A[2K[BROWSER log] ApiService initialized with baseURL: /api authBaseURL: /api envUrl: undefined
+
+[1A[2K[BROWSER log] ApiService: isMockEnabled = true {viteTestFlag: false, nodeEnvTest: false, viteEnvTest: false, urlTestMode: true, storageTestMode: true}
+
+[1A[2K[BROWSER log] AuthGuard: Component mounted, isAuthenticated: null isValidating: true
+
+[1A[2K[BROWSER log] AuthGuard: Not authenticated, validating...
+
+[1A[2K[BROWSER log] AuthGuard: Starting validation, current token: null
+
+[1A[2K[BROWSER log] AuthGuard: Has token in localStorage: false
+
+[1A[2K[BROWSER log] AuthGuard: No token in localStorage, checking for session cookie...
+
+[1A[2K[BROWSER log] AuthGuard: Component mounted, isAuthenticated: null isValidating: true
+
+[1A[2K[BROWSER log] AuthGuard: Not authenticated, validating...
+
+[1A[2K[BROWSER log] AuthGuard: Starting validation, current token: null
+
+[1A[2K[BROWSER log] AuthGuard: Has token in localStorage: false
+
+[1A[2K[BROWSER log] AuthGuard: No token in localStorage, checking for session cookie...
+
+[1A[2K[BROWSER log] AuthGuard: Component mounted, isAuthenticated: false isValidating: false
+
+[1A[2K[BROWSER log] AuthGuard: State already determined (isAuthenticated: false), skipping validation
+
+[1A[2K[BROWSER log] ApiService initialized with baseURL: /api authBaseURL: /api envUrl: undefined
+
+[1A[2K[BROWSER log] ApiService: isMockEnabled = true {viteTestFlag: false, nodeEnvTest: false, viteEnvTest: false, urlTestMode: true, storageTestMode: true}
+
+[1A[2K[BROWSER log] AuthGuard: Component mounted, isAuthenticated: null isValidating: true
+
+[1A[2K[BROWSER log] AuthGuard: Not authenticated, validating...
+
+[1A[2K[BROWSER log] AuthGuard: Starting validation, current token: null
+
+[1A[2K[BROWSER log] AuthGuard: Has token in localStorage: false
+
+[1A[2K[BROWSER log] AuthGuard: No token in localStorage, checking for session cookie...
+
+[1A[2K[BROWSER log] AuthGuard: Component mounted, isAuthenticated: null isValidating: true
+
+[1A[2K[BROWSER log] AuthGuard: Not authenticated, validating...
+
+[1A[2K[BROWSER log] AuthGuard: Starting validation, current token: null
+
+[1A[2K[BROWSER log] AuthGuard: Has token in localStorage: false
+
+[1A[2K[BROWSER log] AuthGuard: No token in localStorage, checking for session cookie...
+
+[1A[2K[BROWSER log] AuthGuard: Component mounted, isAuthenticated: false isValidating: false
+
+[1A[2K[BROWSER log] AuthGuard: State already determined (isAuthenticated: false), skipping validation
+
+[1A[2K[BROWSER log] AuthForm: Attempting registration for user: dakotaunnopm
+
+[1A[2K[BROWSER log] AuthForm: Registration response: {success: true, data: Object}
+
+[1A[2K[BROWSER log] AuthForm: Registration successful, calling onAuthSuccess
+
+[1A[2K[BROWSER log] AuthGuard: Auth success callback called
+
+[1A[2K[BROWSER log] AuthGuard: Current token after auth success: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjEiLCJ1c2VybmFtZSI6ImRha290YXVubm9wbSIsImVtYWlsIjoiZGFrb3RhLmdvbnphbGV6MTc2NzM5OTUwMjcwNUBkZW1vLm9yZyIsImlzQWRtaW4iOmZhbHNlLCJ0eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzY3NDAwNDAzLCJpYXQiOjE3NjczOTk1MDN9.ZXlKaGJHY2lPaUpJVXpJMU5pSXNJblI1Y0NJNklrcFhWQ0o5LmV5SnBaQ0k2SWpFaUxDSjFjMlZ5Ym1GdFpTSTZJbVJoYTI5MFlYVnVibTl3YlNJc0ltVnRZV2xzSWpvaVpHRnJiM1JoTG1kdmJucGhiR1Y2TVRjMk56TTVPVFV3TWpjd05VQmtaVzF2TG05eVp5SXNJbWx6UVdSdGFXNGlPbVpoYkhObExDSjBlWEJsSWpvaVlXTmpaWE56SWl3aVpYaHdJam94TnpZM05EQXdOREF6TENKcFlYUWlPakUzTmpjek9UazFNRE45Lk44bUsyeFI5cVc0ZVQ2eVUzb1A3c0ExZEY1Z0g4akwwY1Y5Yk02blE0d0U3clkydEk1dU8zcEE4c0QxZkc2aEo=
+
+[1A[2K[BROWSER log] AuthGuard: Updating Zustand store after auth success: {id: 1, username: dakotaunnopm, email: dakota.gonzalez1767399502705@demo.org, isAdmin: false, characterLevel: 10}
+
+[1A[2K[BROWSER log] AuthGuard: Component mounted, isAuthenticated: true isValidating: false
+
+[1A[2K[BROWSER log] AuthGuard: State already determined (isAuthenticated: true), skipping validation
+
+[1A[2K[E2E] registration successful for dakotaunnopm, token length: 642
+
+[1A[2K✅ All test data cleaned up
+
+[1A[2K  1) [chromium] › tests/perks-management.spec.ts:32:7 › Perks Management E2E › should display perks manager page 
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m()[22m failed
+
+    Locator:  getByRole('button', { name: /^Perks$/i })
+    Expected: visible
+    Received: <element(s) not found>
+    Timeout:  15000ms
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 15000ms[22m
+    [2m  - waiting for getByRole('button', { name: /^Perks$/i })[22m
+
+
+      41 |     if (!(await perksHeader.isVisible())) {
+      42 |       const perksButton = page.getByRole('button', { name: /^Perks$/i });
+    > 43 |       await expect(perksButton).toBeVisible();
+         |                                 ^
+      44 |       await perksButton.click();
+      45 |     }
+      46 |
+        at /home/patrick/projects/l2p/frontend/e2e/tests/perks-management.spec.ts:43:33
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/perks-management-Perks-Man-86778--display-perks-manager-page-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/perks-management-Perks-Man-86778--display-perks-manager-page-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/perks-management-Perks-Man-86778--display-perks-manager-page-chromium/error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m()[22m failed
+
+    Locator:  getByRole('button', { name: /^Perks$/i })
+    Expected: visible
+    Received: <element(s) not found>
+    Timeout:  15000ms
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 15000ms[22m
+    [2m  - waiting for getByRole('button', { name: /^Perks$/i })[22m
+
+
+      41 |     if (!(await perksHeader.isVisible())) {
+      42 |       const perksButton = page.getByRole('button', { name: /^Perks$/i });
+    > 43 |       await expect(perksButton).toBeVisible();
+         |                                 ^
+      44 |       await perksButton.click();
+      45 |     }
+      46 |
+        at /home/patrick/projects/l2p/frontend/e2e/tests/perks-management.spec.ts:43:33
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/perks-management-Perks-Man-86778--display-perks-manager-page-chromium-retry1/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/perks-management-Perks-Man-86778--display-perks-manager-page-chromium-retry1/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/perks-management-Perks-Man-86778--display-perks-manager-page-chromium-retry1/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/perks-management-Perks-Man-86778--display-perks-manager-page-chromium-retry1/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/perks-management-Perks-Man-86778--display-perks-manager-page-chromium-retry1/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+[1A[2K  1 failed
+    [chromium] › tests/perks-management.spec.ts:32:7 › Perks Management E2E › should display perks manager page 
+
+[36m  Serving HTML report at http://localhost:44913. Press Ctrl+C to quit.[39m

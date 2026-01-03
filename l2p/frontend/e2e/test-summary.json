@@ -1,10 +1,10 @@
 {
-  "timestamp": "2025-11-14T19:46:23.004Z",
-  "duration": 779980.7829999999,
+  "timestamp": "2026-01-02T18:55:02.289Z",
+  "duration": 20630.808,
   "total": 0,
   "passed": 0,
   "failed": 0,
-  "skipped": 21,
+  "skipped": 8,
   "flaky": 0,
   "projects": [
     {
@@ -15,12 +15,6 @@
     },
     {
       "name": "smoke/basic-functionality-mock.spec.ts",
-      "tests": 0,
-      "passed": 0,
-      "failed": 0
-    },
-    {
-      "name": "smoke/basic-functionality.spec.ts",
       "tests": 0,
       "passed": 0,
       "failed": 0

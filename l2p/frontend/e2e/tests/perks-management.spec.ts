@@ -7,48 +7,62 @@ test.describe('Perks Management E2E', () => {
   const dataManager = TestDataManager.getInstance();
   let userCredentials: UserData;
 
-  test.beforeAll(async ({ browser }) => {
-    const context = await browser.newContext();
-    const page = await context.newPage();
-    
-    userCredentials = await TestHelpers.registerUser(page, {
-      character: 'student'
-    }, {
-      timeout: 20000
-    });
-    
-    await context.close();
-  });
-
-  test.afterAll(async () => {
+  test.beforeEach(async ({ page }) => {
     await dataManager.cleanupAll();
   });
 
   test.beforeEach(async ({ page }) => {
-    await TestHelpers.loginUser(page, userCredentials);
+    // Pipe browser logs to terminal
+    page.on('console', msg => {
+      console.log(`[BROWSER ${msg.type()}] ${msg.text()}`);
+    });
+
+    // In mock mode, we need to register the user in the current context/session
+    // because localStorage/sessionStorage are fresh for each test
+    const registration = await TestHelpers.registerUser(page, {
+      character: 'student'
+    });
+    userCredentials = registration.user;
   });
 
   test('should display perks manager page', async ({ page }) => {
-    // Navigate to perks or a page that shows the perks manager
-    await page.goto('/profile'); // Assuming perks manager is accessible from profile
-    
-    // Look for perks manager component or navigate to it
-    const perksSection = page.getByText('Perks & Customization');
-    if (await perksSection.isVisible()) {
-      // Already visible on profile page
-    } else {
-      // Try to find and click perks tab/link
-      await page.getByText('Perks').click();
+    // Navigate to profile page via UI to avoid full page reload issues
+    console.log('[E2E TEST] Clicking profile link');
+    await page.click('[data-testid="profile-link"]');
+    console.log('[E2E TEST] Current URL after click:', page.url());
+
+    // Fallback if not on profile
+    if (!page.url().includes('profile')) {
+      console.log('[E2E TEST] Not on profile, forcing goto /profile');
+      await page.goto('/profile');
     }
 
-    // Verify perks manager is loaded
-    await expect(page.getByText('🎨 Perks & Customization')).toBeVisible();
-    await expect(page.getByText('Unlock and customize your gaming experience!')).toBeVisible();
+    // Ensure we are on the profile page
+    await expect(page).toHaveURL(/.*profile/);
+
+    // Look for perks manager button and click it if perks section is not visible
+    const perksHeader = page.getByRole('heading', { name: /Perks & Customization/i });
+    if (!(await perksHeader.isVisible())) {
+      console.log('[E2E TEST] Perks section not visible, clicking Perks button');
+      const perksButton = page.locator('[data-testid="perks-button"]');
+      console.log('[E2E TEST] Waiting for perks button to be visible. Current URL:', page.url());
+      await expect(perksButton).toBeVisible({ timeout: 10000 });
+      console.log('[E2E TEST] Perks button is visible, clicking it');
+      await perksButton.click();
+    }
+
+    // Verify perks manager is loaded with all elements
+    await expect(page.getByText(/Perks & Customization/i)).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText(/Unlock and customize your gaming experience/i)).toBeVisible();
+
+    // Verify tabs are present
+    await expect(page.getByRole('button', { name: /All Perks/i })).toBeVisible();
+    await expect(page.getByRole('button', { name: /Active/i })).toBeVisible();
   });
 
   test('should show current loadout', async ({ page }) => {
     await page.goto('/profile');
-    
+
     // Navigate to perks if not already visible
     const perksHeading = page.getByText('🎨 Perks & Customization');
     if (!(await perksHeading.isVisible())) {
@@ -57,7 +71,7 @@ test.describe('Perks Management E2E', () => {
 
     // Check that current loadout section is visible
     await expect(page.getByText('Current Loadout')).toBeVisible();
-    
+
     // Should show at least avatar and theme
     await expect(page.getByText('Avatar:')).toBeVisible();
     await expect(page.getByText('Theme:')).toBeVisible();
@@ -65,7 +79,7 @@ test.describe('Perks Management E2E', () => {
 
   test('should filter perks by category', async ({ page }) => {
     await page.goto('/profile');
-    
+
     // Navigate to perks
     const perksHeading = page.getByText('🎨 Perks & Customization');
     if (!(await perksHeading.isVisible())) {
@@ -79,7 +93,7 @@ test.describe('Perks Management E2E', () => {
     const filterTabs = [
       'All Perks',
       'Unlocked',
-      'Active', 
+      'Active',
       'Cosmetic',
       'Locked'
     ];
@@ -88,10 +102,10 @@ test.describe('Perks Management E2E', () => {
       const tab = page.getByRole('button', { name: new RegExp(tabName, 'i') });
       if (await tab.isVisible()) {
         await tab.click();
-        
+
         // Wait for filter to be applied
         await page.waitForTimeout(500);
-        
+
         // Verify tab is active
         await expect(tab).toHaveClass(/active/);
       }
@@ -100,7 +114,7 @@ test.describe('Perks Management E2E', () => {
 
   test('should display perk cards with correct information', async ({ page }) => {
     await page.goto('/profile');
-    
+
     // Navigate to perks
     const perksHeading = page.getByText('🎨 Perks & Customization');
     if (!(await perksHeading.isVisible())) {
@@ -112,7 +126,7 @@ test.describe('Perks Management E2E', () => {
 
     const perkCards = page.locator('.perk-card');
     const cardCount = await perkCards.count();
-    
+
     expect(cardCount).toBeGreaterThan(0);
 
     // Check first perk card has required elements
@@ -126,7 +140,7 @@ test.describe('Perks Management E2E', () => {
 
   test('should open perk details when clicking on available perk', async ({ page }) => {
     await page.goto('/profile');
-    
+
     // Navigate to perks
     const perksHeading = page.getByText('🎨 Perks & Customization');
     if (!(await perksHeading.isVisible())) {
@@ -135,7 +149,7 @@ test.describe('Perks Management E2E', () => {
 
     // Wait for perks and find an available perk (unlocked but not locked)
     await page.waitForSelector('.perk-card', { timeout: 10000 });
-    
+
     // Look for unlocked perks filter first to find available perks
     const unlockedTab = page.getByRole('button', { name: /Unlocked/i });
     if (await unlockedTab.isVisible()) {
@@ -145,7 +159,7 @@ test.describe('Perks Management E2E', () => {
 
     // Find a perk card that's available (not locked)
     const availablePerk = page.locator('.perk-card').filter({ hasText: '✨ Available' }).first();
-    
+
     if (await availablePerk.isVisible()) {
       await availablePerk.click();
 
@@ -154,7 +168,7 @@ test.describe('Perks Management E2E', () => {
       await expect(page.getByText('Type:')).toBeVisible();
       await expect(page.getByText('Required Level:')).toBeVisible();
       await expect(page.getByText('Description:')).toBeVisible();
-      
+
       // Should have activate button for available perks
       const activateButton = page.getByRole('button', { name: 'Activate Perk' });
       if (await activateButton.isVisible()) {
@@ -169,7 +183,7 @@ test.describe('Perks Management E2E', () => {
 
   test('should activate a perk', async ({ page }) => {
     await page.goto('/profile');
-    
+
     // Navigate to perks
     const perksHeading = page.getByText('🎨 Perks & Customization');
     if (!(await perksHeading.isVisible())) {
@@ -178,7 +192,7 @@ test.describe('Perks Management E2E', () => {
 
     // Find an unlocked but inactive perk
     await page.waitForSelector('.perk-card', { timeout: 10000 });
-    
+
     const unlockedTab = page.getByRole('button', { name: /Unlocked/i });
     if (await unlockedTab.isVisible()) {
       await unlockedTab.click();
@@ -186,11 +200,11 @@ test.describe('Perks Management E2E', () => {
     }
 
     const availablePerk = page.locator('.perk-card').filter({ hasText: '✨ Available' }).first();
-    
+
     if (await availablePerk.isVisible()) {
       // Get perk name for verification
       const perkTitle = await availablePerk.locator('.perk-title').textContent();
-      
+
       await availablePerk.click();
       await expect(page.locator('.perk-details')).toBeVisible();
 
@@ -218,7 +232,7 @@ test.describe('Perks Management E2E', () => {
 
   test('should deactivate an active perk', async ({ page }) => {
     await page.goto('/profile');
-    
+
     // Navigate to perks
     const perksHeading = page.getByText('🎨 Perks & Customization');
     if (!(await perksHeading.isVisible())) {
@@ -227,17 +241,17 @@ test.describe('Perks Management E2E', () => {
 
     // Look for active perks
     await page.waitForSelector('.perk-card', { timeout: 10000 });
-    
+
     const activeTab = page.getByRole('button', { name: /Active/i });
     await activeTab.click();
     await page.waitForTimeout(500);
 
     // Find an active perk
     const activePerk = page.locator('.perk-card').filter({ hasText: '🎯 Active' }).first();
-    
+
     if (await activePerk.isVisible()) {
       const perkTitle = await activePerk.locator('.perk-title').textContent();
-      
+
       await activePerk.click();
       await expect(page.locator('.perk-details')).toBeVisible();
 
@@ -251,7 +265,7 @@ test.describe('Perks Management E2E', () => {
 
         // Verify perk is no longer in active list
         await page.waitForTimeout(1000);
-        
+
         if (perkTitle) {
           // Should no longer be visible in active filter
           await expect(page.getByText(perkTitle)).not.toBeVisible();
@@ -262,7 +276,7 @@ test.describe('Perks Management E2E', () => {
 
   test('should show locked perks with level requirements', async ({ page }) => {
     await page.goto('/profile');
-    
+
     // Navigate to perks
     const perksHeading = page.getByText('🎨 Perks & Customization');
     if (!(await perksHeading.isVisible())) {
@@ -271,7 +285,7 @@ test.describe('Perks Management E2E', () => {
 
     // Filter to locked perks
     await page.waitForSelector('.perk-card', { timeout: 10000 });
-    
+
     const lockedTab = page.getByRole('button', { name: /Locked/i });
     if (await lockedTab.isVisible()) {
       await lockedTab.click();
@@ -280,14 +294,14 @@ test.describe('Perks Management E2E', () => {
       // Should show locked perks with lock icon
       const lockedPerks = page.locator('.perk-card').filter({ hasText: '🔒 Locked' });
       const lockedCount = await lockedPerks.count();
-      
+
       if (lockedCount > 0) {
         const firstLockedPerk = lockedPerks.first();
-        
+
         // Should show level requirement
         await expect(firstLockedPerk.locator('.perk-level')).toBeVisible();
         await expect(firstLockedPerk.locator('.status.locked')).toBeVisible();
-        
+
         // Clicking on locked perk should not open details (non-interactive)
         await firstLockedPerk.click();
         await expect(page.locator('.perk-details')).not.toBeVisible();
@@ -297,7 +311,7 @@ test.describe('Perks Management E2E', () => {
 
   test('should show perk configuration options for different perk types', async ({ page }) => {
     await page.goto('/profile');
-    
+
     // Navigate to perks
     const perksHeading = page.getByText('🎨 Perks & Customization');
     if (!(await perksHeading.isVisible())) {
@@ -308,7 +322,7 @@ test.describe('Perks Management E2E', () => {
 
     // Look for different perk types and test their configuration options
     const perkTypes = ['avatar', 'badge', 'theme'];
-    
+
     for (const perkType of perkTypes) {
       // Filter to find specific perk type
       const unlockedTab = page.getByRole('button', { name: /Unlocked/i });
@@ -317,7 +331,7 @@ test.describe('Perks Management E2E', () => {
 
       // Look for perk of this type
       const typePerk = page.locator('.perk-card').filter({ hasText: perkType }).first();
-      
+
       if (await typePerk.isVisible()) {
         await typePerk.click();
         await expect(page.locator('.perk-details')).toBeVisible();
@@ -327,26 +341,26 @@ test.describe('Perks Management E2E', () => {
           const avatarConfig = page.getByText('Select Avatar:');
           if (await avatarConfig.isVisible()) {
             await expect(page.locator('.avatar-grid')).toBeVisible();
-            await expect(page.locator('.avatar-option')).toHaveCount.greaterThan(0);
+            expect(await page.locator('.avatar-option').count()).toBeGreaterThan(0);
           }
         } else if (perkType === 'badge') {
           const badgeConfig = page.getByText('Select Badge Color:');
           if (await badgeConfig.isVisible()) {
             await expect(page.locator('.badge-colors')).toBeVisible();
-            await expect(page.locator('.badge-option')).toHaveCount.greaterThan(0);
+            expect(await page.locator('.badge-option').count()).toBeGreaterThan(0);
           }
         } else if (perkType === 'theme') {
           const themeConfig = page.getByText('Select Theme:');
           if (await themeConfig.isVisible()) {
             await expect(page.locator('.theme-grid')).toBeVisible();
-            await expect(page.locator('.theme-option')).toHaveCount.greaterThan(0);
+            expect(await page.locator('.theme-option').count()).toBeGreaterThan(0);
           }
         }
 
         // Close the modal
         await page.getByText('×').click();
         await expect(page.locator('.perk-details')).not.toBeVisible();
-        
+
         break; // Found and tested this type, move to next
       }
     }
@@ -354,7 +368,7 @@ test.describe('Perks Management E2E', () => {
 
   test('should handle API errors gracefully', async ({ page }) => {
     await page.goto('/profile');
-    
+
     // Navigate to perks
     const perksHeading = page.getByText('🎨 Perks & Customization');
     if (!(await perksHeading.isVisible())) {
@@ -363,7 +377,7 @@ test.describe('Perks Management E2E', () => {
 
     // Check for error state or retry functionality
     // This would typically require mocking API responses or network failures
-    
+
     // Look for loading state first
     const loadingText = page.getByText('Loading your perks...');
     if (await loadingText.isVisible({ timeout: 2000 })) {
@@ -374,13 +388,13 @@ test.describe('Perks Management E2E', () => {
     // If there's an error state, it should show error message and retry button
     const errorText = page.getByText(/Error:/);
     const retryButton = page.getByText('Retry');
-    
+
     if (await errorText.isVisible()) {
       await expect(retryButton).toBeVisible();
-      
+
       // Test retry functionality
       await retryButton.click();
-      
+
       // Should attempt to reload
       await expect(page.getByText('Loading your perks...')).toBeVisible({ timeout: 5000 });
     }
@@ -388,7 +402,7 @@ test.describe('Perks Management E2E', () => {
 
   test('should update current loadout when perk is activated', async ({ page }) => {
     await page.goto('/profile');
-    
+
     // Navigate to perks
     const perksHeading = page.getByText('🎨 Perks & Customization');
     if (!(await perksHeading.isVisible())) {
@@ -400,7 +414,7 @@ test.describe('Perks Management E2E', () => {
     // Get current loadout info before activation
     const loadoutSection = page.locator('.current-loadout');
     await expect(loadoutSection).toBeVisible();
-    
+
     const currentAvatar = await loadoutSection.locator(':text("Avatar:")').locator('+ *').textContent();
     const currentTheme = await loadoutSection.locator(':text("Theme:")').locator('+ *').textContent();
 
@@ -411,7 +425,7 @@ test.describe('Perks Management E2E', () => {
 
     // Look for avatar or theme perk
     const avatarPerk = page.locator('.perk-card').filter({ hasText: 'avatar' }).first();
-    
+
     if (await avatarPerk.isVisible()) {
       await avatarPerk.click();
       await expect(page.locator('.perk-details')).toBeVisible();
@@ -421,18 +435,18 @@ test.describe('Perks Management E2E', () => {
       if (await avatarConfig.isVisible()) {
         const avatarOptions = page.locator('.avatar-option');
         const optionCount = await avatarOptions.count();
-        
+
         if (optionCount > 0) {
           // Click the first available avatar option
           await avatarOptions.first().click();
-          
+
           // Wait for activation and modal to close
           await expect(page.locator('.perk-details')).not.toBeVisible({ timeout: 5000 });
-          
+
           // Check if loadout updated (avatar might have changed)
           await page.waitForTimeout(1000);
           const newAvatar = await loadoutSection.locator(':text("Avatar:")').locator('+ *').textContent();
-          
+
           // Avatar might have changed (this is a weak assertion since we don't know if it actually changed)
           expect(typeof newAvatar).toBe('string');
         }

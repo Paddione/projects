@@ -1,0 +1,4 @@
+
+> learn2play-backend@1.0.0 test:unit
+> NODE_OPTIONS="--experimental-vm-modules --max-old-space-size=8192" TEST_ENVIRONMENT=local TEST_TYPE=unit npx jest --config=jest.config.js --testPathIgnorePatterns=GameService\.test\.ts --testPathIgnorePatterns=GameService\.timers\.test\.ts --testPathIgnorePatterns=CleanupService\.enhanced\.test\.ts --testPathIgnorePatterns=TimerTestUtilities\.example\.test\.ts --testPathIgnorePatterns=etag\.test\.ts --testPathIgnorePatterns=FileProcessingService\.test\.ts
+

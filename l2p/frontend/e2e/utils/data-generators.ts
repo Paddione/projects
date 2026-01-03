@@ -59,11 +59,11 @@ export class TestDataGenerator {
   static generateUser(overrides: Partial<UserData> = {}): UserData {
     const timestamp = Date.now();
     const randomId = Math.random().toString(36).substring(2, 8);
-    
+
     const firstName = this.randomChoice(this.FIRST_NAMES);
     const lastName = this.randomChoice(this.LAST_NAMES);
     const domain = this.randomChoice(this.DOMAINS);
-    
+
     const baseUser: UserData = {
       username: `${firstName.toLowerCase()}${randomId}`,
       email: `${firstName.toLowerCase()}.${lastName.toLowerCase()}${timestamp}@${domain}`,
@@ -106,7 +106,7 @@ export class TestDataGenerator {
   static generateQuestion(overrides: Partial<QuestionData> = {}): QuestionData {
     const categories = this.QUESTION_CATEGORIES;
     const difficulties: Array<'easy' | 'medium' | 'hard'> = ['easy', 'medium', 'hard'];
-    
+
     const baseQuestion: QuestionData = {
       question: `What is the test question ${Date.now()}?`,
       options: [
@@ -128,7 +128,7 @@ export class TestDataGenerator {
    * Generate multiple questions for a question set
    */
   static generateQuestionSet(count: number, category?: string): QuestionData[] {
-    return Array.from({ length: count }, (_, index) => 
+    return Array.from({ length: count }, (_, index) =>
       this.generateQuestion({
         question: `Test question ${index + 1} for ${category || 'general'} category`,
         category: category || this.randomChoice(this.QUESTION_CATEGORIES)
@@ -144,21 +144,21 @@ export class TestDataGenerator {
     const lowercase = 'abcdefghijklmnopqrstuvwxyz';
     const numbers = '0123456789';
     const symbols = '!@#$%^&*';
-    
+
     const allChars = uppercase + lowercase + numbers + symbols;
-    
+
     // Ensure at least one character from each category
     let password = '';
-    password += this.randomChoice([...uppercase]);
-    password += this.randomChoice([...lowercase]);
-    password += this.randomChoice([...numbers]);
-    password += this.randomChoice([...symbols]);
-    
+    password += this.randomChoice(uppercase.split(''));
+    password += this.randomChoice(lowercase.split(''));
+    password += this.randomChoice(numbers.split(''));
+    password += this.randomChoice(symbols.split(''));
+
     // Fill the rest randomly
     for (let i = 4; i < length; i++) {
-      password += this.randomChoice([...allChars]);
+      password += this.randomChoice(allChars.split(''));
     }
-    
+
     // Shuffle the password
     return password.split('').sort(() => Math.random() - 0.5).join('');
   }
@@ -168,7 +168,7 @@ export class TestDataGenerator {
    */
   static generateLobbyCode(): string {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    return Array.from({ length: 6 }, () => this.randomChoice([...chars])).join('');
+    return Array.from({ length: 6 }, () => this.randomChoice(chars.split(''))).join('');
   }
 
   /**
@@ -201,7 +201,7 @@ export class TestDataGenerator {
   } {
     const timestamp = Date.now();
     const content = `Test file content generated at ${new Date().toISOString()}`;
-    
+
     return {
       name: `test-file-${timestamp}.${type}`,
       content,
@@ -316,7 +316,7 @@ export class TestDataGenerator {
   /**
    * Generate test data for specific scenarios
    */
-  static generateScenarioData(scenario: string): 
+  static generateScenarioData(scenario: string):
     | { players: ReturnType<typeof this.generateUsers>; lobby: ReturnType<typeof this.generateLobby>; questions: ReturnType<typeof this.generateQuestionSet> }
     | { users: ReturnType<typeof this.generateUsers>; concurrent_requests: number; duration_minutes: number; expected_response_time: number }
     | ReturnType<typeof this.generateAccessibilityTestData>
@@ -329,7 +329,7 @@ export class TestDataGenerator {
           lobby: this.generateLobby({ maxPlayers: 4, questionCount: 10 }),
           questions: this.generateQuestionSet(10)
         };
-        
+
       case 'performance-test':
         return {
           users: this.generateUsers(100),
@@ -337,13 +337,13 @@ export class TestDataGenerator {
           duration_minutes: 5,
           expected_response_time: 500
         };
-        
+
       case 'accessibility-test':
         return this.generateAccessibilityTestData();
-        
+
       case 'error-handling':
         return this.generateErrorScenarios();
-        
+
       default:
         return {};
     }

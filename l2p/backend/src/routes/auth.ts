@@ -608,6 +608,40 @@ router.get('/validate', authenticate, async (req: Request, res: Response): Promi
 });
 
 /**
+ * GET /api/auth/verify
+ * Verify current token (alias for /validate)
+ */
+router.get('/verify', authenticate, async (req: Request, res: Response): Promise<void> => {
+  if (hasCentralAuth) {
+    const proxied = await proxyAuthService(req, res, {
+      path: '/auth/verify',
+      method: 'GET',
+      includeAuth: true
+    });
+    if (proxied) {
+      return;
+    }
+  }
+
+  if (!req.user) {
+    res.status(401).json({
+      error: 'Authentication required',
+      message: 'User not authenticated'
+    });
+    return;
+  }
+
+  res.status(200).json({
+    valid: true,
+    user: {
+      userId: req.user.userId,
+      username: req.user.username,
+      email: req.user.email
+    }
+  });
+});
+
+/**
  * POST /api/auth/verify-email
  * Verify email address with token
  */

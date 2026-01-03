@@ -121,16 +121,13 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
   }
 
   const validateAuthentication = async () => {
-    console.log('AuthGuard: Starting validation, current token:', apiService.getToken())
     setIsValidating(true)
 
     try {
       // First check if we have a token in localStorage
       const hasToken = apiService.isAuthenticated()
-      console.log('AuthGuard: Has token in localStorage:', hasToken)
 
       if (!hasToken) {
-        // Even if we don't have a token in localStorage, we might have a session cookie
         console.log('AuthGuard: No token in localStorage, checking for session cookie...')
         const meResponse = await apiService.getCurrentUserFromServer()
 
@@ -156,25 +153,30 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
 
       // If we have a token in localStorage, validate it
       const response = await apiService.validateToken()
-      console.log('AuthGuard: Validation response:', response)
-      const isValid = !!(response.success && response.data?.valid)
+      console.log('AuthGuard: Validation result:', response)
+      const isValid = !!(response.success && (response.data as any)?.valid)
       setIsAuthenticated(isValid)
 
       if (isValid) {
-        // Update Zustand store with user data and token
         const userData = apiService.getCurrentUser()
         const token = apiService.getToken()
 
         if (userData && token) {
-          console.log('AuthGuard: Updating Zustand store with user data:', userData)
-          setUser({
-            id: String(userData.id),
-            username: userData.username,
-            email: userData.email,
-            character: (userData as any).selectedCharacter || (userData as any).selected_character || 'student',
-            level: (userData as any).characterLevel || (userData as any).character_level || 1
-          })
-          setToken(token)
+          const currentStoreUser = useAuthStore.getState().user;
+          const currentStoreToken = useAuthStore.getState().token;
+
+          if (!currentStoreUser || currentStoreUser.id !== String(userData.id) || currentStoreToken !== token) {
+            setUser({
+              id: String(userData.id),
+              username: userData.username,
+              email: userData.email,
+              character: (userData as any).selectedCharacter || (userData as any).selected_character || 'student',
+              level: (userData as any).characterLevel || (userData as any).character_level || 1
+            })
+            setToken(token)
+          } else {
+            console.log('AuthGuard: Store already up to date, skipping update')
+          }
         }
       } else {
         console.log('AuthGuard: Validation failed, clearing auth')

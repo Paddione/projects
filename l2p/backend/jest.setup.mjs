@@ -1,5 +1,16 @@
 // Jest setup file - globals are injected automatically with injectGlobals: true
 
+// Load .env.test file for test environment
+import { config } from 'dotenv';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// Load test environment variables
+config({ path: join(__dirname, '.env.test') });
+
 // Override environment variables for unit tests without clobbering explicit config
 process.env.NODE_ENV = process.env.NODE_ENV || 'test';
 process.env.TEST_ENVIRONMENT = process.env.TEST_ENVIRONMENT || 'local';

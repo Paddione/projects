@@ -35,8 +35,8 @@ export default defineConfig({
   ],
   webServer: {
     command: 'npm --prefix .. run dev -- --host 127.0.0.1 --port 3000',
-    url: process.env.BASE_URL || 'http://localhost:3000',
-    reuseExistingServer: !process.env.CI,
+    url: process.env.BASE_URL || 'http://127.0.0.1:3000',
+    reuseExistingServer: true,
     timeout: 120000,
     env: {
       ...process.env,
@@ -46,7 +46,7 @@ export default defineConfig({
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Base URL to use in actions like `await page.goto('/')`. */
-    baseURL: process.env.BASE_URL || 'http://localhost:3000',
+    baseURL: process.env.BASE_URL || 'http://127.0.0.1:3000',
     /* Extra HTTP headers to be sent with every request */
     extraHTTPHeaders: {
       'Accept': 'application/json',

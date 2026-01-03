@@ -96,7 +96,8 @@ const BADGE_STYLE_OPTIONS = [
 ];
 
 const PerksManager: React.FC = () => {
-  const { user, token } = useAuthStore();
+  const user = useAuthStore(state => state.user);
+  const token = useAuthStore(state => state.token);
   const [perksData, setPerksData] = useState<PerksData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -501,8 +502,11 @@ const PerksManager: React.FC = () => {
           {!isLocked && !userPerk.is_unlocked && (
             <span className="status unlockable">⚡ Can Unlock</span>
           )}
-          {userPerk.is_unlocked && !isActive && perk.type !== 'badge' && (
+          {userPerk.is_unlocked && !isActive && perk.type !== 'badge' && canUse && (
             <span className="status unlocked">✨ Available</span>
+          )}
+          {userPerk.is_unlocked && !isActive && perk.type !== 'badge' && !canUse && (
+            <span className="status locked">🔒 Level {perk.level_required} Req.</span>
           )}
           {userPerk.is_unlocked && !isActive && perk.type === 'badge' && (
             <span className="status unlocked">🏆 Available</span>

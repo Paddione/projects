@@ -20,7 +20,6 @@ import { useSettingsStore } from './stores/settingsStore'
 import { useEffect, useState } from 'react'
 import styles from './styles/App.module.css'
 
-
 // Separate AppContent component for easier testing
 export function AppContent() {
   const [isHydrated, setIsHydrated] = useState(false)
@@ -29,7 +28,16 @@ export function AppContent() {
   const isTestEnvironment = (() => {
     // Handle Jest test environment (process is only available in Node.js)
     if (typeof process !== 'undefined' && process.env['NODE_ENV'] === 'test') return true;
-    
+
+    // Check for Vite environment variable directly (if available)
+    try {
+      // Use eval to avoid Jest parsing import.meta at compile time
+      const importMeta = eval('typeof import !== "undefined" ? import.meta : undefined');
+      if (importMeta?.env?.VITE_TEST_MODE === 'true') return true;
+    } catch {
+      // ignore if import.meta is not accessible
+    }
+
     // Handle Vite environment variables safely
     try {
       // Check if running in browser with Vite
@@ -37,15 +45,15 @@ export function AppContent() {
         // Check for test mode via URL params or hostname
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.get('test') === 'true') return true;
-        
+
         // Development environment check
-        if (window.location.hostname === 'localhost' && 
-            window.location.port === '3000') return true;
+        if ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') &&
+          window.location.port === '3000') return true;
       }
     } catch {
       // Fallback for any environment issues
     }
-    
+
     return false;
   })();
 
@@ -62,7 +70,7 @@ export function AppContent() {
       const timer = setTimeout(() => {
         setIsHydrated(true)
       }, 100)
-      
+
       return () => clearTimeout(timer)
     }
   }, [theme, isTestEnvironment])

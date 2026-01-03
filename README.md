@@ -311,11 +311,9 @@ This section is the source of truth for active tasks and consolidated checklists
 
 #### TASK-017: Auth deployment checklist
 - [ ] Step 1: Google OAuth configuration (add production redirect URI)
-- [ ] Step 2: Nginx Proxy Manager setup for auth.korczewski.de
+- [ ] Step 2: Nginx Proxy Manager setup for auth.korczewski.de  !!! We are using traefik now, no nginx!!!
 - [ ] Step 3: Build and deploy auth service
 - [ ] Step 4: Test OAuth flow
-- [ ] Step 5: Security hardening (rotate secrets, strong DB password, NODE_ENV=production)
-- [ ] Step 6: Database migration (optional)
 - [ ] Step 7: Update project integrations (l2p, VideoVault, payment)
 - [ ] Step 8: Final testing checklist
 - [ ] Final testing: health endpoint responds
@@ -333,7 +331,6 @@ This section is the source of truth for active tasks and consolidated checklists
 - [ ] Final testing: CORS works from project domains
 - [ ] Final testing: SSL certificate is valid
 - [ ] Final testing: HTTPS redirect works
-- [ ] Step 9: Monitoring & backup setup (optional)
 - [ ] Step 10: Documentation & handoff (update ALLOWED_ORIGINS + production URLs)
 
 #### TASK-018: vllm Command Center expansion

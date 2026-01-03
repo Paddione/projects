@@ -36,7 +36,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({ onAuthSuccess, onShowPasswor
       lowercase: /(?=.*[a-z])/.test(password),
       uppercase: /(?=.*[A-Z])/.test(password),
       number: /(?=.*\d)/.test(password),
-      special: /(?=.*[@$!%*?&])/.test(password)
+      special: /(?=.*[!@#$%^&*])/.test(password)
     })
   }
 
@@ -181,9 +181,9 @@ export const AuthForm: React.FC<AuthFormProps> = ({ onAuthSuccess, onShowPasswor
     <div className={styles.authContainer}>
       <div className={styles.authCard}>
         <div className={styles.header}>
-          <img 
-            src="/visuals/L2P-Logo.png" 
-            alt="Learn2Play Logo" 
+          <img
+            src="/visuals/L2P-Logo.png"
+            alt="Learn2Play Logo"
             className={styles.logo}
           />
         </div>

@@ -50,11 +50,11 @@ export const ProfilePage: React.FC = () => {
     try {
       setIsLoading(true)
       setError(null)
-      
       const response = await apiService.getCharacterProfile()
       if (response.success && response.data) {
         setProfileData(response.data)
       } else {
+        console.error('ProfilePage: Failed to load profile:', response.error);
         setError(response.error || 'Failed to load profile')
       }
     } catch (err) {
@@ -69,7 +69,7 @@ export const ProfilePage: React.FC = () => {
     try {
       setIsUpdating(true)
       setError(null)
-      
+
       const response = await apiService.updateCharacter(characterId)
       if (response.success && response.data) {
         setProfileData(response.data.characterInfo)
@@ -112,11 +112,11 @@ export const ProfilePage: React.FC = () => {
   if (error) {
     return (
       <div className={styles.profileContainer}>
-        <ErrorDisplay 
-          error={error} 
+        <ErrorDisplay
+          error={error}
           onClear={() => setError(null)}
         />
-        <button 
+        <button
           onClick={loadProfile}
           className={styles.retryButton}
         >
@@ -131,7 +131,7 @@ export const ProfilePage: React.FC = () => {
       <div className={styles.profileContainer}>
         <div className={styles.errorContainer}>
           <p>No profile data available</p>
-          <button 
+          <button
             onClick={loadProfile}
             className={styles.retryButton}
           >
@@ -159,6 +159,7 @@ export const ProfilePage: React.FC = () => {
             type="button"
             className={styles.changePasswordButton || styles.retryButton}
             onClick={() => setShowPerks(prev => !prev)}
+            data-testid="perks-button"
           >
             {showPerks ? 'Close Perks' : 'Perks'}
           </button>
@@ -223,7 +224,7 @@ export const ProfilePage: React.FC = () => {
         {/* Level Progress Section */}
         <div className={styles.progressSection}>
           <h2>Level Progress</h2>
-          
+
           <div className={styles.levelInfo}>
             <div className={styles.levelBadge} style={{ backgroundColor: getLevelColor(profileData.level) }}>
               <span className={styles.levelNumber}>{profileData.level}</span>
@@ -240,7 +241,7 @@ export const ProfilePage: React.FC = () => {
               <span>{profileData.progress.expInLevel} / {profileData.progress.expForNextLevel} XP</span>
             </div>
             <div className={styles.progressBarContainer}>
-              <div 
+              <div
                 className={styles.progressBarFill}
                 style={{ width: `${profileData.progress.progress}%` }}
               />
@@ -253,7 +254,7 @@ export const ProfilePage: React.FC = () => {
           {profileData.progress.expForNextLevel > 0 && (
             <div className={styles.nextLevelInfo}>
               <p>
-                <strong>{profileData.progress.expForNextLevel - profileData.progress.expInLevel} XP</strong> 
+                <strong>{profileData.progress.expForNextLevel - profileData.progress.expInLevel} XP</strong>
                 {' '}needed for level {profileData.level + 1}
               </p>
             </div>
@@ -264,15 +265,15 @@ export const ProfilePage: React.FC = () => {
         <div className={styles.availableCharactersSection}>
           <h2>Available Characters</h2>
           <p>Unlock new characters by reaching higher levels</p>
-          
+
           <div className={styles.charactersGrid}>
             {profileData.availableCharacters.map((character) => {
               const isUnlocked = profileData.level >= character.unlockLevel
               const isCurrent = character.id === profileData.character.id
-              
+
               return (
-                <div 
-                  key={character.id} 
+                <div
+                  key={character.id}
                   className={`${styles.characterCard} ${isCurrent ? styles.current : ''} ${!isUnlocked ? styles.locked : ''}`}
                   onClick={() => {
                     if (isUnlocked && !isCurrent && !isUpdating) {
@@ -286,7 +287,7 @@ export const ProfilePage: React.FC = () => {
                     <span className={styles.characterEmoji}>{character.emoji}</span>
                     <h4>{character.name}</h4>
                     <p>{character.description}</p>
-                    
+
                     {isUnlocked ? (
                       <div className={styles.unlockStatus}>
                         <span className={styles.unlocked}>✓ Unlocked</span>
