@@ -19,6 +19,9 @@ export interface Player {
 
 export interface CreateLobbyRequest {
   hostId: number;
+  username?: string; // Username from JWT token
+  selectedCharacter?: string; // Character from JWT token
+  characterLevel?: number; // Character level from JWT token
   questionCount?: number;
   questionSetIds?: number[];
   settings?: Record<string, unknown>;
@@ -85,26 +88,27 @@ export class LobbyService {
    * Supports both OAuth users (game profiles) and legacy users
    */
   async createLobby(request: CreateLobbyRequest): Promise<LobbyWithPlayers> {
-    let hostUsername = `user_${request.hostId}`;
-    let hostCharacter = 'student';
-    let hostCharacterLevel = 1;
+    let hostUsername = request.username || `user_${request.hostId}`;
+    let hostCharacter = request.selectedCharacter || 'student';
+    let hostCharacterLevel = request.characterLevel || 1;
 
-    // Try to get game profile first (OAuth users)
-    try {
-      const profile = await this.gameProfileService.getOrCreateProfile(request.hostId);
-      // For OAuth users, we need to get username from somewhere else (req.user)
-      // For now, use a default - this should ideally be passed from the route handler
-      hostCharacter = profile.selectedCharacter;
-      hostCharacterLevel = profile.characterLevel;
-    } catch (error) {
-      // Fall back to legacy user
-      const host = await this.userRepository.findUserById(request.hostId);
-      if (!host) {
-        throw new Error('Host user not found');
+    // If user data wasn't provided in the request (legacy flow), try to fetch it
+    if (!request.username) {
+      // Try to get game profile first (OAuth users)
+      try {
+        const profile = await this.gameProfileService.getOrCreateProfile(request.hostId);
+        hostCharacter = profile.selectedCharacter;
+        hostCharacterLevel = profile.characterLevel;
+      } catch (error) {
+        // Fall back to legacy user
+        const host = await this.userRepository.findUserById(request.hostId);
+        if (!host) {
+          throw new Error('Host user not found');
+        }
+        hostUsername = host.username;
+        hostCharacter = host.selected_character || 'student';
+        hostCharacterLevel = host.character_level;
       }
-      hostUsername = host.username;
-      hostCharacter = host.selected_character || 'student';
-      hostCharacterLevel = host.character_level;
     }
 
     // Generate unique code
@@ -174,10 +178,24 @@ export class LobbyService {
       throw new Error('Lobby is full');
     }
 
-    // Check if player is already in lobby
-    const existingPlayer = currentPlayers.find((p) => p.id === request.player.id);
+    // Check if player is already in lobby (extremely robust check)
+    const existingPlayer = currentPlayers.find((p) => {
+      const pId = String(p.id || '').trim();
+      const reqId = String(request.player.id || '').trim();
+      const pUsername = String(p.username || '').trim().toLowerCase();
+      const reqUsername = String(request.player.username || '').trim().toLowerCase();
+
+      // Match if IDs match AND are not empty, OR if usernames match AND are not empty
+      const idMatch = pId !== '' && pId === reqId;
+      const nameMatch = pUsername !== '' && pUsername === reqUsername;
+
+      return idMatch || nameMatch;
+    });
+
     if (existingPlayer) {
-      // Tests expect duplicate join to be rejected
+      // If found, we can optionally update their connection status here
+      // but for now we follow the existing pattern of throwing an error 
+      // which the SocketService handles gracefully for existing sessions.
       throw new Error('Player already in lobby');
     }
 
@@ -228,7 +246,7 @@ export class LobbyService {
     } else {
       // Regular player is leaving - remove them from the lobby
       const updatedPlayers = currentPlayers.filter((p) => p.id !== playerId);
-      
+
       const updatedLobby = await this.lobbyRepository.updateLobby(lobby.id, {
         players: updatedPlayers
       });

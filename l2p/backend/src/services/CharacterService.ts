@@ -361,11 +361,17 @@ export class CharacterService {
     progress: { currentLevel: number; progress: number; expInLevel: number; expForNextLevel: number };
     availableCharacters: Character[];
   } | null> {
+    console.log('[CharacterService] getUserCharacterInfo called for userId:', userId);
+
     // Try to get game profile first (OAuth users)
     try {
+      console.log('[CharacterService] Attempting to get game profile for userId:', userId);
       const profile = await this.gameProfileService.getOrCreateProfile(userId);
+      console.log('[CharacterService] Game profile retrieved:', { authUserId: profile.authUserId, selectedCharacter: profile.selectedCharacter });
+
       const character = this.getCharacterById(profile.selectedCharacter);
       if (!character) {
+        console.error('[CharacterService] Character not found for ID:', profile.selectedCharacter);
         return null;
       }
 
@@ -380,14 +386,19 @@ export class CharacterService {
         availableCharacters
       };
     } catch (error) {
+      console.error('[CharacterService] Error getting game profile, falling back to legacy user:', error);
+
       // Fall back to legacy user repository
       const user = await this.userRepository.findUserById(userId);
+      console.log('[CharacterService] Legacy user lookup result:', user ? `found userId ${user.id}` : 'not found');
+
       if (!user) {
         return null;
       }
 
       const character = this.getCharacterById(user.selected_character);
       if (!character) {
+        console.error('[CharacterService] Character not found for legacy user:', user.selected_character);
         return null;
       }
 

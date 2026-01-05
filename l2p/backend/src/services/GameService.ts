@@ -114,7 +114,7 @@ export class GameService {
       }
 
       gameState.timeRemaining--;
-      
+
       // Emit time update to all clients
       this.io.to(lobbyCode).emit('time-update', {
         timeRemaining: gameState.timeRemaining
@@ -163,7 +163,7 @@ export class GameService {
     // Move to the next question
     gameState.currentQuestionIndex++;
     gameState.timeRemaining = 60; // Reset timer for new question
-    
+
     // Get the current question
     const currentQuestion = gameState.questions[gameState.currentQuestionIndex];
     if (!currentQuestion) {
@@ -274,7 +274,7 @@ export class GameService {
           questionSetIds: [1], // Default fallback question set
           count: totalQuestions
         });
-        
+
         if (!fallbackQuestions || fallbackQuestions.length === 0) {
           // If still no questions, create hardcoded fallback questions
           const hardcodedFallbackQuestions = this.createFallbackQuestions(totalQuestions);
@@ -291,7 +291,7 @@ export class GameService {
             })),
             difficulty: 1,
             created_at: new Date(),
-            ...(q.explanation && { 
+            ...(q.explanation && {
               explanation: q.explanation
             })
           }));
@@ -308,7 +308,7 @@ export class GameService {
         // Handle answers - extract text and find correct answer
         const answerList: string[] = [];
         let correctAnswerText = '';
-        
+
         if (Array.isArray(q.answers)) {
           q.answers.forEach((answer: any) => {
             const answerText = answer.text || '';
@@ -431,8 +431,8 @@ export class GameService {
 
       // Determine if game should continue or end
       const isLastQuestion = gameState.currentQuestionIndex >= gameState.questions.length - 1 ||
-                           gameState.currentQuestionIndex >= gameState.totalQuestions - 1;
-      
+        gameState.currentQuestionIndex >= gameState.totalQuestions - 1;
+
       if (isLastQuestion) {
         // End the game session
         await this.endGameSession(lobbyCode);
@@ -446,15 +446,15 @@ export class GameService {
             }
           });
         }, 5000); // 5 second delay before next question
-        
+
         this.nextQuestionTimers.set(lobbyCode, nextQuestionTimer);
-        
+
         // Prevent timer from keeping the event loop alive in tests
         if (this.isTestEnvironment) {
           (nextQuestionTimer as NodeJS.Timeout).unref();
         }
       }
-      
+
       // Clear only the running countdown timer; keep the scheduled next-question timer
       this.clearGameTimer(lobbyCode);
     } catch (error) {
@@ -581,7 +581,7 @@ export class GameService {
       // Clean up
       this.clearTimers(lobbyCode);
       this.activeGames.delete(lobbyCode);
-      
+
       // Reset lobby state to waiting
       await this.lobbyService.updateLobbyStatus(lobbyCode, 'waiting');
     }
@@ -592,7 +592,7 @@ export class GameService {
     if (!gameState) {
       throw new Error('Game not active');
     }
-    
+
     if (!gameState.currentQuestion) {
       throw new Error('No active question');
     }
@@ -608,7 +608,7 @@ export class GameService {
     }
 
     // Calculate time elapsed
-    const timeElapsed = gameState.questionStartTime ? 
+    const timeElapsed = gameState.questionStartTime ?
       Math.floor((Date.now() - gameState.questionStartTime) / 1000) : 0;
 
     // Record the answer
@@ -618,7 +618,7 @@ export class GameService {
 
     // Check if answer is correct
     const isCorrect = answer === gameState.currentQuestion.correctAnswer;
-    
+
     // Calculate score using ScoringService
     const scoreCalculation = this.scoringService.calculateScore(
       timeElapsed,
@@ -632,7 +632,7 @@ export class GameService {
       player.correctAnswers++;
       player.score += scoreCalculation.pointsEarned;
     }
-    
+
     // Update streak and multiplier
     player.currentStreak = scoreCalculation.streakCount;
     player.multiplier = scoreCalculation.newMultiplier;
@@ -693,15 +693,28 @@ export class GameService {
    */
   private async savePlayerResults(gameState: GameState): Promise<void> {
     const experienceResults: any[] = [];
-    
+
     for (const player of gameState.players) {
       try {
-        // Get user ID if player is authenticated
-        const userRepo = new (await import('../repositories/UserRepository.js')).UserRepository();
-        const user = await userRepo.findByUsername(player.username);
-        const userId = user?.id;
-        
-        // Calculate experience result for character progression
+        // Use player.id as userId if it's numeric (standard for both OAuth/authUserId and legacy/userId),
+        // otherwise fallback to finding by username (mostly for robustness).
+        let userId: number | undefined;
+        const numericId = parseInt(player.id, 10);
+
+        if (!isNaN(numericId)) {
+          userId = numericId;
+        } else {
+          try {
+            const { UserRepository } = await import('../repositories/UserRepository.js');
+            const userRepo = new UserRepository();
+            const user = await userRepo.findByUsername(player.username);
+            userId = user?.id;
+          } catch (e) {
+            console.warn(`[GameService] Could not find user by username ${player.username}:`, e);
+          }
+        }
+
+        // Award experience points if we have a valid userId
         const experienceResult = userId ? await this.characterService.awardExperience(userId, player.score) : null;
 
         await this.scoringService.savePlayerResult(gameState.gameSessionId, {
@@ -712,7 +725,8 @@ export class GameService {
           correctAnswers: player.correctAnswers,
           totalQuestions: gameState.totalQuestions,
           maxMultiplier: player.multiplier,
-          answerDetails: [] // Will be populated with actual answer details
+          answerDetails: [], // Will be populated with actual answer details
+          skipExperienceAward: true
         });
 
         if (experienceResult) {
@@ -732,7 +746,7 @@ export class GameService {
                 character: player.character,
                 unlockedPerks: experienceResult.newlyUnlockedPerks
               });
-            } catch {}
+            } catch { }
           }
         }
       } catch (error) {

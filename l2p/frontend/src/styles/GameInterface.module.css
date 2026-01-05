@@ -1,272 +1,227 @@
 .gameInterface {
-  max-width: 800px;
+  max-width: 1000px;
   margin: 0 auto;
-  padding: 2rem;
+  padding: 4rem 2rem;
+  animation: fadeIn 0.8s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .header {
   text-align: center;
-  margin-bottom: 2rem;
+  margin-bottom: 4rem;
 }
 
 .title {
-  font-size: 2.5rem;
-  font-weight: bold;
-  color: var(--text-primary);
-  margin-bottom: 0.5rem;
+  font-size: 3.5rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 1rem;
+  letter-spacing: -1px;
 }
 
 .subtitle {
-  font-size: 1.125rem;
+  font-size: 1.25rem;
   color: var(--text-secondary);
+  max-width: 600px;
+  margin: 0 auto;
+  line-height: 1.6;
 }
 
 .content {
   display: flex;
   flex-direction: column;
+  gap: 3rem;
+}
+
+.actionGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
   gap: 2rem;
 }
 
-.section {
+.actionCard {
   background: var(--card-bg);
-  border-radius: 12px;
-  padding: 1.5rem;
-  border: 2px solid var(--border-color);
-}
-
-.section h2 {
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: var(--text-primary);
-  margin-bottom: 1rem;
-}
-
-.lobbySettings,
-.joinSettings {
-  margin-top: 1rem;
-  padding: 1rem;
-  border: 2px dashed var(--border-color);
-  border-radius: 10px;
-  background: var(--input-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 24px;
+  padding: 2.5rem;
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 1.5rem;
+  position: relative;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
-.checkboxRow {
+.actionCard:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  border-color: rgba(var(--primary-rgb), 0.3);
+}
+
+.cardHeader {
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  gap: 0.5rem;
-  font-size: 0.95rem;
-  color: var(--text-primary);
 }
 
-.checkboxRow input {
-  width: auto;
-  accent-color: var(--primary-color);
+.cardIcon {
+  font-size: 3rem;
+  filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
 }
 
-.inputGroup {
-  margin-bottom: 1rem;
-}
-
-.inputGroup label {
-  display: block;
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: var(--text-primary);
-  margin-bottom: 0.5rem;
-}
-
-.input,
-.select {
-  width: 100%;
-  padding: 0.75rem;
-  border: 2px solid var(--border-color);
-  border-radius: 8px;
-  background: var(--input-bg);
-  color: var(--text-primary);
-  font-size: 1rem;
-  transition: border-color 0.3s ease;
-}
-
-.input:focus,
-.select:focus {
-  outline: none;
-  border-color: var(--primary-color);
-}
-
-.characterSelection {
-  margin-bottom: 1rem;
-}
-
-.characterSelection label {
-  display: block;
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: var(--text-primary);
-  margin-bottom: 0.5rem;
-}
-
-.characterGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-  gap: 0.75rem;
-}
-
-.characterButton {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 1rem;
-  border: 2px solid var(--border-color);
-  border-radius: 8px;
-  background: var(--input-bg);
-  color: var(--text-primary);
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.characterButton:hover {
-  border-color: var(--primary-color);
-  transform: translateY(-2px);
-}
-
-.characterButton.selected {
-  border-color: var(--primary-color);
-  background: var(--primary-color);
-  color: white;
-}
-
-.characterEmoji {
-  font-size: 2rem;
-  margin-bottom: 0.5rem;
-}
-
-.characterName {
-  font-size: 0.875rem;
-  font-weight: 600;
-  text-align: center;
-}
-
-.button {
-  width: 100%;
-  padding: 0.875rem 1.5rem;
-  border: none;
-  border-radius: 8px;
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
+.cardBadge {
+  background: rgba(var(--primary-rgb), 0.1);
+  color: var(--primary-color);
+  padding: 0.5rem 1rem;
+  border-radius: 99px;
+  font-size: 0.75rem;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 1px;
 }
 
-.button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+.cardBody h3 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin: 0 0 0.75rem 0;
+  color: var(--text-primary);
 }
 
-.button.primary {
+.cardBody p {
+  font-size: 1rem;
+  color: var(--text-secondary);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.cardFooter {
+  margin-top: auto;
+  border-top: 1px solid var(--border-color);
+  padding-top: 1.5rem;
+}
+
+.primaryAction, .secondaryAction {
+  width: 100%;
+  padding: 1rem;
+  border-radius: 12px;
+  font-weight: 700;
+  text-align: center;
+  transition: all 0.2s ease;
+}
+
+.createCard .primaryAction {
   background: var(--primary-color);
   color: white;
 }
 
-.button.primary:hover:not(:disabled) {
-  background: var(--primary-hover);
-  transform: translateY(-2px);
-}
-
-.button.secondary {
+.joinCard .secondaryAction {
   background: var(--secondary-color);
   color: white;
 }
 
-.button.secondary:hover:not(:disabled) {
+.actionCard:hover .primaryAction {
+  background: var(--primary-hover);
+}
+
+.actionCard:hover .secondaryAction {
   background: var(--secondary-hover);
-  transform: translateY(-2px);
 }
 
-.error {
-  background: var(--error-bg);
-  color: var(--error-color);
+/* Expansion for Join Card */
+.cardExpanded {
+  cursor: default;
+}
+
+.cardExpanded:hover {
+  transform: none;
+}
+
+.joinActionWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  width: 100%;
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.input {
+  width: 100%;
   padding: 1rem;
-  border-radius: 8px;
-  border: 2px solid var(--error-color);
-  font-weight: 600;
+  font-size: 1.5rem;
+  font-weight: 700;
   text-align: center;
+  letter-spacing: 4px;
+  border: 2px solid var(--border-color);
+  border-radius: 12px;
+  background: var(--input-bg);
+  color: var(--text-primary);
+  text-transform: uppercase;
 }
 
-.statusMessage {
-  margin-top: 1rem;
-  padding: 0.75rem 1rem;
-  border-radius: 8px;
-  background: var(--success-bg, rgba(34, 197, 94, 0.15));
-  border: 2px solid var(--success-border, #22c55e);
-  color: var(--success-color, #047857);
+.input:focus {
+  outline: none;
+  border-color: var(--secondary-color);
+}
+
+.buttonRow {
+  display: flex;
+  gap: 1rem;
+}
+
+.button {
+  flex: 2;
+  padding: 1rem;
+  border: none;
+  border-radius: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.primary { background: var(--primary-color); color: white; }
+.secondary { background: var(--secondary-color); color: white; }
+
+.textButton {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
   font-weight: 600;
-  text-align: center;
+  cursor: pointer;
 }
 
-.errorMessage {
-  background: var(--error-bg);
-  border-color: var(--error-color);
-  color: var(--error-color);
+.textButton:hover {
+  color: var(--text-primary);
 }
 
-/* Responsive design */
-@media (max-width: 768px) {
-  .gameInterface {
-    padding: 1rem;
-  }
-  
-  .title {
-    font-size: 2rem;
-  }
-  
-  .subtitle {
-    font-size: 1rem;
-  }
-  
-  .section {
-    padding: 1rem;
-  }
-  
-  .characterGrid {
-    grid-template-columns: repeat(3, 1fr);
-  }
-  
-  .characterEmoji {
-    font-size: 1.5rem;
-  }
-  
-  .characterName {
-    font-size: 0.75rem;
+.createCard {
+  background: radial-gradient(circle at top right, rgba(var(--primary-rgb), 0.05), transparent 70%), var(--card-bg);
+}
+
+.joinCard {
+  background: radial-gradient(circle at top right, rgba(var(--secondary-rgb), 0.05), transparent 70%), var(--card-bg);
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .actionGrid {
+    grid-template-columns: 1fr;
   }
 }
 
-@media (max-width: 480px) {
-  .gameInterface {
-    padding: 0.5rem;
-  }
-  
-  .title {
-    font-size: 1.75rem;
-  }
-  
-  .section {
-    padding: 0.75rem;
-  }
-  
-  .characterGrid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-  
-  .characterEmoji {
-    font-size: 1.25rem;
-  }
-  
-  .characterName {
-    font-size: 0.625rem;
-  }
-} 
+@media (max-width: 600px) {
+  .title { font-size: 2.5rem; }
+  .actionCard { padding: 1.5rem; }
+}

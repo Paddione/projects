@@ -70,6 +70,9 @@ router.post('/', authenticate, asyncHandler(async (req: AuthenticatedRequest, re
   try {
     const createRequest: CreateLobbyRequest = {
       hostId: req.user.userId,
+      username: req.user.username,
+      selectedCharacter: req.user.selectedCharacter,
+      characterLevel: req.user.characterLevel,
       questionCount: value.questionCount,
       questionSetIds: value.questionSetIds,
       settings: value.settings

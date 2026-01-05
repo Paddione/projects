@@ -14,6 +14,12 @@ A collection of independent full-stack applications, shared infrastructure, and 
 | [Reverse Proxy](./reverse-proxy/README.md) | Traefik routing and TLS | Traefik, Docker | 443/80 |
 | [Shared Infrastructure](./shared-infrastructure/README.md) | Centralized Postgres | PostgreSQL, Docker | 5432 |
 
+## Documentation
+
+- `TASKS.md`: active tasks and consolidated checklists
+- `docs/auth-fixes.md`: consolidated auth, JWT, and OAuth fixes plus deployment/testing notes
+- Project-specific documentation lives in each project directory
+
 ## Repository Guidelines
 
 ### Project Structure & Module Organization
@@ -255,6 +261,7 @@ Example:
 
 ```
 .
+├── docs/                      # Consolidated documentation
 ├── auth/                      # Auth service
 ├── l2p/                       # Learn2Play
 ├── payment/                   # Payment
@@ -267,123 +274,4 @@ Example:
 ```
 
 ## Task Management
-
-This section is the source of truth for active tasks and consolidated checklists.
-
-### Active Tasks
-
-| Task ID | Status | Owner | Description | Last Update |
-| :--- | :--- | :--- | :--- | :--- |
-| `TASK-012` | 🟡 In Progress | Codex | Investigate why l2p.korczewski.de is not responding | 2025-12-31 |
-| `TASK-016` | 🟡 In Progress | Codex | Complete OAuth migration/testing checklist (consolidated from `OAUTH_IMPLEMENTATION_STATUS.md`) | 2026-01-01 |
-| `TASK-017` | 🟡 In Progress | Codex | Complete auth deployment checklist (consolidated from `auth/DEPLOYMENT_CHECKLIST.md`) | 2026-01-01 |
-| `TASK-018` | 🟡 In Progress | Codex | Deliver vllm Command Center expansion plan (consolidated from `vllm/COMMAND_CENTER_PLAN.md`) | 2026-01-01 |
-| `TASK-019` | 🟡 In Progress | Codex | Address Playwright follow-up recommendations (consolidated from `PLAYWRIGHT_FIXES.md`) | 2026-01-01 |
-| `TASK-020` | 🟡 In Progress | Codex | Implement l2p backend test improvements (consolidated from `l2p/backend/TEST_FIXES.md`) | 2026-01-01 |
-| `TASK-021` | ✅ Done | Codex | Review and reorder npm scripts across monorepo | 2026-01-01 |
-| `TASK-013` | ✅ Done | Codex | Review auth process and align services to the central auth service | 2026-01-01 |
-| `TASK-014` | ✅ Done | Codex | Finalize OAuth best-practice fixes and include existing OAuth files | 2026-01-01 |
-| `TASK-015` | ✅ Done | Codex | Run end-to-end OAuth login test across auth + l2p | 2026-01-01 |
-| `TASK-008` | ✅ Done | Codex | Investigate failing VideoVault and l2p/shared/test-config tests from latest runs | 2025-12-30 |
-| `TASK-009` | ✅ Done | Codex | Align WebCodecs thumbnail service mock support detection with production behavior | 2025-12-30 |
-| `TASK-001` | ✅ Done | Antigravity | Estalishing Reverse Proxy Bridge (Local Sync/Mount) | 2025-12-28 |
-| `TASK-002` | ✅ Done | Antigravity | Auth Service Logic & Email Integration | 2025-12-28 |
-| `TASK-003` | ✅ Done | Codex | Project-wide dependency audit and cleanup | 2025-12-30 |
-| `TASK-004` | ✅ Done | Codex | Set VideoVault public domain and add NPM proxy guidance | 2025-12-28 |
-| `TASK-005` | ✅ Done | Codex | Audit l2p tests that are skipped/ignored and decide whether to re-enable or remove | 2025-12-28 |
-| `TASK-006` | ✅ Done | Codex | Enable VideoVault server tests and resolve excluded/enforced skips | 2025-12-30 |
-| `TASK-007` | ✅ Done | Codex | Reconcile l2p/shared/test-config test coverage | 2025-12-30 |
-| `TASK-010` | ✅ Done | Codex | Review unit tests across monorepo | 2025-12-31 |
-| `TASK-011` | ✅ Done | Codex | Stabilize useToast unit tests and remove debug logs in GameService tests | 2025-12-31 |
-
-### Consolidated Task Checklists
-
-#### TASK-016: OAuth migration/testing checklist
-- [ ] Run auth service migrations
-- [ ] Run L2P backend migrations
-- [ ] Start auth service (port 5500)
-- [ ] Start L2P backend (port 5001)
-- [ ] Start L2P frontend (port 3000)
-- [ ] Test OAuth flow: visit l2p.korczewski.de, login via auth service, exchange code for tokens, verify game profile load
-- [ ] Test token refresh
-- [ ] Test logout
-- [ ] Test protected routes
-
-#### TASK-017: Auth deployment checklist
-- [ ] Step 1: Google OAuth configuration (add production redirect URI)
-- [ ] Step 2: Nginx Proxy Manager setup for auth.korczewski.de  !!! We are using traefik now, no nginx!!!
-- [ ] Step 3: Build and deploy auth service
-- [ ] Step 4: Test OAuth flow
-- [ ] Step 7: Update project integrations (l2p, VideoVault, payment)
-- [ ] Step 8: Final testing checklist
-- [ ] Final testing: health endpoint responds
-- [ ] Final testing: API info endpoint responds
-- [ ] Final testing: login page loads
-- [ ] Final testing: register page loads
-- [ ] Final testing: OAuth redirect works
-- [ ] Final testing: can register new user
-- [ ] Final testing: can login with email/password
-- [ ] Final testing: can login with Google OAuth
-- [ ] Final testing: JWT tokens issued
-- [ ] Final testing: token refresh works
-- [ ] Final testing: logout works
-- [ ] Final testing: password reset works
-- [ ] Final testing: CORS works from project domains
-- [ ] Final testing: SSL certificate is valid
-- [ ] Final testing: HTTPS redirect works
-- [ ] Step 10: Documentation & handoff (update ALLOWED_ORIGINS + production URLs)
-
-#### TASK-018: vllm Command Center expansion
-- [ ] Mass operations: Start All / Stop All / Restart All controls
-- [ ] Mass operations: dependency-aware startup prompts
-- [ ] Advanced monitoring: real-time log streaming per service
-- [ ] Advanced monitoring: CPU & system RAM tracking
-- [ ] Advanced monitoring: process list for process-type services
-- [ ] Alerts & automation: VRAM threshold alerts (90%/95%)
-- [ ] Alerts & automation: auto-restart on failure toggle
-- [ ] Alerts & automation: scheduled maintenance for restarts/updates
-- [ ] Configuration management: environment variable editor with restart workflow
-- [ ] Configuration management: Docker Compose sync
-- [ ] Security & multi-user: role-based access
-- [ ] Security & multi-user: activity log
-- Priority: mass operations, log streaming, CPU/RAM tracking, env editor
-
-#### TASK-019: Playwright follow-ups
-- [ ] L2P: re-enable perks-management tests once UI is complete
-- [x] VideoVault: fix failing unit test in `enhanced-thumbnail.test.ts`
-- [ ] Payment: add E2E coverage for registration and purchasing flows
-- [ ] All projects: set up CI/CD to run tests on pull requests
-
-#### TASK-020: l2p backend test improvements
-- [ ] Integration tests: set up test database for integration tests
-- [ ] Integration tests: configure database seeding for test data
-- [ ] Integration tests: implement proper cleanup between tests
-- [ ] E2E tests: configure end-to-end test environment
-- [ ] E2E tests: set up test user accounts
-- [ ] E2E tests: implement test data management
-- [ ] Performance: add performance benchmarks
-- [ ] Performance: implement load testing scenarios
-- [ ] Performance: monitor test execution times
-- [ ] Maintenance: update test data as needed
-- [ ] Maintenance: review/update mocks when services change
-- [ ] Maintenance: maintain test environment configuration
-
-### Ongoing System Maintenance
-- [x] Establish Reverse Proxy Bridge (Local Sync/Mount)
-- [x] Implement Email Service for Auth (Nodemailer/SMTP)
-- [x] Enforce Username Normalization (lowercase)
-- [x] Secure Password Reset Flow (Removed token leaks)
-- [x] Add Security Email Alerts (Standard Practice)
-- [ ] Monitor Nginx Proxy Manager logs
-- [ ] Ensure all services in monorepo are running correctly
-
-### Task History
-
-| Task ID | Status | Completion Date | Summary |
-| :--- | :--- | :--- | :--- |
-| `TASK-000` | ✅ Done | 2025-12-28 | Initialized task tracking |
-| `TASK-003` | ✅ Done | 2025-12-30 | Audited dependencies, removed unused/duplicate entries, and aligned lockfiles |
-| `TASK-006` | ✅ Done | 2025-12-30 | Enabled VideoVault server tests and re-enabled enhanced-thumbnail + edit-tags-modal coverage |
-| `TASK-007` | ✅ Done | 2025-12-30 | Removed stale test artifacts from test-config |
-| `TASK-010` | ✅ Done | 2025-12-31 | Reviewed unit tests across monorepo |
-| `TASK-011` | ✅ Done | 2025-12-31 | Reset toast test state and removed GameService debug logs |
+Active tasks and consolidated checklists live in `TASKS.md`.

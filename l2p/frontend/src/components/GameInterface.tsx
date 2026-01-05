@@ -11,122 +11,89 @@ interface GameInterfaceProps {
   className?: string
 }
 
-const QUESTION_SET_OPTIONS = [
-  { value: 'general', label: 'General Knowledge' },
-  { value: 'science', label: 'Science & Nature' },
-  { value: 'history', label: 'World History' },
-  { value: 'gaming', label: 'Gaming & Esports' },
-]
-
-const QUESTION_COUNT_OPTIONS = ['3', '5', '10', '15']
-
 export const GameInterface: React.FC<GameInterfaceProps> = ({ className = '' }) => {
   const [lobbyCode, setLobbyCode] = useState('')
-  const [isCreatePanelOpen, setIsCreatePanelOpen] = useState(false)
   const [isJoinPanelOpen, setIsJoinPanelOpen] = useState(false)
-  const [selectedQuestionCount, setSelectedQuestionCount] = useState<string>('5')
-  const [selectedQuestionSet, setSelectedQuestionSet] = useState<string>('general')
-  const [isPrivateLobby, setIsPrivateLobby] = useState(false)
-  const [lobbyStatus, setLobbyStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
+  const [isPrivateLobby] = useState(false)
   const { handleMenuSelect, handleMenuConfirm, handleMenuCancel, handleButtonHover } = useAudio()
-  
-  const { 
-    setLobbyCode: setGameLobbyCode, 
-    setIsHost, 
-    setLoading, 
+
+  const {
+    setLobbyCode: setGameLobbyCode,
+    setIsHost,
+    setLoading,
     setError,
     error,
     isLoading
   } = useGameStore()
-  
-  const handleCreatePanelToggle = () => {
-    setLobbyStatus(null)
-    setIsCreatePanelOpen(prev => !prev)
-    handleMenuSelect()
-  }
 
-  const handleJoinPanelToggle = () => {
-    setLobbyStatus(null)
+  const handleJoinPanelToggle = (e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
     setIsJoinPanelOpen(prev => !prev)
     handleMenuSelect()
   }
 
-  const handleConfirmCreateLobby = async () => {
+  const handleConfirmCreateLobby = async (e: React.MouseEvent) => {
+    e.stopPropagation();
     // Check authentication
     if (!apiService.isAuthenticated()) {
       setError('You must be logged in to create a lobby')
-      setLobbyStatus({ type: 'error', message: 'You must be logged in to create a lobby' })
       handleMenuCancel()
       return
     }
 
     setLoading(true)
     setError(null)
-    setLobbyStatus(null)
-    
+
     try {
-      // Connect to WebSocket if not already connected
       if (!socketService.isConnected()) {
         socketService.connect()
       }
 
-      // Create lobby via API and WebSocket
-      const response = await socketService.createLobby(
-        { 
-          questionCount: Number(selectedQuestionCount),
-          questionSetKey: selectedQuestionSet,
-          isPrivate: isPrivateLobby
-        }
-      )
+      // Default settings - these are configurable inside the lobby anyway
+      const response = await socketService.createLobby({
+        questionCount: 10,
+        isPrivate: isPrivateLobby
+      })
 
       if (response && response.success && response.data) {
         const lobbyCode = response.data.code
         setGameLobbyCode(lobbyCode)
         setIsHost(true)
-        
-        // Navigate to lobby
+
         await navigationService.navigateToLobby(lobbyCode)
-        setLobbyStatus({ type: 'success', message: `Lobby ${lobbyCode} created successfully` })
-        setIsCreatePanelOpen(false)
         handleMenuConfirm()
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to create lobby'
       setError(errorMessage)
-      setLobbyStatus({ type: 'error', message: errorMessage })
       handleMenuCancel()
     } finally {
       setLoading(false)
     }
   }
 
-  const handleJoinLobby = async () => {
+  const handleJoinLobby = async (e: React.MouseEvent) => {
+    e.stopPropagation();
     if (!lobbyCode.trim() || lobbyCode.length !== 6) {
       setError('Please enter a valid 6-character lobby code')
-      setLobbyStatus({ type: 'error', message: 'Please enter a valid 6-character lobby code' })
       handleMenuCancel()
       return
     }
 
-    // Check authentication
     if (!apiService.isAuthenticated()) {
       setError('You must be logged in to join a lobby')
-      setLobbyStatus({ type: 'error', message: 'You must be logged in to join a lobby' })
       handleMenuCancel()
       return
     }
 
     setLoading(true)
     setError(null)
-    setLobbyStatus(null)
-    
+
     try {
-      // Connect to WebSocket if not already connected
       if (!socketService.isConnected()) {
         socketService.connect()
       }
 
-      // Join lobby via API and WebSocket
       const response = await socketService.joinLobby(
         lobbyCode.toUpperCase().trim()
       )
@@ -135,17 +102,12 @@ export const GameInterface: React.FC<GameInterfaceProps> = ({ className = '' }) 
         const lobbyCode = response.data.code
         setGameLobbyCode(lobbyCode)
         setIsHost(false)
-        
-        // Navigate to lobby
         await navigationService.navigateToLobby(lobbyCode)
-        setLobbyStatus({ type: 'success', message: `Joined lobby ${lobbyCode}` })
-        setIsJoinPanelOpen(false)
         handleMenuConfirm()
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to join lobby'
       setError(errorMessage)
-      setLobbyStatus({ type: 'error', message: errorMessage })
       handleMenuCancel()
     } finally {
       setLoading(false)
@@ -156,148 +118,90 @@ export const GameInterface: React.FC<GameInterfaceProps> = ({ className = '' }) 
     <div className={`${styles.gameInterface} ${className}`.trim()}>
       <div className={styles.header}>
         <h1 className={styles.title}>Learn2Play Quiz</h1>
-        <p className={styles.subtitle}>Create or join a multiplayer quiz game</p>
+        <p className={styles.subtitle}>Battle your friends online or tackle solo challenges</p>
       </div>
 
-      {/* Error Display */}
-      <ErrorDisplay 
-        error={error} 
+      <ErrorDisplay
+        error={error}
         onClear={() => setError(null)}
       />
 
       <div className={styles.content}>
-        {/* Create Lobby Section */}
-        <div className={styles.section}>
-          <h2>Create New Game</h2>
-          
-          <button
-            className={`${styles.button} ${styles.primary}`}
-            onClick={handleCreatePanelToggle}
-            data-testid="create-lobby-button"
+        <div className={styles.actionGrid}>
+          {/* Create Card */}
+          <div
+            className={`${styles.actionCard} ${styles.createCard}`}
+            onClick={handleConfirmCreateLobby}
             onMouseEnter={handleButtonHover}
-            onMouseDown={handleMenuSelect}
           >
-            {isCreatePanelOpen ? 'Hide Options' : 'Create Lobby'}
-          </button>
-
-          {isCreatePanelOpen && (
-            <div className={styles.lobbySettings} data-testid="lobby-settings">
-              <div className={styles.inputGroup}>
-                <label htmlFor="questionCount">Question Count</label>
-                <select
-                  id="questionCount"
-                  className={styles.select}
-                  value={selectedQuestionCount}
-                  onChange={(e) => setSelectedQuestionCount(e.target.value)}
-                  data-testid="question-count-select"
-                >
-                  {QUESTION_COUNT_OPTIONS.map(option => (
-                    <option key={option} value={option}>
-                      {option} Questions
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className={styles.inputGroup}>
-                <label htmlFor="questionSet">Question Set</label>
-                <select
-                  id="questionSet"
-                  className={styles.select}
-                  value={selectedQuestionSet}
-                  onChange={(e) => setSelectedQuestionSet(e.target.value)}
-                  data-testid="question-set-select"
-                >
-                  {QUESTION_SET_OPTIONS.map(option => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <label className={styles.checkboxRow}>
-                <input
-                  type="checkbox"
-                  checked={isPrivateLobby}
-                  onChange={(e) => setIsPrivateLobby(e.target.checked)}
-                  data-testid="private-lobby-checkbox"
-                />
-                <span>Private lobby (invite only)</span>
-              </label>
-
-              <button
-                className={`${styles.button} ${styles.primary}`}
-                onClick={handleConfirmCreateLobby}
-                data-testid="confirm-create-lobby"
-                disabled={isLoading}
-                onMouseEnter={handleButtonHover}
-                onMouseDown={handleMenuSelect}
-              >
-                {isLoading ? 'Creating...' : 'Confirm Lobby Setup'}
-              </button>
+            <div className={styles.cardHeader}>
+              <div className={styles.cardIcon}>✨</div>
+              <div className={styles.cardBadge}>Fast Play</div>
             </div>
-          )}
-        </div>
+            <div className={styles.cardBody}>
+              <h3>Create Lobby</h3>
+              <p>Host a new game and invite friends with a code. Configure everything inside!</p>
+            </div>
 
-        {/* Join Lobby Section */}
-        <div className={styles.section}>
-          <h2>Join Existing Game</h2>
+            <div className={styles.cardFooter}>
+              <div className={styles.primaryAction}>
+                {isLoading ? 'Creating...' : 'Launch New Lobby'}
+              </div>
+            </div>
+          </div>
 
-          <button
-            className={`${styles.button} ${styles.secondary}`}
-            onClick={handleJoinPanelToggle}
-            data-testid="join-lobby-button"
+          {/* Join Card */}
+          <div
+            className={`${styles.actionCard} ${styles.joinCard} ${isJoinPanelOpen ? styles.cardExpanded : ''}`}
+            onClick={() => !isJoinPanelOpen && handleJoinPanelToggle()}
             onMouseEnter={handleButtonHover}
-            onMouseDown={handleMenuSelect}
           >
-            {isJoinPanelOpen ? 'Hide Join Options' : 'Join Lobby'}
-          </button>
+            <div className={styles.cardHeader}>
+              <div className={styles.cardIcon}>🔑</div>
+              <div className={styles.cardBadge}>Multiplayer</div>
+            </div>
+            <div className={styles.cardBody}>
+              <h3>Join Game</h3>
+              <p>Enter a 6-character code to jump into an existing lobby</p>
+            </div>
 
-          {isJoinPanelOpen && (
-            <div className={styles.joinSettings}>
-              <div className={styles.inputGroup}>
-                <label htmlFor="lobbyCode">Lobby Code</label>
+            {isJoinPanelOpen ? (
+              <div className={styles.joinActionWrapper} onClick={e => e.stopPropagation()}>
                 <input
-                  id="lobbyCode"
                   type="text"
+                  className={styles.input}
+                  placeholder="CODE12"
+                  maxLength={6}
                   value={lobbyCode}
                   onChange={(e) => setLobbyCode(e.target.value.toUpperCase())}
-                  placeholder="Enter 6-digit code"
-                  maxLength={6}
-                  className={styles.input}
-                  data-testid="lobby-code-input"
-                  onFocus={handleMenuSelect}
+                  autoFocus
                 />
+                <div className={styles.buttonRow}>
+                  <button
+                    className={`${styles.button} ${styles.secondary}`}
+                    onClick={handleJoinLobby}
+                    disabled={isLoading || lobbyCode.length !== 6}
+                  >
+                    Join Now
+                  </button>
+                  <button
+                    className={styles.textButton}
+                    onClick={handleJoinPanelToggle}
+                  >
+                    Cancel
+                  </button>
+                </div>
               </div>
-              
-              <button
-                className={`${styles.button} ${styles.secondary}`}
-                onClick={handleJoinLobby}
-                disabled={!lobbyCode.trim() || isLoading}
-                data-testid="join-lobby-confirm"
-                onMouseEnter={handleButtonHover}
-                onMouseDown={handleMenuSelect}
-              >
-                {isLoading ? 'Joining...' : 'Confirm & Join'}
-              </button>
-            </div>
-          )}
+            ) : (
+              <div className={styles.cardFooter}>
+                <div className={styles.secondaryAction}>
+                  Enter Code
+                </div>
+              </div>
+            )}
+          </div>
         </div>
-
       </div>
-
-      {lobbyStatus?.type === 'success' && (
-        <div className={styles.statusMessage} data-testid="lobby-success">
-          {lobbyStatus.message}
-        </div>
-      )}
-
-      {lobbyStatus?.type === 'error' && (
-        <div className={`${styles.statusMessage} ${styles.errorMessage}`} data-testid="lobby-error">
-          {lobbyStatus.message}
-        </div>
-      )}
     </div>
   )
-} 
+}

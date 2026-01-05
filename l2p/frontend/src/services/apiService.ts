@@ -919,7 +919,7 @@ class ApiService {
       // Convert user ID to string for frontend compatibility
       const userData = {
         ...authData.user,
-        id: String(authData.user?.id || ''),
+        id: String(authData.user?.id || authData.user?.userId || ''),
         // Normalize admin flag from backend (is_admin) to camelCase for the frontend
         isAdmin: Boolean(authData.user?.isAdmin ?? authData.user?.is_admin ?? authData.user?.role === 'ADMIN')
       }
@@ -985,7 +985,11 @@ class ApiService {
     if (response.success && response.data) {
       // Backend returns { tokens } structure
       const authData = response.data as any
-      this.setAuth(authData.tokens.accessToken, authData.tokens.refreshToken)
+      const userData = authData.user ? {
+        ...authData.user,
+        id: String(authData.user.id || authData.user.userId || '')
+      } : undefined
+      this.setAuth(authData.tokens.accessToken, authData.tokens.refreshToken, userData)
     }
 
     return response
@@ -1042,8 +1046,8 @@ class ApiService {
       const authData = response.data as any
       const userData = {
         ...authData.user,
-        id: String(authData.user?.userId || authData.user?.id || ''),
-        isAdmin: Boolean(authData.user?.isAdmin ?? authData.user?.is_admin)
+        id: String(authData.user?.id || authData.user?.userId || ''),
+        isAdmin: Boolean(authData.user?.isAdmin ?? authData.user?.is_admin ?? authData.user?.role === 'ADMIN')
       }
       this.setAuth(authData.tokens?.accessToken, authData.tokens?.refreshToken, userData)
     }
@@ -1058,7 +1062,12 @@ class ApiService {
 
     if (response.success && response.data) {
       const authData = response.data as any
-      this.setAuth(authData.tokens?.accessToken, authData.tokens?.refreshToken, authData.user)
+      const userData = {
+        ...authData.user,
+        id: String(authData.user?.id || authData.user?.userId || ''),
+        isAdmin: Boolean(authData.user?.isAdmin ?? authData.user?.is_admin ?? authData.user?.role === 'ADMIN')
+      }
+      this.setAuth(authData.tokens?.accessToken, authData.tokens?.refreshToken, userData)
     }
 
     return response
@@ -1810,14 +1819,20 @@ class ApiService {
   }
 
   // Utility methods
-  setAuth(token: string, refreshToken?: string, userData?: { id: string; username: string; email: string; isAdmin?: boolean }): void {
+  setAuth(token: string, refreshToken?: string, userData?: any): void {
     this.token = token
     localStorage.setItem('auth_token', token)
     if (refreshToken) {
       localStorage.setItem('refresh_token', refreshToken)
     }
     if (userData) {
-      localStorage.setItem('user_data', JSON.stringify(userData))
+      // Ensure ID is normalized and present before storing
+      const normalizedUser = {
+        ...userData,
+        id: String(userData.id || userData.userId || userData.sub || ''),
+        isAdmin: Boolean(userData.isAdmin ?? userData.is_admin ?? userData.role === 'ADMIN')
+      }
+      localStorage.setItem('user_data', JSON.stringify(normalizedUser))
     }
   }
 

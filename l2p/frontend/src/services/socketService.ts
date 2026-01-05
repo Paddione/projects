@@ -759,6 +759,8 @@ export class SocketService {
       }
 
       // Ensure socket connection and join the room as host for real-time updates
+      // Note: The API already added the host player, so the backend will detect this
+      // as a duplicate join and just add us to the socket room without broadcasting
       if (!this.isConnected()) {
         this.connect()
       }

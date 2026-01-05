@@ -37,7 +37,7 @@ export class SocketService {
     this.io.use(async (socket, next) => {
       try {
         const token = socket.handshake.auth?.['token'] || socket.handshake.headers?.authorization?.replace('Bearer ', '');
-        
+
         if (!token) {
           console.log('Socket connection without token - allowing for public access');
           return next();
@@ -81,42 +81,42 @@ export class SocketService {
   private setupEventHandlers(): void {
     this.io.on('connection', (socket: Socket) => {
       this.handleConnection(socket);
-      
+
       // Lobby management events
       socket.on('join-lobby', (data: { lobbyCode: string; player: SocketUser }) => {
         this.handleJoinLobby(socket, data);
       });
-      
+
       socket.on('leave-lobby', (data: { lobbyCode: string; playerId: string }) => {
         this.handleLeaveLobby(socket, data);
       });
-      
+
       socket.on('player-ready', (data: { lobbyCode: string; playerId: string; isReady: boolean }) => {
         this.handlePlayerReady(socket, data);
       });
-      
+
       socket.on('start-game', (data: { lobbyCode: string; hostId: string }) => {
         this.handleStartGame(socket, data);
       });
-      
+
       // Question set management events
       socket.on('update-question-sets', (data: { lobbyCode: string; hostId: string; questionSetIds: number[]; questionCount: number }) => {
         this.handleUpdateQuestionSets(socket, data);
       });
-      
+
       socket.on('get-question-set-info', (data: { lobbyCode: string }) => {
         this.handleGetQuestionSetInfo(socket, data);
       });
-      
+
       // Game events
       socket.on('submit-answer', (data: { lobbyCode: string; playerId: string; answer: string; timeElapsed: number }) => {
         this.handleSubmitAnswer(socket, data);
       });
-      
+
       socket.on('disconnect', () => {
         this.handleDisconnect(socket);
       });
-      
+
       // Connection testing
       socket.on('ping', () => {
         socket.emit('pong', { timestamp: Date.now() });
@@ -127,15 +127,15 @@ export class SocketService {
   private handleConnection(socket: Socket): void {
     const userId = socket.data?.user?.id;
     const username = socket.data?.user?.username;
-    
+
     console.log('User connected:', {
       socketId: socket.id,
       userId: userId || 'anonymous',
       username: username || 'anonymous'
     });
-    
+
     RequestLogger.logSocketConnection(socket.id, 'connect');
-    
+
     // Send connection confirmation with user info
     socket.emit('connected', {
       socketId: socket.id,
@@ -157,9 +157,9 @@ export class SocketService {
       }
 
       const { lobbyCode, player } = data;
-      
+
       RequestLogger.logSocketEvent(socket.id, 'join-lobby', { lobbyCode, playerId: player?.id });
-      
+
       // Validate lobby code format
       if (!LobbyService.isValidLobbyCode(lobbyCode)) {
         socket.emit('join-error', {
@@ -168,9 +168,10 @@ export class SocketService {
         });
         return;
       }
-      
+
       // Try to join the lobby, but handle case where player is already in lobby
       let lobby;
+      let isAlreadyInLobby = false;
       try {
         lobby = await this.lobbyService.joinLobby({
           lobbyCode,
@@ -185,6 +186,7 @@ export class SocketService {
       } catch (error) {
         if (error instanceof Error && error.message === 'Player already in lobby') {
           // Player is already in lobby (likely joined via API), just get the current lobby state
+          isAlreadyInLobby = true;
           lobby = await this.lobbyService.getLobbyByCode(lobbyCode);
           if (!lobby) {
             socket.emit('join-error', {
@@ -194,12 +196,15 @@ export class SocketService {
             return;
           }
           // Update player connection status to true since they're connecting via socket
-          await this.lobbyService.updatePlayerConnection(lobbyCode, player.id, true);
+          const updatedLobby = await this.lobbyService.updatePlayerConnection(lobbyCode, player.id, true);
+          if (updatedLobby) {
+            lobby = updatedLobby;
+          }
         } else {
           throw error; // Re-throw other errors
         }
       }
-      
+
       if (!lobby) {
         socket.emit('join-error', {
           type: 'LOBBY_NOT_FOUND',
@@ -207,10 +212,10 @@ export class SocketService {
         });
         return;
       }
-      
+
       // Join socket room
       socket.join(lobbyCode);
-      
+
       // Store user information
       this.connectedUsers.set(socket.id, {
         id: player.id,
@@ -220,16 +225,19 @@ export class SocketService {
         lobbyCode
       });
 
-      // Best-effort broadcast to other players in the lobby
-      try {
-        this.io.to(lobbyCode).emit('lobby-updated', {
-          lobby,
-          event: 'player-joined',
-          playerId: player.id
-        });
-      } catch (e) {
-        // Log and continue; do not fail the join on broadcast error
-        console.error('Broadcast join event failed:', e);
+      // Only broadcast player-joined if this is a new player, not a duplicate
+      if (!isAlreadyInLobby) {
+        // Best-effort broadcast to other players in the lobby
+        try {
+          this.io.to(lobbyCode).emit('lobby-updated', {
+            lobby,
+            event: 'player-joined',
+            playerId: player.id
+          });
+        } catch (e) {
+          // Log and continue; do not fail the join on broadcast error
+          console.error('Broadcast join event failed:', e);
+        }
       }
 
       // Send confirmation to joining player
@@ -237,7 +245,7 @@ export class SocketService {
         lobby,
         message: 'Successfully joined lobby'
       });
-      
+
     } catch (error) {
       console.error('Error joining lobby:', error);
       socket.emit('join-error', {
@@ -250,18 +258,18 @@ export class SocketService {
   private async handleLeaveLobby(socket: Socket, data: { lobbyCode: string; playerId: string }): Promise<void> {
     try {
       const { lobbyCode, playerId } = data;
-      
+
       RequestLogger.logSocketEvent(socket.id, 'leave-lobby', { lobbyCode, playerId });
-      
+
       // Leave the lobby
       const updatedLobby = await this.lobbyService.leaveLobby(lobbyCode, playerId);
-      
+
       // Leave socket room
       socket.leave(lobbyCode);
-      
+
       // Remove from connected users
       this.connectedUsers.delete(socket.id);
-      
+
       if (updatedLobby) {
         // Regular player left - broadcast updated lobby to remaining players
         this.io.to(lobbyCode).emit('lobby-updated', {
@@ -276,12 +284,12 @@ export class SocketService {
           reason: 'host-left'
         });
       }
-      
+
       // Send confirmation to leaving player
       socket.emit('leave-success', {
         message: 'Successfully left lobby'
       });
-      
+
     } catch (error) {
       console.error('Error leaving lobby:', error);
       socket.emit('leave-error', {
@@ -294,12 +302,12 @@ export class SocketService {
   private async handlePlayerReady(socket: Socket, data: { lobbyCode: string; playerId: string; isReady: boolean }): Promise<void> {
     try {
       const { lobbyCode, playerId, isReady } = data;
-      
+
       RequestLogger.logSocketEvent(socket.id, 'player-ready', { lobbyCode, playerId, isReady });
-      
+
       // Update player ready state
       const updatedLobby = await this.lobbyService.updatePlayerReady(lobbyCode, playerId, isReady);
-      
+
       if (updatedLobby) {
         // Broadcast to all players in the lobby
         this.io.to(lobbyCode).emit('lobby-updated', {
@@ -309,7 +317,7 @@ export class SocketService {
           isReady
         });
       }
-      
+
     } catch (error) {
       console.error('Error updating player ready state:', error);
       socket.emit('ready-error', {
@@ -322,18 +330,18 @@ export class SocketService {
   private async handleStartGame(socket: Socket, data: { lobbyCode: string; hostId: string }): Promise<void> {
     try {
       const { lobbyCode, hostId } = data;
-      
+
       RequestLogger.logSocketEvent(socket.id, 'start-game', { lobbyCode, hostId });
-      
+
       // Start the game session using GameService
       const gameState = await this.gameService.startGameSession(lobbyCode, parseInt(hostId));
-      
+
       // Broadcast game start to all players
       this.io.to(lobbyCode).emit('game-started', {
         gameState,
         message: 'Game is starting...'
       });
-      
+
     } catch (error) {
       console.error('Error starting game:', error);
       socket.emit('start-game-error', {
@@ -346,14 +354,14 @@ export class SocketService {
   private async handleSubmitAnswer(socket: Socket, data: { lobbyCode: string; playerId: string; answer: string; timeElapsed: number }): Promise<void> {
     try {
       const { lobbyCode, playerId, answer, timeElapsed } = data;
-      
+
       RequestLogger.logSocketEvent(socket.id, 'submit-answer', { lobbyCode, playerId, answer, timeElapsed });
-      
+
       // Submit answer using GameService
       await this.gameService.submitAnswer(lobbyCode, playerId, answer);
-      
+
       // The GameService will handle broadcasting the answer events
-      
+
     } catch (error) {
       console.error('Error submitting answer:', error);
       socket.emit('answer-error', {
@@ -366,9 +374,9 @@ export class SocketService {
   private async handleUpdateQuestionSets(socket: Socket, data: { lobbyCode: string; hostId: string; questionSetIds: number[]; questionCount: number }): Promise<void> {
     try {
       const { lobbyCode, hostId, questionSetIds, questionCount } = data;
-      
+
       RequestLogger.logSocketEvent(socket.id, 'update-question-sets', { lobbyCode, hostId, questionSetIds, questionCount });
-      
+
       // Update question set settings
       const updatedLobby = await this.lobbyService.updateLobbyQuestionSets(
         lobbyCode,
@@ -376,19 +384,19 @@ export class SocketService {
         questionSetIds,
         questionCount
       );
-      
+
       // Broadcast update to all players in lobby
       this.broadcastToLobby(lobbyCode, 'question-sets-updated', {
         lobby: updatedLobby,
         updatedBy: hostId
       });
-      
+
       // Send confirmation to host
       socket.emit('question-sets-update-success', {
         message: 'Question set settings updated successfully',
         lobby: updatedLobby
       });
-      
+
     } catch (error) {
       console.error('Update question sets error:', error);
       socket.emit('question-sets-update-error', {
@@ -401,12 +409,12 @@ export class SocketService {
   private async handleGetQuestionSetInfo(socket: Socket, data: { lobbyCode: string }): Promise<void> {
     try {
       const { lobbyCode } = data;
-      
+
       RequestLogger.logSocketEvent(socket.id, 'get-question-set-info', { lobbyCode });
-      
+
       // Get question set information
       const questionSetInfo = await this.lobbyService.getLobbyQuestionSetInfo(lobbyCode);
-      
+
       if (!questionSetInfo) {
         socket.emit('question-set-info-error', {
           type: 'LOBBY_NOT_FOUND',
@@ -414,12 +422,12 @@ export class SocketService {
         });
         return;
       }
-      
+
       // Send question set info to requesting user
       socket.emit('question-set-info', {
         questionSetInfo
       });
-      
+
     } catch (error) {
       console.error('Get question set info error:', error);
       socket.emit('question-set-info-error', {
@@ -432,10 +440,10 @@ export class SocketService {
   private handleDisconnect(socket: Socket): void {
     console.log('User disconnected:', socket.id);
     RequestLogger.logSocketConnection(socket.id, 'disconnect');
-    
+
     // Get user info
     const user = this.connectedUsers.get(socket.id);
-    
+
     if (user && user.lobbyCode) {
       // Update player connection status in lobby
       this.lobbyService.updatePlayerConnection(user.lobbyCode, user.id, false)
@@ -452,7 +460,7 @@ export class SocketService {
         .catch(error => {
           console.error('Error updating player connection status:', error);
         });
-      
+
       // Handle game disconnection if game is active
       if (this.gameService.isGameActive(user.lobbyCode)) {
         this.gameService.handlePlayerDisconnect(user.lobbyCode, user.id)
@@ -461,7 +469,7 @@ export class SocketService {
           });
       }
     }
-    
+
     // Remove from connected users
     this.connectedUsers.delete(socket.id);
   }

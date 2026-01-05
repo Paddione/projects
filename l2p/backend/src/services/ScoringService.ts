@@ -45,7 +45,7 @@ export class ScoringService {
       // Calculate points: (60 - seconds_elapsed) × multiplier
       const timeBonus = Math.max(0, 60 - timeElapsed);
       pointsEarned = timeBonus * currentMultiplier;
-      
+
       // Increase streak and multiplier
       newStreak = currentStreak + 1;
       newMultiplier = Math.min(5, Math.floor(newStreak / 2) + 1); // 1x, 2x, 3x, 4x, 5x
@@ -86,6 +86,7 @@ export class ScoringService {
       pointsEarned: number;
       multiplierUsed: number;
     }>;
+    skipExperienceAward?: boolean;
   }): Promise<{
     experienceAwarded: number;
     levelUp: boolean;
@@ -108,9 +109,9 @@ export class ScoringService {
 
       await this.gameSessionRepository.createPlayerResult(playerResultData);
 
-      // Award experience points (1:1 conversion from score)
+      // Award experience points (1:1 conversion from score) unless skipped
       let experienceResult = null;
-      if (playerData.userId) {
+      if (playerData.userId && !playerData.skipExperienceAward) {
         try {
           experienceResult = await this.characterService.awardExperience(playerData.userId, playerData.finalScore);
         } catch (error) {
@@ -144,7 +145,7 @@ export class ScoringService {
   async getPlayerStatistics(userId: number): Promise<PlayerStatistics> {
     try {
       const stats = await this.gameSessionRepository.getPlayerStats(userId);
-      
+
       return {
         totalGames: stats.totalGames,
         totalScore: stats.totalScore,
@@ -179,7 +180,7 @@ export class ScoringService {
     try {
       // Get all player results - for now, get all results and filter by question set
       const allResults = await this.gameSessionRepository.getTopPlayersByScore(100);
-      
+
       // Filter and sort by score
       const validResults = allResults
         .filter((result: any) => result.final_score > 0) // Only completed games

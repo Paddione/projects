@@ -18,7 +18,10 @@ export class GameProfileService {
   }
 
   async getOrCreateProfile(authUserId: number): Promise<GameProfile> {
+    console.log('[GameProfileService] getOrCreateProfile called for authUserId:', authUserId, 'type:', typeof authUserId);
+
     if (!Number.isFinite(authUserId)) {
+      console.error('[GameProfileService] Invalid auth user id:', authUserId);
       throw new Error('Invalid auth user id for game profile');
     }
 
@@ -29,22 +32,29 @@ export class GameProfileService {
       RETURNING auth_user_id, selected_character, character_level, experience_points, preferences, created_at, updated_at
     `;
 
+    console.log('[GameProfileService] Attempting INSERT with authUserId:', authUserId);
     const insertResult = await this.db.query(insertQuery, [authUserId]);
+    console.log('[GameProfileService] INSERT result rows:', insertResult.rows.length);
     let row = insertResult.rows[0];
 
     if (!row) {
+      console.log('[GameProfileService] No row from INSERT, attempting SELECT for authUserId:', authUserId);
       const selectQuery = `
         SELECT auth_user_id, selected_character, character_level, experience_points, preferences, created_at, updated_at
         FROM user_game_profiles
         WHERE auth_user_id = $1
       `;
       const selectResult = await this.db.query(selectQuery, [authUserId]);
+      console.log('[GameProfileService] SELECT result rows:', selectResult.rows.length);
       row = selectResult.rows[0];
     }
 
     if (!row) {
+      console.error('[GameProfileService] Game profile not found after INSERT and SELECT for authUserId:', authUserId);
       throw new Error('Game profile not found');
     }
+
+    console.log('[GameProfileService] Game profile found:', { authUserId: row['auth_user_id'], selectedCharacter: row['selected_character'] });
 
     return {
       authUserId: row['auth_user_id'],
