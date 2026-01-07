@@ -19,9 +19,9 @@ const options = {
 };
 
 const root = process.cwd();
-const defaultMediaRoot = process.env.MEDIA_ROOT || path.join(root, 'Bibliothek');
-const processedRoot = process.env.PROCESSED_DIR || process.env.PROCESSED_MEDIA_PATH;
-const thumbnailsRoot = process.env.THUMBNAILS_DIR;
+const defaultMediaRoot = process.env.MEDIA_ROOT || path.join(root, 'Processed');
+const processedRoot = process.env.PROCESSED_DIR || process.env.PROCESSED_MEDIA_PATH || defaultMediaRoot;
+const thumbnailsRoot = process.env.THUMBNAILS_DIR || (process.env.MEDIA_ROOT ? path.join(process.env.MEDIA_ROOT, 'Thumbnails') : path.join(defaultMediaRoot, 'Thumbnails'));
 const targetDir = dirArg ? dirArg : defaultMediaRoot;
 
 function cmdExists(cmd) {
@@ -143,11 +143,11 @@ export async function generateThumbnail(inputPath, options = {}) {
   try {
     await fs.access(spriteOut);
     spriteExists = true;
-  } catch {}
+  } catch { }
   try {
     await fs.access(thumbOut);
     thumbExists = true;
-  } catch {}
+  } catch { }
 
   if (spriteExists && thumbExists && !overwrite) {
     return { skipped: true, sprite: spriteOut, thumb: thumbOut };

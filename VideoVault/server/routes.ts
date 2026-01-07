@@ -44,6 +44,9 @@ import {
   deleteSynonymRoute,
 } from './routes/tag-ops';
 import { importCategories } from './routes/categories';
+import thumbnailsV2Routes from './routes/thumbnails-v2';
+import scanStateRoutes from './routes/scan-state';
+import jobsRoutes from './routes/jobs';
 
 // ... (existing imports)
 
@@ -236,6 +239,11 @@ export function registerRoutes(app: Express): Server {
 
   app.post('/api/categories/import', asyncHandler(importCategories));
 
+  // New background processing routes (thumbnails-v2, scan-state, jobs)
+  app.use('/api/thumbnails', thumbnailsV2Routes);
+  app.use('/api/scan-state', scanStateRoutes);
+  app.use('/api/jobs', jobsRoutes);
+
   logger.info('API routes registered', {
     routes: [
       '/api/errors/report',
@@ -246,6 +254,9 @@ export function registerRoutes(app: Express): Server {
       '/api/roots',
       '/api/presets',
       '/api/thumbnails/generate',
+      '/api/thumbnails/:videoId (v2)',
+      '/api/scan-state/:rootKey',
+      '/api/jobs',
       '/api/videos/compute-hashes',
       '/api/videos/duplicates',
     ],

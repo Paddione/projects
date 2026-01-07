@@ -2074,6 +2074,13 @@ class ApiService {
     })
   }
 
+  // Rebuild service (admin)
+  async rebuildService(): Promise<ApiResponse<{ success: boolean; message: string }>> {
+    return this.request(`/admin/service/rebuild`, {
+      method: 'POST'
+    })
+  }
+
   // Perks Management methods
   async getAllPerks(): Promise<ApiResponse<Array<{
     id: number;

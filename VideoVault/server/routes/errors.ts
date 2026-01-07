@@ -201,11 +201,13 @@ export async function healthCheck(req: Request, res: Response) {
       db: db ? 'connected' : 'disconnected',
     };
 
+    /*
     logger.info('Health check requested', {
       requestId: req.headers['x-request-id'],
       ip: req.ip,
       userAgent: req.headers['user-agent'],
     });
+    */
 
     res.json(health);
   } catch (error) {

@@ -64,6 +64,7 @@ h1 {
     font-weight: 800;
     letter-spacing: -0.04em;
     background: linear-gradient(135deg, #fff 0%, var(--accent) 100%);
+    background-clip: text;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     display: flex;
@@ -153,6 +154,67 @@ h1 i {
     color: #fff;
 }
 
+.header-left {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.header-badges {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+}
+
+.env-badge {
+    padding: 0.35rem 0.75rem;
+    border-radius: 8px;
+    font-size: 0.65rem;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    border: 1px solid;
+    display: inline-block;
+}
+
+.env-badge.development {
+    background: rgba(255, 165, 0, 0.15);
+    color: #ffa500;
+    border-color: rgba(255, 165, 0, 0.3);
+    box-shadow: 0 0 15px rgba(255, 165, 0, 0.2);
+}
+
+.env-badge.production {
+    background: rgba(62, 255, 139, 0.15);
+    color: var(--green);
+    border-color: rgba(62, 255, 139, 0.3);
+    box-shadow: 0 0 15px rgba(62, 255, 139, 0.2);
+}
+
+.hot-reload-badge {
+    padding: 0.35rem 0.75rem;
+    border-radius: 8px;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    background: rgba(255, 100, 0, 0.15);
+    color: #ff6400;
+    border: 1px solid rgba(255, 100, 0, 0.3);
+    animation: pulse-hot-reload 2s infinite;
+}
+
+@keyframes pulse-hot-reload {
+
+    0%,
+    100% {
+        box-shadow: 0 0 10px rgba(255, 100, 0, 0.3);
+    }
+
+    50% {
+        box-shadow: 0 0 20px rgba(255, 100, 0, 0.5);
+    }
+}
+
 .vram-monitor {
     background: linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%);
     border: 1px solid rgba(255, 255, 255, 0.08);
@@ -183,6 +245,7 @@ h1 i {
     font-weight: 800;
     font-family: var(--font-mono);
     background: linear-gradient(to bottom, #fff, #94a3b8);
+    background-clip: text;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
 }
@@ -277,6 +340,123 @@ h1 i {
     border-radius: 6px;
     transition: width 0.6s ease;
     box-shadow: 0 0 14px rgba(0, 242, 255, 0.3);
+}
+
+.environments-section {
+    margin-bottom: 3rem;
+}
+
+.environments-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.env-card {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 16px;
+    padding: 1.5rem;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+}
+
+.env-card:hover {
+    transform: translateY(-3px);
+    border-color: rgba(0, 242, 255, 0.2);
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.env-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.env-header h3 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #fff;
+}
+
+.env-info {
+    margin-bottom: 1rem;
+    font-size: 0.75rem;
+    color: var(--text-dim);
+}
+
+.env-path {
+    font-family: var(--font-mono);
+    margin-bottom: 0.25rem;
+    opacity: 0.7;
+}
+
+.env-compose-files {
+    font-family: var(--font-mono);
+    opacity: 0.5;
+}
+
+.env-services {
+    margin-bottom: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.env-service {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0.75rem;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 8px;
+    font-size: 0.75rem;
+}
+
+.env-service[data-state="running"] {
+    border-left: 2px solid var(--green);
+}
+
+.env-service[data-state="exited"] {
+    border-left: 2px solid var(--red);
+}
+
+.env-service-name {
+    font-family: var(--font-mono);
+    color: #fff;
+}
+
+.env-service-status {
+    color: var(--text-dim);
+    text-transform: capitalize;
+}
+
+.env-controls {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.env-controls .ctrl-btn {
+    flex: 1;
+    min-width: 80px;
+    font-size: 0.7rem;
+    padding: 0.6rem 0.8rem;
+}
+
+.env-controls .ctrl-btn.down {
+    background: rgba(255, 62, 62, 0.1);
+    border-color: rgba(255, 62, 62, 0.3);
+    color: var(--red);
+}
+
+.env-controls .ctrl-btn.down:hover:not(:disabled) {
+    background: rgba(255, 62, 62, 0.2);
+    box-shadow: 0 0 15px rgba(255, 62, 62, 0.3);
 }
 
 .components-section {
@@ -1178,11 +1358,27 @@ h1 i {
     animation: pulse 1.5s infinite;
 }
 
-.task-status-dot.success { background: var(--green); }
-.task-status-dot.error { background: var(--red); }
+.task-status-dot.success {
+    background: var(--green);
+}
+
+.task-status-dot.error {
+    background: var(--red);
+}
 
 @keyframes pulse {
-    0% { opacity: 0.6; transform: scale(0.9); }
-    50% { opacity: 1; transform: scale(1.1); }
-    100% { opacity: 0.6; transform: scale(0.9); }
+    0% {
+        opacity: 0.6;
+        transform: scale(0.9);
+    }
+
+    50% {
+        opacity: 1;
+        transform: scale(1.1);
+    }
+
+    100% {
+        opacity: 0.6;
+        transform: scale(0.9);
+    }
 }

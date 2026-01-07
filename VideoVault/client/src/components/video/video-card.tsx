@@ -50,7 +50,7 @@ export function VideoCard({
 }: VideoCardProps) {
   const [imageError, setImageError] = useState(false);
   const [localThumb, setLocalThumb] = useState<string>(
-    video.thumbnail?.dataUrl && !video.thumbnail.dataUrl.startsWith('file://')
+    video.thumbnail?.generated && video.thumbnail?.dataUrl && !video.thumbnail.dataUrl.startsWith('file://')
       ? video.thumbnail.dataUrl
       : '',
   );
@@ -170,10 +170,10 @@ export function VideoCard({
                     );
                     try {
                       await setSpriteMeta(video.id, { cols, frameWidth, frameHeight });
-                    } catch {}
+                    } catch { }
                   };
                   img.src = update.spriteSheet;
-                } catch {}
+                } catch { }
               }
             },
           );
@@ -225,7 +225,7 @@ export function VideoCard({
             if (spriteCols === 0 && meta.cols) setSpriteCols(meta.cols);
             if (meta.frameWidth && spriteFrameWidth === 64) setSpriteFrameWidth(meta.frameWidth);
           }
-        } catch {}
+        } catch { }
       })();
     }
     // no cleanup needed
@@ -263,7 +263,7 @@ export function VideoCard({
       if (previewRef.current && !previewRef.current.paused) {
         try {
           previewRef.current.pause();
-        } catch {}
+        } catch { }
       }
     } else if (isHovering && previewRef.current) {
       const video = previewRef.current;
@@ -314,7 +314,7 @@ export function VideoCard({
               setHoverIndex(0);
             }
           })
-          .catch(() => {});
+          .catch(() => { });
       }, 200);
     }
     return () => {
@@ -583,7 +583,7 @@ export function VideoCard({
                     });
                   }
                 }
-              } catch {}
+              } catch { }
             }}
           />
         ) : null}

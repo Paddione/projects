@@ -1,7 +1,9 @@
 const socket = io({ withCredentials: true });
 
 document.getElementById('logout-btn').addEventListener('click', async () => {
-    const res = await fetch('/api/logout');
+    const res = await fetch('/api/logout', {
+        credentials: 'include'
+    });
     if (res.ok) window.location.href = '/login.html';
 });
 
@@ -72,10 +74,19 @@ let activeFilter = 'all';
 let activeLogServiceId = null;
 let usersData = [];
 let availableModels = {}; // Store available models per service
+let environmentsData = {}; // Store docker environment data
+let containersData = []; // Store discovered Docker containers
+let npmServersData = []; // Store npm server status
+let activeContainerFilter = 'all';
+let activeEnvFilter = 'all'; // Environment filter for containers
+let currentEnvironment = 'production'; // Current dashboard environment
+let isHotReloadActive = false; // Hot reload status
 
 async function fetchServices() {
     try {
-        const res = await fetch('/api/services');
+        const res = await fetch('/api/services', {
+            credentials: 'include'
+        });
         if (res.redirected) {
             window.location.href = res.url;
             return;
@@ -92,7 +103,9 @@ async function fetchServices() {
         // Fetch available models for each service
         for (const service of servicesData) {
             try {
-                const modelsRes = await fetch(`/api/models/${service.id}`);
+                const modelsRes = await fetch(`/api/models/${service.id}`, {
+                    credentials: 'include'
+                });
                 if (modelsRes.ok) {
                     const data = await modelsRes.json();
                     if (data.models && data.models.length > 0) {
@@ -108,6 +121,296 @@ async function fetchServices() {
     } catch (err) {
         console.error('Unable to fetch services', err);
         servicesGrid.innerHTML = '<div class="card">Unable to load services. Please log in again.</div>';
+    }
+}
+
+async function fetchEnvironments() {
+    try {
+        const res = await fetch('/api/environments', {
+            credentials: 'include'
+        });
+
+        // Handle authentication redirect
+        if (res.redirected) {
+            window.location.href = res.url;
+            return;
+        }
+
+        if (res.status === 401) {
+            window.location.href = '/login.html';
+            return;
+        }
+
+        if (!res.ok) {
+            throw new Error('Failed to load environments');
+        }
+
+        const data = await res.json();
+
+        // Check if we got proper data
+        if (!data || !data.environments) {
+            throw new Error('Invalid response format');
+        }
+
+        environmentsData = data.environments;
+        renderEnvironments();
+    } catch (err) {
+        console.error('Unable to fetch environments', err);
+        const grid = document.getElementById('environments-grid');
+        if (grid) {
+            grid.innerHTML = '<div class="env-card"><div class="env-header"><h3>Unable to load Docker environments</h3></div><div class="env-info">Please check logs or refresh the page.</div></div>';
+        }
+    }
+}
+
+async function fetchContainers() {
+    try {
+        const res = await fetch('/api/containers', {
+            credentials: 'include'
+        });
+        if (!res.ok) throw new Error('Failed to load containers');
+        const data = await res.json();
+        containersData = data.containers || [];
+        renderContainers();
+    } catch (err) {
+        console.error('Unable to fetch containers', err);
+        const grid = document.getElementById('containers-grid');
+        if (grid) {
+            grid.innerHTML = '<div class="card">Unable to load containers.</div>';
+        }
+    }
+}
+
+async function fetchNpmServers() {
+    try {
+        const res = await fetch('/api/npm-servers', {
+            credentials: 'include'
+        });
+        if (!res.ok) throw new Error('Failed to load npm servers');
+        const data = await res.json();
+        npmServersData = data.servers || [];
+        renderNpmServers();
+    } catch (err) {
+        console.error('Unable to fetch npm servers', err);
+        const grid = document.getElementById('npm-servers-grid');
+        if (grid) {
+            grid.innerHTML = '<div class="card">Unable to load npm servers.</div>';
+        }
+    }
+}
+
+function renderEnvironments() {
+    const grid = document.getElementById('environments-grid');
+    if (!grid) return;
+
+    grid.innerHTML = Object.entries(environmentsData).map(([id, env]) => {
+        const isRunning = env.running || false;
+        const runningCount = env.runningCount || 0;
+        const total = env.total || 0;
+        const statusClass = isRunning ? 'running' : 'stopped';
+        const statusText = isRunning ? `Running (${runningCount}/${total})` : 'Stopped';
+
+        return `
+        <div class="env-card">
+            <div class="env-header">
+                <h3>${env.name}</h3>
+                <div class="status-badge ${statusClass}">${statusText}</div>
+            </div>
+            <div class="env-info">
+                <div class="env-path">${env.path}</div>
+                <div class="env-compose-files">${env.composeFiles.join(', ')}</div>
+            </div>
+            ${env.services && env.services.length > 0 ? `
+                <div class="env-services">
+                    ${env.services.map(svc => `
+                        <div class="env-service" data-state="${svc.state}">
+                            <span class="env-service-name">${svc.name}</span>
+                            <span class="env-service-status">${svc.state}</span>
+                        </div>
+                    `).join('')}
+                </div>
+            ` : ''}
+            <div class="env-controls">
+                <button class="ctrl-btn start" onclick="controlEnvironment('${id}', 'start')" ${isRunning ? 'disabled' : ''}>▶ Start</button>
+                <button class="ctrl-btn restart" onclick="controlEnvironment('${id}', 'restart')">⟳ Restart</button>
+                <button class="ctrl-btn stop" onclick="controlEnvironment('${id}', 'stop')" ${!isRunning ? 'disabled' : ''}>⬛ Stop</button>
+                <button class="ctrl-btn down" onclick="controlEnvironment('${id}', 'down')">🗑 Down</button>
+            </div>
+        </div>
+        `;
+    }).join('');
+}
+
+async function controlEnvironment(envId, action) {
+    if (action === 'down' && !confirm(`Are you sure you want to remove all containers in ${environmentsData[envId]?.name}?`)) {
+        return;
+    }
+
+    try {
+        const res = await fetch(`/api/environments/${envId}/${action}`, {
+            method: 'POST',
+            credentials: 'include'
+        });
+
+        const result = await res.json();
+
+        if (!result.success) {
+            alert(`Failed to ${action} environment: ${result.error}`);
+        } else {
+            // Refresh environments after a short delay
+            setTimeout(fetchEnvironments, 2000);
+        }
+    } catch (err) {
+        console.error(`Failed to ${action} environment:`, err);
+        alert(`Failed to ${action} environment. Check console for details.`);
+    }
+}
+
+function renderContainers() {
+    const grid = document.getElementById('containers-grid');
+    if (!grid) return;
+
+    if (!containersData || containersData.length === 0) {
+        grid.innerHTML = '<div class="card">No running containers found.</div>';
+        return;
+    }
+
+    const filtered = containersData.filter(container => {
+        // Filter by project
+        if (activeContainerFilter !== 'all' && container.project !== activeContainerFilter) {
+            return false;
+        }
+        // Filter by environment
+        if (activeEnvFilter !== 'all' && container.env !== activeEnvFilter) {
+            return false;
+        }
+        return true;
+    });
+
+    grid.innerHTML = filtered.map(container => {
+        const statusClass = container.state === 'running' ? 'running' : 'stopped';
+        return `
+        <div class="card container-card" data-project="${container.project}" data-env="${container.env}">
+            <div class="card-header">
+                <div class="card-title-group">
+                    <h4>${container.name}</h4>
+                    <div class="card-tags">
+                        <span class="tag">${container.project}</span>
+                        <span class="tag subtle">${container.env}</span>
+                    </div>
+                </div>
+                <div class="status-badge ${statusClass}">${container.state}</div>
+            </div>
+            <div class="container-details">
+                <div class="metric-item">
+                    <span class="metric-label">Image</span>
+                    <span class="metric-value">${container.image}</span>
+                </div>
+                <div class="metric-item">
+                    <span class="metric-label">Ports</span>
+                    <span class="metric-value">${container.ports || 'None'}</span>
+                </div>
+                <div class="metric-item">
+                    <span class="metric-label">ID</span>
+                    <span class="metric-value">${container.id}</span>
+                </div>
+            </div>
+        </div>
+        `;
+    }).join('');
+
+    // Setup container filter buttons (project)
+    const containerFilterBtns = document.querySelectorAll('[data-container-filter]');
+    containerFilterBtns.forEach(btn => {
+        btn.onclick = () => {
+            containerFilterBtns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            activeContainerFilter = btn.dataset.containerFilter || 'all';
+            renderContainers();
+        };
+    });
+
+    // Setup environment filter buttons
+    const envFilterBtns = document.querySelectorAll('[data-env-filter]');
+    envFilterBtns.forEach(btn => {
+        btn.onclick = () => {
+            envFilterBtns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            activeEnvFilter = btn.dataset.envFilter || 'all';
+            renderContainers();
+        };
+    });
+}
+
+function renderNpmServers() {
+    const grid = document.getElementById('npm-servers-grid');
+    if (!grid) return;
+
+    if (!npmServersData || npmServersData.length === 0) {
+        grid.innerHTML = '<div class="card">No npm servers configured.</div>';
+        return;
+    }
+
+    grid.innerHTML = npmServersData.map(server => {
+        const statusClass = server.running ? 'running' : 'stopped';
+        const statusText = server.running ? 'Running' : 'Stopped';
+
+        return `
+        <div class="card npm-server-card">
+            <div class="card-header">
+                <div class="card-title-group">
+                    <h4>${server.name}</h4>
+                    <div class="card-tags">
+                        <span class="tag">${server.project}</span>
+                        <span class="tag subtle">Port: ${server.port || 'N/A'}</span>
+                    </div>
+                </div>
+                <div class="status-badge ${statusClass}">${statusText}</div>
+            </div>
+            <p class="card-desc">${server.description}</p>
+            <div class="card-metrics">
+                <div class="metric-item">
+                    <span class="metric-label">Path</span>
+                    <span class="metric-value">${server.path}</span>
+                </div>
+                <div class="metric-item">
+                    <span class="metric-label">Script</span>
+                    <span class="metric-value">${server.script}</span>
+                </div>
+                <div class="metric-item">
+                    <span class="metric-label">Port Status</span>
+                    <span class="metric-value">${server.portInUse ? 'In Use' : 'Available'}</span>
+                </div>
+            </div>
+            <div class="card-footer">
+                <div class="control-group">
+                    <button class="ctrl-btn start" onclick="controlNpmServer('${server.id}', 'start')" ${server.running ? 'disabled' : ''}>▶ Start</button>
+                    <button class="ctrl-btn stop" onclick="controlNpmServer('${server.id}', 'stop')" ${!server.running ? 'disabled' : ''}>⬛ Stop</button>
+                </div>
+            </div>
+        </div>
+        `;
+    }).join('');
+}
+
+async function controlNpmServer(serverId, action) {
+    try {
+        const res = await fetch(`/api/npm-servers/${serverId}/${action}`, {
+            method: 'POST',
+            credentials: 'include'
+        });
+
+        const result = await res.json();
+
+        if (!result.success) {
+            alert(`Failed to ${action} npm server: ${result.error || result.message}`);
+        } else {
+            // Refresh npm servers after a short delay
+            setTimeout(fetchNpmServers, 1000);
+        }
+    } catch (err) {
+        console.error(`Failed to ${action} npm server:`, err);
+        alert(`Failed to ${action} npm server. Check console for details.`);
     }
 }
 
@@ -253,6 +556,7 @@ async function handleModelChange(serviceId, modelId) {
     try {
         const res = await fetch(`/api/models/${serviceId}/select`, {
             method: 'POST',
+            credentials: 'include',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ modelId })
         });
@@ -349,7 +653,9 @@ async function openLogs(serviceId) {
 async function refreshLogs() {
     if (!activeLogServiceId) return;
     try {
-        const res = await fetch(`/api/services/${activeLogServiceId}/logs`);
+        const res = await fetch(`/api/services/${activeLogServiceId}/logs`, {
+            credentials: 'include'
+        });
         if (!res.ok) throw new Error('Unable to load logs');
         const data = await res.json();
         logOutput.textContent = data.logs || 'No logs available.';
@@ -449,7 +755,9 @@ browserHubBackdrop.addEventListener('click', closeBrowserHub);
 async function fetchBrowserGroups() {
     browserGroupsList.innerHTML = '<div class="loading-dots">...</div>';
     try {
-        const res = await fetch('/api/browser/groups');
+        const res = await fetch('/api/browser/groups', {
+            credentials: 'include'
+        });
         const groups = await res.json();
         renderBrowserGroups(groups);
     } catch (err) {
@@ -471,7 +779,10 @@ function renderBrowserGroups(groups) {
 
 async function runBrowserGroup(groupId) {
     try {
-        const res = await fetch(`/api/browser/run/${groupId}`, { method: 'POST' });
+        const res = await fetch(`/api/browser/run/${groupId}`, {
+            method: 'POST',
+            credentials: 'include'
+        });
         const data = await res.json();
         if (data.success) {
             browserTaskDetail.classList.remove('hidden');
@@ -489,7 +800,9 @@ async function fetchUsers() {
     showUserMessage('Loading users...', false);
 
     try {
-        const res = await fetch('/api/users');
+        const res = await fetch('/api/users', {
+            credentials: 'include'
+        });
         if (!res.ok) throw new Error('Unable to load users');
         const data = await res.json();
         usersData = Array.isArray(data.users) ? data.users : [];
@@ -561,6 +874,7 @@ async function updateUserRole(userId, role) {
     try {
         const res = await fetch(`/api/users/${userId}/role`, {
             method: 'PATCH',
+            credentials: 'include',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ role })
         });
@@ -593,6 +907,7 @@ async function createUser() {
     try {
         const res = await fetch('/api/users', {
             method: 'POST',
+            credentials: 'include',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ name, email, role })
         });
@@ -616,7 +931,8 @@ async function resetUserPassword(userId) {
 
     try {
         const res = await fetch(`/api/users/${userId}/reset-password`, {
-            method: 'POST'
+            method: 'POST',
+            credentials: 'include'
         });
         const data = await res.json();
         if (!res.ok) {
@@ -632,7 +948,10 @@ async function deleteUser(userId) {
     showUserMessage('Deleting user...', false);
 
     try {
-        const res = await fetch(`/api/users/${userId}`, { method: 'DELETE' });
+        const res = await fetch(`/api/users/${userId}`, {
+            method: 'DELETE',
+            credentials: 'include'
+        });
         const data = await res.json();
         if (!res.ok) {
             throw new Error(data.message || 'Unable to delete user');
@@ -646,7 +965,7 @@ async function deleteUser(userId) {
 }
 
 socket.on('status_update', (data) => {
-    const { vram, statuses, errors, system, summary } = data;
+    const { vram, statuses, errors, system, summary, environments, containers, npmServers } = data;
 
     vramUsedEl.textContent = vram.used;
     vramTotalEl.textContent = vram.total;
@@ -671,6 +990,34 @@ socket.on('status_update', (data) => {
         stackRunningEl.textContent = summary.running;
         stackTotalEl.textContent = summary.total;
         stackUpdatedEl.textContent = formatTimeStamp(new Date());
+    }
+
+    // Update environment status in real-time
+    if (environments) {
+        Object.entries(environments).forEach(([envId, envStatus]) => {
+            if (environmentsData[envId]) {
+                environmentsData[envId].running = envStatus.running;
+                environmentsData[envId].runningCount = envStatus.runningCount;
+                environmentsData[envId].total = envStatus.total;
+                environmentsData[envId].services = envStatus.services;
+            }
+        });
+        // Re-render environments if they've changed
+        if (Object.keys(environments).length > 0) {
+            renderEnvironments();
+        }
+    }
+
+    // Update containers data
+    if (containers && containers.length > 0) {
+        containersData = containers;
+        renderContainers();
+    }
+
+    // Update npm servers data
+    if (npmServers && npmServers.length > 0) {
+        npmServersData = npmServers;
+        renderNpmServers();
     }
 
     const now = Date.now();
@@ -720,6 +1067,18 @@ socket.on('disconnect', () => {
     document.getElementById('connection-status').textContent = 'Disconnected';
 });
 
+socket.on('open', (data) => {
+    document.getElementById('connection-status').textContent = 'Connected';
+    document.getElementById('connection-status').classList.remove('stopped');
+    document.getElementById('connection-status').classList.add('running');
+});
+
+fetchServices();
+fetchEnvironments();
+fetchContainers();
+fetchNpmServers();
+fetchEnvironmentInfo();
+
 socket.on('browser_task_start', (data) => {
     browserTaskDetail.classList.remove('hidden');
     currentTaskListName.textContent = `Running: ${data.groupId}`;
@@ -742,4 +1101,39 @@ socket.on('browser_task_complete', (data) => {
     currentTaskListName.textContent = `Completed: ${groupId} (${result.status})`;
 });
 
+// Fetch environment configuration
+async function fetchEnvironmentInfo() {
+    try {
+        const res = await fetch('/api/environment-info', {
+            credentials: 'include'
+        });
+        if (!res.ok) {
+            console.warn('Failed to fetch environment info');
+            return;
+        }
+        const data = await res.json();
+
+        currentEnvironment = data.environment || 'production';
+        isHotReloadActive = data.hotReload || false;
+
+        // Update environment badge
+        const envBadge = document.getElementById('env-badge');
+        if (envBadge) {
+            envBadge.textContent = currentEnvironment.toUpperCase();
+            envBadge.className = `env-badge ${currentEnvironment}`;
+        }
+
+        // Update hot reload badge
+        const hotReloadBadge = document.getElementById('hot-reload-badge');
+        if (hotReloadBadge && isHotReloadActive) {
+            hotReloadBadge.style.display = 'inline-block';
+        } else if (hotReloadBadge) {
+            hotReloadBadge.style.display = 'none';
+        }
+    } catch (err) {
+        console.error('Unable to fetch environment info:', err);
+    }
+}
+
 fetchServices();
+fetchEnvironments();

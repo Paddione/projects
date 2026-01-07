@@ -2,7 +2,7 @@ import express, { type Request, Response, NextFunction } from 'express';
 import { registerRoutes } from './routes';
 import { setupVite, serveStatic, log } from './vite';
 import { logger } from './lib/logger';
-import { ensureDbReady } from './db';
+import { ensureDbReady, db as dbInstance } from './db';
 import cookieParser from 'cookie-parser';
 import { globalErrorHandler } from './middleware/errorHandler';
 import { requestId, requestLogger, metricsMiddleware } from './middleware/observability';
@@ -22,9 +22,9 @@ if (process.env.TRUST_PROXY === '1' || process.env.NODE_ENV === 'production') {
   app.set('trust proxy', 1);
 }
 
-// Default request size limits (reduced for security)
-app.use(express.json({ limit: '1mb' }));
-app.use(express.urlencoded({ extended: false, limit: '1mb' }));
+// Default request size limits (increased for large bulk operations)
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: false, limit: '50mb' }));
 
 // Compression for better performance
 app.use(compression({
@@ -55,6 +55,13 @@ if (fs.existsSync(processedPath)) {
 }
 
 app.use('/media', express.static(mediaRoot));
+
+// Serve fixtures directory for test data
+const fixturesPath = path.join(process.cwd(), 'fixtures');
+if (fs.existsSync(fixturesPath)) {
+  app.use('/fixtures', express.static(fixturesPath));
+  logger.info('Fixtures directory mounted', { path: fixturesPath });
+}
 
 // Session configuration (Postgres-backed if DB configured)
 app.use(createSessionMiddleware());
@@ -87,13 +94,46 @@ app.use(requestLogger);
 
 (async () => {
   // Initialize DB connection if configured
-  if (process.env.DATABASE_URL) {
+  if (process.env.DATABASE_URL && dbInstance) {
     try {
       await ensureDbReady();
+      app.locals.db = dbInstance;
       logger.info('Database connection verified');
     } catch (err) {
       logger.error('Failed to connect to database', { error: (err as Error).message });
       // Continue to boot so app remains accessible (may use in-memory fallbacks)
+    }
+  }
+
+  // Initialize and start job queue (if database available)
+  if (dbInstance) {
+    try {
+      const { initializeJobQueue } = await import('./lib/enhanced-job-queue');
+      const { handleThumbnailGeneration } = await import('./handlers/thumbnail-handler');
+      const { handleMetadataExtraction } = await import('./handlers/metadata-handler');
+
+      // Get concurrency from environment or default to 4
+      const concurrency = parseInt(process.env.JOB_QUEUE_CONCURRENCY || '4', 10);
+      const jobQueue = initializeJobQueue(dbInstance, concurrency);
+
+      // Register job handlers
+      jobQueue.registerHandler('thumbnail', (payload: any, context) =>
+        handleThumbnailGeneration(payload, context, dbInstance)
+      );
+      jobQueue.registerHandler('metadata', (payload: any, context) =>
+        handleMetadataExtraction(payload, context, dbInstance)
+      );
+
+      // Start the job queue
+      await jobQueue.start();
+      app.locals.jobQueue = jobQueue;
+
+      logger.info('Job queue initialized and started', { concurrency });
+
+      // Cleanup old completed jobs on startup
+      await jobQueue.clearCompleted(7);
+    } catch (err) {
+      logger.error('Failed to initialize job queue', { error: (err as Error).message, stack: (err as Error).stack });
     }
   }
 
@@ -122,44 +162,24 @@ app.use(requestLogger);
     serveStatic(app);
   }
 
-  // Serve the app on the configured PORT. In development, if the port is busy,
-  // fall back to the next available port to avoid orphan conflicts.
-  const basePort = parseInt(process.env.PORT || '5000', 10);
+  // Serve the app on the configured PORT; keep it stable for local development.
+  const port = parseInt(process.env.PORT || '5000', 10);
 
-  async function listenWithRetry(p: number, attemptsLeft: number): Promise<void> {
-    return new Promise((resolve, reject) => {
+  try {
+    await new Promise<void>((resolve, reject) => {
       const onError = (err: any) => {
-        if (
-          err?.code === 'EADDRINUSE' &&
-          process.env.NODE_ENV === 'development' &&
-          attemptsLeft > 0
-        ) {
-          const nextPort = p + 1;
-          logger.warn(`Port ${p} in use; retrying on ${nextPort}`);
-          server.off('error', onError);
-          // Try the next port
-          listenWithRetry(nextPort, attemptsLeft - 1)
-            .then(resolve)
-            .catch(reject);
-        } else {
-          reject(err);
-        }
+        reject(err);
       };
 
       server.once('error', onError);
-      server.listen({ port: p, host: '0.0.0.0', reusePort: true }, () => {
+      server.listen({ port, host: '0.0.0.0', reusePort: true }, () => {
         server.off('error', onError);
-        log(`serving on port ${p}`);
+        log(`serving on port ${port}`);
         resolve();
       });
     });
-  }
-
-  try {
-    const maxHops = process.env.NODE_ENV === 'development' ? 5 : 0;
-    await listenWithRetry(basePort, maxHops);
   } catch (err) {
-    logger.error('Failed to bind server port', { error: (err as Error).message, port: basePort });
+    logger.error('Failed to bind server port', { error: (err as Error).message, port });
     process.exit(1);
   }
 })();

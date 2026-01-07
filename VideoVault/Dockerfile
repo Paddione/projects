@@ -8,10 +8,11 @@ WORKDIR /app
 # Add curl for healthchecks and tooling for native modules
 RUN apt-get update \
   && apt-get install -y --no-install-recommends \
-    ca-certificates \
-    curl \
-    python3 \
-    build-essential \
+  ca-certificates \
+  curl \
+  python3 \
+  build-essential \
+  ffmpeg \
   && rm -rf /var/lib/apt/lists/*
 
 # Copy package files first for better caching
@@ -20,7 +21,8 @@ COPY tsconfig.json ./
 COPY vite.config.ts ./
 
 # Install dependencies (upgrade npm to avoid 404 tarball issues)
-RUN npm install -g npm@11 && npm ci
+# Ensure devDependencies are installed by not setting NODE_ENV=production
+RUN npm install -g npm@11 && NODE_ENV=development npm ci
 
 # Create directories that will be mounted as volumes
 RUN mkdir -p client server shared docs
@@ -29,6 +31,7 @@ RUN mkdir -p client server shared docs
 COPY client/ ./client/
 COPY server/ ./server/
 COPY shared/ ./shared/
+COPY scripts/ ./scripts/
 
 # Expose port for development server
 EXPOSE 5000

@@ -45,29 +45,46 @@ http:
         - default-chain@file
       priority: 5
 
+    # Dashboard - Local Fallback (lower priority than Docker)
+    dashboard-local:
+      rule: "Host(`dashboard.korczewski.de`)"
+      entryPoints:
+        - websecure
+      service: dashboard-local
+      tls: {}
+      middlewares:
+        - default-chain@file
+      priority: 5
+
   services:
     # Local service endpoints (fallback to host machine)
 
     l2p-backend-local:
       loadBalancer:
         servers:
-          - url: "http://172.17.0.1:5001"
+          - url: "http://host.docker.internal:5001"
         passHostHeader: true
 
     l2p-frontend-local:
       loadBalancer:
         servers:
-          - url: "http://172.17.0.1:4173"
+          - url: "http://host.docker.internal:4173"
         passHostHeader: true
 
     payment-local:
       loadBalancer:
         servers:
-          - url: "http://172.17.0.1:3004"
+          - url: "http://host.docker.internal:3004"
         passHostHeader: true
 
     videovault-local:
       loadBalancer:
         servers:
-          - url: "http://172.17.0.1:5100"
+          - url: "http://host.docker.internal:5100"
+        passHostHeader: true
+
+    dashboard-local:
+      loadBalancer:
+        servers:
+          - url: "http://host.docker.internal:4242"
         passHostHeader: true

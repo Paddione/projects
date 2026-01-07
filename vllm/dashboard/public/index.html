@@ -18,7 +18,13 @@
     <div class="dashboard">
         <header>
             <div class="header-main">
-                <h1><i>✦</i> VRAM MASTERMIND</h1>
+                <div class="header-left">
+                    <h1><i>✦</i> VRAM MASTERMIND</h1>
+                    <div class="header-badges">
+                        <div id="env-badge" class="env-badge">LOADING...</div>
+                        <div id="hot-reload-badge" class="hot-reload-badge" style="display: none;">🔥 Hot Reload Active</div>
+                    </div>
+                </div>
                 <div class="mass-actions">
                     <button class="mass-btn start" onclick="massAction('start')">START ALL</button>
                     <button class="mass-btn restart" onclick="massAction('restart')">RESTART ALL</button>
@@ -75,6 +81,61 @@
             </div>
         </section>
 
+        <section class="environments-section">
+            <div class="section-header">
+                <div>
+                    <div class="section-eyebrow">Docker Compose</div>
+                    <h2>Production Environments</h2>
+                </div>
+            </div>
+            <div id="environments-grid" class="environments-grid">
+                <!-- Environments will be injected here -->
+                <div class="loading-dots">...</div>
+            </div>
+        </section>
+
+        <section class="containers-section">
+            <div class="section-header">
+                <div>
+                    <div class="section-eyebrow">Docker Containers</div>
+                    <h2>Running Containers</h2>
+                </div>
+                <div class="filter-group">
+                    <button class="filter-btn active" data-container-filter="all">All</button>
+                    <button class="filter-btn" data-container-filter="l2p">L2P</button>
+                    <button class="filter-btn" data-container-filter="videovault">VideoVault</button>
+                    <button class="filter-btn" data-container-filter="payment">Payment</button>
+                    <button class="filter-btn" data-container-filter="auth">Auth</button>
+                    <button class="filter-btn" data-container-filter="vllm">vLLM</button>
+                    <button class="filter-btn" data-container-filter="shared">Infrastructure</button>
+                </div>
+                <div class="filter-group" style="margin-left: auto;">
+                    <span style="margin-right: 8px; opacity: 0.7; font-size: 12px;">Environment:</span>
+                    <button class="filter-btn active" data-env-filter="all">All</button>
+                    <button class="filter-btn" data-env-filter="production">Production</button>
+                    <button class="filter-btn" data-env-filter="development">Development</button>
+                    <button class="filter-btn" data-env-filter="infrastructure">Infrastructure</button>
+                </div>
+            </div>
+            <div id="containers-grid" class="containers-grid">
+                <!-- Containers will be injected here -->
+                <div class="loading-dots">...</div>
+            </div>
+        </section>
+
+        <section class="npm-servers-section">
+            <div class="section-header">
+                <div>
+                    <div class="section-eyebrow">Development Servers</div>
+                    <h2>npm Servers</h2>
+                </div>
+            </div>
+            <div id="npm-servers-grid" class="npm-servers-grid">
+                <!-- npm servers will be injected here -->
+                <div class="loading-dots">...</div>
+            </div>
+        </section>
+
         <section class="components-section">
             <div class="section-header">
                 <div>
@@ -89,6 +150,8 @@
                     <button class="filter-btn" data-filter="pipeline">Pipeline</button>
                     <button class="filter-btn" data-filter="creative">Creative</button>
                     <button class="filter-btn" data-filter="portal">Portal</button>
+                    <button class="filter-btn" data-filter="production">Production</button>
+                    <button class="filter-btn" data-filter="infrastructure">Infrastructure</button>
                 </div>
             </div>
             <div id="services-grid" class="services-grid">

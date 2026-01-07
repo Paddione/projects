@@ -1,0 +1,64 @@
+# Development Docker Compose
+# This file runs ONLY infrastructure services (Qdrant, Infinity, PostgreSQL)
+# Main application services (vLLM, Open WebUI, Dashboard) should run locally via npm for hot reload
+
+services:
+  # Vector Database
+  qdrant:
+    image: qdrant/qdrant:v1.14.0
+    container_name: qdrant-dev
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    volumes:
+      - ./rag/data/qdrant:/qdrant/storage
+    restart: unless-stopped
+
+  # Embedding Service
+  infinity:
+    image: michaelf34/infinity:latest
+    container_name: infinity-dev
+    runtime: nvidia
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - LD_LIBRARY_PATH=/usr/lib/wsl/lib:/usr/local/cuda/lib64:/usr/local/nvidia/lib:/usr/local/nvidia/lib64
+    ports:
+      - "7997:7997"
+    volumes:
+      - /usr/lib/wsl:/usr/lib/wsl
+      - ~/.cache/huggingface:/root/.cache/huggingface
+    devices:
+      - /dev/dxg
+    command: v2 --model-id BAAI/bge-m3 --batch-size 32 --device cuda --no-bettertransformer --no-compile --url-prefix /v1
+    restart: unless-stopped
+
+  # Database for Open WebUI
+  db:
+    image: postgres:16-alpine
+    container_name: postgres-dev
+    ports:
+      - "5438:5432"
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB:-webui}
+      - POSTGRES_USER=${POSTGRES_USER:-webui}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-webui}
+    volumes:
+      - ./rag/data/postgres:/var/lib/postgresql/data
+    restart: unless-stopped
+
+# Note: Run the following services locally for development with hot reload:
+# 
+# 1. vLLM: 
+#    cd rag && docker run --runtime nvidia -e HF_TOKEN=$HF_TOKEN -p 4100:8888 vllm/vllm-openai:latest --model Qwen/Qwen2.5-Coder-1.5B
+#
+# 2. Open WebUI:
+#    cd rag && docker run -p 3005:8080 -e OPENAI_API_BASE_URLS=http://localhost:4100/v1 ghcr.io/open-webui/open-webui:main
+#
+# 3. Dashboard:
+#    cd dashboard && npm run dev
+#
+# This approach allows for:
+# - Fast iteration on application code
+# - Hot reload for dashboard
+# - Stable infrastructure services
+# - Lower resource usage (only infrastructure containers running)

@@ -11,6 +11,11 @@ const cookieParser = require('cookie-parser');
 const os = require('os');
 const { Pool } = require('pg');
 
+// Environment Configuration
+const NODE_ENV = process.env.NODE_ENV || 'production';
+const IS_DEVELOPMENT = NODE_ENV === 'development';
+const IS_PRODUCTION = NODE_ENV === 'production';
+
 const REGISTRY_PATH = path.join(__dirname, '..', '..', 'browser_control_registry.json');
 
 const app = express();
@@ -35,6 +40,124 @@ const dbPool = new Pool({
     max: 5
 });
 const ALLOWED_ROLES = new Set(['admin', 'user', 'pending']);
+
+console.log(`🚀 Dashboard starting in ${NODE_ENV.toUpperCase()} mode`);
+console.log(`📊 Database: ${DB_URL.replace(/:[^:@]+@/, ':***@')}`);
+if (IS_DEVELOPMENT) {
+    console.log('🔥 Hot reload enabled via nodemon');
+}
+
+// Docker Compose Environment Configuration
+const DOCKER_ENVIRONMENTS = {
+    'l2p-production': {
+        name: 'L2P Production',
+        path: path.resolve(PROJECT_ROOT, '..', 'l2p'),
+        composeFiles: ['docker-compose.yml'],
+        profile: 'production',
+        project: 'l2p',
+        env: 'production',
+        description: 'Learn2Play production stack (frontend, backend, redis)'
+    },
+    'l2p-development': {
+        name: 'L2P Development',
+        path: path.resolve(PROJECT_ROOT, '..', 'l2p'),
+        composeFiles: ['docker-compose.yml'],
+        profile: 'development',
+        project: 'l2p',
+        env: 'development',
+        description: 'Learn2Play dev environment with hot reload'
+    },
+    'shared-infrastructure': {
+        name: 'Shared Infrastructure',
+        path: path.resolve(PROJECT_ROOT, '..', 'shared-infrastructure'),
+        composeFiles: ['docker-compose.yml'],
+        project: 'shared',
+        env: 'infrastructure',
+        description: 'Centralized PostgreSQL database'
+    },
+    'auth-service': {
+        name: 'Auth Service',
+        path: path.resolve(PROJECT_ROOT, '..', 'auth'),
+        composeFiles: ['docker-compose.yml'],
+        project: 'auth',
+        env: 'production',
+        description: 'Central authentication service'
+    },
+    'videovault-production': {
+        name: 'VideoVault Production',
+        path: path.resolve(PROJECT_ROOT, '..', 'VideoVault'),
+        composeFiles: ['docker-compose.yml'],
+        service: 'videovault',
+        project: 'videovault',
+        env: 'production',
+        description: 'Media management and transcription (production)'
+    },
+    'videovault-development': {
+        name: 'VideoVault Development',
+        path: path.resolve(PROJECT_ROOT, '..', 'VideoVault'),
+        composeFiles: ['docker-compose.yml'],
+        service: 'videovault-dev',
+        project: 'videovault',
+        env: 'development',
+        description: 'Media management and transcription (dev)'
+    },
+    'traefik': {
+        name: 'Traefik Reverse Proxy',
+        path: path.resolve(PROJECT_ROOT, '..', 'reverse-proxy'),
+        composeFiles: ['docker-compose.yml'],
+        project: 'shared',
+        env: 'infrastructure',
+        description: 'Reverse proxy and SSL termination'
+    },
+    'vllm-rag': {
+        name: 'vLLM RAG Stack',
+        path: path.resolve(PROJECT_ROOT, '..', 'rag'),
+        composeFiles: ['docker-compose.yml'],
+        project: 'vllm',
+        env: 'production',
+        description: 'AI inference and RAG pipeline (vLLM, Qdrant, Infinity, Open WebUI)'
+    }
+};
+
+// npm Project Configuration (for local development servers)
+const NPM_PROJECTS = {
+    'l2p-dev': {
+        name: 'L2P Dev (npm)',
+        path: path.resolve(PROJECT_ROOT, '..', 'l2p'),
+        script: 'dev',
+        port: 3000,
+        project: 'l2p',
+        env: 'development',
+        description: 'L2P development server (frontend + backend)'
+    },
+    'videovault-dev': {
+        name: 'VideoVault Dev (npm)',
+        path: path.resolve(PROJECT_ROOT, '..', 'VideoVault'),
+        script: 'dev',
+        port: 5100,
+        project: 'videovault',
+        env: 'development',
+        description: 'VideoVault development server'
+    },
+    'payment-dev': {
+        name: 'Payment Service Dev (npm)',
+        path: path.resolve(PROJECT_ROOT, '..', 'payment'),
+        script: 'dev',
+        port: 3004,
+        project: 'payment',
+        env: 'development',
+        description: 'Payment service development server'
+    },
+    'auth-dev': {
+        name: 'Auth Service Dev (npm)',
+        path: path.resolve(PROJECT_ROOT, '..', 'auth'),
+        script: 'start',
+        port: 5500,
+        project: 'auth',
+        env: 'development',
+        description: 'Auth service (local process)'
+    }
+};
 
 app.use(express.json());
 app.use(cookieParser());
@@ -329,6 +452,59 @@ const SERVICES = [
         vramEstimate: '< 500 MB',
         type: 'docker',
         group: 'infrastructure'
+    },
+    {
+        id: 'l2p-frontend-prod',
+        name: 'L2P Frontend (Prod)',
+        containerName: 'l2p-frontend-1',
+        url: 'https://l2p.korczewski.de',
+        model: 'Nginx + React',
+        description: 'Production frontend for Learn2Play platform.',
+        vramEstimate: '< 100 MB',
+        type: 'docker',
+        group: 'production'
+    },
+    {
+        id: 'l2p-backend-prod',
+        name: 'L2P Backend (Prod)',
+        containerName: 'l2p-backend-1',
+        url: 'https://l2p.korczewski.de/api',
+        model: 'Node.js + Express',
+        description: 'Production backend for Learn2Play platform.',
+        vramEstimate: '< 500 MB',
+        type: 'docker',
+        group: 'production'
+    },
+    {
+        id: 'l2p-postgres-prod',
+        name: 'L2P PostgreSQL (Prod)',
+        containerName: 'l2p-postgres-1',
+        model: 'PostgreSQL 15',
+        description: 'Production database for Learn2Play platform.',
+        vramEstimate: '< 1 GB',
+        type: 'docker',
+        group: 'production'
+    },
+    {
+        id: 'l2p-redis-prod',
+        name: 'L2P Redis (Prod)',
+        containerName: 'l2p-redis-1',
+        model: 'Redis 7',
+        description: 'Production session storage for Learn2Play platform.',
+        vramEstimate: '< 200 MB',
+        type: 'docker',
+        group: 'production'
+    },
+    {
+        id: 'vllm-dashboard',
+        name: 'vLLM Dashboard',
+        containerName: 'vllm-dashboard',
+        url: 'https://dashboard.korczewski.de',
+        model: 'Dashboard UI',
+        description: 'Central control panel for all services.',
+        vramEstimate: '< 200 MB',
+        type: 'docker',
+        group: 'infrastructure'
     }
 ];
 
@@ -486,6 +662,138 @@ function getUserSchemaMap(schema) {
     const map = new Map();
     schema.forEach(column => map.set(column.name, column));
     return map;
+}
+
+// Helper to discover all running Docker containers
+async function discoverDockerContainers() {
+    try {
+        const containers = await docker.listContainers({ all: false });
+        return containers.map(container => {
+            const labels = container.Labels || {};
+            const names = container.Names.map(n => n.replace(/^\//, ''));
+            const ports = container.Ports.map(p =>
+                p.PublicPort ? `${p.PublicPort}:${p.PrivatePort}` : `${p.PrivatePort}`
+            ).join(', ');
+
+            // Try to infer project from compose labels
+            const composeProject = labels['com.docker.compose.project'] || 'unknown';
+            const composeService = labels['com.docker.compose.service'] || names[0];
+
+            // Try to infer environment
+            let env = 'production';
+            if (names[0].includes('-dev') || names[0].includes('development')) {
+                env = 'development';
+            } else if (names[0].includes('test')) {
+                env = 'test';
+            } else if (['traefik', 'shared-postgres'].includes(names[0])) {
+                env = 'infrastructure';
+            }
+
+            // Map to project categories
+            let project = 'unknown';
+            if (composeProject.includes('l2p') || names[0].includes('l2p')) {
+                project = 'l2p';
+            } else if (composeProject.includes('videovault') || names[0].includes('videovault')) {
+                project = 'videovault';
+            } else if (composeProject.includes('auth') || names[0].includes('auth')) {
+                project = 'auth';
+            } else if (composeProject.includes('payment') || names[0].includes('payment')) {
+                project = 'payment';
+            } else if (names[0].includes('vllm') || names[0].includes('qdrant') || names[0].includes('infinity') || names[0].includes('webui')) {
+                project = 'vllm';
+            } else if (names[0].includes('postgres') || names[0].includes('traefik')) {
+                project = 'shared';
+            }
+
+            return {
+                id: container.Id.substring(0, 12),
+                name: names[0],
+                image: container.Image,
+                state: container.State,
+                status: container.Status,
+                ports: ports,
+                created: container.Created,
+                composeProject: composeProject,
+                composeService: composeService,
+                project: project,
+                env: env,
+                labels: labels
+            };
+        });
+    } catch (error) {
+        console.error('Error discovering Docker containers:', error);
+        return [];
+    }
+}
+
+// Helper to detect running npm servers
+async function detectNpmServers() {
+    const results = [];
+
+    for (const [id, config] of Object.entries(NPM_PROJECTS)) {
+        const isRunning = await new Promise((resolve) => {
+            // Check for node processes in the project directory
+            const searchPattern = config.path.split('/').pop();
+            exec(`ps aux | grep -v grep | grep "node" | grep "${searchPattern}"`, (err, stdout) => {
+                resolve(!!stdout.trim());
+            });
+        });
+
+        // Also check if port is in use
+        const portInUse = config.port ? await new Promise((resolve) => {
+            exec(`lsof -i :${config.port} -sTCP:LISTEN -t`, (err, stdout) => {
+                resolve(!!stdout.trim());
+            });
+        }) : false;
+
+        results.push({
+            id: id,
+            ...config,
+            running: isRunning || portInUse,
+            portInUse: portInUse
+        });
+    }
+
+    return results;
+}
+
+// Helper to get docker-compose environment status
+async function getEnvironmentStatus(envId, envConfig) {
+    const composeCmd = envConfig.composeFiles.map(f => `-f ${f}`).join(' ');
+    const profileArg = envConfig.profile ? `--profile ${envConfig.profile}` : '';
+
+    return new Promise((resolve) => {
+        exec(
+            `docker compose ${composeCmd} ${profileArg} ps --format json`,
+            { cwd: envConfig.path, timeout: 5000 },
+            (err, stdout, stderr) => {
+                if (err) {
+                    resolve({ running: false, total: 0, runningCount: 0, services: [] });
+                    return;
+                }
+                try {
+                    const lines = stdout.trim().split('\n').filter(l => l.trim());
+                    const services = lines.map(line => {
+                        try { return JSON.parse(line); } catch { return null; }
+                    }).filter(Boolean);
+
+                    const runningCount = services.filter(s => s.State === 'running').length;
+                    resolve({
+                        running: runningCount > 0,
+                        total: services.length,
+                        runningCount: runningCount,
+                        services: services.map(s => ({
+                            name: s.Service,
+                            state: s.State,
+                            status: s.Status
+                        }))
+                    });
+                } catch {
+                    resolve({ running: false, total: 0, runningCount: 0, services: [] });
+                }
+            }
+        );
+    });
 }
 
 function getServiceLogs(service, lines) {
@@ -653,7 +961,35 @@ io.on('connection', async (socket) => {
         const statuses = await getServiceStatus();
         const system = await getSystemStats();
         const running = Object.values(statuses).filter(Boolean).length;
-        socket.emit('status_update', { vram, statuses, errors: lastErrors, system, summary: { running, total: SERVICES.length } });
+
+        // Get Docker environment status summary
+        const envStatus = {};
+        for (const [id, env] of Object.entries(DOCKER_ENVIRONMENTS)) {
+            const status = await getEnvironmentStatus(id, env);
+            envStatus[id] = status;
+        }
+
+        // Get all running Docker containers
+        const containers = await discoverDockerContainers();
+
+        // Get npm server status
+        const npmServers = await detectNpmServers();
+
+        socket.emit('status_update', {
+            vram,
+            statuses,
+            errors: lastErrors,
+            system,
+            environments: envStatus,
+            containers: containers,
+            npmServers: npmServers,
+            summary: { running, total: SERVICES.length },
+            config: {
+                nodeEnv: NODE_ENV,
+                isDevelopment: IS_DEVELOPMENT,
+                isProduction: IS_PRODUCTION
+            }
+        });
     };
 
     const interval = setInterval(sendUpdate, 2000);
@@ -677,6 +1013,141 @@ io.on('connection', async (socket) => {
 
 app.get('/api/services', (req, res) => {
     res.json(SERVICES);
+});
+
+// API: Get current environment info (for dashboard header badges)
+app.get('/api/environment-info', (req, res) => {
+    res.json({
+        environment: NODE_ENV,
+        hotReload: IS_DEVELOPMENT
+    });
+});
+
+// New API: Get all running Docker containers
+app.get('/api/containers', async (req, res) => {
+    try {
+        const containers = await discoverDockerContainers();
+        res.json({ containers });
+    } catch (error) {
+        console.error('Error fetching containers:', error);
+        res.status(500).json({ error: 'Failed to fetch containers' });
+    }
+});
+
+// New API: Get all docker-compose environments with their status
+app.get('/api/environments', async (req, res) => {
+    try {
+        const environments = {};
+        for (const [id, config] of Object.entries(DOCKER_ENVIRONMENTS)) {
+            const status = await getEnvironmentStatus(id, config);
+            environments[id] = {
+                ...config,
+                status: status
+            };
+        }
+        res.json({ environments });
+    } catch (error) {
+        console.error('Error fetching environments:', error);
+        res.status(500).json({ error: 'Failed to fetch environments' });
+    }
+});
+
+// New API: Control docker-compose environment (start/stop/restart)
+app.post('/api/environments/:id/:action', async (req, res) => {
+    const { id, action } = req.params;
+    const envConfig = DOCKER_ENVIRONMENTS[id];
+
+    if (!envConfig) {
+        return res.status(404).json({ success: false, message: 'Environment not found' });
+    }
+
+    if (!['start', 'stop', 'restart'].includes(action)) {
+        return res.status(400).json({ success: false, message: 'Invalid action' });
+    }
+
+    try {
+        const composeCmd = envConfig.composeFiles.map(f => `-f ${f}`).join(' ');
+        const profileArg = envConfig.profile ? `--profile ${envConfig.profile}` : '';
+        const serviceArg = envConfig.service ? envConfig.service : '';
+
+        let cmd;
+        if (action === 'start') {
+            cmd = `docker compose ${composeCmd} ${profileArg} up -d ${serviceArg}`;
+        } else if (action === 'stop') {
+            cmd = `docker compose ${composeCmd} ${profileArg} down ${serviceArg}`;
+        } else if (action === 'restart') {
+            cmd = `docker compose ${composeCmd} ${profileArg} restart ${serviceArg}`;
+        }
+
+        const result = await new Promise((resolve, reject) => {
+            exec(cmd, { cwd: envConfig.path, timeout: 60000 }, (err, stdout, stderr) => {
+                if (err) {
+                    reject(new Error(stderr || err.message));
+                } else {
+                    resolve({ stdout, stderr });
+                }
+            });
+        });
+
+        res.json({ success: true, output: result.stdout, id, action });
+    } catch (error) {
+        console.error(`Error ${action}ing environment ${id}:`, error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// New API: Get all npm servers with their running status
+app.get('/api/npm-servers', async (req, res) => {
+    try {
+        const servers = await detectNpmServers();
+        res.json({ servers });
+    } catch (error) {
+        console.error('Error detecting npm servers:', error);
+        res.status(500).json({ error: 'Failed to detect npm servers' });
+    }
+});
+
+// New API: Control npm server (start/stop)
+app.post('/api/npm-servers/:id/:action', async (req, res) => {
+    const { id, action } = req.params;
+    const npmConfig = NPM_PROJECTS[id];
+
+    if (!npmConfig) {
+        return res.status(404).json({ success: false, message: 'npm project not found' });
+    }
+
+    if (!['start', 'stop'].includes(action)) {
+        return res.status(400).json({ success: false, message: 'Invalid action. Use start or stop' });
+    }
+
+    try {
+        if (action === 'stop') {
+            // Kill npm processes in the project directory
+            const searchPattern = npmConfig.path.split('/').pop();
+            await new Promise((resolve) => {
+                exec(`pkill -9 -f "${searchPattern}"`, (err) => resolve());
+            });
+            res.json({ success: true, message: `Stopped ${npmConfig.name}` });
+        } else if (action === 'start') {
+            // Start npm server
+            const logFile = path.join(npmConfig.path, `${id}.log`);
+            const out = fs.openSync(logFile, 'a');
+            const err = fs.openSync(logFile, 'a');
+
+            const child = spawn('npm', ['run', npmConfig.script], {
+                cwd: npmConfig.path,
+                detached: true,
+                stdio: ['ignore', out, err],
+                env: { ...process.env, PORT: npmConfig.port ? npmConfig.port.toString() : undefined }
+            });
+            child.unref();
+
+            res.json({ success: true, message: `Started ${npmConfig.name}`, pid: child.pid });
+        }
+    } catch (error) {
+        console.error(`Error ${action}ing npm server ${id}:`, error);
+        res.status(500).json({ success: false, error: error.message });
+    }
 });
 
 // Get available models for a service
@@ -988,7 +1459,101 @@ app.post('/api/browser/run/:groupId', async (req, res) => {
     res.json({ success: true, message: 'Task group started' });
 });
 
+//  Get status of all docker compose environments
+app.get('/api/docker/environments', async (req, res) => {
+    const environments = {};
+
+    for (const [id, env] of Object.entries(DOCKER_ENVIRONMENTS)) {
+        const composeCmd = env.composeFiles
+            .map(f => `-f ${f}`)
+            .join(' ');
+
+        const statusCheck = await new Promise((resolve) => {
+            exec(
+                `docker compose ${composeCmd} ps --format json`,
+                { cwd: env.path },
+                (err, stdout, stderr) => {
+                    if (err) {
+                        resolve({ running: false, services: [], error: stderr || err.message });
+                        return;
+                    }
+
+                    try {
+                        // Parse docker compose ps output (one JSON object per line)
+                        const lines = stdout.trim().split('\n').filter(l => l.trim());
+                        const services = lines.map(line => {
+                            try {
+                                return JSON.parse(line);
+                            } catch {
+                                return null;
+                            }
+                        }).filter(Boolean);
+
+                        const runningCount = services.filter(s => s.State === 'running').length;
+
+                        resolve({
+                            running: runningCount > 0,
+                            total: services.length,
+                            runningCount,
+                            services: services.map(s => ({
+                                name: s.Name,
+                                state: s.State,
+                                status: s.Status
+                            }))
+                        });
+                    } catch (e) {
+                        resolve({ running: false, services: [], error: 'Failed to parse status' });
+                    }
+                }
+            );
+        });
+
+        environments[id] = {
+            ...env,
+            ...statusCheck
+        };
+    }
+
+    res.json({ environments });
+});
+
+// Control docker compose environments (start/stop/restart)
+app.post('/api/docker/environments/:envId/:action', async (req, res) => {
+    const { envId, action } = req.params;
+    const env = DOCKER_ENVIRONMENTS[envId];
+
+    if (!env) {
+        return res.status(404).json({ success: false, error: 'Environment not found' });
+    }
+
+    if (!['start', 'stop', 'restart', 'down'].includes(action)) {
+        return res.status(400).json({ success: false, error: 'Invalid action' });
+    }
+
+    const composeCmd = env.composeFiles
+        .map(f => `-f ${f}`)
+        .join(' ');
+
+    const command = action === 'start'
+        ? `docker compose ${composeCmd} up -d`
+        : action === 'down'
+            ? `docker compose ${composeCmd} down`
+            : `docker compose ${composeCmd} ${action}`;
+
+    const result = await new Promise((resolve) => {
+        exec(command, { cwd: env.path }, (err, stdout, stderr) => {
+            if (err) {
+                resolve({ success: false, error: stderr || err.message, output: stdout });
+            } else {
+                resolve({ success: true, output: stdout || stderr });
+            }
+        });
+    });
+
+    res.json(result);
+});
+
 const PORT = process.env.DASHBOARD_PORT || 4242;
-server.listen(PORT, () => {
-    console.log(`vLLM Mastermind Dashboard running on http://localhost:${PORT}`);
+server.listen(PORT, '0.0.0.0', () => {
+    console.log(`vLLM Mastermind Dashboard running on http://0.0.0.0:${PORT}`);
 });

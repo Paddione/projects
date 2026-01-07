@@ -23,6 +23,11 @@ export function requestLogger(req: Request, res: Response, next: NextFunction) {
   const start = process.hrtime();
 
   res.on('finish', () => {
+    // Skip logging for health checks to reduce log spam
+    if (req.originalUrl === '/api/health' || req.path === '/api/health') {
+      return;
+    }
+
     const [seconds, nanoseconds] = process.hrtime(start);
     const durationMs = (seconds * 1000 + nanoseconds / 1e6).toFixed(2);
 

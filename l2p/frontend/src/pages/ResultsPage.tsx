@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useGameStore } from '../stores/gameStore'
 import styles from '../styles/App.module.css'
+import { useAuthStore } from '../stores/authStore'
+import { useCharacterStore } from '../stores/characterStore'
 
 // Component for animated score to experience conversion
 const AnimatedScoreConversion: React.FC<{
@@ -35,11 +37,11 @@ const AnimatedScoreConversion: React.FC<{
   useEffect(() => {
     // Use finalScore as experience if experienceAwarded is 0 or undefined
     const expToGain = experienceAwarded > 0 ? experienceAwarded : finalScore
-    
+
     // Start animation after 1 second
     const startTimeout = setTimeout(() => {
       setAnimationStarted(true)
-      
+
       const duration = 2500 // 2.5 seconds
       const steps = 50
       const stepDuration = duration / steps
@@ -52,7 +54,7 @@ const AnimatedScoreConversion: React.FC<{
 
         const newScore = Math.max(0, Math.round(finalScore - (scoreDecrement * step)))
         const newExperience = Math.round(experienceIncrement * step)
-        
+
         setCurrentScore(newScore)
         setCurrentExperience(newExperience)
 
@@ -60,12 +62,12 @@ const AnimatedScoreConversion: React.FC<{
           clearInterval(interval)
           setCurrentScore(0)
           setCurrentExperience(expToGain)
-          
+
           // Show level up animation if applicable
           if (levelUp) {
             setTimeout(() => setShowLevelUp(true), 200)
           }
-          
+
           onAnimationComplete?.()
         }
       }, stepDuration)
@@ -80,15 +82,15 @@ const AnimatedScoreConversion: React.FC<{
   const expToGain = experienceAwarded > 0 ? experienceAwarded : finalScore
   return (
     <div style={{ textAlign: 'center', padding: 'var(--spacing-lg)' }}>
-      <div style={{ 
-        fontSize: '3rem', 
+      <div style={{
+        fontSize: '3rem',
         marginBottom: 'var(--spacing-md)',
         transition: 'transform 0.3s ease',
         transform: showLevelUp ? 'scale(1.2)' : 'scale(1)'
       }}>
         {getCharacterEmoji(character)}
       </div>
-      
+
       {showLevelUp && (
         <div style={{
           animation: 'levelUpPulse 1s ease-in-out',
@@ -104,23 +106,23 @@ const AnimatedScoreConversion: React.FC<{
         </div>
       )}
 
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'space-around', 
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-around',
         alignItems: 'center',
         gap: 'var(--spacing-xl)',
         marginTop: 'var(--spacing-lg)'
       }}>
         <div>
-          <div style={{ 
-            fontSize: '1.2rem', 
-            color: 'var(--text-secondary)', 
-            marginBottom: 'var(--spacing-xs)' 
+          <div style={{
+            fontSize: '1.2rem',
+            color: 'var(--text-secondary)',
+            marginBottom: 'var(--spacing-xs)'
           }}>
             Score
           </div>
-          <div style={{ 
-            fontSize: '2rem', 
+          <div style={{
+            fontSize: '2rem',
             fontWeight: 'bold',
             color: currentScore > 0 ? 'var(--primary-color)' : 'var(--text-secondary)'
           }}>
@@ -128,23 +130,23 @@ const AnimatedScoreConversion: React.FC<{
           </div>
         </div>
 
-        <div style={{ 
-          fontSize: '2rem', 
+        <div style={{
+          fontSize: '2rem',
           animation: animationStarted ? 'transferArrow 2.5s ease-in-out' : 'none'
         }}>
           →
         </div>
 
         <div>
-          <div style={{ 
-            fontSize: '1.2rem', 
-            color: 'var(--color-success)', 
-            marginBottom: 'var(--spacing-xs)' 
+          <div style={{
+            fontSize: '1.2rem',
+            color: 'var(--color-success)',
+            marginBottom: 'var(--spacing-xs)'
           }}>
             Experience
           </div>
-          <div style={{ 
-            fontSize: '2rem', 
+          <div style={{
+            fontSize: '2rem',
             fontWeight: 'bold',
             color: 'var(--color-success)',
             textShadow: currentExperience > 0 ? '0 0 10px rgba(76, 175, 80, 0.5)' : 'none'
@@ -173,53 +175,55 @@ const AnimatedScoreConversion: React.FC<{
 
 export const ResultsPage: React.FC = () => {
   const navigate = useNavigate()
-  const { gameResults } = useGameStore()
-  
+  const { gameResults, totalQuestions } = useGameStore()
+  const { user } = useAuthStore()
+  const { progress } = useCharacterStore()
+
   // Use actual game results or fallback to mock data
   const finalPlayers = gameResults.length > 0 ? gameResults : [
-    { 
-      id: '4', 
-      username: 'Diana', 
-      character: 'professor', 
+    {
+      id: '4',
+      username: 'Diana',
+      character: 'professor',
       characterLevel: 5,
-      finalScore: 2100, 
-      correctAnswers: 7, 
+      finalScore: 2100,
+      correctAnswers: 7,
       experienceAwarded: 2100,
       levelUp: true,
       newLevel: 6,
       oldLevel: 5
     },
-    { 
-      id: '1', 
-      username: 'Alice', 
-      character: 'student', 
+    {
+      id: '1',
+      username: 'Alice',
+      character: 'student',
       characterLevel: 3,
-      finalScore: 1250, 
-      correctAnswers: 5, 
+      finalScore: 1250,
+      correctAnswers: 5,
       experienceAwarded: 1250,
       levelUp: false,
       newLevel: 3,
       oldLevel: 3
     },
-    { 
-      id: '2', 
-      username: 'Bob', 
-      character: 'librarian', 
+    {
+      id: '2',
+      username: 'Bob',
+      character: 'librarian',
       characterLevel: 2,
-      finalScore: 890, 
-      correctAnswers: 3, 
+      finalScore: 890,
+      correctAnswers: 3,
       experienceAwarded: 890,
       levelUp: false,
       newLevel: 2,
       oldLevel: 2
     },
-    { 
-      id: '3', 
-      username: 'Charlie', 
-      character: 'researcher', 
+    {
+      id: '3',
+      username: 'Charlie',
+      character: 'researcher',
       characterLevel: 1,
-      finalScore: 450, 
-      correctAnswers: 2, 
+      finalScore: 450,
+      correctAnswers: 2,
       experienceAwarded: 450,
       levelUp: false,
       newLevel: 1,
@@ -249,19 +253,19 @@ export const ResultsPage: React.FC = () => {
 
   return (
     <div className={styles.container}>
-      <div className={`${styles.card} ${styles.textCenter}`} style={{marginBottom: 'var(--spacing-xl)'}}>
+      <div className={`${styles.card} ${styles.textCenter}`} style={{ marginBottom: 'var(--spacing-xl)' }}>
         <h1>🏆 Game Results</h1>
         <p>Final scores, rankings, and experience gained</p>
       </div>
 
       {/* Winner Announcement with Animation */}
       {winner && (
-        <div className={`${styles.card} ${styles.textCenter}`} style={{marginBottom: 'var(--spacing-xl)'}}>
+        <div className={`${styles.card} ${styles.textCenter}`} style={{ marginBottom: 'var(--spacing-xl)' }}>
           <h2>🎉 Winner: {winner.username}!</h2>
           <p style={{ marginBottom: 'var(--spacing-lg)' }}>
-            Level {winner.newLevel} {winner.character} • {winner.correctAnswers}/10 correct
+            Level {winner.newLevel} {winner.character} • {winner.correctAnswers}/{totalQuestions || 10} correct
           </p>
-          
+
           <AnimatedScoreConversion
             finalScore={winner.finalScore}
             experienceAwarded={winner.experienceAwarded}
@@ -269,19 +273,21 @@ export const ResultsPage: React.FC = () => {
             oldLevel={winner.oldLevel}
             newLevel={winner.newLevel}
             character={winner.character}
+            onAnimationComplete={() => {
+              // Optional: play celebratory sound when animation completes
+            }}
           />
         </div>
       )}
 
       {/* Final Rankings with Experience */}
-      <div className={styles.card}>
+      <div className={styles.card} style={{ marginBottom: 'var(--spacing-xl)' }}>
         <h3>Final Rankings & Experience</h3>
-        <div style={{marginBottom: 'var(--spacing-xl)'}}>
+        <div style={{ gap: 'var(--spacing-md)', display: 'flex', flexDirection: 'column' }}>
           {finalPlayers.map((player, index) => (
             <div key={player.id} className={`${styles.flex} ${styles.justifyBetween} ${styles.itemsCenter}`} style={{
-              padding: 'var(--spacing-md)', 
-              marginBottom: 'var(--spacing-sm)', 
-              border: '1px solid var(--border-color)', 
+              padding: 'var(--spacing-md)',
+              border: '1px solid var(--border-color)',
               borderRadius: 'var(--radius-md)',
               backgroundColor: player.levelUp ? 'rgba(76, 175, 80, 0.1)' : 'transparent'
             }}>
@@ -292,7 +298,9 @@ export const ResultsPage: React.FC = () => {
                   backgroundColor: index === 0 ? 'var(--primary-color)' : 'var(--secondary-color)',
                   color: 'white',
                   fontSize: '0.875rem',
-                  fontWeight: '600'
+                  fontWeight: '600',
+                  minWidth: '2.5rem',
+                  textAlign: 'center'
                 }}>
                   #{index + 1}
                 </span>
@@ -308,13 +316,13 @@ export const ResultsPage: React.FC = () => {
               </div>
               <div className={styles.textRight}>
                 <div style={{ fontWeight: 'bold', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
-                  Score → Experience
+                  {player.finalScore} pts
                 </div>
-                <div style={{ fontSize: '0.875rem', color: 'var(--color-success)' }}>
-                  +{player.experienceAwarded} XP
+                <div style={{ fontSize: '0.875rem', color: 'var(--color-success)', fontWeight: 'bold' }}>
+                  +{player.experienceAwarded || player.finalScore} XP
                 </div>
                 <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
-                  {player.correctAnswers}/10 correct
+                  {player.correctAnswers}/{totalQuestions || 10} correct
                 </div>
                 {player.levelUp && (
                   <div style={{ fontSize: '0.75rem', color: 'var(--color-success)', fontWeight: 'bold' }}>
@@ -327,37 +335,88 @@ export const ResultsPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Experience Summary */}
-      <div className={styles.card} style={{marginBottom: 'var(--spacing-xl)'}}>
+      {/* Experience Summary & Progress */}
+      <div className={styles.card} style={{ marginBottom: 'var(--spacing-xl)' }}>
         <h3>Experience Summary</h3>
-        <div className={styles.grid} style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 'var(--spacing-md)' }}>
+        <div className={styles.grid} style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 'var(--spacing-lg)' }}>
           {finalPlayers.map(player => (
             <div key={player.id} style={{
-              padding: 'var(--spacing-md)',
+              padding: 'var(--spacing-lg)',
               border: '1px solid var(--border-color)',
               borderRadius: 'var(--radius-md)',
-              textAlign: 'center'
+              textAlign: 'center',
+              backgroundColor: 'rgba(255, 255, 255, 0.02)'
             }}>
-              <div style={{ fontSize: '2rem', marginBottom: 'var(--spacing-sm)' }}>
+              <div style={{ fontSize: '2.5rem', marginBottom: 'var(--spacing-sm)' }}>
                 {getCharacterEmoji(player.character)}
               </div>
-              <div style={{ fontWeight: 'bold', marginBottom: 'var(--spacing-xs)' }}>
+              <div style={{ fontSize: '1.2rem', fontWeight: 'bold', marginBottom: 'var(--spacing-xs)' }}>
                 {player.username}
               </div>
-              <div style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: 'var(--spacing-sm)' }}>
-                Level {player.newLevel}
+              <div style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: 'var(--spacing-md)' }}>
+                Level {player.newLevel} {player.character}
               </div>
-              <div style={{ fontSize: '1.1rem', fontWeight: 'bold', color: 'var(--color-success)' }}>
-                +{player.experienceAwarded} XP
+
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr',
+                gap: 'var(--spacing-md)',
+                marginBottom: 'var(--spacing-lg)',
+                padding: 'var(--spacing-md)',
+                backgroundColor: 'rgba(0, 0, 0, 0.1)',
+                borderRadius: 'var(--radius-md)'
+              }}>
+                <div style={{ textAlign: 'left' }}>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Score</div>
+                  <div style={{ fontSize: '1.1rem', fontWeight: 'bold' }}>{player.finalScore}</div>
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Experience</div>
+                  <div style={{ fontSize: '1.1rem', fontWeight: 'bold', color: 'var(--color-success)' }}>+{player.experienceAwarded || player.finalScore} XP</div>
+                </div>
+                <div style={{ textAlign: 'left' }}>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Accuracy</div>
+                  <div style={{ fontSize: '1.1rem', fontWeight: 'bold' }}>
+                    {Math.round((player.correctAnswers / (totalQuestions || 10)) * 100)}%
+                  </div>
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Rank</div>
+                  <div style={{ fontSize: '1.1rem', fontWeight: 'bold' }}>#{finalPlayers.indexOf(player) + 1}</div>
+                </div>
               </div>
+
+              {/* Progress toward next level if it's the current player's character */}
+              {player.id === user?.id && progress && (
+                <div style={{ marginTop: 'var(--spacing-md)', textAlign: 'left' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', marginBottom: 'var(--spacing-xs)' }}>
+                    <span>Next Level</span>
+                    <span>{Math.round(progress.progress)}%</span>
+                  </div>
+                  <div style={{
+                    height: '8px',
+                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                    borderRadius: '4px',
+                    overflow: 'hidden'
+                  }}>
+                    <div style={{
+                      width: `${progress.progress}%`,
+                      height: '100%',
+                      backgroundColor: 'var(--color-success)',
+                      transition: 'width 1s ease-out'
+                    }}></div>
+                  </div>
+                </div>
+              )}
+
               {player.levelUp && (
-                <div style={{ 
-                  fontSize: '0.875rem', 
-                  color: 'var(--color-success)', 
+                <div style={{
+                  fontSize: '0.875rem',
+                  color: 'var(--color-success)',
                   fontWeight: 'bold',
-                  marginTop: 'var(--spacing-xs)'
+                  marginBottom: 'var(--spacing-sm)'
                 }}>
-                  🎉 Level Up!
+                  🎉 LEVEL UP!
                 </div>
               )}
             </div>
@@ -367,13 +426,13 @@ export const ResultsPage: React.FC = () => {
 
       {/* Actions */}
       <div className={`${styles.flex} ${styles.justifyCenter} ${styles.gapLg}`}>
-        <button 
+        <button
           className={styles.button}
           onClick={handlePlayAgain}
         >
           Play Again
         </button>
-        <button 
+        <button
           className={`${styles.button} ${styles.buttonSecondary}`}
           onClick={() => navigate('/')}
         >

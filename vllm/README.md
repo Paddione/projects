@@ -84,30 +84,111 @@ Configuration:
 }
 ```
 
+
 ## Dashboard (VRAM Mastermind)
 
-The dashboard controls vLLM, Forge, and Infinity containers.
+The dashboard provides centralized control for all services, Docker containers, and npm development servers.
+
+### Development Mode (Hot Reload)
+
+For local development with automatic restart on file changes:
 
 ```bash
-cd dashboard
-node server.js
+# Start development environment (infrastructure + dashboard)
+./scripts/start_dev.sh
+
+# Or start dashboard only in dev mode
+./scripts/manage_dashboard.sh dev
 ```
 
-Open http://localhost:4242.
+The dashboard will run with nodemon and automatically reload when you edit `server.js` or files in `public/`.
 
-Tech stack:
+Access at: http://localhost:4242
+
+### Production Mode (Docker)
+
+For production deployment:
+
+```bash
+# Start full RAG stack including dashboard
+./scripts/start_rag.sh
+
+# Or manage dashboard separately
+./scripts/manage_dashboard.sh prod
+```
+
+Access at: https://dashboard.korczewski.de
+
+### Tech Stack
 - Backend: Node.js, Express, Socket.io, Dockerode
 - Frontend: Vanilla HTML/JS/CSS
 - Monitoring: `nvidia-smi`
+- Development: Nodemon for hot reload
+
+### Environment Management
+
+The dashboard now features comprehensive environment detection and management:
+
+**Visual Indicators:**
+- 🟠 **DEVELOPMENT** badge (orange) - Shows when running in dev mode
+- 🟢 **PRODUCTION** badge (green) - Shows when running in production
+- 🔥 **Hot Reload Active** - Indicates nodemon is watching for changes (dev only)
+
+**Container Filtering:**
+- Filter by project: All | L2P | VideoVault | Payment | Auth | vLLM | Infrastructure
+- Filter by environment: All | Production | Development | Infrastructure
+- Combined filtering for precise container management
+
+**Docker Compose Configurations:**
+
+1. **Production** (`rag/docker-compose.yml`):
+   - Full stack deployment
+   - All services containerized
+   - Optimized for stability
+   ```bash
+   cd rag && docker-compose up -d
+   ```
+
+2. **Development** (`docker-compose.dev.yml`):
+   - Infrastructure only (Qdrant, Infinity, PostgreSQL)
+   - Application services run locally with hot reload
+   - Faster iteration cycles
+   ```bash
+   docker-compose -f docker-compose.dev.yml up -d
+   cd dashboard && npm run dev
+   ```
+
+**Testing:**
+```bash
+# Test production deployment
+./test-production.sh
+
+# Verify environment badges and filtering
+# Visit dashboard and check header for environment indicators
+```
+
+For detailed documentation, see:
+- `ENVIRONMENT_SETUP.md` - Complete environment management guide
+- `QUICK_START.md` - Quick reference and testing instructions
+- `IMPLEMENTATION_SUMMARY.md` - Technical implementation details
 
 ## RAG Stack
 
-Quick start:
-1. Ensure `.env` has a valid `HF_TOKEN`.
-2. Run `./scripts/start_rag.sh`.
-3. Open http://localhost:3000.
+### Production Deployment
 
-Directory dump (inbox):
+Quick start for production:
+1. Ensure `.env-prod` has a valid `HF_TOKEN`.
+2. Run `./scripts/start_rag.sh`.
+3. Access via production URLs (see output).
+
+### Development Mode
+
+For local development without Docker:
+1. Start infrastructure: `./scripts/start_dev.sh`
+2. Infrastructure services run in Docker (postgres, qdrant)
+3. Application services run via npm with hot reload
+
+### Document Ingestion
 1. Drop files into `rag/storage/inbox/`.
 2. The ingestion engine vectorizes and moves them to `rag/storage/processed/`.
 

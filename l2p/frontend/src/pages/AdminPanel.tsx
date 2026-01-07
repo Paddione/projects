@@ -122,6 +122,22 @@ export const AdminPanel: React.FC = () => {
     }
   }
 
+  const handleRebuildService = async () => {
+    if (!confirm('Rebuild the L2P service? This will rebuild and restart all containers. The service may be unavailable for a few minutes.')) return
+    setMessage(null)
+    setError(null)
+    try {
+      const res = await apiService.rebuildService()
+      if (res.success) {
+        setMessage(res.data?.message || 'Service rebuild initiated. Containers will be rebuilt and restarted.')
+      } else {
+        setError(res.error || 'Failed to rebuild service')
+      }
+    } catch (e) {
+      setError('Failed to rebuild service')
+    }
+  }
+
   const handleCreateUser = async (e: React.FormEvent) => {
     e.preventDefault()
     setCreating(true)
@@ -178,6 +194,7 @@ export const AdminPanel: React.FC = () => {
         <div className={styles.flex} style={{ gap: 8 }}>
           <button className={styles.button} onClick={loadUsers} disabled={loading}>Refresh Users</button>
           <button className={styles.buttonOutline} onClick={handleClearLobbies}>Clear Lobbies</button>
+          <button className={styles.buttonOutline} onClick={handleRebuildService}>Rebuild Service</button>
         </div>
       </div>
 

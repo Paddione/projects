@@ -426,7 +426,7 @@ router.post('/users', authMiddleware.authenticate, requireAdmin, async (req: Req
     const passwordHash = await bcrypt.hash(password, saltRounds);
 
     const result = await pool.query(
-      `INSERT INTO users 
+      `INSERT INTO users
         (username, email, password_hash, is_active, is_admin, email_verified, selected_character, character_level, experience_points)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
        RETURNING id, username, email, created_at, last_login, is_active, is_admin, selected_character, character_level, experience_points, avatar_url, timezone`,
@@ -450,6 +450,49 @@ router.post('/users', authMiddleware.authenticate, requireAdmin, async (req: Req
       error: 'Failed to create user',
       message: 'An unexpected error occurred',
       code: 'CREATE_USER_FAILED',
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+/**
+ * POST /api/admin/service/rebuild
+ * Rebuild the L2P service containers
+ */
+router.post('/service/rebuild', authMiddleware.authenticate, requireAdmin, async (req: Request, res: Response) => {
+  try {
+    const { exec } = await import('child_process');
+    const { promisify } = await import('util');
+    const execAsync = promisify(exec);
+
+    // Trigger rebuild script in the background
+    // The script will run docker-compose build and restart containers
+    const rebuildCommand = 'cd /home/patrick/projects/l2p && docker compose --profile production build --no-cache && docker compose --profile production up -d';
+
+    // Execute in background - don't wait for completion
+    exec(rebuildCommand, (error, stdout, stderr) => {
+      if (error) {
+        console.error('Rebuild command error:', error);
+      }
+      if (stdout) {
+        console.log('Rebuild stdout:', stdout);
+      }
+      if (stderr) {
+        console.error('Rebuild stderr:', stderr);
+      }
+    });
+
+    return res.status(202).json({
+      success: true,
+      message: 'Service rebuild initiated. Containers will be rebuilt and restarted in the background.',
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Service rebuild error:', error);
+    return res.status(500).json({
+      error: 'Failed to initiate service rebuild',
+      message: 'An unexpected error occurred',
+      code: 'SERVICE_REBUILD_FAILED',
       timestamp: new Date().toISOString()
     });
   }

@@ -36,15 +36,15 @@ const CONFIG = {
   STRIP_QUALITY: 0.9,
 
   // Directories
-  INBOX_DIR: process.env.INBOX_DIR || '/home/patrick/VideoVault/Bibliothek/Inbox',
+  INBOX_DIR: process.env.INBOX_DIR || path.join(process.cwd(), 'Inbox'),
   PROCESSED_DIR:
     process.env.PROCESSED_DIR ||
     process.env.CATEGORIZED_DIR ||
-    '/home/patrick/VideoVault/Bibliothek/Categorized',
+    path.join(process.cwd(), 'Processed'),
   THUMBNAILS_DIR:
     process.env.THUMBNAILS_DIR ||
     process.env.CATEGORIZED_DIR ||
-    '/home/patrick/VideoVault/Bibliothek/Categorized',
+    path.join(process.cwd(), 'Processed', 'Thumbnails'),
 };
 
 // Category schema (reused from ai-video-processor.mjs)

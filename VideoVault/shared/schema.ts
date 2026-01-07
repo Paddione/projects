@@ -37,6 +37,14 @@ export const videos = pgTable(
     rootKey: text('root_key'),
     hashFast: text('hash_fast'),
     hashPerceptual: text('hash_perceptual'),
+    // New metadata columns (0002_thumbnail_storage migration)
+    bitrate: bigint('bitrate', { mode: 'number' }),
+    codec: varchar('codec', { length: 50 }),
+    fps: text('fps').$type<number>(),
+    aspectRatio: varchar('aspect_ratio', { length: 20 }),
+    fileHash: text('file_hash'),
+    metadataExtractedAt: timestamp('metadata_extracted_at', { withTimezone: false }),
+    processingStatus: varchar('processing_status', { length: 20 }).default('pending'),
   },
   (table) => {
     return {
@@ -53,6 +61,10 @@ export const videos = pgTable(
       ),
       idxVideosHashFast: index('idx_videos_hash_fast').on(table.hashFast),
       idxVideosHashPerceptual: index('idx_videos_hash_perceptual').on(table.hashPerceptual),
+      idxVideosFileHash: index('idx_videos_file_hash').on(table.fileHash),
+      idxVideosProcessingStatus: index('idx_videos_processing_status').on(table.processingStatus),
+      idxVideosBitrate: index('idx_videos_bitrate').on(table.bitrate),
+      idxVideosFps: index('idx_videos_fps').on(table.fps),
     };
   },
 );
@@ -179,3 +191,120 @@ export const duplicateIgnores = pgTable(
 
 export type DBDuplicateIgnore = typeof duplicateIgnores.$inferSelect;
 export type InsertDBDuplicateIgnore = typeof duplicateIgnores.$inferInsert;
+
+// ========================================
+// Thumbnail Storage & Background Processing Infrastructure
+// (Added in 0002_thumbnail_storage migration)
+// ========================================
+
+// Thumbnails and sprites stored as files with metadata in database
+export const thumbnails = pgTable(
+  'thumbnails',
+  {
+    id: varchar('id')
+      .primaryKey()
+      .default(sql`gen_random_uuid()::text`),
+    videoId: varchar('video_id').notNull(),
+    filePath: text('file_path').notNull(),
+    type: varchar('type', { length: 20 }).notNull(), // 'thumbnail' | 'sprite'
+    width: bigint('width', { mode: 'number' }).notNull(),
+    height: bigint('height', { mode: 'number' }).notNull(),
+    format: varchar('format', { length: 10 }).notNull(), // 'jpeg' | 'webp' | 'png'
+    fileSize: bigint('file_size', { mode: 'number' }).notNull(),
+    quality: text('quality').$type<number | null>(), // JPEG/WebP quality 0.0-1.0
+    frameCount: bigint('frame_count', { mode: 'number' }), // For sprites: number of frames
+    tileLayout: varchar('tile_layout', { length: 20 }), // For sprites: grid layout e.g., '25x1'
+    generatedBy: varchar('generated_by', { length: 20 }).notNull(), // 'server-ffmpeg' | 'client-webcodecs'
+    generationParams: jsonb('generation_params').$type<Record<string, unknown> | null>(),
+    createdAt: timestamp('created_at', { withTimezone: false })
+      .default(sql`now()`)
+      .notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: false })
+      .default(sql`now()`)
+      .notNull(),
+  },
+  (table) => {
+    return {
+      idxThumbnailsVideoId: index('idx_thumbnails_video_id').on(table.videoId),
+      idxThumbnailsType: index('idx_thumbnails_type').on(table.type),
+      idxThumbnailsCreatedAt: index('idx_thumbnails_created_at').on(table.createdAt),
+      idxThumbnailsFilePath: index('idx_thumbnails_file_path').on(table.filePath),
+    };
+  },
+);
+
+export type DBThumbnail = typeof thumbnails.$inferSelect;
+export type InsertDBThumbnail = typeof thumbnails.$inferInsert;
+
+// Scan state tracking for incremental directory scanning
+export const scanState = pgTable(
+  'scan_state',
+  {
+    id: varchar('id')
+      .primaryKey()
+      .default(sql`gen_random_uuid()::text`),
+    rootKey: text('root_key').notNull(),
+    relativePath: text('relative_path').notNull(),
+    fileHash: text('file_hash').notNull(),
+    fileSize: bigint('file_size', { mode: 'number' }).notNull(),
+    lastModified: timestamp('last_modified', { withTimezone: false }).notNull(),
+    metadataExtracted: varchar('metadata_extracted', { length: 5 })
+      .default('false')
+      .notNull(),
+    thumbnailGenerated: varchar('thumbnail_generated', { length: 5 })
+      .default('false')
+      .notNull(),
+    spriteGenerated: varchar('sprite_generated', { length: 5 })
+      .default('false')
+      .notNull(),
+    lastScannedAt: timestamp('last_scanned_at', { withTimezone: false })
+      .default(sql`now()`)
+      .notNull(),
+  },
+  (table) => {
+    return {
+      idxScanStateRootKey: index('idx_scan_state_root_key').on(table.rootKey),
+      idxScanStateLastModified: index('idx_scan_state_last_modified').on(table.lastModified),
+      idxScanStateFileHash: index('idx_scan_state_file_hash').on(table.fileHash),
+    };
+  },
+);
+
+export type DBScanState = typeof scanState.$inferSelect;
+export type InsertDBScanState = typeof scanState.$inferInsert;
+
+// Background job queue for thumbnail/sprite generation and metadata extraction
+export const processingJobs = pgTable(
+  'processing_jobs',
+  {
+    id: varchar('id')
+      .primaryKey()
+      .default(sql`gen_random_uuid()::text`),
+    type: varchar('type', { length: 50 }).notNull(), // 'thumbnail' | 'sprite' | 'metadata' | 'hash'
+    videoId: varchar('video_id'),
+    rootKey: text('root_key'),
+    relativePath: text('relative_path'),
+    priority: bigint('priority', { mode: 'number' }).default(5).notNull(),
+    status: varchar('status', { length: 20 }).default('pending').notNull(), // 'pending' | 'processing' | 'completed' | 'failed'
+    attempts: bigint('attempts', { mode: 'number' }).default(0).notNull(),
+    maxAttempts: bigint('max_attempts', { mode: 'number' }).default(3).notNull(),
+    payload: jsonb('payload').$type<Record<string, unknown> | null>(),
+    errorMessage: text('error_message'),
+    createdAt: timestamp('created_at', { withTimezone: false })
+      .default(sql`now()`)
+      .notNull(),
+    startedAt: timestamp('started_at', { withTimezone: false }),
+    completedAt: timestamp('completed_at', { withTimezone: false }),
+  },
+  (table) => {
+    return {
+      idxJobsVideoId: index('idx_jobs_video_id').on(table.videoId),
+      idxJobsType: index('idx_jobs_type').on(table.type),
+      idxJobsCreatedAt: index('idx_jobs_created_at').on(table.createdAt),
+      idxJobsStatus: index('idx_jobs_status').on(table.status),
+    };
+  },
+);
+
+export type DBProcessingJob = typeof processingJobs.$inferSelect;
+export type InsertDBProcessingJob = typeof processingJobs.$inferInsert;

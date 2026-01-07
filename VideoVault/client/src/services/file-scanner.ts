@@ -107,7 +107,7 @@ export class FileScanner {
     return videos;
   }
 
-  private static async getAllVideoFilesAndDirs(
+  static async getAllVideoFilesAndDirs(
     directoryHandle: FileSystemDirectoryHandle,
     basePath: string = '',
   ): Promise<{

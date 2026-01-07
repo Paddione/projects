@@ -7,6 +7,7 @@ import { AdaptiveThumbnailManager as AdaptiveThumbnailManagerReal } from '@/serv
 const AdaptiveThumbnailManager: any = AdaptiveThumbnailManagerReal;
 import { EnhancedThumbnailService } from '@/services/enhanced-thumbnail-service';
 import { AppSettingsService } from '@/services/app-settings';
+import { ThumbnailFetcher } from './thumbnail-fetcher';
 
 /**
  * Enhanced thumbnail generation service that provides retry logic,
@@ -39,6 +40,23 @@ export class ThumbnailGenerator {
     this.generatingThumbnails.add(videoId);
 
     try {
+      // Strategy 0: Try server-side thumbnail first (preferred)
+      try {
+        const serverThumbnailUrl = await ThumbnailFetcher.fetchThumbnail(videoId, 'thumbnail');
+        if (serverThumbnailUrl) {
+          const serverThumbnail: VideoThumbnail = {
+            dataUrl: serverThumbnailUrl,
+            generated: true,
+            timestamp: new Date().toISOString(),
+          };
+          this.cacheThumbnail(videoId, serverThumbnail);
+          return serverThumbnail;
+        }
+      } catch (serverError) {
+        // Server thumbnail not available, fall back to client generation
+        console.info(`Server thumbnail not available for ${videoId}, using client generation`);
+      }
+
       // Strategy 1: Try adaptive thumbnail generation with file handle
       const thumbnail = await this.tryGenerateAdaptiveFromFileHandle(videoId, adaptiveOptions);
       if (thumbnail) {

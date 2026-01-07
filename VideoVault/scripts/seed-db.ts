@@ -6,6 +6,7 @@ import fs from 'fs/promises';
 import { fileURLToPath } from 'url';
 import { videos, directoryRoots, tags } from '../shared/schema';
 import { randomUUID } from 'crypto';
+import { createCanvas } from 'canvas';
 
 const { Client } = pg;
 
@@ -23,8 +24,103 @@ if (!dbUrl) {
 }
 
 const FIXTURES_DIR = path.resolve(__dirname, '../fixtures/library');
-// 1x1 pixel black JPEG base64
-const PLACEHOLDER_JPG = Buffer.from('/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAP//////////////////////////////////////////////////////////////////////////////////////wgALCAABAAEBAREA/8QAFBABAAAAAAAAAAAAAAAAAAAAAP/aAAgBAQABPxA=', 'base64');
+
+/**
+ * Generate a unique colored thumbnail for each video
+ */
+function generateUniqueThumbnail(videoNumber: number): Buffer {
+    const canvas = createCanvas(320, 180);
+    const ctx = canvas.getContext('2d');
+
+    // Create a unique color based on video number
+    const hue = (videoNumber * 137.508) % 360; // Golden angle for good distribution
+    const saturation = 60 + (videoNumber % 40);
+    const lightness = 40 + (videoNumber % 30);
+
+    // Create gradient background
+    const gradient = ctx.createLinearGradient(0, 0, 320, 180);
+    gradient.addColorStop(0, `hsl(${hue}, ${saturation}%, ${lightness}%)`);
+    gradient.addColorStop(1, `hsl(${(hue + 60) % 360}, ${saturation}%, ${lightness - 10}%)`);
+
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, 320, 180);
+
+    // Add video number text
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+    ctx.font = 'bold 48px Arial';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(`#${videoNumber}`, 160, 90);
+
+    // Add subtle pattern for more uniqueness
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+    for (let i = 0; i < 5; i++) {
+        const x = (videoNumber * 13 + i * 50) % 320;
+        const y = (videoNumber * 17 + i * 30) % 180;
+        const radius = 10 + (videoNumber % 20);
+        ctx.beginPath();
+        ctx.arc(x, y, radius, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
+    return canvas.toBuffer('image/jpeg', { quality: 0.85 });
+}
+
+/**
+ * Generate a unique sprite sheet with 10 frames for each video
+ */
+function generateUniqueSprite(videoNumber: number): Buffer {
+    const frameWidth = 160;
+    const frameHeight = 90;
+    const frameCount = 10;
+
+    const canvas = createCanvas(frameWidth * frameCount, frameHeight);
+    const ctx = canvas.getContext('2d');
+
+    // Base hue for this video
+    const baseHue = (videoNumber * 137.508) % 360;
+
+    // Draw each frame with a slight variation
+    for (let frame = 0; frame < frameCount; frame++) {
+        const x = frame * frameWidth;
+
+        // Vary the color for each frame
+        const hue = (baseHue + frame * 10) % 360;
+        const saturation = 55 + (videoNumber % 30) + frame * 2;
+        const lightness = 35 + (videoNumber % 25) + frame * 3;
+
+        // Create gradient for this frame
+        const gradient = ctx.createLinearGradient(x, 0, x + frameWidth, frameHeight);
+        gradient.addColorStop(0, `hsl(${hue}, ${saturation}%, ${lightness}%)`);
+        gradient.addColorStop(1, `hsl(${(hue + 40) % 360}, ${saturation}%, ${lightness - 5}%)`);
+
+        ctx.fillStyle = gradient;
+        ctx.fillRect(x, 0, frameWidth, frameHeight);
+
+        // Add frame number
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+        ctx.font = 'bold 20px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(`${frame + 1}`, x + frameWidth / 2, frameHeight / 2);
+
+        // Add video number in smaller text
+        ctx.font = '12px Arial';
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+        ctx.fillText(`#${videoNumber}`, x + frameWidth / 2, frameHeight / 2 + 25);
+
+        // Add unique pattern per frame
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+        const circleX = x + ((videoNumber * 7 + frame * 11) % frameWidth);
+        const circleY = (videoNumber * 5 + frame * 13) % frameHeight;
+        const radius = 5 + ((videoNumber + frame) % 15);
+        ctx.beginPath();
+        ctx.arc(circleX, circleY, radius, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
+    return canvas.toBuffer('image/jpeg', { quality: 0.85 });
+}
 
 const SAMPLE_CATEGORIES = {
     age: ['18-25', '26-35', '36-50'],
@@ -79,11 +175,17 @@ async function seed() {
         // Create empty file
         await fs.writeFile(filePath, '');
 
-        // Create thumbnail
+        // Create unique thumbnail for this video
         const thumbsDir = path.join(FIXTURES_DIR, 'Thumbnails');
         await fs.mkdir(thumbsDir, { recursive: true });
         const thumbPath = path.join(thumbsDir, `${filename.replace('.mp4', '')}-thumb.jpg`);
-        await fs.writeFile(thumbPath, PLACEHOLDER_JPG);
+        const uniqueThumbnail = generateUniqueThumbnail(i);
+        await fs.writeFile(thumbPath, uniqueThumbnail);
+
+        // Create unique sprite sheet for this video
+        const spritePath = path.join(thumbsDir, `${filename.replace('.mp4', '')}-sprite.jpg`);
+        const uniqueSprite = generateUniqueSprite(i);
+        await fs.writeFile(spritePath, uniqueSprite);
 
         const duration = Math.floor(Math.random() * 3600) + 60; // 1 min to 1 hour
         const size = Math.floor(Math.random() * 1024 * 1024 * 1024) + 1024 * 1024; // 1MB to 1GB

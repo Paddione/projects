@@ -38,6 +38,20 @@ export const getVideoSrc = (video: Video): string | undefined => {
     }
   }
 
+  // Mapping for fixtures directory (test data)
+  // DB Path: .../fixtures/...
+  if (video.path.includes('/fixtures/')) {
+    const parts = video.path.split('/fixtures/');
+    if (parts.length > 1) {
+      return `/fixtures/${parts[1]}`
+        .split('/')
+        .map(encodeURIComponent)
+        .join('/')
+        .replace('%2F', '/')
+        .replace('%2F', '/');
+    }
+  }
+
   // Basic fallback: if path is absolute but we don't recognize root,
   // we can't serve it unless we map another root.
   // For now, return undefined.
@@ -45,8 +59,8 @@ export const getVideoSrc = (video: Video): string | undefined => {
 };
 
 export const getThumbnailSrc = (video: Video): string | undefined => {
-  // 1. If DB has a dataUrl, use it (unless it is a local file path which browsers block)
-  if (video.thumbnail?.dataUrl && !video.thumbnail.dataUrl.startsWith('file://')) {
+  // 1. If DB has a generated dataUrl, use it (unless it is a local file path which browsers block)
+  if (video.thumbnail?.generated && video.thumbnail?.dataUrl && !video.thumbnail.dataUrl.startsWith('file://')) {
     return video.thumbnail.dataUrl;
   }
 
@@ -54,14 +68,27 @@ export const getThumbnailSrc = (video: Video): string | undefined => {
   if (!video.path) return undefined;
   const baseName = video.filename.replace(/\.[^.]+$/, '');
 
+  // Check if video is in Processed directory by rootKey
+  if (video.rootKey?.startsWith('Processed')) {
+    // Thumbnails are stored in /media/processed/Thumbnails/
+    const path = `/media/processed/Thumbnails/${baseName}-thumb.jpg`;
+    return path
+      .split('/')
+      .map(encodeURIComponent)
+      .join('/')
+      .replace('%2F', '/')
+      .replace('%2F', '/');
+  }
+
+  // Legacy path-based check for backwards compatibility
   if (video.path.includes('/Processed/')) {
     const parts = video.path.split('/Processed/');
     if (parts.length > 1) {
       const rel = parts[1];
       const dir = rel.substring(0, rel.lastIndexOf('/'));
       // Construct path relative to /media/processed
-      // e.g. /media/processed/Thumbnails/subdir/video_thumb.jpg
-      const path = `/media/processed/Thumbnails/${dir ? dir + '/' : ''}${baseName}_thumb.jpg`;
+      // e.g. /media/processed/Thumbnails/subdir/video-thumb.jpg
+      const path = `/media/processed/Thumbnails/${dir ? dir + '/' : ''}${baseName}-thumb.jpg`;
       return path
         .split('/')
         .map(encodeURIComponent)
@@ -86,6 +113,22 @@ export const getThumbnailSrc = (video: Video): string | undefined => {
     }
   }
 
+  // Mapping for fixtures directory (test data)
+  if (video.path.includes('/fixtures/')) {
+    const parts = video.path.split('/fixtures/');
+    if (parts.length > 1) {
+      const rel = parts[1];
+      const dir = rel.substring(0, rel.lastIndexOf('/'));
+      const path = `/fixtures/${dir ? dir + '/' : ''}Thumbnails/${baseName}-thumb.jpg`;
+      return path
+        .split('/')
+        .map(encodeURIComponent)
+        .join('/')
+        .replace('%2F', '/')
+        .replace('%2F', '/');
+    }
+  }
+
   return undefined;
 };
 
@@ -93,13 +136,26 @@ export const getSpriteSrc = (video: Video): string | undefined => {
   if (!video.path) return undefined;
   const baseName = video.filename.replace(/\.[^.]+$/, '');
 
+  // Check if video is in Processed directory by rootKey
+  if (video.rootKey?.startsWith('Processed')) {
+    // Sprites are stored in /media/processed/Thumbnails/
+    const path = `/media/processed/Thumbnails/${baseName}-sprite.jpg`;
+    return path
+      .split('/')
+      .map(encodeURIComponent)
+      .join('/')
+      .replace('%2F', '/')
+      .replace('%2F', '/');
+  }
+
+  // Legacy path-based check for backwards compatibility
   if (video.path.includes('/Processed/')) {
     const parts = video.path.split('/Processed/');
     if (parts.length > 1) {
       const rel = parts[1];
       const dir = rel.substring(0, rel.lastIndexOf('/'));
-      // Processed usually uses _sprite.jpg
-      const path = `/media/processed/Thumbnails/${dir ? dir + '/' : ''}${baseName}_sprite.jpg`;
+      // Processed usually uses -sprite.jpg
+      const path = `/media/processed/Thumbnails/${dir ? dir + '/' : ''}${baseName}-sprite.jpg`;
       return path
         .split('/')
         .map(encodeURIComponent)
@@ -116,6 +172,22 @@ export const getSpriteSrc = (video: Video): string | undefined => {
       const dir = rel.substring(0, rel.lastIndexOf('/'));
       // Bibliothek usually uses -sprite.jpg
       const path = `/media/${dir ? dir + '/' : ''}${baseName}-sprite.jpg`;
+      return path
+        .split('/')
+        .map(encodeURIComponent)
+        .join('/')
+        .replace('%2F', '/')
+        .replace('%2F', '/');
+    }
+  }
+
+  // Mapping for fixtures directory (test data)
+  if (video.path.includes('/fixtures/')) {
+    const parts = video.path.split('/fixtures/');
+    if (parts.length > 1) {
+      const rel = parts[1];
+      const dir = rel.substring(0, rel.lastIndexOf('/'));
+      const path = `/fixtures/${dir ? dir + '/' : ''}Thumbnails/${baseName}-sprite.jpg`;
       return path
         .split('/')
         .map(encodeURIComponent)
