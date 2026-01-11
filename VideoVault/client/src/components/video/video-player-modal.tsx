@@ -474,6 +474,18 @@ export function VideoPlayerModal({
                 } else if (e.key === 'ArrowRight') {
                   e.preventDefault();
                   skip(e.shiftKey ? 30 : 5);
+                } else if (e.key === 'ArrowUp') {
+                  e.preventDefault();
+                  // Increase volume by 10%
+                  const newVolume = Math.min(1, volume + 0.1);
+                  setVolume(newVolume);
+                  setIsMuted(false);
+                } else if (e.key === 'ArrowDown') {
+                  e.preventDefault();
+                  // Decrease volume by 10%
+                  const newVolume = Math.max(0, volume - 0.1);
+                  setVolume(newVolume);
+                  if (newVolume === 0) setIsMuted(true);
                 } else if (e.key.toLowerCase() === 'm') {
                   e.preventDefault();
                   toggleMute();
@@ -488,6 +500,15 @@ export function VideoPlayerModal({
                   // Next
                   e.preventDefault();
                   onNext?.();
+                } else if (['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'].includes(e.key)) {
+                  // Seek to percentage (0-9 = 0%-90%)
+                  e.preventDefault();
+                  const percent = parseInt(e.key) / 10;
+                  if (videoRef.current && effectiveDuration > 0) {
+                    const seekTime = effectiveDuration * percent;
+                    videoRef.current.currentTime = seekTime;
+                    setCurrentTime(seekTime);
+                  }
                 }
               }}
             >

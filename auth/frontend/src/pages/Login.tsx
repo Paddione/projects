@@ -165,35 +165,35 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg shadow-xl p-8 w-full max-w-md">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">
+    <div className="auth-page">
+      <div className="auth-card">
+        <div className="auth-header">
+          <h1 className={`auth-title ${view === 'login' ? 'auth-view-login' : (view === 'forgot' ? 'auth-view-forgot' : 'auth-view-reset')}`}>
             {view === 'login' ? 'Welcome Back' : (view === 'forgot' ? 'Reset your password' : 'Choose a new password')}
           </h1>
-          <p className="text-gray-600 mt-2">
+          <p className="auth-subtitle">
             {view === 'login'
               ? 'Sign in to your account'
               : (view === 'forgot' ? 'Enter your email to receive a reset link' : 'Enter a new password for your account')}
           </p>
           {project && view === 'login' && (
-            <p className="text-sm text-indigo-600 mt-1">
-              Logging in for: <span className="font-semibold">{project}</span>
-            </p>
+            <div className="auth-project-badge">
+              Logging in for: <span className="auth-project-name">{project}</span>
+            </div>
           )}
         </div>
 
         {view === 'login' && (
           <>
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit} className="auth-form">
               {error && (
-                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+                <div className="auth-message auth-message-error">
                   {error}
                 </div>
               )}
 
-              <div>
-                <label htmlFor="usernameOrEmail" className="block text-sm font-medium text-gray-700 mb-2">
+              <div className="auth-form-group">
+                <label htmlFor="usernameOrEmail" className="auth-label">
                   Username or Email
                 </label>
                 <input
@@ -201,21 +201,21 @@ export default function Login() {
                   type="text"
                   value={usernameOrEmail}
                   onChange={(e) => setUsernameOrEmail(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  className="auth-input"
                   required
                   autoComplete="username"
                 />
               </div>
 
-              <div>
-                <div className="flex items-center justify-between">
-                  <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+              <div className="auth-form-group">
+                <div className="auth-form-group-with-action">
+                  <label htmlFor="password" className="auth-label">
                     Password
                   </label>
                   <button
                     type="button"
                     onClick={handleShowForgot}
-                    className="text-sm text-indigo-600 hover:text-indigo-500"
+                    className="auth-link"
                   >
                     Forgot password?
                   </button>
@@ -225,7 +225,7 @@ export default function Login() {
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  className="auth-input"
                   required
                   autoComplete="current-password"
                 />
@@ -234,27 +234,22 @@ export default function Login() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-indigo-600 text-white py-2 px-4 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                className={`auth-btn-primary ${loading ? 'auth-loading' : ''}`}
               >
                 {loading ? 'Signing in...' : 'Sign In'}
               </button>
             </form>
 
-            <div className="mt-6">
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-gray-300"></div>
-                </div>
-                <div className="relative flex justify-center text-sm">
-                  <span className="px-2 bg-white text-gray-500">Or continue with</span>
-                </div>
-              </div>
+            <div className="auth-divider">
+              <div className="auth-divider-line"></div>
+              <span className="auth-divider-text">Or continue with</span>
+            </div>
 
               <button
                 onClick={handleGoogleLogin}
-                className="mt-4 w-full flex items-center justify-center gap-3 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="auth-btn-oauth"
               >
-                <svg className="w-5 h-5" viewBox="0 0 24 24">
+                <svg className="auth-oauth-icon" viewBox="0 0 24 24">
                   <path
                     fill="currentColor"
                     d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -276,15 +271,15 @@ export default function Login() {
               </button>
             </div>
 
-            <p className="mt-6 text-center text-sm text-gray-600">
+            <div className="auth-footer">
               Don't have an account?{' '}
               <Link
                 to={`/register${redirectParamKey && redirectUri ? `?${redirectParamKey}=${encodeURIComponent(redirectUri)}&project=${project}` : ''}`}
-                className="text-indigo-600 hover:text-indigo-500 font-semibold"
+                className="auth-footer-link"
               >
                 Sign up
               </Link>
-            </p>
+            </div>
           </>
         )}
 

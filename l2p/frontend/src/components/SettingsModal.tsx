@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react'
 import { useAudio } from '../hooks/useAudio'
 import { useLocalization } from '../hooks/useLocalization'
 import { useVisualFeedback } from '../hooks/useVisualFeedback'
+import { useFocusTrap } from '../hooks/useFocusTrap'
 import { LanguageSelector } from './LanguageSelector'
 import { ThemeSelector } from './ThemeSelector'
 import { AudioSettings } from './AudioSettings'
@@ -17,7 +18,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
   const { handleButtonClick, handleButtonHover, handleModalOpen, handleModalClose } = useAudio()
   const { animateModal } = useVisualFeedback()
   const [activeTab, setActiveTab] = useState<'audio' | 'language' | 'theme' | 'help'>('audio')
-  const modalRef = useRef<HTMLDivElement>(null)
+
+  // Focus trap hook handles Tab navigation and Escape key
+  const focusTrapRef = useFocusTrap(isOpen, onClose)
 
   useEffect(() => {
     if (isOpen) {
@@ -27,10 +30,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
         // Swallow audio hook errors to keep modal stable (no console output in tests)
       }
       animateModal('settings-modal', true)
-      // Focus the modal when it opens, but only in non-test environments
-      if (modalRef.current && (typeof process === 'undefined' || process.env?.['TEST_ENVIRONMENT'] !== 'local')) {
-        modalRef.current.focus()
-      }
     } else {
       try {
         handleModalClose()
@@ -49,19 +48,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
     }
     onClose()
   }
-
-  useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isOpen) {
-        handleClose()
-      }
-    }
-
-    if (isOpen) {
-      document.addEventListener('keydown', handleEscape)
-      return () => document.removeEventListener('keydown', handleEscape)
-    }
-  }, [isOpen, handleClose])
 
   const handleTabClick = (tab: 'audio' | 'language' | 'theme' | 'help') => {
     setActiveTab(tab)
@@ -82,10 +68,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
 
   return (
     <div className={styles.overlay} onClick={handleOverlayClick}>
-      <div 
+      <div
         className={styles.modal}
         id="settings-modal"
-        ref={modalRef}
+        ref={focusTrapRef as React.RefObject<HTMLDivElement>}
         role="dialog"
         aria-modal="true"
         aria-labelledby="settings-modal-title"

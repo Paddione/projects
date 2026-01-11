@@ -415,9 +415,18 @@ export function VideoCard({
   const handleCardKeyDown = (e: React.KeyboardEvent) => {
     switch (e.key) {
       case 'Enter':
-      case ' ':
         e.preventDefault();
         onPlay(video);
+        break;
+      case ' ':
+        e.preventDefault();
+        // If in selection mode, Space toggles selection
+        if (showSelection) {
+          handleSelectionChange(!isSelected);
+        } else {
+          // Otherwise, Space plays the video
+          onPlay(video);
+        }
         break;
       case 'e':
         e.preventDefault();

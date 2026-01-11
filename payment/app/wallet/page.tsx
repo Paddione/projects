@@ -12,16 +12,16 @@ export default async function WalletPage() {
     })
 
     return (
-        <div className="max-w-4xl mx-auto p-8">
-            <h1 className="text-3xl font-bold mb-8">My Wallet</h1>
+        <div className="payment-wallet-container">
+            <h1 className="payment-wallet-title">My Wallet</h1>
 
-            <div className="bg-white p-6 rounded shadow mb-8">
-                <h2 className="text-xl font-semibold mb-2">Current Balance</h2>
-                <p className="text-4xl font-bold text-green-600">{wallet?.balance.toString()} PC</p>
+            <div className="payment-balance-card">
+                <h2 className="payment-balance-label">Current Balance</h2>
+                <p className="payment-balance-amount">{wallet?.balance.toString()} PC</p>
             </div>
 
-            <div className="bg-white p-6 rounded shadow">
-                <h2 className="text-xl font-semibold mb-4">Add Funds</h2>
+            <div className="payment-add-funds-card">
+                <h2 className="payment-card-title">Add Funds</h2>
                 <AddFundsForm />
             </div>
         </div>

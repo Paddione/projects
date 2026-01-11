@@ -1,3 +1,7 @@
+/* Cybervault Design System */
+@import '../../../shared-design-system/cybervault.css';
+@import './cybervault-l2p.css';
+
 /* CSS Variables for theming */
 :root {
   /* Light theme colors */

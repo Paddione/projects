@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { apiService } from '../services/apiService'
 import { LoadingSpinner } from './LoadingSpinner'
 import { QuestionSet, Answer } from '../types'
+import { useFocusTrap } from '../hooks/useFocusTrap'
 import styles from '../styles/QuestionSetManager.module.css'
 
 interface QuestionSetStats {
@@ -21,6 +22,10 @@ export const QuestionSetManager: React.FC = () => {
   const [showEditForm, setShowEditForm] = useState(false)
   // AI generator removed
   const [stats, setStats] = useState<QuestionSetStats | null>(null)
+
+  // Focus traps for modals
+  const editModalRef = useFocusTrap(showEditForm, () => setShowEditForm(false))
+  const importModalRef = useFocusTrap(showImportForm, () => setShowImportForm(false))
 
   // Mobile/compact mode helpers
   const [isMobile, setIsMobile] = useState<boolean>(() => typeof window !== 'undefined' ? window.innerWidth <= 768 : false)
@@ -635,8 +640,15 @@ export const QuestionSetManager: React.FC = () => {
       {/* Edit Question Set Modal */}
       {showEditForm && selectedSet && (
         <div className={styles.modal}>
-          <div className={styles.modalContent}>
-            <h2>Edit Question Set</h2>
+          <div
+            className={styles.modalContent}
+            ref={editModalRef as React.RefObject<HTMLDivElement>}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="edit-modal-title"
+            tabIndex={-1}
+          >
+            <h2 id="edit-modal-title">Edit Question Set</h2>
             <form onSubmit={handleUpdateQuestionSet}>
               <div className={styles.formGroup}>
                 <label htmlFor="edit-name">Name</label>
@@ -699,8 +711,16 @@ export const QuestionSetManager: React.FC = () => {
       {/* Import Question Set Modal */}
       {showImportForm && (
         <div className={styles.modal}>
-          <div className={styles.modalContent} style={{ maxWidth: '800px' }}>
-            <h2>Fragen-Set Importieren</h2>
+          <div
+            className={styles.modalContent}
+            style={{ maxWidth: '800px' }}
+            ref={importModalRef as React.RefObject<HTMLDivElement>}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="import-modal-title"
+            tabIndex={-1}
+          >
+            <h2 id="import-modal-title">Fragen-Set Importieren</h2>
             <div className={styles.importInstructions}>
               <p>Fügen Sie JSON-Daten ein, um ein neues Fragen-Set zu erstellen. Unterstützte Formate:</p>
               <details>

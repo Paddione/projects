@@ -50,6 +50,7 @@ export const GamePage: React.FC = () => {
   const [scoreDelta, setScoreDelta] = useState<number | null>(null)
   const [questionExpanded, setQuestionExpanded] = useState(false)
   const [questionOverflowing, setQuestionOverflowing] = useState(false)
+  const [focusedAnswerIndex, setFocusedAnswerIndex] = useState<number>(0)
   const questionRef = useRef<HTMLHeadingElement | null>(null)
   
   // Derived UI state
@@ -112,6 +113,7 @@ export const GamePage: React.FC = () => {
     setAnswerFlash(null)
     setScoreDelta(null)
     setQuestionExpanded(false)
+    setFocusedAnswerIndex(0)
     resetPlayerAnswerStatus()
   }, [questionIndex, resetPlayerAnswerStatus])
 
@@ -148,6 +150,34 @@ export const GamePage: React.FC = () => {
     window.addEventListener('resize', checkOverflow)
     return () => window.removeEventListener('resize', checkOverflow)
   }, [currentQuestion?.text, questionExpanded])
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (hasAnswered || !currentQuestion || timeRemaining === 0) return
+
+    const answerCount = currentQuestion.answers.length
+
+    // Arrow key navigation
+    if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
+      e.preventDefault()
+      setFocusedAnswerIndex(prev => (prev - 1 + answerCount) % answerCount)
+    } else if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
+      e.preventDefault()
+      setFocusedAnswerIndex(prev => (prev + 1) % answerCount)
+    }
+    // Number key shortcuts (1-4)
+    else if (['1', '2', '3', '4'].includes(e.key)) {
+      e.preventDefault()
+      const answerIndex = parseInt(e.key) - 1
+      if (answerIndex < answerCount) {
+        handleAnswerClick(answerIndex)
+      }
+    }
+    // Enter or Space to submit focused answer
+    else if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault()
+      handleAnswerClick(focusedAnswerIndex)
+    }
+  }
 
   const handleAnswerClick = async (answerIndex: number) => {
     if (hasAnswered || !currentQuestion) return
@@ -337,9 +367,16 @@ export const GamePage: React.FC = () => {
                 </button>
               </div>
             )}
-            <div className={gameStyles.answersGrid}>
+            <div
+              className={gameStyles.answersGrid}
+              onKeyDown={handleKeyDown}
+              tabIndex={0}
+              role="radiogroup"
+              aria-label="Answer options"
+            >
               {currentQuestion.answers.map((answer, index) => {
                 const isSelected = selectedAnswer === index
+                const isFocused = focusedAnswerIndex === index && !hasAnswered
                 const isCorrectAnswer = typeof currentQuestion.correctAnswer === 'number' && currentQuestion.correctAnswer === index
                 const showCorrectBlink = !!answerFlash && ((answerFlash === 'correct' && isSelected) || (answerFlash === 'wrong' && isCorrectAnswer))
                 const showWrongBlink = !!answerFlash && answerFlash === 'wrong' && isSelected
@@ -353,12 +390,15 @@ export const GamePage: React.FC = () => {
                       ${gameStyles.answerButton}
                       ${gameStyles.answerEnter}
                       ${isSelected && !answerFlash ? gameStyles.answerSelected : ''}
+                      ${isFocused ? gameStyles.answerFocused : ''}
                       ${showCorrectBlink ? gameStyles.answerCorrectBlink : ''}
                       ${showWrongBlink ? gameStyles.answerWrongBlink : ''}
                     `}
                     onClick={() => handleAnswerClick(index)}
                     disabled={hasAnswered || timeRemaining === 0}
                     style={{ animationDelay: `${index * 60}ms` }}
+                    aria-checked={isSelected}
+                    role="radio"
                   >
                     <span className={gameStyles.answerLabel}>{String.fromCharCode(65 + index)}.</span>
                     <span className={gameStyles.answerText}>{answer}</span>
