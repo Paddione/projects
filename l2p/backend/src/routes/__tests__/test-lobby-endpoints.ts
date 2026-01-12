@@ -1,6 +1,6 @@
 import { db } from '../../services/DatabaseService.js';
 import { UserRepository } from '../../repositories/UserRepository.js';
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 
 async function testLobbyEndpoints() {
   console.log('Testing Lobby API Endpoints...');

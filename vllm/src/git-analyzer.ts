@@ -1,4 +1,5 @@
-import { simpleGit, SimpleGit, LogResult, DefaultLogFields } from "simple-git";
+import { simpleGit } from "simple-git";
+import type { SimpleGit, LogResult } from "simple-git";
 import { join } from "path";
 
 export interface GitAnalysis {

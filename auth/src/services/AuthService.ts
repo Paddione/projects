@@ -1,4 +1,4 @@
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import { db } from '../config/database.js';
 import { users, type User, type NewUser } from '../db/schema.js';

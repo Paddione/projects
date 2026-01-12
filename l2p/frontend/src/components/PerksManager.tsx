@@ -39,7 +39,7 @@ interface UserLoadout {
 interface PerksData {
   perks: UserPerk[];
   activePerks: UserPerk[];
-  loadout: UserLoadout;
+  loadout: UserLoadout | null;
 }
 
 type PerkFilter = 'all' | 'unlocked' | 'active' | 'cosmetic' | 'locked' | 'avatar' | 'theme' | 'badge' | 'helper' | 'display' | 'emote' | 'sound' | 'multiplier' | 'title';
@@ -332,11 +332,11 @@ const PerksManager: React.FC = () => {
     const config = userPerk.configuration || {};
     if (userPerk.perk.type === 'avatar') {
       setConfigSelection({
-        avatar: config.selected_avatar || perksData?.loadout.active_avatar || AVATAR_OPTIONS[0]?.id || 'student',
+        avatar: config.selected_avatar || perksData?.loadout?.active_avatar || AVATAR_OPTIONS[0]?.id || 'student',
       });
     } else if (userPerk.perk.type === 'theme') {
       setConfigSelection({
-        theme: config.theme_name || perksData?.loadout.active_theme || THEME_OPTIONS[0]?.id || 'default',
+        theme: config.theme_name || perksData?.loadout?.active_theme || THEME_OPTIONS[0]?.id || 'default',
       });
     } else if (userPerk.perk.type === 'badge') {
       setConfigSelection({
@@ -660,7 +660,7 @@ const PerksManager: React.FC = () => {
       { id: 'teaching_assistant', emoji: '👩‍🏫' }
     ];
 
-    const currentAvatar = universityAvatars.find(a => a.id === perksData?.loadout.active_avatar);
+    const currentAvatar = universityAvatars.find(a => a.id === perksData?.loadout?.active_avatar);
     return currentAvatar?.emoji || '👨‍🎓';
   };
 

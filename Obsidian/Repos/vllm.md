@@ -11,6 +11,13 @@ MCP (Model Context Protocol) server for AI inference and analysis. Provides tool
 - **RAG Stack**: Qdrant, LlamaIndex, Open WebUI
 - **Testing**: Jest
 
+## Quick Start
+```bash
+cd vllm
+npm install
+npm run dev:watch
+```
+
 ## Architecture
 
 ### System Overview
@@ -325,6 +332,12 @@ npx jest src/tools/inference.test.ts
 # Test with coverage
 npm test -- --coverage
 ```
+
+## Key Scripts
+- `npm run dev:watch` - rebuild on changes
+- `npm run build` - build MCP server
+- `npm test` - run tests
+- `./scripts/start_rag.sh` - start RAG stack
 
 ## Dashboard
 

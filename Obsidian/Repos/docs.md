@@ -3,6 +3,10 @@
 ## Purpose
 Central documentation hub for deployment, architecture, and operations.
 
+## Quick Start
+- Start with `docs/architecture.md` for system overview.
+- Follow `docs/deployment.md` for environment and deployment.
+
 ## Highlights
 - `docs/deployment.md`
 - `docs/environment-management.md`
@@ -13,3 +17,6 @@ Central documentation hub for deployment, architecture, and operations.
 
 ## Related
 See [[Docs Library]] for a curated list.
+
+## Ports
+- None (documentation only)

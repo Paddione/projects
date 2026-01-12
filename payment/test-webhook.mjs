@@ -5,10 +5,12 @@
  * This simulates a Stripe webhook call to verify the endpoint is working
  */
 
-const crypto = require('crypto');
-const https = require('https');
-const http = require('http');
-require('dotenv').config({ path: '.env-prod' });
+import crypto from 'crypto';
+import https from 'https';
+import http from 'http';
+import dotenv from 'dotenv';
+
+dotenv.config({ path: '.env-prod' });
 
 const WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET;
 const WEBHOOK_URL = 'http://localhost:3004/api/stripe/webhook';

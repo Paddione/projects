@@ -50,14 +50,16 @@ export const { auth, signIn, signOut, handlers } = NextAuth({
     },
     events: {
         async signOut(message) {
-            const token = (message as any)?.token?.accessToken as string | undefined;
+            const token = 'token' in message && message.token && typeof message.token === 'object' && 'accessToken' in message.token
+                ? message.token.accessToken as string | undefined
+                : undefined;
             if (!token) return;
             try {
                 await fetch(`${authServiceApiUrl}/auth/logout`, {
                     method: 'POST',
                     headers: { Authorization: `Bearer ${token}` },
                 });
-            } catch (error) {
+            } catch {
                 console.warn('Failed to revoke central auth token during sign-out');
             }
         },

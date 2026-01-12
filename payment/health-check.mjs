@@ -4,7 +4,7 @@
  * Health check for payment service endpoints
  */
 
-const http = require('http');
+import http from 'http';
 
 const tests = [
     {

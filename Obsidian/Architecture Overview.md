@@ -149,16 +149,16 @@ sequenceDiagram
 
 ## Port Allocation
 
-| Service | Dev Port | Prod Port | Protocol |
-|---------|----------|-----------|----------|
-| L2P Frontend | 3000 | 3007 | HTTP |
-| L2P Backend | 3001 | 3008 | HTTP + WS |
-| Payment | 3004 | 3005 | HTTP |
-| Auth | 5500 | 5501 | HTTP |
-| VideoVault | 5100/5000 | 5001 | HTTP |
-| VLLM Dashboard | 4242 | - | HTTP |
-| Shared Postgres | 5432 | 5432 | TCP |
-| Traefik | 80/443 | 80/443 | HTTP/HTTPS |
+| Service | Local Dev | Docker Test/Dev | Production (Traefik Internal) | Protocol |
+|---------|-----------|-----------------|--------------------------------|----------|
+| L2P Frontend | 3000 | 3007 (test) / 3000 (dev) | 80 | HTTP |
+| L2P Backend | 3001 | 3006 (test) / 3001 (dev) | 3001 | HTTP + WS |
+| Payment | 3004 | 3000 (container) | 3000 | HTTP |
+| Auth | 5500 | 5500 (container) | 5500 | HTTP |
+| VideoVault | 5100 | 5000 | 5000 | HTTP |
+| VLLM Dashboard | 4242 | - | 4242 | HTTP |
+| Shared Postgres | 5432 | 5432 | 5432 | TCP |
+| Traefik | 80/443 | 80/443 | 80/443 | HTTP/HTTPS |
 
 ## Data Flow Patterns
 

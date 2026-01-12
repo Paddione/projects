@@ -4,7 +4,7 @@ A quick map of what lives in this monorepo. Click a repo name to open its page.
 
 | Repo | Purpose | Stack | Ports |
 | --- | --- | --- | --- |
-| [[Repos/l2p|Learn2Play (l2p)]] | Multiplayer quiz platform | React, Express, Socket.io, PostgreSQL | 3000, 3001 |
+| [[Repos/l2p|Learn2Play (l2p)]] | Multiplayer quiz platform | React, Express, Socket.io, PostgreSQL | 3000, 3001 (Docker test: 3007/3006) |
 | [[Repos/VideoVault|VideoVault]] | Client-first video management | React, Vite, File System Access API | 5100/5000 |
 | [[Repos/payment|Payment]] | Payment platform with Stripe | Next.js 16, Prisma, NextAuth | 3004 |
 | [[Repos/vllm|VLLM]] | MCP server for AI inference and analysis | TypeScript, vLLM, PostgreSQL | 4100 |

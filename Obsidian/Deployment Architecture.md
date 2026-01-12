@@ -12,11 +12,11 @@ graph TB
     end
 
     subgraph "Application Layer"
-        L2P_FE[L2P Frontend<br/>:3007]
-        L2P_BE[L2P Backend<br/>:3008]
-        Payment[Payment<br/>:3005]
-        Auth[Auth<br/>:5501]
-        VV[VideoVault<br/>:5001]
+        L2P_FE[L2P Frontend<br/>:80]
+        L2P_BE[L2P Backend<br/>:3001]
+        Payment[Payment<br/>:3000]
+        Auth[Auth<br/>:5500]
+        VV[VideoVault<br/>:5000]
     end
 
     subgraph "Data Layer"
@@ -60,12 +60,13 @@ graph TB
 |--------|-------------|------------|
 | **Domain** | localhost | korczewski.de |
 | **HTTPS** | No (HTTP only) | Yes (TLS via Traefik) |
-| **Env File** | `.env-dev` | `.env-prod` |
-| **Builds** | Hot reload | Optimized builds |
+| **Env File** | `.env` (root mapping) | `.env` (root mapping) |
+| **Builds** | Hot reload / tsx | Optimized build / node |
 | **Source Maps** | Enabled | Disabled |
-| **Logging** | Verbose | Error only |
-| **Database** | Separate test DB :5433 | Production :5432 |
-| **Secrets** | Local only | Secure vault |
+| **Logging** | Verbose / Debug | Error / Info only |
+| **Database** | Shared Postgres :5432 | Shared Postgres :5432 |
+| **Test DB** | Isolated DB on :5433 | N/A |
+| **Secrets** | `.env` (local) | `.env` (secure) |
 
 ## Development Deployment
 
@@ -139,8 +140,8 @@ npm run deploy:down
 ```
 
 **Access Points:**
-- Frontend: http://localhost:3007
-- Backend: http://localhost:3008
+- Frontend: http://localhost:3000
+- Backend: http://localhost:3001
 
 ## Production Deployment
 
@@ -181,8 +182,9 @@ npm run build:all
 # 3. Health check
 ./scripts/health-check.sh
 
-# 4. Monitor logs
-./scripts/monitor-logs.sh
+# 4. Monitor logs (per service)
+cd shared-infrastructure
+docker-compose logs -f
 ```
 
 ### L2P Production Deployment
@@ -272,11 +274,11 @@ flowchart LR
     end
 
     subgraph "Services"
-        L2P[l2p.korczewski.de<br/>:3007]
-        API[api.l2p.korczewski.de<br/>:3008]
-        Payment[payment.korczewski.de<br/>:3005]
-        Auth[auth.korczewski.de<br/>:5501]
-        VV[vault.korczewski.de<br/>:5001]
+        L2P[l2p.korczewski.de<br/>:80]
+        API[api.l2p.korczewski.de<br/>:3001]
+        Payment[payment.korczewski.de<br/>:3000]
+        Auth[auth.korczewski.de<br/>:5500]
+        VV[vault.korczewski.de<br/>:5000]
     end
 
     User -->|HTTPS| TLS
@@ -626,12 +628,13 @@ flowchart LR
 
 | Issue | Symptom | Solution |
 |-------|---------|----------|
-| Service won't start | Container exits immediately | Check logs: `docker-compose logs service_name` |
-| Port already in use | `EADDRINUSE` | Stop conflicting service or change port |
-| Database connection fails | `ECONNREFUSED` | Start `shared-infrastructure` first |
-| Environment variable missing | Service crashes on start | Check `.env` file exists and is valid |
-| Build fails | Docker build error | Clear cache: `docker-compose build --no-cache` |
-| Health check fails | Container marked unhealthy | Check health endpoint responds correctly |
+| Service won't start | Container exits immediately | Check logs: `docker logs <container_id>`. Often missing secrets. |
+| Port already in use | `EADDRINUSE` | `fuser -k <port>/tcp` or stop conflicting container. |
+| Database connection fails | `ECONNREFUSED` | Start `shared-infrastructure` first. Check `DATABASE_URL` host. |
+| Environment variable missing | Service crashes on start | Validate root `.env` against each service's `.env.example`. |
+| L2P Test Crash | Fatal memory error | Known issue with `pdf-parse`. Temporarily exclude FileProcessingService tests. |
+| Build fails | Docker build error | Check stage targets in Dockerfile. Use `--no-cache` to force rebuild. |
+| Health check fails | Container marked unhealthy | Ensure health routes (e.g. `/api/health`) are responding. |
 
 ### Debug Commands
 

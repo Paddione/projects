@@ -19,12 +19,12 @@ export interface Player {
 
 export interface CreateLobbyRequest {
   hostId: number;
-  username?: string; // Username from JWT token
-  selectedCharacter?: string; // Character from JWT token
-  characterLevel?: number; // Character level from JWT token
-  questionCount?: number;
-  questionSetIds?: number[];
-  settings?: Record<string, unknown>;
+  username?: string | undefined; // Username from JWT token
+  selectedCharacter?: string | undefined; // Character from JWT token
+  characterLevel?: number | undefined; // Character level from JWT token
+  questionCount?: number | undefined;
+  questionSetIds?: number[] | undefined;
+  settings?: Record<string, unknown> | undefined;
 }
 
 export interface LobbySettings {

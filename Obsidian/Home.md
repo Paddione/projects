@@ -7,6 +7,12 @@ Comprehensive documentation for the monorepo with visual architecture diagrams, 
 - [[Operations]] - Common day-to-day commands
 - [[Environment & Secrets]] - Environment setup guide
 
+## First-Time Setup
+1. Install prerequisites: Node.js (LTS), npm, Docker Desktop/Engine.
+2. From the monorepo root, run `./scripts/start-all-services.sh`.
+3. Confirm services are healthy with `./scripts/health-check.sh`.
+4. Open the repo-specific page in `Repos/` for app URLs and local workflows.
+
 ## Architecture Documentation
 - [[Architecture Overview]] - System architecture with visual diagrams
 - [[Database Architecture]] - Centralized PostgreSQL architecture
@@ -24,6 +30,7 @@ Comprehensive documentation for the monorepo with visual architecture diagrams, 
 
 ## Additional Resources
 - [[Docs Library]] - Link to consolidated documentation
+- [[Doc Update Checklist]] - Checklist for writing or updating docs
 - [[Repos/shared-design-system|Design System]] - Shared CSS and accessibility
 - [[Repos/shared-postgres-mcp|Postgres MCP]] - MCP server for database access
 - [[Repos/browser-control|Browser Control]] - Playwright helpers
@@ -36,6 +43,12 @@ Comprehensive documentation for the monorepo with visual architecture diagrams, 
 - **Visual Diagrams**: All architecture pages include Mermaid diagrams
 - **Code Examples**: Copy-ready commands throughout
 - **Cross-links**: Follow internal links to explore related topics
+
+## Documentation Conventions
+- Each service has a dedicated page in `Repos/`.
+- Use `[[Wiki Links]]` for navigation across this vault.
+- Commands assume you are in the monorepo root unless noted.
+- Architecture pages favor diagrams, while service pages focus on workflows.
 
 ## Key Features
 - **Visual Architecture**: System diagrams, data flows, and sequence diagrams

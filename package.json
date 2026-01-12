@@ -15,12 +15,21 @@
     "install:all": "cd l2p && npm run install:all && cd ../VideoVault && npm install && cd ../payment && npm install && cd ../vllm && npm install",
     "restart:outdated": "bash ./scripts/restart-outdated.sh",
     "test:all": "cd l2p && npm run test:all && cd ../VideoVault && npm run test:all && cd ../payment && npm test",
-    "typecheck:all": "cd l2p && npm run typecheck && cd ../auth && npm run typecheck && cd ../VideoVault && npm run check && cd ../payment && npm run lint && cd ../vllm && npm run build",
+    "typecheck:all": "bash scripts/typecheck-all.sh",
     "validate:env": "node scripts/validate-env.js all",
     "validate:env:dev": "node scripts/validate-env.js dev",
     "validate:env:prod": "node scripts/validate-env.js prod"
   },
   "devDependencies": {
-    "concurrently": "^8.2.2"
+    "concurrently": "^8.2.2",
+    "typescript": "^5.3.3",
+    "@types/node": "^20.11.0",
+    "@types/pg": "^8.16.0",
+    "@modelcontextprotocol/sdk": "^0.6.0",
+    "axios": "^1.13.2",
+    "glob": "^10.0.0",
+    "pg": "^8.16.3",
+    "simple-git": "^3.22.0",
+    "yaml": "^2.3.0"
   }
 }

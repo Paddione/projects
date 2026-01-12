@@ -9,6 +9,19 @@ Multiplayer quiz platform with real-time gameplay. Players create lobbies, invit
 - **Database**: PostgreSQL (via shared-infrastructure)
 - **Testing**: Jest, Testing Library, Supertest, Playwright
 
+## Quick Start
+```bash
+cd l2p
+npm run dev:backend
+npm run dev:frontend
+```
+
+## Key Scripts
+- `npm run dev:backend` - backend dev server
+- `npm run dev:frontend` - frontend dev server
+- `npm run test:all` - full test suite
+- `npm run build:all` - build frontend + backend
+
 ## Architecture
 
 ### System Overview
@@ -410,11 +423,13 @@ openssl rand -hex 32
 
 ## Ports
 
-| Service | Dev | Prod | Docker Dev |
-|---------|-----|------|------------|
-| Frontend | 3000 | 3007 | 3007 |
-| Backend | 3001 | 3008 | 3008 |
-| Test DB | 5433 | - | - |
+| Service | Local dev | Production (Traefik internal) | Docker test stack |
+|---------|-----------|--------------------------------|-------------------|
+| Frontend | 3000 | 80 | 3007 |
+| Backend API | 3001 | 3001 | 3006 |
+| Postgres (test) | 5433 | - | 5433 |
+| Redis (test) | 6380 | - | 6380 |
+| MailHog (test) | 8025 | - | 8025 |
 
 ## API Endpoints
 

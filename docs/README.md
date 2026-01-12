@@ -1,6 +1,6 @@
 # Documentation Index
 
-This directory contains consolidated documentation for the entire monorepo.
+This directory contains consolidated documentation for the entire monorepo. For a visual architecture guide with Mermaid diagrams, visit the [Obsidian Vault](file:///home/patrick/projects/Obsidian/Home.md).
 
 ## 🚀 Core Documentation
 - **[architecture.md](./architecture.md)**: Visual architecture and service structure.

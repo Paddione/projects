@@ -6,6 +6,7 @@ import fs from 'fs/promises';
 import { fileURLToPath } from 'url';
 import { videos, directoryRoots, tags } from '../shared/schema';
 import { randomUUID } from 'crypto';
+// @ts-ignore - canvas is an optional dependency
 import { createCanvas } from 'canvas';
 
 const { Client } = pg;

@@ -138,6 +138,7 @@
     "@testing-library/jest-dom": "^6.6.4",
     "@testing-library/react": "^16.3.0",
     "@testing-library/user-event": "^14.6.1",
+    "@types/canvas": "^2.11.2",
     "@types/compression": "^1.8.1",
     "@types/connect-pg-simple": "^7.0.3",
     "@types/cookie-parser": "^1.4.9",

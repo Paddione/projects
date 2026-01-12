@@ -16,6 +16,7 @@ import { ttsService, TTS_LANGUAGES } from "./tts/index.js";
 import pg from "pg";
 import { spawn, ChildProcess } from "child_process";
 import { createInterface } from "readline";
+import * as path from "path";
 
 interface DynamicServerInstance {
     name: string;
@@ -2378,9 +2379,9 @@ ${JSON.stringify(result, null, 2)}
 
         // Embed subtitles if requested
         if (args.embed_subtitles && result.srtPath) {
-            const videoDir = require('path').dirname(args.file_path);
-            const videoBase = require('path').basename(args.file_path, require('path').extname(args.file_path));
-            const outputPath = require('path').join(videoDir, `${videoBase}_subtitled${require('path').extname(args.file_path)}`);
+            const videoDir = path.dirname(args.file_path);
+            const videoBase = path.basename(args.file_path, path.extname(args.file_path));
+            const outputPath = path.join(videoDir, `${videoBase}_subtitled${path.extname(args.file_path)}`);
 
             const embedResult = await ffmpegService.embedSubtitles({
                 videoFile: args.file_path,

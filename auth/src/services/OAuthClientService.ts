@@ -2,7 +2,7 @@ import { db } from '../config/database.js';
 import { oauthClients } from '../db/schema.js';
 import { eq } from 'drizzle-orm';
 import type { OAuthClientValidation } from '../types/oauth.js';
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 
 /**
  * OAuthClientService

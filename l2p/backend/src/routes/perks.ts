@@ -42,11 +42,22 @@ router.get('/all', authenticate, async (req: Request, res: Response): Promise<vo
 router.get('/user', authenticate, async (req: Request, res: Response): Promise<void> => {
   try {
     const userId = (req as any).user!.userId as number;
-    
+
     const userPerks = await perksManager.getUserPerks(userId);
     const activePerks = await perksManager.getActivePerks(userId);
-    const loadout = await perksManager.getUserLoadout(userId);
-    
+    let loadout = await perksManager.getUserLoadout(userId);
+
+    // Provide default loadout if user doesn't have one
+    if (!loadout) {
+      loadout = {
+        user_id: userId,
+        active_avatar: 'student',
+        active_theme: 'default',
+        perks_config: {},
+        active_perks: activePerks
+      };
+    }
+
     res.json({
       success: true,
       data: {

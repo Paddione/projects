@@ -1,7 +1,7 @@
 import { promises as fs } from "fs";
 import { join, relative } from "path";
 import { existsSync } from "fs";
-import YAML from "yaml";
+import * as YAML from "yaml";
 import { glob } from "glob";
 
 export interface CustomRule {

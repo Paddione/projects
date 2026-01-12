@@ -3,7 +3,7 @@ import { UserRepository } from '../../repositories/UserRepository.js';
 import { DatabaseService } from '../../services/DatabaseService.js';
 
 const db = DatabaseService.getInstance();
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 
 async function testFullLobbyFunctionality() {
   console.log('Testing Full Lobby Functionality...');

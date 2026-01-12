@@ -10,6 +10,13 @@ Client-first video management application optimized for large local media librar
 - **File Access**: File System Access API (Chromium only)
 - **Testing**: Vitest, Playwright
 
+## Quick Start
+```bash
+cd VideoVault
+npm ci
+npm run dev
+```
+
 ## Architecture
 
 ### System Overview
@@ -218,6 +225,16 @@ sequenceDiagram
 ### Video Playback
 - Native HTML5 video player
 - Thumbnail generation on-demand
+
+## Key Scripts
+- `npm run dev` - local dev server
+- `npm run verify` - types + tests + build
+- `npm run docker:dev` - Docker dev stack with hot reload
+- `npm run docker:pw:all` - full E2E suite in Docker
+
+## Ports
+- Local dev: 5100
+- Docker dev: 5000
 - Playback history tracking
 - Resume from last position
 

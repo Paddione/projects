@@ -5,6 +5,12 @@ Short, safe rules for working with env files.
 ## Standard layout
 - `.env.example` is the template.
 - `.env-dev` and `.env-prod` are local-only (gitignored).
+- Some services also use `.env.test` for automated testing.
+
+## Setup checklist
+1. Copy `.env.example` to `.env-dev` in each service you run.
+2. Keep values consistent with `shared-infrastructure/.env-dev`.
+3. Use `localhost` in local-only setups and `shared-postgres` in Docker.
 
 ## Rules to follow
 1. Never commit `.env-dev` or `.env-prod`.

@@ -421,7 +421,7 @@ router.post('/users', authMiddleware.authenticate, requireAdmin, async (req: Req
     }
 
     // Hash password
-    const bcrypt = await import('bcrypt');
+    const bcrypt = await import('bcryptjs');
     const saltRounds = 10;
     const passwordHash = await bcrypt.hash(password, saltRounds);
 

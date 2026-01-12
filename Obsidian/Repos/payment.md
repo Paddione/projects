@@ -11,6 +11,16 @@ Payment platform with Stripe integration for handling subscriptions, one-time pa
 - **Database**: PostgreSQL (via shared-infrastructure)
 - **Testing**: Vitest, Playwright
 
+## Quick Start
+```bash
+cd payment
+npm install
+cp .env.example .env-dev
+cp .env.example .env-prod
+npx prisma migrate dev
+npm run dev
+```
+
 ## Architecture
 
 ### System Overview
@@ -218,6 +228,17 @@ npm run dev        # http://localhost:3004
 # With Stripe webhook forwarding
 stripe listen --forward-to localhost:3004/api/webhooks/stripe
 ```
+
+## Key Scripts
+- `npm run dev` - local dev server
+- `npm run build` - production build
+- `npm run start` - run production server
+- `npm test` - test suite
+- `npm run test:e2e` - Playwright E2E tests
+- `npm run lint` - linting
+
+## Ports
+- Dev server: 3004
 
 ## Build & Production
 

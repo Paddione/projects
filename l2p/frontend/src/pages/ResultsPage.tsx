@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useGameStore } from '../stores/gameStore'
+import { useGameStore, type GameResult } from '../stores/gameStore'
 import styles from '../styles/App.module.css'
 import { useAuthStore } from '../stores/authStore'
 import { useCharacterStore } from '../stores/characterStore'
@@ -180,7 +180,7 @@ export const ResultsPage: React.FC = () => {
   const { progress } = useCharacterStore()
 
   // Use actual game results or fallback to mock data
-  const finalPlayers = gameResults.length > 0 ? gameResults : [
+  const finalPlayers: GameResult[] = gameResults.length > 0 ? gameResults : [
     {
       id: '4',
       username: 'Diana',
@@ -188,6 +188,7 @@ export const ResultsPage: React.FC = () => {
       characterLevel: 5,
       finalScore: 2100,
       correctAnswers: 7,
+      multiplier: 1,
       experienceAwarded: 2100,
       levelUp: true,
       newLevel: 6,
@@ -200,6 +201,7 @@ export const ResultsPage: React.FC = () => {
       characterLevel: 3,
       finalScore: 1250,
       correctAnswers: 5,
+      multiplier: 1,
       experienceAwarded: 1250,
       levelUp: false,
       newLevel: 3,
@@ -212,6 +214,7 @@ export const ResultsPage: React.FC = () => {
       characterLevel: 2,
       finalScore: 890,
       correctAnswers: 3,
+      multiplier: 1,
       experienceAwarded: 890,
       levelUp: false,
       newLevel: 2,
@@ -224,6 +227,7 @@ export const ResultsPage: React.FC = () => {
       characterLevel: 1,
       finalScore: 450,
       correctAnswers: 2,
+      multiplier: 1,
       experienceAwarded: 450,
       levelUp: false,
       newLevel: 1,

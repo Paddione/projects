@@ -22,9 +22,10 @@ export const authConfig = {
                 console.log('JWT Callback - User:', user);
                 token.role = user.role;
                 token.id = user.id;
-                token.accessToken = (user as any).accessToken;
-                token.refreshToken = (user as any).refreshToken;
-                token.authUserId = (user as any).authUserId;
+                // Extended properties from credentials provider
+                token.accessToken = 'accessToken' in user ? user.accessToken : undefined;
+                token.refreshToken = 'refreshToken' in user ? user.refreshToken : undefined;
+                token.authUserId = 'authUserId' in user ? user.authUserId : undefined;
             }
             return token;
         },

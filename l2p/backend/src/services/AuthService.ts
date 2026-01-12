@@ -1,5 +1,5 @@
 import jwt from 'jsonwebtoken';
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import { UserRepository, User, CreateUserData } from '../repositories/UserRepository.js';
 import { EmailService } from './EmailService.js';

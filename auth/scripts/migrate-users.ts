@@ -18,7 +18,7 @@ import postgres from 'postgres';
 import { db } from '../src/config/database.js';
 import { users, userMigrationLog } from '../src/db/schema.js';
 import { eq, or } from 'drizzle-orm';
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 
 interface MigrationOptions {
   dryRun: boolean;
