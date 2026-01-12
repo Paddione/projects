@@ -8,19 +8,23 @@ RUN apt-get update && apt-get install -y \
 
 WORKDIR /app
 
+# Copy shared design system
+COPY shared-design-system /app/shared-design-system
+
 # Copy package files
-COPY package*.json ./
+COPY auth/package*.json ./
 
 # Development stage
 FROM base AS development
 RUN npm ci
-COPY . .
+COPY auth/. .
 CMD ["npm", "run", "dev"]
 
 # Build stage
 FROM base AS build
 RUN npm ci
-COPY . .
+COPY shared-design-system /app/shared-design-system
+COPY auth/. .
 # Build backend
 RUN npm run build
 # Build frontend
@@ -37,7 +41,7 @@ RUN apt-get update && apt-get install -y \
 WORKDIR /app
 
 # Copy package files and install production dependencies
-COPY package*.json ./
+COPY auth/package*.json ./
 RUN npm ci --only=production
 
 # Copy built application from build stage

@@ -6,22 +6,27 @@ WORKDIR /app
 
 RUN apt-get update \
   && apt-get install -y --no-install-recommends \
-    ca-certificates \
-    curl \
-    python3 \
-    build-essential \
+  ca-certificates \
+  curl \
+  python3 \
+  build-essential \
   && rm -rf /var/lib/apt/lists/*
 
-COPY package*.json ./
-COPY tsconfig.json ./
-COPY vite.config.ts ./
+# Copy shared design system
+COPY shared-design-system ./shared-design-system
+
+COPY VideoVault/package*.json ./
+COPY VideoVault/tsconfig.json ./
+COPY VideoVault/vite.config.ts ./
+COPY VideoVault/tailwind.config.cjs ./
+COPY VideoVault/postcss.config.js ./
 
 RUN npm install -g npm@11 && npm install --legacy-peer-deps
 
-COPY client/ ./client/
-COPY server/ ./server/
-COPY shared/ ./shared/
-COPY scripts/ ./scripts/
+COPY VideoVault/client/ ./client/
+COPY VideoVault/server/ ./server/
+COPY VideoVault/shared/ ./shared/
+COPY VideoVault/scripts/ ./scripts/
 
 RUN npm run build
 
@@ -31,18 +36,18 @@ WORKDIR /app
 
 RUN apt-get update \
   && apt-get install -y --no-install-recommends \
-    ca-certificates \
-    curl \
-    ffmpeg \
+  ca-certificates \
+  curl \
+  ffmpeg \
   && rm -rf /var/lib/apt/lists/*
 
 ENV NODE_ENV=production
 
-COPY package*.json ./
+COPY VideoVault/package*.json ./
 RUN npm install -g npm@11 && npm install --legacy-peer-deps --omit=dev
 
 COPY --from=build /app/dist /app/dist
-COPY scripts/ ./scripts/
+COPY VideoVault/scripts/ ./scripts/
 
 EXPOSE 5000
 

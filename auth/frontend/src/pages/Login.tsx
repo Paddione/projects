@@ -245,6 +245,7 @@ export default function Login() {
               <span className="auth-divider-text">Or continue with</span>
             </div>
 
+            <div>
               <button
                 onClick={handleGoogleLogin}
                 className="auth-btn-oauth"

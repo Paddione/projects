@@ -2,110 +2,69 @@
 @import '../../../shared-design-system/cybervault.css';
 @import './cybervault-l2p.css';
 
-/* CSS Variables for theming */
+/* CSS Variables - Map legacy tokens to Cybervault theme */
 :root {
-  /* Light theme colors */
-  --primary-color: #2563eb;
-  --primary-hover: #1d4ed8;
-  --secondary-color: #64748b;
-  --background-color: #ffffff;
-  --surface-color: #f8fafc;
-  --text-primary: #1e293b;
-  --text-secondary: #64748b;
-  --border-color: #e2e8f0;
-  --success-color: #10b981;
-  --error-color: #ef4444;
-  --warning-color: #f59e0b;
-  
-  /* Spacing */
-  --spacing-xs: 0.25rem;
-  --spacing-sm: 0.5rem;
-  --spacing-md: 1rem;
-  --spacing-lg: 1.5rem;
-  --spacing-xl: 2rem;
-  --spacing-2xl: 3rem;
-  
-  /* Border radius */
-  --radius-sm: 0.25rem;
-  --radius-md: 0.5rem;
-  --radius-lg: 0.75rem;
-  --radius-xl: 1rem;
-  
-  /* Shadows */
-  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  /* Primary theme colors - Use Cybervault tokens */
+  --primary-color: var(--cv-cyan);
+  --primary-hover: var(--cv-cyan-dim);
+  --secondary-color: var(--cv-purple);
+  --background-color: var(--cv-void);
+  --surface-color: var(--cv-glass-3);
+  --text-primary: var(--cv-text);
+  --text-secondary: var(--cv-text-dim);
+  --border-color: var(--cv-border-2);
+  --success-color: var(--cv-success);
+  --error-color: var(--cv-danger);
+  --warning-color: var(--cv-warning);
+
+  /* Spacing - Use Cybervault spacing */
+  --spacing-xs: var(--cv-space-1);
+  --spacing-sm: var(--cv-space-2);
+  --spacing-md: var(--cv-space-4);
+  --spacing-lg: var(--cv-space-6);
+  --spacing-xl: var(--cv-space-8);
+  --spacing-2xl: var(--cv-space-12);
+
+  /* Border radius - Use Cybervault radius */
+  --radius-sm: var(--cv-radius-sm);
+  --radius-md: var(--cv-radius-md);
+  --radius-lg: var(--cv-radius-lg);
+  --radius-xl: var(--cv-radius-xl);
+
+  /* Shadows - Use Cybervault shadows with glow */
+  --shadow-sm: var(--cv-shadow-sm);
+  --shadow-md: var(--cv-shadow-md);
+  --shadow-lg: var(--cv-shadow-lg);
 
   /* Compatibility aliases for components using --color-* and --bg-* tokens */
-  --color-background: var(--background-color);
-  --color-background-primary: var(--background-color);
-  --color-background-secondary: var(--surface-color);
-  --color-surface: var(--surface-color);
-  --color-text: var(--text-primary);
-  --color-text-primary: var(--text-primary);
-  --color-text-secondary: var(--text-secondary);
-  --color-border: var(--border-color);
-  --color-primary: var(--primary-color);
-  --color-primary-dark: var(--primary-hover);
-  --color-primary-light: rgba(37, 99, 235, 0.08);
-  --color-secondary: var(--surface-color);
-  --color-secondary-dark: #e5e7eb;
-  --color-accent: var(--primary-color);
-  --color-error: var(--error-color);
-  --color-error-bg: rgba(239, 68, 68, 0.08);
-  --color-error-border: #ef4444;
+  --color-background: var(--cv-void);
+  --color-background-primary: var(--cv-void);
+  --color-background-secondary: var(--cv-glass-2);
+  --color-surface: var(--cv-glass-3);
+  --color-text: var(--cv-text);
+  --color-text-primary: var(--cv-text-bright);
+  --color-text-secondary: var(--cv-text-dim);
+  --color-border: var(--cv-border-2);
+  --color-primary: var(--cv-cyan);
+  --color-primary-dark: var(--cv-cyan-dim);
+  --color-primary-light: var(--cv-cyan-subtle);
+  --color-secondary: var(--cv-purple);
+  --color-secondary-dark: var(--cv-purple-dim);
+  --color-accent: var(--cv-cyan);
+  --color-error: var(--cv-danger);
+  --color-error-bg: var(--cv-danger-subtle);
+  --color-error-border: var(--cv-danger-border);
 
   /* Additional aliases used by AI components */
-  --bg-primary: var(--surface-color);
-  --bg-secondary: #eef2f7;
-  --bg-hover: #eef2ff;
-  --text-tertiary: #9ca3af;
-  --accent-color: var(--primary-color);
-  --accent-hover: var(--primary-hover);
+  --bg-primary: var(--cv-glass-2);
+  --bg-secondary: var(--cv-glass-3);
+  --bg-hover: var(--cv-glass-4);
+  --text-tertiary: var(--cv-text-muted);
+  --accent-color: var(--cv-cyan);
+  --accent-hover: var(--cv-cyan-dim);
 }
 
-/* Dark theme colors */
-[data-theme="dark"] {
-  --primary-color: #3b82f6;
-  --primary-hover: #2563eb;
-  --secondary-color: #94a3b8;
-  --background-color: #0f172a;
-  --surface-color: #1e293b;
-  --text-primary: #f1f5f9;
-  --text-secondary: #cbd5e1;
-  --border-color: #334155;
-  --success-color: #22c55e;
-  --error-color: #f87171;
-  --warning-color: #fbbf24;
-
-  /* Dark theme aliases */
-  --color-background: var(--background-color);
-  --color-background-primary: var(--background-color);
-  --color-background-secondary: var(--surface-color);
-  --color-surface: var(--surface-color);
-  --color-text: var(--text-primary);
-  --color-text-primary: var(--text-primary);
-  --color-text-secondary: var(--text-secondary);
-  --color-border: var(--border-color);
-  --color-primary: var(--primary-color);
-  --color-primary-dark: var(--primary-hover);
-  --color-primary-light: rgba(59, 130, 246, 0.12);
-  --color-secondary: var(--surface-color);
-  --color-secondary-dark: #0b1220;
-  --color-accent: var(--primary-color);
-  --color-error: var(--error-color);
-  --color-error-bg: rgba(248, 113, 113, 0.12);
-  --color-error-border: #f87171;
-
-  --bg-primary: var(--surface-color);
-  --bg-secondary: #111827;
-  --bg-hover: #1f2937;
-  --text-tertiary: #94a3b8;
-  --accent-color: var(--primary-color);
-  --accent-hover: var(--primary-hover);
-}
-
-/* Base styles */
+/* Base styles - Using Cybervault foundation */
 * {
   box-sizing: border-box;
 }
@@ -113,14 +72,16 @@
 body {
   margin: 0;
   padding: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+  font-family: var(--cv-font-body);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: var(--background-color);
-  color: var(--text-primary);
-  transition: background-color var(--transition-normal), color var(--transition-normal);
+  background-color: var(--cv-void);
+  color: var(--cv-text);
+  transition: background-color 0.3s ease, color 0.3s ease;
+  /* Cybervault background with radial gradients */
+  background-image: var(--cv-radial-cyan), var(--cv-radial-purple);
+  background-attachment: fixed;
+  min-height: 100vh;
 }
 
 #root {

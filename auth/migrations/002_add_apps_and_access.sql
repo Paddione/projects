@@ -35,10 +35,10 @@ CREATE TRIGGER update_apps_updated_at
 -- Seed app catalog
 INSERT INTO auth.apps (key, name, description, url)
 VALUES
-    ('l2p', 'Learn2Play', 'Multiplayer quiz platform', 'http://localhost:5173'),
+    ('l2p', 'Learn2Play', 'Multiplayer quiz platform', 'https://l2p.korczewski.de'),
     ('videovault', 'VideoVault', 'Video manager', 'https://videovault.korczewski.de'),
-    ('payment', 'Payment', 'Payments and wallet dashboard', 'http://localhost:3000'),
-    ('vllm-dashboard', 'VRAM Mastermind', 'vLLM dashboard', 'http://localhost:4242')
+    ('payment', 'Payment', 'Payments and wallet dashboard', 'https://payment.korczewski.de'),
+    ('vllm-dashboard', 'VRAM Mastermind', 'vLLM dashboard', 'https://vllm.korczewski.de')
 ON CONFLICT (key) DO UPDATE SET
     name = EXCLUDED.name,
     description = EXCLUDED.description,

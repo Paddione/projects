@@ -7,14 +7,16 @@ RUN apt-get update -y && apt-get install -y openssl ca-certificates
 WORKDIR /app
 
 # Install dependencies based on the preferred package manager
-COPY package.json package-lock.json* ./
+COPY payment/package.json payment/package-lock.json* ./
 RUN npm install --legacy-peer-deps
 
 # Rebuild the source code only when needed
 FROM base AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
-COPY . .
+# Copy shared design system
+COPY shared-design-system ../shared-design-system
+COPY payment/. .
 
 # Adjust schema in container if needed, but better to edit file
 # Generating client

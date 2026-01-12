@@ -63,9 +63,9 @@ services:
     ports:
       - "5438:5432"
     environment:
-      - POSTGRES_DB=${POSTGRES_DB:-webui}
-      - POSTGRES_USER=${POSTGRES_USER:-webui}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-webui}
+      - POSTGRES_DB=webui
+      - POSTGRES_USER=webui
+      - POSTGRES_PASSWORD=webui
     volumes:
       - ./data/postgres:/var/lib/postgresql/data
     restart: unless-stopped
@@ -87,7 +87,7 @@ services:
       - VECTOR_DB=qdrant
       - QDRANT_URI=http://qdrant:6333
       - QDRANT_HOST=qdrant
-      - DATABASE_URL=postgresql://${POSTGRES_USER:-webui}:${POSTGRES_PASSWORD:-webui}@db:5432/${POSTGRES_DB:-webui}
+      - DATABASE_URL=postgresql://webui:webui@db:5432/webui
       - USER_AGENT=OpenWebUI
       - WEBUI_SECRET_KEY=${WEBUI_SECRET_KEY}
       - CORS_ALLOW_ORIGIN=${CORS_ALLOW_ORIGIN}
@@ -143,7 +143,7 @@ services:
     environment:
       - NODE_ENV=production
       - DASHBOARD_PORT=4242
-      - DATABASE_URL=postgresql://${POSTGRES_USER:-webui}:${POSTGRES_PASSWORD:-webui}@db:5432/${POSTGRES_DB:-webui}
+      - DATABASE_URL=postgresql://webui:webui@db:5432/webui
       - AUTH_SERVICE_URL=${AUTH_SERVICE_URL:-https://auth.korczewski.de}
       - ADMIN_PASSWORD=${VLLM_ADMIN_PASSWORD}
       - DASHBOARD_PORT=${VLLM_DASHBOARD_PORT:-4242}

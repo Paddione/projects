@@ -1,8 +1,8 @@
 services:
   videovault:
     build:
-      context: .
-      dockerfile: Dockerfile.prod
+      context: ..
+      dockerfile: VideoVault/Dockerfile.prod
     container_name: videovault
     expose:
       - "${VIDEO_PORT:-5000}"

@@ -4,13 +4,14 @@
  * Grid-focused, organized, cinematic precision
  */
 
-@import url('/shared-design-system/cybervault.css');
+@import '../../../shared-design-system/cybervault.css';
 
 :root {
   /* VideoVault-specific overrides - Media-focused palette */
   --vv-primary: var(--cv-cyan);
   --vv-secondary: var(--cv-purple);
-  --vv-media-accent: #00d9e6; /* Lighter cyan for media elements */
+  --vv-media-accent: #00d9e6;
+  /* Lighter cyan for media elements */
 
   /* Category colors */
   --vv-cat-1: #00f2ff;
@@ -105,7 +106,8 @@
   border-right: var(--cv-border-width) solid var(--cv-border-2);
   padding: var(--cv-space-6);
   overflow-y: auto;
-  height: calc(100vh - 80px); /* Adjust for header height */
+  height: calc(100vh - 80px);
+  /* Adjust for header height */
   position: sticky;
   top: 80px;
 }

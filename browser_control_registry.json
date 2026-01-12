@@ -12,22 +12,22 @@
             "tasks": [
                 {
                     "name": "L2P Frontend",
-                    "url": "http://localhost:5173",
+                    "url": "https://l2p.korczewski.de",
                     "expected": "h1:contains('Learn2Play')"
                 },
                 {
                     "name": "VideoVault UI",
-                    "url": "http://localhost:5100",
+                    "url": "https://videovault.korczewski.de",
                     "expected": "title:contains('VideoVault')"
                 },
                 {
                     "name": "Payment Portal",
-                    "url": "http://localhost:3004",
+                    "url": "https://payment.korczewski.de",
                     "expected": "button:contains('Get Started')"
                 },
                 {
                     "name": "VRAM Dashboard",
-                    "url": "http://localhost:4242",
+                    "url": "https://dashboard.korczewski.de",
                     "expected": "h1:contains('VRAM')"
                 }
             ]
@@ -38,7 +38,7 @@
             "tasks": [
                 {
                     "name": "Login to L2P",
-                    "url": "http://localhost:5173/login",
+                    "url": "https://l2p.korczewski.de/login",
                     "steps": [
                         "type email",
                         "type password",
@@ -47,7 +47,7 @@
                 },
                 {
                     "name": "Check Session on Payment",
-                    "url": "http://localhost:3004/profile",
+                    "url": "https://payment.korczewski.de/profile",
                     "expected": "text:contains('Welcome')"
                 }
             ]
@@ -63,7 +63,7 @@
                 },
                 {
                     "name": "L2P Backend Health",
-                    "url": "http://localhost:5001/api/health",
+                    "url": "https://l2p.korczewski.de/api/health",
                     "expected": "text:contains('healthy')"
                 }
             ]
@@ -90,7 +90,7 @@
             "tasks": [
                 {
                     "name": "RAG Verification",
-                    "url": "http://localhost:4242/rag",
+                    "url": "https://dashboard.korczewski.de/rag",
                     "expected": "div:contains('Search')"
                 },
                 {

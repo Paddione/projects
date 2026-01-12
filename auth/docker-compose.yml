@@ -3,8 +3,8 @@ version: '3.8'
 services:
   auth-service:
     build:
-      context: .
-      dockerfile: Dockerfile
+      context: ..
+      dockerfile: auth/Dockerfile
       target: production
     container_name: auth-service
     restart: unless-stopped

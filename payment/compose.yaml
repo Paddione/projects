@@ -1,6 +1,8 @@
 services:
   web:
-    build: .
+    build:
+      context: ..
+      dockerfile: payment/Dockerfile
     expose:
       - "3000"
     env_file:

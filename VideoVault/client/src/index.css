@@ -122,17 +122,17 @@
   }
   
   .progress-bar {
-    background: linear-gradient(90deg, hsl(var(--primary)) 0%, hsl(216, 82%, 56%) 100%);
+    background: linear-gradient(90deg, var(--primary) 0%, hsl(216, 82%, 56%) 100%);
   }
   
   .video-thumbnail {
     aspect-ratio: 16/9;
-    background: linear-gradient(135deg, hsl(var(--muted)) 0%, hsl(var(--border)) 100%);
+    background: linear-gradient(135deg, var(--muted) 0%, var(--border) 100%);
   }
   
   .sidebar-scroll {
     scrollbar-width: thin;
-    scrollbar-color: hsl(var(--border)) hsl(var(--muted));
+    scrollbar-color: var(--border) var(--muted);
   }
   
   .sidebar-scroll::-webkit-scrollbar {

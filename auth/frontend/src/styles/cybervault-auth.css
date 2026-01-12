@@ -6,7 +6,7 @@
  * Palette: Cybervault base with purple emphasis (authority/security)
  */
 
-@import url('../../../../shared-design-system/cybervault.css');
+@import url('../../../shared-design-system/cybervault.css');
 
 /* ============================================================================
    AUTH-SPECIFIC DESIGN TOKENS
