@@ -4,7 +4,7 @@
   "private": true,
   "description": "Monorepo containing l2p, VideoVault, payment, and vllm projects",
   "scripts": {
-    "build:all": "cd l2p && npm run build:all && cd ../VideoVault && npm run build && cd ../payment && npm run build && cd ../vllm && npm run build",
+    "build:all": "cd l2p && npm run build:all && cd ../auth && npm run build && cd ../VideoVault && npm run build && cd ../payment && npm run build && cd ../vllm && npm run build",
     "dev:all": "concurrently -n \"l2p-fe,l2p-be,vault,payment,vllm\" -c \"green,blue,yellow,magenta,cyan\" \"cd l2p && npm run dev:frontend\" \"cd l2p && npm run dev:backend\" \"cd VideoVault && npm run dev\" \"cd payment && npm run dev\" \"cd vllm && npm run dev:watch\"",
     "dev:all:web": "concurrently -n \"l2p-fe,l2p-be,vault,payment\" -c \"green,blue,yellow,magenta\" \"cd l2p && npm run dev:frontend\" \"cd l2p && npm run dev:backend\" \"cd VideoVault && npm run dev\" \"cd payment && npm run dev\"",
     "dev:l2p": "npm run dev:l2p:parallel",
@@ -13,7 +13,9 @@
     "dev:videovault": "cd VideoVault && npm run dev",
     "dev:vllm": "cd vllm && npm run dev:watch",
     "install:all": "cd l2p && npm run install:all && cd ../VideoVault && npm install && cd ../payment && npm install && cd ../vllm && npm install",
+    "restart:outdated": "bash ./scripts/restart-outdated.sh",
     "test:all": "cd l2p && npm run test:all && cd ../VideoVault && npm run test:all && cd ../payment && npm test",
+    "typecheck:all": "cd l2p && npm run typecheck && cd ../auth && npm run typecheck && cd ../VideoVault && npm run check && cd ../payment && npm run lint && cd ../vllm && npm run build",
     "validate:env": "node scripts/validate-env.js all",
     "validate:env:dev": "node scripts/validate-env.js dev",
     "validate:env:prod": "node scripts/validate-env.js prod"

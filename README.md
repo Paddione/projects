@@ -56,6 +56,7 @@ A collection of independent full-stack applications, shared infrastructure, and 
 
 - **[docs/tasks.md](./docs/tasks.md)**: active tasks and consolidated checklists
 - **[docs/auth-fixes.md](./docs/auth-fixes.md)**: consolidated auth, JWT, and OAuth fixes plus deployment/testing notes
+- **[docs/npm-scripts.md](./docs/npm-scripts.md)**: npm script reference by project
 - **[docs/accessibility/](./docs/accessibility/)**: accessibility audits and test results
 - **[docs/integrations/](./docs/integrations/)**: third-party service integration plans
 - Project-specific documentation lives in each project directory
