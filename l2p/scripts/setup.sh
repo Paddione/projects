@@ -131,8 +131,6 @@ SMTP_USER=your-email@gmail.com
 SMTP_PASS=your-gmail-app-password
 SMTP_FROM=your-email@gmail.com
 
-# Google AI Configuration (Optional - for question generation)
-GOOGLE_AI_API_KEY=your-gemini-api-key
 
 # Application Configuration
 NODE_ENV=development
@@ -145,7 +143,7 @@ TEST_ENVIRONMENT=local
 EOF
     
     print_success "Environment file created with secure secrets"
-    print_warning "Optional: Edit .env to configure email (SMTP) and AI (Google Gemini) features"
+    print_warning "Optional: Edit .env to configure email (SMTP) features"
 }
 
 # Install dependencies
@@ -305,7 +303,7 @@ show_completion() {
     echo -e "\n${BLUE}Next Steps:${NC}"
     echo -e "  1. Visit ${GREEN}http://localhost:3000${NC} to access the application"
     echo -e "  2. Register a new account to get started"
-    echo -e "  3. Edit ${YELLOW}.env${NC} to configure email and AI features (optional)"
+    echo -e "  3. Edit ${YELLOW}.env${NC} to configure email features (optional)"
     echo -e "  4. Read ${YELLOW}DEPLOYMENT.md${NC} for advanced configuration"
     
     echo -e "\n${BLUE}Documentation:${NC}"

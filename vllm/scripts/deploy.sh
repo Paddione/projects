@@ -13,16 +13,18 @@ if [ -f "$ROOT_DIR/.env" ]; then
     set +a
 fi
 
-IMAGE=${IMAGE:-vllm/vllm-openai:latest}
-PLATFORM=${PLATFORM:-linux/amd64}
-PORT=${PORT:-8888}
-MODEL=${MODEL:-Qwen/Qwen2.5-Coder-1.5B}
+IMAGE=${VLLM_IMAGE:-${IMAGE:-vllm/vllm-openai:latest}}
+PLATFORM=${VLLM_PLATFORM:-${PLATFORM:-linux/amd64}}
+PORT=${VLLM_PORT:-${PORT:-4100}}
+MODEL=${VLLM_MODEL:-${MODEL:-Qwen/Qwen2.5-Coder-1.5B}}
 
 # Check for HF_TOKEN
-if [ -z "$HF_TOKEN" ]; then
-    echo "Error: HF_TOKEN is not set. Please set it in .env file or environment."
+# Check for HF_TOKEN
+if [ -z "${VLLM_HF_TOKEN:-${HF_TOKEN:-}}" ]; then
+    echo "Error: VLLM_HF_TOKEN (or HF_TOKEN) is not set. Please set it in .env file."
     exit 1
 fi
+HF_TOKEN="${VLLM_HF_TOKEN:-$HF_TOKEN}"
 
 # Handle API Key
 VLLM_API_KEY=${VLLM_API_KEY:-}

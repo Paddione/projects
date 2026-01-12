@@ -54,9 +54,29 @@ http:
     #       - "127.0.0.1/32"
     #       - "192.168.1.0/24"
 
+    # WebSocket support - minimal headers to avoid interference
+    websocket-headers:
+      headers:
+        customRequestHeaders:
+          X-Forwarded-Proto: "https"
+          X-Real-IP: ""
+        # Don't set custom response headers that might interfere with WebSocket upgrade
+
+    # HTTPS Redirect
+    https-redirect:
+      redirectScheme:
+        scheme: https
+        permanent: true
+
     # Chain common middlewares
     default-chain:
       chain:
         middlewares:
           - security-headers
           - compression
+
+    # Chain for WebSocket-enabled services - no security headers that interfere with WS
+    websocket-chain:
+      chain:
+        middlewares:
+          - websocket-headers

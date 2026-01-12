@@ -22,7 +22,7 @@ COPY vite.config.ts ./
 
 # Install dependencies (upgrade npm to avoid 404 tarball issues)
 # Ensure devDependencies are installed by not setting NODE_ENV=production
-RUN npm install -g npm@11 && NODE_ENV=development npm ci
+RUN npm install -g npm@11 && NODE_ENV=development npm install --legacy-peer-deps
 
 # Create directories that will be mounted as volumes
 RUN mkdir -p client server shared docs

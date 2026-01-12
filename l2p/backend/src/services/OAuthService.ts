@@ -26,8 +26,22 @@ export class OAuthService {
     const defaultFrontendUrl = isProduction
       ? 'https://l2p.korczewski.de'
       : 'http://localhost:3000';
-    this.redirectUri = process.env['OAUTH_REDIRECT_URI']
-      || `${(process.env['FRONTEND_URL'] || defaultFrontendUrl).trim().replace(/\/+$/, '')}/auth/callback`;
+
+    // Handle comma-separated redirect URIs and select the appropriate one
+    const redirectUriEnv = process.env['OAUTH_REDIRECT_URI'];
+    if (redirectUriEnv && redirectUriEnv.includes(',')) {
+      // Multiple URIs provided, select based on environment
+      const uris = redirectUriEnv.split(',').map(uri => uri.trim());
+      this.redirectUri = (isProduction
+        ? (uris.find(uri => uri.startsWith('https://')) || uris[0])
+        : (uris.find(uri => uri.includes('localhost')) || uris[0]))
+        || `${(process.env['FRONTEND_URL'] || defaultFrontendUrl).trim().replace(/\/+$/, '')}/auth/callback`;
+    } else {
+      // Single URI or fallback
+      this.redirectUri = redirectUriEnv
+        || `${(process.env['FRONTEND_URL'] || defaultFrontendUrl).trim().replace(/\/+$/, '')}/auth/callback`;
+    }
+
     this.clientSecret = this.resolveClientSecret(nodeEnv);
   }
 

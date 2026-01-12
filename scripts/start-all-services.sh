@@ -31,6 +31,14 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 cd "$ROOT_DIR"
 
+# Ensure centralized env file exists
+CENTRAL_ENV_FILE="$ROOT_DIR/.env"
+if [ ! -f "$CENTRAL_ENV_FILE" ]; then
+    print_error "Central .env file not found at $CENTRAL_ENV_FILE"
+    print_error "Please create it before starting services."
+    exit 1
+fi
+
 # Check if we're in the right directory
 if [ ! -d "shared-infrastructure" ]; then
     print_error "shared-infrastructure directory not found!"
@@ -41,14 +49,6 @@ fi
 # Step 1: Start centralized PostgreSQL
 echo "Step 1: Starting centralized PostgreSQL..."
 cd shared-infrastructure
-
-if [ ! -f ".env" ]; then
-    print_warning ".env file not found in shared-infrastructure!"
-    print_warning "Creating from .env.example..."
-    cp .env.example .env
-    print_warning "Please edit shared-infrastructure/.env with secure passwords before continuing!"
-    exit 1
-fi
 
 docker-compose up -d
 print_status "Centralized PostgreSQL started"
@@ -73,13 +73,8 @@ echo ""
 echo "Step 2: Starting Auth Service..."
 cd auth
 
-if [ ! -f ".env" ]; then
-    print_warning ".env file not found in auth directory!"
-    print_warning "Please create auth/.env from .env.example"
-else
-    docker-compose up -d
-    print_status "Auth service started"
-fi
+docker-compose up -d
+print_status "Auth service started"
 
 cd ..
 
@@ -88,34 +83,29 @@ echo ""
 echo "Step 3: Starting L2P Service..."
 cd l2p
 
-if [ ! -f ".env.production" ]; then
-    print_warning ".env.production file not found in l2p directory!"
-    print_warning "Skipping L2P production deployment"
-else
-    # Ask which profile to use
-    echo "Which L2P profile would you like to start?"
-    echo "1) Production"
-    echo "2) Development"
-    echo "3) Skip L2P"
-    read -p "Enter choice (1-3): " choice
+# Ask which profile to use
+echo "Which L2P profile would you like to start?"
+echo "1) Production"
+echo "2) Development"
+echo "3) Skip L2P"
+read -p "Enter choice (1-3): " choice
 
-    case $choice in
-        1)
-            docker-compose --profile production up -d
-            print_status "L2P production started"
-            ;;
-        2)
-            docker-compose --profile development up -d
-            print_status "L2P development started"
-            ;;
-        3)
-            print_warning "Skipping L2P"
-            ;;
-        *)
-            print_warning "Invalid choice, skipping L2P"
-            ;;
-    esac
-fi
+case $choice in
+    1)
+        docker-compose --profile production up -d
+        print_status "L2P production started"
+        ;;
+    2)
+        docker-compose --profile development up -d
+        print_status "L2P development started"
+        ;;
+    3)
+        print_warning "Skipping L2P"
+        ;;
+    *)
+        print_warning "Invalid choice, skipping L2P"
+        ;;
+esac
 
 cd ..
 
@@ -124,13 +114,8 @@ echo ""
 echo "Step 4: Starting Payment Service..."
 cd payment
 
-if [ ! -f ".env" ]; then
-    print_warning ".env file not found in payment directory!"
-    print_warning "Please create payment/.env from .env.example"
-else
-    docker-compose up -d
-    print_status "Payment service started"
-fi
+docker-compose up -d
+print_status "Payment service started"
 
 cd ..
 
@@ -139,13 +124,8 @@ echo ""
 echo "Step 5: Starting VideoVault Service..."
 cd VideoVault
 
-if [ ! -f "env/.env-app" ]; then
-    print_warning "env/.env-app file not found in VideoVault directory!"
-    print_warning "Please create VideoVault/env/.env-app"
-else
-    docker-compose up -d
-    print_status "VideoVault service started"
-fi
+docker-compose up -d
+print_status "VideoVault service started"
 
 cd ..
 

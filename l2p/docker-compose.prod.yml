@@ -42,7 +42,7 @@ services:
       - SMTP_USER=${SMTP_USER}
       - SMTP_PASS=${SMTP_PASS}
       - SMTP_FROM=${SMTP_FROM}
-      - GOOGLE_AI_API_KEY=${GOOGLE_AI_API_KEY}
+
       - FRONTEND_URL=${FRONTEND_URL:-https://localhost}
       - CORS_ORIGINS=${CORS_ORIGINS:-https://localhost}
       - COOKIE_DOMAIN=${COOKIE_DOMAIN:-.korczewski.de}

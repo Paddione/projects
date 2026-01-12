@@ -13,14 +13,14 @@ echo "  vLLM Development Environment Startup"
 echo "========================================="
 echo ""
 
-# Load environment variables from .env-dev
-if [ -f "$ROOT_DIR/.env-dev" ]; then
+# Load environment variables from .env
+if [ -f "$ROOT_DIR/.env" ]; then
     echo "📋 Loading development environment variables..."
     set -a
-    source "$ROOT_DIR/.env-dev"
+    source "$ROOT_DIR/.env"
     set +a
 else
-    echo "⚠️  Warning: .env-dev not found, using defaults"
+    echo "⚠️  Warning: .env not found, using defaults"
 fi
 
 # Ensure NODE_ENV is set to development

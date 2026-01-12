@@ -1,17 +1,19 @@
 services:
   vllm:
-    image: ${IMAGE:-vllm/vllm-openai:latest}
+    image: ${VLLM_IMAGE:-vllm/vllm-openai:latest}
     container_name: vllm-rag
     runtime: nvidia
+    env_file:
+      - ../.env
     environment:
-      - HF_TOKEN=${HF_TOKEN}
+      - HF_TOKEN=${VLLM_HF_TOKEN}
       - LD_LIBRARY_PATH=/usr/lib/wsl/lib:/usr/local/cuda/lib64:/usr/local/nvidia/lib:/usr/local/nvidia/lib64
       - NVIDIA_VISIBLE_DEVICES=all
       - NVIDIA_DRIVER_CAPABILITIES=compute,utility
       - VLLM_ATTENTION_BACKEND=FLASH_ATTN
       - VLLM_API_KEY=${VLLM_API_KEY:-}
     ports:
-      - "${PORT:-8888}:8888"
+      - "${VLLM_PORT:-4100}:8888"
     volumes:
       - /usr/lib/wsl:/usr/lib/wsl
       - ~/.cache/huggingface:/root/.cache/huggingface
@@ -25,8 +27,8 @@ services:
     command: >
       -c "sed -i 's/return \"microsoft\" in \" \".join(platform.uname()).lower()/return False/g' \$(python3 -c 'import vllm; import os; print(os.path.join(os.path.dirname(vllm.__file__), \"platforms/interface.py\"))') && \
           python3 -c \"import vllm.entrypoints.openai.api_server as api; path = api.__file__; content = open(path).read(); (open(path, 'w').write(content.replace('app.include_router(router)', 'app.include_router(router)\\n\\n    @app.get(\\\"/\\\")\\n    async def root(): return {\\\"status\\\": \\\"ok\\\", \\\"message\\\": \\\"vLLM API Server (RAG) is running\\\", \\\"version\\\": VLLM_VERSION}'))) if '@app.get(\\\"/\\\")' not in content else None\" && \
-          exec vllm serve \"${MODEL:-Qwen/Qwen2.5-Coder-7B-Instruct-AWQ}\" --host 0.0.0.0 --port 8888 --gpu-memory-utilization 0.7 --max-model-len 16384 $${VLLM_API_KEY:+--api-key \"$$VLLM_API_KEY\"}"
-    restart: "no"
+          exec vllm serve \"${VLLM_MODEL:-Qwen/Qwen2.5-Coder-7B-Instruct-AWQ}\" --host 0.0.0.0 --port 8888 --gpu-memory-utilization 0.75 --max-model-len 6144 --max-num-seqs 8 --quantization awq $${VLLM_API_KEY:+--api-key \"$$VLLM_API_KEY\"}"
+    restart: unless-stopped
 
   qdrant:
     image: qdrant/qdrant:v1.14.0
@@ -36,7 +38,7 @@ services:
       - "6334:6334"
     volumes:
       - ./data/qdrant:/qdrant/storage
-    restart: "no"
+    restart: unless-stopped
 
   infinity:
     image: michaelf34/infinity:latest
@@ -53,7 +55,7 @@ services:
     devices:
       - /dev/dxg
     command: v2 --model-id BAAI/bge-m3 --batch-size 32 --device cuda --no-bettertransformer --no-compile --url-prefix /v1
-    restart: "no"
+    restart: unless-stopped
 
   db:
     image: postgres:16-alpine
@@ -66,11 +68,13 @@ services:
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-webui}
     volumes:
       - ./data/postgres:/var/lib/postgresql/data
-    restart: "no"
+    restart: unless-stopped
 
   open-webui:
     image: ghcr.io/open-webui/open-webui:main
     container_name: open-webui-rag
+    env_file:
+      - ../.env
     ports:
       - "3005:8080"
     environment:
@@ -87,6 +91,7 @@ services:
       - USER_AGENT=OpenWebUI
       - WEBUI_SECRET_KEY=${WEBUI_SECRET_KEY}
       - CORS_ALLOW_ORIGIN=${CORS_ALLOW_ORIGIN}
+      - ENABLE_WEBSOCKET_SUPPORT=true
     volumes:
       - ./data/webui:/app/backend/data
     depends_on:
@@ -94,7 +99,22 @@ services:
       - qdrant
       - infinity
       - db
-    restart: "no"
+    networks:
+      - default
+      - traefik-public
+    labels:
+      # Enable Traefik
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik-public"
+
+      # HTTP Router for Open WebUI
+      - "traefik.http.routers.open-webui.rule=Host(`vllm.korczewski.de`)"
+      - "traefik.http.routers.open-webui.entrypoints=websecure"
+      - "traefik.http.routers.open-webui.tls=true"
+
+      # Service configuration
+      - "traefik.http.services.open-webui.loadbalancer.server.port=8080"
+    restart: unless-stopped
 
   ingest-engine:
     build: ./ingest
@@ -111,24 +131,29 @@ services:
       - LLM_API_URL=http://vllm:8888/v1
       - LLM_MODEL=${MODEL:-Qwen/Qwen3-0.6B}
       - LLM_API_KEY=${VLLM_API_KEY:-sk-dummy}
-    restart: "no"
+    restart: unless-stopped
 
   dashboard:
     build:
       context: ../dashboard
       dockerfile: Dockerfile
     container_name: vllm-dashboard
+    env_file:
+      - ../.env
     environment:
       - NODE_ENV=production
       - DASHBOARD_PORT=4242
       - DATABASE_URL=postgresql://${POSTGRES_USER:-webui}:${POSTGRES_PASSWORD:-webui}@db:5432/${POSTGRES_DB:-webui}
       - AUTH_SERVICE_URL=${AUTH_SERVICE_URL:-https://auth.korczewski.de}
-      - ADMIN_PASSWORD=${DASHBOARD_ADMIN_PASSWORD}
+      - ADMIN_PASSWORD=${VLLM_ADMIN_PASSWORD}
+      - DASHBOARD_PORT=${VLLM_DASHBOARD_PORT:-4242}
+      - PROJECT_ROOT=/home/patrick/projects/vllm
     expose:
-      - "4242"
+      - "${VLLM_DASHBOARD_PORT:-4242}"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - dashboard_logs:/var/log/dashboard
+      - /home/patrick/projects:/home/patrick/projects:ro
     depends_on:
       - db
     networks:
@@ -145,7 +170,7 @@ services:
       - "traefik.http.routers.vllm-dashboard.tls=true"
 
       # Service configuration
-      - "traefik.http.services.vllm-dashboard.loadbalancer.server.port=4242"
+      - "traefik.http.services.vllm-dashboard.loadbalancer.server.port=${VLLM_DASHBOARD_PORT:-4242}"
 
       # Middlewares
       - "traefik.http.routers.vllm-dashboard.middlewares=default-chain@file"

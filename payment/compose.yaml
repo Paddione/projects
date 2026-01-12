@@ -4,7 +4,30 @@ services:
     expose:
       - "3000"
     env_file:
-      - .env-prod
+      - ../.env
+    environment:
+      # Database
+      DATABASE_URL: ${PAYMENT_DATABASE_URL}
+      PAYMENT_DB_USER: ${PAYMENT_DB_USER}
+      PAYMENT_DB_PASSWORD: ${PAYMENT_DB_PASSWORD}
+      
+      # NextAuth
+      NEXTAUTH_SECRET: ${PAYMENT_NEXTAUTH_SECRET}
+      NEXTAUTH_URL: ${PAYMENT_NEXTAUTH_URL}
+      
+      # OAuth
+      AUTH_GOOGLE_ID: ${PAYMENT_AUTH_GOOGLE_ID}
+      AUTH_GOOGLE_SECRET: ${PAYMENT_AUTH_GOOGLE_SECRET}
+      
+      # Stripe
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET}
+      NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY}
+      
+      # Auth Service Integration
+      AUTH_SECRET: ${PAYMENT_AUTH_SECRET}
+      AUTH_TRUST_HOST: ${PAYMENT_AUTH_TRUST_HOST}
+      AUTH_SERVICE_URL: ${AUTH_SERVICE_URL}
     networks:
       - traefik-public
     external_links:

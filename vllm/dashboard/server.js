@@ -11,6 +11,40 @@ const cookieParser = require('cookie-parser');
 const os = require('os');
 const { Pool } = require('pg');
 
+/**
+ * ============================================================================
+ * DEPLOYMENT PHILOSOPHY: SINGLE ENVIRONMENT PER SERVICE
+ * ============================================================================
+ * 
+ * This dashboard manages all services in the infrastructure following a strict
+ * "single environment per service" model:
+ * 
+ * RULES:
+ * 1. Each service has EXACTLY ONE production environment
+ * 2. Each service has EXACTLY ONE development environment (if applicable)
+ * 3. No duplicate or overlapping environments are allowed
+ * 4. All deployments follow the patterns defined in /projects/DEPLOYMENT.md
+ * 
+ * ENVIRONMENT TYPES:
+ * - production: Live services accessible via *.korczewski.de
+ * - development: Dev services for testing (Docker profiles or npm)
+ * - infrastructure: Shared services (Traefik, PostgreSQL)
+ * 
+ * SERVICE CATEGORIES:
+ * - Infrastructure: traefik, shared-postgres (production only)
+ * - Core Services: auth, vllm-rag
+ * - Applications: l2p, payment, videovault
+ * - AI/ML: vllm, open-webui, qdrant, infinity
+ * 
+ * DEPLOYMENT PATHS:
+ * - Docker Compose: Services use profiles (production/development)
+ * - npm: Development services run locally with hot reload
+ * - Hybrid: Some services use Docker for prod, npm for dev
+ * 
+ * See /projects/DEPLOYMENT.md for complete deployment guide
+ * ============================================================================
+ */
+
 // Environment Configuration
 const NODE_ENV = process.env.NODE_ENV || 'production';
 const IS_DEVELOPMENT = NODE_ENV === 'development';
@@ -30,7 +64,7 @@ const docker = new Docker({ socketPath: '/var/run/docker.sock' });
 
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'password123';
 const DB_URL = process.env.DATABASE_URL || 'postgresql://webui:webui@localhost:5438/webui';
-const PROJECT_ROOT = path.resolve(__dirname, '..');
+const PROJECT_ROOT = process.env.PROJECT_ROOT || path.resolve(__dirname, '..');
 const FORGE_PATH = process.env.FORGE_PATH || path.join(PROJECT_ROOT, 'ai-image-gen', 'forge');
 const AUTH_SERVICE_URL = process.env.AUTH_SERVICE_URL || null;
 const dbPool = new Pool({
@@ -83,6 +117,14 @@ const DOCKER_ENVIRONMENTS = {
         env: 'production',
         description: 'Central authentication service'
     },
+    'payment-production': {
+        name: 'Payment Service',
+        path: path.resolve(PROJECT_ROOT, '..', 'payment'),
+        composeFiles: ['compose.yaml'],
+        project: 'payment',
+        env: 'production',
+        description: 'Subscription and payment processing (Stripe)'
+    },
     'videovault-production': {
         name: 'VideoVault Production',
         path: path.resolve(PROJECT_ROOT, '..', 'VideoVault'),
@@ -111,7 +153,7 @@ const DOCKER_ENVIRONMENTS = {
     },
     'vllm-rag': {
         name: 'vLLM RAG Stack',
-        path: path.resolve(PROJECT_ROOT, '..', 'rag'),
+        path: path.resolve(PROJECT_ROOT, 'rag'),
         composeFiles: ['docker-compose.yml'],
         project: 'vllm',
         env: 'production',
@@ -670,8 +712,8 @@ async function discoverDockerContainers() {
         const containers = await docker.listContainers({ all: false });
         return containers.map(container => {
             const labels = container.Labels || {};
-            const names = container.Names.map(n => n.replace(/^\//, ''));
-            const ports = container.Ports.map(p =>
+            const names = (container.Names || []).map(n => n.replace(/^\//, ''));
+            const ports = (container.Ports || []).map(p =>
                 p.PublicPort ? `${p.PublicPort}:${p.PrivatePort}` : `${p.PrivatePort}`
             ).join(', ');
 
@@ -1042,7 +1084,7 @@ app.get('/api/environments', async (req, res) => {
             const status = await getEnvironmentStatus(id, config);
             environments[id] = {
                 ...config,
-                status: status
+                ...status
             };
         }
         res.json({ environments });

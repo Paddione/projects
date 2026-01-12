@@ -1,0 +1,51 @@
+# Exclude problematic directories
+vllm/rag/data/
+scripts/
+reverse-proxy/
+.github/
+
+# Exclude node_modules everywhere
+**/node_modules/
+
+# Exclude build artifacts
+**/dist/
+**/build/
+**/coverage/
+**/.next/
+
+# Exclude data and database directories
+**/postgres/
+**/qdrant_storage/
+**/*.db
+**/*.sqlite
+
+# Exclude git
+.git/
+**/.gitignore
+
+# Exclude env files (but keep examples)
+.env
+.env-dev
+.env-prod
+**/.env
+**/.env-dev
+**/.env-prod
+
+# Exclude logs
+**/logs/
+**/*.log
+
+# Exclude cache
+**/.cache/
+**/.npm/
+**/.vite/
+
+# Exclude test results
+**/playwright-report/
+**/test-results/
+
+# Exclude misc
+**/.DS_Store
+**/Thumbs.db
+**/*.swp
+**/*.swo

@@ -24,8 +24,8 @@ services:
   # Backend API - Production (via Traefik)
   backend:
     build:
-      context: .
-      dockerfile: backend/Dockerfile
+      context: ..
+      dockerfile: l2p/backend/Dockerfile
       target: production
       cache_from:
         - node:20-bullseye-slim
@@ -37,24 +37,24 @@ services:
     expose:
       - "3001"
     env_file:
-      - ./.env-prod
+      - ../.env
     environment:
       NODE_ENV: production
-      PORT: ${BACKEND_PORT:-3001}
+      PORT: ${L2P_PORT:-3001}
       # Database connection details (using centralized PostgreSQL)
-      DATABASE_URL: postgresql://${L2P_DB_USER:-l2p_user}:${L2P_DB_PASSWORD:-l2p_password}@shared-postgres:5432/l2p_db
-      POSTGRES_DB: l2p_db
+      DATABASE_URL: ${L2P_DATABASE_URL}
+      POSTGRES_DB: ${L2P_DB_NAME:-l2p_db}
       POSTGRES_USER: ${L2P_DB_USER:-l2p_user}
       POSTGRES_PASSWORD: ${L2P_DB_PASSWORD:-l2p_password}
       DB_HOST: shared-postgres
       DB_PORT: 5432
-      # JWT Configuration - Ensure these are set in .env.production
-      JWT_SECRET: ${JWT_SECRET:-dummy-secret-change-me-in-production}
-      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-dummy-refresh-secret-change-me-in-production}
+      # JWT Configuration
+      JWT_SECRET: ${L2P_JWT_SECRET}
+      JWT_REFRESH_SECRET: ${L2P_JWT_REFRESH_SECRET}
       # Application Configuration
       FRONTEND_URL: https://l2p.korczewski.de
-      CORS_ORIGINS: https://l2p.korczewski.de,http://localhost:3000,https://*.korczewski.de
-      COOKIE_DOMAIN: .korczewski.de
+      CORS_ORIGINS: ${L2P_CORS_ORIGINS:-https://l2p.korczewski.de,http://localhost:3000,https://*.korczewski.de}
+      COOKIE_DOMAIN: ${COOKIE_DOMAIN:-.korczewski.de}
       # Postgres is on the internal Docker network; SSL is not used between containers by default
       DB_SSL: "${DB_SSL:-false}"
       # SMTP Configuration
@@ -67,6 +67,10 @@ services:
       EMAIL_SENDER_NAME: ${EMAIL_SENDER_NAME:-Learn2Play}
       # Centralized Auth Service
       AUTH_SERVICE_URL: ${AUTH_SERVICE_URL:-}
+      # OAuth Configuration (for L2P as OAuth client)
+      OAUTH_CLIENT_ID: ${L2P_OAUTH_CLIENT_ID}
+      OAUTH_CLIENT_SECRET: ${L2P_OAUTH_CLIENT_SECRET}
+      OAUTH_REDIRECT_URI: ${L2P_OAUTH_REDIRECT_URI}
       # API Keys
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
       GOOGLE_CLOUD_PROJECT_ID: ${GOOGLE_CLOUD_PROJECT_ID:-}
@@ -132,8 +136,8 @@ services:
   # Frontend React App - Production (via Traefik)
   frontend:
     build:
-      context: ./frontend
-      dockerfile: Dockerfile
+      context: ..
+      dockerfile: l2p/frontend/Dockerfile
       target: production
       cache_from:
         - node:20-alpine
@@ -207,19 +211,19 @@ services:
   # Backend Development Service
   backend-dev:
     build:
-      context: ./backend
-      dockerfile: Dockerfile
+      context: ..
+      dockerfile: l2p/backend/Dockerfile
       target: development
     container_name: l2p-backend-dev
     working_dir: /app
     env_file:
-      - ./.env-dev
+      - ../.env
     environment:
       NODE_ENV: development
-      PORT: 3001
-      DATABASE_URL: postgresql://${L2P_DB_USER:-l2p_user}:${L2P_DB_PASSWORD:-l2p_password}@shared-postgres:5432/l2p_db
-      JWT_SECRET: ${JWT_SECRET:-dev-jwt-secret}
-      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-dev-jwt-refresh-secret}
+      PORT: ${L2P_PORT:-3001}
+      DATABASE_URL: ${L2P_DATABASE_URL}
+      JWT_SECRET: ${L2P_JWT_SECRET}
+      JWT_REFRESH_SECRET: ${L2P_JWT_REFRESH_SECRET}
       # Allow frontend container and localhost for CORS
       FRONTEND_URL: http://frontend-dev:3000
       CORS_ORIGINS: http://localhost:3000,http://frontend-dev:3000,http://127.0.0.1:3000
@@ -228,6 +232,11 @@ services:
       # Temporarily allow all CORS origins for development
       CORS_ALLOW_ALL: "true"
       DB_SSL: "false"
+      # OAuth Configuration (for L2P as OAuth client)
+      OAUTH_CLIENT_ID: ${L2P_OAUTH_CLIENT_ID}
+      OAUTH_CLIENT_SECRET: ${L2P_OAUTH_CLIENT_SECRET}
+      OAUTH_REDIRECT_URI: ${L2P_OAUTH_REDIRECT_URI}
+      AUTH_SERVICE_URL: ${AUTH_SERVICE_URL:-http://localhost:5500}
       LOG_LEVEL: debug
       DEBUG: 'app:*'
       NODE_OPTIONS: --max-old-space-size=4096
@@ -288,8 +297,8 @@ services:
   # Frontend Development Service
   frontend-dev:
     build:
-      context: ./frontend
-      dockerfile: Dockerfile
+      context: ..
+      dockerfile: l2p/frontend/Dockerfile
       target: development
     container_name: l2p-frontend-dev
     environment:
@@ -385,8 +394,8 @@ services:
   # Backend Test Service
   backend-test:
     build:
-      context: ./backend
-      dockerfile: Dockerfile.test
+      context: ..
+      dockerfile: l2p/backend/Dockerfile.test
       cache_from:
         - node:20-bullseye-slim
       args:
@@ -439,8 +448,8 @@ services:
   # Frontend Test Service
   frontend-test:
     build:
-      context: ./frontend
-      dockerfile: Dockerfile.test
+      context: ..
+      dockerfile: l2p/frontend/Dockerfile.test
       cache_from:
         - node:18-alpine
       args:

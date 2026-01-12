@@ -45,6 +45,17 @@ http:
         - default-chain@file
       priority: 5
 
+    # Auth Service - Local Fallback (lower priority than Docker)
+    auth-local:
+      rule: "Host(`auth.korczewski.de`)"
+      entryPoints:
+        - websecure
+      service: auth-local
+      tls: {}
+      middlewares:
+        - default-chain@file
+      priority: 5
+
     # Dashboard - Local Fallback (lower priority than Docker)
     dashboard-local:
       rule: "Host(`dashboard.korczewski.de`)"
@@ -81,6 +92,12 @@ http:
       loadBalancer:
         servers:
           - url: "http://host.docker.internal:5100"
+        passHostHeader: true
+
+    auth-local:
+      loadBalancer:
+        servers:
+          - url: "http://host.docker.internal:5500"
         passHostHeader: true
 
     dashboard-local:

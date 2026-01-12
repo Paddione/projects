@@ -14,10 +14,50 @@ A collection of independent full-stack applications, shared infrastructure, and 
 | [Reverse Proxy](./reverse-proxy/README.md) | Traefik routing and TLS | Traefik, Docker | 443/80 |
 | [Shared Infrastructure](./shared-infrastructure/README.md) | Centralized Postgres | PostgreSQL, Docker | 5432 |
 
+## 🚀 Deployment & Environment Management
+
+**⚠️ IMPORTANT**: This repository follows a **strict single environment per service** model.
+
+### Key Documentation
+- **[deployment.md](./docs/deployment.md)** - Complete deployment guide for all services
+- **[environment-management.md](./docs/environment-management.md)** - Environment philosophy and quick start
+- **[architecture.md](./docs/architecture.md)** - Visual architecture and service structure
+- **[agents.md](./docs/agents.md)** - Repository guidelines and agent instructions
+
+### Quick Deployment
+```bash
+# Start all production services
+./scripts/start-all-production.sh
+
+# Check service health
+./scripts/health-check.sh
+
+# Stop all services
+./scripts/stop-all.sh
+```
+
+### Environment Rules
+1. Each service has **exactly ONE** production environment
+2. Each service has **exactly ONE** development environment (if applicable)
+3. No duplicate or overlapping environments allowed
+4. All deployments follow patterns in `DEPLOYMENT.md`
+5. Dashboard at https://dashboard.korczewski.de manages everything
+
+### Service URLs (Production)
+- **Dashboard**: https://dashboard.korczewski.de
+- **Auth**: https://auth.korczewski.de
+- **L2P**: https://l2p.korczewski.de
+- **Payment**: https://payment.korczewski.de
+- **VideoVault**: https://videovault.korczewski.de
+- **Open WebUI**: https://vllm.korczewski.de
+- **Traefik**: https://traefik.korczewski.de
+
 ## Documentation
 
-- `TASKS.md`: active tasks and consolidated checklists
-- `docs/auth-fixes.md`: consolidated auth, JWT, and OAuth fixes plus deployment/testing notes
+- **[docs/tasks.md](./docs/tasks.md)**: active tasks and consolidated checklists
+- **[docs/auth-fixes.md](./docs/auth-fixes.md)**: consolidated auth, JWT, and OAuth fixes plus deployment/testing notes
+- **[docs/accessibility/](./docs/accessibility/)**: accessibility audits and test results
+- **[docs/integrations/](./docs/integrations/)**: third-party service integration plans
 - Project-specific documentation lives in each project directory
 
 ## Repository Guidelines
@@ -274,4 +314,4 @@ Example:
 ```
 
 ## Task Management
-Active tasks and consolidated checklists live in `TASKS.md`.
+Active tasks and consolidated checklists live in [docs/tasks.md](./docs/tasks.md).

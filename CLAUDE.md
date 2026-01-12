@@ -337,7 +337,7 @@ Required:
 - `JWT_SECRET`, `JWT_REFRESH_SECRET` (32-char hex)
 - `FRONTEND_URL` (dev: `http://localhost:3000`, prod: `https://l2p.korczewski.de`)
 - `CORS_ORIGINS` (comma-separated)
-- `GOOGLE_AI_API_KEY` (Gemini API)
+
 
 Production-only:
 - `COOKIE_DOMAIN=.korczewski.de`

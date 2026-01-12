@@ -78,45 +78,45 @@ These values mirror the current `.env` usage and should be updated if passwords 
 
 Auth (`auth/.env`):
 ```env
-DATABASE_URL=postgresql://auth_user:2a873d2316717f62ddbbc2a12bc52ca8267907ddb45c36bec2f23e3dcb1074d6@shared-postgres:5432/auth_db
+DATABASE_URL=postgresql://auth_user:2e4c28977e4e86afcaa485105ab0b53d@shared-postgres:5432/auth_db
 AUTH_DB_USER=auth_user
-AUTH_DB_PASSWORD=2a873d2316717f62ddbbc2a12bc52ca8267907ddb45c36bec2f23e3dcb1074d6
+AUTH_DB_PASSWORD=2e4c28977e4e86afcaa485105ab0b53d
 ```
 
 L2P (`l2p/.env`, `l2p/.env.production`):
 ```env
-DATABASE_URL=postgresql://l2p_user:06752fc9637d5fe896cd88b858d2cf2eff112de5cf4769e69927009f5d45d581@shared-postgres:5432/l2p_db
+DATABASE_URL=postgresql://l2p_user:23d13a56cfee5d0c5f9060fc62ab4a6d@shared-postgres:5432/l2p_db
 L2P_DB_USER=l2p_user
-L2P_DB_PASSWORD=06752fc9637d5fe896cd88b858d2cf2eff112de5cf4769e69927009f5d45d581
+L2P_DB_PASSWORD=23d13a56cfee5d0c5f9060fc62ab4a6d
 DB_HOST=shared-postgres
 DB_PORT=5432
 DB_NAME=l2p_db
 DB_USER=l2p_user
-DB_PASSWORD=06752fc9637d5fe896cd88b858d2cf2eff112de5cf4769e69927009f5d45d581
+DB_PASSWORD=23d13a56cfee5d0c5f9060fc62ab4a6d
 POSTGRES_USER=l2p_user
-POSTGRES_PASSWORD=06752fc9637d5fe896cd88b858d2cf2eff112de5cf4769e69927009f5d45d581
+POSTGRES_PASSWORD=23d13a56cfee5d0c5f9060fc62ab4a6d
 POSTGRES_DB=l2p_db
 ```
 
 Payment (`payment/.env`):
 ```env
-DATABASE_URL="postgresql://payment_user:5bb240855f4d220640360d6c0d9adfa8cb03a526baed5fb4c3904adea5cb6d5c@shared-postgres:5432/payment_db?schema=public"
+DATABASE_URL="postgresql://payment_user:2e67a4d8576773457fcaac19b3de8b1c@shared-postgres:5432/payment_db?schema=public"
 PAYMENT_DB_USER=payment_user
-PAYMENT_DB_PASSWORD=5bb240855f4d220640360d6c0d9adfa8cb03a526baed5fb4c3904adea5cb6d5c
+PAYMENT_DB_PASSWORD=2e67a4d8576773457fcaac19b3de8b1c
 ```
 
 VideoVault (`VideoVault/env/.env-postgres`):
 ```env
-DATABASE_URL=postgresql://videovault_user:8ef3064ff817a1eb4fd20eff6d991566a9ff0dd5f77fa871cf29354d6e26bdf4@shared-postgres:5432/videovault_db
+DATABASE_URL=postgresql://videovault_user:d5cd9488c0f39eef9d84903e3625b861@shared-postgres:5432/videovault_db
 POSTGRES_USER=videovault_user
-POSTGRES_PASSWORD=8ef3064ff817a1eb4fd20eff6d991566a9ff0dd5f77fa871cf29354d6e26bdf4
+POSTGRES_PASSWORD=d5cd9488c0f39eef9d84903e3625b861
 POSTGRES_DB=videovault_db
 ```
 
 Postgres admin access:
 ```bash
 docker exec -it shared-postgres psql -U postgres
-# Password: 8e7fa0310da975b357f74fea410b4be78c5735051115e27ef1a125c3724be8fb
+# Password: value of POSTGRES_PASSWORD used at initial container setup
 ```
 
 Security notes:

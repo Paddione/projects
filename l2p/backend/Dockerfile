@@ -39,8 +39,8 @@ RUN chown -R nodejs:nodejs /app
 USER nodejs
 
 # Copy package files first for better caching
-COPY --chown=nodejs:nodejs package*.json ./
-COPY --chown=nodejs:nodejs tsconfig*.json ./
+COPY --chown=nodejs:nodejs l2p/backend/package*.json ./
+COPY --chown=nodejs:nodejs l2p/backend/tsconfig*.json ./
 
 # Install global packages as root
 USER root
@@ -53,7 +53,7 @@ USER nodejs
 RUN npm install --legacy-peer-deps
 
 # Copy source code
-COPY --chown=nodejs:nodejs . .
+COPY --chown=nodejs:nodejs l2p/backend/ .
 
 # Expose port
 EXPOSE 3001
@@ -70,7 +70,7 @@ FROM base AS build-dependencies
 WORKDIR /app/backend
 
 # Copy package files
-COPY package*.json ./
+COPY l2p/backend/package*.json ./
 
 # Install all dependencies for build (production + dev)
 RUN npm install --legacy-peer-deps && \
@@ -84,7 +84,7 @@ FROM base AS prod-dependencies
 WORKDIR /app
 
 # Copy and build shared modules first (needed for local file dependencies)
-COPY --chown=nodejs:nodejs shared/ ./shared/
+COPY --chown=nodejs:nodejs l2p/shared/ ./shared/
 
 # Build error-handling module
 WORKDIR /app/shared/error-handling
@@ -96,7 +96,7 @@ RUN npm install --legacy-peer-deps && npm run build || true
 
 # Install backend production dependencies with proper context
 WORKDIR /app/backend
-COPY --chown=nodejs:nodejs backend/package*.json ./
+COPY --chown=nodejs:nodejs l2p/backend/package*.json ./
 
 # Install production dependencies (this will resolve local file dependencies correctly)
 RUN npm install --production --legacy-peer-deps && \
@@ -107,7 +107,7 @@ FROM base AS build
 WORKDIR /app
 
 # Copy shared directory first and build shared modules
-COPY --chown=nodejs:nodejs shared/ ./shared/
+COPY --chown=nodejs:nodejs l2p/shared/ ./shared/
 
 # Build shared modules
 WORKDIR /app/shared/error-handling
@@ -118,14 +118,17 @@ RUN npm install --legacy-peer-deps && npm run build || true
 
 # Copy backend source and install all dependencies for build
 WORKDIR /app/backend
-COPY --chown=nodejs:nodejs backend/package*.json ./
+COPY --chown=nodejs:nodejs l2p/backend/package*.json ./
 RUN npm install --legacy-peer-deps
 
 # Install TypeScript globally for build
 RUN npm install -g typescript
 
-# Copy backend source code
-COPY --chown=nodejs:nodejs backend/. ./
+# Copy backend source code (excluding already-copied package files)
+COPY --chown=nodejs:nodejs l2p/backend/src ./src
+COPY --chown=nodejs:nodejs l2p/backend/tsconfig*.json ./
+COPY --chown=nodejs:nodejs l2p/backend/migrations ./migrations
+COPY --chown=nodejs:nodejs l2p/backend/public ./public
 
 # Build TypeScript
 RUN npm run build

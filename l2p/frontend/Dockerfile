@@ -20,12 +20,13 @@ FROM base AS development
 WORKDIR /app
 
 # Install dependencies first (better caching)
-COPY package*.json ./
+COPY l2p/frontend/package*.json ./
 RUN npm install --legacy-peer-deps && \
     npm cache clean --force || true
 
-# Copy source code
-COPY --chown=nodejs:nodejs . .
+# Copy source code and shared design system
+COPY --chown=nodejs:nodejs l2p/frontend/ ./
+COPY --chown=nodejs:nodejs shared-design-system/ ../shared-design-system/
 
 # Create necessary directories with proper permissions
 RUN mkdir -p coverage test-results playwright-report .vite && \
@@ -48,7 +49,7 @@ FROM base AS dependencies
 WORKDIR /app
 
 # Copy frontend package files
-COPY package*.json ./
+COPY l2p/frontend/package*.json ./
 
 # Install all dependencies
 RUN npm install --legacy-peer-deps && \
@@ -64,16 +65,18 @@ ARG VITE_SOCKET_URL=https://l2p.korczewski.de
 ARG VITE_NODE_ENV=production
 ARG VITE_APP_ENVIRONMENT=production
 
-# Copy source code (this layer will be cached if source doesn't change)  
+# Copy source code (this layer will be cached if source doesn't change)
 # Copy package.json first if it's different from dependencies stage
-COPY --chown=nodejs:nodejs package*.json ./
+COPY --chown=nodejs:nodejs l2p/frontend/package*.json ./
+# Copy shared design system first
+COPY --chown=nodejs:nodejs shared-design-system/ ../shared-design-system/
 # Copy source files without overwriting node_modules
-COPY --chown=nodejs:nodejs src ./src
-COPY --chown=nodejs:nodejs public ./public  
-COPY --chown=nodejs:nodejs index.html ./
-COPY --chown=nodejs:nodejs vite.config.ts ./
-COPY --chown=nodejs:nodejs tsconfig*.json ./
-COPY --chown=nodejs:nodejs nginx.conf ./ 
+COPY --chown=nodejs:nodejs l2p/frontend/src ./src
+COPY --chown=nodejs:nodejs l2p/frontend/public ./public
+COPY --chown=nodejs:nodejs l2p/frontend/index.html ./
+COPY --chown=nodejs:nodejs l2p/frontend/vite.config.ts ./
+COPY --chown=nodejs:nodejs l2p/frontend/tsconfig*.json ./
+COPY --chown=nodejs:nodejs l2p/frontend/nginx.conf ./ 
 
 # Set production environment variables for Vite build
 ENV NODE_ENV=production
