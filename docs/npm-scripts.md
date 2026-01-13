@@ -23,7 +23,7 @@ Run from `/home/patrick/projects`.
 | `dev:vllm` | Start vllm dev server in watch mode. |
 | `install:all` | Install dependencies for l2p, VideoVault, payment, vllm. |
 | `restart:outdated` | Rebuild and restart only services with outdated Docker images. |
-| `test:all` | Run l2p + VideoVault + payment test suites. |
+| `test:all` | Run l2p + auth + VideoVault + payment + vllm test suites. |
 | `typecheck:all` | Run typechecks across services (L2P, auth, VideoVault, payment, vllm). |
 | `validate:env` | Validate all environments via `scripts/validate-env.js`. |
 | `validate:env:dev` | Validate development env. |

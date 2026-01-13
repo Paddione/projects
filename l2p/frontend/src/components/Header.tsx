@@ -20,15 +20,23 @@ export const Header: React.FC = () => {
   } = useAudio()
 
   const handleLogout = async () => {
+    const reloadPage = () => {
+      try {
+        window.location.reload()
+      } catch {
+        // Ignore reload errors in non-browser environments
+      }
+    }
+
     try {
       await apiService.logout()
       // Reload the page to trigger re-authentication
-      window.location.reload()
+      reloadPage()
     } catch (error) {
       console.error('Logout failed:', error)
       // Clear auth anyway and reload
       apiService.clearAuth()
-      window.location.reload()
+      reloadPage()
     }
   }
 

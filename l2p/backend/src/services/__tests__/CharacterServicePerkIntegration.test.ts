@@ -26,6 +26,15 @@ describe('CharacterService - Perk Integration', () => {
   let characterService: CharacterService;
   let mockDb: jest.Mocked<DatabaseService>;
   let mockPerksManager: jest.Mocked<PerksManager>;
+  const buildProfile = (userId: number, level: number, experiencePoints: number) => ({
+    authUserId: userId,
+    selectedCharacter: 'student',
+    characterLevel: level,
+    experiencePoints,
+    preferences: {},
+    createdAt: new Date(),
+    updatedAt: new Date()
+  });
 
   beforeEach(() => {
     // Mock database service
@@ -52,6 +61,7 @@ describe('CharacterService - Perk Integration', () => {
   });
 
   afterEach(() => {
+    jest.restoreAllMocks();
     jest.clearAllMocks();
   });
 
@@ -67,16 +77,8 @@ describe('CharacterService - Perk Integration', () => {
       const experienceGained = (nextLevelThreshold - currentXp) + 50;
       const updatedXp = currentXp + experienceGained;
 
-      mockDb.query.mockResolvedValueOnce({
-        rows: [
-          {
-            id: userId,
-            experience_points: currentXp,
-            character_level: oldLevel,
-            username: 'testuser'
-          }
-        ]
-      } as any);
+      jest.spyOn((characterService as any).gameProfileService, 'getOrCreateProfile')
+        .mockResolvedValue(buildProfile(userId, oldLevel, currentXp));
 
       const newlyUnlockedPerks = [
         {
@@ -100,10 +102,13 @@ describe('CharacterService - Perk Integration', () => {
       mockDb.query.mockResolvedValueOnce({
         rows: [
           {
-            id: userId,
-            experience_points: updatedXp,
+            auth_user_id: userId,
+            selected_character: 'student',
             character_level: newLevel,
-            username: 'testuser'
+            experience_points: updatedXp,
+            preferences: {},
+            created_at: new Date(),
+            updated_at: new Date()
           }
         ]
       } as any);
@@ -119,8 +124,8 @@ describe('CharacterService - Perk Integration', () => {
         oldLevel,
         newlyUnlockedPerks,
         user: expect.objectContaining({
-          experience_points: updatedXp,
-          character_level: newLevel
+          experiencePoints: updatedXp,
+          characterLevel: newLevel
         })
       });
 
@@ -138,24 +143,19 @@ describe('CharacterService - Perk Integration', () => {
       const updatedXp = currentXp + experienceGained;
       const resultingLevel = characterService.calculateLevel(updatedXp);
 
-      mockDb.query.mockResolvedValueOnce({
-        rows: [
-          {
-            id: userId,
-            experience_points: currentXp,
-            character_level: level,
-            username: 'testuser'
-          }
-        ]
-      } as any);
+      jest.spyOn((characterService as any).gameProfileService, 'getOrCreateProfile')
+        .mockResolvedValue(buildProfile(userId, level, currentXp));
 
       mockDb.query.mockResolvedValueOnce({
         rows: [
           {
-            id: userId,
-            experience_points: updatedXp,
+            auth_user_id: userId,
+            selected_character: 'student',
             character_level: resultingLevel,
-            username: 'testuser'
+            experience_points: updatedXp,
+            preferences: {},
+            created_at: new Date(),
+            updated_at: new Date()
           }
         ]
       } as any);
@@ -168,8 +168,8 @@ describe('CharacterService - Perk Integration', () => {
         oldLevel: level,
         newlyUnlockedPerks: [],
         user: expect.objectContaining({
-          experience_points: updatedXp,
-          character_level: resultingLevel
+          experiencePoints: updatedXp,
+          characterLevel: resultingLevel
         })
       });
 
@@ -185,16 +185,8 @@ describe('CharacterService - Perk Integration', () => {
       const experienceGained = characterService.getTotalExperienceForLevel(targetLevel - 1) + 1000;
       const newLevel = characterService.calculateLevel(currentXp + experienceGained);
 
-      mockDb.query.mockResolvedValueOnce({
-        rows: [
-          {
-            id: userId,
-            experience_points: currentXp,
-            character_level: startingLevel,
-            username: 'testuser'
-          }
-        ]
-      } as any);
+      jest.spyOn((characterService as any).gameProfileService, 'getOrCreateProfile')
+        .mockResolvedValue(buildProfile(userId, startingLevel, currentXp));
 
       const newlyUnlockedPerks = [
         {
@@ -248,10 +240,13 @@ describe('CharacterService - Perk Integration', () => {
       mockDb.query.mockResolvedValueOnce({
         rows: [
           {
-            id: userId,
-            experience_points: currentXp + experienceGained,
+            auth_user_id: userId,
+            selected_character: 'student',
             character_level: newLevel,
-            username: 'testuser'
+            experience_points: currentXp + experienceGained,
+            preferences: {},
+            created_at: new Date(),
+            updated_at: new Date()
           }
         ]
       } as any);
@@ -279,24 +274,19 @@ describe('CharacterService - Perk Integration', () => {
       const experienceGained = (nextLevelThreshold - currentXp) + 25;
       const updatedXp = currentXp + experienceGained;
 
-      mockDb.query.mockResolvedValueOnce({
-        rows: [
-          {
-            id: userId,
-            experience_points: currentXp,
-            character_level: oldLevel,
-            username: 'testuser'
-          }
-        ]
-      } as any);
+      jest.spyOn((characterService as any).gameProfileService, 'getOrCreateProfile')
+        .mockResolvedValue(buildProfile(userId, oldLevel, currentXp));
 
       mockDb.query.mockResolvedValueOnce({
         rows: [
           {
-            id: userId,
-            experience_points: updatedXp,
+            auth_user_id: userId,
+            selected_character: 'student',
             character_level: newLevel,
-            username: 'testuser'
+            experience_points: updatedXp,
+            preferences: {},
+            created_at: new Date(),
+            updated_at: new Date()
           }
         ]
       } as any);
@@ -315,8 +305,8 @@ describe('CharacterService - Perk Integration', () => {
         oldLevel,
         newlyUnlockedPerks: [], // Empty due to error
         user: expect.objectContaining({
-          experience_points: updatedXp,
-          character_level: newLevel
+          experiencePoints: updatedXp,
+          characterLevel: newLevel
         })
       });
 
@@ -330,24 +320,19 @@ describe('CharacterService - Perk Integration', () => {
       const experienceGained = characterService.calculateLevelExperience(maxLevel);
       const updatedXp = currentXp + experienceGained;
 
-      mockDb.query.mockResolvedValueOnce({
-        rows: [
-          {
-            id: userId,
-            experience_points: currentXp,
-            character_level: maxLevel,
-            username: 'testuser'
-          }
-        ]
-      } as any);
+      jest.spyOn((characterService as any).gameProfileService, 'getOrCreateProfile')
+        .mockResolvedValue(buildProfile(userId, maxLevel, currentXp));
 
       mockDb.query.mockResolvedValueOnce({
         rows: [
           {
-            id: userId,
-            experience_points: updatedXp,
+            auth_user_id: userId,
+            selected_character: 'student',
             character_level: maxLevel,
-            username: 'testuser'
+            experience_points: updatedXp,
+            preferences: {},
+            created_at: new Date(),
+            updated_at: new Date()
           }
         ]
       } as any);
@@ -360,8 +345,8 @@ describe('CharacterService - Perk Integration', () => {
         oldLevel: maxLevel,
         newlyUnlockedPerks: [],
         user: expect.objectContaining({
-          experience_points: updatedXp,
-          character_level: maxLevel
+          experiencePoints: updatedXp,
+          characterLevel: maxLevel
         })
       });
 
@@ -373,8 +358,11 @@ describe('CharacterService - Perk Integration', () => {
       const userId = 999;
       const experienceGained = 100;
 
-      // Mock user not found
-      mockDb.query.mockResolvedValueOnce({ rows: [] } as any);
+      jest.spyOn((characterService as any).gameProfileService, 'getOrCreateProfile')
+        .mockRejectedValue(new Error('Game profile not found'));
+
+      jest.spyOn((characterService as any).userRepository, 'findUserById')
+        .mockResolvedValue(null);
 
       // Should throw error when user not found
       await expect(characterService.awardExperience(userId, experienceGained))
@@ -391,17 +379,8 @@ describe('CharacterService - Perk Integration', () => {
       const level = 10;
       const experience = characterService.getTotalExperienceForLevel(level - 1) + 12345;
 
-      mockDb.query.mockResolvedValueOnce({
-        rows: [
-          {
-            id: userId,
-            username: 'testuser',
-            character_level: level,
-            experience_points: experience,
-            selected_character: 'professor'
-          }
-        ]
-      } as any);
+      jest.spyOn((characterService as any).gameProfileService, 'getOrCreateProfile')
+        .mockResolvedValue(buildProfile(userId, level, experience));
 
       const result = await characterService.getUserCharacterInfo(userId);
 
@@ -424,13 +403,20 @@ describe('CharacterService - Perk Integration', () => {
       const experienceGained = (nextLevelThreshold - currentXp) + 40;
       const updatedXp = currentXp + experienceGained;
 
-      mockDb.query
-        .mockResolvedValueOnce({
-          rows: [{ id: userId, experience_points: currentXp, character_level: currentLevel, username: 'testuser' }]
-        } as any)
-        .mockResolvedValueOnce({
-          rows: [{ id: userId, experience_points: updatedXp, character_level: currentLevel + 1, username: 'testuser' }]
-        } as any);
+      jest.spyOn((characterService as any).gameProfileService, 'getOrCreateProfile')
+        .mockResolvedValue(buildProfile(userId, currentLevel, currentXp));
+
+      mockDb.query.mockResolvedValueOnce({
+        rows: [{
+          auth_user_id: userId,
+          selected_character: 'student',
+          character_level: currentLevel + 1,
+          experience_points: updatedXp,
+          preferences: {},
+          created_at: new Date(),
+          updated_at: new Date()
+        }]
+      } as any);
 
       // Mock perk manager throwing an error
       mockPerksManager.checkAndUnlockPerksForLevel.mockRejectedValue(
@@ -452,13 +438,20 @@ describe('CharacterService - Perk Integration', () => {
       const experienceGained = characterService.getTotalExperienceForLevel(targetLevel - 1) - currentXp + 5000;
       const updatedXp = currentXp + experienceGained;
 
-      mockDb.query
-        .mockResolvedValueOnce({
-          rows: [{ id: userId, experience_points: currentXp, character_level: startLevel, username: 'testuser' }]
-        } as any)
-        .mockResolvedValueOnce({
-          rows: [{ id: userId, experience_points: updatedXp, character_level: targetLevel, username: 'testuser' }]
-        } as any);
+      jest.spyOn((characterService as any).gameProfileService, 'getOrCreateProfile')
+        .mockResolvedValue(buildProfile(userId, startLevel, currentXp));
+
+      mockDb.query.mockResolvedValueOnce({
+        rows: [{
+          auth_user_id: userId,
+          selected_character: 'student',
+          character_level: targetLevel,
+          experience_points: updatedXp,
+          preferences: {},
+          created_at: new Date(),
+          updated_at: new Date()
+        }]
+      } as any);
 
       // Mock some perks unlocking successfully, some failing
       const partiallyUnlockedPerks = [

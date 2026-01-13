@@ -50,6 +50,13 @@
     "start:test-env": "concurrently -k -s first -n backend,frontend -c blue,green \"npm --prefix backend run dev\" \"npm --prefix frontend run start:test-env\"",
     "stop": "docker-compose --profile production down",
     "test:all": "npm run test:unit && npm run test:integration && npm run test:e2e",
+    "test:setup": "./scripts/test-setup.sh full",
+    "test:setup:db": "./scripts/test-setup.sh db",
+    "test:setup:backend": "./scripts/test-setup.sh backend",
+    "test:setup:frontend": "./scripts/test-setup.sh full",
+    "test:setup:status": "./scripts/test-setup.sh status",
+    "test:teardown": "./scripts/test-setup.sh teardown",
+    "test:teardown:clean": "./scripts/test-setup.sh clean",
     "test:all:ci": "CI=1 npm --prefix frontend run test:ci && CI=1 npm --prefix backend run test:unit:ci && CI=1 npm --prefix backend run test:integration:ci && CI=1 npm run test:e2e:guarded",
     "test:all:full": "npm run typecheck && npm run test:all",
     "test:all:pipeline": "npm run typecheck && npm run test:unit && npm run test:integration && npm run test:e2e:guarded",
@@ -97,19 +104,29 @@
     "test:watch:unit": "concurrently -k -s first -n front,back -c green,blue \"npm --prefix frontend run test:watch\" \"npm --prefix backend run test:watch\"",
     "typecheck": "npm --prefix frontend run typecheck && npm --prefix backend run typecheck",
     "typecheck:strict": "npm --prefix frontend run typecheck:strict && npm --prefix backend run typecheck:strict",
-    "validate:no-compile": "./scripts/validate-no-compile.sh"
+    "validate:no-compile": "./scripts/validate-no-compile.sh",
+    "check:deprecated": "node -e \"const fs=require('fs'); const path='package-lock.json'; if(!fs.existsSync(path)){console.log('No package-lock.json found.'); process.exit(0);} const lock=JSON.parse(fs.readFileSync(path,'utf8')); const deprecated=Object.entries(lock.packages||{}).filter(([,info])=>info.deprecated); if(!deprecated.length){console.log('No deprecated packages.'); process.exit(0);} deprecated.forEach(([name,info])=>{const pkg=name.replace(/^node_modules\\//,''); console.log(pkg + ': ' + info.deprecated);}); process.exit(1);\""
   },
   "devDependencies": {
     "@types/js-yaml": "^4.0.9",
-    "@types/node-fetch": "^2.6.13",
     "concurrently": "^8.2.2",
-    "js-yaml": "^4.1.0",
-    "node-fetch": "^3.3.2"
+    "js-yaml": "^4.1.0"
   },
   "workspaces": [
     "frontend",
     "backend"
   ],
+  "overrides": {
+    "@opentelemetry/exporter-trace-otlp-proto": "0.209.0",
+    "@opentelemetry/exporter-metrics-otlp-proto": "0.209.0",
+    "babel-plugin-istanbul": {
+      "test-exclude": "7.0.1"
+    },
+    "glob": "10.5.0",
+    "module-lookup-amd": {
+      "glob": "10.5.0"
+    }
+  },
   "bin": {
     "run-script": "./scripts/run-script.js"
   }

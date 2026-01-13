@@ -263,6 +263,19 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     sourcemap: true,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // Separate React and related libraries
+          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+          // Separate state management
+          'zustand-vendor': ['zustand'],
+          // Separate Socket.io client
+          'socket-vendor': ['socket.io-client'],
+          // You can add more chunks as needed
+        },
+      },
+    },
   },
   preview: {
     port: 4173,

@@ -23,6 +23,7 @@
     "prebuild": "npm --prefix ../shared/error-handling install --legacy-peer-deps && npm --prefix ../shared/error-handling run build",
     "start": "node dist/server.js",
     "test": "NODE_OPTIONS=\"--experimental-vm-modules --max-old-space-size=4096\" TEST_ENVIRONMENT=local TEST_TYPE=unit npx jest --config=jest.config.js",
+    "test:with-db": "npm run --prefix .. test:setup:db && npm run test",
     "test:ai": "tsx --import tsx src/cli/test-ai.ts",
     "test:ai-mock": "tsx --import tsx src/cli/test-ai-mock.ts",
     "test:ai-real": "tsx --import tsx src/cli/test-ai-real.ts",
@@ -31,6 +32,7 @@
     "test:e2e": "NODE_OPTIONS=\"--experimental-vm-modules --max-old-space-size=4096\" TEST_ENVIRONMENT=local TEST_TYPE=e2e npx jest --config=jest.config.js src/__tests__/e2e --passWithNoTests",
     "test:email": "../scripts/test-email.sh",
     "test:integration": "NODE_OPTIONS=\"--experimental-vm-modules --max-old-space-size=8192 --expose-gc\" TEST_ENVIRONMENT=local TEST_TYPE=integration npx jest --config=jest.config.js src/__tests__/integration --passWithNoTests",
+    "test:integration:with-db": "npm run --prefix .. test:setup:db && npm run test:integration",
     "test:integration:ci": "NODE_OPTIONS=\"--experimental-vm-modules --max-old-space-size=4096 --expose-gc\" TEST_ENVIRONMENT=ci TEST_TYPE=integration npx jest --config=jest.config.js src/__tests__/integration --passWithNoTests",
     "test:integration:docker": "NODE_OPTIONS=\"--experimental-vm-modules --max-old-space-size=4096 --expose-gc\" TEST_ENVIRONMENT=docker TEST_TYPE=integration npx jest --config=jest.config.js src/__tests__/integration --passWithNoTests",
     "test:integration:local": "NODE_OPTIONS=\"--experimental-vm-modules --max-old-space-size=8192 --expose-gc\" TEST_ENVIRONMENT=local TEST_TYPE=integration npx jest --config=jest.config.js src/__tests__/integration --passWithNoTests",
@@ -43,11 +45,12 @@
     "tsc:log": "node ./scripts/tsc-log.mjs",
     "typecheck": "tsc -p tsconfig.strict.json --noEmit",
     "typecheck:loose": "tsc -p tsconfig.json --noEmit",
-    "typecheck:strict": "tsc -p tsconfig.strict.json --noEmit"
+    "typecheck:strict": "tsc -p tsconfig.strict.json --noEmit",
+    "check:deprecated": "node -e \"const fs=require('fs'); const path='package-lock.json'; if(!fs.existsSync(path)){console.log('No package-lock.json found.'); process.exit(0);} const lock=JSON.parse(fs.readFileSync(path,'utf8')); const deprecated=Object.entries(lock.packages||{}).filter(([,info])=>info.deprecated); if(!deprecated.length){console.log('No deprecated packages.'); process.exit(0);} deprecated.forEach(([name,info])=>{const pkg=name.replace(/^node_modules\\//,''); console.log(pkg + ': ' + info.deprecated);}); process.exit(1);\""
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
-    "@langchain/core": "^0.3.30",
+    "@langchain/core": "^1.1.12",
     "bcryptjs": "^3.0.3",
     "chromadb": "^3.0.10",
     "cookie-parser": "^1.4.6",
@@ -60,7 +63,7 @@
     "joi": "^17.9.1",
     "jsdom": "^27.4.0",
     "jsonwebtoken": "^9.0.0",
-    "langchain": "^0.3.30",
+    "langchain": "^1.2.7",
     "mammoth": "^1.6.0",
     "marked": "^9.1.6",
     "multer": "^2.0.0",
@@ -73,12 +76,12 @@
     "test-config": "file:../shared/test-config"
   },
   "devDependencies": {
-    "@jest/globals": "^29.7.0",
+    "@jest/globals": "^30.2.0",
     "@types/bcryptjs": "^2.4.6",
     "@types/cookie-parser": "^1.4.3",
     "@types/cors": "^2.8.13",
     "@types/express": "^4.17.17",
-    "@types/jest": "^29.5.5",
+    "@types/jest": "^30.0.0",
     "@types/jsonwebtoken": "^9.0.1",
     "@types/multer": "^1.4.7",
     "@types/node": "^20.14.14",
@@ -89,12 +92,20 @@
     "@typescript-eslint/parser": "^8.39.0",
     "artillery": "2.0.27",
     "eslint": "^9.32.0",
-    "jest": "^29.7.0",
+    "jest": "^30.2.0",
     "nodemon": "^3.0.1",
     "supertest": "^7.0.0",
-    "ts-jest": "^29.1.1",
+    "ts-jest": "^29.4.6",
     "ts-node": "^10.9.1",
     "tsx": "^3.12.6",
     "typescript": "^5.0.2"
+  },
+  "overrides": {
+    "babel-plugin-istanbul": {
+      "test-exclude": "7.0.1"
+    },
+    "module-lookup-amd": {
+      "glob": "10.5.0"
+    }
   }
 }

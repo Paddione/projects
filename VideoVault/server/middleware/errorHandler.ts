@@ -43,12 +43,17 @@ export function globalErrorHandler(err: any, req: Request, res: Response, _next:
     // Default 500 Internal Server Error
     const statusCode = err.statusCode || 500;
     const message =
-        process.env.NODE_ENV === 'production'
-            ? 'Internal server error'
-            : err.message;
+        process.env.NODE_ENV === 'development'
+            ? err.message
+            : 'Internal server error';
+
+    // Extract requestId from headers
+    const requestId = req.headers['x-request-id'] as string | undefined;
 
     res.status(statusCode).json({
-        error: message,
+        message,
+        ...(requestId ? { requestId } : {}),
+        ...(err.code ? { code: err.code } : {}),
         ...(process.env.NODE_ENV === 'development' ? { stack: err.stack } : {}),
     });
 }

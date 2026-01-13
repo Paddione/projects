@@ -1,0 +1,109 @@
+/*
+ * Cybervault design system (minimal fallback).
+ * Keeps builds working when the full design system repo is absent.
+ */
+
+@import url("https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap");
+
+:root {
+  --cv-void: #030408;
+
+  --cv-text: #d5dbe6;
+  --cv-text-bright: #f3f6ff;
+  --cv-text-dim: #a8b3c7;
+  --cv-text-muted: #8a94a6;
+
+  --cv-text-xs: 11px;
+  --cv-text-sm: 13px;
+  --cv-text-base: 16px;
+  --cv-text-lg: 18px;
+  --cv-text-xl: 20px;
+  --cv-text-2xl: 24px;
+
+  --cv-font-display: "Orbitron", "Space Grotesk", sans-serif;
+  --cv-font-body: "Space Grotesk", system-ui, sans-serif;
+  --cv-font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    "Liberation Mono", "Courier New", monospace;
+
+  --cv-weight-medium: 500;
+  --cv-weight-semibold: 600;
+  --cv-weight-bold: 700;
+  --cv-weight-black: 900;
+
+  --cv-tracking-wide: 0.04em;
+  --cv-tracking-wider: 0.08em;
+  --cv-tracking-widest: 0.12em;
+
+  --cv-space-1: 4px;
+  --cv-space-2: 8px;
+  --cv-space-3: 12px;
+  --cv-space-4: 16px;
+  --cv-space-6: 24px;
+  --cv-space-8: 32px;
+
+  --cv-radius-sm: 6px;
+  --cv-radius-md: 10px;
+  --cv-radius-lg: 16px;
+  --cv-radius-2xl: 24px;
+  --cv-radius-full: 999px;
+
+  --cv-border-width: 1px;
+  --cv-border-2: rgba(255, 255, 255, 0.12);
+  --cv-border-3: rgba(255, 255, 255, 0.18);
+
+  --cv-cyan: #00d9e6;
+  --cv-cyan-subtle: rgba(0, 217, 230, 0.12);
+  --cv-cyan-border: rgba(0, 217, 230, 0.55);
+
+  --cv-purple: #bc13fe;
+  --cv-purple-subtle: rgba(188, 19, 254, 0.12);
+  --cv-purple-border: rgba(188, 19, 254, 0.55);
+
+  --cv-danger: #ff5a5f;
+  --cv-danger-subtle: rgba(255, 90, 95, 0.12);
+  --cv-danger-border: rgba(255, 90, 95, 0.55);
+
+  --cv-glass-2: rgba(9, 13, 24, 0.72);
+  --cv-glass-3: rgba(13, 18, 32, 0.78);
+  --cv-glass-4: rgba(18, 25, 42, 0.86);
+  --cv-glass-strong: rgba(15, 20, 34, 0.92);
+  --cv-blur-xl: 20px;
+
+  --cv-gradient-primary: linear-gradient(135deg, #00d9e6 0%, #bc13fe 100%);
+
+  --cv-glow-cyan-sm: 0 0 12px rgba(0, 217, 230, 0.35);
+  --cv-glow-cyan-md: 0 0 20px rgba(0, 217, 230, 0.45);
+  --cv-glow-cyan-lg: 0 0 32px rgba(0, 217, 230, 0.55);
+
+  --cv-shadow-lg: 0 18px 36px rgba(0, 0, 0, 0.45);
+  --cv-shadow-xl: 0 24px 48px rgba(0, 0, 0, 0.6);
+
+  --cv-duration-fast: 120ms;
+  --cv-duration-base: 200ms;
+  --cv-duration-slow: 450ms;
+
+  --cv-ease-smooth: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --cv-ease-bounce: cubic-bezier(0.2, 0.9, 0.2, 1.3);
+}
+
+@keyframes cv-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes cv-slide-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}

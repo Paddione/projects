@@ -287,6 +287,7 @@ describe('PerksManager', () => {
 
       // First call returns available perks, second call returns inserted user_perks
       mockDb.query
+        .mockResolvedValueOnce({ rows: [{ legacy_user_id: 1 }] } as any)
         .mockResolvedValueOnce({ rows: mockAvailablePerks } as any)
         .mockResolvedValueOnce({ rows: mockInsertResult } as any);
 
@@ -302,7 +303,9 @@ describe('PerksManager', () => {
     });
 
     it('should return empty array when no perks to unlock', async () => {
-      mockDb.query.mockResolvedValue({ rows: [] } as any);
+      mockDb.query
+        .mockResolvedValueOnce({ rows: [{ legacy_user_id: 1 }] } as any)
+        .mockResolvedValueOnce({ rows: [] } as any);
 
       const result = await perksManager.checkAndUnlockPerksForLevel(1, 1);
 

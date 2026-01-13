@@ -383,7 +383,10 @@ export class TestConfigManager {
 
     try {
       // Use dynamic import for fetch in Node.js environments
-      const fetch = (await import('node-fetch')).default;
+      const fetch = globalThis.fetch;
+      if (!fetch) {
+        throw new Error('Fetch API is not available in this Node runtime.');
+      }
       
       const response = await Promise.race([
         fetch(url),

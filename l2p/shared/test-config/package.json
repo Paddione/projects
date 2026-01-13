@@ -106,7 +106,8 @@
     "test:run:health": "node dist/TestRunnerCLI.js health",
     "test:run:integration": "node dist/TestRunnerCLI.js integration",
     "test:run:unit": "node dist/TestRunnerCLI.js unit",
-    "test:watch": "jest --watch"
+    "test:watch": "jest --watch",
+    "check:deprecated": "node -e \"const fs=require('fs'); const path='package-lock.json'; if(!fs.existsSync(path)){console.log('No package-lock.json found.'); process.exit(0);} const lock=JSON.parse(fs.readFileSync(path,'utf8')); const deprecated=Object.entries(lock.packages||{}).filter(([,info])=>info.deprecated); if(!deprecated.length){console.log('No deprecated packages.'); process.exit(0);} deprecated.forEach(([name,info])=>{const pkg=name.replace(/^node_modules\\//,''); console.log(pkg + ': ' + info.deprecated);}); process.exit(1);\""
   },
   "dependencies": {
     "chalk": "^5.3.0",
@@ -115,7 +116,6 @@
     "glob": "^11.0.3",
     "inquirer": "^9.2.12",
     "js-yaml": "^4.1.0",
-    "node-fetch": "^3.3.2",
     "open": "^9.1.0",
     "ora": "^7.0.1"
   },
@@ -123,11 +123,11 @@
     "@playwright/test": "^1.55.0",
     "@types/glob": "^8.1.0",
     "@types/inquirer": "^9.0.7",
-    "@types/jest": "^29.5.5",
+    "@types/jest": "^30.0.0",
     "@types/js-yaml": "^4.0.5",
     "@types/node": "^18.15.11",
-    "jest": "^29.7.0",
-    "ts-jest": "^29.1.1",
+    "jest": "^30.2.0",
+    "ts-jest": "^29.4.6",
     "typescript": "^5.0.2"
   }
 }

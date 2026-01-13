@@ -1,4 +1,4 @@
-// ESM-friendly Jest mock for bcrypt
+// ESM-friendly Jest mock for bcryptjs
 // Provides minimal compatible API used in the codebase
 export async function genSalt(rounds?: number): Promise<string> {
   return Promise.resolve(`$2b$${rounds || 10}$testsalt`);

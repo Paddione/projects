@@ -6,7 +6,7 @@
  * Palette: Cybervault base with purple emphasis (authority/security)
  */
 
-@import url('../../../../shared-design-system/cybervault.css');
+@import '@shared-design-system/cybervault.css';
 
 /* ============================================================================
    AUTH-SPECIFIC DESIGN TOKENS
@@ -64,6 +64,7 @@
     transform: translate(0, 0) scale(1);
     opacity: 0.3;
   }
+
   100% {
     transform: translate(20px, 20px) scale(1.1);
     opacity: 0.5;
@@ -79,13 +80,11 @@
   right: 0;
   bottom: 0;
   background:
-    repeating-linear-gradient(
-      0deg,
+    repeating-linear-gradient(0deg,
       transparent,
       transparent 2px,
       var(--cv-border-1) 2px,
-      var(--cv-border-1) 3px
-    );
+      var(--cv-border-1) 3px);
   opacity: 0.05;
   pointer-events: none;
   animation: scan-lines 10s linear infinite;
@@ -95,6 +94,7 @@
   0% {
     transform: translateY(0);
   }
+
   100% {
     transform: translateY(100px);
   }
@@ -421,6 +421,7 @@
     opacity: 0;
     transform: translateY(-10px);
   }
+
   100% {
     opacity: 1;
     transform: translateY(0);
@@ -514,9 +515,12 @@
 }
 
 @keyframes shield-pulse {
-  0%, 100% {
+
+  0%,
+  100% {
     box-shadow: 0 0 10px var(--auth-verified-glow);
   }
+
   50% {
     box-shadow: 0 0 20px var(--auth-verified-glow);
   }
@@ -588,6 +592,7 @@
   0% {
     transform: rotate(0deg);
   }
+
   100% {
     transform: rotate(360deg);
   }
@@ -616,6 +621,7 @@
    ========================================================================= */
 
 @media (prefers-reduced-motion: reduce) {
+
   .auth-page::before,
   .auth-page::after,
   .auth-card,
@@ -725,7 +731,7 @@
   margin-top: var(--cv-space-2);
 }
 
-.space-y-6 > * + * {
+.space-y-6>*+* {
   margin-top: var(--cv-space-6);
 }
 

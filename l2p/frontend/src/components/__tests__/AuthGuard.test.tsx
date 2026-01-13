@@ -164,8 +164,6 @@ describe('AuthGuard', () => {
         id: '1',
         username: 'testuser',
         email: 'test@example.com',
-        selectedCharacter: 'warrior',
-        characterLevel: 5,
       })
       jest.mocked(apiService.getToken).mockReturnValue('new-token')
 
@@ -178,8 +176,8 @@ describe('AuthGuard', () => {
           id: '1',
           username: 'testuser',
           email: 'test@example.com',
-          character: 'warrior',
-          level: 5,
+          character: 'student',
+          level: 1,
         })
         expect(authState.token).toBe('new-token')
       })

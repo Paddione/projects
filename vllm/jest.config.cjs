@@ -1,18 +1,18 @@
-/** @type {import('ts-jest').JestConfigWithTsJest} */
+/** @type {import('jest').Config} */
 module.exports = {
-    preset: 'ts-jest',
     testEnvironment: 'node',
     extensionsToTreatAsEsm: ['.ts'],
     moduleNameMapper: {
         '^(\\.{1,2}/.*)\\.js$': '$1',
     },
     transform: {
-        // '^.+\\.[tj]sx?$' to process js/ts with `ts-jest`
-        // '^.+\\.m?[tj]sx?$' to process js/ts/mjs/mts with `ts-jest`
         '^.+\\.tsx?$': [
-            'ts-jest',
+            'babel-jest',
             {
-                useESM: true,
+                presets: [
+                    ['@babel/preset-env', { targets: { node: 'current' } }],
+                    '@babel/preset-typescript',
+                ],
             },
         ],
     },

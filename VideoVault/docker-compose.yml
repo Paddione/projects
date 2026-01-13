@@ -4,6 +4,8 @@ services:
       context: ..
       dockerfile: VideoVault/Dockerfile.prod
     container_name: videovault
+    profiles:
+      - prod
     expose:
       - "${VIDEO_PORT:-5000}"
     volumes:

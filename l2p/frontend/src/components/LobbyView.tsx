@@ -20,7 +20,8 @@ export const LobbyView: React.FC<LobbyViewProps> = ({ className = '' }) => {
     isHost,
     players,
     error,
-    questionSetInfo
+    questionSetInfo,
+    maxPlayers
   } = useGameStore()
 
   const handleReadyToggle = () => {
@@ -78,7 +79,7 @@ export const LobbyView: React.FC<LobbyViewProps> = ({ className = '' }) => {
       <div className={styles.topBar}>
         <div className={styles.codeBadge} onClick={handleCopyCode}>
           <span className={styles.codeLabel}>Lobby Code</span>
-          <span className={styles.codeValue}>{lobbyCode}</span>
+          <span className={styles.codeValue} data-testid="lobby-code">{lobbyCode}</span>
           <span className={styles.copyHint}>{copied ? 'Copied!' : 'Click to copy'}</span>
         </div>
 
@@ -96,15 +97,16 @@ export const LobbyView: React.FC<LobbyViewProps> = ({ className = '' }) => {
           <div className={styles.sectionHeader}>
             <h2 className={styles.sectionTitle}>Challengers</h2>
             {isHost && (
-              <div className={styles.hostBadge}>👑 Master of Ceremony</div>
+              <div className={styles.hostBadge} data-testid="host-indicator">👑 Master of Ceremony</div>
             )}
           </div>
 
-          <div className={styles.playersWrapper}>
+          <div className={styles.playersWrapper} data-testid="lobby-players">
             <PlayerGrid
               players={players}
               showScores={false}
               showMultipliers={true}
+              data-testid="player-list"
             />
           </div>
 
@@ -112,6 +114,7 @@ export const LobbyView: React.FC<LobbyViewProps> = ({ className = '' }) => {
             <button
               className={`${styles.readyToggle} ${isReady ? styles.readyActive : ''}`}
               onClick={handleReadyToggle}
+              data-testid="ready-toggle"
             >
               {isReady ? '✓ I am Ready' : 'Get Ready'}
             </button>
@@ -122,6 +125,7 @@ export const LobbyView: React.FC<LobbyViewProps> = ({ className = '' }) => {
                   className={`${styles.startAction} ${canStart ? styles.startEnabled : ''}`}
                   onClick={handleStartGame}
                   disabled={!canStart}
+                  data-testid="start-game-button"
                 >
                   <span className={styles.startIcon}>🎮</span>
                   <span className={styles.startText}>
@@ -136,7 +140,7 @@ export const LobbyView: React.FC<LobbyViewProps> = ({ className = '' }) => {
           </div>
         </div>
 
-        <div className={styles.settingsSection}>
+        <div className={styles.settingsSection} data-testid="lobby-settings">
           <div className={styles.sectionHeader}>
             <h2 className={styles.sectionTitle}>Game Configuration</h2>
             {isHost && (
@@ -150,11 +154,19 @@ export const LobbyView: React.FC<LobbyViewProps> = ({ className = '' }) => {
           </div>
 
           <QuestionSetSelector />
+          <div style={{ display: 'none' }}>
+            <span data-testid="setting-question-count">{questionSetInfo?.selectedQuestionCount ?? 0}</span>
+            <span data-testid="setting-question-set">
+              {questionSetInfo?.selectedSets?.map(set => set.name).join(', ') || 'None'}
+            </span>
+            <span data-testid="setting-private">{String(false)}</span>
+            <span data-testid="setting-max-players">{maxPlayers}</span>
+          </div>
         </div>
       </div>
 
       {error && (
-        <div className={styles.errorOverlay}>
+        <div className={styles.errorOverlay} data-testid="lobby-error">
           <div className={styles.errorBox}>
             <span className={styles.errorIcon}>⚠️</span>
             <p>{error}</p>

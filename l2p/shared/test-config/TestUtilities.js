@@ -170,7 +170,10 @@ export class TestUtilities {
                 if (token) {
                     headers['Authorization'] = `Bearer ${token}`;
                 }
-                const fetch = (await import('node-fetch')).default;
+                const fetch = globalThis.fetch;
+                if (!fetch) {
+                    throw new Error('Fetch API is not available in this Node runtime.');
+                }
                 return fetch(url, {
                     ...options,
                     headers

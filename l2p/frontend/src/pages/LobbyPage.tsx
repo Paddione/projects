@@ -109,6 +109,7 @@ export const LobbyPage: React.FC = () => {
             onClick={handleLeaveLobby}
             className={`${styles.button} ${styles.buttonSecondary}`}
             style={{ fontSize: '0.875rem' }}
+            data-testid="leave-lobby-button"
           >
             Leave Lobby
           </button>

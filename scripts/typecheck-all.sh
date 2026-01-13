@@ -2,7 +2,7 @@
 
 # Configuration
 PROJECTS=("l2p" "auth" "VideoVault" "payment" "vllm")
-project_scripts=("npm run typecheck" "npm run typecheck" "npm run check" "npm run lint" "npm run build")
+project_scripts=("npm run typecheck" "npm run typecheck" "npm run check" "npm run typecheck" "npm run typecheck")
 
 status=0
 failures=()

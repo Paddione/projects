@@ -5,6 +5,8 @@ import { deleteProduct } from '@/lib/actions/product'
 // I'll use standard HTML/Tailwind for speed unless I have a component library
 // I'll stick to raw Tailwind
 
+import { Product } from '@prisma/client'
+
 export default async function AdminProductsPage() {
     const products = await db.product.findMany({ orderBy: { createdAt: 'desc' } })
 
@@ -30,7 +32,7 @@ export default async function AdminProductsPage() {
                         </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                        {products.map((product) => (
+                        {products.map((product: Product) => (
                             <tr key={product.id}>
                                 <td className="px-6 py-4 whitespace-nowrap">
                                     {product.imageUrl && (

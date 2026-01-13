@@ -6,6 +6,7 @@ export default defineConfig({
     plugins: [react()],
     test: {
         environment: 'jsdom',
+        setupFiles: ['./test/setup-env.ts'],
         alias: {
             '@': path.resolve(__dirname, './')
         },

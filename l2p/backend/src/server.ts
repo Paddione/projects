@@ -20,7 +20,6 @@ import questionManagementRoutes from './routes/question-management.js';
 import scoringRoutes from './routes/scoring.js';
 import hallOfFameRoutes from './routes/hall-of-fame.js';
 import characterRoutes from './routes/characters.js';
-import fileUploadRoutes from './routes/file-upload.js';
 import adminRoutes from './routes/admin.js';
 import perksRoutes from './routes/perks.js';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
@@ -29,6 +28,9 @@ import { initializeBackendHealthChecks } from './health/index.js';
 import { correlationId } from './middleware/correlationId.js';
 import { metricsMiddleware } from './middleware/metrics.js';
 import metricsRoutes from './routes/metrics.js';
+
+const shouldEnableFileUploadRoutes = process.env['NODE_ENV'] !== 'test' &&
+  process.env['DISABLE_FILE_UPLOAD_ROUTES'] !== 'true';
 
 // Feature flag: disable rate limiting in development and tests, or via override
 const isRateLimitDisabled = (
@@ -368,7 +370,15 @@ app.use('/api/question-management', questionManagementRoutes);
 app.use('/api/scoring', scoringRoutes);
 app.use('/api/hall-of-fame', hallOfFameRoutes);
 app.use('/api/characters', characterRoutes);
-app.use('/api/file-upload', fileUploadRoutes);
+if (shouldEnableFileUploadRoutes) {
+  import('./routes/file-upload.js')
+    .then(({ default: routes }) => {
+      app.use('/api/file-upload', routes);
+    })
+    .catch((error) => {
+      console.error('Failed to load file upload routes:', error);
+    });
+}
 app.use('/api/admin', adminRoutes);
 app.use('/api/perks', perksRoutes);
 

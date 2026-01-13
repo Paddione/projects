@@ -1,5 +1,6 @@
 import { useGameStore } from '../stores/gameStore'
 import { apiService } from './apiService'
+import { socketService } from './socketService'
 
 export type GameState = 'home' | 'lobby' | 'game' | 'results' | 'error'
 
@@ -124,12 +125,10 @@ class NavigationService {
       if (lobbyCode) {
         console.log(`Leaving lobby: ${lobbyCode}`)
         // Get current user information
-        const { apiService } = await import('./apiService.js')
         const currentUser = apiService.getCurrentUser()
 
         if (currentUser) {
           // Call socket service to leave lobby
-          const { socketService } = await import('./socketService.js')
           const playerId = `user_${currentUser.id}`
           socketService.leaveLobby(lobbyCode, playerId)
 

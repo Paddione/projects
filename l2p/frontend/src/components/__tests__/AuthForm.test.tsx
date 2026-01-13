@@ -100,7 +100,7 @@ describe('AuthForm', () => {
     it('should handle successful login', async () => {
       jest.mocked(apiService.login).mockResolvedValue({
         success: true,
-        data: { user: { id: '1', username: 'testuser', email: 'test@example.com' } },
+        data: { user: { id: '1', username: 'testuser', email: 'test@example.com', isAdmin: false }, tokens: { accessToken: 'token', refreshToken: 'refresh' } },
       })
 
       render(<AuthForm onAuthSuccess={mockOnAuthSuccess} />)
@@ -138,7 +138,7 @@ describe('AuthForm', () => {
 
     it('should show loading state during login', async () => {
       jest.mocked(apiService.login).mockImplementation(() =>
-        new Promise(resolve => setTimeout(() => resolve({ success: true, data: {} }), 100))
+        new Promise(resolve => setTimeout(() => resolve({ success: true, data: { user: { id: '1', username: 'testuser', email: 'test@example.com', isAdmin: false }, tokens: { accessToken: 'token', refreshToken: 'refresh' } } }), 100))
       )
 
       render(<AuthForm onAuthSuccess={mockOnAuthSuccess} />)
@@ -197,7 +197,7 @@ describe('AuthForm', () => {
     it('should handle successful registration', async () => {
       jest.mocked(apiService.register).mockResolvedValue({
         success: true,
-        data: { user: { id: '1', username: 'newuser', email: 'new@example.com' } },
+        data: { user: { id: '1', username: 'newuser', email: 'new@example.com', isAdmin: false }, tokens: { accessToken: 'token', refreshToken: 'refresh' } },
       })
 
       fireEvent.change(screen.getByTestId('username-input'), { target: { value: 'newuser' } })
@@ -331,7 +331,7 @@ describe('AuthForm', () => {
 
       // Error should clear on new submission
       fireEvent.change(screen.getByTestId('password-input'), { target: { value: 'newpassword' } })
-      jest.mocked(apiService.login).mockResolvedValue({ success: true, data: {} })
+      jest.mocked(apiService.login).mockResolvedValue({ success: true, data: { user: { id: '1', username: 'testuser', email: 'test@example.com', isAdmin: false }, tokens: { accessToken: 'token', refreshToken: 'refresh' } } })
       fireEvent.click(screen.getByTestId('login-button'))
 
       await waitFor(() => {

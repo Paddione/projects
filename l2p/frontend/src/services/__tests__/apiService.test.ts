@@ -32,14 +32,8 @@ Object.defineProperty(window, 'localStorage', {
   writable: true,
 })
 
-// Mock window.location BEFORE importing apiService
-const mockLocation = {
-  href: 'http://localhost:3000',
-}
-Object.defineProperty(window, 'location', {
-  value: mockLocation,
-  configurable: true,
-})
+// Ensure predictable URL for URLSearchParams BEFORE importing apiService
+window.history.replaceState({}, 'Test', 'http://localhost:3000')
 
 // Now import apiService after mocks are in place
 import { apiService } from '../apiService'

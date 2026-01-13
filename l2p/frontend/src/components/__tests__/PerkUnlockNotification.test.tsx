@@ -11,10 +11,9 @@ describe('PerkUnlockNotification', () => {
   const mockOnClose = jest.fn();
 
   const mockNotification: PerkUnlockNotificationType = {
-    id: 'test-notification',
+    playerId: 'test-player',
     username: 'testuser',
     character: 'professor',
-    level: 10,
     unlockedPerks: [
       {
         id: 1,
@@ -76,7 +75,7 @@ describe('PerkUnlockNotification', () => {
 
   it('should display correct character emoji for professor', () => {
     render(<PerkUnlockNotification notification={mockNotification} onClose={mockOnClose} />);
-    
+
     // Professor emoji should be present
     const spans = document.querySelectorAll('span');
     const professorSpan = Array.from(spans).find(span => span.textContent === '👨‍🏫');
@@ -170,7 +169,7 @@ describe('PerkUnlockNotification', () => {
 
     // Should start fade out animation
     jest.advanceTimersByTime(500);
-    
+
     expect(mockOnClose).toHaveBeenCalledTimes(1);
   });
 
@@ -211,8 +210,6 @@ describe('PerkUnlockNotification', () => {
             title: 'Custom Theme',
             description: 'Personalize your interface',
             is_active: true,
-            created_at: new Date(),
-            updated_at: new Date()
           }
         }
       ]
@@ -252,8 +249,6 @@ describe('PerkUnlockNotification', () => {
             title: 'Custom Theme',
             description: 'Theme perk',
             is_active: true,
-            created_at: new Date(),
-            updated_at: new Date()
           }
         },
         {
@@ -272,8 +267,6 @@ describe('PerkUnlockNotification', () => {
             title: 'Speed Booster',
             description: 'Booster perk',
             is_active: true,
-            created_at: new Date(),
-            updated_at: new Date()
           }
         }
       ]
@@ -282,7 +275,7 @@ describe('PerkUnlockNotification', () => {
     render(<PerkUnlockNotification notification={variousPerksNotification} onClose={mockOnClose} />);
 
     const perkIcons = document.querySelectorAll('span');
-    
+
     // Should show theme icon (🎨)
     const hasThemeIcon = Array.from(perkIcons).some(icon => icon.textContent === '🎨');
     expect(hasThemeIcon).toBe(true);

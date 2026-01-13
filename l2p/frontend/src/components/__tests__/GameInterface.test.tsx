@@ -43,6 +43,20 @@ describe('GameInterface', () => {
   const mockSetIsHost = jest.fn()
   const mockSetLoading = jest.fn()
   const mockSetError = jest.fn()
+  const buildLobby = (code: string) => ({
+    id: 1,
+    code,
+    hostId: 'host-1',
+    status: 'waiting' as const,
+    players: [],
+    questionCount: 10,
+    currentQuestion: 0,
+    settings: {
+      questionSetIds: [],
+      timeLimit: 60,
+      allowReplay: false,
+    },
+  })
 
   beforeEach(() => {
     jest.clearAllMocks()
@@ -72,24 +86,23 @@ describe('GameInterface', () => {
       render(<GameInterface />)
 
       expect(screen.getByText('Learn2Play Quiz')).toBeInTheDocument()
-      expect(screen.getByText('Create or join a multiplayer quiz game')).toBeInTheDocument()
-      expect(screen.getByText('Create New Game')).toBeInTheDocument()
-      expect(screen.getByText('Join Existing Game')).toBeInTheDocument()
+      expect(screen.getByText('Battle your friends online or tackle solo challenges')).toBeInTheDocument()
+      expect(screen.getByText('Create Lobby')).toBeInTheDocument()
+      expect(screen.getByText('Join Game')).toBeInTheDocument()
     })
 
     it('should render create lobby button', () => {
       render(<GameInterface />)
 
-      expect(screen.getByTestId('create-lobby-button')).toBeInTheDocument()
-      expect(screen.getByTestId('create-lobby-button')).toHaveTextContent('Create Lobby')
+      expect(screen.getByText('Launch New Lobby')).toBeInTheDocument()
     })
 
     it('should render join lobby input and button', () => {
       render(<GameInterface />)
 
-      fireEvent.click(screen.getByTestId('join-lobby-button'))
-      expect(screen.getByTestId('lobby-code-input')).toBeInTheDocument()
-      expect(screen.getByTestId('join-lobby-confirm')).toBeInTheDocument()
+      fireEvent.click(screen.getByText('Join Game'))
+      expect(screen.getByPlaceholderText('CODE12')).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: 'Join Now' })).toBeInTheDocument()
     })
 
     it('should apply custom className', () => {
@@ -104,14 +117,13 @@ describe('GameInterface', () => {
     it('should create lobby successfully', async () => {
       jest.mocked(socketService.createLobby).mockResolvedValue({
         success: true,
-        data: { code: 'ABC123' },
+        data: buildLobby('ABC123'),
       })
       jest.mocked(navigationService.navigateToLobby).mockResolvedValue()
 
       render(<GameInterface />)
 
-      fireEvent.click(screen.getByTestId('create-lobby-button'))
-      fireEvent.click(screen.getByTestId('confirm-create-lobby'))
+      fireEvent.click(screen.getByText('Create Lobby'))
 
       await waitFor(() => {
         expect(mockSetLoading).toHaveBeenCalledWith(true)
@@ -119,7 +131,7 @@ describe('GameInterface', () => {
       })
 
       await waitFor(() => {
-        expect(socketService.createLobby).toHaveBeenCalledWith({ questionCount: 5, isPrivate: false, questionSetKey: 'general' })
+        expect(socketService.createLobby).toHaveBeenCalledWith({ questionCount: 10, isPrivate: false })
         expect(mockSetLobbyCode).toHaveBeenCalledWith('ABC123')
         expect(mockSetIsHost).toHaveBeenCalledWith(true)
         expect(navigationService.navigateToLobby).toHaveBeenCalledWith('ABC123')
@@ -131,14 +143,13 @@ describe('GameInterface', () => {
       jest.mocked(socketService.isConnected).mockReturnValue(false)
       jest.mocked(socketService.createLobby).mockResolvedValue({
         success: true,
-        data: { code: 'ABC123' },
+        data: buildLobby('ABC123'),
       })
       jest.mocked(navigationService.navigateToLobby).mockResolvedValue()
 
       render(<GameInterface />)
 
-      fireEvent.click(screen.getByTestId('create-lobby-button'))
-      fireEvent.click(screen.getByTestId('confirm-create-lobby'))
+      fireEvent.click(screen.getByText('Create Lobby'))
 
       await waitFor(() => {
         expect(socketService.connect).toHaveBeenCalled()
@@ -150,8 +161,7 @@ describe('GameInterface', () => {
 
       render(<GameInterface />)
 
-      fireEvent.click(screen.getByTestId('create-lobby-button'))
-      fireEvent.click(screen.getByTestId('confirm-create-lobby'))
+      fireEvent.click(screen.getByText('Create Lobby'))
 
       await waitFor(() => {
         expect(mockSetError).toHaveBeenCalledWith('You must be logged in to create a lobby')
@@ -164,8 +174,7 @@ describe('GameInterface', () => {
 
       render(<GameInterface />)
 
-      fireEvent.click(screen.getByTestId('create-lobby-button'))
-      fireEvent.click(screen.getByTestId('confirm-create-lobby'))
+      fireEvent.click(screen.getByText('Create Lobby'))
 
       await waitFor(() => {
         expect(mockSetError).toHaveBeenCalledWith('Network error')
@@ -187,11 +196,9 @@ describe('GameInterface', () => {
 
       render(<GameInterface />)
 
-      fireEvent.click(screen.getByTestId('create-lobby-button'))
+      fireEvent.click(screen.getByText('Create Lobby'))
 
-      const confirmButton = screen.getByTestId('confirm-create-lobby')
-      expect(confirmButton).toHaveTextContent('Creating...')
-      expect(confirmButton).toBeDisabled()
+      expect(screen.getByText('Creating...')).toBeInTheDocument()
     })
   })
 
@@ -199,17 +206,17 @@ describe('GameInterface', () => {
     it('should join lobby successfully', async () => {
       jest.mocked(socketService.joinLobby).mockResolvedValue({
         success: true,
-        data: { code: 'XYZ789' },
+        data: buildLobby('XYZ789'),
       })
       jest.mocked(navigationService.navigateToLobby).mockResolvedValue()
 
       render(<GameInterface />)
 
-      fireEvent.click(screen.getByTestId('join-lobby-button'))
-      const input = screen.getByTestId('lobby-code-input')
+      fireEvent.click(screen.getByText('Join Game'))
+      const input = screen.getByPlaceholderText('CODE12')
       fireEvent.change(input, { target: { value: 'xyz789' } })
 
-      fireEvent.click(screen.getByTestId('join-lobby-confirm'))
+      fireEvent.click(screen.getByRole('button', { name: 'Join Now' }))
 
       await waitFor(() => {
         expect(mockSetLoading).toHaveBeenCalledWith(true)
@@ -228,8 +235,8 @@ describe('GameInterface', () => {
     it('should convert lobby code to uppercase', async () => {
       render(<GameInterface />)
 
-      fireEvent.click(screen.getByTestId('join-lobby-button'))
-      const input = screen.getByTestId('lobby-code-input') as HTMLInputElement
+      fireEvent.click(screen.getByText('Join Game'))
+      const input = screen.getByPlaceholderText('CODE12') as HTMLInputElement
       fireEvent.change(input, { target: { value: 'abc123' } })
 
       expect(input.value).toBe('ABC123')
@@ -238,35 +245,32 @@ describe('GameInterface', () => {
     it('should disable join button when code is empty', () => {
       render(<GameInterface />)
 
-      fireEvent.click(screen.getByTestId('join-lobby-button'))
-      const joinButton = screen.getByTestId('join-lobby-confirm')
+      fireEvent.click(screen.getByText('Join Game'))
+      const joinButton = screen.getByRole('button', { name: 'Join Now' })
       expect(joinButton).toBeDisabled()
     })
 
     it('should enable join button when code has 6 characters', () => {
       render(<GameInterface />)
 
-      fireEvent.click(screen.getByTestId('join-lobby-button'))
-      const input = screen.getByTestId('lobby-code-input')
+      fireEvent.click(screen.getByText('Join Game'))
+      const input = screen.getByPlaceholderText('CODE12')
       fireEvent.change(input, { target: { value: 'ABC123' } })
 
-      const joinButton = screen.getByTestId('join-lobby-confirm')
+      const joinButton = screen.getByRole('button', { name: 'Join Now' })
       expect(joinButton).not.toBeDisabled()
     })
 
-    it('should show error for invalid lobby code', async () => {
+    it('should not attempt join when lobby code is invalid', async () => {
       render(<GameInterface />)
 
-      fireEvent.click(screen.getByTestId('join-lobby-button'))
-      const input = screen.getByTestId('lobby-code-input')
+      fireEvent.click(screen.getByText('Join Game'))
+      const input = screen.getByPlaceholderText('CODE12')
       fireEvent.change(input, { target: { value: 'ABC' } })
 
-      fireEvent.click(screen.getByTestId('join-lobby-confirm'))
-
-      await waitFor(() => {
-        expect(mockSetError).toHaveBeenCalledWith('Please enter a valid 6-character lobby code')
-        expect(socketService.joinLobby).not.toHaveBeenCalled()
-      })
+      const joinButton = screen.getByRole('button', { name: 'Join Now' })
+      expect(joinButton).toBeDisabled()
+      expect(socketService.joinLobby).not.toHaveBeenCalled()
     })
 
     it('should show error when not authenticated', async () => {
@@ -274,11 +278,11 @@ describe('GameInterface', () => {
 
       render(<GameInterface />)
 
-      fireEvent.click(screen.getByTestId('join-lobby-button'))
-      const input = screen.getByTestId('lobby-code-input')
+      fireEvent.click(screen.getByText('Join Game'))
+      const input = screen.getByPlaceholderText('CODE12')
       fireEvent.change(input, { target: { value: 'ABC123' } })
 
-      fireEvent.click(screen.getByTestId('join-lobby-confirm'))
+      fireEvent.click(screen.getByRole('button', { name: 'Join Now' }))
 
       await waitFor(() => {
         expect(mockSetError).toHaveBeenCalledWith('You must be logged in to join a lobby')
@@ -291,11 +295,11 @@ describe('GameInterface', () => {
 
       render(<GameInterface />)
 
-      fireEvent.click(screen.getByTestId('join-lobby-button'))
-      const input = screen.getByTestId('lobby-code-input')
+      fireEvent.click(screen.getByText('Join Game'))
+      const input = screen.getByPlaceholderText('CODE12')
       fireEvent.change(input, { target: { value: 'ABC123' } })
 
-      fireEvent.click(screen.getByTestId('join-lobby-confirm'))
+      fireEvent.click(screen.getByRole('button', { name: 'Join Now' }))
 
       await waitFor(() => {
         expect(mockSetError).toHaveBeenCalledWith('Lobby not found')
@@ -307,17 +311,17 @@ describe('GameInterface', () => {
       jest.mocked(socketService.isConnected).mockReturnValue(false)
       jest.mocked(socketService.joinLobby).mockResolvedValue({
         success: true,
-        data: { code: 'ABC123' },
+        data: buildLobby('ABC123'),
       })
       jest.mocked(navigationService.navigateToLobby).mockResolvedValue()
 
       render(<GameInterface />)
 
-      fireEvent.click(screen.getByTestId('join-lobby-button'))
-      const input = screen.getByTestId('lobby-code-input')
+      fireEvent.click(screen.getByText('Join Game'))
+      const input = screen.getByPlaceholderText('CODE12')
       fireEvent.change(input, { target: { value: 'ABC123' } })
 
-      fireEvent.click(screen.getByTestId('join-lobby-confirm'))
+      fireEvent.click(screen.getByRole('button', { name: 'Join Now' }))
 
       await waitFor(() => {
         expect(socketService.connect).toHaveBeenCalled()

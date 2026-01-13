@@ -18,41 +18,37 @@ npm run dev
 
 # Docker development with hot reload (port 5000)
 npm run docker:dev
-npm run docker:dev:detached  # Background mode
+npm run docker:down          # Stop environment
+npm run docker:restart       # Restart environment
 npm run docker:logs          # View logs
-npm run docker:shell         # Access container shell
-
-# Stop and cleanup
-npm run docker:down
-npm run docker:clean
 ```
 
 ### Testing
 
 ```bash
-# Full test suite
-npm test                     # Runs client + server tests
+# Full 6-stage test pipeline (recommended before deploy)
+npm run test:all             # All stages: types → unit → integration → e2e → build → health
+
+# Individual test stages
+npm run test:1:types         # Stage 1: TypeScript type checking
+npm run test:2:unit          # Stage 2: Unit tests (client + server)
+npm run test:3:integration   # Stage 3: Integration tests
+npm run test:4:e2e           # Stage 4: Playwright E2E tests
+npm run test:5:build         # Stage 5: Production build
+npm run test:6:health        # Stage 6: Health check
+
+# Run specific test suites
 npm run test:client          # Client-side tests only
 npm run test:server          # Server-side tests only
-npm run test:watch           # Watch mode
-npm run test:coverage        # Coverage report
-npm run test:e2e             # Server E2E tests (Vitest)
+npm run test:e2e             # Integration tests only
+npm run docker:pw:all        # Playwright E2E tests only
 
 # Run single test file
-npm run test -- client/src/services/VideoDatabase.test.ts
+npx vitest run client/src/services/VideoDatabase.test.ts
 FAST_TESTS=1 npx vitest run client/src/services/filter-engine.test.ts
-
-# Playwright E2E (Docker)
-npm run docker:pw:all        # Full E2E suite
-npm run docker:pw:up         # Start test environment
-npm run docker:pw:run        # Run Playwright tests
-npm run docker:pw:ui         # Interactive UI mode (port 9323)
-
-# Local Playwright (requires setup)
-npm run test:pw
-npm run test:pw:ui
-npm run test:pw:report
 ```
+
+**See [TESTING.md](./TESTING.md) for detailed testing guide and troubleshooting.**
 
 ### Build & Production
 
@@ -65,19 +61,6 @@ npm run build
 
 # Start production server
 npm run start
-
-# Full verification pipeline
-npm run verify               # Typecheck + tests + e2e + build
-```
-
-### Database (Postgres)
-
-```bash
-# Apply Prisma schema (Drizzle ORM)
-npm run db:push
-
-# Run migrations
-npm run db:migrate
 ```
 
 ## Architecture & Code Organization

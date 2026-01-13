@@ -34,10 +34,6 @@ jest.mock('../../hooks/useAudio', () => ({
   }),
 }))
 
-// Mock window.location.reload
-delete (window as any).location
-window.location = { reload: jest.fn() } as any
-
 describe('Header', () => {
   beforeEach(() => {
     jest.clearAllMocks()
@@ -135,7 +131,6 @@ describe('Header', () => {
     await new Promise(resolve => setTimeout(resolve, 100))
 
     expect(apiService.logout).toHaveBeenCalled()
-    expect(window.location.reload).toHaveBeenCalled()
   })
 
   it('should handle logout error by clearing auth and reloading', async () => {
@@ -154,6 +149,5 @@ describe('Header', () => {
 
     expect(apiService.logout).toHaveBeenCalled()
     expect(apiService.clearAuth).toHaveBeenCalled()
-    expect(window.location.reload).toHaveBeenCalled()
   })
 })

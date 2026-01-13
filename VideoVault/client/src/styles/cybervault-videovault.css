@@ -4,7 +4,7 @@
  * Grid-focused, organized, cinematic precision
  */
 
-@import '../../../../shared-design-system/cybervault.css';
+@import '../../../shared-design-system/cybervault.css';
 
 :root {
   /* VideoVault-specific overrides - Media-focused palette */

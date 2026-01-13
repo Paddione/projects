@@ -472,6 +472,8 @@ describe('SettingsModal Component', () => {
     it('closes modal on Escape key', async () => {
       render(<SettingsModal isOpen={true} onClose={mockOnClose} />)
       
+      const closeBtn = screen.getByLabelText('Close')
+      closeBtn.focus()
       await user.keyboard('{Escape}')
       
       expect(mockOnClose).toHaveBeenCalled()

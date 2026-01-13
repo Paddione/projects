@@ -87,26 +87,21 @@ cd VideoVault
 # Development
 npm run dev                  # Local dev server (port 5100)
 npm run docker:dev           # Docker dev with hot reload (port 5000)
-npm run docker:dev:detached  # Background mode
+npm run docker:down          # Stop environment
+npm run docker:restart       # Restart environment
+npm run docker:logs          # View logs
+
+# Testing
+npm run check                # TypeScript checking
+npm run test:all             # Full 6-stage test pipeline
+npm run test:client          # Client tests only
+npm run test:server          # Server tests only
+npm run test:e2e             # Integration tests
+npm run docker:pw:all        # Playwright E2E tests
 
 # Build & Production
 npm run build
 npm run start                # Production server
-
-# Testing
-npm test                     # Unit tests with Vitest
-npm run test:watch
-npm run check                # TypeScript checking
-npm run verify               # Typecheck + tests + build
-
-# Docker E2E
-npm run docker:pw:all        # Full Playwright E2E suite
-npm run docker:pw:up         # Start test environment
-npm run docker:pw:run        # Run Playwright tests
-npm run docker:down          # Cleanup
-
-# Database (if using Postgres)
-npm run db:push              # Apply Prisma schema
 ```
 
 ### Payment

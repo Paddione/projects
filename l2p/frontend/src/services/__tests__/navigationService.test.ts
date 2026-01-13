@@ -23,33 +23,9 @@ jest.mock('../apiService', () => ({
   },
 }))
 
-// Mock window.location and history
-const mockLocation = {
-  pathname: '/',
-  search: '',
-  hash: '',
-  assign: jest.fn(),
-  replace: jest.fn(),
-  reload: jest.fn(),
+const setPathname = (path: string) => {
+  window.history.replaceState({}, '', path)
 }
-
-const mockHistory = {
-  pushState: jest.fn(),
-  replaceState: jest.fn(),
-  back: jest.fn(),
-  forward: jest.fn(),
-  go: jest.fn(),
-}
-
-Object.defineProperty(window, 'location', {
-  value: mockLocation,
-  writable: true,
-})
-
-Object.defineProperty(window, 'history', {
-  value: mockHistory,
-  writable: true,
-})
 
 // Mock console methods to avoid test noise
 const originalConsoleError = console.error
@@ -99,8 +75,7 @@ describe('NavigationService', () => {
     })
 
     // Reset location
-    mockLocation.pathname = '/'
-    mockLocation.search = ''
+    setPathname('/')
 
       // Clear any existing listeners
       ; (navigationService as any).listeners = []
@@ -279,7 +254,7 @@ describe('NavigationService', () => {
 
   describe('Route Validation', () => {
     it('should validate current route on initialization', () => {
-      mockLocation.pathname = '/lobby/TEST123'
+      setPathname('/lobby/TEST123')
 
       const validateSpy = jest.spyOn(navigationService as any, 'validateCurrentRoute')
 
@@ -300,7 +275,7 @@ describe('NavigationService', () => {
     })
 
     it('should extract lobby code from path', () => {
-      mockLocation.pathname = '/lobby/TEST123'
+      setPathname('/lobby/TEST123')
       const code = (navigationService as any).extractLobbyCodeFromPath('/lobby/TEST123')
 
       expect(code).toBe('TEST123')

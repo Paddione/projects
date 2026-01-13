@@ -101,7 +101,7 @@ describe('LobbyView', () => {
 
   it('copies the lobby code when clicked', async () => {
     const user = userEvent.setup()
-    const writeText = jest.fn().mockResolvedValue(undefined)
+    const writeText = jest.fn((_text: string) => Promise.resolve())
     Object.defineProperty(navigator, 'clipboard', {
       value: { writeText },
       writable: true,

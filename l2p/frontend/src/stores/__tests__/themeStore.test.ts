@@ -20,20 +20,8 @@ Object.defineProperty(window, 'matchMedia', {
   value: matchMediaMock
 })
 
-// Mock document methods
-const documentMock = {
-  documentElement: {
-    setAttribute: jest.fn(),
-    getAttribute: jest.fn()
-  },
-  querySelector: jest.fn(),
-  querySelectorAll: jest.fn(),
-  addEventListener: jest.fn(),
-  removeEventListener: jest.fn()
-}
-Object.defineProperty(window, 'document', {
-  value: documentMock
-})
+let documentSetAttributeSpy: jest.SpyInstance
+let documentQuerySelectorSpy: jest.SpyInstance
 
 describe('ThemeStore', () => {
   let store: ThemeState
@@ -42,6 +30,8 @@ describe('ThemeStore', () => {
   beforeEach(() => {
     // Reset all mocks
     jest.clearAllMocks()
+
+    documentSetAttributeSpy = jest.spyOn(document.documentElement, 'setAttribute')
     
     // Reset localStorage
     localStorageMock.getItem.mockReturnValue(null)
@@ -50,7 +40,7 @@ describe('ThemeStore', () => {
     mockMetaThemeColor = {
       setAttribute: jest.fn()
     }
-    documentMock.querySelector.mockReturnValue(mockMetaThemeColor)
+    documentQuerySelectorSpy = jest.spyOn(document, 'querySelector').mockReturnValue(mockMetaThemeColor as any)
     
     // Setup default matchMedia mock
     matchMediaMock.mockReturnValue({
@@ -60,16 +50,6 @@ describe('ThemeStore', () => {
     })
     
     // Mock window properties that might be accessed
-    Object.defineProperty(window, 'addEventListener', {
-      value: jest.fn(),
-      writable: true
-    })
-    
-    Object.defineProperty(window, 'removeEventListener', {
-      value: jest.fn(),
-      writable: true
-    })
-    
     // Get fresh store state
     store = useThemeStore.getState()
   })
@@ -80,6 +60,9 @@ describe('ThemeStore', () => {
       theme: 'auto',
       isDark: false
     })
+
+    documentSetAttributeSpy.mockRestore()
+    documentQuerySelectorSpy.mockRestore()
   })
 
   describe('Initial State', () => {
@@ -197,13 +180,13 @@ describe('ThemeStore', () => {
     it('should set data-theme attribute on document root for light theme', () => {
       store.setTheme('light')
       
-      expect(documentMock.documentElement.setAttribute).toHaveBeenCalledWith('data-theme', 'light')
+      expect(documentSetAttributeSpy).toHaveBeenCalledWith('data-theme', 'light')
     })
 
     it('should set data-theme attribute on document root for dark theme', () => {
       store.setTheme('dark')
       
-      expect(documentMock.documentElement.setAttribute).toHaveBeenCalledWith('data-theme', 'dark')
+      expect(documentSetAttributeSpy).toHaveBeenCalledWith('data-theme', 'dark')
     })
 
     it('should set data-theme attribute for auto theme based on system preference', () => {
@@ -215,7 +198,7 @@ describe('ThemeStore', () => {
       
       store.setTheme('auto')
       
-      expect(documentMock.documentElement.setAttribute).toHaveBeenCalledWith('data-theme', 'dark')
+      expect(documentSetAttributeSpy).toHaveBeenCalledWith('data-theme', 'dark')
     })
 
     it('should update meta theme-color for light theme', () => {
@@ -310,7 +293,7 @@ describe('ThemeStore', () => {
 
   describe('Error Handling', () => {
     it('should handle missing meta theme-color element', () => {
-      documentMock.querySelector.mockReturnValue(null)
+      documentQuerySelectorSpy.mockReturnValue(null)
       
       expect(() => store.setTheme('light')).not.toThrow()
       expect(() => store.setTheme('dark')).not.toThrow()

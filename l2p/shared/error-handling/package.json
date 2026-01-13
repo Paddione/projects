@@ -16,7 +16,8 @@
   "scripts": {
     "build": "npm run build:esm && npm run build:cjs",
     "build:cjs": "tsc --project tsconfig.cjs.json",
-    "build:esm": "tsc"
+    "build:esm": "tsc",
+    "check:deprecated": "node -e \"const fs=require('fs'); const path='package-lock.json'; if(!fs.existsSync(path)){console.log('No package-lock.json found.'); process.exit(0);} const lock=JSON.parse(fs.readFileSync(path,'utf8')); const deprecated=Object.entries(lock.packages||{}).filter(([,info])=>info.deprecated); if(!deprecated.length){console.log('No deprecated packages.'); process.exit(0);} deprecated.forEach(([name,info])=>{const pkg=name.replace(/^node_modules\\//,''); console.log(pkg + ': ' + info.deprecated);}); process.exit(1);\""
   },
   "devDependencies": {
     "typescript": "^5.0.0",

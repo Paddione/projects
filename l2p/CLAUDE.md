@@ -36,6 +36,22 @@ npm run typecheck:strict     # Strict mode
 
 ### Testing
 
+**Test Infrastructure Setup**:
+```bash
+# Setup test infrastructure (must do this first!)
+npm run test:setup:db             # Database only (for unit tests)
+npm run test:setup:backend        # Database + Backend (for integration tests)
+npm run test:setup:frontend       # Full environment (for E2E tests)
+npm run test:setup                # Alias for full setup
+
+# Check status
+npm run test:setup:status
+
+# Teardown
+npm run test:teardown             # Stop infrastructure
+npm run test:teardown:clean       # Stop and remove volumes
+```
+
 **Unit Tests**:
 ```bash
 npm run test:unit                 # All unit tests
@@ -44,14 +60,14 @@ npm run test:unit:backend
 npm run test:watch                # Watch mode for unit tests
 ```
 
-**Integration Tests**:
+**Integration Tests** (requires test infrastructure):
 ```bash
 npm run test:integration          # All integration tests
 npm run test:integration:frontend
 npm run test:integration:backend
 ```
 
-**E2E Tests**:
+**E2E Tests** (requires full test infrastructure):
 ```bash
 npm run test:browsers:install     # Install Playwright browsers
 npm run test:e2e                  # Run E2E suite
