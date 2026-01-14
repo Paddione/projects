@@ -1,0 +1,23 @@
+---
+# =============================================================================
+# Auth Service
+# =============================================================================
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: auth
+  namespace: korczewski-services
+  labels:
+    app: auth
+    app.kubernetes.io/name: auth
+    app.kubernetes.io/component: authentication
+spec:
+  type: ClusterIP
+  ports:
+    - port: 5500
+      targetPort: 5500
+      protocol: TCP
+      name: http
+  selector:
+    app: auth

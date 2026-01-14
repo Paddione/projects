@@ -1,0 +1,21 @@
+# =============================================================================
+# Auth Service Kustomization
+# =============================================================================
+
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+metadata:
+  name: auth
+
+namespace: korczewski-services
+
+commonLabels:
+  app.kubernetes.io/part-of: korczewski
+  app.kubernetes.io/component: authentication
+  tier: services
+
+resources:
+  - deployment.yaml
+  - service.yaml
+  - ingressroute.yaml

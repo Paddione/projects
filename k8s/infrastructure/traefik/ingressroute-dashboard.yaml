@@ -1,0 +1,30 @@
+---
+# =============================================================================
+# Traefik Dashboard IngressRoute
+# =============================================================================
+# Secure access to Traefik dashboard with basic auth.
+# =============================================================================
+
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: traefik-dashboard
+  namespace: korczewski-infra
+  labels:
+    app: traefik
+    app.kubernetes.io/name: traefik
+    app.kubernetes.io/component: dashboard
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`traefik.korczewski.de`)
+      kind: Rule
+      services:
+        - name: api@internal
+          kind: TraefikService
+      middlewares:
+        - name: dashboard-auth
+          namespace: korczewski-infra
+  tls:
+    secretName: korczewski-tls

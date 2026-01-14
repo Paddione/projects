@@ -1,0 +1,43 @@
+---
+# =============================================================================
+# VideoVault Persistent Volume Claims
+# =============================================================================
+# NFS-backed storage for media files and thumbnails.
+# Using ReadWriteMany for potential multi-replica access.
+# =============================================================================
+
+# Main media storage
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: videovault-media
+  namespace: korczewski-services
+  labels:
+    app: videovault
+    app.kubernetes.io/name: videovault
+    app.kubernetes.io/component: storage
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: nfs-storage
+  resources:
+    requests:
+      storage: 500Gi
+---
+# Thumbnails storage (separate for performance)
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: videovault-thumbnails
+  namespace: korczewski-services
+  labels:
+    app: videovault
+    app.kubernetes.io/name: videovault
+    app.kubernetes.io/component: storage
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: nfs-storage
+  resources:
+    requests:
+      storage: 50Gi

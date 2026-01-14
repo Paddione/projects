@@ -1,0 +1,59 @@
+# =============================================================================
+# Production Overlay
+# =============================================================================
+# Adjustments for production environment:
+# - Higher resource limits
+# - Multiple replicas for HA
+# - Production logging
+# =============================================================================
+
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+metadata:
+  name: korczewski-prod
+
+# Include base and all services
+resources:
+  - ../../base
+  - ../../infrastructure/postgres
+  - ../../infrastructure/traefik
+  - ../../infrastructure/nfs-provisioner
+  - ../../services/auth
+  - ../../services/l2p-backend
+  - ../../services/l2p-frontend
+  - ../../services/payment
+  - ../../services/videovault
+
+# Common labels for production
+commonLabels:
+  environment: production
+
+# Patches for production settings
+patches:
+  # Increase replicas for L2P backend (handles WebSocket connections)
+  - patch: |-
+      - op: replace
+        path: /spec/replicas
+        value: 3
+    target:
+      kind: Deployment
+      name: l2p-backend
+
+  # Increase replicas for L2P frontend
+  - patch: |-
+      - op: replace
+        path: /spec/replicas
+        value: 2
+    target:
+      kind: Deployment
+      name: l2p-frontend
+
+  # Increase Traefik replicas for HA
+  - patch: |-
+      - op: replace
+        path: /spec/replicas
+        value: 2
+    target:
+      kind: Deployment
+      name: traefik

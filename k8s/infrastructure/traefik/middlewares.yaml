@@ -1,0 +1,142 @@
+---
+# =============================================================================
+# Traefik Middlewares
+# =============================================================================
+# Reusable middleware components for security, compression, and CORS.
+# =============================================================================
+
+# Security Headers Middleware
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: security-headers
+  namespace: korczewski-infra
+  labels:
+    app: traefik
+spec:
+  headers:
+    browserXssFilter: true
+    contentTypeNosniff: true
+    forceSTSHeader: true
+    stsIncludeSubdomains: true
+    stsPreload: true
+    stsSeconds: 31536000
+    customFrameOptionsValue: "SAMEORIGIN"
+    customResponseHeaders:
+      X-Robots-Tag: "none,noarchive,nosnippet,notranslate,noimageindex"
+    referrerPolicy: "strict-origin-when-cross-origin"
+---
+# Rate Limiting Middleware
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: rate-limit
+  namespace: korczewski-infra
+  labels:
+    app: traefik
+spec:
+  rateLimit:
+    average: 100
+    burst: 200
+    period: 1s
+---
+# Compression Middleware
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: compression
+  namespace: korczewski-infra
+  labels:
+    app: traefik
+spec:
+  compress:
+    excludedContentTypes:
+      - "text/event-stream"
+---
+# CORS Headers Middleware
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: cors-headers
+  namespace: korczewski-infra
+  labels:
+    app: traefik
+spec:
+  headers:
+    accessControlAllowMethods:
+      - GET
+      - POST
+      - PUT
+      - DELETE
+      - PATCH
+      - OPTIONS
+    accessControlAllowOriginList:
+      - "https://l2p.korczewski.de"
+      - "https://auth.korczewski.de"
+      - "https://payment.korczewski.de"
+      - "https://videovault.korczewski.de"
+      - "https://video.korczewski.de"
+    accessControlAllowHeaders:
+      - "Content-Type"
+      - "Authorization"
+      - "X-Requested-With"
+    accessControlAllowCredentials: true
+    accessControlMaxAge: 3600
+---
+# WebSocket Headers Middleware
+# Minimal headers for WebSocket connections (avoid interference)
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: websocket-headers
+  namespace: korczewski-infra
+  labels:
+    app: traefik
+spec:
+  headers:
+    customRequestHeaders:
+      X-Forwarded-Proto: "https"
+---
+# Default Chain Middleware
+# Combines security headers and compression
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: default-chain
+  namespace: korczewski-infra
+  labels:
+    app: traefik
+spec:
+  chain:
+    middlewares:
+      - name: security-headers
+        namespace: korczewski-infra
+      - name: compression
+        namespace: korczewski-infra
+---
+# WebSocket Chain Middleware
+# Minimal middleware for WebSocket routes
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: websocket-chain
+  namespace: korczewski-infra
+  labels:
+    app: traefik
+spec:
+  chain:
+    middlewares:
+      - name: websocket-headers
+        namespace: korczewski-infra
+---
+# Basic Auth Middleware for Dashboard
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: dashboard-auth
+  namespace: korczewski-infra
+  labels:
+    app: traefik
+spec:
+  basicAuth:
+    secret: traefik-dashboard-auth

@@ -1,0 +1,23 @@
+---
+# =============================================================================
+# VideoVault Service
+# =============================================================================
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: videovault
+  namespace: korczewski-services
+  labels:
+    app: videovault
+    app.kubernetes.io/name: videovault
+    app.kubernetes.io/component: media
+spec:
+  type: ClusterIP
+  ports:
+    - port: 5000
+      targetPort: 5000
+      protocol: TCP
+      name: http
+  selector:
+    app: videovault

@@ -1,0 +1,90 @@
+---
+# =============================================================================
+# PostgreSQL Configuration ConfigMap
+# =============================================================================
+# PostgreSQL server configuration files.
+# Tuned for 300 connections and moderate memory usage.
+# =============================================================================
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-config
+  namespace: korczewski-infra
+  labels:
+    app: postgres
+    app.kubernetes.io/name: postgres
+    app.kubernetes.io/component: database
+data:
+  postgresql.conf: |
+    # Connection Settings
+    listen_addresses = '*'
+    port = 5432
+    max_connections = 300
+    superuser_reserved_connections = 3
+
+    # Memory Settings
+    shared_buffers = 512MB
+    effective_cache_size = 1536MB
+    maintenance_work_mem = 128MB
+    work_mem = 16MB
+    wal_buffers = 16MB
+
+    # WAL Settings
+    min_wal_size = 1GB
+    max_wal_size = 4GB
+    wal_level = replica
+    synchronous_commit = on
+
+    # Query Planner
+    random_page_cost = 1.1
+    effective_io_concurrency = 200
+    default_statistics_target = 100
+
+    # Checkpoints
+    checkpoint_completion_target = 0.9
+    checkpoint_timeout = 10min
+
+    # Logging
+    logging_collector = off
+    log_destination = 'stderr'
+    log_min_duration_statement = 1000
+    log_checkpoints = on
+    log_connections = on
+    log_disconnections = on
+    log_lock_waits = on
+    log_statement = 'ddl'
+    log_timezone = 'UTC'
+
+    # Locale
+    timezone = 'UTC'
+    lc_messages = 'en_US.utf8'
+    lc_monetary = 'en_US.utf8'
+    lc_numeric = 'en_US.utf8'
+    lc_time = 'en_US.utf8'
+    default_text_search_config = 'pg_catalog.english'
+
+    # Connection Security
+    password_encryption = scram-sha-256
+
+  pg_hba.conf: |
+    # TYPE  DATABASE        USER            ADDRESS                 METHOD
+
+    # Local connections
+    local   all             all                                     scram-sha-256
+
+    # IPv4 local connections
+    host    all             all             127.0.0.1/32            scram-sha-256
+
+    # IPv6 local connections
+    host    all             all             ::1/128                 scram-sha-256
+
+    # Docker/Kubernetes networks
+    host    all             all             10.0.0.0/8              scram-sha-256
+    host    all             all             172.16.0.0/12           scram-sha-256
+    host    all             all             192.168.0.0/16          scram-sha-256
+
+    # Replication connections
+    local   replication     all                                     scram-sha-256
+    host    replication     all             127.0.0.1/32            scram-sha-256
+    host    replication     all             ::1/128                 scram-sha-256

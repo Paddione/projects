@@ -1,0 +1,223 @@
+# =============================================================================
+# Skaffold Configuration
+# =============================================================================
+# Enables iterative development with automatic rebuild and redeploy.
+#
+# Usage:
+#   skaffold dev                    # Development mode with hot reload
+#   skaffold run                    # Build and deploy once
+#   skaffold run --profile=prod     # Production build with image push
+#   skaffold build                  # Build images only
+#   skaffold delete                 # Remove deployed resources
+#
+# Prerequisites:
+#   - kubectl configured for your cluster
+#   - Docker running (for builds)
+#   - Skaffold installed (https://skaffold.dev/docs/install/)
+# =============================================================================
+
+apiVersion: skaffold/v4beta10
+kind: Config
+metadata:
+  name: korczewski-k8s
+
+# =============================================================================
+# Build Configuration
+# =============================================================================
+build:
+  local:
+    push: false
+    useBuildkit: true
+    concurrency: 2
+
+  artifacts:
+    # Auth Service
+    - image: korczewski/auth
+      context: ../auth
+      docker:
+        dockerfile: Dockerfile
+        target: production
+      sync:
+        manual:
+          - src: "src/**/*.ts"
+            dest: /app/src
+
+    # L2P Backend
+    - image: korczewski/l2p-backend
+      context: ..
+      docker:
+        dockerfile: l2p/backend/Dockerfile
+        target: production
+      sync:
+        manual:
+          - src: "l2p/backend/src/**/*.ts"
+            dest: /app/src
+
+    # L2P Frontend
+    - image: korczewski/l2p-frontend
+      context: ..
+      docker:
+        dockerfile: l2p/frontend/Dockerfile
+        target: production
+        buildArgs:
+          VITE_API_URL: "https://l2p.korczewski.de/api"
+          VITE_SOCKET_URL: "https://l2p.korczewski.de"
+          VITE_AUTH_SERVICE_URL: "https://auth.korczewski.de"
+
+    # Payment Service
+    - image: korczewski/payment
+      context: ..
+      docker:
+        dockerfile: payment/Dockerfile
+
+    # VideoVault
+    - image: korczewski/videovault
+      context: ..
+      docker:
+        dockerfile: VideoVault/Dockerfile.prod
+
+# =============================================================================
+# Deploy Configuration
+# =============================================================================
+deploy:
+  kubectl:
+    hooks:
+      before:
+        - host:
+            command: ["bash", "-c", "kubectl get ns korczewski-infra || kubectl apply -f base/namespaces.yaml"]
+    manifests:
+      - base/namespaces.yaml
+      - infrastructure/postgres/*.yaml
+      - infrastructure/traefik/*.yaml
+      - services/**/*.yaml
+
+# =============================================================================
+# Port Forwarding
+# =============================================================================
+portForward:
+  - resourceType: service
+    resourceName: postgres
+    namespace: korczewski-infra
+    port: 5432
+    localPort: 5432
+  - resourceType: service
+    resourceName: traefik-dashboard
+    namespace: korczewski-infra
+    port: 8080
+    localPort: 8080
+  - resourceType: service
+    resourceName: auth
+    namespace: korczewski-services
+    port: 5500
+    localPort: 5500
+  - resourceType: service
+    resourceName: l2p-backend
+    namespace: korczewski-services
+    port: 3001
+    localPort: 3001
+  - resourceType: service
+    resourceName: l2p-frontend
+    namespace: korczewski-services
+    port: 80
+    localPort: 3000
+  - resourceType: service
+    resourceName: payment
+    namespace: korczewski-services
+    port: 3000
+    localPort: 3004
+  - resourceType: service
+    resourceName: videovault
+    namespace: korczewski-services
+    port: 5000
+    localPort: 5100
+
+# =============================================================================
+# Profiles
+# =============================================================================
+profiles:
+  # Development profile - local builds, no push
+  - name: dev
+    build:
+      local:
+        push: false
+    deploy:
+      kubectl:
+        manifests:
+          - base/namespaces.yaml
+          - services/**/*.yaml
+
+  # Production profile - push to registry
+  - name: prod
+    build:
+      local:
+        push: true
+      tagPolicy:
+        sha256: {}
+
+  # Auth only
+  - name: auth
+    build:
+      artifacts:
+        - image: korczewski/auth
+          context: ../auth
+          docker:
+            dockerfile: Dockerfile
+            target: production
+    deploy:
+      kubectl:
+        manifests:
+          - services/auth/*.yaml
+
+  # L2P only (backend + frontend)
+  - name: l2p
+    build:
+      artifacts:
+        - image: korczewski/l2p-backend
+          context: ..
+          docker:
+            dockerfile: l2p/backend/Dockerfile
+            target: production
+        - image: korczewski/l2p-frontend
+          context: ..
+          docker:
+            dockerfile: l2p/frontend/Dockerfile
+            target: production
+    deploy:
+      kubectl:
+        manifests:
+          - services/l2p-backend/*.yaml
+          - services/l2p-frontend/*.yaml
+
+  # Payment only
+  - name: payment
+    build:
+      artifacts:
+        - image: korczewski/payment
+          context: ..
+          docker:
+            dockerfile: payment/Dockerfile
+    deploy:
+      kubectl:
+        manifests:
+          - services/payment/*.yaml
+
+  # VideoVault only
+  - name: videovault
+    build:
+      artifacts:
+        - image: korczewski/videovault
+          context: ..
+          docker:
+            dockerfile: VideoVault/Dockerfile.prod
+    deploy:
+      kubectl:
+        manifests:
+          - services/videovault/*.yaml
+
+  # Infrastructure only (no builds)
+  - name: infra
+    deploy:
+      kubectl:
+        manifests:
+          - base/namespaces.yaml
+          - infrastructure/**/*.yaml

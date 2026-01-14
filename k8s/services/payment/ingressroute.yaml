@@ -1,0 +1,30 @@
+---
+# =============================================================================
+# Payment Service IngressRoute
+# =============================================================================
+
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: payment
+  namespace: korczewski-services
+  labels:
+    app: payment
+    app.kubernetes.io/name: payment
+    app.kubernetes.io/component: payment
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`payment.korczewski.de`)
+      kind: Rule
+      services:
+        - name: payment
+          port: 3000
+      middlewares:
+        - name: security-headers
+          namespace: korczewski-infra
+        - name: compression
+          namespace: korczewski-infra
+  tls:
+    secretName: korczewski-tls

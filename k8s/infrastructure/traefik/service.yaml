@@ -1,0 +1,52 @@
+---
+# =============================================================================
+# Traefik Services
+# =============================================================================
+# LoadBalancer service for external traffic.
+# ClusterIP service for internal dashboard access.
+# =============================================================================
+
+# Main LoadBalancer Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: traefik
+  namespace: korczewski-infra
+  labels:
+    app: traefik
+    app.kubernetes.io/name: traefik
+    app.kubernetes.io/component: ingress-controller
+spec:
+  type: LoadBalancer
+  externalTrafficPolicy: Local
+  ports:
+    - name: web
+      port: 80
+      targetPort: web
+      protocol: TCP
+    - name: websecure
+      port: 443
+      targetPort: websecure
+      protocol: TCP
+  selector:
+    app: traefik
+---
+# Dashboard Service (internal only)
+apiVersion: v1
+kind: Service
+metadata:
+  name: traefik-dashboard
+  namespace: korczewski-infra
+  labels:
+    app: traefik
+    app.kubernetes.io/name: traefik
+    app.kubernetes.io/component: dashboard
+spec:
+  type: ClusterIP
+  ports:
+    - name: dashboard
+      port: 8080
+      targetPort: dashboard
+      protocol: TCP
+  selector:
+    app: traefik

@@ -1,0 +1,22 @@
+# =============================================================================
+# VideoVault Kustomization
+# =============================================================================
+
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+metadata:
+  name: videovault
+
+namespace: korczewski-services
+
+commonLabels:
+  app.kubernetes.io/part-of: korczewski
+  app.kubernetes.io/component: media
+  tier: services
+
+resources:
+  - deployment.yaml
+  - service.yaml
+  - pvc.yaml
+  - ingressroute.yaml

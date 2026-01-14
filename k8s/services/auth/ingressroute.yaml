@@ -1,0 +1,30 @@
+---
+# =============================================================================
+# Auth Service IngressRoute
+# =============================================================================
+
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: auth
+  namespace: korczewski-services
+  labels:
+    app: auth
+    app.kubernetes.io/name: auth
+    app.kubernetes.io/component: authentication
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`auth.korczewski.de`)
+      kind: Rule
+      services:
+        - name: auth
+          port: 5500
+      middlewares:
+        - name: security-headers
+          namespace: korczewski-infra
+        - name: compression
+          namespace: korczewski-infra
+  tls:
+    secretName: korczewski-tls

@@ -1,0 +1,26 @@
+---
+# =============================================================================
+# Kubernetes Namespaces for Korczewski Infrastructure
+# =============================================================================
+# Two main namespaces to separate infrastructure from application services.
+# =============================================================================
+
+# Infrastructure namespace: PostgreSQL, Traefik, NFS provisioner
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: korczewski-infra
+  labels:
+    app.kubernetes.io/part-of: korczewski
+    app.kubernetes.io/managed-by: kubectl
+    tier: infrastructure
+---
+# Services namespace: auth, l2p, payment, videovault
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: korczewski-services
+  labels:
+    app.kubernetes.io/part-of: korczewski
+    app.kubernetes.io/managed-by: kubectl
+    tier: services

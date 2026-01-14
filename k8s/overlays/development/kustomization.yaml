@@ -1,0 +1,50 @@
+# =============================================================================
+# Development Overlay
+# =============================================================================
+# Adjustments for development environment:
+# - Lower resource limits
+# - Single replicas
+# - Debug logging
+# =============================================================================
+
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+metadata:
+  name: korczewski-dev
+
+# Include base and all services
+resources:
+  - ../../base
+  - ../../infrastructure/postgres
+  - ../../infrastructure/traefik
+  - ../../services/auth
+  - ../../services/l2p-backend
+  - ../../services/l2p-frontend
+  - ../../services/payment
+  - ../../services/videovault
+
+# Common labels for development
+commonLabels:
+  environment: development
+
+# Patches for development settings
+patches:
+  # Reduce replicas for all deployments
+  - patch: |-
+      - op: replace
+        path: /spec/replicas
+        value: 1
+    target:
+      kind: Deployment
+
+  # Reduce resource limits
+  - patch: |-
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/limits/memory
+        value: "512Mi"
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/limits/cpu
+        value: "500m"
+    target:
+      kind: Deployment

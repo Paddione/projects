@@ -1,0 +1,117 @@
+---
+# =============================================================================
+# Auth Service Deployment
+# =============================================================================
+# Centralized authentication service with JWT, OAuth, and session management.
+# =============================================================================
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auth
+  namespace: korczewski-services
+  labels:
+    app: auth
+    app.kubernetes.io/name: auth
+    app.kubernetes.io/component: authentication
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: auth
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: auth
+        app.kubernetes.io/name: auth
+        app.kubernetes.io/component: authentication
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+        runAsGroup: 1001
+        fsGroup: 1001
+      containers:
+        - name: auth
+          image: korczewski/auth:latest
+          imagePullPolicy: Always
+          ports:
+            - name: http
+              containerPort: 5500
+              protocol: TCP
+          envFrom:
+            - secretRef:
+                name: auth-credentials
+          env:
+            - name: NODE_ENV
+              value: "production"
+            - name: PORT
+              value: "5500"
+            - name: ACCESS_TOKEN_EXPIRY
+              value: "15m"
+            - name: REFRESH_TOKEN_EXPIRY
+              value: "7d"
+            - name: BCRYPT_ROUNDS
+              value: "12"
+            - name: MAX_LOGIN_ATTEMPTS
+              value: "5"
+            - name: ACCOUNT_LOCKOUT_DURATION
+              value: "900000"
+            - name: APP_URL
+              value: "https://auth.korczewski.de"
+            - name: COOKIE_DOMAIN
+              value: ".korczewski.de"
+            - name: COOKIE_SECURE
+              value: "true"
+            - name: GOOGLE_REDIRECT_URI
+              value: "https://auth.korczewski.de/api/oauth/google/callback"
+            - name: SMTP_HOST
+              value: "smtp.gmail.com"
+            - name: SMTP_PORT
+              value: "587"
+            - name: SMTP_SECURE
+              value: "false"
+            - name: ALLOWED_ORIGINS
+              value: "https://l2p.korczewski.de,https://auth.korczewski.de,https://payment.korczewski.de,https://videovault.korczewski.de"
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 5500
+            initialDelaySeconds: 40
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 5500
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 5500
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 5
+            failureThreshold: 30
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: false
+            capabilities:
+              drop:
+                - ALL

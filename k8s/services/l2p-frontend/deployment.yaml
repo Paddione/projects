@@ -1,0 +1,83 @@
+---
+# =============================================================================
+# L2P Frontend Deployment
+# =============================================================================
+# React frontend served by Nginx.
+# Static assets built with Vite and served efficiently.
+# =============================================================================
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: l2p-frontend
+  namespace: korczewski-services
+  labels:
+    app: l2p-frontend
+    app.kubernetes.io/name: l2p-frontend
+    app.kubernetes.io/component: frontend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: l2p-frontend
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: l2p-frontend
+        app.kubernetes.io/name: l2p-frontend
+        app.kubernetes.io/component: frontend
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+        runAsGroup: 1001
+      containers:
+        - name: l2p-frontend
+          image: korczewski/l2p-frontend:latest
+          imagePullPolicy: Always
+          ports:
+            - name: http
+              containerPort: 80
+              protocol: TCP
+          # Note: Frontend env vars are baked into the build
+          # These are just for reference/debugging
+          env:
+            - name: VITE_API_URL
+              value: "https://l2p.korczewski.de/api"
+            - name: VITE_SOCKET_URL
+              value: "https://l2p.korczewski.de"
+            - name: VITE_AUTH_SERVICE_URL
+              value: "https://auth.korczewski.de"
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "50m"
+            limits:
+              memory: "256Mi"
+              cpu: "500m"
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL

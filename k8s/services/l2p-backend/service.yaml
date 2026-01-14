@@ -1,0 +1,26 @@
+---
+# =============================================================================
+# L2P Backend Service
+# =============================================================================
+# ClusterIP service for internal access.
+# Socket.io sticky sessions handled by Traefik.
+# =============================================================================
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: l2p-backend
+  namespace: korczewski-services
+  labels:
+    app: l2p-backend
+    app.kubernetes.io/name: l2p-backend
+    app.kubernetes.io/component: backend
+spec:
+  type: ClusterIP
+  ports:
+    - port: 3001
+      targetPort: 3001
+      protocol: TCP
+      name: http
+  selector:
+    app: l2p-backend

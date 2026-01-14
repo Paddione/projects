@@ -1,0 +1,34 @@
+---
+# =============================================================================
+# NFS Storage Class
+# =============================================================================
+# Default storage class that provisions volumes from NFS.
+# Each PVC gets its own subdirectory on the NFS server.
+# =============================================================================
+
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: nfs-storage
+  labels:
+    app: nfs-subdir-external-provisioner
+  annotations:
+    storageclass.kubernetes.io/is-default-class: "true"
+provisioner: cluster.local/nfs-subdir-external-provisioner
+parameters:
+  # Path pattern for PVC directories: namespace/pvcname
+  pathPattern: "${.PVC.namespace}/${.PVC.name}"
+  # What to do when PVC is deleted
+  onDelete: retain
+# Keep data when PVC is deleted
+reclaimPolicy: Retain
+# Bind PVs immediately (not wait for first consumer)
+volumeBindingMode: Immediate
+# Allow volume expansion
+allowVolumeExpansion: true
+# Mount options
+mountOptions:
+  - soft
+  - timeo=100
+  - retrans=3
+  - nfsvers=4

@@ -1,0 +1,32 @@
+---
+# =============================================================================
+# VideoVault IngressRoute
+# =============================================================================
+# Accessible via videovault.korczewski.de or video.korczewski.de
+# =============================================================================
+
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: videovault
+  namespace: korczewski-services
+  labels:
+    app: videovault
+    app.kubernetes.io/name: videovault
+    app.kubernetes.io/component: media
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`videovault.korczewski.de`) || Host(`video.korczewski.de`)
+      kind: Rule
+      services:
+        - name: videovault
+          port: 5000
+      middlewares:
+        - name: security-headers
+          namespace: korczewski-infra
+        - name: compression
+          namespace: korczewski-infra
+  tls:
+    secretName: korczewski-tls

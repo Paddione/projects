@@ -1,0 +1,114 @@
+---
+# =============================================================================
+# VideoVault Deployment
+# =============================================================================
+# Client-first video management with File System Access API.
+# Requires persistent storage for media files and thumbnails.
+# =============================================================================
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: videovault
+  namespace: korczewski-services
+  labels:
+    app: videovault
+    app.kubernetes.io/name: videovault
+    app.kubernetes.io/component: media
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: videovault
+  strategy:
+    type: Recreate  # Single replica with persistent storage
+  template:
+    metadata:
+      labels:
+        app: videovault
+        app.kubernetes.io/name: videovault
+        app.kubernetes.io/component: media
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+        runAsGroup: 1001
+        fsGroup: 1001
+      containers:
+        - name: videovault
+          image: korczewski/videovault:latest
+          imagePullPolicy: Always
+          ports:
+            - name: http
+              containerPort: 5000
+              protocol: TCP
+          envFrom:
+            - secretRef:
+                name: videovault-credentials
+          env:
+            - name: NODE_ENV
+              value: "production"
+            - name: PORT
+              value: "5000"
+            - name: MEDIA_ROOT
+              value: "/app/media"
+            - name: PROCESSED_MEDIA_PATH
+              value: "/app/media/Processed"
+            - name: INBOX_DIR
+              value: "/app/media/Inbox"
+            - name: PROCESSED_DIR
+              value: "/app/media/Processed"
+            - name: THUMBNAILS_DIR
+              value: "/app/media/Processed/Thumbnails"
+            - name: CORS_ORIGINS
+              value: "https://videovault.korczewski.de,https://video.korczewski.de"
+            - name: TRUST_PROXY
+              value: "true"
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "1Gi"
+              cpu: "1000m"
+          volumeMounts:
+            - name: media-storage
+              mountPath: /app/media
+            - name: thumbnails-storage
+              mountPath: /app/media/Processed/Thumbnails
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: 5000
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: 5000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          startupProbe:
+            httpGet:
+              path: /api/health
+              port: 5000
+            initialDelaySeconds: 15
+            periodSeconds: 5
+            timeoutSeconds: 5
+            failureThreshold: 30
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+      volumes:
+        - name: media-storage
+          persistentVolumeClaim:
+            claimName: videovault-media
+        - name: thumbnails-storage
+          persistentVolumeClaim:
+            claimName: videovault-thumbnails
