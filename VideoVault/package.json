@@ -176,6 +176,6 @@
   },
   "optionalDependencies": {
     "bufferutil": "^4.0.8",
-    "canvas": "^2.11.2"
+    "canvas": "^3.2.1"
   }
 }
