@@ -70,7 +70,7 @@ services:
       # Mount source code for hot reload
       - ./client:/app/client:cached
       - ./server:/app/server:cached
-      - ./shared:/app/shared:cached
+      - ../shared-infrastructure:/app/shared-infrastructure:cached
       - ./docs:/app/docs:cached
       - ./scripts:/app/scripts:cached
 
@@ -137,8 +137,8 @@ services:
           ignore:
             - "**/*.test.ts"
         - action: sync
-          path: ./shared
-          target: /app/shared
+          path: ../shared-infrastructure/shared/videovault
+          target: /app/shared-infrastructure/shared/videovault
         - action: rebuild
           path: ./package.json
         - action: sync+restart

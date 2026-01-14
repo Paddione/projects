@@ -1,5 +1,5 @@
 import { FullConfig } from '@playwright/test';
-import { TestEnvironment } from '../../shared/test-config/dist/TestEnvironment.js';
+import { TestEnvironment } from '../../../shared-infrastructure/shared/l2p/test-config/dist/TestEnvironment.js';
 
 /**
  * Global teardown for Playwright tests

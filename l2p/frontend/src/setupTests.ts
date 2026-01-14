@@ -23,7 +23,7 @@ if (typeof window !== 'undefined') {
   // Initialize test environment
   let testContext;
   try {
-    const { TestUtilities } = require('../../shared/test-config/dist/cjs/TestUtilities');
+    const { TestUtilities } = require('../../../shared-infrastructure/shared/l2p/test-config/dist/cjs/TestUtilities');
     const { environment } = TestUtilities.getCurrentContext();
     testContext = TestUtilities.configManager?.getEnvironmentConfig(environment);
   } catch {

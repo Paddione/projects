@@ -1,7 +1,7 @@
 # Shared Infrastructure
 
 ## Purpose
-Provides centralized services used across the monorepo, primarily the shared PostgreSQL instance. This avoids container sprawl and simplifies database management.
+Provides centralized services used across the monorepo, primarily the shared PostgreSQL instance. This avoids container sprawl and simplifies database management. Shared assets now live under `shared-infrastructure/shared/`.
 
 ## Components
 - **PostgreSQL 15**: Central database engine.
@@ -29,6 +29,7 @@ The shared instance hosts multiple isolated databases:
 
 ## Key Files
 - `docker-compose.yml` - Defines the `shared-postgres` service.
+- `shared/` - Consolidated shared assets (design system, MCP tooling, per-service shared packages).
 - `init-databases.sql` - Script to bootstrap the databases.
 - `postgresql.conf` - Database performance tuning.
 

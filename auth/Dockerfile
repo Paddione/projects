@@ -9,7 +9,7 @@ RUN apt-get update && apt-get install -y \
 WORKDIR /app
 
 # Copy shared design system
-COPY shared-design-system /app/shared-design-system
+COPY shared-infrastructure/shared/design-system /app/shared-infrastructure/shared/design-system
 
 # Copy package files
 COPY auth/package*.json ./
@@ -23,7 +23,7 @@ CMD ["npm", "run", "dev"]
 # Build stage
 FROM base AS build
 RUN npm ci
-COPY shared-design-system /app/shared-design-system
+COPY shared-infrastructure/shared/design-system /app/shared-infrastructure/shared/design-system
 COPY auth/. .
 # Build backend
 RUN npm run build

@@ -152,9 +152,11 @@ npm run verify
 Run `npm run db:push` after enabling Postgres to create/update tables.
 
 ### Shared Types & Errors
-- Error codes and error payload types live in `shared/errors.ts` and are used by both client and server.
-- Common API payload schemas (Zod) are in `shared/api.ts` (e.g., app settings endpoints).
+- Error codes and error payload types live in `shared-infrastructure/shared/videovault/errors.ts` and are used by both client and server.
+- Common API payload schemas (Zod) are in `shared-infrastructure/shared/videovault/api.ts` (e.g., app settings endpoints).
 - Prefer importing `ErrorCodes`, `ErrorCode`, and `StoredError` from `@shared/errors` instead of redefining on the client.
+
+**Local shared path**: `VideoVault/shared-infrastructure` is a symlink to `../shared-infrastructure` so Vite can resolve shared modules and their dependencies during builds. Docker mounts `shared-infrastructure` into `/app/shared-infrastructure` for production builds.
 
 ### Settings Service
 - `AppSettingsService` exposes typed helpers: `get<T>(key, parser?)` and `set<T>(key, value, serializer?)`.

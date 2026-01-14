@@ -5,7 +5,7 @@ import pg from 'pg';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import { sql } from 'drizzle-orm';
 import * as dotenv from 'dotenv';
-import { CORRUPT_PERFORMERS } from '../shared/corrupt-performers.ts';
+import { CORRUPT_PERFORMERS } from '../shared-infrastructure/shared/videovault/corrupt-performers.ts';
 
 const CORRUPT_PERFORMERS_SET = new Set(CORRUPT_PERFORMERS.map((p: string) => p.toLowerCase()));
 

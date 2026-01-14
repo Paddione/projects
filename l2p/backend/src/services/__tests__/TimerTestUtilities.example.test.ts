@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
-import { TimerTestUtils, AsyncCleanupTestUtils, ConsoleTestUtils } from '../../../../shared/test-utils/timer-test-utils';
+import { TimerTestUtils, AsyncCleanupTestUtils, ConsoleTestUtils } from '../../../../../shared-infrastructure/shared/l2p/test-utils/timer-test-utils';
 
 // Skip this entire suite during coverage runs or when explicitly requested
 const d = (process.env.TEST_COVERAGE === '1' || process.env.SKIP_TIMER_TESTS === 'true') ? describe.skip : describe;

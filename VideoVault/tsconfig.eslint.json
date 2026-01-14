@@ -6,7 +6,7 @@
     "client/**/*.test.tsx",
     "client/**/*.spec.ts",
     "client/**/*.spec.tsx",
-    "shared/**/*",
+    "shared-infrastructure/shared/videovault/**/*",
     "server/**/*",
     "scripts/**/*",
     "e2e/**/*.ts",

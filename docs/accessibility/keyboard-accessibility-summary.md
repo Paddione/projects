@@ -28,7 +28,7 @@ Successfully implemented comprehensive keyboard accessibility across the entire 
 
 **L2P** (`l2p/frontend/src/index.css`):
 ```css
-@import '../../../shared-design-system/cybervault.css';
+@import '../../../shared-infrastructure/shared/design-system/cybervault.css';
 @import './cybervault-l2p.css';
 ```
 
@@ -49,7 +49,7 @@ import './styles/cybervault-auth.css';
 
 ### Design System Files Created
 
-1. **`shared-design-system/cybervault.css`** (1,384 lines)
+1. **`shared-infrastructure/shared/design-system/cybervault.css`** (1,384 lines)
    - Base design tokens
    - Universal components
    - Accessibility features
@@ -453,9 +453,9 @@ No performance impact:
 - `auth/KEYBOARD_SHORTCUTS.md`
 
 ### Design System
-- `shared-design-system/cybervault.css` - Base system
-- `shared-design-system/COMPONENT_EXAMPLES.md` - Usage guide
-- `shared-design-system/KEYBOARD_NAVIGATION_TEST.md` - Testing guide
+- `shared-infrastructure/shared/design-system/cybervault.css` - Base system
+- `shared-infrastructure/shared/design-system/COMPONENT_EXAMPLES.md` - Usage guide
+- `shared-infrastructure/shared/design-system/KEYBOARD_NAVIGATION_TEST.md` - Testing guide
 
 ### Test Suites
 - `l2p/frontend/e2e/tests/accessibility/keyboard-navigation.spec.ts`

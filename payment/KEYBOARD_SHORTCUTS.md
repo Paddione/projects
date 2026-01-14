@@ -384,9 +384,9 @@ Vote on features you'd like:
 ## Getting Help
 
 ### Documentation
-- **Full test guide**: `/shared-design-system/KEYBOARD_NAVIGATION_TEST.md`
+- **Full test guide**: `/shared-infrastructure/shared/design-system/KEYBOARD_NAVIGATION_TEST.md`
 - **Issue tracker**: `/ACCESSIBILITY_ISSUES.md`
-- **Design system**: `/shared-design-system/cybervault.css`
+- **Design system**: `/shared-infrastructure/shared/design-system/cybervault.css`
 
 ### Support
 - **Keyboard issues**: Report via GitHub with "keyboard-navigation" label

@@ -107,7 +107,7 @@ server/
   ├── lib/                # Server utilities
   └── routes.ts           # Route registration
 
-shared/
+shared-infrastructure/shared/videovault/
   ├── errors.ts           # Error codes and schemas
   ├── api.ts              # API payload schemas (Zod)
   └── ...                 # Other shared types
@@ -191,6 +191,8 @@ import { ErrorCodes } from '@shared/errors';
 - `tsconfig.json` → `paths`
 - `vite.config.ts` → `resolve.alias`
 - `vitest.config.ts` → `resolve.alias` (includes test stubs)
+
+**Shared path**: `VideoVault/shared-infrastructure` is a symlink to `../shared-infrastructure` so `@shared` and `@design-system` resolve with their dependencies during local and Docker builds.
 
 ## Testing Strategy
 

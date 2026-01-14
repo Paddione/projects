@@ -219,7 +219,7 @@ async function watchTests(testType: TestType, options: TestRunnerOptions): Promi
   const watchPaths = [
     'frontend/src/**/*.{ts,tsx}',
     'backend/src/**/*.ts',
-    'shared/**/*.ts'
+    '../shared-infrastructure/shared/l2p/**/*.ts'
   ];
 
   const watcher = chokidar.watch(watchPaths, {

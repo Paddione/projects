@@ -6,8 +6,8 @@ const path = require('path');
 async function testRegistry() {
   console.log('🧪 Testing TestFileRegistry...\n');
   
-  // Use the project root (two levels up from shared/test-config)
-  const projectRoot = path.resolve(__dirname, '../..');
+  // Use the L2P root (shared-infrastructure/shared/l2p/test-config -> ../../../../l2p)
+  const projectRoot = path.resolve(__dirname, '../../../../l2p');
   console.log(`Project root: ${projectRoot}\n`);
   
   const registry = new TestFileRegistry(projectRoot);

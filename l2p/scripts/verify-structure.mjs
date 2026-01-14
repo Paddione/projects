@@ -69,7 +69,7 @@ function enforceTestPlacement(baseDir) {
 enforceTestPlacement('frontend/src');
 enforceTestPlacement('backend/src');
 
-const sharedDir = path.join(rootDir, 'shared');
+const sharedDir = path.join(rootDir, '..', 'shared-infrastructure', 'shared', 'l2p');
 const sharedPackageAllowlist = new Set(['test-utils']);
 if (fs.existsSync(sharedDir)) {
   const sharedPackages = fs.readdirSync(sharedDir, { withFileTypes: true }).filter(d => d.isDirectory());
@@ -79,7 +79,7 @@ if (fs.existsSync(sharedDir)) {
     }
     const packageJsonPath = path.join(sharedDir, dirent.name, 'package.json');
     if (!fs.existsSync(packageJsonPath)) {
-      errors.push(`Shared package missing package.json: shared/${dirent.name}`);
+      errors.push(`Shared package missing package.json: shared-infrastructure/shared/l2p/${dirent.name}`);
     }
   }
 }

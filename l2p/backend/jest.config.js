@@ -35,12 +35,12 @@ const config = {
   },
   moduleFileExtensions: ['ts', 'js', 'mjs', 'cjs', 'json'],
   moduleNameMapper: {
-    '^@shared/(.*)$': '<rootDir>/../shared/$1',
-    '^@test-config/(.*)$': '<rootDir>/../shared/test-config/$1',
+    '^@shared/(.*)$': '<rootDir>/../../shared-infrastructure/shared/l2p/$1',
+    '^@test-config/(.*)$': '<rootDir>/../../shared-infrastructure/shared/l2p/test-config/$1',
     '^@/(.*)$': '<rootDir>/src/$1',
     // Map shared error-handling imports - keep ESM for Jest ESM mode
-    '^../../shared/error-handling/dist/index\\.js$': '<rootDir>/../shared/error-handling/dist/index.js',
-    '^../../../shared/error-handling/dist/index\\.js$': '<rootDir>/../shared/error-handling/dist/index.js',
+    '^../../shared/error-handling/dist/index\\.js$': '<rootDir>/../../shared-infrastructure/shared/l2p/error-handling/dist/index.js',
+    '^../../../shared/error-handling/dist/index\\.js$': '<rootDir>/../../shared-infrastructure/shared/l2p/error-handling/dist/index.js',
     // Map server imports for route tests
     '^../../server\\.js$': '<rootDir>/src/server.ts',
     '^../../server$': '<rootDir>/src/server.ts',

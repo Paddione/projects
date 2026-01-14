@@ -5,8 +5,8 @@
  * Provides commands for managing and validating test configuration
  */
 
-import { TestConfigManager } from '../shared/test-config/dist/TestConfigManager.js';
-import { TestUtilities } from '../shared/test-config/dist/TestUtilities.js';
+import { TestConfigManager } from '../../shared-infrastructure/shared/l2p/test-config/dist/TestConfigManager.js';
+import { TestUtilities } from '../../shared-infrastructure/shared/l2p/test-config/dist/TestUtilities.js';
 
 const commands = {
   validate: validateConfig,

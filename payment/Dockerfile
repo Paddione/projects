@@ -15,7 +15,7 @@ FROM base AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 # Copy shared design system
-COPY shared-design-system ../shared-design-system
+COPY shared-infrastructure/shared/design-system ../shared-infrastructure/shared/design-system
 COPY payment/. .
 
 # Adjust schema in container if needed, but better to edit file

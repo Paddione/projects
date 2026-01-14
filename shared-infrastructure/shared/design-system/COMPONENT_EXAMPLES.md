@@ -22,7 +22,7 @@ Each application imports the base Cybervault system and its specific theme:
 
 **L2P Frontend** (`l2p/frontend/src/index.css`):
 ```css
-@import '../../../shared-design-system/cybervault.css';
+@import '../../../shared-infrastructure/shared/design-system/cybervault.css';
 @import './cybervault-l2p.css';
 ```
 
@@ -924,7 +924,7 @@ This is already included in all theme files.
 ## Need Help?
 
 This design system is fully implemented in:
-- `/shared-design-system/cybervault.css` - Base system
+- `/shared-infrastructure/shared/design-system/cybervault.css` - Base system
 - `/l2p/frontend/src/cybervault-l2p.css` - Gaming theme
 - `/VideoVault/client/src/styles/cybervault-videovault.css` - Media theme
 - `/payment/app/cybervault-payment.css` - Financial theme

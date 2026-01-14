@@ -91,7 +91,7 @@ module.exports = async function globalSetup() {
 
     try {
       // Try to load test utilities if available
-      const { TestUtilities } = await import('../../../shared/test-config/dist/TestUtilities.js');
+      const { TestUtilities } = await import('../../../../shared-infrastructure/shared/l2p/test-config/dist/TestUtilities.js');
       
       // Get test context from environment
       const { environment, testType } = TestUtilities.getCurrentContext();

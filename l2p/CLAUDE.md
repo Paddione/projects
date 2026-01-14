@@ -170,7 +170,7 @@ l2p/
 │   │   ├── page-objects/  # Page object models
 │   │   └── fixtures/      # Test fixtures
 │   └── package.json
-├── shared/                # Cross-package utilities
+├── ../shared-infrastructure/shared/l2p/  # Cross-package utilities
 │   ├── error-handling/    # Centralized error handling
 │   ├── test-config/       # Test configuration system
 │   └── test-utils/        # Test utilities
@@ -335,7 +335,7 @@ npm run stop:docker-test       # Cleanup
 
 ### Test Configuration System
 
-**Centralized test config** in `shared/test-config/`:
+**Centralized test config** in `shared-infrastructure/shared/l2p/test-config/`:
 - `test-config.yml`: Single source of truth for test settings
 - Environment-specific configs (local/CI/Docker)
 - Test-type configs (unit/integration/E2E)

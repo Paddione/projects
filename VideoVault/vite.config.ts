@@ -1,7 +1,14 @@
 import { defineConfig } from "vitest/config";
 import react from "@vitejs/plugin-react";
 import path from "path";
+import fs from "fs";
 import runtimeErrorOverlay from "@replit/vite-plugin-runtime-error-modal";
+
+// Prefer a local symlinked shared-infrastructure (for node_modules resolution).
+// Fall back to the repo root shared-infrastructure when the symlink isn't present.
+const sharedRootLocal = path.resolve(import.meta.dirname, "shared-infrastructure", "shared");
+const sharedRootExternal = path.resolve(import.meta.dirname, "..", "shared-infrastructure", "shared");
+const sharedRoot = fs.existsSync(sharedRootLocal) ? sharedRootLocal : sharedRootExternal;
 
 export default defineConfig({
   plugins: [
@@ -19,9 +26,9 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": path.resolve(import.meta.dirname, "client", "src"),
-      "@shared": path.resolve(import.meta.dirname, "shared"),
+      "@shared": path.resolve(sharedRoot, "videovault"),
       "@assets": path.resolve(import.meta.dirname, "attached_assets"),
-      "@design-system": path.resolve(import.meta.dirname, "shared-design-system"),
+      "@design-system": path.resolve(sharedRoot, "design-system"),
     },
   },
   root: path.resolve(import.meta.dirname, "client"),

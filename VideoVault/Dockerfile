@@ -25,12 +25,11 @@ COPY vite.config.ts ./
 RUN npm install -g npm@11 && NODE_ENV=development npm install --legacy-peer-deps
 
 # Create directories that will be mounted as volumes
-RUN mkdir -p client server shared docs
+RUN mkdir -p client server docs /app/shared-infrastructure/shared/videovault /app/shared-infrastructure/shared/design-system
 
 # Copy initial source code (will be overridden by volume mounts in development)
 COPY client/ ./client/
 COPY server/ ./server/
-COPY shared/ ./shared/
 COPY scripts/ ./scripts/
 
 # Expose port for development server

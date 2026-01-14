@@ -1,6 +1,6 @@
 # Shared Infrastructure
 
-This directory hosts the centralized PostgreSQL instance used by all services in the monorepo.
+This directory hosts the centralized PostgreSQL instance used by all services in the monorepo, plus the shared assets that were consolidated here.
 
 ## Overview
 
@@ -10,6 +10,18 @@ A single PostgreSQL container (`shared-postgres`) provides isolated databases an
 - `l2p_db` (user: `l2p_user`)
 - `payment_db` (user: `payment_user`)
 - `videovault_db` (user: `videovault_user`)
+
+## Shared Assets (Consolidated)
+
+Shared packages and assets now live under `shared-infrastructure/shared/`:
+
+- `shared/design-system/` - global CSS design system and accessibility references
+- `shared/postgres-mcp/` - MCP server for shared Postgres access
+- `shared/l2p/` - L2P shared tooling (test-config, error-handling, test-utils)
+- `shared/videovault/` - VideoVault shared schemas/types/errors
+- `shared/videovault-design-system/` - legacy VideoVault-specific CSS bundle
+
+See `shared-infrastructure/shared/README.md` for usage details.
 
 ### Benefits
 

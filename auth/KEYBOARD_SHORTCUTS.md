@@ -409,7 +409,7 @@ Keyboard flow:
 ## Getting Help
 
 ### Documentation
-- **Full test guide**: `/shared-design-system/KEYBOARD_NAVIGATION_TEST.md`
+- **Full test guide**: `/shared-infrastructure/shared/design-system/KEYBOARD_NAVIGATION_TEST.md`
 - **Issue tracker**: `/ACCESSIBILITY_ISSUES.md`
 - **Security audit**: `/auth/SECURITY_AUDIT_REPORT.md`
 

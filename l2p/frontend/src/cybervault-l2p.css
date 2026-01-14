@@ -4,7 +4,7 @@
  * High energy, neon accents, fast-paced visual hierarchy
  */
 
-@import url('../../../shared-design-system/cybervault.css');
+@import url('../../../shared-infrastructure/shared/design-system/cybervault.css');
 
 :root {
   /* L2P-specific color overrides - Competitive Gaming Energy */

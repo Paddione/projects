@@ -26,7 +26,7 @@ RUN npm install --legacy-peer-deps && \
 
 # Copy source code and shared design system
 COPY --chown=nodejs:nodejs l2p/frontend/ ./
-COPY --chown=nodejs:nodejs shared-design-system/ ../shared-design-system/
+COPY --chown=nodejs:nodejs shared-infrastructure/shared/design-system/ ../shared-infrastructure/shared/design-system/
 
 # Create necessary directories with proper permissions
 RUN mkdir -p coverage test-results playwright-report .vite && \
@@ -69,7 +69,7 @@ ARG VITE_APP_ENVIRONMENT=production
 # Copy package.json first if it's different from dependencies stage
 COPY --chown=nodejs:nodejs l2p/frontend/package*.json ./
 # Copy shared design system first
-COPY --chown=nodejs:nodejs shared-design-system/ ../shared-design-system/
+COPY --chown=nodejs:nodejs shared-infrastructure/shared/design-system/ ../shared-infrastructure/shared/design-system/
 # Copy source files without overwriting node_modules
 COPY --chown=nodejs:nodejs l2p/frontend/src ./src
 COPY --chown=nodejs:nodejs l2p/frontend/public ./public

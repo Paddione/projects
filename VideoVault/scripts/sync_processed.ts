@@ -6,7 +6,7 @@ import fs from 'node:fs/promises';
 import { fileURLToPath } from 'url';
 import crypto from 'crypto';
 import { spawn } from 'child_process';
-import { videos, directoryRoots } from '../shared/schema';
+import { videos, directoryRoots } from '../shared-infrastructure/shared/videovault/schema';
 import { eq } from 'drizzle-orm';
 
 const { Client } = pg;

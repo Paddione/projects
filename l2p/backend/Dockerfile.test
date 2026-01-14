@@ -44,7 +44,7 @@ ENV CI=true
 COPY --chown=nodejs:nodejs backend/ .
 
 # Copy shared modules
-COPY --chown=nodejs:nodejs shared/ ./shared
+COPY --chown=nodejs:nodejs shared-infrastructure/shared/l2p /shared-infrastructure/shared/l2p
 
 # Install all dependencies (including dev dependencies for testing)
 RUN --mount=type=cache,target=/root/.npm \
@@ -56,8 +56,8 @@ RUN chown -R nodejs:nodejs /app && \
     chmod -R 755 /app/logs /app/coverage /app/test-results /app/dist
 
 # Build shared modules
-RUN cd ./shared/error-handling && npm install && npm run build
-RUN cd ./shared/test-config && npm install && npm run build
+RUN cd /shared-infrastructure/shared/l2p/error-handling && npm install && npm run build
+RUN cd /shared-infrastructure/shared/l2p/test-config && npm install && npm run build
 
 # Install global test utilities
 RUN npm install -g nodemon ts-node jest @types/jest

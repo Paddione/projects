@@ -318,9 +318,9 @@ Vote on keyboard features you'd like to see:
 ## Getting Help
 
 ### Documentation
-- **Full test guide**: `shared-design-system/KEYBOARD_NAVIGATION_TEST.md`
+- **Full test guide**: `shared-infrastructure/shared/design-system/KEYBOARD_NAVIGATION_TEST.md`
 - **Issue tracker**: `ACCESSIBILITY_ISSUES.md`
-- **Design system**: `shared-design-system/cybervault.css`
+- **Design system**: `shared-infrastructure/shared/design-system/cybervault.css`
 
 ### Support Channels
 - **GitHub Issues**: Report bugs with keyboard navigation

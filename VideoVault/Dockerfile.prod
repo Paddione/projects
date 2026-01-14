@@ -13,7 +13,7 @@ RUN apt-get update \
   && rm -rf /var/lib/apt/lists/*
 
 # Copy shared design system
-COPY shared-design-system ./shared-design-system
+COPY shared-infrastructure/shared/design-system /app/shared-infrastructure/shared/design-system
 
 COPY VideoVault/package*.json ./
 COPY VideoVault/tsconfig.json ./
@@ -25,7 +25,7 @@ RUN npm install -g npm@11 && npm install --legacy-peer-deps
 
 COPY VideoVault/client/ ./client/
 COPY VideoVault/server/ ./server/
-COPY VideoVault/shared/ ./shared/
+COPY shared-infrastructure/shared/videovault /app/shared-infrastructure/shared/videovault
 COPY VideoVault/scripts/ ./scripts/
 
 RUN npm run build
@@ -47,6 +47,8 @@ COPY VideoVault/package*.json ./
 RUN npm install -g npm@11 && npm install --legacy-peer-deps --omit=dev
 
 COPY --from=build /app/dist /app/dist
+COPY --from=build /app/shared-infrastructure/shared/videovault /app/shared-infrastructure/shared/videovault
+COPY --from=build /app/shared-infrastructure/shared/design-system /app/shared-infrastructure/shared/design-system
 COPY VideoVault/scripts/ ./scripts/
 
 EXPOSE 5000

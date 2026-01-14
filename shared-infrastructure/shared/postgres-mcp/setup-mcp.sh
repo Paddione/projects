@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Configuration for the MCP server
-MCP_DIR="/home/patrick/projects/shared-postgres-mcp"
+MCP_DIR="/home/patrick/projects/shared-infrastructure/shared/postgres-mcp"
 CLAUDE_CONFIG="$HOME/.config/Claude/claude_desktop_config.json"
 
 echo "Configuring shared-postgres-mcp..."

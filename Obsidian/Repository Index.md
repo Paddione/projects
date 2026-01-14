@@ -11,8 +11,8 @@ A quick map of what lives in this monorepo. Click a repo name to open its page.
 | [[Repos/auth|Auth]] | Unified authentication service | Node, JWT, OAuth, PostgreSQL | 5500 |
 | [[Repos/reverse-proxy|Reverse Proxy]] | Traefik routing and TLS | Traefik, Docker | 443/80 |
 | [[Repos/shared-infrastructure|Shared Infrastructure]] | Centralized Postgres | PostgreSQL, Docker | 5432 |
-| [[Repos/shared-postgres-mcp|Shared Postgres MCP]] | MCP server for Postgres access | TypeScript, pg | - |
-| [[Repos/shared-design-system|Shared Design System]] | CSS + accessibility references | CSS, Markdown | - |
+| [[Repos/shared-postgres-mcp|Shared Postgres MCP]] | MCP server for Postgres access (shared-infrastructure/shared) | TypeScript, pg | - |
+| [[Repos/shared-design-system|Shared Design System]] | CSS + accessibility references (shared-infrastructure/shared) | CSS, Markdown | - |
 | [[Repos/browser-control|Browser Control]] | Playwright helper scripts | Node, Playwright | - |
 | [[Repos/docs|Docs]] | Consolidated documentation | Markdown | - |
 | [[Repos/scripts|Scripts]] | Root utility scripts | Bash | - |

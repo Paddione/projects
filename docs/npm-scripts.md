@@ -267,9 +267,9 @@ Run from `/home/patrick/projects/l2p/frontend/e2e`.
 | `test:ui` | Run Playwright UI. |
 | `test:ui:xvfb` | Run UI with Xvfb. |
 
-## L2P shared test-config (`/home/patrick/projects/l2p/shared/test-config/package.json`)
+## L2P shared test-config (`/home/patrick/projects/shared-infrastructure/shared/l2p/test-config/package.json`)
 
-Run from `/home/patrick/projects/l2p/shared/test-config`.
+Run from `/home/patrick/projects/shared-infrastructure/shared/l2p/test-config`.
 
 | Script | Purpose |
 | --- | --- |
@@ -312,9 +312,9 @@ Run from `/home/patrick/projects/l2p/shared/test-config`.
 | `test:run:unit` | Run unit tests. |
 | `test:watch` | Watch tests. |
 
-## L2P shared error-handling (`/home/patrick/projects/l2p/shared/error-handling/package.json`)
+## L2P shared error-handling (`/home/patrick/projects/shared-infrastructure/shared/l2p/error-handling/package.json`)
 
-Run from `/home/patrick/projects/l2p/shared/error-handling`.
+Run from `/home/patrick/projects/shared-infrastructure/shared/l2p/error-handling`.
 
 | Script | Purpose |
 | --- | --- |
@@ -411,9 +411,9 @@ Run from `/home/patrick/projects/vllm/dashboard`.
 | `start` | Start dashboard server. |
 | `test` | Placeholder test script. |
 
-## shared-postgres-mcp (`/home/patrick/projects/shared-postgres-mcp/package.json`)
+## shared-postgres-mcp (`/home/patrick/projects/shared-infrastructure/shared/postgres-mcp/package.json`)
 
-Run from `/home/patrick/projects/shared-postgres-mcp`.
+Run from `/home/patrick/projects/shared-infrastructure/shared/postgres-mcp`.
 
 | Script | Purpose |
 | --- | --- |

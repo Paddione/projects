@@ -31,8 +31,8 @@ Comprehensive documentation for the monorepo with visual architecture diagrams, 
 ## Additional Resources
 - [[Docs Library]] - Link to consolidated documentation
 - [[Doc Update Checklist]] - Checklist for writing or updating docs
-- [[Repos/shared-design-system|Design System]] - Shared CSS and accessibility
-- [[Repos/shared-postgres-mcp|Postgres MCP]] - MCP server for database access
+- [[Repos/shared-design-system|Design System]] - Shared CSS and accessibility (now under shared-infrastructure/shared)
+- [[Repos/shared-postgres-mcp|Postgres MCP]] - MCP server for database access (now under shared-infrastructure/shared)
 - [[Repos/browser-control|Browser Control]] - Playwright helpers
 - [[Repos/scripts|Scripts]] - Utility scripts
 - [[Repos/docs|Docs]] - Additional documentation

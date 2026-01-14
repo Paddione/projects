@@ -12,7 +12,8 @@ A collection of independent full-stack applications, shared infrastructure, and 
 | [VLLM](./vllm/README.md) | MCP server for AI inference and analysis | TypeScript, vLLM, PostgreSQL | 4100 |
 | [Auth](./auth/README.md) | Unified authentication service | Node, JWT, OAuth, PostgreSQL | 5500 |
 | [Reverse Proxy](./reverse-proxy/README.md) | Traefik routing and TLS | Traefik, Docker | 443/80 |
-| [Shared Infrastructure](./shared-infrastructure/README.md) | Centralized Postgres | PostgreSQL, Docker | 5432 |
+| [Shared Infrastructure](./shared-infrastructure/README.md) | Centralized Postgres + shared assets | PostgreSQL, Docker | 5432 |
+| [Shared Resources](./shared-infrastructure/shared/README.md) | Cross-service packages and design assets | CSS, TypeScript, Node | - |
 
 ## 🚀 Deployment & Environment Management
 
@@ -65,11 +66,14 @@ A collection of independent full-stack applications, shared infrastructure, and 
 
 ### Project Structure & Module Organization
 
-- `l2p/`: quiz platform with `frontend/`, `backend/`, and `shared/`
-- `VideoVault/`: video manager with `client/`, `server/`, and `e2e/`
+- `l2p/`: quiz platform with `frontend/`, `backend/`; shared tooling lives in `shared-infrastructure/shared/l2p/`
+- `VideoVault/`: video manager with `client/`, `server/`, `e2e/`; shared modules live in `shared-infrastructure/shared/videovault/`
 - `payment/`: Next.js app with Prisma in `prisma/` and tests in `test/`
 - `vllm/`: MCP server with `src/`, `tests/`, optional `dashboard/` and `rag/`
+- `shared-infrastructure/shared/`: design system, MCP tooling, and per-service shared packages
 - Root utilities live in `scripts/`
+
+Note: `VideoVault/shared-infrastructure` is a symlink to `../shared-infrastructure` so Vite builds resolve shared modules and dependencies locally.
 
 ### Coding Style & Naming
 
@@ -189,7 +193,7 @@ tar -xzf env-backup-YYYYMMDD.tar.gz
 
 ## Centralized Database (Shared Infrastructure)
 
-All services use a single PostgreSQL instance with separate databases and users. Details, migration steps, and credentials live in `shared-infrastructure/README.md`.
+All services use a single PostgreSQL instance with separate databases and users. Shared assets (design system, MCP tooling, service-level shared packages) live under `shared-infrastructure/shared/`.
 
 Start/stop all services:
 ```bash
@@ -307,7 +311,8 @@ Example:
 ├── l2p/                       # Learn2Play
 ├── payment/                   # Payment
 ├── reverse-proxy/             # Traefik
-├── shared-infrastructure/     # Centralized Postgres
+├── shared-infrastructure/     # Centralized Postgres + shared assets
+│   └── shared/                # Shared design system, MCP tooling, per-service shared packages
 ├── vllm/                      # MCP server + tooling
 ├── VideoVault/                # VideoVault app
 ├── scripts/                   # Root scripts

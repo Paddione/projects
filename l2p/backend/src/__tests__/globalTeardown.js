@@ -12,7 +12,7 @@ module.exports = async function globalTeardown() {
     
     if (context) {
       try {
-        const { TestUtilities } = await import('../../../shared/test-config/dist/TestUtilities.js');
+        const { TestUtilities } = await import('../../../../shared-infrastructure/shared/l2p/test-config/dist/TestUtilities.js');
         await TestUtilities.cleanupTestEnvironment(context);
       } catch (error) {
         console.warn('Could not load test utilities for cleanup:', error.message);

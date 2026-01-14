@@ -186,7 +186,7 @@ async function watchTests(testType, options) {
     const watchPaths = [
         'frontend/src/**/*.{ts,tsx}',
         'backend/src/**/*.ts',
-        'shared/**/*.ts'
+        '../shared-infrastructure/shared/l2p/**/*.ts'
     ];
     const watcher = chokidar.watch(watchPaths, {
         ignored: /node_modules|\.git|dist|coverage/,

@@ -1,7 +1,7 @@
 // Auto-generated test configuration - Updated by TestRunnerConfigUpdater
 // Last updated: 2025-08-14
-import { TestConfigManager } from '../shared/test-config/dist/TestConfigManager.js';
-import { CoverageConfigManager } from '../shared/test-config/dist/CoverageConfigManager.js';
+import { TestConfigManager } from '../../shared-infrastructure/shared/l2p/test-config/dist/TestConfigManager.js';
+import { CoverageConfigManager } from '../../shared-infrastructure/shared/l2p/test-config/dist/CoverageConfigManager.js';
 
 const testEnvironment = process.env.TEST_ENVIRONMENT || 'local';
 const testType = process.env.TEST_TYPE || 'unit';

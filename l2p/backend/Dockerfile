@@ -30,7 +30,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # Create necessary directories with proper permissions
-RUN mkdir -p /app/node_modules /app/logs /app/coverage /app/test-results /app/shared
+RUN mkdir -p /app/node_modules /app/logs /app/coverage /app/test-results /shared-infrastructure/shared/l2p
 
 # Set proper ownership for app directory
 RUN chown -R nodejs:nodejs /app
@@ -84,14 +84,14 @@ FROM base AS prod-dependencies
 WORKDIR /app
 
 # Copy and build shared modules first (needed for local file dependencies)
-COPY --chown=nodejs:nodejs l2p/shared/ ./shared/
+COPY --chown=nodejs:nodejs shared-infrastructure/shared/l2p /shared-infrastructure/shared/l2p
 
 # Build error-handling module
-WORKDIR /app/shared/error-handling
+WORKDIR /shared-infrastructure/shared/l2p/error-handling
 RUN npm install --legacy-peer-deps && npm run build
 
 # Build test-config module
-WORKDIR /app/shared/test-config
+WORKDIR /shared-infrastructure/shared/l2p/test-config
 RUN npm install --legacy-peer-deps && npm run build || true
 
 # Install backend production dependencies with proper context
@@ -107,13 +107,13 @@ FROM base AS build
 WORKDIR /app
 
 # Copy shared directory first and build shared modules
-COPY --chown=nodejs:nodejs l2p/shared/ ./shared/
+COPY --chown=nodejs:nodejs shared-infrastructure/shared/l2p /shared-infrastructure/shared/l2p
 
 # Build shared modules
-WORKDIR /app/shared/error-handling
+WORKDIR /shared-infrastructure/shared/l2p/error-handling
 RUN npm install --legacy-peer-deps && npm run build
 
-WORKDIR /app/shared/test-config
+WORKDIR /shared-infrastructure/shared/l2p/test-config
 RUN npm install --legacy-peer-deps && npm run build || true
 
 # Copy backend source and install all dependencies for build
@@ -148,10 +148,8 @@ COPY --from=build --chown=nodejs:nodejs /app/backend/migrations ./migrations
 # Copy public admin dashboard assets
 COPY --from=build --chown=nodejs:nodejs /app/backend/public ./public
 
-# Copy shared modules for runtime resolution by relative imports (e.g., '../../../shared/error-handling')
-# This aligns with development where './shared' is mounted into the container.
-# Ensures compiled code that references '/app/shared/*' can be resolved at runtime.
-COPY --from=build --chown=nodejs:nodejs /app/shared /app/shared
+# Copy shared modules for runtime resolution by relative imports
+COPY --from=build --chown=nodejs:nodejs /shared-infrastructure/shared/l2p /shared-infrastructure/shared/l2p
 
 # Workaround: some builds may emit admin route to dist/backend/src/routes instead of dist/routes
 # Ensure the expected path exists to avoid ERR_MODULE_NOT_FOUND

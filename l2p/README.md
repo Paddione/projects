@@ -210,7 +210,6 @@ npm run db test
 l2p/
 ├── backend/           # Express + TS API
 ├── frontend/          # React + Vite application
-├── shared/            # Cross-package utilities and tooling
 ├── config/            # Env templates, linting, tooling presets
 ├── scripts/           # Helper scripts (DB, email, CI helpers)
 ├── database/          # SQL migrations and seed data
@@ -220,6 +219,8 @@ l2p/
 ├── test-*/            # Test assets
 └── package.json       # Workspaces + root npm scripts
 ```
+
+Shared tooling lives at `../shared-infrastructure/shared/l2p/`.
 
 Supporting files such as `docker-compose*.yml`, `scripts/deploy.sh`, and `scripts/validate-deployment.sh` orchestrate local/prod environments. Root npm scripts proxy to workspace commands (`install:all`, `build:all`, `dev:*`, `test:*`).
 
@@ -383,7 +384,7 @@ Features:
 
 Quick start:
 ```bash
-cd shared/test-config
+cd ../shared-infrastructure/shared/l2p/test-config
 npm install
 npm run build
 npm run coverage:collect
@@ -409,7 +410,7 @@ Centralized error handling provides:
 
 Initialize:
 ```typescript
-import { initializeErrorHandling } from './shared/error-handling';
+import { initializeErrorHandling } from 'error-handling';
 
 await initializeErrorHandling({
   logLevel: 'info',
@@ -419,13 +420,15 @@ await initializeErrorHandling({
 });
 ```
 
+Package source lives at `../shared-infrastructure/shared/l2p/error-handling`.
+
 ## Contributing & Placement Rules
 
 - Frontend components in `frontend/src/components`, routes in `frontend/src/pages`.
 - Backend routes in `backend/src/routes`, logic in `backend/src/services`.
 - DB access in `backend/src/repositories`.
 - Tests live in `__tests__` folders near the code.
-- Shared packages under `shared/` must include `package.json`.
+- Shared packages under `shared-infrastructure/shared/l2p/` must include `package.json`.
 
 Run structure checks:
 ```bash

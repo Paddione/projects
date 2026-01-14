@@ -65,7 +65,7 @@ services:
       - "3006:3003"
     volumes:
       - ./backend/src:/app/src:ro
-      - ./shared:/app/shared:rw
+      - ../shared-infrastructure/shared/l2p:/shared-infrastructure/shared/l2p:rw
       - test_backend_logs:/app/logs
     networks:
       - test-network

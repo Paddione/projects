@@ -6,7 +6,7 @@
  * Palette: Cybervault base + trust indicators (green for balance, amber for alerts)
  */
 
-@import url('../../shared-design-system/cybervault.css');
+@import url('../../shared-infrastructure/shared/design-system/cybervault.css');
 
 /* ============================================================================
    PAYMENT-SPECIFIC DESIGN TOKENS

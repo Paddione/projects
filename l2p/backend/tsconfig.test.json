@@ -21,8 +21,8 @@
       "@/middleware/*": ["src/middleware/*"],
       "@/utils/*": ["src/utils/*"],
       "@/types/*": ["src/types/*"],
-      "@shared/*": ["../shared/*"],
-      "@test-config/*": ["../shared/test-config/*"]
+      "@shared/*": ["../../shared-infrastructure/shared/l2p/*"],
+      "@test-config/*": ["../../shared-infrastructure/shared/l2p/test-config/*"]
     },
     "types": ["jest", "node", "@types/supertest", "@playwright/test"]
   },
@@ -31,7 +31,7 @@
     "src/**/*.test.ts",
     "src/**/*.spec.ts",
     "src/**/__tests__/**/*.ts",
-    "../shared/**/*.ts"
+    "../../shared-infrastructure/shared/l2p/**/*.ts"
   ],
   "exclude": [
     "node_modules",

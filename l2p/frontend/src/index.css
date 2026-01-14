@@ -1,5 +1,5 @@
 /* Cybervault Design System */
-@import '../../../shared-design-system/cybervault.css';
+@import '../../../shared-infrastructure/shared/design-system/cybervault.css';
 @import './cybervault-l2p.css';
 
 /* CSS Variables - Map legacy tokens to Cybervault theme */

@@ -257,7 +257,7 @@ services:
       - ./backend/tsconfig.json:/app/tsconfig.json:ro
       - ./backend/src:/app/src:rw
       - ./backend/migrations:/app/migrations:ro
-      - ./shared:/app/shared:rw
+      - ../shared-infrastructure/shared/l2p:/shared-infrastructure/shared/l2p:rw
       - dev_backend_node_modules:/app/node_modules
       - dev_backend_logs:/app/logs
     networks:
@@ -289,8 +289,8 @@ services:
             - "**/*.test.ts"
             - "**/__tests__"
         - action: sync
-          path: ./shared
-          target: /app/shared
+          path: ../shared-infrastructure/shared/l2p
+          target: /shared-infrastructure/shared/l2p
         - action: rebuild
           path: ./backend/package.json
 
@@ -429,7 +429,7 @@ services:
     volumes:
       - ./backend/src:/app/src:ro
       - ./backend/migrations:/app/migrations:ro
-      - ./shared:/app/shared:rw
+      - ../shared-infrastructure/shared/l2p:/shared-infrastructure/shared/l2p:rw
       - test_backend_logs:/app/logs
     networks:
       - test-network

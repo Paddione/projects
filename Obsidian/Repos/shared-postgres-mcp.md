@@ -8,24 +8,24 @@ TypeScript, @modelcontextprotocol/sdk, pg.
 
 ## Quick Start
 ```bash
-cd shared-postgres-mcp
+cd shared-infrastructure/shared/postgres-mcp
 npm run build
 npm run start
 ```
 
 ## Key folders
-- `shared-postgres-mcp/src/` - TypeScript source
-- `shared-postgres-mcp/build/` - compiled output
+- `shared-infrastructure/shared/postgres-mcp/src/` - TypeScript source
+- `shared-infrastructure/shared/postgres-mcp/build/` - compiled output
 
 ## Build
 ```bash
-cd shared-postgres-mcp
+cd shared-infrastructure/shared/postgres-mcp
 npm run build
 ```
 
 ## Run
 ```bash
-cd shared-postgres-mcp
+cd shared-infrastructure/shared/postgres-mcp
 npm run start
 ```
 
