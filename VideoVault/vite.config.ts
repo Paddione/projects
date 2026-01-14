@@ -67,7 +67,7 @@ export default defineConfig({
     // Enable source maps for debugging
     sourcemap: process.env.NODE_ENV === 'development',
     // Optimize chunk size warnings
-    chunkSizeWarningLimit: 1000,
+  chunkSizeWarningLimit: 1500,
     // Use esbuild minification (built-in)
     minify: 'esbuild',
   },

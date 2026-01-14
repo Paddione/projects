@@ -233,6 +233,9 @@ function mockApiMiddleware() {
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react(), mockApiMiddleware()],
+  define: {
+    __IMPORT_META_ENV__: 'import.meta.env',
+  },
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),

@@ -23,6 +23,7 @@ import {
   QuestionAnswers,
   QuestionExplanation
 } from '../types'
+import { importMetaEnv } from '../utils/import-meta'
 
 // JWT secrets for test mode - should match backend secrets
 const JWT_SECRET = 'N8mK2xR9qW4eT6yU3oP7sA1dF5gH8jL0cV9bM6nQ4wE7rY2tI5uO3pA8sD1fG6hJ'
@@ -139,15 +140,8 @@ class ApiService {
     // Handle both Vite and Jest environments
     let envUrl: string | undefined;
 
-    // Check if we're in a Vite environment (import.meta available)
-    try {
-      // Use eval to avoid Jest parsing import.meta at compile time
-      const importMeta = eval('typeof import !== "undefined" ? import.meta : undefined');
-      if (importMeta?.env?.VITE_API_URL) {
-        envUrl = importMeta.env.VITE_API_URL;
-      }
-    } catch {
-      // import.meta not available, continue to process.env fallback
+    if (importMetaEnv.VITE_API_URL) {
+      envUrl = importMetaEnv.VITE_API_URL;
     }
 
     if (!envUrl && typeof process !== 'undefined' && process.env?.VITE_API_URL) {
@@ -160,13 +154,8 @@ class ApiService {
     this.baseURL = (envUrl && envUrl.trim()) || '/api'
 
     let authEnvUrl: string | undefined;
-    try {
-      const importMeta = eval('typeof import !== "undefined" ? import.meta : undefined');
-      if (importMeta?.env?.VITE_AUTH_SERVICE_URL) {
-        authEnvUrl = importMeta.env.VITE_AUTH_SERVICE_URL;
-      }
-    } catch {
-      // import.meta not available
+    if (importMetaEnv.VITE_AUTH_SERVICE_URL) {
+      authEnvUrl = importMetaEnv.VITE_AUTH_SERVICE_URL;
     }
 
     if (!authEnvUrl && typeof process !== 'undefined' && process.env?.['VITE_AUTH_SERVICE_URL']) {
@@ -200,16 +189,7 @@ class ApiService {
     }
 
     // Determine if mock mode should be enabled for tests
-    let viteTestFlag = false;
-    try {
-      // Use eval to avoid Jest parsing import.meta at compile time
-      const importMeta = eval('typeof import !== "undefined" ? import.meta : undefined');
-      if (importMeta?.env?.VITE_TEST_MODE === 'true') {
-        viteTestFlag = true;
-      }
-    } catch {
-      // import.meta not available
-    }
+    const viteTestFlag = importMetaEnv.VITE_TEST_MODE === 'true';
     const nodeEnvTest = (typeof process !== 'undefined' && process?.env?.NODE_ENV === 'test')
     const viteEnvTest = (typeof process !== 'undefined' && process?.env?.VITE_TEST_MODE === 'true')
 

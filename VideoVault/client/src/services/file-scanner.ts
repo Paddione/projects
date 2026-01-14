@@ -7,6 +7,7 @@ import { DirectoryDatabase } from './directory-database';
 import { ApiClient } from './api-client';
 import { SpriteCache } from './sprite-cache';
 import { setSpriteMeta } from './sprite-indexeddb';
+import { FileHandleRegistry } from './file-handle-registry';
 
 export class FileScanner {
   private static readonly SUPPORTED_EXTENSIONS = [
@@ -245,7 +246,6 @@ export class FileScanner {
     // Keep a handle reference for potential filesystem operations in this session
     try {
       // fileHandle may be a mock when files are dropped; ignore failures
-      const { FileHandleRegistry } = await import('./file-handle-registry');
       FileHandleRegistry.register(video.id, fileHandle);
       if (parentDirHandle && rootKey) {
         DirectoryHandleRegistry.registerParentForFile(video.id, parentDirHandle, rootKey);

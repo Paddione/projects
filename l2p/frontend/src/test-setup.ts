@@ -25,6 +25,10 @@ const mockEnv = {
   SSR: false
 };
 
+if (typeof globalThis !== 'undefined') {
+  (globalThis as any).__IMPORT_META_ENV__ = mockEnv;
+}
+
 // Mock import.meta for both global and window contexts
 const importMeta = {
   env: mockEnv,

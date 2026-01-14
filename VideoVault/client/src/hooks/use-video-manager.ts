@@ -33,6 +33,7 @@ import {
 } from '@/services/video-splitter';
 import { LibraryMetadataService } from '@/services/library-metadata';
 import { WatchStateService, type WatchStatesByRoot } from '@/services/watch-state-service';
+import { AppSettingsService } from '@/services/app-settings';
 import { toast, toastWithUndo } from '@/hooks/use-toast';
 
 // Public hook return type (keeps strong typing for state used by UI)
@@ -223,7 +224,6 @@ export function useVideoManager(): UseVideoManagerReturn {
 
         // Hydrate sort from server (deferred)
         try {
-          const { AppSettingsService } = await import('@/services/app-settings');
           const remoteSort = await AppSettingsService.get<{
             field: SortField;
             direction: SortDirection;
@@ -310,7 +310,6 @@ export function useVideoManager(): UseVideoManagerReturn {
       const next = { ...prev, sort: { field, direction } };
       void (async () => {
         try {
-          const { AppSettingsService } = await import('@/services/app-settings');
           await AppSettingsService.set('vv.sort', next.sort);
         } catch {}
       })();

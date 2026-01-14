@@ -2,6 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   output: "standalone",
+  outputFileTracingRoot: process.cwd(),
   webpack: (config) => {
     config.watchOptions = {
       poll: 1000,

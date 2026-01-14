@@ -19,6 +19,7 @@ import ErrorBoundary from './components/ErrorBoundary'
 import { useSettingsStore } from './stores/settingsStore'
 import { useEffect, useState } from 'react'
 import styles from './styles/App.module.css'
+import { importMetaEnv } from './utils/import-meta'
 
 // Separate AppContent component for easier testing
 export function AppContent() {
@@ -29,14 +30,7 @@ export function AppContent() {
     // Handle Jest test environment (process is only available in Node.js)
     if (typeof process !== 'undefined' && process.env['NODE_ENV'] === 'test') return true;
 
-    // Check for Vite environment variable directly (if available)
-    try {
-      // Use eval to avoid Jest parsing import.meta at compile time
-      const importMeta = eval('typeof import !== "undefined" ? import.meta : undefined');
-      if (importMeta?.env?.VITE_TEST_MODE === 'true') return true;
-    } catch {
-      // ignore if import.meta is not accessible
-    }
+    if (importMetaEnv.VITE_TEST_MODE === 'true') return true;
 
     // Handle Vite environment variables safely
     try {

@@ -72,7 +72,7 @@
 /* Background image for question phase */
 .questionBg {
   position: relative;
-  background-image: url('/images/question-bg.png');
+  background-image: url('/visuals/background.png');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;

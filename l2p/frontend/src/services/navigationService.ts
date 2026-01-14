@@ -1,4 +1,5 @@
 import { useGameStore } from '../stores/gameStore'
+import { importMetaEnv } from '../utils/import-meta'
 import { apiService } from './apiService'
 import { socketService } from './socketService'
 
@@ -188,14 +189,7 @@ class NavigationService {
     // reliably react to synthetic popstate. As a fallback in tests,
     // perform a hard navigation to ensure the route updates.
     try {
-      let isTest = false;
-      try {
-        // Use eval to avoid Jest parsing import.meta at compile time
-        const importMeta = eval('typeof import !== "undefined" ? import.meta : undefined');
-        isTest = (importMeta?.env?.VITE_TEST_MODE === 'true');
-      } catch {
-        // import.meta not available
-      }
+      let isTest = importMetaEnv.VITE_TEST_MODE === 'true';
       isTest = isTest || (typeof process !== 'undefined' && (process as { env?: { NODE_ENV?: string } })?.env?.NODE_ENV === 'test')
       if (isTest) {
         // Slight delay to allow SPA handling first

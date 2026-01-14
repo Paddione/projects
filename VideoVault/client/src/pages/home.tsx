@@ -22,6 +22,7 @@ import { PlaylistExportService } from '@/services/playlist-export';
 import { DirectoryPickerModal } from '@/components/directory-picker-modal';
 import { SettingsModal } from '@/components/settings-modal';
 import { DirectoryDatabase } from '@/services/directory-database';
+import { AppSettingsService } from '@/services/app-settings';
 import { SplitVideoModal, type SplitVideoFormValues } from '@/components/video/split-video-modal';
 import type { SplitVideoResult } from '@/services/video-splitter';
 import {
@@ -94,7 +95,6 @@ export default function Home() {
   const [shuffle, setShuffle] = useState<boolean>(false);
   useEffect(() => {
     void (async () => {
-      const { AppSettingsService } = await import('@/services/app-settings');
       const saved = await AppSettingsService.get<boolean>('vv.shuffle', (raw) => {
         if (raw === '1') return true;
         if (raw === '0') return false;
@@ -108,7 +108,6 @@ export default function Home() {
 
   useEffect(() => {
     void (async () => {
-      const { AppSettingsService } = await import('@/services/app-settings');
       await AppSettingsService.set('vv.shuffle', shuffle);
     })();
   }, [shuffle]);

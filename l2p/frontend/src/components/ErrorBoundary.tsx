@@ -1,18 +1,10 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import styles from '../styles/App.module.css'
+import { importMetaEnv } from '../utils/import-meta'
 
 const runtimeEnv = (() => {
-  if (typeof globalThis !== 'undefined' && (globalThis as any).importMetaEnv) {
-    return (globalThis as any).importMetaEnv as Record<string, any>
-  }
-
-  try {
-    const importMeta = eval('typeof import !== "undefined" ? import.meta : undefined')
-    if (importMeta?.env) {
-      return importMeta.env as Record<string, any>
-    }
-  } catch {
-    // Fall through to Node env fallback.
+  if (Object.keys(importMetaEnv).length) {
+    return importMetaEnv as Record<string, any>
   }
 
   const globalProcess = typeof globalThis !== 'undefined' ? (globalThis as any).process : undefined

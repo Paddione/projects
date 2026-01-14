@@ -34,6 +34,8 @@ declare global {
     ResizeObserver: typeof ResizeObserver;
     IntersectionObserver: typeof IntersectionObserver;
   }
+
+  const __IMPORT_META_ENV__: Record<string, string | boolean | undefined>;
   
   // Custom audio context types
   interface AudioContext {
