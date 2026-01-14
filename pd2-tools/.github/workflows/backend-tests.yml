@@ -1,0 +1,80 @@
+name: Backend Tests
+
+on:
+  push:
+    branches: [ main, master ]
+    paths:
+      - 'api/**'
+      - '.github/workflows/backend-tests.yml'
+  pull_request:
+    branches: [ main, master ]
+    paths:
+      - 'api/**'
+      - '.github/workflows/backend-tests.yml'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_DB: pd2_tools_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure PostgreSQL max_connections
+        run: |
+          docker ps
+          CONTAINER_ID=$(docker ps --filter "ancestor=postgres:15" --format "{{.ID}}")
+          echo "Postgres container: $CONTAINER_ID"
+          docker exec $CONTAINER_ID bash -c "echo 'max_connections = 1000' >> /var/lib/postgresql/data/postgresql.conf"
+          docker restart $CONTAINER_ID
+          sleep 10
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Cache npm dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('api/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Install dependencies
+        working-directory: ./api
+        run: npm ci
+
+      - name: TypeScript check
+        working-directory: ./api
+        run: npx tsc --noEmit
+
+      - name: Lint
+        working-directory: ./api
+        run: npm run lint
+
+      - name: Run tests
+        working-directory: ./api
+        run: npm test
+        env:
+          POSTGRES_HOST: localhost
+          POSTGRES_PORT: 5432
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_DB: pd2_tools_test
+          NODE_ENV: test

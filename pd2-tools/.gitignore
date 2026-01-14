@@ -1,0 +1,88 @@
+# =============================================================================
+# API
+# =============================================================================
+
+# Dependencies
+api/node_modules/
+
+# Build output
+api/dist/
+api/build/
+
+# Environment variables
+api/.env
+api/.env.local
+api/.env.*.local
+
+# Database files
+api/**/*.db
+api/**/*.db-shm
+api/**/*.db-wal
+
+# Logs
+api/logs/
+api/**/*.log
+api/**/npm-debug.log*
+api/**/yarn-debug.log*
+api/**/yarn-error.log*
+
+# Testing
+api/coverage/
+api/.nyc_output/
+
+# IDE
+api/.vscode/
+api/.idea/
+api/**/*.swp
+api/**/*.swo
+api/**/*~
+
+# OS
+api/.DS_Store
+api/**/Thumbs.db
+
+# TypeScript
+api/**/*.tsbuildinfo
+
+# Misc
+api/.cache/
+api/temp/
+api/tmp/
+
+# Data
+api/data/seen.json
+
+# =============================================================================
+# WEB
+# =============================================================================
+
+# Logs
+web/logs
+web/**/*.log
+web/**/npm-debug.log*
+web/**/yarn-debug.log*
+web/**/yarn-error.log*
+web/**/pnpm-debug.log*
+web/**/lerna-debug.log*
+
+# Dependencies
+web/node_modules
+
+# Build output
+web/dist
+web/dist-ssr
+
+# Environment variables
+web/**/*.local
+web/.env
+
+# Editor directories and files
+web/.vscode/*
+!web/.vscode/extensions.json
+web/.idea
+web/.DS_Store
+web/**/*.suo
+web/**/*.ntvs*
+web/**/*.njsproj
+web/**/*.sln
+web/**/*.sw?
