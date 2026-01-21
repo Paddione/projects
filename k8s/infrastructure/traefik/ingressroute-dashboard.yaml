@@ -15,8 +15,6 @@ metadata:
     app.kubernetes.io/name: traefik
     app.kubernetes.io/component: dashboard
 spec:
-  entryPoints:
-    - websecure
   routes:
     - match: Host(`traefik.korczewski.de`)
       kind: Rule

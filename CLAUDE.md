@@ -4,426 +4,220 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Repository Overview
 
-This is a monorepo containing independent full-stack applications sharing centralized infrastructure:
+Patrick's Projects is a monorepo containing independent full-stack applications sharing centralized PostgreSQL infrastructure. Each service operates independently but connects to a shared database instance.
 
-- **l2p/** - Multiplayer quiz platform (React, Express, Socket.io, PostgreSQL)
-- **VideoVault/** - Client-first video management (React, Vite, File System Access API)
-- **payment/** - Payment platform with Stripe (Next.js 16, Prisma, NextAuth)
-- **vllm/** - MCP server for AI inference and analysis (TypeScript, vLLM, PostgreSQL)
-- **auth/** - Unified authentication service (Node, JWT, OAuth, PostgreSQL)
-- **reverse-proxy/** - Traefik routing and TLS
-- **shared-infrastructure/** - Centralized PostgreSQL instance with isolated databases per service
+| Project | Stack | Ports |
+|---------|-------|-------|
+| l2p | React, Express, Socket.io, Drizzle ORM | 3000, 3001 |
+| VideoVault | React, Vite, File System Access API, Express | 5100/5000 |
+| payment | Next.js 16, Prisma, NextAuth v5 | 3004 |
+| auth | Express, Passport.js, JWT/OAuth | 5500 |
+| reverse-proxy | Traefik v3 | 80/443 |
+| shared-infrastructure | PostgreSQL, shared design system | 5432 |
 
 ## Common Commands
 
-### Root-Level Operations
+### Root-Level Commands
 
 ```bash
-# Install all dependencies
-npm run install:all
-
-# Build all projects
-npm run build:all
-
-# Run all services in development
-npm run dev:all
-
-# Test all projects
-npm run test:all
-
-# Validate environment files
-npm run validate:env
-npm run validate:env:dev
-npm run validate:env:prod
-```
-
-### L2P (Learn2Play)
-
-```bash
-cd l2p
-
 # Development
-npm run dev:backend          # Start backend on port 3001
-npm run dev:frontend         # Start frontend on port 3000
+npm run dev:all              # Start all services concurrently
+npm run dev:l2p              # L2P frontend + backend
+npm run dev:videovault       # VideoVault dev server
+npm run dev:payment          # Payment dev server
 
-# Build
-npm run build:all
-npm run build:frontend
-npm run build:backend
-
-# Testing
-npm run test:all             # Full test suite
-npm run test:unit            # Unit tests (frontend + backend)
-npm run test:integration     # Integration tests
-npm run test:e2e             # Playwright E2E tests
-npm run test:watch           # Watch mode for unit tests
-
-# Single-project tests
-npm run test:unit:frontend
-npm run test:unit:backend
-npm run test:integration:frontend
-npm run test:integration:backend
-
-# Type checking
-npm run typecheck
-
-# Database
-npm run db:migrate           # Run migrations
-npm run db:status            # Check migration status
-npm run db:health            # Database health check
-
-# Docker deployment
-npm run deploy:dev           # Development stack
-npm run deploy:prod          # Production stack
-npm run deploy:logs          # View logs
-npm run deploy:down          # Stop containers
-```
-
-### VideoVault
-
-```bash
-cd VideoVault
-
-# Development
-npm run dev                  # Local dev server (port 5100)
-npm run docker:dev           # Docker dev with hot reload (port 5000)
-npm run docker:down          # Stop environment
-npm run docker:restart       # Restart environment
-npm run docker:logs          # View logs
-
-# Testing
-npm run check                # TypeScript checking
-npm run test:all             # Full 6-stage test pipeline
-npm run test:client          # Client tests only
-npm run test:server          # Server tests only
-npm run test:e2e             # Integration tests
-npm run docker:pw:all        # Playwright E2E tests
-
-# Build & Production
-npm run build
-npm run start                # Production server
-```
-
-### Payment
-
-```bash
-cd payment
-
-# Development
-npm run dev                  # Next.js dev server (port 3004)
-
-# Build & Production
-npm run build
-npm run start
-
-# Testing
-npm test
-npm run test:e2e
-npm run lint
-
-# Prisma
-npx prisma migrate dev       # Development migrations
-npx prisma migrate deploy    # Production migrations
-npx prisma studio            # Database GUI
-```
-
-### VLLM
-
-```bash
-cd vllm
-
-# Build MCP server
-npm install
-npm run build
-
-# Development
-npm run dev:watch
-
-# Dashboard
-cd dashboard
-node server.js               # Port 4242
-
-# RAG stack
-./scripts/start_rag.sh       # Start full RAG environment
+# Build & Test
+npm run build:all            # Build all services
+npm run test:all             # Run all test suites
+npm run typecheck:all        # Type check all projects
+npm run validate:env         # Validate environment files
 
 # Deployment
-bash scripts/deploy.sh       # Deploy vLLM container
+./scripts/start-all-production.sh   # Start production stack
+./scripts/stop-all.sh               # Stop all services
+./scripts/health-check.sh           # Verify service health
+./scripts/restart_all_services.sh   # Full restart
 ```
 
-### Auth
+### Project-Specific Commands
+
+**l2p** (from `l2p/` directory):
+```bash
+npm run dev:frontend         # Port 3000
+npm run dev:backend          # Port 3001
+npm run test:unit            # Unit tests (requires NODE_OPTIONS=--experimental-vm-modules)
+npm run test:integration     # Integration tests (uses port 5433 test DB)
+npm run test:e2e             # Playwright E2E
+npm run db:migrate           # Run migrations
+```
+
+**VideoVault** (from `VideoVault/` directory):
+```bash
+npm run dev                  # Port 5100
+npm run docker:dev           # Docker with hot reload (port 5000)
+npm run test:all             # 6-stage test pipeline
+npm run docker:pw:all        # Playwright E2E in Docker
+```
+
+**payment** (from `payment/` directory):
+```bash
+npm run dev                  # Port 3004
+npm run test                 # Vitest tests
+npm run test:e2e             # Playwright E2E
+```
+
+### Running Single Tests
 
 ```bash
-cd auth
+# l2p backend (ESM requires --experimental-vm-modules)
+cd l2p/backend && NODE_OPTIONS=--experimental-vm-modules npx jest src/services/AuthService.test.ts
 
-# Docker
-docker-compose --env-file .env-dev up -d
-docker-compose down
+# l2p frontend
+cd l2p/frontend && NODE_ENV=test npx jest src/components/Login.test.tsx
+
+# VideoVault
+cd VideoVault && npx vitest run client/src/services/filter-engine.test.ts
+
+# payment
+cd payment && npx vitest run test/some.test.ts
+
 ```
 
-### Shared Infrastructure
+## Architecture
 
+### Service Architecture
+
+Each service follows a three-layer architecture:
+- **Routes**: HTTP/WebSocket endpoints
+- **Services**: Business logic
+- **Repositories**: Data access (Drizzle ORM or Prisma)
+
+### Centralized PostgreSQL
+
+All services connect to a single PostgreSQL instance with isolated databases:
+- `l2p_db` - L2P quiz platform
+- `videovault_db` - VideoVault (optional persistence)
+- `payment_db` - Payment service
+- `auth_db` - Auth service
+
+Start shared infrastructure first:
 ```bash
-cd shared-infrastructure
-
-# Start centralized Postgres
-docker-compose up -d
-docker-compose down
-
-# Or use root scripts
-../scripts/start-all-services.sh
-../scripts/stop-all-services.sh
+cd shared-infrastructure && docker-compose up -d
 ```
 
-## Architecture & Code Organization
+### Real-Time Architecture (l2p)
 
-### Centralized Database Architecture
+L2P uses Socket.io for multiplayer functionality:
+- Backend: `SocketService.ts` manages WebSocket connections
+- Frontend: `socket.io-client` in service layer
+- Events: `lobby:*`, `game:*`, `player:*`
 
-All services connect to a single PostgreSQL instance (`shared-postgres`) with isolated databases:
-- `auth_db` (user: `auth_user`)
-- `l2p_db` (user: `l2p_user`)
-- `payment_db` (user: `payment_user`)
-- `videovault_db` (user: `videovault_user`)
+### Client-First Architecture (VideoVault)
 
-**Critical**: Always start `shared-infrastructure` before other services. Connection strings use `shared-postgres:5432/<db_name>`.
+VideoVault uses browser as primary data store:
+- localStorage for video metadata
+- File System Access API for file handles (Chromium only)
+- Session-based handles (lost on reload, rescan required)
 
-### L2P Structure
+### Network Configuration
 
-**Workspace-based monorepo** with `frontend/` and `backend/` workspaces:
-
-Backend (`backend/src/`):
-- `routes/` - HTTP endpoints (auth, admin, lobbies, game, etc.)
-- `services/` - Domain logic (AuthService, LobbyService, GameService, etc.)
-- `repositories/` - Data access layer (UserRepository, LobbyRepository, etc.)
-- `middleware/` - Express middleware (auth, validation, rate limiting, error handling)
-- `cli/` - Command-line utilities (database migrations, testing tools)
-- `__tests__/` - Jest tests (unit/, integration/, e2e/)
-
-Frontend (`frontend/src/`):
-- `components/` - Reusable UI components (PascalCase naming)
-- `pages/` - Route-level screens (Login, Lobby, Game, etc.)
-- `services/` - API clients and domain helpers (apiService.ts for REST, Socket.io client)
-- `hooks/` - Custom React hooks (useThing naming convention)
-- `stores/` - Zustand state management stores
-- `__tests__/` - Jest + Testing Library tests
-
-**Real-time architecture**: Backend uses Socket.io for live gameplay. Frontend connects via `socket.io-client`. Game state synchronized through WebSocket events.
-
-**Testing architecture**:
-- Jest with ESM modules (`NODE_OPTIONS=--experimental-vm-modules`)
-- Separate test databases on port 5433 to avoid interference
-- Integration tests use Supertest for HTTP and real Socket.io connections
-- E2E tests use Playwright with Docker test stack
-
-### VideoVault Structure
-
-**Client-first architecture** using File System Access API:
-
-Client (`client/src/`):
-- `components/` - React components (video player, grid, filters)
-- `services/` - Core business logic (VideoDatabase, FileScanner, FilterEngine, BulkOperationsService)
-- `hooks/` - useVideoManager orchestrates all services
-
-Server (`server/`):
-- Express server with Vite dev middleware
-- Optional Postgres persistence (falls back to in-memory)
-- Drizzle ORM schema in `server/db/`
-
-**Key constraint**: Requires Chromium-based browsers for File System Access API. File handles are session-based; rescan required after reload.
-
-### Payment Structure
-
-**Next.js App Router** with:
-- `app/` - Next.js 16 App Router pages
-- `prisma/` - Database schema and migrations
-- `test/` - Vitest + Playwright tests
-
-**Auth integration**: Uses NextAuth v5 and integrates with centralized auth service.
-
-### VLLM Structure
-
-**MCP Server** communicating via stdio:
-- `src/` - TypeScript tool handlers
-- `tests/` - Jest tests
-- `dashboard/` - Control panel for vLLM/Forge/Infinity containers
-- `rag/` - RAG stack (Qdrant, LlamaIndex, Open WebUI)
-
-**Tool architecture**: MCP tools call vLLM API via Axios, database tools use PostgreSQL for Open-WebUI queries (SELECT-only for security).
-
-## Testing Strategy
-
-### L2P Testing
-
-**Unit tests** (`npm run test:unit`):
-- Run with `NODE_OPTIONS=--experimental-vm-modules`
-- Backend: Service and utility tests
-- Frontend: Component and hook tests with Testing Library
-- No external dependencies; mocked services
-
-**Integration tests** (`npm run test:integration`):
-- Real Express server via Supertest
-- Real Socket.io connections
-- Test database on port 5433
-- Require `--forceExit --detectOpenHandles`
-
-**E2E tests** (`npm run test:e2e`):
-- Playwright in `frontend/e2e/`
-- Full Docker test stack: `npm run deploy:dev`
-- Tests hit http://localhost:3000 (local) or http://localhost:3007 (Docker)
-
-**Test one file**:
-```bash
-# Backend unit test
-cd backend
-NODE_OPTIONS=--experimental-vm-modules npx jest src/services/AuthService.test.ts
-
-# Frontend unit test
-cd frontend
-NODE_ENV=test npx jest src/components/Login.test.tsx
-
-# Integration test
-cd backend
-NODE_OPTIONS=--experimental-vm-modules npx jest src/__tests__/integration/auth.test.ts
-
-# Single E2E spec
-cd frontend/e2e
-npx playwright test tests/login.spec.ts
-```
-
-### VideoVault Testing
-
-```bash
-# Unit tests
-npm test
-
-# Single test file
-npm run test -- client/src/services/VideoDatabase.test.ts
-
-# E2E with Docker
-npm run docker:pw:all
-```
-
-### Payment Testing
-
-```bash
-# All tests
-npm test
-
-# E2E
-npm run test:e2e
-```
+- `traefik-public` - External routing network
+- `l2p-network` - Internal service network
+- Services connect to `shared-postgres:5432`
 
 ## Environment Configuration
 
-**Structure**: Each service uses `.env.example`, `.env-dev`, `.env-prod`.
+### File Structure
 
-**Critical rules**:
-1. Never commit `.env-dev` or `.env-prod`
-2. Use **alphanumeric-only** database passwords (avoid Docker/Postgres escaping issues)
-3. Secrets must be unique per environment
-4. Generate secrets: `openssl rand -hex 32`
-5. Generate DB passwords: `openssl rand -base64 32 | tr -dc 'A-Za-z0-9' | head -c 32`
+```
+.env.example      # Template
+.env-dev          # Development (gitignored)
+.env-prod         # Production (gitignored)
+```
 
-**Shared infrastructure precedence**: Database credentials in `shared-infrastructure/.env` must match each service's `.env` file.
+### Critical Rules
 
-### L2P Environment
+1. **Never commit** `.env-dev` or `.env-prod`
+2. **Alphanumeric-only** database passwords (avoid Docker escaping issues)
+3. Secrets must be **unique per environment**
 
-Required:
-- `DATABASE_URL=postgresql://l2p_user:<password>@shared-postgres:5432/l2p_db`
-- `JWT_SECRET`, `JWT_REFRESH_SECRET` (32-char hex)
-- `FRONTEND_URL` (dev: `http://localhost:3000`, prod: `https://l2p.korczewski.de`)
-- `CORS_ORIGINS` (comma-separated)
+### Secret Generation
 
+```bash
+# JWT/session secrets
+openssl rand -hex 32
 
-Production-only:
-- `COOKIE_DOMAIN=.korczewski.de`
-- `COOKIE_SECURE=true`
+# Alphanumeric DB passwords
+openssl rand -base64 32 | tr -dc 'A-Za-z0-9' | head -c 32
+```
 
-### Auth Environment
+### Required Variables (per service)
 
-Required:
-- `DATABASE_URL=postgresql://auth_user:<password>@shared-postgres:5432/auth_db`
-- `JWT_SECRET`, `JWT_REFRESH_SECRET`, `SESSION_SECRET` (32-char hex each)
-- SMTP settings
-- Google OAuth client ID and secret
+All services need:
+- `DATABASE_URL` pointing to `shared-postgres:5432/<service>_db`
+- `JWT_SECRET` or `SESSION_SECRET` (32-char hex minimum)
+- Service-specific ports and URLs
 
-### Payment Environment
+## Testing Constraints
 
-Required:
-- `DATABASE_URL=postgresql://payment_user:<password>@shared-postgres:5432/payment_db?schema=public`
-- `NEXTAUTH_SECRET`, `AUTH_SECRET` (32-char hex)
-- `NEXTAUTH_URL` (dev: `http://localhost:3004`, prod: `https://payment.korczewski.de`)
-- Stripe API keys and webhook secret
+### l2p
 
-### VideoVault Environment
+**ALWAYS use `NODE_OPTIONS=--experimental-vm-modules`** for Jest tests (ESM modules).
 
-Required:
-- `SESSION_SECRET` (32-char hex)
-- `ADMIN_PASS`
-- `MEDIA_ROOT` (path to video library)
-- `DATABASE_URL` (optional Postgres persistence)
+Integration tests use separate database on **port 5433** (production on 5432).
+
+Integration tests require `--forceExit --detectOpenHandles` flags for cleanup.
+
+### VideoVault
+
+**Test configuration** (`vitest.config.ts`):
+- Enhanced services stubbed to avoid FlexSearch/WebCodecs dependencies
+- Single-threaded execution (`singleThread: true`)
+- Per-file coverage thresholds (85-95% for core services)
+
+**Path aliases required**:
+```typescript
+import { VideoDatabase } from '@/services/video-database';
+import { ErrorCodes } from '@shared/errors';
+```
+
+## Project-Specific Documentation
+
+Each major project has its own CLAUDE.md with detailed guidance:
+- `l2p/CLAUDE.md` - Backend/frontend architecture, Socket.io patterns, test setup
+- `VideoVault/CLAUDE.md` - Client-first architecture, service patterns, test stubs
+
+Read the relevant project CLAUDE.md before making changes.
 
 ## Multi-Agent Coordination
 
-If multiple Claude instances are working simultaneously:
+When multiple agents work simultaneously:
 
-1. **Task declaration**: Update `.agent-tasks.md` at repo root
-   - Format: `[YYYY-MM-DD HH:MM] [project-name] [IN_PROGRESS|BLOCKED|DONE] Description`
-   - Include specific files/subsystems being modified
+1. **Check `.agent-tasks.md`** at repo root
+2. **Add task entries**: `[YYYY-MM-DD HH:MM] [project] [STATUS] Description`
+3. **Work in different projects** or different subsystems
+4. **Avoid simultaneous edits** to the same file
 
-2. **Project isolation**: Prefer working in different projects (l2p vs vllm vs payment)
+**Critical sections** requiring exclusive access:
+- Git operations (commit/merge/branch)
+- Docker operations (rebuild/restart)
+- Database migrations
+- Dependency updates
 
-3. **Critical sections** (require exclusive access):
-   - Git operations (commit/merge/branch)
-   - Docker operations (rebuild/restart)
-   - Database migrations
-   - Dependency updates
-   - Root-level changes
-   - Deployments
+## Production URLs
 
-4. **Conflict resolution**: Mark as `[BLOCKED]` and yield to active operations
+- **Dashboard**: https://dashboard.korczewski.de
+- **Auth**: https://auth.korczewski.de
+- **L2P**: https://l2p.korczewski.de
+- **Payment**: https://payment.korczewski.de (alias: https://shop.korczewski.de)
+- **VideoVault**: https://videovault.korczewski.de (alias: https://video.korczewski.de)
+- **Traefik**: https://traefik.korczewski.de
 
-## Important Patterns & Constraints
+## Change Discipline
 
-### L2P Constraints
-
-- **ESM modules**: All Jest tests require `NODE_OPTIONS=--experimental-vm-modules`
-- **Test isolation**: Integration tests use separate database on port 5433
-- **Socket.io testing**: Must use real socket connections, not mocks
-- **Database**: Production uses centralized Postgres; test DB stays isolated
-- **Migrations**: Run via `npm run db:migrate` from backend
-
-### VideoVault Constraints
-
-- **Browser dependency**: Chromium-based browsers only for File System Access API
-- **Session-based handles**: File access lost on reload; requires rescan
-- **Storage**: Primary persistence is localStorage; Postgres optional
-- **Thumbnails**: Generated on-demand, not persisted (quota management)
-
-### Payment Constraints
-
-- **Prisma requirement**: All migrations need valid `DATABASE_URL`
-- **NextAuth**: Requires `NEXTAUTH_SECRET` and `NEXTAUTH_URL`
-- **Stripe webhooks**: Must configure `STRIPE_WEBHOOK_SECRET`
-
-### VLLM Constraints
-
-- **Database tools**: Only SELECT queries allowed (security constraint)
-- **MCP config**: Absolute paths required in Claude Desktop config
-- **GPU**: Recommended for optimal vLLM performance
-
-## Code Style
-
-- **TypeScript** across all projects
-- **2-space indentation**, single quotes preferred
-- **React components**: PascalCase
-- **Hooks**: `useThing` naming
-- **Tests**: Colocated in `__tests__/` directories
-- **VideoVault**: Uses Prettier (`.prettierrc.json`)
-- Other projects: ESLint only
-
-## Documentation & Task Tracking
-
-- **Root README.md**: Project overview and guidelines
-- **TASKS.md**: Active tasks and checklists
-- **docs/**: Consolidated documentation
-- **Project READMEs**: Service-specific documentation in each directory
+- Confirm target project before making changes
+- Prefer small, targeted edits over sweeping refactors
+- Match existing patterns and lint rules
+- Do not add dependencies or change infrastructure without explicit approval
+- Run the smallest relevant test suite for your change
+- Update existing docs rather than creating new ones

@@ -1,14 +1,12 @@
-import { auth } from '@/auth'
+import { requireAuth } from '@/lib/actions/auth'
 import { db } from '@/lib/db'
 import AddFundsForm from './add-funds-form'
-// Separating client component for interactivity
 
 export default async function WalletPage() {
-    const session = await auth()
-    if (!session?.user) return <div>Please login</div>
+    const user = await requireAuth()
 
     const wallet = await db.wallet.findUnique({
-        where: { userId: session.user.id }
+        where: { userId: user.id }
     })
 
     return (

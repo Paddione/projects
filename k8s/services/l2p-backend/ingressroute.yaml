@@ -16,8 +16,6 @@ metadata:
     app.kubernetes.io/name: l2p-backend
     app.kubernetes.io/component: backend
 spec:
-  entryPoints:
-    - websecure
   routes:
     # API routes (higher priority than frontend)
     - match: Host(`l2p.korczewski.de`) && PathPrefix(`/api`)
@@ -26,10 +24,13 @@ spec:
       services:
         - name: l2p-backend
           port: 3001
+          sticky:
+            cookie:
+              name: l2p-backend-sticky
+              httpOnly: true
+              secure: true
       middlewares:
-        - name: security-headers
-          namespace: korczewski-infra
-        - name: compression
+        - name: user-auth-chain
           namespace: korczewski-infra
 
     # Socket.io routes (highest priority, minimal middleware)
@@ -39,8 +40,12 @@ spec:
       services:
         - name: l2p-backend
           port: 3001
+          sticky:
+            cookie:
+              name: l2p-backend-sticky
+              httpOnly: true
+              secure: true
       middlewares:
-        - name: websocket-headers
+        - name: websocket-chain
           namespace: korczewski-infra
-  tls:
-    secretName: korczewski-tls
+  tls: {}

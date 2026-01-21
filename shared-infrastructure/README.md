@@ -23,6 +23,10 @@ Shared packages and assets now live under `shared-infrastructure/shared/`:
 
 See `shared-infrastructure/shared/README.md` for usage details.
 
+## SMB Share (VideoVault Storage)
+
+`shared-infrastructure/SMB-Share` is a symlink to `/home/patrick/SMB-Share` and represents the host SMB share used by VideoVault storage. This path is referenced by the SMB-CSI storage class (see `k8s/infrastructure/smb-csi/storageclass.yaml`), so ensure the share is mounted and reachable on the host before deploying VideoVault.
+
 ### Benefits
 
 - One backup/restore workflow

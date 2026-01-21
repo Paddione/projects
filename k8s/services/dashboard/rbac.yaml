@@ -1,0 +1,74 @@
+---
+# =============================================================================
+# Dashboard RBAC
+# =============================================================================
+# ServiceAccount and permissions for the dashboard to manage k8s resources.
+# =============================================================================
+
+# ServiceAccount for the dashboard
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: dashboard
+  namespace: korczewski-infra
+  labels:
+    app: dashboard
+    app.kubernetes.io/name: dashboard
+    app.kubernetes.io/component: control-center
+---
+# ClusterRole with permissions to view and manage resources
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: dashboard-controller
+  labels:
+    app: dashboard
+    app.kubernetes.io/name: dashboard
+    app.kubernetes.io/component: control-center
+rules:
+  # Read-only access to cluster-wide resources
+  - apiGroups: [""]
+    resources: ["namespaces", "nodes"]
+    verbs: ["get", "list", "watch"]
+  # Full access to pods (for logs, restart, etc.)
+  - apiGroups: [""]
+    resources: ["pods", "pods/log"]
+    verbs: ["get", "list", "watch", "delete"]
+  # Read access to services, configmaps, secrets (metadata only)
+  - apiGroups: [""]
+    resources: ["services", "configmaps", "endpoints"]
+    verbs: ["get", "list", "watch"]
+  # Full access to deployments for scaling and restart
+  - apiGroups: ["apps"]
+    resources: ["deployments", "replicasets", "statefulsets", "daemonsets"]
+    verbs: ["get", "list", "watch", "update", "patch"]
+  # Read access to Traefik IngressRoutes
+  - apiGroups: ["traefik.io"]
+    resources: ["ingressroutes", "middlewares"]
+    verbs: ["get", "list", "watch"]
+  # Read access to events for debugging
+  - apiGroups: [""]
+    resources: ["events"]
+    verbs: ["get", "list", "watch"]
+  # Access to resource metrics
+  - apiGroups: ["metrics.k8s.io"]
+    resources: ["pods", "nodes"]
+    verbs: ["get", "list"]
+---
+# ClusterRoleBinding to bind the ClusterRole to the ServiceAccount
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: dashboard-controller
+  labels:
+    app: dashboard
+    app.kubernetes.io/name: dashboard
+    app.kubernetes.io/component: control-center
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: dashboard-controller
+subjects:
+  - kind: ServiceAccount
+    name: dashboard
+    namespace: korczewski-infra

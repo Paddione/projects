@@ -1,11 +1,11 @@
-import { auth } from "@/auth";
+import { requireAdmin } from "@/lib/actions/auth";
 
 export default async function AdminDashboard() {
-    const session = await auth();
+    const user = await requireAdmin();
 
     return (
         <div>
-            <h1 className="text-3xl font-bold mb-4">Welcome, Master {session?.user?.name}</h1>
+            <h1 className="text-3xl font-bold mb-4">Welcome, Master {user.name}</h1>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="bg-white p-6 rounded shadow">
                     <h3 className="text-lg font-semibold mb-2">System Status</h3>

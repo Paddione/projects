@@ -308,3 +308,182 @@ export const processingJobs = pgTable(
 
 export type DBProcessingJob = typeof processingJobs.$inferSelect;
 export type InsertDBProcessingJob = typeof processingJobs.$inferInsert;
+
+// ========================================
+// Audiobook and Ebook Support
+// (Added in 0003_add_audiobooks_ebooks migration)
+// ========================================
+
+import type {
+  AudiobookShape,
+  AudiobookChapter,
+  AudiobookMetadata,
+  EbookShape,
+  EbookFile,
+  EbookMetadata,
+} from '@shared/types';
+
+// Audiobooks table
+export const audiobooks = pgTable(
+  'audiobooks',
+  {
+    id: varchar('id').primaryKey(),
+    title: text('title').notNull(),
+    author: text('author').notNull(),
+    path: text('path').notNull(),
+    totalDuration: bigint('total_duration', { mode: 'number' }).notNull(),
+    totalSize: bigint('total_size', { mode: 'number' }).notNull(),
+    coverImage: text('cover_image'),
+    metadata: jsonb('metadata').$type<AudiobookMetadata>().notNull(),
+    lastModified: timestamp('last_modified', { withTimezone: false }).notNull(),
+    rootKey: text('root_key'),
+    createdAt: timestamp('created_at', { withTimezone: false })
+      .default(sql`now()`)
+      .notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: false })
+      .default(sql`now()`)
+      .notNull(),
+  },
+  (table) => {
+    return {
+      idxAudiobooksPath: index('idx_audiobooks_path').on(table.path),
+      idxAudiobooksAuthor: index('idx_audiobooks_author').on(table.author),
+      idxAudiobooksTitle: index('idx_audiobooks_title').on(table.title),
+      idxAudiobooksLastModified: index('idx_audiobooks_last_modified').on(table.lastModified),
+      idxAudiobooksRootKey: index('idx_audiobooks_root_key').on(table.rootKey),
+    };
+  },
+);
+
+export type DBAudiobook = typeof audiobooks.$inferSelect;
+export type InsertDBAudiobook = typeof audiobooks.$inferInsert;
+
+// Audiobook chapters table
+export const audiobookChapters = pgTable(
+  'audiobook_chapters',
+  {
+    id: varchar('id')
+      .primaryKey()
+      .default(sql`gen_random_uuid()::text`),
+    audiobookId: varchar('audiobook_id')
+      .notNull()
+      .references(() => audiobooks.id, { onDelete: 'cascade' }),
+    index: bigint('index', { mode: 'number' }).notNull(),
+    title: text('title').notNull(),
+    path: text('path').notNull(),
+    duration: bigint('duration', { mode: 'number' }).notNull(),
+    startTime: bigint('start_time', { mode: 'number' }).notNull(),
+    fileSize: bigint('file_size', { mode: 'number' }).notNull(),
+  },
+  (table) => {
+    return {
+      idxChaptersAudiobookId: index('idx_chapters_audiobook_id').on(table.audiobookId),
+      idxChaptersIndex: index('idx_chapters_index').on(table.index),
+    };
+  },
+);
+
+export type DBAudiobookChapter = typeof audiobookChapters.$inferSelect;
+export type InsertDBAudiobookChapter = typeof audiobookChapters.$inferInsert;
+
+// Ebooks table
+export const ebooks = pgTable(
+  'ebooks',
+  {
+    id: varchar('id').primaryKey(),
+    title: text('title').notNull(),
+    author: text('author').notNull(),
+    path: text('path').notNull(),
+    coverImage: text('cover_image'),
+    metadata: jsonb('metadata').$type<EbookMetadata>().notNull(),
+    lastModified: timestamp('last_modified', { withTimezone: false }).notNull(),
+    rootKey: text('root_key'),
+    createdAt: timestamp('created_at', { withTimezone: false })
+      .default(sql`now()`)
+      .notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: false })
+      .default(sql`now()`)
+      .notNull(),
+  },
+  (table) => {
+    return {
+      idxEbooksPath: index('idx_ebooks_path').on(table.path),
+      idxEbooksAuthor: index('idx_ebooks_author').on(table.author),
+      idxEbooksTitle: index('idx_ebooks_title').on(table.title),
+      idxEbooksLastModified: index('idx_ebooks_last_modified').on(table.lastModified),
+      idxEbooksRootKey: index('idx_ebooks_root_key').on(table.rootKey),
+    };
+  },
+);
+
+export type DBEbook = typeof ebooks.$inferSelect;
+export type InsertDBEbook = typeof ebooks.$inferInsert;
+
+// Ebook files table (multiple formats per book)
+export const ebookFiles = pgTable(
+  'ebook_files',
+  {
+    id: varchar('id')
+      .primaryKey()
+      .default(sql`gen_random_uuid()::text`),
+    ebookId: varchar('ebook_id')
+      .notNull()
+      .references(() => ebooks.id, { onDelete: 'cascade' }),
+    format: varchar('format', { length: 10 }).notNull(), // 'epub' | 'pdf' | 'mobi' | 'azw3' | 'txt'
+    path: text('path').notNull(),
+    fileSize: bigint('file_size', { mode: 'number' }).notNull(),
+  },
+  (table) => {
+    return {
+      idxFilesEbookId: index('idx_files_ebook_id').on(table.ebookId),
+      idxFilesFormat: index('idx_files_format').on(table.format),
+    };
+  },
+);
+
+export type DBEbookFile = typeof ebookFiles.$inferSelect;
+export type InsertDBEbookFile = typeof ebookFiles.$inferInsert;
+
+// Media progress tracking (unified for all media types)
+export const mediaProgress = pgTable(
+  'media_progress',
+  {
+    id: varchar('id')
+      .primaryKey()
+      .default(sql`gen_random_uuid()::text`),
+    mediaType: varchar('media_type', { length: 20 }).notNull(), // 'video' | 'audiobook' | 'ebook'
+    mediaId: varchar('media_id').notNull(),
+    userId: varchar('user_id'), // optional user association
+    // Audiobook progress
+    chapterIndex: bigint('chapter_index', { mode: 'number' }),
+    position: bigint('position', { mode: 'number' }), // seconds for audiobook, percentage * 100 for ebook
+    // Ebook progress
+    format: varchar('format', { length: 10 }), // which format was being read
+    location: text('location'), // EPUB CFI or page number
+    // Video progress
+    watchedSeconds: bigint('watched_seconds', { mode: 'number' }),
+    // Common fields
+    percentage: bigint('percentage', { mode: 'number' }).default(0), // 0-100
+    completed: varchar('completed', { length: 5 }).default('false').notNull(),
+    lastAccessed: timestamp('last_accessed', { withTimezone: false })
+      .default(sql`now()`)
+      .notNull(),
+    createdAt: timestamp('created_at', { withTimezone: false })
+      .default(sql`now()`)
+      .notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: false })
+      .default(sql`now()`)
+      .notNull(),
+  },
+  (table) => {
+    return {
+      idxProgressMediaType: index('idx_progress_media_type').on(table.mediaType),
+      idxProgressMediaId: index('idx_progress_media_id').on(table.mediaId),
+      idxProgressUserId: index('idx_progress_user_id').on(table.userId),
+      idxProgressLastAccessed: index('idx_progress_last_accessed').on(table.lastAccessed),
+    };
+  },
+);
+
+export type DBMediaProgress = typeof mediaProgress.$inferSelect;
+export type InsertDBMediaProgress = typeof mediaProgress.$inferInsert;

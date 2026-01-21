@@ -278,7 +278,7 @@ If you find keyboard navigation problems:
 ## Getting Help
 
 ### Keyboard Navigation Support
-- **Documentation**: See `/docs/accessibility/`
+- **Documentation**: See `shared-infrastructure/shared/design-system/KEYBOARD_NAVIGATION_TEST.md`
 - **GitHub Issues**: Report problems with "keyboard-navigation" label
 - **Testing Guide**: `KEYBOARD_NAVIGATION_TEST.md`
 

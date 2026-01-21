@@ -1,0 +1,37 @@
+---
+# =============================================================================
+# Dashboard IngressRoute
+# =============================================================================
+# Exposes the dashboard at dashboard.korczewski.de
+# =============================================================================
+
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: dashboard
+  namespace: korczewski-infra
+  labels:
+    app: dashboard
+    app.kubernetes.io/name: dashboard
+    app.kubernetes.io/component: control-center
+spec:
+  routes:
+    # Main dashboard route
+    - match: Host(`dashboard.korczewski.de`)
+      kind: Rule
+      services:
+        - name: dashboard
+          port: 4242
+      middlewares:
+        - name: admin-auth-chain
+          namespace: korczewski-infra
+    # WebSocket route for Socket.io
+    - match: Host(`dashboard.korczewski.de`) && PathPrefix(`/socket.io`)
+      kind: Rule
+      services:
+        - name: dashboard
+          port: 4242
+      middlewares:
+        - name: websocket-chain
+          namespace: korczewski-infra
+  tls: {}

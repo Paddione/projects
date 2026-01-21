@@ -935,11 +935,9 @@ class ApiService {
   }
 
   async getCurrentUserFromServer(): Promise<ApiResponse<any>> {
-    const response = await this.authRequest<any>('/user/me')
+    // Use local auth endpoint which handles Traefik ForwardAuth headers
+    const response = await this.request<any>('/auth/me')
     if (response.success && response.data?.user) {
-      // If we got a user, but didn't have a token in local memory/storage, 
-      // it means we are authenticated via cookies.
-      // Note: we might not have the actual token string if it's httpOnly.
       return {
         success: true,
         data: response.data.user

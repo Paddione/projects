@@ -1,14 +1,13 @@
-import { auth } from '@/auth'
+import { requireAuth } from '@/lib/actions/auth'
 export const dynamic = 'force-dynamic'
 import { db } from '@/lib/db'
 import { format } from 'date-fns'
 
 export default async function OrdersPage() {
-    const session = await auth()
-    if (!session?.user) return <div>Please login</div>
+    const user = await requireAuth()
 
     const orders = await db.order.findMany({
-        where: { userId: session.user.id },
+        where: { userId: user.id },
         include: { items: { include: { product: true } } },
         orderBy: { createdAt: 'desc' }
     })

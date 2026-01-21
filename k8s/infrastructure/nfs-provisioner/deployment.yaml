@@ -58,8 +58,8 @@ spec:
       volumes:
         - name: nfs-client-root
           nfs:
-            server: "$(NFS_SERVER)"
-            path: "$(NFS_PATH)"
+            server: "10.10.0.3"
+            path: "/srv/nfs/k8s-data"
 ---
 # ConfigMap for NFS server configuration
 # IMPORTANT: Update these values before deploying!
@@ -72,6 +72,6 @@ metadata:
     app: nfs-subdir-external-provisioner
 data:
   # Replace with your NFS server IP
-  nfs_server: "REPLACE_WITH_NFS_SERVER_IP"
+  nfs_server: "10.10.0.3"
   # Replace with your NFS export path
   nfs_path: "/srv/nfs/k8s-data"

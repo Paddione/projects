@@ -3,7 +3,7 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { useTheme } from '@/components/ui/theme-provider';
 import {
-  Video,
+  Library,
   Moon,
   Sun,
   FolderOpen,
@@ -96,7 +96,7 @@ export function Header({
       {/* Main Header Row */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center space-x-3 min-w-0">
-          <Video className="text-primary text-2xl" />
+          <Library className="text-primary h-7 w-7" />
           <h1 className="text-2xl font-bold text-foreground truncate">{t('app.title')}</h1>
         </div>
 

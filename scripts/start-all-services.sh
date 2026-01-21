@@ -78,9 +78,19 @@ print_status "Auth service started"
 
 cd ..
 
-# Step 3: Start L2P service
+# Step 3: Start Dashboard service
 echo ""
-echo "Step 3: Starting L2P Service..."
+echo "Step 3: Starting Dashboard Service..."
+cd dashboard
+
+docker-compose up -d
+print_status "Dashboard service started"
+
+cd ..
+
+# Step 4: Start L2P service
+echo ""
+echo "Step 4: Starting L2P Service..."
 cd l2p
 
 # Ask which profile to use
@@ -109,9 +119,9 @@ esac
 
 cd ..
 
-# Step 4: Start Payment service
+# Step 5: Start Payment service
 echo ""
-echo "Step 4: Starting Payment Service..."
+echo "Step 5: Starting Payment Service..."
 cd payment
 
 docker-compose up -d
@@ -119,9 +129,9 @@ print_status "Payment service started"
 
 cd ..
 
-# Step 5: Start VideoVault service
+# Step 6: Start VideoVault service
 echo ""
-echo "Step 5: Starting VideoVault Service..."
+echo "Step 6: Starting VideoVault Service..."
 cd VideoVault
 
 docker-compose up -d
@@ -136,7 +146,7 @@ echo "Service Startup Complete!"
 echo "======================================"
 echo ""
 echo "Running services:"
-docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" | grep -E "(shared-postgres|auth-service|l2p|payment|videovault)"
+docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" | grep -E "(shared-postgres|auth-service|dashboard|l2p|payment|videovault)"
 
 echo ""
 echo "To view logs:"

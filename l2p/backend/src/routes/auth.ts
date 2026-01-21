@@ -421,37 +421,20 @@ router.post('/logout', async (req: Request, res: Response): Promise<void> => {
   });
 });
 
-/**
- * GET /api/auth/me
- * Get current user information
- */
 router.get('/me', authenticate, async (req: Request, res: Response): Promise<void> => {
   try {
-    if (hasCentralAuth) {
-      const proxied = await proxyAuthService(req, res, {
-        path: '/user/me',
-        method: 'GET',
-        includeAuth: true
-      });
-      if (proxied) {
-        return;
-      }
-    }
-
-    const user = await authService.getUserByToken(
-      req.cookies?.['accessToken'] || req.headers.authorization?.substring(7) || ''
-    );
-
-    if (!user) {
-      res.status(404).json({
-        error: 'User not found',
-        message: 'Could not find user information'
+    // req.user is populated by authenticate middleware (handles both tokens and Traefik headers)
+    if (!req.user) {
+      res.status(401).json({
+        error: 'Not authenticated',
+        message: 'User session not found'
       });
       return;
     }
 
+    // Return the user information that was already resolved by the middleware
     res.status(200).json({
-      user
+      user: req.user
     });
   } catch (error) {
     console.error('Get user error:', error);

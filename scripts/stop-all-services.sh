@@ -56,6 +56,13 @@ docker-compose --profile test down 2>/dev/null || true
 cd ..
 print_status "L2P stopped"
 
+# Stop Dashboard
+echo "Stopping Dashboard service..."
+cd dashboard
+docker-compose down 2>/dev/null || print_warning "Dashboard not running or already stopped"
+cd ..
+print_status "Dashboard stopped"
+
 # Stop Auth
 echo "Stopping Auth service..."
 cd auth
@@ -84,4 +91,4 @@ echo "======================================"
 echo "Service Shutdown Complete!"
 echo "======================================"
 echo ""
-docker ps --format "table {{.Names}}\t{{.Status}}" | grep -E "(postgres|auth|l2p|payment|videovault)" || echo "No related services running"
+docker ps --format "table {{.Names}}\t{{.Status}}" | grep -E "(postgres|auth|dashboard|l2p|payment|videovault)" || echo "No related services running"

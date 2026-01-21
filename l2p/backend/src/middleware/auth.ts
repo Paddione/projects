@@ -54,6 +54,33 @@ export class AuthMiddleware {
   }
 
   /**
+   * Extract user info from Traefik ForwardAuth headers
+   */
+  private extractUserFromHeaders(req: Request): TokenPayload | null {
+    const userId = req.headers['x-auth-user-id'];
+    const username = req.headers['x-auth-user'];
+    const email = req.headers['x-auth-email'];
+    const role = req.headers['x-auth-role'];
+
+    // Ensure we have a string for email, and it's not an array
+    const emailStr = Array.isArray(email) ? email[0] : email;
+    const usernameStr = Array.isArray(username) ? username[0] : username;
+    const userIdStr = Array.isArray(userId) ? userId[0] : userId;
+    const roleStr = Array.isArray(role) ? role[0] : role;
+
+    if (emailStr) {
+      return {
+        userId: userIdStr ? parseInt(userIdStr, 10) : 0,
+        username: usernameStr || emailStr.split('@')[0] || 'user',
+        email: emailStr,
+        isAdmin: roleStr === 'ADMIN',
+        role: roleStr
+      };
+    }
+    return null;
+  }
+
+  /**
    * Verify token with the central auth service.
    */
   private async verifyWithAuthService(token: string): Promise<TokenPayload> {
@@ -118,10 +145,27 @@ export class AuthMiddleware {
   }
 
   /**
-   * Middleware to authenticate requests using JWT
+   * Middleware to authenticate requests using JWT or Traefik headers
    */
   authenticate = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
+      // 1. Check for Traefik ForwardAuth headers first (Unified Auth)
+      const headerUser = this.extractUserFromHeaders(req);
+      if (headerUser) {
+        // Sync/get local user based on unified auth data
+        const localUser = await this.authService.getOrCreateUserFromUnifiedAuth(headerUser);
+        req.user = {
+          ...headerUser,
+          userId: localUser.id, // Use local ID for internal consistency
+          selectedCharacter: localUser.selected_character,
+          characterLevel: localUser.character_level,
+          isAdmin: localUser.is_admin || headerUser.isAdmin
+        };
+        next();
+        return;
+      }
+
+      // 2. Fallback to token-based authentication (legacy/testing)
       const token = this.extractToken(req);
 
       if (!token) {
@@ -232,6 +276,22 @@ export class AuthMiddleware {
    */
   optionalAuthenticate = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
+      // 1. Check for Traefik ForwardAuth headers first
+      const headerUser = this.extractUserFromHeaders(req);
+      if (headerUser) {
+        const localUser = await this.authService.getOrCreateUserFromUnifiedAuth(headerUser);
+        req.user = {
+          ...headerUser,
+          userId: localUser.id,
+          selectedCharacter: localUser.selected_character,
+          characterLevel: localUser.character_level,
+          isAdmin: localUser.is_admin || headerUser.isAdmin
+        };
+        next();
+        return;
+      }
+
+      // 2. Fallback to token
       const token = this.extractToken(req);
 
       if (token) {

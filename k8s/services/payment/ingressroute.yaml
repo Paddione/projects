@@ -13,18 +13,13 @@ metadata:
     app.kubernetes.io/name: payment
     app.kubernetes.io/component: payment
 spec:
-  entryPoints:
-    - websecure
   routes:
-    - match: Host(`payment.korczewski.de`)
+    - match: Host(`shop.korczewski.de`) || Host(`payment.korczewski.de`)
       kind: Rule
       services:
         - name: payment
           port: 3000
       middlewares:
-        - name: security-headers
+        - name: user-auth-chain
           namespace: korczewski-infra
-        - name: compression
-          namespace: korczewski-infra
-  tls:
-    secretName: korczewski-tls
+  tls: {}

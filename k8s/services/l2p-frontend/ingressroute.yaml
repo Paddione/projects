@@ -16,8 +16,6 @@ metadata:
     app.kubernetes.io/name: l2p-frontend
     app.kubernetes.io/component: frontend
 spec:
-  entryPoints:
-    - websecure
   routes:
     - match: Host(`l2p.korczewski.de`)
       kind: Rule
@@ -26,9 +24,6 @@ spec:
         - name: l2p-frontend
           port: 80
       middlewares:
-        - name: security-headers
+        - name: user-auth-chain
           namespace: korczewski-infra
-        - name: compression
-          namespace: korczewski-infra
-  tls:
-    secretName: korczewski-tls
+  tls: {}

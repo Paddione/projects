@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { AuthApi, type AppAccess, type AppsResponse } from '../services/authApi';
 
 export default function Apps() {
@@ -70,12 +70,12 @@ export default function Apps() {
             </div>
             <div className="flex items-center gap-3">
               {user?.role === 'ADMIN' && (
-                <Link
-                  to="/admin"
+                <a
+                  href="https://dashboard.korczewski.de"
                   className="px-4 py-2 rounded-lg border border-indigo-200 text-indigo-700 hover:bg-indigo-50"
                 >
-                  Admin Panel
-                </Link>
+                  Dashboard
+                </a>
               )}
               <button
                 onClick={handleLogout}
@@ -99,39 +99,6 @@ export default function Apps() {
 
         {!loading && !error && (
           <>
-            <div className="mb-8">
-              <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-                <span className="p-2 bg-indigo-100 rounded-lg">🤖</span>
-                AI Functionalities
-              </h2>
-              <div className="grid gap-4 sm:grid-cols-3">
-                <a
-                  href="https://chat.korczewski.de"
-                  className="group bg-white p-5 rounded-xl shadow-sm border border-transparent hover:border-indigo-300 transition-all hover:shadow-md"
-                >
-                  <div className="text-2xl mb-2">💬</div>
-                  <h3 className="font-semibold text-gray-900 group-hover:text-indigo-600">AI Chat (RAG)</h3>
-                  <p className="text-xs text-gray-500 mt-1">Chat with documents and local models.</p>
-                </a>
-                <a
-                  href="https://videovault.korczewski.de"
-                  className="group bg-white p-5 rounded-xl shadow-sm border border-transparent hover:border-indigo-300 transition-all hover:shadow-md"
-                >
-                  <div className="text-2xl mb-2">🎬</div>
-                  <h3 className="font-semibold text-gray-900 group-hover:text-indigo-600">Video Vault</h3>
-                  <p className="text-xs text-gray-500 mt-1">AI-powered media transcription & management.</p>
-                </a>
-                <a
-                  href="https://forge.korczewski.de"
-                  className="group bg-white p-5 rounded-xl shadow-sm border border-transparent hover:border-indigo-300 transition-all hover:shadow-md"
-                >
-                  <div className="text-2xl mb-2">🎨</div>
-                  <h3 className="font-semibold text-gray-900 group-hover:text-indigo-600">Image Gen</h3>
-                  <p className="text-xs text-gray-500 mt-1">Generate stunning images with Stable Diffusion.</p>
-                </a>
-              </div>
-            </div>
-
             <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
               <span className="p-2 bg-blue-100 rounded-lg">📱</span>
               Your Applications

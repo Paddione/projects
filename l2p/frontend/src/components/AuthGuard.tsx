@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { apiService } from '../services/apiService'
 import { useAuthStore } from '../stores/authStore'
 import { AuthForm } from './AuthForm'
@@ -41,7 +41,7 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
     } else {
       console.log('AuthGuard: State already determined (isAuthenticated: ' + isAuthenticated + '), skipping validation')
     }
-  }, [isAuthenticated])
+  }, [isAuthenticated, isValidating, handleOAuthCallback, validateAuthentication])
 
   // Add a listener for storage changes to detect when auth state changes
   useEffect(() => {
@@ -54,9 +54,9 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
 
     window.addEventListener('storage', handleStorageChange)
     return () => window.removeEventListener('storage', handleStorageChange)
-  }, [])
+  }, [validateAuthentication])
 
-  const handleOAuthCallback = async (code: string, state: string) => {
+  const handleOAuthCallback = useCallback(async (code: string, state: string) => {
     console.log('AuthGuard: Processing OAuth callback')
     setIsValidating(true)
     setOauthError(null)
@@ -118,9 +118,9 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
       processingOAuth.current = false
       setIsValidating(false)
     }
-  }
+  }, [setUser, setToken])
 
-  const validateAuthentication = async () => {
+  const validateAuthentication = useCallback(async () => {
     setIsValidating(true)
 
     try {
@@ -147,14 +147,22 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
         }
 
         setIsAuthenticated(false)
+
+        // If in unified auth mode, redirect to central login instead of showing local form
+        if (import.meta.env.VITE_AUTH_SERVICE_URL) {
+          const authUrl = import.meta.env.VITE_AUTH_SERVICE_URL.replace(/\/api$/, '')
+          const callbackURL = window.location.origin + window.location.pathname
+          window.location.href = `${authUrl}/login?callbackURL=${encodeURIComponent(callbackURL)}`
+        }
+
         setIsValidating(false)
-        return
+        return;
       }
 
       // If we have a token in localStorage, validate it
       const response = await apiService.validateToken()
       console.log('AuthGuard: Validation result:', response)
-      const isValid = !!(response.success && (response.data as any)?.valid)
+      const isValid = !!(response.success && response.data && typeof response.data === 'object' && 'valid' in response.data && response.data.valid)
       setIsAuthenticated(isValid)
 
       if (isValid) {
@@ -166,12 +174,13 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
           const currentStoreToken = useAuthStore.getState().token;
 
           if (!currentStoreUser || currentStoreUser.id !== String(userData.id) || currentStoreToken !== token) {
+            const userDataWithOptional = userData as { id: number; username: string; email: string; selectedCharacter?: string; selected_character?: string; characterLevel?: number; character_level?: number }
             setUser({
               id: String(userData.id),
               username: userData.username,
               email: userData.email,
-              character: (userData as any).selectedCharacter || (userData as any).selected_character || 'student',
-              level: (userData as any).characterLevel || (userData as any).character_level || 1
+              character: userDataWithOptional.selectedCharacter || userDataWithOptional.selected_character || 'student',
+              level: userDataWithOptional.characterLevel || userDataWithOptional.character_level || 1
             })
             setToken(token)
           } else {
@@ -192,7 +201,7 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
     } finally {
       setIsValidating(false)
     }
-  }
+  }, [setUser, setToken, clearAuth])
 
   const handleAuthSuccess = () => {
     console.log('AuthGuard: Auth success callback called')
@@ -204,12 +213,13 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
 
     if (userData && token) {
       console.log('AuthGuard: Updating Zustand store after auth success:', userData)
+      const userDataWithOptional = userData as { id: string; username: string; email: string; selectedCharacter?: string; characterLevel?: number }
       setUser({
         id: userData.id,
         username: userData.username,
         email: userData.email,
-        character: (userData as any).selectedCharacter || 'student',
-        level: (userData as any).characterLevel || 1
+        character: userDataWithOptional.selectedCharacter || 'student',
+        level: userDataWithOptional.characterLevel || 1
       })
       setToken(token)
     }
@@ -260,8 +270,24 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
     return <PasswordResetForm onBackToLogin={handleBackToLogin} />
   }
 
-  // Show login form if not authenticated
+  // Show login form if not authenticated (fallback for local dev)
   if (!isAuthenticated) {
+    // If we're in unified mode, we've already triggered a redirect in validateAuthentication
+    if (import.meta.env.VITE_AUTH_SERVICE_URL) {
+      return (
+        <div style={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          minHeight: '100vh',
+          background: 'var(--background-color)',
+          color: 'var(--text-primary)'
+        }}>
+          <p>Redirecting to login...</p>
+        </div>
+      )
+    }
+
     return (
       <>
         {oauthError && (

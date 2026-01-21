@@ -34,10 +34,10 @@ data:
     # Create users with passwords from environment
     psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-EOSQL
       -- Create users
-      CREATE USER auth_user WITH PASSWORD '$AUTH_DB_PASSWORD';
-      CREATE USER l2p_user WITH PASSWORD '$L2P_DB_PASSWORD';
-      CREATE USER payment_user WITH PASSWORD '$PAYMENT_DB_PASSWORD';
-      CREATE USER videovault_user WITH PASSWORD '$VIDEOVAULT_DB_PASSWORD';
+      CREATE USER auth_user WITH PASSWORD "$AUTH_DB_PASSWORD";
+      CREATE USER l2p_user WITH PASSWORD "$L2P_DB_PASSWORD";
+      CREATE USER payment_user WITH PASSWORD "$PAYMENT_DB_PASSWORD";
+      CREATE USER videovault_user WITH PASSWORD "$VIDEOVAULT_DB_PASSWORD";
 
       -- Grant database access
       GRANT ALL PRIVILEGES ON DATABASE auth_db TO auth_user;

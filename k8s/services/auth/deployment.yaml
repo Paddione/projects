@@ -39,7 +39,7 @@ spec:
       containers:
         - name: auth
           image: korczewski/auth:latest
-          imagePullPolicy: Always
+          imagePullPolicy: IfNotPresent
           ports:
             - name: http
               containerPort: 5500

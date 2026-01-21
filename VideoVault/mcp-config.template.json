@@ -1,20 +1,3 @@
 {
-    "mcpServers": {
-        "vllm-analyzer": {
-            "command": "uv",
-            "args": [
-                "run",
-                "--directory",
-                "/home/patrick/vllm",
-                "mcp-server-vllm",
-                "--model",
-                "Qwen/Qwen2.5-Coder-32B-Instruct-AWQ",
-                "--max-model-len",
-                "4096"
-            ],
-            "env": {
-                "VLLM_API_KEY": "YOUR_API_KEY_HERE"
-            }
-        }
-    }
+    "mcpServers": {}
 }

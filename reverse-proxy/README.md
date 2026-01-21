@@ -2,6 +2,8 @@
 
 This directory contains the Traefik v3 reverse proxy configuration for all services in the repository. Traefik uses a pre-issued wildcard TLS certificate and routes traffic to each service.
 
+Note: Kubernetes deployments use the manifests in `k8s/infrastructure/traefik` instead of this Docker-based setup.
+
 ## Overview
 
 ### Services Routed by Traefik

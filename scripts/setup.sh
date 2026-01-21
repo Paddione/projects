@@ -119,50 +119,6 @@ setup_node_project "Payment" "$ROOT_DIR/payment"
 # Setup VideoVault
 setup_node_project "VideoVault" "$ROOT_DIR/VideoVault"
 
-# Setup VLLM
-setup_node_project "VLLM" "$ROOT_DIR/vllm"
-
-# Setup VLLM Dashboard
-if [ -d "$ROOT_DIR/vllm/dashboard" ]; then
-    setup_node_project "VLLM Dashboard" "$ROOT_DIR/vllm/dashboard"
-fi
-
-# Setup Python virtual environment for Forge
-echo ""
-print_info "Setting up Python environment for AI Image Generation..."
-
-FORGE_PATH="$ROOT_DIR/vllm/ai-image-gen/forge"
-if [ -d "$FORGE_PATH" ]; then
-    cd "$FORGE_PATH"
-    
-    if [ ! -d "venv" ]; then
-        print_info "Creating Python virtual environment..."
-        python3 -m venv venv
-        print_success "Virtual environment created"
-        
-        print_info "Activating virtual environment and installing dependencies..."
-        source venv/bin/activate
-        
-        if [ -f "requirements.txt" ]; then
-            print_info "Installing Python packages (this may take a while)..."
-            pip install --upgrade pip
-            pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
-            pip install -r requirements.txt
-            print_success "Python dependencies installed"
-        else
-            print_info "No requirements.txt found, skipping Python package installation"
-        fi
-        
-        deactivate
-    else
-        print_success "Virtual environment already exists for Forge"
-    fi
-    
-    cd - > /dev/null
-else
-    print_info "Forge directory not found, skipping Python setup"
-fi
-
 # Docker setup
 echo ""
 print_info "Docker setup..."
@@ -201,17 +157,16 @@ print_success "All projects have been set up successfully!"
 echo ""
 echo "Next steps:"
 echo "1. Edit .env files in each project with your configuration"
-echo "2. Run database migrations (see SETUP_GUIDE.md)"
-echo "3. Download AI models if needed (see SETUP_GUIDE.md)"
+echo "2. Run database migrations (see each service README.md)"
+echo "3. Review service-specific setup in each service README.md"
 echo ""
 echo "To start development:"
 echo "  - L2P:        cd l2p && npm run dev"
 echo "  - Payment:    cd payment && npm run dev"
 echo "  - VideoVault: cd VideoVault && npm run dev"
-echo "  - VLLM:       cd vllm && npm run dev"
 echo ""
-echo "For more details, see SETUP_GUIDE.md"
+echo "For more details, see README.md and service docs."
 echo ""
 print_info "Note: AI models are NOT downloaded automatically."
-print_info "See SETUP_GUIDE.md for model download instructions."
+print_info "Service-specific setup lives in each service README.md."
 echo ""

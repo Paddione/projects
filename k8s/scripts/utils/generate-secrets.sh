@@ -216,6 +216,46 @@ stringData:
 EOF
 log_info "Created traefik-secret.yaml"
 
+cat > "$SECRETS_DIR/ipv64-secret.yaml" <<EOF
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: ipv64-credentials
+  namespace: korczewski-infra
+type: Opaque
+stringData:
+  IPV64_API_KEY: "$(get_env IPV64_API_KEY)"
+EOF
+log_info "Created ipv64-secret.yaml"
+
+# =============================================================================
+# SMB Credentials Secret
+# =============================================================================
+cat > "$SECRETS_DIR/smb-secret.yaml" <<EOF
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: smbcreds
+  namespace: korczewski-infra
+type: Opaque
+stringData:
+  username: "$(get_env SMB_USER)"
+  password: "$(get_env SMB_PASSWORD)"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: smbcreds
+  namespace: korczewski-services
+type: Opaque
+stringData:
+  username: "$(get_env SMB_USER)"
+  password: "$(get_env SMB_PASSWORD)"
+EOF
+log_info "Created smb-secret.yaml"
+
 # =============================================================================
 # TLS Certificate Secret (placeholder)
 # =============================================================================

@@ -421,6 +421,44 @@ export class AuthService {
   }
 
   /**
+   * Get or create a local user based on unified auth data
+   */
+  async getOrCreateUserFromUnifiedAuth(authData: Partial<TokenPayload>): Promise<User> {
+    const { email, username, isAdmin } = authData;
+
+    if (!email) throw new Error('Email is required for unified auth sync');
+
+    let user = await this.userRepository.findByEmail(email);
+
+    if (user) {
+      // Update admin status if it matches central auth.
+      if (isAdmin !== undefined && user.is_admin !== isAdmin) {
+        user = await this.userRepository.updateUser(user.id, { is_admin: isAdmin }) || user;
+      }
+      return user;
+    }
+
+    // Create new user if not found
+    const newUsername = username || email.split('@')[0] || `user_${Date.now()}`;
+
+    // Check if username exists, if so append random suffix
+    let finalUsername = newUsername;
+    let suffix = 1;
+    while (await this.userRepository.findByUsername(finalUsername)) {
+      finalUsername = `${newUsername}${suffix++}`;
+    }
+
+    return await this.userRepository.createUser({
+      username: finalUsername,
+      email: email,
+      password_hash: 'EXTERNAL_AUTH', // Dummy hash since auth is handled externally
+      email_verified: true,
+      is_admin: isAdmin || false,
+      is_active: true
+    });
+  }
+
+  /**
    * Get user by token
    */
   async getUserByToken(token: string): Promise<Omit<User, 'password_hash'> | null> {

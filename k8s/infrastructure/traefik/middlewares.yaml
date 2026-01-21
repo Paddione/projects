@@ -140,3 +140,79 @@ metadata:
 spec:
   basicAuth:
     secret: traefik-dashboard-auth
+---
+# Admin Authentication Middleware (ForwardAuth)
+# Forwards authentication to auth service and requires ADMIN role
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: admin-auth
+  namespace: korczewski-infra
+  labels:
+    app: traefik
+spec:
+  forwardAuth:
+    address: "http://auth.korczewski-services.svc.cluster.local:5500/api/auth/verify?requireAdmin=true"
+    trustForwardHeader: true
+    authResponseHeaders:
+      - "X-Auth-User"
+      - "X-Auth-Email"
+      - "X-Auth-Role"
+      - "X-Auth-User-Id"
+---
+# Admin Auth Chain Middleware
+# Combines admin authentication with default security
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: admin-auth-chain
+  namespace: korczewski-infra
+  labels:
+    app: traefik
+spec:
+  chain:
+    middlewares:
+      - name: admin-auth
+        namespace: korczewski-infra
+      - name: security-headers
+        namespace: korczewski-infra
+      - name: compression
+        namespace: korczewski-infra
+---
+# User Authentication Middleware (ForwardAuth)
+# Forwards authentication to auth service (any authenticated user)
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: user-auth
+  namespace: korczewski-infra
+  labels:
+    app: traefik
+spec:
+  forwardAuth:
+    address: "http://auth.korczewski-services.svc.cluster.local:5500/api/auth/verify"
+    trustForwardHeader: true
+    authResponseHeaders:
+      - "X-Auth-User"
+      - "X-Auth-Email"
+      - "X-Auth-Role"
+      - "X-Auth-User-Id"
+---
+# User Auth Chain Middleware
+# Combines user authentication with default security
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: user-auth-chain
+  namespace: korczewski-infra
+  labels:
+    app: traefik
+spec:
+  chain:
+    middlewares:
+      - name: user-auth
+        namespace: korczewski-infra
+      - name: security-headers
+        namespace: korczewski-infra
+      - name: compression
+        namespace: korczewski-infra

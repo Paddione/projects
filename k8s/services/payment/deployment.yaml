@@ -13,13 +13,18 @@ metadata:
   namespace: korczewski-services
   labels:
     app: payment
-    app.kubernetes.io/name: payment
     app.kubernetes.io/component: payment
+    app.kubernetes.io/name: payment
+    app.kubernetes.io/part-of: korczewski
+    tier: services
 spec:
   replicas: 1
   selector:
     matchLabels:
       app: payment
+      app.kubernetes.io/component: payment
+      app.kubernetes.io/part-of: korczewski
+      tier: services
   strategy:
     type: RollingUpdate
     rollingUpdate:
@@ -29,8 +34,10 @@ spec:
     metadata:
       labels:
         app: payment
-        app.kubernetes.io/name: payment
         app.kubernetes.io/component: payment
+        app.kubernetes.io/name: payment
+        app.kubernetes.io/part-of: korczewski
+        tier: services
     spec:
       securityContext:
         runAsNonRoot: true
@@ -40,7 +47,7 @@ spec:
       containers:
         - name: payment
           image: korczewski/payment:latest
-          imagePullPolicy: Always
+          imagePullPolicy: IfNotPresent
           ports:
             - name: http
               containerPort: 3000
@@ -55,10 +62,6 @@ spec:
               value: "3000"
             - name: HOSTNAME
               value: "0.0.0.0"
-            - name: NEXTAUTH_URL
-              value: "https://payment.korczewski.de"
-            - name: AUTH_TRUST_HOST
-              value: "true"
             - name: AUTH_SERVICE_URL
               value: "http://auth.korczewski-services.svc.cluster.local:5500"
             - name: NEXT_TELEMETRY_DISABLED

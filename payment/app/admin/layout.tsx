@@ -1,5 +1,4 @@
-import { auth } from "@/auth";
-import { redirect } from "next/navigation";
+import { requireAdmin } from "@/lib/actions/auth";
 import Link from "next/link";
 
 export default async function AdminLayout({
@@ -7,11 +6,7 @@ export default async function AdminLayout({
 }: {
     children: React.ReactNode;
 }) {
-    const session = await auth();
-
-    if (!session?.user || session.user.role !== "ADMIN") {
-        redirect("/login");
-    }
+    const user = await requireAdmin(); // Throws if not admin, redirects handled by ForwardAuth
 
     return (
         <div className="flex min-h-screen">

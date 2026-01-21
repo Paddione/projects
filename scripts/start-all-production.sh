@@ -36,10 +36,10 @@ cd /home/patrick/projects/auth
 docker compose up -d
 echo "  ✓ Auth Service started"
 
-echo "  → Starting vLLM RAG Stack..."
-cd /home/patrick/projects/vllm/rag
+echo "  → Starting Dashboard..."
+cd /home/patrick/projects/dashboard
 docker compose up -d
-echo "  ✓ vLLM RAG Stack started (includes Dashboard)"
+echo "  ✓ Dashboard started"
 
 # 3. Application Services
 echo ""
@@ -73,7 +73,6 @@ echo "  • Auth:         https://auth.korczewski.de"
 echo "  • L2P:          https://l2p.korczewski.de"
 echo "  • Payment:      https://payment.korczewski.de"
 echo "  • VideoVault:   https://videovault.korczewski.de"
-echo "  • Open WebUI:   https://vllm.korczewski.de"
 echo "  • Traefik:      https://traefik.korczewski.de"
 echo ""
 echo "Check status: docker ps"

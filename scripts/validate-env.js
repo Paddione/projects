@@ -142,15 +142,6 @@ const SERVICE_CONFIGS = {
     secrets: ['NEXTAUTH_SECRET', 'AUTH_SECRET'],
     matchPasswords: ['PAYMENT_DB_PASSWORD'],
   },
-  vllm: {
-    name: 'VLLM',
-    envFiles: ['.env-dev', '.env-prod'],
-    required: {
-      '.env-dev': ['VLLM_BASE_URL', 'PORT'],
-      '.env-prod': ['VLLM_BASE_URL', 'PORT', 'HF_TOKEN'],
-    },
-    optional: true, // VLLM is optional
-  },
   'reverse-proxy': {
     name: 'Reverse Proxy (Traefik)',
     envFiles: ['.env-prod'],

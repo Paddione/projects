@@ -15,8 +15,6 @@ metadata:
     app.kubernetes.io/name: videovault
     app.kubernetes.io/component: media
 spec:
-  entryPoints:
-    - websecure
   routes:
     - match: Host(`videovault.korczewski.de`) || Host(`video.korczewski.de`)
       kind: Rule
@@ -24,9 +22,6 @@ spec:
         - name: videovault
           port: 5000
       middlewares:
-        - name: security-headers
+        - name: default-chain
           namespace: korczewski-infra
-        - name: compression
-          namespace: korczewski-infra
-  tls:
-    secretName: korczewski-tls
+  tls: {}

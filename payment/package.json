@@ -13,7 +13,6 @@
     "check:deprecated": "node -e \"const fs=require('fs'); const path='package-lock.json'; if(!fs.existsSync(path)){console.log('No package-lock.json found.'); process.exit(0);} const lock=JSON.parse(fs.readFileSync(path,'utf8')); const deprecated=Object.entries(lock.packages||{}).filter(([,info])=>info.deprecated); if(!deprecated.length){console.log('No deprecated packages.'); process.exit(0);} deprecated.forEach(([name,info])=>{const pkg=name.replace(/^node_modules\\//,''); console.log(pkg + ': ' + info.deprecated);}); process.exit(1);\""
   },
   "dependencies": {
-    "@auth/prisma-adapter": "^2.11.1",
     "@prisma/client": "^5.22.0",
     "@tanstack/react-query": "^5.90.12",
     "bcryptjs": "^3.0.3",
@@ -21,7 +20,6 @@
     "date-fns": "^4.1.0",
     "lucide-react": "^0.556.0",
     "next": "16.1.1",
-    "next-auth": "^5.0.0-beta.30",
     "react": "19.2.0",
     "react-dom": "19.2.0",
     "stripe": "^20.0.0",

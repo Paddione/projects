@@ -1,10 +1,8 @@
 import Link from 'next/link'
-import { auth } from '@/auth'
-// auth helpers are usually server side. For a client header with dynamic login state, we need a client component or hybrid.
-// Let's make a server component that fetches session.
+import { getCurrentUser } from '@/lib/actions/auth'
 
 export default async function Header() {
-    const session = await auth()
+    const user = await getCurrentUser()
 
     return (
         <header className="payment-header">
@@ -15,22 +13,22 @@ export default async function Header() {
 
                 <nav className="payment-nav">
                     <Link href="/shop" className="payment-nav-link">Shop</Link>
-                    {session?.user ? (
+                    {user ? (
                         <>
                             <Link href="/wallet" className="payment-nav-link">Wallet</Link>
                             <Link href="/orders" className="payment-nav-link">Orders</Link>
-                            {session.user.role === 'ADMIN' && (
+                            {user.role === 'ADMIN' && (
                                 <Link href="/admin" className="payment-nav-link payment-nav-admin">Admin</Link>
                             )}
-                            <span className="payment-nav-user">{session.user.email}</span>
-                            <Link href="/api/auth/signout" className="payment-btn-signout">
+                            <span className="payment-nav-user">{user.email}</span>
+                            <a href={`${process.env.AUTH_SERVICE_URL || 'https://auth.korczewski.de'}/logout`} className="payment-btn-signout">
                                 Sign Out
-                            </Link>
+                            </a>
                         </>
                     ) : (
-                        <Link href="/login" className="payment-btn-login">
+                        <a href={`${process.env.AUTH_SERVICE_URL || 'https://auth.korczewski.de'}/login?redirect=${encodeURIComponent('https://shop.korczewski.de')}`} className="payment-btn-login">
                             Login
-                        </Link>
+                        </a>
                     )}
                 </nav>
             </div>

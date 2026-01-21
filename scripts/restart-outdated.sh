@@ -43,7 +43,7 @@ run_compose_build() {
 run_compose_build "Traefik reverse proxy" "$ROOT_DIR/reverse-proxy"
 run_compose_build "Shared PostgreSQL" "$ROOT_DIR/shared-infrastructure"
 run_compose_build "Auth service" "$ROOT_DIR/auth"
-run_compose_build "vLLM RAG stack" "$ROOT_DIR/vllm/rag"
+run_compose_build "Dashboard" "$ROOT_DIR/dashboard"
 run_compose_build "L2P (production profile)" "$ROOT_DIR/l2p" --profile production
 run_compose_build "Payment service" "$ROOT_DIR/payment"
 run_compose_build "VideoVault (production)" "$ROOT_DIR/VideoVault" -- videovault

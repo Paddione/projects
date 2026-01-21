@@ -1,6 +1,7 @@
 {
     "app": {
-        "title": "Video Category Manager"
+        "title": "MediaVault",
+        "description": "Your personal media library for videos, audiobooks, and ebooks"
     },
     "common": {
         "scan": "Scan",
@@ -36,7 +37,7 @@
         "toggleTheme": "Toggle theme"
     },
     "sidebar": {
-        "searchPlaceholder": "Search videos...",
+        "searchPlaceholder": "Search media...",
         "categories": "Categories",
         "dateRange": "Date Range",
         "clearAll": "Clear All",

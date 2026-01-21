@@ -49,16 +49,6 @@ print_success "Node.js processes stopped"
 # Step 2: Restart Docker containers (stop then start to avoid port conflicts)
 print_info "Restarting Docker containers..."
 
-# VLLM containers
-if [ -f "$ROOT_DIR/vllm/rag/docker-compose.yml" ]; then
-    print_info "Stopping VLLM RAG stack..."
-    cd "$ROOT_DIR/vllm/rag"
-    docker-compose stop
-    print_info "Starting VLLM RAG stack..."
-    docker-compose up -d
-    print_success "VLLM RAG stack restarted"
-fi
-
 # Auth containers
 if [ -f "$ROOT_DIR/auth/docker-compose.yml" ]; then
     print_info "Restarting Auth services..."
@@ -87,6 +77,16 @@ else
     print_info "VideoVault services not running, skipping..."
 fi
 
+# Payment - only restart if containers are running
+cd "$ROOT_DIR/payment"
+if [ -f "compose.yaml" ] && docker ps --format '{{.Names}}' | grep -q "payment"; then
+    print_info "Restarting Payment services..."
+    docker compose restart
+    print_success "Payment services restarted"
+else
+    print_info "Payment services not running, skipping..."
+fi
+
 cd "$ROOT_DIR"
 
 # Step 3: Wait for services to be ready
@@ -94,13 +94,15 @@ print_info "Waiting for services to initialize (10 seconds)..."
 sleep 10
 
 # Step 4: Start dashboard
-print_info "Starting VRAM Dashboard..."
-if [ -f "$ROOT_DIR/vllm/scripts/manage_dashboard.sh" ]; then
-    bash "$ROOT_DIR/vllm/scripts/manage_dashboard.sh"
-    print_success "Dashboard started"
+print_info "Restarting Dashboard..."
+if [ -f "$ROOT_DIR/dashboard/docker-compose.yml" ] && docker ps --format '{{.Names}}' | grep -q "^dashboard$"; then
+    cd "$ROOT_DIR/dashboard"
+    docker-compose restart
+    print_success "Dashboard restarted"
 else
-    print_warning "Dashboard script not found"
+    print_info "Dashboard not running, skipping..."
 fi
+cd "$ROOT_DIR"
 
 # Step 5: Check service status
 echo ""
@@ -109,7 +111,7 @@ echo ""
 
 # Check Docker containers
 print_info "Docker containers:"
-docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" | grep -E "(vllm|qdrant|postgres|infinity|auth|l2p|videovault)" || print_warning "No matching containers found"
+docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" | grep -E "(postgres|auth|dashboard|l2p|payment|videovault)" || print_warning "No matching containers found"
 
 echo ""
 print_info "Node.js processes:"
@@ -121,13 +123,11 @@ print_success "Service restart complete!"
 echo "=========================================="
 echo ""
 echo "Available services:"
-echo "  - VRAM Dashboard:  http://localhost:4242"
+echo "  - Dashboard:       http://localhost:4242"
 echo "  - L2P Frontend:    http://localhost:5173"
 echo "  - L2P Backend:     http://localhost:5001"
 echo "  - VideoVault:      http://localhost:5100"
 echo "  - Payment:         http://localhost:3004"
-echo "  - VLLM API:        http://localhost:4100"
 echo ""
 print_info "Check logs with: docker logs <container-name>"
-print_info "Dashboard logs: tail -f vllm/dashboard/dashboard.log"
 echo ""

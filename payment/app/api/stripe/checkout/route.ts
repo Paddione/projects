@@ -1,10 +1,10 @@
-import { auth } from '@/auth'
+import { requireAuth } from '@/lib/actions/auth'
 import { stripe } from '@/lib/stripe'
 import { NextResponse } from 'next/server'
 
 export async function POST(req: Request) {
-    const session = await auth()
-    if (!session?.user) {
+    const user = await requireAuth().catch(() => null)
+    if (!user) {
         return new NextResponse('Unauthorized', { status: 401 })
     }
 
@@ -29,7 +29,7 @@ export async function POST(req: Request) {
         success_url: `${process.env.NEXTAUTH_URL}/wallet?success=1`,
         cancel_url: `${process.env.NEXTAUTH_URL}/wallet?canceled=1`,
         metadata: {
-            userId: session.user.id,
+            userId: user.id,
             amountCoins: amount.toString(),
         },
     })

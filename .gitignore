@@ -6,7 +6,9 @@ yarn-error.log*
 pnpm-debug.log*
 package-lock.json
 yarn.lock
-
+/home/patrick/projects/Obsidian
+Obsidian/
+browser_control_registry.json
 # Environment variables (except examples)
 .env
 .env-dev
@@ -218,3 +220,4 @@ debug-*.jpeg
 *-debug.png
 *-debug.jpg
 *.debug.log
+k8s/skaffold

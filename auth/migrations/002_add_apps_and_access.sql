@@ -37,8 +37,7 @@ INSERT INTO auth.apps (key, name, description, url)
 VALUES
     ('l2p', 'Learn2Play', 'Multiplayer quiz platform', 'https://l2p.korczewski.de'),
     ('videovault', 'VideoVault', 'Video manager', 'https://videovault.korczewski.de'),
-    ('payment', 'Payment', 'Payments and wallet dashboard', 'https://payment.korczewski.de'),
-    ('vllm-dashboard', 'VRAM Mastermind', 'vLLM dashboard', 'https://vllm.korczewski.de')
+    ('payment', 'Payment', 'Payments and wallet dashboard', 'https://shop.korczewski.de')
 ON CONFLICT (key) DO UPDATE SET
     name = EXCLUDED.name,
     description = EXCLUDED.description,

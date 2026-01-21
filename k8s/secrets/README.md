@@ -18,7 +18,10 @@ This reads from the root `.env` file and creates:
 - `l2p-backend-secret.yaml` - L2P backend secrets
 - `payment-secret.yaml` - Payment service secrets (Stripe, NextAuth)
 - `videovault-secret.yaml` - VideoVault secrets
+- `dashboard-secret.yaml` - Dashboard service secrets
 - `traefik-secret.yaml` - Traefik dashboard auth
+- `ipv64-secret.yaml` - IPv64 DNS credentials (ACME DNS-01)
+- `smb-secret.yaml` - SMB credentials (infra + services namespaces)
 - `tls-secret.yaml` - TLS certificates (if available)
 
 ## Applying Secrets

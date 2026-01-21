@@ -6,7 +6,6 @@
 # L2P Test:    5433
 # Payment:     5436
 # VideoVault:  5437
-# VLLM RAG:    5438
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -44,11 +43,6 @@ stop_all() {
     # VideoVault
     if [ -d "$ROOT_DIR/VideoVault" ]; then
         cd "$ROOT_DIR/VideoVault" && docker-compose down && cd "$ROOT_DIR"
-    fi
-    
-    # VLLM RAG
-    if [ -d "$ROOT_DIR/vllm/rag" ]; then
-        cd "$ROOT_DIR/vllm/rag" && docker-compose down && cd "$ROOT_DIR"
     fi
     
     # Payment

@@ -42,6 +42,7 @@ export interface FilterPreset {
 }
 
 export interface VideoShape {
+  type?: 'video'; // discriminator for unified MediaItem type
   id: string;
   filename: string;
   displayName: string;
@@ -54,3 +55,86 @@ export interface VideoShape {
   thumbnail?: VideoThumbnail | null;
   rootKey?: string;
 }
+
+// ===============================
+// Audiobook Types
+// ===============================
+
+export interface AudiobookChapter {
+  index: number;
+  title: string;
+  path: string;
+  duration: number;
+  startTime: number;
+  fileSize: number;
+}
+
+export interface AudiobookMetadata {
+  narrator?: string;
+  publisher?: string;
+  publishDate?: string;
+  isbn?: string;
+  series?: string;
+  seriesIndex?: number;
+  description?: string;
+  language?: string;
+  sampleRate?: number;
+  bitrate?: number;
+}
+
+export interface AudiobookShape {
+  type: 'audiobook';
+  id: string;
+  title: string;
+  author: string;
+  path: string;
+  chapters: AudiobookChapter[];
+  totalDuration: number;
+  totalSize: number;
+  coverImage?: string;
+  metadata: AudiobookMetadata;
+  lastModified: string;
+  rootKey?: string;
+}
+
+// ===============================
+// Ebook Types
+// ===============================
+
+export type EbookFormat = 'epub' | 'pdf' | 'mobi' | 'azw3' | 'txt';
+
+export interface EbookFile {
+  format: EbookFormat;
+  path: string;
+  fileSize: number;
+}
+
+export interface EbookMetadata {
+  publisher?: string;
+  publishDate?: string;
+  isbn?: string;
+  series?: string;
+  seriesIndex?: number;
+  description?: string;
+  language?: string;
+  pageCount?: number;
+  subjects?: string[];
+  opfPath?: string;
+  calibreId?: string;
+  calibreTimestamp?: string;
+}
+
+export interface EbookShape {
+  type: 'ebook';
+  id: string;
+  title: string;
+  author: string;
+  path: string;
+  files: EbookFile[];
+  coverImage?: string;
+  metadata: EbookMetadata;
+  lastModified: string;
+  rootKey?: string;
+}
+
+export type MediaType = 'video' | 'audiobook' | 'ebook';

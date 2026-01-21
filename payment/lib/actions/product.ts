@@ -1,7 +1,7 @@
 'use server'
 
 import { db } from '@/lib/db'
-import { auth } from '@/auth'
+import { requireAdmin } from '@/lib/actions/auth'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { z } from 'zod'
@@ -16,10 +16,7 @@ const productSchema = z.object({
 })
 
 export async function createProduct(formData: FormData) {
-    const session = await auth()
-    if (session?.user?.role !== 'ADMIN') {
-        throw new Error('Unauthorized')
-    }
+    await requireAdmin() // Throws if not admin
 
     const rawData = {
         title: formData.get('title'),
@@ -41,10 +38,7 @@ export async function createProduct(formData: FormData) {
 }
 
 export async function deleteProduct(id: string) {
-    const session = await auth()
-    if (session?.user?.role !== 'ADMIN') {
-        throw new Error('Unauthorized')
-    }
+    await requireAdmin() // Throws if not admin
 
     await db.product.delete({
         where: { id },

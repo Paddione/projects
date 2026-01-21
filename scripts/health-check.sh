@@ -45,7 +45,6 @@ echo ""
 echo "Core Services:"
 check_container "Auth Service" "auth-service"
 check_http "Auth Health" "https://auth.korczewski.de/health"
-check_container "vLLM Dashboard" "vllm-dashboard"
 check_http "Dashboard" "https://dashboard.korczewski.de"
 echo ""
 
@@ -62,19 +61,8 @@ check_container "VideoVault" "videovault"
 check_http "VideoVault Health" "https://videovault.korczewski.de/api/health"
 echo ""
 
-# AI/ML Services
-echo "AI/ML Services:"
-check_container "vLLM" "vllm-rag"
-check_container "Open WebUI" "open-webui-rag"
-check_http "Open WebUI" "https://vllm.korczewski.de/health"
-check_container "Qdrant" "qdrant-rag"
-check_container "Infinity" "infinity-embeddings"
-check_container "Postgres (WebUI)" "postgres-rag"
-check_container "Ingest Engine" "rag-ingest-engine"
-echo ""
-
 # Summary
 echo "================================================"
 echo "Docker Containers Summary:"
-docker ps --format "table {{.Names}}\t{{.Status}}" | grep -E "traefik|postgres|auth|l2p|payment|videovault|vllm|webui|qdrant|infinity|ingest|dashboard"
+docker ps --format "table {{.Names}}\t{{.Status}}" | grep -E "traefik|postgres|auth|l2p|payment|videovault|dashboard"
 echo ""

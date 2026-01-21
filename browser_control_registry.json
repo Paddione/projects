@@ -2,8 +2,12 @@
     "name": "Antigravity Browser Control Model (BCM)",
     "version": "1.0.0",
     "test_credentials": {
-        "email": "test@example.com",
-        "password": "password123"
+        "email": "agent-test@korczewski.de",
+        "password": "Agent-Secret-1337!"
+    },
+    "sessions": {
+        "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjQsImVtYWlsIjoiYWdlbnQtdGVzdEBrb3JjemV3c2tpLmRlIiwiaWF0IjoxNzY4OTU3MTQxLCJleHAiOjE3Njg5NTgwNDEsImF1ZCI6ImtvcmN6ZXdza2ktc2VydmljZXMiLCJpc3MiOiJ1bmlmaWVkLWF1dGgifQ.NcY37fZjVnRu-vwBGm9wMTvffVBxlAaQzup9l1eyqhg",
+        "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjQsImVtYWlsIjoiYWdlbnQtdGVzdEBrb3JjemV3c2tpLmRlIiwiaWF0IjoxNzY4OTU3MTQxLCJleHAiOjE3Njk1NjE5NDEsImF1ZCI6ImtvcmN6ZXdza2ktc2VydmljZXMiLCJpc3MiOiJ1bmlmaWVkLWF1dGgifQ.4YHRnEriObKsHsYsH-MAY31QuTn4EJbzePWVHp3dC5Q"
     },
     "groups": {
         "health_check": {
@@ -81,22 +85,6 @@
                     "name": "Check Video List",
                     "url": "http://localhost:5100",
                     "expected": "div:contains('Videos')"
-                }
-            ]
-        },
-        "vllm_group": {
-            "id": "vllm_group",
-            "description": "Tasks specific to vLLM project",
-            "tasks": [
-                {
-                    "name": "RAG Verification",
-                    "url": "https://dashboard.korczewski.de/rag",
-                    "expected": "div:contains('Search')"
-                },
-                {
-                    "name": "Dashboard Services",
-                    "url": "http://localhost:4242",
-                    "expected": "div.service-card"
                 }
             ]
         }

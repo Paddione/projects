@@ -1,6 +1,6 @@
 'use server'
 
-import { auth } from '@/auth'
+import { requireAuth } from '@/lib/actions/auth'
 import { db } from '@/lib/db'
 import { checkAvailability } from '@/lib/booking'
 import { TxType } from '@prisma/client'
@@ -9,10 +9,9 @@ import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 
 export async function purchaseProduct(productId: string, quantity: number = 1, bookingStartTime?: Date) {
-    const session = await auth()
-    if (!session?.user) throw new Error('Login required')
+    const user = await requireAuth() // Throws if not authenticated
 
-    const userId = session.user.id
+    const userId = user.id
 
     // Start Transaction
     await db.$transaction(async (tx) => {

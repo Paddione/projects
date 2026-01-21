@@ -203,8 +203,29 @@ router.post('/refresh', async (req: Request, res: Response) => {
 /**
  * GET /api/auth/verify
  * Verify token validity
+ * Query params:
+ *   - requireAdmin: if set, requires ADMIN role
  */
 router.get('/verify', authenticate, async (req: Request, res: Response) => {
+  // Check if admin role is required
+  const requireAdmin = req.query.requireAdmin === 'true';
+
+  if (requireAdmin && req.user?.role !== 'ADMIN') {
+    res.status(403).json({
+      error: 'Admin access required',
+      valid: false
+    });
+    return;
+  }
+
+  // Set headers for Traefik ForwardAuth
+  if (req.user) {
+    res.setHeader('X-Auth-User', req.user.username || '');
+    res.setHeader('X-Auth-Email', req.user.email || '');
+    res.setHeader('X-Auth-Role', req.user.role || '');
+    res.setHeader('X-Auth-User-Id', req.user.userId?.toString() || '');
+  }
+
   res.status(200).json({
     valid: true,
     user: req.user,

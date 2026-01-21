@@ -92,6 +92,8 @@ export class LobbyService {
     let hostCharacter = request.selectedCharacter || 'student';
     let hostCharacterLevel = request.characterLevel || 1;
 
+    let isLegacyUser = false;
+
     // If user data wasn't provided in the request (legacy flow), try to fetch it
     if (!request.username) {
       // Try to get game profile first (OAuth users)
@@ -108,6 +110,14 @@ export class LobbyService {
         hostUsername = host.username;
         hostCharacter = host.selected_character || 'student';
         hostCharacterLevel = host.character_level;
+        isLegacyUser = true;
+      }
+    } else {
+      // If username is provided, we check if it's a legacy user in the database
+      // to determine if we should set host_id or auth_user_id
+      const host = await this.userRepository.findUserById(request.hostId);
+      if (host) {
+        isLegacyUser = true;
       }
     }
 
@@ -117,7 +127,10 @@ export class LobbyService {
     // Prepare lobby data
     const lobbyData: CreateLobbyData = {
       code,
-      host_id: request.hostId,
+      // For unified auth/OAuth users, we use auth_user_id.
+      // For legacy users that exist in the local users table, we use host_id.
+      host_id: isLegacyUser ? request.hostId : null,
+      auth_user_id: isLegacyUser ? null : request.hostId,
       question_count: request.questionCount || 10,
       settings: {
         questionSetIds: request.questionSetIds || [],
@@ -238,8 +251,9 @@ export class LobbyService {
       return null;
     }
 
-    // Check if the leaving player is the host
-    if (lobby.host_id === parseInt(playerId)) {
+    // Check if the leaving player is the host (using both host_id and auth_user_id)
+    const isHost = lobby.host_id === parseInt(playerId) || lobby.auth_user_id === parseInt(playerId);
+    if (isHost) {
       // Host is leaving - delete the entire lobby
       await this.lobbyRepository.deleteLobby(lobby.id);
       return null;
@@ -369,8 +383,9 @@ export class LobbyService {
       throw new Error('Lobby not found');
     }
 
-    // Verify host permission
-    if (lobby.host_id !== hostId) {
+    // Verify host permission (check both host_id and auth_user_id)
+    const isHost = lobby.host_id === hostId || lobby.auth_user_id === hostId;
+    if (!isHost) {
       throw new Error('Only the host can update lobby settings');
     }
 
@@ -411,8 +426,9 @@ export class LobbyService {
       throw new Error('Lobby not found');
     }
 
-    // Verify host permission
-    if (lobby.host_id !== hostId) {
+    // Verify host permission (check both host_id and auth_user_id)
+    const isHost = lobby.host_id === hostId || lobby.auth_user_id === hostId;
+    if (!isHost) {
       throw new Error('Only the host can start the game');
     }
 
@@ -597,8 +613,9 @@ export class LobbyService {
       throw new Error('Lobby not found');
     }
 
-    // Verify host permission
-    if (lobby.host_id !== hostId) {
+    // Verify host permission (check both host_id and auth_user_id)
+    const isHost = lobby.host_id === hostId || lobby.auth_user_id === hostId;
+    if (!isHost) {
       throw new Error('Only the host can update question set settings');
     }
 

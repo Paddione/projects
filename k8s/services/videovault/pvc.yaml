@@ -19,7 +19,7 @@ metadata:
 spec:
   accessModes:
     - ReadWriteMany
-  storageClassName: nfs-storage
+  storageClassName: smb-storage
   resources:
     requests:
       storage: 500Gi
@@ -37,7 +37,7 @@ metadata:
 spec:
   accessModes:
     - ReadWriteMany
-  storageClassName: nfs-storage
+  storageClassName: smb-storage
   resources:
     requests:
       storage: 50Gi

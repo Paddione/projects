@@ -71,7 +71,8 @@ export class AudioManager {
 
     // Settings sounds
     { name: 'volume-change', path: '/audio/volume-change.mp3', type: 'ui' },
-    { name: 'theme-change', path: '/audio/theme-change.mp3', type: 'ui' }
+    { name: 'theme-change', path: '/audio/theme-change.mp3', type: 'ui' },
+    { name: 'language-change', path: '/audio/language-change.mp3', type: 'ui' }
   ]
 
   // Centralized volume/mute settings applied via type-level gain nodes
@@ -80,11 +81,19 @@ export class AudioManager {
   private soundVolume = 0.8
   private isMuted = false
 
+  // Global kill switch for the sound module to handle missing assets gracefully
+  private readonly DISABLED = true
+
   constructor() {
     // Defer initialization until first use to allow environment/test setup
   }
 
   private async init(): Promise<void> {
+    if (this.DISABLED) {
+      console.log('AudioManager is disabled')
+      return
+    }
+
     try {
       // Initialize Web Audio API
       this.audioContext = new (window.AudioContext || (window as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext)()
@@ -124,13 +133,14 @@ export class AudioManager {
 
   // Public helpers for safe external initialization without exposing internals
   public async ensureInitialized(): Promise<void> {
+    if (this.DISABLED) return
     if (!this.isInitialized) {
       await this.init()
     }
   }
 
   public isReady(): boolean {
-    return this.isInitialized
+    return this.DISABLED || this.isInitialized
   }
 
   private async loadAllAudioFiles(): Promise<void> {
@@ -239,6 +249,8 @@ export class AudioManager {
     fadeIn?: boolean
     fadeOut?: boolean
   } = {}): Promise<void> {
+    if (this.DISABLED) return Promise.resolve()
+
     // Auto-initialize on first use
     if (!this.isReady()) {
       try {
@@ -480,6 +492,7 @@ export class AudioManager {
   }
 
   public isAudioSupported(): boolean {
+    if (this.DISABLED) return false
     return !!(window.AudioContext || (window as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext)
   }
 }

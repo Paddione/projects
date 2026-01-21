@@ -32,6 +32,7 @@ export interface CustomCategories {
 }
 
 export interface Video {
+  type?: 'video'; // discriminator for unified MediaItem type (optional for backwards compatibility)
   id: string;
   filename: string;
   displayName: string;

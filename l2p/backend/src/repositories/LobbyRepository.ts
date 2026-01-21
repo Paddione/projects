@@ -3,7 +3,8 @@ import { BaseRepository } from './BaseRepository.js';
 export interface Lobby {
   id: number;
   code: string;
-  host_id: number;
+  host_id: number | null;
+  auth_user_id: number | null;
   status: 'waiting' | 'starting' | 'playing' | 'ended';
   question_count: number;
   current_question: number;
@@ -16,7 +17,8 @@ export interface Lobby {
 
 export interface CreateLobbyData {
   code: string;
-  host_id: number;
+  host_id?: number | null;
+  auth_user_id?: number | null;
   question_count?: number;
   settings?: Record<string, any>;
 }
@@ -81,7 +83,7 @@ export class LobbyRepository extends BaseRepository {
 
   async findLobbiesByHost(hostId: number): Promise<Lobby[]> {
     const result = await this.getDb().query<Lobby>(
-      'SELECT * FROM lobbies WHERE host_id = $1 ORDER BY created_at DESC',
+      'SELECT * FROM lobbies WHERE host_id = $1 OR auth_user_id = $1 ORDER BY created_at DESC',
       [hostId]
     );
     return result.rows;
@@ -89,7 +91,7 @@ export class LobbyRepository extends BaseRepository {
 
   async updateLobbyStatus(id: number, status: Lobby['status']): Promise<Lobby | null> {
     const updateData: any = { status };
-    
+
     if (status === 'playing') {
       updateData.started_at = new Date();
     } else if (status === 'ended') {
@@ -125,10 +127,10 @@ export class LobbyRepository extends BaseRepository {
 
     // Ensure players is an array
     const currentPlayers = Array.isArray(lobby.players) ? lobby.players : [];
-    const updatedPlayers = currentPlayers.map((p: any) => 
+    const updatedPlayers = currentPlayers.map((p: any) =>
       p.id === playerId ? { ...p, ...playerData } : p
     );
-    
+
     return this.updateLobby(lobbyId, { players: updatedPlayers });
   }
 

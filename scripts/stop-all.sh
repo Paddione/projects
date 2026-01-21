@@ -18,8 +18,8 @@ echo "✓ Application services stopped"
 # Stop core services
 echo ""
 echo "Stopping Core Services..."
+cd /home/patrick/projects/dashboard && docker compose down
 cd /home/patrick/projects/auth && docker compose down
-cd /home/patrick/projects/vllm/rag && docker compose down
 echo "✓ Core services stopped"
 
 # Stop infrastructure (optional - usually keep running)

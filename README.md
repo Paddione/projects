@@ -7,10 +7,10 @@ A collection of independent full-stack applications, shared infrastructure, and 
 | Project | Description | Tech Stack | Port(s) |
 | --- | --- | --- | --- |
 | [Learn2Play (l2p)](./l2p/README.md) | Multiplayer quiz platform | React, Express, Socket.io, PostgreSQL | 3000, 3001 |
-| [VideoVault](./VideoVault/README.md) | Client-first video management | React, Vite, File System Access API | 5100/5000 |
-| [Payment](./payment/README.md) | Payment platform with Stripe | Next.js 16, Prisma, NextAuth | 3004 |
-| [VLLM](./vllm/README.md) | MCP server for AI inference and analysis | TypeScript, vLLM, PostgreSQL | 4100 |
+| [VideoVault](./VideoVault/README.md) | Client-first video management | React, Vite, File System Access API | 5100 (dev), 5000 (k8s) |
+| [Payment](./payment/README.md) | Payment platform with Stripe | Next.js 16, Prisma, NextAuth | 3004 (dev), 3000 (k8s) |
 | [Auth](./auth/README.md) | Unified authentication service | Node, JWT, OAuth, PostgreSQL | 5500 |
+| Dashboard | Cluster control center | Node, Express, Socket.io | 4242 |
 | [Reverse Proxy](./reverse-proxy/README.md) | Traefik routing and TLS | Traefik, Docker | 443/80 |
 | [Shared Infrastructure](./shared-infrastructure/README.md) | Centralized Postgres + shared assets | PostgreSQL, Docker | 5432 |
 | [Shared Resources](./shared-infrastructure/shared/README.md) | Cross-service packages and design assets | CSS, TypeScript, Node | - |
@@ -20,10 +20,13 @@ A collection of independent full-stack applications, shared infrastructure, and 
 **⚠️ IMPORTANT**: This repository follows a **strict single environment per service** model.
 
 ### Key Documentation
-- **[deployment.md](./docs/deployment.md)** - Complete deployment guide for all services
-- **[environment-management.md](./docs/environment-management.md)** - Environment philosophy and quick start
-- **[architecture.md](./docs/architecture.md)** - Visual architecture and service structure
-- **[agents.md](./docs/agents.md)** - Repository guidelines and agent instructions
+- **[k8s/README.md](./k8s/README.md)** - Kubernetes deployment guide
+- **[k8s/services/README.md](./k8s/services/README.md)** - Service routing and ports
+- **[k8s/infrastructure/README.md](./k8s/infrastructure/README.md)** - Infra components (Traefik/Postgres/SMB/NFS)
+- **[k8s/secrets/README.md](./k8s/secrets/README.md)** - Secrets generation and handling
+- **[k8s/scripts/README.md](./k8s/scripts/README.md)** - Cluster and deploy scripts
+- **[scripts/README.md](./scripts/README.md)** - Root automation scripts
+- **[AGENTS.md](./AGENTS.md)** - Repository guidelines and agent instructions
 
 ### Quick Deployment
 ```bash
@@ -48,18 +51,13 @@ A collection of independent full-stack applications, shared infrastructure, and 
 - **Dashboard**: https://dashboard.korczewski.de
 - **Auth**: https://auth.korczewski.de
 - **L2P**: https://l2p.korczewski.de
-- **Payment**: https://payment.korczewski.de
-- **VideoVault**: https://videovault.korczewski.de
-- **Open WebUI**: https://vllm.korczewski.de
+- **Payment**: https://payment.korczewski.de (alias: https://shop.korczewski.de)
+- **VideoVault**: https://videovault.korczewski.de (alias: https://video.korczewski.de)
 - **Traefik**: https://traefik.korczewski.de
 
 ## Documentation
 
-- **[docs/tasks.md](./docs/tasks.md)**: active tasks and consolidated checklists
-- **[docs/auth-fixes.md](./docs/auth-fixes.md)**: consolidated auth, JWT, and OAuth fixes plus deployment/testing notes
-- **[docs/npm-scripts.md](./docs/npm-scripts.md)**: npm script reference by project
-- **[docs/accessibility/](./docs/accessibility/)**: accessibility audits and test results
-- **[docs/integrations/](./docs/integrations/)**: third-party service integration plans
+- Kubernetes deployment docs live under `k8s/`
 - Project-specific documentation lives in each project directory
 
 ## Repository Guidelines
@@ -69,8 +67,8 @@ A collection of independent full-stack applications, shared infrastructure, and 
 - `l2p/`: quiz platform with `frontend/`, `backend/`; shared tooling lives in `shared-infrastructure/shared/l2p/`
 - `VideoVault/`: video manager with `client/`, `server/`, `e2e/`; shared modules live in `shared-infrastructure/shared/videovault/`
 - `payment/`: Next.js app with Prisma in `prisma/` and tests in `test/`
-- `vllm/`: MCP server with `src/`, `tests/`, optional `dashboard/` and `rag/`
 - `shared-infrastructure/shared/`: design system, MCP tooling, and per-service shared packages
+- `shared-infrastructure/SMB-Share`: symlink to the host SMB share used by VideoVault storage
 - Root utilities live in `scripts/`
 
 Note: `VideoVault/shared-infrastructure` is a symlink to `../shared-infrastructure` so Vite builds resolve shared modules and dependencies locally.
@@ -87,7 +85,6 @@ Note: `VideoVault/shared-infrastructure` is a symlink to `../shared-infrastructu
 - L2P: Jest unit/integration tests under `l2p/backend/src/**/__tests__` and `l2p/frontend/src/**/__tests__`, Playwright E2E under `l2p/frontend/e2e/`
 - VideoVault: Vitest unit tests in `VideoVault/client/src/**.test.ts`, Playwright E2E in `VideoVault/e2e/`
 - Payment: Vitest + Playwright in `payment/test/`
-- VLLM: Jest tests in `vllm/tests/`
 
 Add or update tests with every functional change.
 
@@ -107,16 +104,17 @@ Add or update tests with every functional change.
 cd l2p && npm run dev:backend && npm run dev:frontend
 cd VideoVault && npm run dev
 cd payment && npm run dev
-cd vllm && npm run dev:watch
 ```
 
 ## Root Scripts
 
+See `scripts/README.md` for the full list and usage. Common entry points:
+
 - `scripts/setup.sh`: install dependencies and seed env files
+- `scripts/start-all-production.sh`: start production Docker services
 - `scripts/start-all-services.sh`: start shared Postgres + services
-- `scripts/stop-all-services.sh`: stop services in order
-- `scripts/restart_all_services.sh`: restart stacks and dashboard
-- `scripts/db-viewer.sh`: inspect running DB containers and ports
+- `scripts/stop-all.sh`: stop production + dev services (optional infra)
+- `scripts/health-check.sh`: check production health + container status
 
 ## Environment Setup (General)
 
@@ -179,8 +177,6 @@ tar -czf env-backup-$(date +%Y%m%d).tar.gz \\
   l2p/.env-{dev,prod} \\
   VideoVault/.env-{dev,prod} \\
   payment/.env-{dev,prod} \\
-  vllm/.env-{dev,prod} \\
-  vllm/rag/.env-prod \\
   reverse-proxy/.env-prod
 ```
 
@@ -208,7 +204,6 @@ Start/stop all services:
 cd l2p && npm run build:all
 cd VideoVault && npm run build
 cd payment && npm run build
-cd vllm && npm run build
 
 # Tests
 cd l2p && npm run test:all
@@ -276,7 +271,6 @@ Status communication:
 Example:
 ```
 [2025-12-27 14:30] [l2p] [IN_PROGRESS] Adding profile feature (frontend/src/components/Profile.tsx)
-[2025-12-27 14:35] [vllm] [DONE] Updated MCP server configuration, container restarted
 ```
 
 ### Testing Expectations
@@ -300,24 +294,24 @@ Example:
 
 - Services are independent except for shared Postgres
 - L2P and VideoVault are performance-sensitive
-- VLLM tools allow SELECT-only database queries
 
 ## Repository Structure
 
 ```
 .
-├── docs/                      # Consolidated documentation
+├── Obsidian/                  # User guide and service docs (Obsidian vault)
 ├── auth/                      # Auth service
+├── dashboard/                 # Dashboard UI + server
+├── k8s/                       # Kubernetes manifests and scripts
 ├── l2p/                       # Learn2Play
 ├── payment/                   # Payment
 ├── reverse-proxy/             # Traefik
 ├── shared-infrastructure/     # Centralized Postgres + shared assets
 │   └── shared/                # Shared design system, MCP tooling, per-service shared packages
-├── vllm/                      # MCP server + tooling
 ├── VideoVault/                # VideoVault app
 ├── scripts/                   # Root scripts
 └── README.md
 ```
 
 ## Task Management
-Active tasks and consolidated checklists live in [docs/tasks.md](./docs/tasks.md).
+Active tasks and consolidated checklists live in the Obsidian vault (`Obsidian/`).
