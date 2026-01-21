@@ -206,7 +206,7 @@ res.cookie('accessToken', result.tokens.accessToken, {
 ```typescript
 res.cookie('accessToken', result.tokens.accessToken, {
   httpOnly: true,
-  secure: true, // Always use secure, rely on reverse proxy in dev
+  secure: true, // Always use secure, rely on ingress TLS in dev
   sameSite: 'strict', // Prevent CSRF more strictly
   maxAge: 15 * 60 * 1000,
   domain: process.env.COOKIE_DOMAIN || undefined,
@@ -214,7 +214,7 @@ res.cookie('accessToken', result.tokens.accessToken, {
 });
 ```
 
-**Note**: In development, use HTTPS locally or configure reverse proxy.
+**Note**: In development, use HTTPS locally or configure k3d ingress TLS.
 
 ---
 

@@ -358,13 +358,13 @@ docker run -p 5000:5000 --env-file .env-prod videovault
 **Production setup**:
 - Uses `Dockerfile.prod`
 - Connects to `shared-postgres:5432`
-- Traefik reverse proxy integration
+- Traefik ingress integration
 - Healthcheck: `/api/health`
 
 ### Networks
 
 - `l2p-network` (external): Shared network for services
-- `traefik-public` (external): Production reverse proxy
+- `traefik-public` (external): Production ingress
 
 ## Key Constraints & Patterns
 

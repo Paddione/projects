@@ -221,3 +221,4 @@ debug-*.jpeg
 *-debug.jpg
 *.debug.log
 k8s/skaffold
+k8s/test-results/

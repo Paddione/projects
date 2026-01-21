@@ -23,6 +23,7 @@ interface VideoCardProps {
   onSplit?: (video: Video) => void;
   onMove?: (video: Video) => void;
   onDelete?: (video: Video) => void;
+  onFocusMode?: (video: Video) => void;
   onRemoveCategory?: (videoId: string, categoryType: string, categoryValue: string) => void;
   'data-video-index'?: number;
   onClick?: () => void;
@@ -40,6 +41,7 @@ export function VideoCard({
   onSplit,
   onMove,
   onDelete,
+  onFocusMode,
   onRemoveCategory,
   onClick,
   isSelected = false,
@@ -450,6 +452,12 @@ export function VideoCard({
           }
         }
         break;
+      case 'f':
+        if (onFocusMode) {
+          e.preventDefault();
+          onFocusMode(video);
+        }
+        break;
     }
   };
 
@@ -503,7 +511,7 @@ export function VideoCard({
       onKeyDown={handleCardKeyDown}
       tabIndex={0}
       role="button"
-      aria-label={`Video: ${video.displayName}. Duration: ${formatDuration(video.metadata.duration)}. Size: ${formatFileSize(video.size)}. Click to play, or use keyboard shortcuts: E for edit tags, R for rename, M for move, Delete for delete.`}
+      aria-label={`Video: ${video.displayName}. Duration: ${formatDuration(video.metadata.duration)}. Size: ${formatFileSize(video.size)}. Click to play, or use keyboard shortcuts: E for edit tags, R for rename, M for move, F for focus mode, Delete for delete.`}
       data-testid={`video-card-${video.id}`}
       {...props}
     >

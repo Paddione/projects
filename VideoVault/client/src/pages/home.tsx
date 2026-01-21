@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useLocation } from 'wouter';
 import { Header } from '@/components/layout/header';
 import { Sidebar } from '@/components/layout/sidebar';
 import { MainContent } from '@/components/layout/main-content';
@@ -58,6 +59,7 @@ interface BatchResult {
 }
 
 export default function Home() {
+  const [, setLocation] = useLocation();
   const { state, actions } = useVideoManager();
   const { toast } = useToast();
   const { showError, showSuccess } = useErrorToast();
@@ -336,6 +338,10 @@ export default function Home() {
     setIsSplitOpen(true);
   };
 
+  const handleFocusMode = (video: Video) => {
+    setLocation(`/focus/${video.id}`);
+  };
+
   const handleFileDrop = async (files: FileList) => {
     try {
       const count = await actions.handleDroppedFiles(files);
@@ -539,6 +545,7 @@ export default function Home() {
           onVideoEditTags={handleVideoEditTags}
           onVideoRename={handleVideoRename}
           onVideoSplit={handleVideoSplit}
+          onFocusMode={handleFocusMode}
           onSelectDirectory={() => void handleScanDirectory()}
           onFileDrop={(files) => void handleFileDrop(files)}
           onDeleteFile={(video) =>
@@ -636,6 +643,7 @@ export default function Home() {
         onUpdateVideo={actions.updateVideoCategories}
         onRemoveCategory={actions.removeVideoCategory}
         onSplitVideo={handleSubmitSplit}
+        onFocusMode={handleFocusMode}
         onRescan={() =>
           void (async () => {
             const res = await actions.rescanLastRoot();

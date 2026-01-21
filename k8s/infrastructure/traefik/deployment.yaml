@@ -2,7 +2,7 @@
 # =============================================================================
 # Traefik Deployment
 # =============================================================================
-# Traefik v3 reverse proxy and ingress controller.
+# Traefik v3 ingress controller.
 # Handles TLS termination, routing, and middleware for all services.
 # =============================================================================
 

@@ -12,7 +12,6 @@
     "dev:payment": "cd payment && npm run dev",
     "dev:videovault": "cd VideoVault && npm run dev",
     "install:all": "cd l2p && npm run install:all && cd ../VideoVault && npm install && cd ../payment && npm install",
-    "restart:outdated": "bash ./scripts/restart-outdated.sh",
     "test:all": "npm --prefix l2p run test:all && npm --prefix auth run test && npm --prefix VideoVault run test && npm --prefix payment run test",
     "typecheck:all": "bash scripts/typecheck-all.sh",
     "validate:env": "node scripts/validate-env.js all",

@@ -32,6 +32,47 @@ export const SHORTCUT_GROUPS: ShortcutGroup[] = [
     ],
   },
   {
+    id: 'focus-mode',
+    title: 'Focus Mode',
+    shortcuts: [
+      {
+        id: 'open-focus-mode',
+        title: 'Open focus mode',
+        keys: ['F'],
+        description: 'Open focused video in Focus Mode for detailed editing.',
+        context: 'Focused video card',
+      },
+      {
+        id: 'focus-prev-next',
+        title: 'Previous / Next video',
+        keys: ['J', 'K'],
+        description: 'Navigate to previous or next video in the playlist.',
+        context: 'Focus Mode',
+      },
+      {
+        id: 'focus-save',
+        title: 'Save changes',
+        keys: ['Ctrl + S', 'Cmd + S'],
+        description: 'Save all pending changes to the current video.',
+        context: 'Focus Mode',
+      },
+      {
+        id: 'focus-generate-name',
+        title: 'Generate name',
+        keys: ['G'],
+        description: 'Generate display name and filename from categories.',
+        context: 'Focus Mode',
+      },
+      {
+        id: 'focus-exit',
+        title: 'Exit focus mode',
+        keys: ['Escape'],
+        description: 'Return to the library view.',
+        context: 'Focus Mode',
+      },
+    ],
+  },
+  {
     id: 'library-navigation',
     title: 'Library browsing',
     shortcuts: [

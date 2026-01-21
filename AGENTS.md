@@ -1,8 +1,8 @@
 # Repository Guidelines
 
 ## Project Structure & Module Organization
-- `l2p/`, `VideoVault/`, `payment/`, `auth/`, and `reverse-proxy/` are independent services with their own `README.md` and build/test scripts.
-- Service docs: `l2p/README.md`, `VideoVault/README.md`, `payment/README.md`, `auth/README.md`, `reverse-proxy/README.md`, and `shared-infrastructure/README.md`.
+- `l2p/`, `VideoVault/`, `payment/`, and `auth/` are independent services with their own `README.md` and build/test scripts.
+- Service docs: `l2p/README.md`, `VideoVault/README.md`, `payment/README.md`, `auth/README.md`, and `shared-infrastructure/README.md`.
 - `shared-infrastructure/` hosts the shared Postgres setup; reusable packages and design assets live in `shared-infrastructure/shared/`.
 - `Obsidian/` contains the user guide and service docs, `k8s/` holds deployment manifests, and `scripts/` contains root utilities (setup, health checks, env validation).
 - Keep changes scoped to a single service unless the feature explicitly spans multiple apps.
@@ -11,7 +11,7 @@
 - `npm run dev:all` runs all core services in parallel.
 - `npm run build:all` builds all apps sequentially (useful for CI checks).
 - `npm run test:all` runs each service’s test suite in order.
-- `./scripts/start-all-services.sh` and `./scripts/stop-all-services.sh` manage shared infra + services.
+- `k8s/scripts/deploy/deploy-all.sh` orchestrates a full cluster deployment.
 - `npm run validate:env` (or `:dev` / `:prod`) verifies required environment variables.
 
 ## Coding Style & Naming Conventions

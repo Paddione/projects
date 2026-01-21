@@ -11,7 +11,6 @@ A collection of independent full-stack applications, shared infrastructure, and 
 | [Payment](./payment/README.md) | Payment platform with Stripe | Next.js 16, Prisma, NextAuth | 3004 (dev), 3000 (k8s) |
 | [Auth](./auth/README.md) | Unified authentication service | Node, JWT, OAuth, PostgreSQL | 5500 |
 | Dashboard | Cluster control center | Node, Express, Socket.io | 4242 |
-| [Reverse Proxy](./reverse-proxy/README.md) | Traefik routing and TLS | Traefik, Docker | 443/80 |
 | [Shared Infrastructure](./shared-infrastructure/README.md) | Centralized Postgres + shared assets | PostgreSQL, Docker | 5432 |
 | [Shared Resources](./shared-infrastructure/shared/README.md) | Cross-service packages and design assets | CSS, TypeScript, Node | - |
 
@@ -30,14 +29,14 @@ A collection of independent full-stack applications, shared infrastructure, and 
 
 ### Quick Deployment
 ```bash
-# Start all production services
-./scripts/start-all-production.sh
+# Create local k3d cluster
+./k8s/scripts/cluster/k3d-create.sh
 
-# Check service health
-./scripts/health-check.sh
+# Generate secrets
+./k8s/scripts/utils/generate-secrets.sh
 
-# Stop all services
-./scripts/stop-all.sh
+# Deploy everything (Traefik ingress + services)
+./k8s/scripts/deploy/deploy-all.sh
 ```
 
 ### Environment Rules
@@ -111,10 +110,8 @@ cd payment && npm run dev
 See `scripts/README.md` for the full list and usage. Common entry points:
 
 - `scripts/setup.sh`: install dependencies and seed env files
-- `scripts/start-all-production.sh`: start production Docker services
-- `scripts/start-all-services.sh`: start shared Postgres + services
-- `scripts/stop-all.sh`: stop production + dev services (optional infra)
-- `scripts/health-check.sh`: check production health + container status
+- `k8s/scripts/deploy/deploy-all.sh`: deploy the full k8s stack
+- `k8s/scripts/utils/validate-cluster.sh`: validate cluster health
 
 ## Environment Setup (General)
 
@@ -177,7 +174,6 @@ tar -czf env-backup-$(date +%Y%m%d).tar.gz \\
   l2p/.env-{dev,prod} \\
   VideoVault/.env-{dev,prod} \\
   payment/.env-{dev,prod} \\
-  reverse-proxy/.env-prod
 ```
 
 Restore:
@@ -191,10 +187,10 @@ tar -xzf env-backup-YYYYMMDD.tar.gz
 
 All services use a single PostgreSQL instance with separate databases and users. Shared assets (design system, MCP tooling, service-level shared packages) live under `shared-infrastructure/shared/`.
 
-Start/stop all services:
+Start/stop the k8s stack:
 ```bash
-./scripts/start-all-services.sh
-./scripts/stop-all-services.sh
+./k8s/scripts/deploy/deploy-all.sh
+./k8s/scripts/utils/validate-cluster.sh
 ```
 
 ## Common Commands
@@ -305,7 +301,6 @@ Example:
 ├── k8s/                       # Kubernetes manifests and scripts
 ├── l2p/                       # Learn2Play
 ├── payment/                   # Payment
-├── reverse-proxy/             # Traefik
 ├── shared-infrastructure/     # Centralized Postgres + shared assets
 │   └── shared/                # Shared design system, MCP tooling, per-service shared packages
 ├── VideoVault/                # VideoVault app

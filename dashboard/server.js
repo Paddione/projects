@@ -161,14 +161,6 @@ const DOCKER_ENVIRONMENTS = {
         project: 'videovault',
         env: 'development',
         description: 'Media management and transcription (dev)'
-    },
-    'traefik': {
-        name: 'Traefik Reverse Proxy',
-        path: path.resolve(PROJECT_ROOT, '..', 'reverse-proxy'),
-        composeFiles: ['docker-compose.yml'],
-        project: 'shared',
-        env: 'infrastructure',
-        description: 'Reverse proxy and SSL termination'
     }
 };
 
@@ -1096,7 +1088,7 @@ io.on('connection', async (socket) => {
                 }
             });
         } else {
-            // Docker mode
+            // Docker/Process mode (Only for local dev)
             const statuses = await getServiceStatus();
             const running = Object.values(statuses).filter(Boolean).length;
 

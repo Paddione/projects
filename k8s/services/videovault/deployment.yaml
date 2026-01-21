@@ -76,6 +76,8 @@ spec:
               mountPath: /app/media
             - name: thumbnails-storage
               mountPath: /app/media/Processed/Thumbnails
+            - name: logs
+              mountPath: /app/logs
           livenessProbe:
             httpGet:
               path: /api/health
@@ -112,3 +114,5 @@ spec:
         - name: thumbnails-storage
           persistentVolumeClaim:
             claimName: videovault-thumbnails
+        - name: logs
+          emptyDir: {}

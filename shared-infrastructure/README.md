@@ -34,7 +34,7 @@ See `shared-infrastructure/shared/README.md` for usage details.
 - Centralized monitoring
 - Per-service isolation via separate databases and users
 
-## Quick Start (Fresh Install)
+## Quick Start (Local Docker)
 
 ```bash
 cd shared-infrastructure
@@ -44,18 +44,7 @@ cp .env.example .env
 docker-compose up -d
 ```
 
-Start all services after Postgres is healthy:
-
-```bash
-cd ..
-./scripts/start-all-services.sh
-```
-
-Stop all services:
-
-```bash
-./scripts/stop-all-services.sh
-```
+For k3d/k8s deployments, use the manifests under `k8s/infrastructure/postgres/` and `k8s/scripts/deploy/deploy-postgres.sh`.
 
 ## Environment Configuration
 

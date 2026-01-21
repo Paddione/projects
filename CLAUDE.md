@@ -12,7 +12,6 @@ Patrick's Projects is a monorepo containing independent full-stack applications 
 | VideoVault | React, Vite, File System Access API, Express | 5100/5000 |
 | payment | Next.js 16, Prisma, NextAuth v5 | 3004 |
 | auth | Express, Passport.js, JWT/OAuth | 5500 |
-| reverse-proxy | Traefik v3 | 80/443 |
 | shared-infrastructure | PostgreSQL, shared design system | 5432 |
 
 ## Common Commands
@@ -32,11 +31,11 @@ npm run test:all             # Run all test suites
 npm run typecheck:all        # Type check all projects
 npm run validate:env         # Validate environment files
 
-# Deployment
-./scripts/start-all-production.sh   # Start production stack
-./scripts/stop-all.sh               # Stop all services
-./scripts/health-check.sh           # Verify service health
-./scripts/restart_all_services.sh   # Full restart
+# Deployment (k8s)
+./k8s/scripts/cluster/k3d-create.sh
+./k8s/scripts/utils/generate-secrets.sh
+./k8s/scripts/deploy/deploy-all.sh
+./scripts/health-check.sh
 ```
 
 ### Project-Specific Commands
@@ -100,10 +99,7 @@ All services connect to a single PostgreSQL instance with isolated databases:
 - `payment_db` - Payment service
 - `auth_db` - Auth service
 
-Start shared infrastructure first:
-```bash
-cd shared-infrastructure && docker-compose up -d
-```
+Start shared infrastructure via Kubernetes manifests in `k8s/infrastructure/`.
 
 ### Real-Time Architecture (l2p)
 

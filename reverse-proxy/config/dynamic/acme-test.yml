@@ -1,8 +1,0 @@
-http:
-  routers:
-    acme-test:
-      rule: "Host(`test.korczewski.de`)"
-      entryPoints:
-        - websecure
-      service: noop@internal
-      tls: {}

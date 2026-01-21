@@ -142,14 +142,6 @@ const SERVICE_CONFIGS = {
     secrets: ['NEXTAUTH_SECRET', 'AUTH_SECRET'],
     matchPasswords: ['PAYMENT_DB_PASSWORD'],
   },
-  'reverse-proxy': {
-    name: 'Reverse Proxy (Traefik)',
-    envFiles: ['.env-prod'],
-    required: {
-      '.env-prod': ['ACME_EMAIL', 'TRAEFIK_DASHBOARD_USER'],
-    },
-    optional: true, // Reverse proxy is optional for local dev
-  },
 };
 
 // Default placeholder values that should be replaced

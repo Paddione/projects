@@ -23,6 +23,33 @@ log_warn() { echo -e "${YELLOW}[WARN]${NC} $1"; }
 log_info() { echo -e "${BLUE}[INFO]${NC} $1"; }
 
 ERRORS=0
+PORT_FORWARD_LOG="/tmp/korczewski-port-forward.log"
+
+get_free_port() {
+    if command -v python3 >/dev/null 2>&1; then
+        python3 - <<'PY'
+import socket
+s = socket.socket()
+s.bind(('', 0))
+print(s.getsockname()[1])
+s.close()
+PY
+        return
+    fi
+
+    if command -v python >/dev/null 2>&1; then
+        python - <<'PY'
+import socket
+s = socket.socket()
+s.bind(('', 0))
+print(s.getsockname()[1])
+s.close()
+PY
+        return
+    fi
+
+    echo "18080"
+}
 
 echo "=========================================="
 echo "Cluster Health Validation"
@@ -36,7 +63,7 @@ echo "1. Node Status"
 echo "----------------------------------------"
 if kubectl get nodes &> /dev/null; then
     kubectl get nodes -o wide
-    NOT_READY=$(kubectl get nodes --no-headers | grep -v "Ready" | wc -l)
+    NOT_READY=$(kubectl get nodes --no-headers | awk '$2 != "Ready" {count++} END {print count+0}')
     if [ "$NOT_READY" -eq 0 ]; then
         log_pass "All nodes are Ready"
     else
@@ -58,7 +85,7 @@ kubectl get pods -A -l app.kubernetes.io/part-of=korczewski 2>/dev/null || \
 kubectl get pods -A 2>/dev/null || echo "No pods found"
 
 # Check for non-running pods
-NOT_RUNNING=$(kubectl get pods -A --no-headers 2>/dev/null | grep -v "Running\|Completed" | wc -l)
+NOT_RUNNING=$(kubectl get pods -A --no-headers 2>/dev/null | awk '$4 != "Running" && $4 != "Completed" {count++} END {print count+0}')
 if [ "$NOT_RUNNING" -eq 0 ]; then
     log_pass "All pods are Running"
 else
@@ -101,6 +128,24 @@ check_service() {
     # Check health endpoint
     HEALTH=$(kubectl exec "$POD" -n "$namespace" -- wget -q -O- "http://localhost:${port}${path}" 2>/dev/null || \
              kubectl exec "$POD" -n "$namespace" -- curl -sf "http://localhost:${port}${path}" 2>/dev/null || echo "")
+    if [ -z "$HEALTH" ] && command -v curl >/dev/null 2>&1; then
+        local local_port
+        local_port="$(get_free_port)"
+        kubectl port-forward -n "$namespace" "$POD" "${local_port}:${port}" >"$PORT_FORWARD_LOG" 2>&1 &
+        local pf_pid=$!
+
+        for _ in {1..10}; do
+            if curl -sf "http://127.0.0.1:${local_port}${path}" >/dev/null 2>&1; then
+                HEALTH="ok"
+                break
+            fi
+            sleep 0.5
+        done
+
+        kill "$pf_pid" >/dev/null 2>&1 || true
+        wait "$pf_pid" >/dev/null 2>&1 || true
+    fi
+
     if [ -n "$HEALTH" ]; then
         log_pass "Healthy"
     else
@@ -108,7 +153,6 @@ check_service() {
     fi
 }
 
-check_service "PostgreSQL" "korczewski-infra" "app=postgres" "5432" ""
 # For PostgreSQL, use pg_isready instead
 echo -n "   PostgreSQL (pg_isready): "
 if kubectl exec statefulset/postgres -n korczewski-infra -- pg_isready -U postgres &>/dev/null; then
@@ -139,7 +183,7 @@ echo ""
 echo "5. Persistent Volume Claims"
 echo "----------------------------------------"
 kubectl get pvc -A 2>/dev/null || echo "No PVCs found"
-UNBOUND=$(kubectl get pvc -A --no-headers 2>/dev/null | grep -v "Bound" | wc -l)
+UNBOUND=$(kubectl get pvc -A --no-headers 2>/dev/null | awk '$3 != "Bound" {count++} END {print count+0}')
 if [ "$UNBOUND" -gt 0 ]; then
     log_warn "$UNBOUND PVC(s) not bound"
 fi

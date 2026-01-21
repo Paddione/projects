@@ -19,6 +19,9 @@ spec:
   selector:
     matchLabels:
       app: dashboard
+      app.kubernetes.io/component: control-center
+      app.kubernetes.io/part-of: korczewski
+      tier: infrastructure
   strategy:
     type: RollingUpdate
     rollingUpdate:
@@ -28,8 +31,10 @@ spec:
     metadata:
       labels:
         app: dashboard
-        app.kubernetes.io/name: dashboard
         app.kubernetes.io/component: control-center
+        app.kubernetes.io/name: dashboard
+        app.kubernetes.io/part-of: korczewski
+        tier: infrastructure
     spec:
       serviceAccountName: dashboard
       securityContext:
@@ -99,6 +104,23 @@ spec:
           securityContext:
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: false
+            capabilities:
+              drop:
+                - ALL
+        - name: kubectl-proxy
+          image: bitnami/kubectl:latest
+          command: ["kubectl", "proxy", "--port=8001", "--address=127.0.0.1"]
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "10m"
+            limits:
+              memory: "128Mi"
+              cpu: "100m"
+          securityContext:
+            runAsUser: 1001
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
             capabilities:
               drop:
                 - ALL

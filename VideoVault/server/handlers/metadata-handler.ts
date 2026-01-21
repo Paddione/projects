@@ -1,6 +1,8 @@
 import { spawn } from 'child_process';
+import path from 'path';
+import fs from 'fs/promises';
 import { eq, and } from 'drizzle-orm';
-import { videos, scanState } from '@shared/schema';
+import { videos, scanState, directoryRoots } from '@shared/schema';
 import { logger } from '../lib/logger';
 import type { JobContext } from '../lib/enhanced-job-queue';
 
@@ -94,6 +96,83 @@ function extractMetadataWithFFprobe(filePath: string): Promise<VideoMetadata> {
 }
 
 /**
+ * Resolve a relative path to an absolute path using rootKey and MEDIA_ROOT
+ * Tries multiple candidate paths to find where the file actually exists
+ */
+async function resolveInputPath(
+  relativePath: string,
+  rootKey: string | undefined,
+  db: any,
+): Promise<string | null> {
+  const MEDIA_ROOT = process.env.MEDIA_ROOT || path.join(process.cwd(), 'Bibliothek');
+
+  // If inputPath is already absolute, verify it exists
+  if (path.isAbsolute(relativePath)) {
+    try {
+      await fs.access(relativePath);
+      return relativePath;
+    } catch {
+      logger.warn(`[MetadataHandler] Absolute path not found: ${relativePath}`);
+      return null;
+    }
+  }
+
+  // Build candidate root paths
+  const candidateRoots: string[] = [MEDIA_ROOT];
+
+  // Try to look up root from database if rootKey is provided
+  if (rootKey && db) {
+    try {
+      const [root] = await db
+        .select()
+        .from(directoryRoots)
+        .where(eq(directoryRoots.rootKey, rootKey))
+        .limit(1);
+
+      if (root) {
+        // Add root name subdirectory
+        candidateRoots.unshift(path.join(MEDIA_ROOT, root.name));
+
+        // Add any stored directory paths
+        if (root.directories && Array.isArray(root.directories)) {
+          for (const dir of root.directories) {
+            if (path.isAbsolute(dir)) {
+              candidateRoots.push(dir);
+            }
+          }
+        }
+      }
+    } catch (error: any) {
+      logger.warn(`[MetadataHandler] Failed to look up root: ${rootKey}`, { error: error?.message });
+    }
+  }
+
+  // Also try common fallback paths
+  candidateRoots.push(
+    path.join(process.cwd(), 'Bibliothek'),
+    process.cwd(),
+  );
+
+  // Try each candidate to find where the file exists
+  for (const rootPath of candidateRoots) {
+    const candidate = path.join(rootPath, relativePath);
+    try {
+      await fs.access(candidate);
+      logger.debug(`[MetadataHandler] Resolved path: ${relativePath} -> ${candidate}`);
+      return candidate;
+    } catch {
+      // Continue to next candidate
+    }
+  }
+
+  logger.error(`[MetadataHandler] Could not resolve path: ${relativePath}`, {
+    rootKey,
+    triedPaths: candidateRoots.map((r) => path.join(r, relativePath)),
+  });
+  return null;
+}
+
+/**
  * Metadata Extraction Handler
  *
  * Uses ffprobe to extract accurate video metadata:
@@ -108,11 +187,19 @@ export async function handleMetadataExtraction(
 ) {
   const { inputPath, videoId, rootKey, relativePath } = data;
 
-  logger.info(`[MetadataHandler] Extracting metadata for: ${inputPath}`, { videoId });
+  logger.info(`[MetadataHandler] Extracting metadata for: ${inputPath}`, { videoId, rootKey });
 
   try {
+    // Resolve relative path to absolute path
+    const resolvedPath = await resolveInputPath(inputPath, rootKey, db);
+    if (!resolvedPath) {
+      throw new Error(`Could not resolve input path: ${inputPath} (rootKey: ${rootKey})`);
+    }
+
+    logger.info(`[MetadataHandler] Resolved path: ${inputPath} -> ${resolvedPath}`);
+
     // Extract metadata using ffprobe
-    const metadata = await extractMetadataWithFFprobe(inputPath);
+    const metadata = await extractMetadataWithFFprobe(resolvedPath);
 
     logger.info(`[MetadataHandler] Extracted metadata for: ${inputPath}`, {
       videoId,

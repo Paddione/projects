@@ -403,7 +403,7 @@ Compose Playwright image is pinned to `v1.55.0-jammy` to match `@playwright/test
 ### Production
 - Run `npm run build` to create production build
 - Use `npm run start` to serve production build
-- Configure reverse proxy if needed
+- Configure k3d ingress if needed
 
 ### Docker Production
 ```bash

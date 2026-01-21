@@ -48,7 +48,7 @@ export { app };
 // Enable strong ETag for better conditional GET support
 app.set('etag', 'strong');
 
-// Trust proxy for nginx reverse proxy - required for rate limiting to work correctly
+// Trust proxy for ingress - required for rate limiting to work correctly
 // Use specific trust proxy setting for production with nginx
 app.set('trust proxy', process.env['NODE_ENV'] === 'production' ? 1 : false);
 
@@ -325,6 +325,9 @@ app.use(metricsMiddleware);
 // Expose metrics endpoint before general rate limiting to avoid self-interference
 app.use('/metrics', metricsRoutes);
 
+// Health check routes (no rate limiting for health checks)
+app.use('/api/health', healthRoutes);
+
 // Apply general rate limiter afterward
 app.use(generalLimiter);
 
@@ -340,9 +343,6 @@ app.use(requestLogger);
 
 // Error logging middleware (placeholder - implement if needed)
 // app.use(errorLogger);
-
-// Health check routes (no rate limiting for health checks)
-app.use('/api/health', healthRoutes);
 
 // Migration status endpoint under API
 app.get('/api/migrations/status', async (req: Request, res: Response) => {

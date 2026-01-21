@@ -6,10 +6,10 @@
 - [ ] l2p
 - [ ] VideoVault
 - [ ] payment
-- [ ] vllm
 - [ ] auth
+- [ ] dashboard
 - [ ] shared-infrastructure
-- [ ] reverse-proxy
+- [ ] k8s
 
 ## Type of Change
 - [ ] New feature

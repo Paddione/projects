@@ -11,12 +11,14 @@ import AdminErrorsPage from '@/pages/admin-errors';
 import DuplicatesPage from '@/pages/duplicates';
 import TagsPage from '@/pages/tags';
 import AnalyticsPage from '@/pages/analytics';
+import FocusModePage from '@/pages/focus-mode';
 import NotFound from '@/pages/not-found';
 
 function Router() {
   return (
     <Switch>
       <Route path="/" component={Home} />
+      <Route path="/focus/:videoId" component={FocusModePage} />
       <Route path="/duplicates" component={DuplicatesPage} />
       <Route path="/tags" component={TagsPage} />
       <Route path="/analytics" component={AnalyticsPage} />

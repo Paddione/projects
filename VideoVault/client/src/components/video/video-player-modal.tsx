@@ -23,6 +23,7 @@ import {
   Tags,
   Scissors,
   X,
+  Focus,
 } from 'lucide-react';
 import { useMemo } from 'react';
 import { VideoUrlRegistry } from '@/services/video-url-registry';
@@ -55,6 +56,7 @@ interface VideoPlayerModalProps {
   onSplitVideo?: (payload: SplitVideoFormValues) => Promise<SplitVideoResult>;
   shuffleEnabled?: boolean;
   onToggleShuffle?: () => void;
+  onFocusMode?: (video: Video) => void;
 }
 
 export function VideoPlayerModal({
@@ -70,6 +72,7 @@ export function VideoPlayerModal({
   onSplitVideo,
   shuffleEnabled,
   onToggleShuffle,
+  onFocusMode,
 }: VideoPlayerModalProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -708,6 +711,23 @@ export function VideoPlayerModal({
                     >
                       <Tags className="h-4 w-4" />
                     </Button>
+
+                    {onFocusMode && video && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          onFocusMode(video);
+                          onClose();
+                        }}
+                        className="text-white hover:bg-white hover:bg-opacity-20 hidden sm:inline-flex"
+                        data-testid="button-focus-mode"
+                        aria-label="Open in Focus Mode"
+                        title="Open in Focus Mode"
+                      >
+                        <Focus className="h-4 w-4" />
+                      </Button>
+                    )}
 
                     {onSplitVideo && (
                       <Button

@@ -1,112 +1,99 @@
 ---
-description: Manage and Configure Reverse Proxy (Traefik)
+description: Manage Traefik Ingress Controller (Kubernetes)
 ---
 
-This workflow explains how to manage the Traefik reverse proxy configuration.
+This workflow explains how to manage Traefik as the Kubernetes ingress controller.
 
 ## Overview
-Traefik is now the primary reverse proxy, replacing Nginx Proxy Manager.
+
+Traefik runs as a Kubernetes deployment in the `korczewski-infra` namespace, handling TLS termination and routing via IngressRoute CRDs.
 
 ### Architecture
-- **Traefik**: Running as Docker container on ports 80, 443, 8080
-- **Docker Provider**: Auto-discovers services with Traefik labels
-- **File Provider**: Static configuration for local services (fallback)
-- **Location**: `/home/patrick/projects/reverse-proxy`
+- **Namespace**: `korczewski-infra`
+- **Ports**: 80 (HTTP), 443 (HTTPS), 8080 (dashboard)
+- **Manifests**: `k8s/infrastructure/traefik/`
+- **Dashboard**: https://traefik.korczewski.de
 
 ## Configuration Files
 
-### Static Configuration
-- `docker-compose.yml`: Traefik container configuration
-- `.env`: Environment variables (credentials, email)
-
-### Dynamic Configuration
-Located in `config/dynamic/`:
-- `auth.yml`: Auth service routing (legacy, can be removed)
-- `middlewares.yml`: Security headers, rate limiting, etc.
-- `tls.yml`: TLS/SSL configuration
-- `local-services.yml`: Fallback routes for local services
+| File | Purpose |
+|------|---------|
+| `deployment.yaml` | Traefik deployment and args |
+| `service.yaml` | LoadBalancer service |
+| `middlewares.yaml` | Security headers, rate limiting |
+| `ingressroute-dashboard.yaml` | Dashboard routing |
+| `tlsstore.yaml` | Default TLS certificate |
 
 ## Managing Traefik
 
-### 1. View Logs
+### View Logs
 ```bash
-docker logs traefik --tail 50
+kubectl logs -n korczewski-infra -l app=traefik --tail=50
 ```
 
-### 2. Restart Traefik
+### Restart Traefik
 ```bash
-cd /home/patrick/projects/reverse-proxy
-docker compose restart
+kubectl rollout restart deployment/traefik -n korczewski-infra
 ```
 
-### 3. Rebuild Traefik
+### Deploy/Update
 ```bash
-cd /home/patrick/projects/reverse-proxy
-docker compose up -d --force-recreate
+./k8s/scripts/deploy/deploy-traefik.sh
 ```
 
-### 4. Access Dashboard
-Open browser to: `https://traefik.korczewski.de`
-(Requires authentication - credentials in `.env`)
+### Check Status
+```bash
+kubectl get pods -n korczewski-infra -l app=traefik
+kubectl get svc -n korczewski-infra traefik
+```
 
 ## Adding New Services
 
-### Option 1: Docker Service (Recommended)
-Add Traefik labels to your docker-compose.yml:
+Add an IngressRoute in the service's k8s directory:
 
 ```yaml
-labels:
-  - "traefik.enable=true"
-  - "traefik.http.routers.myservice.rule=Host(`myservice.korczewski.de`)"
-  - "traefik.http.routers.myservice.entrypoints=websecure"
-  - "traefik.http.routers.myservice.tls=true"
-  - "traefik.http.services.myservice.loadbalancer.server.port=8080"
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: myservice
+  namespace: korczewski-services
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`myservice.korczewski.de`)
+      kind: Rule
+      services:
+        - name: myservice
+          port: 8080
+  tls:
+    secretName: korczewski-tls
 ```
 
-### Option 2: Local Service (Fallback)
-Edit `config/dynamic/local-services.yml` and add:
+## Secrets
 
-```yaml
-http:
-  routers:
-    myservice-local:
-      rule: "Host(`myservice.korczewski.de`)"
-      entryPoints:
-        - websecure
-      service: myservice-local
-      tls: true
-      priority: 5
-  
-  services:
-    myservice-local:
-      loadBalancer:
-        servers:
-          - url: "http://172.17.0.1:8080"
-```
+From `k8s/secrets/`:
+- `korczewski-tls` - TLS certificate
+- `traefik-dashboard-auth` - Dashboard credentials
 
-## Port Forwarding
-For external access, ensure your router forwards:
-- Port 80 → 10.10.0.3:80
-- Port 443 → 10.10.0.3:443
+Generated from root `.env`:
+- `TRAEFIK_DASHBOARD_USER`
+- `TRAEFIK_DASHBOARD_PASSWORD_HASH`
 
 ## Troubleshooting
 
-### Check if Traefik is running
+### Check IngressRoutes
 ```bash
-docker ps | grep traefik
+kubectl get ingressroutes -A
 ```
 
 ### View routing configuration
 ```bash
+kubectl port-forward -n korczewski-infra svc/traefik 8080:8080
 curl http://localhost:8080/api/http/routers | jq
 ```
 
 ### Test service locally
 ```bash
-curl -H "Host: myservice.korczewski.de" http://localhost/
+curl -k -H "Host: myservice.korczewski.de" https://localhost/
 ```
-
-## Migration Notes
-- ✅ Migrated from Nginx Proxy Manager (10.0.0.46) to Traefik
-- ✅ All services now use Traefik for routing
-- ✅ Hybrid setup: Docker containers + local services supported

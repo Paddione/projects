@@ -1,5 +1,12 @@
 import { defineConfig } from 'vitest/config';
 import path from 'path';
+import fs from 'fs';
+
+// Prefer a local symlinked shared-infrastructure (for node_modules resolution).
+// Fall back to the repo root shared-infrastructure when the symlink isn't present.
+const sharedRootLocal = path.resolve(__dirname, 'shared-infrastructure', 'shared');
+const sharedRootExternal = path.resolve(__dirname, '..', 'shared-infrastructure', 'shared');
+const sharedRoot = fs.existsSync(sharedRootLocal) ? sharedRootLocal : sharedRootExternal;
 
 export default defineConfig({
   root: path.resolve(__dirname, 'client'),
@@ -10,7 +17,7 @@ export default defineConfig({
   resolve: {
     alias: [
       { find: '@', replacement: path.resolve(__dirname, 'client', 'src') },
-      { find: '@shared', replacement: path.resolve(__dirname, 'shared') },
+      { find: '@shared', replacement: path.resolve(sharedRoot, 'videovault') },
       { find: '@assets', replacement: path.resolve(__dirname, 'attached_assets') },
       // Stub heavy instant-search path during tests
       {

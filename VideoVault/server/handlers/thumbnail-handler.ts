@@ -1,7 +1,7 @@
 import path from 'path';
 import fs from 'fs/promises';
 import { eq, and } from 'drizzle-orm';
-import { thumbnails, videos, scanState } from '@shared/schema';
+import { thumbnails, videos, scanState, directoryRoots } from '@shared/schema';
 import { logger } from '../lib/logger';
 import type { JobContext } from '../lib/enhanced-job-queue';
 import { fileURLToPath } from 'url';
@@ -19,6 +19,83 @@ async function loadThumbnailGenerator() {
     ffmpegGenerateThumbnail = module.generateThumbnail;
   }
   return ffmpegGenerateThumbnail;
+}
+
+/**
+ * Resolve a relative path to an absolute path using rootKey and MEDIA_ROOT
+ * Tries multiple candidate paths to find where the file actually exists
+ */
+async function resolveInputPath(
+  relativePath: string,
+  rootKey: string | undefined,
+  db: any,
+): Promise<string | null> {
+  const MEDIA_ROOT = process.env.MEDIA_ROOT || path.join(process.cwd(), 'Bibliothek');
+
+  // If inputPath is already absolute, verify it exists
+  if (path.isAbsolute(relativePath)) {
+    try {
+      await fs.access(relativePath);
+      return relativePath;
+    } catch {
+      logger.warn(`[ThumbnailHandler] Absolute path not found: ${relativePath}`);
+      return null;
+    }
+  }
+
+  // Build candidate root paths
+  const candidateRoots: string[] = [MEDIA_ROOT];
+
+  // Try to look up root from database if rootKey is provided
+  if (rootKey && db) {
+    try {
+      const [root] = await db
+        .select()
+        .from(directoryRoots)
+        .where(eq(directoryRoots.rootKey, rootKey))
+        .limit(1);
+
+      if (root) {
+        // Add root name subdirectory
+        candidateRoots.unshift(path.join(MEDIA_ROOT, root.name));
+
+        // Add any stored directory paths
+        if (root.directories && Array.isArray(root.directories)) {
+          for (const dir of root.directories) {
+            if (path.isAbsolute(dir)) {
+              candidateRoots.push(dir);
+            }
+          }
+        }
+      }
+    } catch (error: any) {
+      logger.warn(`[ThumbnailHandler] Failed to look up root: ${rootKey}`, { error: error?.message });
+    }
+  }
+
+  // Also try common fallback paths
+  candidateRoots.push(
+    path.join(process.cwd(), 'Bibliothek'),
+    process.cwd(),
+  );
+
+  // Try each candidate to find where the file exists
+  for (const rootPath of candidateRoots) {
+    const candidate = path.join(rootPath, relativePath);
+    try {
+      await fs.access(candidate);
+      logger.debug(`[ThumbnailHandler] Resolved path: ${relativePath} -> ${candidate}`);
+      return candidate;
+    } catch {
+      // Continue to next candidate
+    }
+  }
+
+  logger.error(`[ThumbnailHandler] Could not resolve path: ${relativePath}`, {
+    rootKey,
+    triedPaths: candidateRoots.map((r) => path.join(r, relativePath)),
+  });
+  return null;
 }
 
 export interface ThumbnailJobPayload {
@@ -48,12 +125,21 @@ export async function handleThumbnailGeneration(
   logger.info(`[ThumbnailHandler] Generating thumbnail for: ${inputPath}`, {
     videoId,
     fileHash,
+    rootKey,
   });
 
   try {
+    // 0. Resolve relative path to absolute path
+    const resolvedPath = await resolveInputPath(inputPath, rootKey, db);
+    if (!resolvedPath) {
+      throw new Error(`Could not resolve input path: ${inputPath} (rootKey: ${rootKey})`);
+    }
+
+    logger.info(`[ThumbnailHandler] Resolved path: ${inputPath} -> ${resolvedPath}`);
+
     // 1. Generate thumbnails using existing FFmpeg script
     const generateThumbnail = await loadThumbnailGenerator();
-    const result = await generateThumbnail(inputPath, { overwrite: false });
+    const result = await generateThumbnail(resolvedPath, { overwrite: false });
 
     if (result.skipped) {
       logger.info(`[ThumbnailHandler] Thumbnail already exists for: ${inputPath}`);
