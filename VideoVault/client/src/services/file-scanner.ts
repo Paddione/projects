@@ -9,6 +9,49 @@ import { SpriteCache } from './sprite-cache';
 import { setSpriteMeta } from './sprite-indexeddb';
 import { FileHandleRegistry } from './file-handle-registry';
 
+// Throttled thumbnail generation requests to prevent server flooding
+class ThumbnailRequestQueue {
+  private queue: Array<{ rootKey: string; relativePath: string }> = [];
+  private processing = false;
+  private pendingPaths = new Set<string>();
+  private readonly maxConcurrent = 4;
+  private readonly delayMs = 100;
+
+  enqueue(rootKey: string, relativePath: string): void {
+    // Deduplicate
+    const key = `${rootKey}:${relativePath}`;
+    if (this.pendingPaths.has(key)) return;
+    this.pendingPaths.add(key);
+    this.queue.push({ rootKey, relativePath });
+    this.processQueue();
+  }
+
+  private async processQueue(): Promise<void> {
+    if (this.processing) return;
+    this.processing = true;
+
+    while (this.queue.length > 0) {
+      // Process batch
+      const batch = this.queue.splice(0, this.maxConcurrent);
+      await Promise.allSettled(
+        batch.map(({ rootKey, relativePath }) =>
+          ApiClient.post('/api/thumbnails/generate', { rootKey, relativePath })
+            .catch((err: any) => console.warn('Thumbnail request failed:', err.message || err))
+            .finally(() => this.pendingPaths.delete(`${rootKey}:${relativePath}`)),
+        ),
+      );
+      // Small delay between batches to avoid overwhelming server
+      if (this.queue.length > 0) {
+        await new Promise((r) => setTimeout(r, this.delayMs));
+      }
+    }
+
+    this.processing = false;
+  }
+}
+
+const thumbnailRequestQueue = new ThumbnailRequestQueue();
+
 export class FileScanner {
   private static readonly SUPPORTED_EXTENSIONS = [
     '.mp4',
@@ -179,10 +222,8 @@ export class FileScanner {
     }
 
     if (!thumbnail && rootKey && relativePath) {
-      // Trigger server-side generation in background (fire and forget)
-      ApiClient.post('/api/thumbnails/generate', { rootKey, relativePath }).catch((err: any) =>
-        console.warn('Failed to trigger thumbnail generation:', err.message || err),
-      );
+      // Queue server-side generation (throttled to prevent flooding)
+      thumbnailRequestQueue.enqueue(rootKey, relativePath);
     }
 
     if (!thumbnail) {

@@ -93,4 +93,5 @@ export class JobQueue extends EventEmitter {
     }
 }
 
-export const jobQueue = new JobQueue(2);
+// Increase concurrency for thumbnail generation (parallel FFmpeg processes)
+export const jobQueue = new JobQueue(4);

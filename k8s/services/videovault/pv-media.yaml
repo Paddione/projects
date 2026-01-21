@@ -1,0 +1,105 @@
+---
+# =============================================================================
+# VideoVault Static Persistent Volumes for Media Libraries
+# =============================================================================
+# These PVs mount existing SMB directories directly (not dynamic provisioning)
+# =============================================================================
+
+# Movies PV - mounts //10.10.0.3/SMB-Share/movies directly
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: videovault-movies-pv
+  labels:
+    app: videovault
+    media-type: movies
+spec:
+  capacity:
+    storage: 2Ti
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: "" # Empty to prevent dynamic provisioning
+  mountOptions:
+    - dir_mode=0755
+    - file_mode=0644
+    - uid=1001
+    - gid=1001
+    - noperm
+    - mfsymlinks
+    - cache=none
+    - noserverino
+  csi:
+    driver: smb.csi.k8s.io
+    volumeHandle: videovault-movies-pv
+    volumeAttributes:
+      source: "//10.10.0.3/SMB-Share/movies"
+    nodeStageSecretRef:
+      name: smbcreds
+      namespace: korczewski-infra
+---
+# Audiobooks PV - mounts //10.10.0.3/SMB-Share/audiobooks directly
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: videovault-audiobooks-pv
+  labels:
+    app: videovault
+    media-type: audiobooks
+spec:
+  capacity:
+    storage: 500Gi
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ""
+  mountOptions:
+    - dir_mode=0755
+    - file_mode=0644
+    - uid=1001
+    - gid=1001
+    - noperm
+    - mfsymlinks
+    - cache=none
+    - noserverino
+  csi:
+    driver: smb.csi.k8s.io
+    volumeHandle: videovault-audiobooks-pv
+    volumeAttributes:
+      source: "//10.10.0.3/SMB-Share/audiobooks"
+    nodeStageSecretRef:
+      name: smbcreds
+      namespace: korczewski-infra
+---
+# Ebooks PV - mounts //10.10.0.3/SMB-Share/ebooks directly
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: videovault-ebooks-pv
+  labels:
+    app: videovault
+    media-type: ebooks
+spec:
+  capacity:
+    storage: 100Gi
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ""
+  mountOptions:
+    - dir_mode=0755
+    - file_mode=0644
+    - uid=1001
+    - gid=1001
+    - noperm
+    - mfsymlinks
+    - cache=none
+    - noserverino
+  csi:
+    driver: smb.csi.k8s.io
+    volumeHandle: videovault-ebooks-pv
+    volumeAttributes:
+      source: "//10.10.0.3/SMB-Share/ebooks"
+    nodeStageSecretRef:
+      name: smbcreds
+      namespace: korczewski-infra

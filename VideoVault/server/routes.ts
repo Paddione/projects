@@ -47,6 +47,7 @@ import { importCategories } from './routes/categories';
 import thumbnailsV2Routes from './routes/thumbnails-v2';
 import scanStateRoutes from './routes/scan-state';
 import jobsRoutes from './routes/jobs';
+import processingRoutes from './routes/processing';
 
 // ... (existing imports)
 
@@ -239,10 +240,11 @@ export function registerRoutes(app: Express): Server {
 
   app.post('/api/categories/import', asyncHandler(importCategories));
 
-  // New background processing routes (thumbnails-v2, scan-state, jobs)
+  // New background processing routes (thumbnails-v2, scan-state, jobs, processing)
   app.use('/api/thumbnails', thumbnailsV2Routes);
   app.use('/api/scan-state', scanStateRoutes);
   app.use('/api/jobs', jobsRoutes);
+  app.use('/api/processing', processingRoutes);
 
   logger.info('API routes registered', {
     routes: [
@@ -259,6 +261,9 @@ export function registerRoutes(app: Express): Server {
       '/api/jobs',
       '/api/videos/compute-hashes',
       '/api/videos/duplicates',
+      '/api/processing/movies',
+      '/api/processing/audiobooks',
+      '/api/processing/ebooks',
     ],
   });
 

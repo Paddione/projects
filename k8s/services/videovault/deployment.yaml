@@ -28,6 +28,8 @@ spec:
         app: videovault
         app.kubernetes.io/name: videovault
         app.kubernetes.io/component: media
+        app.kubernetes.io/part-of: korczewski
+        tier: services
     spec:
       securityContext:
         runAsNonRoot: true
@@ -60,6 +62,13 @@ spec:
               value: "/app/media/Processed"
             - name: THUMBNAILS_DIR
               value: "/app/media/Processed/Thumbnails"
+            # Multi-media library paths
+            - name: MOVIES_DIR
+              value: "/app/media/movies"
+            - name: AUDIOBOOKS_DIR
+              value: "/app/media/audiobooks"
+            - name: EBOOKS_DIR
+              value: "/app/media/ebooks"
             - name: CORS_ORIGINS
               value: "https://videovault.korczewski.de,https://video.korczewski.de"
             - name: TRUST_PROXY
@@ -76,6 +85,13 @@ spec:
               mountPath: /app/media
             - name: thumbnails-storage
               mountPath: /app/media/Processed/Thumbnails
+            # Multi-media library mounts
+            - name: movies-storage
+              mountPath: /app/media/movies
+            - name: audiobooks-storage
+              mountPath: /app/media/audiobooks
+            - name: ebooks-storage
+              mountPath: /app/media/ebooks
             - name: logs
               mountPath: /app/logs
           livenessProbe:
@@ -114,5 +130,15 @@ spec:
         - name: thumbnails-storage
           persistentVolumeClaim:
             claimName: videovault-thumbnails
+        # Multi-media library volumes
+        - name: movies-storage
+          persistentVolumeClaim:
+            claimName: videovault-movies
+        - name: audiobooks-storage
+          persistentVolumeClaim:
+            claimName: videovault-audiobooks
+        - name: ebooks-storage
+          persistentVolumeClaim:
+            claimName: videovault-ebooks
         - name: logs
           emptyDir: {}

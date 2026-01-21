@@ -3,3 +3,4 @@ kind: Kustomization
 
 resources:
   - storageclass.yaml
+  - storageclass-media.yaml

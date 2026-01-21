@@ -1,0 +1,91 @@
+---
+# =============================================================================
+# SMB StorageClasses for Media Types
+# =============================================================================
+# Separate StorageClasses for movies, audiobooks, and ebooks on the SMB share.
+# These point to specific subdirectories within //10.10.0.3/SMB-Share
+# =============================================================================
+
+# StorageClass for Movies
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: smb-movies
+  labels:
+    app.kubernetes.io/name: smb-csi
+    app.kubernetes.io/component: storage
+    media-type: movies
+provisioner: smb.csi.k8s.io
+parameters:
+  source: "//10.10.0.3/SMB-Share/movies"
+  csi.storage.k8s.io/provisioner-secret-name: "smbcreds"
+  csi.storage.k8s.io/provisioner-secret-namespace: "korczewski-infra"
+  csi.storage.k8s.io/node-stage-secret-name: "smbcreds"
+  csi.storage.k8s.io/node-stage-secret-namespace: "korczewski-infra"
+reclaimPolicy: Retain
+volumeBindingMode: Immediate
+mountOptions:
+  - dir_mode=0755
+  - file_mode=0644
+  - uid=1001
+  - gid=1001
+  - noperm
+  - mfsymlinks
+  - cache=none
+  - noserverino
+---
+# StorageClass for Audiobooks
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: smb-audiobooks
+  labels:
+    app.kubernetes.io/name: smb-csi
+    app.kubernetes.io/component: storage
+    media-type: audiobooks
+provisioner: smb.csi.k8s.io
+parameters:
+  source: "//10.10.0.3/SMB-Share/audiobooks"
+  csi.storage.k8s.io/provisioner-secret-name: "smbcreds"
+  csi.storage.k8s.io/provisioner-secret-namespace: "korczewski-infra"
+  csi.storage.k8s.io/node-stage-secret-name: "smbcreds"
+  csi.storage.k8s.io/node-stage-secret-namespace: "korczewski-infra"
+reclaimPolicy: Retain
+volumeBindingMode: Immediate
+mountOptions:
+  - dir_mode=0755
+  - file_mode=0644
+  - uid=1001
+  - gid=1001
+  - noperm
+  - mfsymlinks
+  - cache=none
+  - noserverino
+---
+# StorageClass for Ebooks
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: smb-ebooks
+  labels:
+    app.kubernetes.io/name: smb-csi
+    app.kubernetes.io/component: storage
+    media-type: ebooks
+provisioner: smb.csi.k8s.io
+parameters:
+  source: "//10.10.0.3/SMB-Share/ebooks"
+  csi.storage.k8s.io/provisioner-secret-name: "smbcreds"
+  csi.storage.k8s.io/provisioner-secret-namespace: "korczewski-infra"
+  csi.storage.k8s.io/node-stage-secret-name: "smbcreds"
+  csi.storage.k8s.io/node-stage-secret-namespace: "korczewski-infra"
+reclaimPolicy: Retain
+volumeBindingMode: Immediate
+mountOptions:
+  - dir_mode=0755
+  - file_mode=0644
+  - uid=1001
+  - gid=1001
+  - noperm
+  - mfsymlinks
+  - cache=none
+  - noserverino

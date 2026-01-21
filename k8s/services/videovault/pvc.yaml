@@ -2,11 +2,11 @@
 # =============================================================================
 # VideoVault Persistent Volume Claims
 # =============================================================================
-# NFS-backed storage for media files and thumbnails.
+# SMB-backed storage for media files and thumbnails.
 # Using ReadWriteMany for potential multi-replica access.
 # =============================================================================
 
-# Main media storage
+# Main media storage (Inbox, Processed, etc.)
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
@@ -41,3 +41,68 @@ spec:
   resources:
     requests:
       storage: 50Gi
+---
+# =============================================================================
+# Multi-Media Library Storage (Static Binding)
+# =============================================================================
+# These PVCs bind to pre-created PVs that mount existing SMB directories
+# =============================================================================
+# Movies storage (binds to videovault-movies-pv)
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: videovault-movies
+  namespace: korczewski-services
+  labels:
+    app: videovault
+    app.kubernetes.io/name: videovault
+    app.kubernetes.io/component: storage
+    media-type: movies
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: "" # Empty for static binding
+  volumeName: videovault-movies-pv
+  resources:
+    requests:
+      storage: 2Ti
+---
+# Audiobooks storage (binds to videovault-audiobooks-pv)
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: videovault-audiobooks
+  namespace: korczewski-services
+  labels:
+    app: videovault
+    app.kubernetes.io/name: videovault
+    app.kubernetes.io/component: storage
+    media-type: audiobooks
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: ""
+  volumeName: videovault-audiobooks-pv
+  resources:
+    requests:
+      storage: 500Gi
+---
+# Ebooks storage (binds to videovault-ebooks-pv)
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: videovault-ebooks
+  namespace: korczewski-services
+  labels:
+    app: videovault
+    app.kubernetes.io/name: videovault
+    app.kubernetes.io/component: storage
+    media-type: ebooks
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: ""
+  volumeName: videovault-ebooks-pv
+  resources:
+    requests:
+      storage: 100Gi

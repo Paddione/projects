@@ -6,8 +6,8 @@
         "password": "Agent-Secret-1337!"
     },
     "sessions": {
-        "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjQsImVtYWlsIjoiYWdlbnQtdGVzdEBrb3JjemV3c2tpLmRlIiwiaWF0IjoxNzY4OTU3MTQxLCJleHAiOjE3Njg5NTgwNDEsImF1ZCI6ImtvcmN6ZXdza2ktc2VydmljZXMiLCJpc3MiOiJ1bmlmaWVkLWF1dGgifQ.NcY37fZjVnRu-vwBGm9wMTvffVBxlAaQzup9l1eyqhg",
-        "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjQsImVtYWlsIjoiYWdlbnQtdGVzdEBrb3JjemV3c2tpLmRlIiwiaWF0IjoxNzY4OTU3MTQxLCJleHAiOjE3Njk1NjE5NDEsImF1ZCI6ImtvcmN6ZXdza2ktc2VydmljZXMiLCJpc3MiOiJ1bmlmaWVkLWF1dGgifQ.4YHRnEriObKsHsYsH-MAY31QuTn4EJbzePWVHp3dC5Q"
+        "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjQsInVzZXJuYW1lIjoiYWdlbnRfdGVzdCIsImVtYWlsIjoiYWdlbnQtdGVzdEBrb3JjemV3c2tpLmRlIiwicm9sZSI6IlVTRVIiLCJzZWxlY3RlZENoYXJhY3RlciI6InN0dWRlbnQiLCJjaGFyYWN0ZXJMZXZlbCI6MSwiaWF0IjoxNzY4OTU5NTYwLCJleHAiOjE3Njg5NjA0NjAsImF1ZCI6ImtvcmN6ZXdza2ktc2VydmljZXMiLCJpc3MiOiJ1bmlmaWVkLWF1dGgifQ.RuXVEGvCX2v45CS6cA8NGAcS8WGi3Nh9EnM6Lo3MOJc",
+        "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjQsImVtYWlsIjoiYWdlbnQtdGVzdEBrb3JjemV3c2tpLmRlIiwiaWF0IjoxNzY4OTU5NTYwLCJleHAiOjE3Njk1NjQzNjAsImF1ZCI6ImtvcmN6ZXdza2ktc2VydmljZXMiLCJpc3MiOiJ1bmlmaWVkLWF1dGgifQ.YUJ5V1Apvql8bKqjYEUKhf7hodqzWtnCCuOTIpZn9Kc"
     },
     "groups": {
         "health_check": {
