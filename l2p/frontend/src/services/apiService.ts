@@ -271,10 +271,21 @@ class ApiService {
             // Retry the original request with new token
             return this.request(endpoint, options, baseUrlOverride)
           }
+          // Refresh failed — session is truly dead
+          this.clearAuth()
+          if (typeof window !== 'undefined') {
+            window.location.href = '/'
+          }
         }
 
         const statusMessage = response.status ? `HTTP ${response.status}` : 'Request failed'
-        throw new Error(errorData.error || errorData.message || statusMessage)
+        const errorMessage = errorData.error || errorData.message || statusMessage
+
+        return {
+          success: false,
+          error: errorMessage,
+          details: errorData.details,
+        }
       }
 
       const data = await response.json()

@@ -4,7 +4,7 @@ import { performanceOptimizer } from './performanceOptimizer'
 import { audioManager } from './audioManager'
 import { useAuthStore } from '../stores/authStore'
 import { useCharacterStore } from '../stores/characterStore'
-import { navigationService } from './navigationService'
+// import { navigationService } from './navigationService'
 import { apiService } from './apiService'
 
 export interface SocketEvents {
@@ -137,7 +137,7 @@ export class SocketService {
       const { setPlayers, setError } = useGameStore.getState()
       if (data?.lobby?.players) {
         setPlayers(data.lobby.players)
-        
+
         // If a player left, show a notification
         if (data.event === 'player-left') {
           console.log(`Player ${data.playerId} left the lobby`)
@@ -149,7 +149,10 @@ export class SocketService {
     this.socket.on('lobby-deleted', (data) => {
       console.log('Lobby deleted:', data)
       // Navigate all players back to home screen
-      navigationService.navigateToHome()
+      // Use dynamic import to avoid circular dependency
+      import('./navigationService').then(({ navigationService }) => {
+        navigationService.navigateToHome()
+      })
     })
 
     // Question set event handlers
@@ -193,9 +196,10 @@ export class SocketService {
       }
 
       // Navigate to game page (skip validation since this is triggered by server game-started event)
-      if (lobbyCode) {
+      // Use dynamic import to avoid circular dependency
+      import('./navigationService').then(({ navigationService }) => {
         navigationService.navigateToGame(lobbyCode, true)
-      }
+      })
     })
 
     this.socket.on('question-started', (data) => {
@@ -310,7 +314,7 @@ export class SocketService {
       console.log('Answer received:', data)
       const { setPlayerAnswerStatus, updatePlayer, players } = useGameStore.getState()
       const { user } = useAuthStore.getState()
-      
+
       if (data.playerId) {
         // Update answer status if provided
         if (typeof data.isCorrect === 'boolean') {
@@ -331,7 +335,7 @@ export class SocketService {
             if (typeof incomingScore === 'number') {
               const delta = incomingScore - (typeof target.score === 'number' ? target.score : 0)
               if (delta > 0) {
-                ;(data as any).scoreDelta = delta
+                ; (data as any).scoreDelta = delta
               }
             }
           }
@@ -375,7 +379,7 @@ export class SocketService {
               if (data.isCorrect) {
                 // Use the streak from updates (which has the most current value)
                 let streak = updates.currentStreak || 1
-                
+
                 audioManager.playCorrectAnswer(streak)
               } else {
                 audioManager.playWrongAnswer()
@@ -429,13 +433,13 @@ export class SocketService {
       // Normalize results to ensure experienceAwarded is populated
       const normalizedResults = Array.isArray(data.results)
         ? data.results.map((r: any) => ({
-            ...r,
-            experienceAwarded: typeof r.experienceAwarded === 'number'
-              ? r.experienceAwarded
-              : (typeof r.experience === 'number' ? r.experience
-                : (typeof r.xp === 'number' ? r.xp
-                  : (typeof r.experience_points === 'number' ? r.experience_points : 0)))
-          }))
+          ...r,
+          experienceAwarded: typeof r.experienceAwarded === 'number'
+            ? r.experienceAwarded
+            : (typeof r.experience === 'number' ? r.experience
+              : (typeof r.xp === 'number' ? r.xp
+                : (typeof r.experience_points === 'number' ? r.experience_points : 0)))
+        }))
         : []
 
       setGameResults(normalizedResults as any)
@@ -467,10 +471,10 @@ export class SocketService {
 
       // Process perk unlock notifications
       const { addPerkUnlockNotification } = useGameStore.getState()
-      const playersWithPerks = normalizedResults.filter((result: any) => 
+      const playersWithPerks = normalizedResults.filter((result: any) =>
         result.newlyUnlockedPerks && result.newlyUnlockedPerks.length > 0
       )
-      
+
       playersWithPerks.forEach((result: any) => {
         addPerkUnlockNotification({
           playerId: result.id,
@@ -481,9 +485,12 @@ export class SocketService {
       })
 
       // Navigate to results page
-      if (lobbyCode) {
-        navigationService.navigateToResults(lobbyCode)
-      }
+      // Use dynamic import to avoid circular dependency
+      import('./navigationService').then(({ navigationService }) => {
+        if (lobbyCode) {
+          navigationService.navigateToResults(lobbyCode)
+        }
+      })
     })
 
     this.socket.on('player-level-up', (data) => {
@@ -863,7 +870,7 @@ export class SocketService {
   private getAuthToken(): string | undefined {
     try {
       // Get token from localStorage or apiService
-      const token = localStorage.getItem('authToken') || apiService.getToken()
+      const token = localStorage.getItem('auth_token') || apiService.getToken()
       return token || undefined
     } catch (error) {
       console.warn('Failed to get auth token:', error)
