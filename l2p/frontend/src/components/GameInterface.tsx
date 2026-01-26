@@ -1,8 +1,8 @@
 import React, { useState, useRef } from 'react'
 import { useGameStore } from '../stores/gameStore'
 import { socketService } from '../services/socketService'
-import { navigationService } from '../services/navigationService'
 import { apiService } from '../services/apiService'
+import { navigationService } from '../services/navigationService'
 import { ErrorDisplay } from './ErrorBoundary'
 import styles from '../styles/GameInterface.module.css'
 import { useAudio } from '../hooks/useAudio'
@@ -55,7 +55,7 @@ export const GameInterface: React.FC<GameInterfaceProps> = ({ className = '' }) 
     settings?: { questionCount?: number; questionSetKey?: string; isPrivate?: boolean }
   ) => {
     if (e) e.stopPropagation()
-    // Check authentication
+    // Check authentication via apiService (source of truth for real login state)
     if (!apiService.isAuthenticated()) {
       setError('You must be logged in to create a lobby')
       handleMenuCancel()

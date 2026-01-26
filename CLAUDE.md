@@ -217,3 +217,4 @@ When multiple agents work simultaneously:
 - Do not add dependencies or change infrastructure without explicit approval
 - Run the smallest relevant test suite for your change
 - Update existing docs rather than creating new ones
+- Always deploy changes to k3s after committing (don't leave changes undeployed)
