@@ -1,7 +1,7 @@
 import { useGameStore } from '../stores/gameStore'
 import { importMetaEnv } from '../utils/import-meta'
 import { apiService } from './apiService'
-import { socketService } from './socketService'
+// import { socketService } from './socketService'
 
 export type GameState = 'home' | 'lobby' | 'game' | 'results' | 'error'
 
@@ -131,7 +131,10 @@ class NavigationService {
         if (currentUser) {
           // Call socket service to leave lobby
           const playerId = `user_${currentUser.id}`
-          socketService.leaveLobby(lobbyCode, playerId)
+          // Use dynamic import to avoid circular dependency
+          import('./socketService').then(({ socketService }) => {
+            socketService.leaveLobby(lobbyCode, playerId)
+          })
 
           // The socket service will handle the appropriate response:
           // - If host leaves: lobby-deleted event will redirect everyone to home

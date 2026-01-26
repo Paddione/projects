@@ -52,6 +52,10 @@ export function setupApp(app: Application) {
   const apiLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
     max: 300, // limit each IP to 300 requests per windowMs
+    skip: (req) => {
+      // Skip health check endpoints used by Kubernetes probes
+      return req.path === '/api/health' || req.path === '/healthz';
+    },
     message: 'Too many requests from this IP, please try again later',
     standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
     legacyHeaders: false, // Disable the `X-RateLimit-*` headers

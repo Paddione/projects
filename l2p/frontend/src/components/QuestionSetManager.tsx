@@ -317,8 +317,8 @@ export const QuestionSetManager: React.FC = () => {
       } else {
         // API error
         setError(response.error || 'Fehler beim Importieren des Fragen-Sets')
-        if ((response as any).details) {
-          setImportErrorDetails((response as any).details)
+        if (response.details) {
+          setImportErrorDetails(response.details)
         }
       }
     } catch (err) {
@@ -722,18 +722,27 @@ export const QuestionSetManager: React.FC = () => {
           >
             <h2 id="import-modal-title">Fragen-Set Importieren</h2>
             <div className={styles.importInstructions}>
-              <p>Fügen Sie JSON-Daten ein, um ein neues Fragen-Set zu erstellen. Unterstützte Formate:</p>
+              <p>Fügen Sie JSON-Daten ein, um ein neues Fragen-Set zu erstellen. Exportierte Sets können direkt wieder importiert werden.</p>
               <details>
-                <summary>Standard Format (Exportiertes Set)</summary>
+                <summary>Standard Format (Export/Import)</summary>
                 <pre>{`{
-  "questionSet": { "name": "Set Name", "description": "...", "difficulty": "medium" },
+  "questionSet": {
+    "name": "Mein Fragen-Set",
+    "description": "Beschreibung",
+    "category": "Allgemein",
+    "difficulty": "medium"
+  },
   "questions": [
-    { 
-      "question_text": "Welche Farbe hat der Himmel?", 
+    {
+      "question_text": "Was ist die Hauptstadt von Deutschland?",
       "answers": [
-        { "text": "Blau", "correct": true },
-        { "text": "Grün", "correct": false }
-      ]
+        { "text": "Berlin", "correct": true },
+        { "text": "München", "correct": false },
+        { "text": "Hamburg", "correct": false },
+        { "text": "Köln", "correct": false }
+      ],
+      "explanation": "Berlin ist seit 1990 die Hauptstadt.",
+      "difficulty": 2
     }
   ]
 }`}</pre>
@@ -752,6 +761,15 @@ export const QuestionSetManager: React.FC = () => {
     }
   ]
 }`}</pre>
+              </details>
+              <details>
+                <summary>Anforderungen</summary>
+                <ul style={{ fontSize: '0.85em', margin: '0.5em 0', paddingLeft: '1.2em' }}>
+                  <li>Jede Frage braucht ein nicht-leeres <code>question_text</code> Feld</li>
+                  <li>Mindestens <strong>2 Antworten</strong> pro Frage</li>
+                  <li>Mindestens <strong>1 Antwort</strong> muss <code>"correct": true</code> haben</li>
+                  <li>Zusätzliche DB-Felder (id, created_at, ...) werden ignoriert</li>
+                </ul>
               </details>
             </div>
 

@@ -4,6 +4,7 @@ import { useAuthStore } from '../stores/authStore'
 import { AuthForm } from './AuthForm'
 import { PasswordResetForm } from './PasswordResetForm'
 import { extractOAuthParams, validateState, getOAuthState, clearOAuthState, clearOAuthParamsFromUrl } from '../utils/oauth'
+import { importMetaEnv } from '../utils/import-meta'
 
 interface AuthGuardProps {
   children: React.ReactNode
@@ -18,44 +19,7 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
 
   const processingOAuth = React.useRef(false)
 
-  // Handle OAuth callback first (before any other validation)
-  useEffect(() => {
-    const { code, state } = extractOAuthParams()
-
-    if (code && state && !processingOAuth.current) {
-      console.log('AuthGuard: OAuth callback detected')
-      processingOAuth.current = true
-      handleOAuthCallback(code, state)
-      return // Skip normal validation
-    }
-
-    if (code && state && processingOAuth.current) {
-      return // Already processing or processed
-    }
-
-    // If no OAuth callback, proceed with normal validation
-    console.log('AuthGuard: Component mounted, isAuthenticated:', isAuthenticated, 'isValidating:', isValidating)
-    if (isAuthenticated === null) {
-      console.log('AuthGuard: Not authenticated, validating...')
-      validateAuthentication()
-    } else {
-      console.log('AuthGuard: State already determined (isAuthenticated: ' + isAuthenticated + '), skipping validation')
-    }
-  }, [isAuthenticated, isValidating, handleOAuthCallback, validateAuthentication])
-
-  // Add a listener for storage changes to detect when auth state changes
-  useEffect(() => {
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'auth_token') {
-        console.log('AuthGuard: Storage change detected, re-validating')
-        validateAuthentication()
-      }
-    }
-
-    window.addEventListener('storage', handleStorageChange)
-    return () => window.removeEventListener('storage', handleStorageChange)
-  }, [validateAuthentication])
-
+  // Define callbacks BEFORE useEffect hooks that reference them
   const handleOAuthCallback = useCallback(async (code: string, state: string) => {
     console.log('AuthGuard: Processing OAuth callback')
     setIsValidating(true)
@@ -149,8 +113,8 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
         setIsAuthenticated(false)
 
         // If in unified auth mode, redirect to central login instead of showing local form
-        if (import.meta.env.VITE_AUTH_SERVICE_URL) {
-          const authUrl = import.meta.env.VITE_AUTH_SERVICE_URL.replace(/\/api$/, '')
+        if (importMetaEnv.VITE_AUTH_SERVICE_URL) {
+          const authUrl = String(importMetaEnv.VITE_AUTH_SERVICE_URL).replace(/\/api$/, '')
           const callbackURL = window.location.origin + window.location.pathname
           window.location.href = `${authUrl}/login?callbackURL=${encodeURIComponent(callbackURL)}`
         }
@@ -174,7 +138,7 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
           const currentStoreToken = useAuthStore.getState().token;
 
           if (!currentStoreUser || currentStoreUser.id !== String(userData.id) || currentStoreToken !== token) {
-            const userDataWithOptional = userData as { id: number; username: string; email: string; selectedCharacter?: string; selected_character?: string; characterLevel?: number; character_level?: number }
+            const userDataWithOptional = userData as unknown as { id: number; username: string; email: string; selectedCharacter?: string; selected_character?: string; characterLevel?: number; character_level?: number }
             setUser({
               id: String(userData.id),
               username: userData.username,
@@ -202,6 +166,44 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
       setIsValidating(false)
     }
   }, [setUser, setToken, clearAuth])
+
+  // Handle OAuth callback first (before any other validation)
+  useEffect(() => {
+    const { code, state } = extractOAuthParams()
+
+    if (code && state && !processingOAuth.current) {
+      console.log('AuthGuard: OAuth callback detected')
+      processingOAuth.current = true
+      handleOAuthCallback(code, state)
+      return // Skip normal validation
+    }
+
+    if (code && state && processingOAuth.current) {
+      return // Already processing or processed
+    }
+
+    // If no OAuth callback, proceed with normal validation
+    console.log('AuthGuard: Component mounted, isAuthenticated:', isAuthenticated, 'isValidating:', isValidating)
+    if (isAuthenticated === null) {
+      console.log('AuthGuard: Not authenticated, validating...')
+      validateAuthentication()
+    } else {
+      console.log('AuthGuard: State already determined (isAuthenticated: ' + isAuthenticated + '), skipping validation')
+    }
+  }, [isAuthenticated, isValidating, handleOAuthCallback, validateAuthentication])
+
+  // Add a listener for storage changes to detect when auth state changes
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'auth_token') {
+        console.log('AuthGuard: Storage change detected, re-validating')
+        validateAuthentication()
+      }
+    }
+
+    window.addEventListener('storage', handleStorageChange)
+    return () => window.removeEventListener('storage', handleStorageChange)
+  }, [validateAuthentication])
 
   const handleAuthSuccess = () => {
     console.log('AuthGuard: Auth success callback called')
@@ -273,7 +275,7 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
   // Show login form if not authenticated (fallback for local dev)
   if (!isAuthenticated) {
     // If we're in unified mode, we've already triggered a redirect in validateAuthentication
-    if (import.meta.env.VITE_AUTH_SERVICE_URL) {
+    if (importMetaEnv.VITE_AUTH_SERVICE_URL) {
       return (
         <div style={{
           display: 'flex',

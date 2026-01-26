@@ -7,6 +7,11 @@ export function setupRateLimiting(app: Express) {
     const apiLimiter = rateLimit({
         windowMs: 15 * 60 * 1000, // 15 minutes
         max: 100, // max 100 requests per IP
+        skip: (req) => {
+            // Skip health check endpoints used by Kubernetes probes
+            const healthPaths = ['/api/health', '/api/db/health'];
+            return healthPaths.includes(req.path);
+        },
         message: {
             error: 'Too many requests from this IP. Please try again later.',
         },

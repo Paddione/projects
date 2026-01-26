@@ -92,12 +92,11 @@ export function Header({
   };
 
   return (
-    <header className="bg-card border-b border-border px-4 sm:px-6 py-4 sm:py-6 shadow-sm sticky top-0 z-30">
-      {/* Main Header Row */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center space-x-3 min-w-0">
-          <Library className="text-primary h-7 w-7" />
-          <h1 className="text-2xl font-bold text-foreground truncate">{t('app.title')}</h1>
+    <header className="videovault-header sticky top-0 z-100">
+      <div className="flex flex-wrap items-center justify-between gap-3 w-full">
+        <div className="videovault-logo">
+          <Library className="h-8 w-8 text-primary shadow-glow-cyan" />
+          <h1 className="text-2xl font-bold">{t('app.title')}</h1>
         </div>
 
         {/* Top Right Controls */}
@@ -175,17 +174,16 @@ export function Header({
       </div>
 
       {/* Action Buttons Row */}
-      {/* Action Buttons Row */}
-      <div className="mt-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+      <div className="mt-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between p-4 bg-cv-glass-2 rounded-lg border border-cv-border-2">
         {/* Desktop View */}
-        <div className="hidden lg:flex flex-wrap items-center gap-2">
+        <div className="hidden lg:flex flex-wrap items-center gap-3">
           <Button
             onClick={onScanDirectory}
             disabled={isScanning}
             data-testid="button-scan-directory"
-            variant="outline"
+            variant="default"
             size="sm"
-            className="min-h-[40px]"
+            className="min-h-[42px] cv-btn-primary shadow-glow-cyan"
           >
 
             <FolderOpen className="mr-2 h-4 w-4" />
@@ -193,11 +191,11 @@ export function Header({
           </Button>
 
           <Button
-            variant="outline"
+            variant="secondary"
             size="sm"
             onClick={onImportData}
             data-testid="button-import-data"
-            className="min-h-[40px]"
+            className="min-h-[42px] cv-btn-secondary"
           >
 
             <Download className="mr-2 h-4 w-4" />
@@ -207,9 +205,9 @@ export function Header({
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
-                variant="outline"
+                variant="secondary"
                 size="sm"
-                className="min-h-[40px]"
+                className="min-h-[42px] cv-btn-secondary"
                 data-testid="button-export-menu"
               >
                 <Upload className="mr-2 h-4 w-4" />

@@ -268,15 +268,7 @@ export default defineConfig({
     sourcemap: true,
     rollupOptions: {
       output: {
-        manualChunks: {
-          // Separate React and related libraries
-          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
-          // Separate state management
-          'zustand-vendor': ['zustand'],
-          // Separate Socket.io client
-          'socket-vendor': ['socket.io-client'],
-          // You can add more chunks as needed
-        },
+        // No manual chunks to avoid initialization order issues
       },
     },
   },

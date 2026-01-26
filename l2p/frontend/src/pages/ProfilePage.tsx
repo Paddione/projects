@@ -6,6 +6,7 @@ import { ChangePasswordForm } from '../components/ChangePasswordForm'
 import PerksManager from '../components/PerksManager'
 import styles from '../styles/ProfilePage.module.css'
 import appStyles from '../styles/App.module.css'
+import { importMetaEnv } from '../utils/import-meta'
 
 interface ProfileData {
   character: {
@@ -165,7 +166,7 @@ export const ProfilePage: React.FC = () => {
           </button>
           {isAdmin && (
             <a
-              href={import.meta.env.MODE === 'development' ? 'http://localhost:3001/admin' : '/admin'}
+              href={importMetaEnv.MODE === 'development' ? 'http://localhost:3001/admin' : '/admin'}
               className={`${appStyles.button} ${appStyles.buttonOutline}`}
               data-testid="admin-dashboard-link"
             >

@@ -17,6 +17,7 @@ export interface CreateUserData {
   character_level?: number;
   experience_points?: number;
   is_admin?: boolean;
+  is_active?: boolean;
   preferences?: {
     language: 'en' | 'de';
     theme: 'light' | 'dark';
@@ -97,7 +98,7 @@ export class UserRepository extends BaseRepository {
       character_level: userData.character_level || 1,
       experience_points: userData.experience_points || 0,
       // Ensure new users are active by default to satisfy auth flow in tests
-      is_active: (userData as any).is_active ?? true,
+      is_active: userData.is_active ?? true,
       is_admin: userData.is_admin ?? false,
       preferences: userData.preferences || defaultPreferences,
       notification_settings: userData.notification_settings || defaultNotificationSettings,

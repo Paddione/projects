@@ -3,89 +3,74 @@
 @tailwind utilities;
 
 :root {
-  --background: hsl(248, 24%, 98%);
-  --foreground: hsl(222, 16%, 19%);
-  --card: hsl(248, 17%, 97%);
-  --card-foreground: hsl(222, 16%, 19%);
-  --popover: hsl(0, 0%, 100%);
-  --popover-foreground: hsl(222, 16%, 19%);
-  --primary: hsl(216, 87%, 53%);
-  --primary-foreground: hsl(0, 0%, 100%);
-  --secondary: hsl(216, 25%, 47%);
-  --secondary-foreground: hsl(0, 0%, 100%);
-  --muted: hsl(210, 25%, 90%);
-  --muted-foreground: hsl(222, 16%, 19%);
-  --accent: hsl(159, 95%, 30%);
-  --accent-foreground: hsl(0, 0%, 100%);
-  --destructive: hsl(0, 87%, 54%);
-  --destructive-foreground: hsl(0, 0%, 100%);
-  --border: hsl(215, 25%, 89%);
-  --input: hsl(215, 25%, 89%);
-  --ring: hsl(216, 87%, 53%);
-  --chart-1: hsl(216, 87%, 53%);
-  --chart-2: hsl(159, 95%, 30%);
-  --chart-3: hsl(42, 93%, 56%);
-  --chart-4: hsl(147, 78%, 42%);
-  --chart-5: hsl(341, 75%, 51%);
-  --sidebar: hsl(248, 17%, 97%);
-  --sidebar-foreground: hsl(222, 16%, 19%);
-  --sidebar-primary: hsl(216, 87%, 53%);
-  --sidebar-primary-foreground: hsl(0, 0%, 100%);
-  --sidebar-accent: hsl(216, 51%, 93%);
-  --sidebar-accent-foreground: hsl(216, 87%, 53%);
-  --sidebar-border: hsl(215, 25%, 89%);
-  --sidebar-ring: hsl(216, 87%, 53%);
-  --font-sans: Inter, system-ui, -apple-system, sans-serif;
-  --font-serif: Georgia, serif;
-  --font-mono: Menlo, monospace;
-  --radius: 0.75rem;
+  /* Core Foundation - Shared Design System Integration */
+  --background: var(--cv-void);
+  --foreground: var(--cv-text);
   
-  /* Custom color variables */
-  --background-light: hsl(248, 24%, 98%);
-  --text-main: hsl(222, 16%, 19%);
-  --accent-emerald: hsl(159, 95%, 30%);
-  --border-light: hsl(215, 25%, 89%);
+  /* Surface Tokens */
+  --card: var(--cv-glass-2);
+  --card-foreground: var(--cv-text-bright);
+  --popover: var(--cv-void-light);
+  --popover-foreground: var(--cv-text);
+  
+  /* Action Tokens */
+  --primary: var(--cv-cyan);
+  --primary-foreground: var(--cv-void);
+  --secondary: var(--cv-purple);
+  --secondary-foreground: var(--cv-text-bright);
+  
+  /* State & Utility Tokens */
+  --muted: var(--cv-glass-1);
+  --muted-foreground: var(--cv-text-dim);
+  --accent: var(--cv-cyan-subtle);
+  --accent-foreground: var(--cv-cyan);
+  --destructive: var(--cv-danger);
+  --destructive-foreground: var(--cv-text-bright);
+  
+  /* Input & Border Tokens */
+  --border: var(--cv-border-2);
+  --input: var(--cv-border-2);
+  --ring: var(--cv-cyan-glow);
+  
+  /* Typography & Layout */
+  --font-sans: var(--cv-font-body);
+  --font-serif: Georgia, serif;
+  --font-mono: var(--cv-font-mono);
+  --radius: var(--cv-radius-md);
+  
+  /* Legacy/Custom Variables Mapping */
+  --background-light: var(--cv-void-light);
+  --text-main: var(--cv-text);
+  --accent-emerald: var(--cv-success);
+  --border-light: var(--cv-border-1);
 }
 
 .dark {
-  --background: hsl(0, 0%, 7%);
-  --foreground: hsl(0, 0%, 91%);
-  --card: hsl(0, 0%, 12%);
-  --card-foreground: hsl(0, 0%, 85%);
-  --popover: hsl(0, 0%, 7%);
-  --popover-foreground: hsl(0, 0%, 91%);
-  --primary: hsl(216, 87%, 53%);
-  --primary-foreground: hsl(0, 0%, 100%);
-  --secondary: hsl(195, 15%, 95%);
-  --secondary-foreground: hsl(222, 16%, 19%);
-  --muted: hsl(0, 0%, 9%);
-  --muted-foreground: hsl(210, 3%, 46%);
-  --accent: hsl(205, 70%, 8%);
-  --accent-foreground: hsl(216, 87%, 53%);
-  --destructive: hsl(0, 87%, 54%);
-  --destructive-foreground: hsl(0, 0%, 100%);
-  --border: hsl(210, 5%, 15%);
-  --input: hsl(207, 28%, 18%);
-  --ring: hsl(216, 87%, 53%);
-  --chart-1: hsl(216, 87%, 53%);
-  --chart-2: hsl(159, 95%, 30%);
-  --chart-3: hsl(42, 93%, 56%);
-  --chart-4: hsl(147, 78%, 42%);
-  --chart-5: hsl(341, 75%, 51%);
-  --sidebar: hsl(0, 0%, 12%);
-  --sidebar-foreground: hsl(0, 0%, 85%);
-  --sidebar-primary: hsl(216, 87%, 53%);
-  --sidebar-primary-foreground: hsl(0, 0%, 100%);
-  --sidebar-accent: hsl(205, 70%, 8%);
-  --sidebar-accent-foreground: hsl(216, 87%, 53%);
-  --sidebar-border: hsl(205, 16%, 26%);
-  --sidebar-ring: hsl(216, 87%, 53%);
+  /* In Cybervault, dark is the primary mode, but we maintain compatibility */
+  --background: var(--cv-void);
+  --foreground: var(--cv-text);
+  --card: var(--cv-glass-3);
+  --card-foreground: var(--cv-text-bright);
+  --popover: var(--cv-void-lighter);
+  --popover-foreground: var(--cv-text);
+  --primary: var(--cv-cyan);
+  --primary-foreground: var(--cv-void);
+  --secondary: var(--cv-purple);
+  --secondary-foreground: var(--cv-text-bright);
+  --muted: var(--cv-glass-2);
+  --muted-foreground: var(--cv-text-dim);
+  --accent: var(--cv-cyan-bg);
+  --accent-foreground: var(--cv-cyan);
+  --destructive: var(--cv-danger);
+  --destructive-foreground: var(--cv-text-bright);
+  --border: var(--cv-border-3);
+  --input: var(--cv-border-3);
+  --ring: var(--cv-cyan-glow);
   
-  /* Custom dark mode variables */
-  --background-light: hsl(0, 0%, 7%);
-  --text-main: hsl(0, 0%, 91%);
-  --accent-emerald: hsl(159, 95%, 30%);
-  --border-light: hsl(210, 5%, 15%);
+  --background-light: var(--cv-void-light);
+  --text-main: var(--cv-text-bright);
+  --accent-emerald: var(--cv-success);
+  --border-light: var(--cv-border-2);
 }
 
 @layer base {

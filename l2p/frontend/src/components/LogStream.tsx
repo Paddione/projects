@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'
+import { importMetaEnv } from '../utils/import-meta'
 
 interface LogStreamProps {
   title: string
@@ -8,15 +9,10 @@ interface LogStreamProps {
 
 function resolveApiBase(): string {
   let envUrl: string | undefined
-  
-  // Handle Vite environment variables (only available in browser/Vite context)
-  if (typeof window !== 'undefined' && 'import' in window) {
-    const windowWithImport = window as { import?: { meta?: { env?: { VITE_API_URL?: string } } } }
-    if (windowWithImport.import?.meta?.env?.VITE_API_URL) {
-      envUrl = windowWithImport.import.meta.env.VITE_API_URL
-    }
-  } else if (typeof process !== 'undefined' && process.env?.VITE_API_URL) {
-    envUrl = process.env.VITE_API_URL
+
+  // Handle Vite environment variables via wrapper
+  if (importMetaEnv.VITE_API_URL) {
+    envUrl = String(importMetaEnv.VITE_API_URL)
   }
   // Ensure ends without trailing slash
   const base = (envUrl && envUrl.trim()) || '/api'

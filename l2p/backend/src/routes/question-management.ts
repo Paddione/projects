@@ -381,8 +381,8 @@ router.post('/question-sets/import', authMiddleware.authenticate, async (req: Re
     }
 
     if (importedCount === 0 && questions.length > 0) {
-      // Rollback would be better here, but psql pool.query is direct.
-      // For now, we'll just report the failure.
+      // Clean up the empty question set since no questions were imported
+      await pool.query('DELETE FROM question_sets WHERE id = $1', [setId]);
       return res.status(400).json({
         error: 'No questions could be imported',
         details: errors
