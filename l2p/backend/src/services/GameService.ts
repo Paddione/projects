@@ -214,8 +214,8 @@ export class GameService {
         throw new Error('Lobby not found');
       }
 
-      // Verify host permission
-      if (lobby.host_id !== hostId) {
+      // Verify host permission (check both host_id and auth_user_id)
+      if (lobby.host_id !== hostId && lobby.auth_user_id !== hostId) {
         throw new Error('Only the host can start the game');
       }
 

@@ -4,10 +4,15 @@
   gap: 24px;
   align-items: start;
   margin-top: 0;
+  max-height: calc(100vh - 200px);
 }
 
 .gameInterface {
   margin: 0;
+  max-height: calc(100vh - 200px);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
 }
 
 .lobbiesList {
@@ -20,9 +25,10 @@
     grid-template-columns: 1fr;
     gap: 16px;
   }
-  
+
   .lobbiesList {
-    order: -1; /* Show lobbies list first on mobile */
+    order: -1;
+    /* Show lobbies list first on mobile */
   }
 }
 

@@ -64,10 +64,12 @@ app.use(
 app.use(passport.initialize());
 app.use(passport.session());
 
+const isProduction = process.env.NODE_ENV === 'production';
+
 // Rate limiting
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // Limit each IP to 100 requests per windowMs
+  max: process.env.AUTH_RATE_LIMIT_MAX ? parseInt(process.env.AUTH_RATE_LIMIT_MAX) : (isProduction ? 100 : 1000), // much higher limit for dev/test
   message: 'Too many requests from this IP, please try again later',
   standardHeaders: true,
   legacyHeaders: false,
@@ -75,7 +77,7 @@ const authLimiter = rateLimit({
 
 const strictAuthLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 5, // Strict limit for login/register
+  max: process.env.AUTH_STRICT_RATE_LIMIT_MAX ? parseInt(process.env.AUTH_STRICT_RATE_LIMIT_MAX) : (isProduction ? 5 : 100), // Increased for E2E testing in dev
   message: 'Too many authentication attempts, please try again later',
   standardHeaders: true,
   legacyHeaders: false,

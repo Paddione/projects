@@ -7,6 +7,14 @@ import { TEST_USER } from '../lib/auth-helpers.js';
 
 test.describe('Unified Authentication (ForwardAuth)', () => {
 
+    test.beforeEach(async ({ page }) => {
+        page.on('console', msg => {
+            if (msg.type() === 'error' || msg.type() === 'warning') {
+                console.log(`BROWSER ${msg.type().toUpperCase()}: ${msg.text()}`);
+            }
+        });
+    });
+
     test('Protected service is blocked (401)', async ({ page }) => {
         // Try to access L2P which is protected
         const response = await page.goto('https://l2p.korczewski.de');
@@ -38,13 +46,7 @@ test.describe('Unified Authentication (ForwardAuth)', () => {
 
         // 2. After registration, the app should navigate to /apps
         // We increase timeout in case the service is slow
-        try {
-            await expect(page).toHaveURL(/auth\.korczewski\.de\/apps/, { timeout: 20000 });
-        } catch (e) {
-            // If it fails, take a screenshot or log current URL
-            console.error(`Current URL: ${page.url()}`);
-            throw e;
-        }
+        await expect(page).toHaveURL(/auth\.korczewski\.de\/apps/, { timeout: 20000 });
 
         // 3. Now verify cross-domain access to L2P
         // The cookies should have been set for .korczewski.de
@@ -56,9 +58,6 @@ test.describe('Unified Authentication (ForwardAuth)', () => {
     });
 
     test('Login works and provides access', async ({ page }) => {
-        // We'll use the TEST_USER from lib/auth-helpers or just create one here
-        // For a clean test, let's register then login
-
         const timestamp = Date.now();
         const username = `login_e2e_${timestamp}`;
         const email = `${username}@example.com`;
@@ -77,8 +76,6 @@ test.describe('Unified Authentication (ForwardAuth)', () => {
 
         // Login
         await page.goto('https://auth.korczewski.de/login');
-        // Login page usually has usernameOrEmail or similar
-        // Let's check Login.tsx if possible, or assume #usernameOrEmail
         const userField = page.locator('#usernameOrEmail');
         if (await userField.isVisible()) {
             await userField.fill(username);

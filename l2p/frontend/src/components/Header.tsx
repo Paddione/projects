@@ -1,12 +1,10 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
-import { useTheme } from './ThemeProvider'
 import { apiService } from '../services/apiService'
 import styles from '../styles/App.module.css'
 import { useAudio } from '../hooks/useAudio'
 
 export const Header: React.FC = () => {
-  const { theme, toggleTheme } = useTheme()
   const currentUser = apiService.getCurrentUser()
   const isAdmin = !!currentUser?.isAdmin
   const {
@@ -47,7 +45,7 @@ export const Header: React.FC = () => {
         <a href="/" className={styles.logo}>
           Learn2Play Quiz
         </a>
-        
+
         <nav className={`${styles.flex} ${styles.gapMd} ${styles.itemsCenter}`} role="navigation">
           <a href="/" className={`${styles.button} ${styles.buttonOutline}`} data-testid="home-page" onClick={handleMenuSelect}>
             Home
@@ -64,13 +62,13 @@ export const Header: React.FC = () => {
             </Link>
           )}
         </nav>
-        
+
         <div className={`${styles.flex} ${styles.gapMd} ${styles.itemsCenter}`} data-testid="user-menu">
           {/* Volume/Mute Controls */}
           <div className={`${styles.flex} ${styles.itemsCenter} ${styles.gapSm}`} style={{ minWidth: 180 }}>
             <button
-              onClick={() => { 
-                setIsMuted(!isMuted); 
+              onClick={() => {
+                setIsMuted(!isMuted);
                 if (!isMuted) {
                   handleMenuCancel();
                 } else {
@@ -96,18 +94,6 @@ export const Header: React.FC = () => {
               style={{ width: 100 }}
             />
           </div>
-
-          
-          {/* Theme Toggle */}
-          <button
-            onClick={toggleTheme}
-            className={`${styles.button} ${styles.buttonOutline}`}
-            title={theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
-            data-testid="theme-toggle"
-            onClickCapture={handleMenuSelect}
-          >
-            {theme === 'light' ? '🌙' : '☀️'}
-          </button>
 
           {/* Logout Button */}
           <button

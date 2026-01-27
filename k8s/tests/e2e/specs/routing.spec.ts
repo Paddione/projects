@@ -7,9 +7,9 @@ import { test, expect } from '@playwright/test';
  */
 
 const ALIASES = [
-    { alias: 'https://video.korczewski.de', targetMatch: /mediavault|videovault/i },
-    { alias: 'https://shop.korczewski.de', targetMatch: /payment|shop/i },
-    { alias: 'https://l2p.korczewski.de/api/health', targetMatch: null }, // Just check connectivity
+    { alias: 'https://video.korczewski.de', expectedStatus: 401 },
+    { alias: 'https://shop.korczewski.de', expectedStatus: 401 },
+    { alias: 'https://l2p.korczewski.de/api/health', expectedStatus: 401 },
 ];
 
 test.describe('Domain Aliases & Routing', () => {
@@ -17,15 +17,9 @@ test.describe('Domain Aliases & Routing', () => {
         test(`Alias: ${item.alias} is correctly routed`, async ({ page }) => {
             const response = await page.goto(item.alias);
 
-            // Should be reachable (may be 401 if protected, that's fine for routing check)
-            expect(response?.status()).toBeLessThan(500);
-            expect([200, 304, 401]).toContain(response?.status());
-
-            // If we got a 200, check content
-            if (response?.status() === 200 && item.targetMatch) {
-                const content = await page.content();
-                expect(content).toMatch(item.targetMatch);
-            }
+            // A 401 proves both that the route exists (not 404) and ForwardAuth is protecting it.
+            // A 404 or 5xx would indicate a routing misconfiguration.
+            expect(response?.status(), `${item.alias} should be routed and protected`).toBe(item.expectedStatus);
         });
     }
 

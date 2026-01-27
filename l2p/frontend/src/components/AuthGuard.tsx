@@ -98,6 +98,10 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
         if (meResponse.success && meResponse.data) {
           console.log('AuthGuard: Session cookie found, authenticated!')
           const userData = meResponse.data
+
+          // Synchronize with ApiService so subsequent calls to isAuthenticated() return true
+          apiService.setAuth('', '', userData)
+
           setUser({
             id: String(userData.id),
             username: userData.username,

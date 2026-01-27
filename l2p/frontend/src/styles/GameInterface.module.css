@@ -2,12 +2,22 @@
   max-width: 1000px;
   margin: 0 auto;
   padding: 2rem;
-  animation: fadeIn 0.8s ease-out;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .header {
@@ -20,6 +30,7 @@
   font-weight: 800;
   font-family: var(--cv-font-display);
   background: var(--cv-gradient-primary);
+  background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   filter: drop-shadow(0 0 10px var(--cv-cyan-glow));
@@ -39,6 +50,8 @@
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+  flex: 1;
+  min-height: 0;
 }
 
 .actionGrid {
@@ -76,7 +89,7 @@
 
 .cardIcon {
   font-size: 3rem;
-  filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1));
 }
 
 .cardBadge {
@@ -111,7 +124,8 @@
   padding-top: 1rem;
 }
 
-.primaryAction, .secondaryAction {
+.primaryAction,
+.secondaryAction {
   width: 100%;
   padding: 1rem;
   border-radius: var(--cv-radius-md);
@@ -122,13 +136,13 @@
 
 .createCard .primaryAction {
   background: var(--cv-cyan-subtle);
-  color: var(--cv-cyan);
+  color: var(--cv-text-bright);
   border: 1px solid var(--cv-cyan-border);
 }
 
 .joinCard .secondaryAction {
   background: var(--cv-purple-subtle);
-  color: var(--cv-purple);
+  color: var(--cv-text-bright);
   border: 1px solid var(--cv-purple-border);
 }
 
@@ -160,8 +174,15 @@
 }
 
 @keyframes slideDown {
-  from { opacity: 0; transform: translateY(-10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .input {
@@ -200,8 +221,17 @@
   transition: all var(--cv-duration-base) var(--cv-ease-smooth);
 }
 
-.primary { background: var(--cv-cyan-subtle); color: var(--cv-cyan); border: 1px solid var(--cv-cyan-border); }
-.secondary { background: var(--cv-purple-subtle); color: var(--cv-purple); border: 1px solid var(--cv-purple-border); }
+.primary {
+  background: var(--cv-cyan-subtle);
+  color: var(--cv-text-bright);
+  border: 1px solid var(--cv-cyan-border);
+}
+
+.secondary {
+  background: var(--cv-purple-subtle);
+  color: var(--cv-text-bright);
+  border: 1px solid var(--cv-purple-border);
+}
 
 .textButton {
   flex: 1;
@@ -287,6 +317,11 @@
 }
 
 @media (max-width: 600px) {
-  .title { font-size: 2rem; }
-  .actionCard { padding: 1rem; }
+  .title {
+    font-size: 2rem;
+  }
+
+  .actionCard {
+    padding: 1rem;
+  }
 }

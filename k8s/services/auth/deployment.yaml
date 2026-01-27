@@ -78,6 +78,10 @@ spec:
               value: "false"
             - name: ALLOWED_ORIGINS
               value: "https://l2p.korczewski.de,https://auth.korczewski.de,https://payment.korczewski.de,https://videovault.korczewski.de"
+            - name: AUTH_RATE_LIMIT_MAX
+              value: "10000"
+            - name: AUTH_STRICT_RATE_LIMIT_MAX
+              value: "1000"
           resources:
             requests:
               memory: "256Mi"

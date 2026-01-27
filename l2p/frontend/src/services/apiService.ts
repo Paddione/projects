@@ -2,14 +2,9 @@ import {
   Lobby,
   Question,
   ApiResponse,
-  UserProfile,
-  LobbyResponse,
   LobbyListResponse,
   MockLobby,
-  QuestionData,
   QuestionSetData,
-  AuthData,
-  MockData,
   AuthRequest,
   AuthResponse,
   Character,
@@ -18,7 +13,6 @@ import {
   JoinLobbyRequest,
   LobbyData,
   FileMetadata,
-  MockQuestion,
   QuestionText,
   QuestionAnswers,
   QuestionExplanation
@@ -140,11 +134,11 @@ class ApiService {
     // Handle both Vite and Jest environments
     let envUrl: string | undefined;
 
-    if (importMetaEnv.VITE_API_URL) {
+    if (typeof importMetaEnv.VITE_API_URL === 'string') {
       envUrl = importMetaEnv.VITE_API_URL;
     }
 
-    if (!envUrl && typeof process !== 'undefined' && process.env?.VITE_API_URL) {
+    if (!envUrl && typeof process !== 'undefined' && typeof process.env?.VITE_API_URL === 'string') {
       // Fallback to process.env for Jest/Node environment
       envUrl = process.env.VITE_API_URL;
     }
@@ -154,11 +148,11 @@ class ApiService {
     this.baseURL = (envUrl && envUrl.trim()) || '/api'
 
     let authEnvUrl: string | undefined;
-    if (importMetaEnv.VITE_AUTH_SERVICE_URL) {
+    if (typeof importMetaEnv.VITE_AUTH_SERVICE_URL === 'string') {
       authEnvUrl = importMetaEnv.VITE_AUTH_SERVICE_URL;
     }
 
-    if (!authEnvUrl && typeof process !== 'undefined' && process.env?.['VITE_AUTH_SERVICE_URL']) {
+    if (!authEnvUrl && typeof process !== 'undefined' && typeof process.env?.['VITE_AUTH_SERVICE_URL'] === 'string') {
       authEnvUrl = process.env['VITE_AUTH_SERVICE_URL'];
     }
 
@@ -1839,7 +1833,10 @@ class ApiService {
     if (currentToken && currentToken !== this.token) {
       this.token = currentToken
     }
-    return !!this.token
+
+    // Check for explicit token or presence of user_data as evidence 
+    // of session-based authentication (cookie-based)
+    return !!this.token || !!localStorage.getItem('user_data')
   }
 
   getToken(): string | null {
