@@ -197,9 +197,11 @@ export class SocketService {
 
       // Navigate to game page (skip validation since this is triggered by server game-started event)
       // Use dynamic import to avoid circular dependency
-      import('./navigationService').then(({ navigationService }) => {
-        navigationService.navigateToGame(lobbyCode, true)
-      })
+      if (lobbyCode) {
+        import('./navigationService').then(({ navigationService }) => {
+          navigationService.navigateToGame(lobbyCode, true)
+        })
+      }
     })
 
     this.socket.on('question-started', (data) => {
@@ -484,11 +486,12 @@ export class SocketService {
         })
       })
 
-      // Navigate to results page
+      // Navigate to results page — skip validation since the lobby gets
+      // deleted after game end and the API check would fail
       // Use dynamic import to avoid circular dependency
       import('./navigationService').then(({ navigationService }) => {
         if (lobbyCode) {
-          navigationService.navigateToResults(lobbyCode)
+          navigationService.navigateToResults(lobbyCode, true)
         }
       })
     })

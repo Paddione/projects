@@ -139,7 +139,7 @@ describe('SocketService event handlers', () => {
     expect(useGameStore.getState().error).toBe('bad')
   })
 
-  it('handles game-started by setting state and navigating', () => {
+  it('handles game-started by setting state and navigating', async () => {
     const { socket } = connectAndGetMockSocket()
 
     // Pretend we are in a lobby to trigger navigation
@@ -152,6 +152,9 @@ describe('SocketService event handlers', () => {
       },
       message: 'start'
     })
+
+    // Wait for async dynamic import to settle
+    await new Promise(resolve => setTimeout(resolve, 50))
 
     const state = useGameStore.getState()
     expect(state.gameStarted).toBe(true)
@@ -185,7 +188,7 @@ describe('SocketService event handlers', () => {
     expect(useGameStore.getState().timeRemaining).toBe(15)
   })
 
-  it('handles game-ended by setting results and navigating', () => {
+  it('handles game-ended by setting results and navigating', async () => {
     const { socket } = connectAndGetMockSocket()
 
     useGameStore.getState().setLobbyCode('ABC123')
@@ -198,10 +201,13 @@ describe('SocketService event handlers', () => {
       questionSetIds: [1]
     })
 
+    // Wait for async handler (dynamic import + await) to settle
+    await new Promise(resolve => setTimeout(resolve, 50))
+
     const state = useGameStore.getState()
     expect(state.gameEnded).toBe(true)
     expect(state.gameResults.length).toBe(1)
-    expect(navigationService.navigateToResults).toHaveBeenCalledWith('ABC123')
+    expect(navigationService.navigateToResults).toHaveBeenCalledWith('ABC123', true)
   })
 
   it('handles player-level-up by appending a notification', () => {
@@ -272,13 +278,16 @@ describe('SocketService event handlers', () => {
     expect(useGameStore.getState().error).toBe('boom')
   })
 
-  it('handles lobby-deleted by navigating to home', () => {
+  it('handles lobby-deleted by navigating to home', async () => {
     const { socket } = connectAndGetMockSocket()
 
     socket.serverEmit('lobby-deleted', {
       message: 'Lobby has been deleted',
       reason: 'host-left'
     })
+
+    // Wait for async dynamic import to settle
+    await new Promise(resolve => setTimeout(resolve, 50))
 
     // Verify that navigateToHome was called
     expect(navigationService.navigateToHome).toHaveBeenCalled()

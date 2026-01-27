@@ -257,13 +257,14 @@ describe('AuthGuard', () => {
         success: true,
         data: { valid: true },
       })
+      // AuthGuard casts getCurrentUser() to extract selectedCharacter/characterLevel at runtime
       jest.mocked(apiService.getCurrentUser).mockReturnValue({
         id: '1',
         username: 'testuser',
         email: 'test@example.com',
         selectedCharacter: 'mage',
         characterLevel: 10,
-      })
+      } as any)
       jest.mocked(apiService.getToken).mockReturnValue('valid-token')
 
       render(<AuthGuard>{mockChildren}</AuthGuard>)

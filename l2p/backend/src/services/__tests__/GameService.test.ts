@@ -192,6 +192,7 @@ describe('GameService', () => {
     (mockLobbyService as any).getLobbyQuestionSetInfo = jest.fn();
     (mockLobbyService as any).validateQuestionSetSelection = jest.fn();
     (mockLobbyService as any).updateLobbyStatus = jest.fn();
+    (mockLobbyService as any).deleteLobbyByCode = jest.fn().mockResolvedValue(true);
     (mockLobbyService as any).updatePlayerConnection = jest.fn();
     // QuestionService
     (mockQuestionService as any).getRandomQuestions = jest.fn();
@@ -774,14 +775,14 @@ describe('GameService', () => {
       );
       expect(mockIo.to).toHaveBeenCalledWith('ABC123');
       expect(mockIo.emit).toHaveBeenCalledWith('game-over', expect.any(Object));
-      expect(mockLobbyService.updateLobbyStatus).toHaveBeenCalledWith('ABC123', 'waiting');
+      expect(mockLobbyService.deleteLobbyByCode).toHaveBeenCalledWith('ABC123');
       expect((gameService as any).activeGames.has('ABC123')).toBe(false);
     });
 
-    it('should update lobby status when ending game', async () => {
+    it('should delete lobby when ending game', async () => {
       await gameService.endGameSession('ABC123');
 
-      expect(mockLobbyService.updateLobbyStatus).toHaveBeenCalledWith('ABC123', 'waiting');
+      expect(mockLobbyService.deleteLobbyByCode).toHaveBeenCalledWith('ABC123');
     });
 
     it('should handle errors when saving player results', async () => {
@@ -789,7 +790,7 @@ describe('GameService', () => {
 
       await expect(gameService.endGameSession('ABC123')).resolves.not.toThrow();
 
-      expect(mockLobbyService.updateLobbyStatus).toHaveBeenCalledWith('ABC123', 'waiting');
+      expect(mockLobbyService.deleteLobbyByCode).toHaveBeenCalledWith('ABC123');
       expect((gameService as any).activeGames.has('ABC123')).toBe(false);
     });
   });

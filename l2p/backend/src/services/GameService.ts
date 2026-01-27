@@ -582,8 +582,12 @@ export class GameService {
       this.clearTimers(lobbyCode);
       this.activeGames.delete(lobbyCode);
 
-      // Reset lobby state to waiting
-      await this.lobbyService.updateLobbyStatus(lobbyCode, 'waiting');
+      // Delete the lobby — game is over, the session is fully persisted
+      try {
+        await this.lobbyService.deleteLobbyByCode(lobbyCode);
+      } catch (error) {
+        console.warn('Failed to delete lobby after game end:', error);
+      }
     }
   }
 
@@ -796,20 +800,7 @@ export class GameService {
       }
     }
 
-    // Remove from active games
-    this.activeGames.delete(gameState.lobbyCode);
-
-    // Update lobby status - use the repository directly
-    try {
-      const { LobbyRepository } = await import('../repositories/LobbyRepository.js');
-      const lobbyRepo = new LobbyRepository();
-      const lobby = await this.lobbyService.getLobbyByCode(gameState.lobbyCode);
-      if (lobby) {
-        await lobbyRepo.updateLobbyStatus(lobby.id, 'ended');
-      }
-    } catch (error) {
-      console.warn('Failed to update lobby status to ended:', error);
-    }
+    // Lobby cleanup (activeGames removal + lobby deletion) is handled by endGameSession's finally block
 
     RequestLogger.logGameEvent('game-ended', gameState.lobbyCode, undefined, {
       gameSessionId: gameState.gameSessionId,

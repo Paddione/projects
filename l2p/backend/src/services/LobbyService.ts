@@ -457,6 +457,17 @@ export class LobbyService {
   }
 
   /**
+   * Delete a lobby by its code
+   */
+  async deleteLobbyByCode(lobbyCode: string): Promise<boolean> {
+    const lobby = await this.lobbyRepository.findByCode(lobbyCode);
+    if (!lobby) {
+      return false;
+    }
+    return await this.lobbyRepository.deleteLobby(lobby.id);
+  }
+
+  /**
    * Clean up old lobbies
    */
   async cleanupOldLobbies(hoursOld: number = 24): Promise<number> {

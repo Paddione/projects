@@ -92,12 +92,14 @@ class NavigationService {
     }
   }
 
-  async navigateToResults(lobbyCode: string) {
+  async navigateToResults(lobbyCode: string, skipValidation: boolean = false) {
     try {
-      // Validate lobby exists
-      const response = await apiService.getLobby(lobbyCode)
-      if (!response.success || !response.data) {
-        throw new Error('Lobby not found')
+      if (!skipValidation) {
+        // Validate lobby exists
+        const response = await apiService.getLobby(lobbyCode)
+        if (!response.success || !response.data) {
+          throw new Error('Lobby not found')
+        }
       }
 
       this.navigate(`/results/${lobbyCode}`)
@@ -130,24 +132,18 @@ class NavigationService {
 
         if (currentUser) {
           // Call socket service to leave lobby
-          const playerId = `user_${currentUser.id}`
+          // Player IDs are stored as String(user.id) in the lobby
+          const playerId = String(currentUser.id)
           // Use dynamic import to avoid circular dependency
-          import('./socketService').then(({ socketService }) => {
-            socketService.leaveLobby(lobbyCode, playerId)
-          })
-
-          // The socket service will handle the appropriate response:
-          // - If host leaves: lobby-deleted event will redirect everyone to home
-          // - If regular player leaves: lobby-updated event will update the lobby
-          // No need to handle navigation here as the socket events will manage it
-        } else {
-          // If no user, just navigate to home
-          await this.navigateToHome()
+          const { socketService } = await import('./socketService')
+          socketService.leaveLobby(lobbyCode, playerId)
         }
-      } else {
-        // No lobby code, just navigate to home
-        await this.navigateToHome()
       }
+
+      // Always navigate home after leaving — the leaving player's socket
+      // has already left the room by the time backend broadcasts events,
+      // so we can't rely on lobby-deleted/lobby-updated to trigger navigation.
+      await this.navigateToHome()
     } catch (error) {
       this.handleNavigationError('Failed to leave lobby', error)
     }
@@ -167,7 +163,8 @@ class NavigationService {
         }
       } else if (gameStore.gameEnded && !currentPath.includes('/results/')) {
         if (gameStore.lobbyCode) {
-          await this.navigateToResults(gameStore.lobbyCode)
+          // Skip validation since gameEnded is set by socket events and lobby is deleted after game
+          await this.navigateToResults(gameStore.lobbyCode, true)
         }
       }
     } catch (error) {
