@@ -1,4 +1,5 @@
 import React from 'react'
+import { Link } from 'react-router-dom'
 import { useTheme } from './ThemeProvider'
 import { apiService } from '../services/apiService'
 import styles from '../styles/App.module.css'
@@ -58,9 +59,9 @@ export const Header: React.FC = () => {
             Question Sets
           </a>
           {isAdmin && (
-            <a href="/admin" className={`${styles.button} ${styles.buttonOutline}`} data-testid="admin-dashboard-link" onClick={handleMenuSelect}>
+            <Link to="/admin" className={`${styles.button} ${styles.buttonOutline}`} data-testid="admin-dashboard-link" onClick={handleMenuSelect}>
               Admin
-            </a>
+            </Link>
           )}
         </nav>
         

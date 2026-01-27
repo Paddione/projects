@@ -1,7 +1,7 @@
 .gameInterface {
   max-width: 1000px;
   margin: 0 auto;
-  padding: 4rem 2rem;
+  padding: 2rem;
   animation: fadeIn 0.8s ease-out;
 }
 
@@ -12,18 +12,18 @@
 
 .header {
   text-align: center;
-  margin-bottom: 4rem;
+  margin-bottom: 1.5rem;
 }
 
 .title {
-  font-size: 3.5rem;
+  font-size: 2.75rem;
   font-weight: 800;
   font-family: var(--cv-font-display);
   background: var(--cv-gradient-primary);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   filter: drop-shadow(0 0 10px var(--cv-cyan-glow));
-  margin-bottom: 1rem;
+  margin-bottom: 0.5rem;
   letter-spacing: var(--cv-tracking-tight);
 }
 
@@ -38,7 +38,7 @@
 .content {
   display: flex;
   flex-direction: column;
-  gap: 3rem;
+  gap: 1.5rem;
 }
 
 .actionGrid {
@@ -51,12 +51,12 @@
   background: var(--cv-glass-2);
   border: 1px solid var(--cv-border-2);
   border-radius: var(--cv-radius-2xl);
-  padding: 2.5rem;
+  padding: 1.5rem;
   cursor: pointer;
   transition: all 0.4s var(--cv-ease-smooth);
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 1rem;
   position: relative;
   backdrop-filter: var(--cv-blur-md);
   box-shadow: var(--cv-shadow-md);
@@ -108,7 +108,7 @@
 .cardFooter {
   margin-top: auto;
   border-top: 1px solid var(--cv-border-2);
-  padding-top: 1.5rem;
+  padding-top: 1rem;
 }
 
 .primaryAction, .secondaryAction {
@@ -287,6 +287,6 @@
 }
 
 @media (max-width: 600px) {
-  .title { font-size: 2.5rem; }
-  .actionCard { padding: 1.5rem; }
+  .title { font-size: 2rem; }
+  .actionCard { padding: 1rem; }
 }
