@@ -17,7 +17,7 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
   correctAnswers,
   totalQuestions,
   showMultiplier = true,
-  showStreak = true,
+  showStreak = false,
   className = ''
 }) => {
   const getMultiplierColor = (mult: number): string => {
@@ -43,11 +43,11 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
           {score.toLocaleString()}
         </div>
       </div>
-      
+
       {showMultiplier && multiplier > 1 && (
         <div className={styles.multiplierSection}>
           <div className={styles.multiplierLabel}>Multiplier</div>
-          <div 
+          <div
             className={`${styles.multiplierValue} ${getMultiplierColor(multiplier)}`}
             data-testid="multiplier-value"
           >
@@ -55,11 +55,11 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
           </div>
         </div>
       )}
-      
+
       {showStreak && correctAnswers > 0 && (
         <div className={styles.streakSection}>
           <div className={styles.streakLabel}>Streak</div>
-          <div 
+          <div
             className={`${styles.streakValue} ${getStreakColor(correctAnswers)}`}
             data-testid="streak-value"
           >
@@ -68,12 +68,12 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
           </div>
         </div>
       )}
-      
+
       {totalQuestions && (
         <div className={styles.progressSection}>
           <div className={styles.progressLabel}>Progress</div>
           <div className={styles.progressBar}>
-            <div 
+            <div
               className={styles.progressFill}
               style={{ width: `${(correctAnswers / totalQuestions) * 100}%` }}
               data-testid="progress-fill"

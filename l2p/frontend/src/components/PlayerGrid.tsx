@@ -30,7 +30,7 @@ export const PlayerGrid: React.FC<PlayerGridProps> = ({
   const { playerAnswerStatus } = useGameStore()
   const prevScoresRef = useRef<Record<string, number>>({})
   const prevStreakRef = useRef<Record<string, number | undefined>>({})
-  
+
   // Sort provided players by score descending for display order
   const sortedPlayers = [...players].sort((a, b) => b.score - a.score)
 
@@ -83,7 +83,7 @@ export const PlayerGrid: React.FC<PlayerGridProps> = ({
       {slots.map((player, index) => (
         <div
           key={player?.id || `empty-${index}`}
-          className={`${styles.playerSlot} ${styles.slotEnter} ${player ? styles.occupied : styles.empty} ${player ? (playerAnswerStatus[player.id] === 'correct' ? styles.slotGlowCorrect : playerAnswerStatus[player.id] === 'wrong' ? styles.slotGlowWrong : '') : ''} ${player && rankings?.[player.id] === 0 ? styles.topRank : ''}`}
+          className={`${styles.playerSlot} ${styles.slotEnter} ${player ? styles.occupied : styles.empty} ${player ? (playerAnswerStatus[player.id] === 'correct' ? styles.slotGlowCorrect : playerAnswerStatus[player.id] === 'wrong' ? styles.slotGlowWrong : '') : ''} ${player && rankings?.[player.id] === 0 ? styles.topRank : ''} ${player && rankings?.[player.id] !== undefined ? styles[`rank${rankings[player.id]}`] : ''}`}
           data-testid={player ? `player-${player.id}` : `empty-slot-${index}`}
           style={{ animationDelay: `${index * 80}ms` }}
         >
@@ -99,7 +99,7 @@ export const PlayerGrid: React.FC<PlayerGridProps> = ({
                 return (
                   <div className={styles.confettiContainer} aria-hidden>
                     {Array.from({ length: 12 }).map((_, i) => (
-                      <span key={i} className={styles.confettiPiece} style={{ ['--i' as any]: i }} />
+                      <span key={i} className={styles.confettiPiece} style={{ '--i': i } as React.CSSProperties} />
                     ))}
                   </div>
                 )
@@ -120,10 +120,10 @@ export const PlayerGrid: React.FC<PlayerGridProps> = ({
                   <div className={`${styles.medalBadge} ${styles.medalPop}`}>{getMedalForRank(rankings?.[player.id] ?? null)}</div>
                 )}
               </div>
-              
+
               <div className={styles.playerInfo}>
                 <div className={styles.username}>{player.username}</div>
-                
+
                 {showScores && (
                   <div className={styles.scoreContainer}>
                     {(() => {
@@ -147,14 +147,9 @@ export const PlayerGrid: React.FC<PlayerGridProps> = ({
                     </span>
                   </div>
                 )}
-                
+
                 <div className={styles.statusIndicators}>
                   {player.isReady && <div className={styles.readyIndicator}>✓</div>}
-                  {player.correctAnswers > 0 && (
-                    <div className={styles.streakIndicator}>
-                      🔥 {player.correctAnswers}
-                    </div>
-                  )}
                 </div>
               </div>
 

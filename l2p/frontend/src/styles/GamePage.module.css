@@ -295,25 +295,9 @@
 .answerButton:hover:not(:disabled) {
   transform: translateY(-2px);
   border-color: var(--cv-cyan);
-  box-shadow: var(--cv-glow-cyan-sm);
+  box-shadow: var(--cv-glow-cyan-md);
   background: var(--cv-void-lighter);
   color: var(--cv-cyan);
-  animation: answer-hover-glow 0.6s var(--cv-ease-smooth) forwards;
-}
-
-@keyframes answer-hover-glow {
-  0% {
-    box-shadow: 0 0 0 transparent;
-  }
-
-  50% {
-    box-shadow: var(--cv-glow-cyan-md);
-    border-color: var(--cv-cyan);
-  }
-
-  100% {
-    box-shadow: var(--cv-glow-cyan-sm);
-  }
 }
 
 .answerButton:active:not(:disabled) {
