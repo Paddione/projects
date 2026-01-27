@@ -1,0 +1,230 @@
+apiVersion: v1
+items:
+- apiVersion: traefik.io/v1alpha1
+  kind: IngressRoute
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"traefik.io/v1alpha1","kind":"IngressRoute","metadata":{"annotations":{},"labels":{"app":"dashboard","app.kubernetes.io/component":"control-center","app.kubernetes.io/name":"dashboard","app.kubernetes.io/part-of":"korczewski","tier":"infrastructure"},"name":"dashboard","namespace":"korczewski-infra"},"spec":{"routes":[{"kind":"Rule","match":"Host(`dashboard.korczewski.de`)","middlewares":[{"name":"admin-auth-chain","namespace":"korczewski-infra"}],"services":[{"name":"dashboard","port":4242}]},{"kind":"Rule","match":"Host(`dashboard.korczewski.de`) \u0026\u0026 PathPrefix(`/socket.io`)","middlewares":[{"name":"websocket-chain","namespace":"korczewski-infra"}],"services":[{"name":"dashboard","port":4242}]}],"tls":{}}}
+    creationTimestamp: "2026-01-20T16:36:38Z"
+    generation: 1
+    labels:
+      app: dashboard
+      app.kubernetes.io/component: control-center
+      app.kubernetes.io/name: dashboard
+      app.kubernetes.io/part-of: korczewski
+      tier: infrastructure
+    name: dashboard
+    namespace: korczewski-infra
+    resourceVersion: "451960"
+    uid: 68f8500b-5d2c-4259-b05a-38c8e85b9aa9
+  spec:
+    routes:
+    - kind: Rule
+      match: Host(`dashboard.korczewski.de`)
+      middlewares:
+      - name: admin-auth-chain
+        namespace: korczewski-infra
+      services:
+      - name: dashboard
+        port: 4242
+    - kind: Rule
+      match: Host(`dashboard.korczewski.de`) && PathPrefix(`/socket.io`)
+      middlewares:
+      - name: websocket-chain
+        namespace: korczewski-infra
+      services:
+      - name: dashboard
+        port: 4242
+    tls: {}
+- apiVersion: traefik.io/v1alpha1
+  kind: IngressRoute
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"traefik.io/v1alpha1","kind":"IngressRoute","metadata":{"annotations":{},"labels":{"app":"traefik","app.kubernetes.io/component":"dashboard","app.kubernetes.io/name":"traefik"},"name":"traefik-dashboard","namespace":"korczewski-infra"},"spec":{"routes":[{"kind":"Rule","match":"Host(`traefik.korczewski.de`)","middlewares":[{"name":"dashboard-auth","namespace":"korczewski-infra"}],"services":[{"kind":"TraefikService","name":"api@internal"}]}],"tls":{"secretName":"korczewski-tls"}}}
+    creationTimestamp: "2026-01-14T23:19:54Z"
+    generation: 3
+    labels:
+      app: traefik
+      app.kubernetes.io/component: dashboard
+      app.kubernetes.io/name: traefik
+    name: traefik-dashboard
+    namespace: korczewski-infra
+    resourceVersion: "391976"
+    uid: f1ae46a0-4d6a-4f9a-a56e-07a5973e3985
+  spec:
+    routes:
+    - kind: Rule
+      match: Host(`traefik.korczewski.de`)
+      middlewares:
+      - name: dashboard-auth
+        namespace: korczewski-infra
+      services:
+      - kind: TraefikService
+        name: api@internal
+    tls:
+      secretName: korczewski-tls
+- apiVersion: traefik.io/v1alpha1
+  kind: IngressRoute
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"traefik.io/v1alpha1","kind":"IngressRoute","metadata":{"annotations":{},"labels":{"app":"auth","app.kubernetes.io/component":"authentication","app.kubernetes.io/name":"auth","app.kubernetes.io/part-of":"korczewski","tier":"services"},"name":"auth","namespace":"korczewski-services"},"spec":{"routes":[{"kind":"Rule","match":"Host(`auth.korczewski.de`)","middlewares":[{"name":"default-chain","namespace":"korczewski-infra"}],"services":[{"name":"auth","port":5500}]}],"tls":{}}}
+    creationTimestamp: "2026-01-14T23:20:26Z"
+    generation: 5
+    labels:
+      app: auth
+      app.kubernetes.io/component: authentication
+      app.kubernetes.io/name: auth
+      app.kubernetes.io/part-of: korczewski
+      tier: services
+    name: auth
+    namespace: korczewski-services
+    resourceVersion: "434117"
+    uid: 6c673e0a-5a59-4fbb-b942-932d7c896c0f
+  spec:
+    routes:
+    - kind: Rule
+      match: Host(`auth.korczewski.de`)
+      middlewares:
+      - name: default-chain
+        namespace: korczewski-infra
+      services:
+      - name: auth
+        port: 5500
+    tls: {}
+- apiVersion: traefik.io/v1alpha1
+  kind: IngressRoute
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"traefik.io/v1alpha1","kind":"IngressRoute","metadata":{"annotations":{},"labels":{"app":"l2p-backend","app.kubernetes.io/component":"backend","app.kubernetes.io/name":"l2p-backend"},"name":"l2p-backend","namespace":"korczewski-services"},"spec":{"routes":[{"kind":"Rule","match":"Host(`l2p.korczewski.de`) \u0026\u0026 PathPrefix(`/api`)","middlewares":[{"name":"user-auth-chain","namespace":"korczewski-infra"}],"priority":100,"services":[{"name":"l2p-backend","port":3001,"sticky":{"cookie":{"httpOnly":true,"name":"l2p-backend-sticky","secure":true}}}]},{"kind":"Rule","match":"Host(`l2p.korczewski.de`) \u0026\u0026 PathPrefix(`/socket.io`)","middlewares":[{"name":"websocket-chain","namespace":"korczewski-infra"}],"priority":110,"services":[{"name":"l2p-backend","port":3001,"sticky":{"cookie":{"httpOnly":true,"name":"l2p-backend-sticky","secure":true}}}]}],"tls":{}}}
+    creationTimestamp: "2026-01-15T00:01:41Z"
+    generation: 6
+    labels:
+      app: l2p-backend
+      app.kubernetes.io/component: backend
+      app.kubernetes.io/name: l2p-backend
+    name: l2p-backend
+    namespace: korczewski-services
+    resourceVersion: "948933"
+    uid: 0c270e50-c5d5-480c-97ec-5e69653650d7
+  spec:
+    routes:
+    - kind: Rule
+      match: Host(`l2p.korczewski.de`) && PathPrefix(`/api`)
+      middlewares:
+      - name: user-auth-chain
+        namespace: korczewski-infra
+      priority: 100
+      services:
+      - name: l2p-backend
+        port: 3001
+        sticky:
+          cookie:
+            httpOnly: true
+            name: l2p-backend-sticky
+            secure: true
+    - kind: Rule
+      match: Host(`l2p.korczewski.de`) && PathPrefix(`/socket.io`)
+      middlewares:
+      - name: websocket-chain
+        namespace: korczewski-infra
+      priority: 110
+      services:
+      - name: l2p-backend
+        port: 3001
+        sticky:
+          cookie:
+            httpOnly: true
+            name: l2p-backend-sticky
+            secure: true
+    tls: {}
+- apiVersion: traefik.io/v1alpha1
+  kind: IngressRoute
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"traefik.io/v1alpha1","kind":"IngressRoute","metadata":{"annotations":{},"labels":{"app":"l2p-frontend","app.kubernetes.io/component":"frontend","app.kubernetes.io/name":"l2p-frontend","app.kubernetes.io/part-of":"korczewski","tier":"services"},"name":"l2p-frontend","namespace":"korczewski-services"},"spec":{"routes":[{"kind":"Rule","match":"Host(`l2p.korczewski.de`)","middlewares":[{"name":"user-auth-chain","namespace":"korczewski-infra"}],"priority":10,"services":[{"name":"l2p-frontend","port":80}]}],"tls":{}}}
+    creationTimestamp: "2026-01-15T00:01:41Z"
+    generation: 6
+    labels:
+      app: l2p-frontend
+      app.kubernetes.io/component: frontend
+      app.kubernetes.io/name: l2p-frontend
+      app.kubernetes.io/part-of: korczewski
+      tier: services
+    name: l2p-frontend
+    namespace: korczewski-services
+    resourceVersion: "611312"
+    uid: 92af0422-4c5b-4343-b59d-8ee4bf8d44eb
+  spec:
+    routes:
+    - kind: Rule
+      match: Host(`l2p.korczewski.de`)
+      middlewares:
+      - name: user-auth-chain
+        namespace: korczewski-infra
+      priority: 10
+      services:
+      - name: l2p-frontend
+        port: 80
+    tls: {}
+- apiVersion: traefik.io/v1alpha1
+  kind: IngressRoute
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"traefik.io/v1alpha1","kind":"IngressRoute","metadata":{"annotations":{},"labels":{"app":"payment","app.kubernetes.io/component":"payment","app.kubernetes.io/name":"payment"},"name":"payment","namespace":"korczewski-services"},"spec":{"routes":[{"kind":"Rule","match":"Host(`shop.korczewski.de`) || Host(`payment.korczewski.de`)","middlewares":[{"name":"user-auth-chain","namespace":"korczewski-infra"}],"services":[{"name":"payment","port":3000}]}],"tls":{}}}
+    creationTimestamp: "2026-01-15T00:06:51Z"
+    generation: 6
+    labels:
+      app: payment
+      app.kubernetes.io/component: payment
+      app.kubernetes.io/name: payment
+    name: payment
+    namespace: korczewski-services
+    resourceVersion: "455082"
+    uid: 06c52dd6-a18d-4c5d-aaf3-3daa08b6f545
+  spec:
+    routes:
+    - kind: Rule
+      match: Host(`shop.korczewski.de`) || Host(`payment.korczewski.de`)
+      middlewares:
+      - name: user-auth-chain
+        namespace: korczewski-infra
+      services:
+      - name: payment
+        port: 3000
+    tls: {}
+- apiVersion: traefik.io/v1alpha1
+  kind: IngressRoute
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"traefik.io/v1alpha1","kind":"IngressRoute","metadata":{"annotations":{},"labels":{"app":"videovault","app.kubernetes.io/component":"media","app.kubernetes.io/name":"videovault"},"name":"videovault","namespace":"korczewski-services"},"spec":{"routes":[{"kind":"Rule","match":"Host(`videovault.korczewski.de`) || Host(`video.korczewski.de`)","middlewares":[{"name":"user-auth-chain","namespace":"korczewski-infra"}],"services":[{"name":"videovault","port":5000}]}],"tls":{}}}
+    creationTimestamp: "2026-01-15T00:10:01Z"
+    generation: 6
+    labels:
+      app: videovault
+      app.kubernetes.io/component: media
+      app.kubernetes.io/name: videovault
+    name: videovault
+    namespace: korczewski-services
+    resourceVersion: "949634"
+    uid: b4cd352b-b269-4308-aad0-d0f1a7e69669
+  spec:
+    routes:
+    - kind: Rule
+      match: Host(`videovault.korczewski.de`) || Host(`video.korczewski.de`)
+      middlewares:
+      - name: user-auth-chain
+        namespace: korczewski-infra
+      services:
+      - name: videovault
+        port: 5000
+    tls: {}
+kind: List
+metadata:
+  resourceVersion: ""

@@ -6,8 +6,8 @@
         "password": "Agent-Secret-1337!"
     },
     "sessions": {
-        "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjQsInVzZXJuYW1lIjoiYWdlbnRfdGVzdCIsImVtYWlsIjoiYWdlbnQtdGVzdEBrb3JjemV3c2tpLmRlIiwicm9sZSI6IlVTRVIiLCJzZWxlY3RlZENoYXJhY3RlciI6InN0dWRlbnQiLCJjaGFyYWN0ZXJMZXZlbCI6MSwiaWF0IjoxNzY4OTU5NTYwLCJleHAiOjE3Njg5NjA0NjAsImF1ZCI6ImtvcmN6ZXdza2ktc2VydmljZXMiLCJpc3MiOiJ1bmlmaWVkLWF1dGgifQ.RuXVEGvCX2v45CS6cA8NGAcS8WGi3Nh9EnM6Lo3MOJc",
-        "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjQsImVtYWlsIjoiYWdlbnQtdGVzdEBrb3JjemV3c2tpLmRlIiwiaWF0IjoxNzY4OTU5NTYwLCJleHAiOjE3Njk1NjQzNjAsImF1ZCI6ImtvcmN6ZXdza2ktc2VydmljZXMiLCJpc3MiOiJ1bmlmaWVkLWF1dGgifQ.YUJ5V1Apvql8bKqjYEUKhf7hodqzWtnCCuOTIpZn9Kc"
+        "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiO...",
+        "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiO..."
     },
     "groups": {
         "health_check": {
@@ -25,14 +25,14 @@
                     "expected": "title:contains('VideoVault')"
                 },
                 {
-                    "name": "Payment Portal",
-                    "url": "https://payment.korczewski.de",
-                    "expected": "button:contains('Get Started')"
+                    "name": "Shop Portal",
+                    "url": "https://shop.korczewski.de",
+                    "expected": "body:contains('Browse Shop')"
                 },
                 {
-                    "name": "VRAM Dashboard",
+                    "name": "Control Center",
                     "url": "https://dashboard.korczewski.de",
-                    "expected": "h1:contains('VRAM')"
+                    "expected": "[id='dashboard-title']:contains('CONTROL CENTER')"
                 }
             ]
         },
@@ -50,8 +50,8 @@
                     ]
                 },
                 {
-                    "name": "Check Session on Payment",
-                    "url": "https://payment.korczewski.de/profile",
+                    "name": "Check Session on Shop",
+                    "url": "https://shop.korczewski.de/profile",
                     "expected": "text:contains('Welcome')"
                 }
             ]
@@ -61,8 +61,8 @@
             "description": "Tasks specific to the L2P project",
             "tasks": [
                 {
-                    "name": "L2P Frontend",
-                    "url": "http://localhost:5173",
+                    "name": "L2P Production",
+                    "url": "https://l2p.korczewski.de",
                     "expected": "h1:contains('Learn2Play')"
                 },
                 {
@@ -77,13 +77,13 @@
             "description": "Tasks specific to VideoVault",
             "tasks": [
                 {
-                    "name": "VideoVault UI",
-                    "url": "http://localhost:5100",
+                    "name": "VideoVault Production",
+                    "url": "https://videovault.korczewski.de",
                     "expected": "title:contains('VideoVault')"
                 },
                 {
                     "name": "Check Video List",
-                    "url": "http://localhost:5100",
+                    "url": "https://videovault.korczewski.de",
                     "expected": "div:contains('Videos')"
                 }
             ]

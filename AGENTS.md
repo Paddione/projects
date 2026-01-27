@@ -1,36 +1,68 @@
-# Repository Guidelines
+# Agent Coordination Guidelines
 
-## Project Structure & Module Organization
-- `l2p/`, `VideoVault/`, `payment/`, and `auth/` are independent services with their own `README.md` and build/test scripts.
-- Service docs: `l2p/README.md`, `VideoVault/README.md`, `payment/README.md`, `auth/README.md`, and `shared-infrastructure/README.md`.
-- `shared-infrastructure/` hosts the shared Postgres setup; reusable packages and design assets live in `shared-infrastructure/shared/`.
-- `Obsidian/` contains the user guide and service docs, `k8s/` holds deployment manifests, and `scripts/` contains root utilities (setup, health checks, env validation).
-- Keep changes scoped to a single service unless the feature explicitly spans multiple apps.
+Rules for AI agents working in this repository. For full command references and architecture details, see CLAUDE.md and README.md.
 
-## Build, Test, and Development Commands
-- `npm run dev:all` runs all core services in parallel.
-- `npm run build:all` builds all apps sequentially (useful for CI checks).
-- `npm run test:all` runs each service’s test suite in order.
-- `k8s/scripts/deploy/deploy-all.sh` orchestrates a full cluster deployment.
-- `npm run validate:env` (or `:dev` / `:prod`) verifies required environment variables.
+## Task Management
 
-## Coding Style & Naming Conventions
-- TypeScript is the default across services; follow each project’s ESLint config.
-- VideoVault uses Prettier (`VideoVault/.prettierrc.json`); other services rely on ESLint formatting rules.
-- Indentation is 2 spaces and single quotes where the local style uses them.
-- React components are `PascalCase`, hooks are `useThing`, tests live in `__tests__/`, `test/`, or `e2e/`.
+Before starting work:
+1. Check `.agent-tasks.md` at repo root
+2. Add a task entry: `[YYYY-MM-DD HH:MM] [project] [STATUS] Description`
+3. Update status between major steps; mark `[DONE]` immediately when complete
 
-## Testing Guidelines
-- L2P: Jest unit/integration tests under `l2p/**/__tests__`; Playwright E2E under `l2p/frontend/e2e/`.
-- VideoVault: Vitest unit tests in `VideoVault/client/src/*.test.ts`; Playwright E2E in `VideoVault/e2e/`.
-- Payment: Vitest + Playwright in `payment/test/`.
-- Prefer the smallest relevant suite and state when tests are skipped.
+Status values: `IN_PROGRESS`, `BLOCKED`, `DONE`
 
-## Commit & Pull Request Guidelines
-- Git history favors conventional commits like `feat:`, `fix:`, and `chore:`; keep messages short and imperative.
-- Include the project name in the subject when the change targets a single service (e.g., `feat: l2p matchmaking cleanup`).
-- PRs should list affected services, summarize changes, note tests run, and include screenshots for UI updates.
+Example:
+```
+[2025-12-27 14:30] [l2p] [IN_PROGRESS] Adding profile feature (frontend/src/components/Profile.tsx)
+```
 
-## Security & Configuration Tips
-- Do not commit `.env-dev` or `.env-prod`; use `.env.example` templates and `npm run validate:env*`.
-- Use unique, alphanumeric-only DB passwords to avoid Docker/Postgres escaping issues.
+## Project Isolation
+
+- Work in different projects or different subsystems when possible
+- Avoid simultaneous edits to the same file
+- Keep changes scoped to a single service unless the feature explicitly spans multiple apps
+
+### Critical Sections (Exclusive Access Required)
+
+- Git operations (commit, merge, branch)
+- Docker operations (rebuild, restart containers)
+- Database migrations
+- Dependency updates
+- Root-level config changes
+- Deployments
+
+If a critical section is in use, mark your task `[BLOCKED]` and yield.
+
+## Coding Style
+
+- TypeScript across projects; follow each project's ESLint config
+- VideoVault uses Prettier; other projects rely on ESLint
+- 2-space indentation, single quotes where the codebase uses them
+- React components: `PascalCase`; hooks: `useThing`; tests: `__tests__/`, `test/`, or `e2e/`
+
+## Commit and PR Guidelines
+
+- Short, imperative commit messages with project name when targeting a single service
+- Conventional prefixes: `feat:`, `fix:`, `chore:`
+- PRs should list affected services, summarize changes, note tests run, and include screenshots for UI updates
+
+## Testing
+
+- Run the smallest relevant test suite for your change
+- If tests are skipped, state why
+- Do not skip tests silently
+
+## Communication
+
+- Provide a concise summary of work done
+- List files modified
+- Include commands run and assumptions made
+
+## Scope Rules
+
+- Confirm the target project before making changes
+- Read the relevant project CLAUDE.md or README before changes
+- Prefer small, targeted edits over sweeping refactors
+- Do not add dependencies, run migrations, or change infrastructure without explicit approval
+- Keep secrets out of the repo
+- Update existing docs rather than creating new ones

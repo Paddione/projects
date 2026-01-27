@@ -1,432 +1,423 @@
 # VideoVault
 
-A powerful client-first video management application with advanced filtering, bulk operations, and professional-grade organization features.
+A client-first video management application with advanced filtering, bulk operations, and professional-grade organization features. Built with privacy-first local storage and modern web APIs.
 
-## 🎯 Core Features
+## Features
 
-### Video Management
-- **Directory Scanning**: Scan entire directories with progress tracking and cancellation support
-- **Drag & Drop Import**: Import videos by dragging files directly into the application
-- **Thumbnail Generation**: Off-main-thread thumbnail encoding (worker/OffscreenCanvas with fallback)
-- **File Operations**: Create/delete folders, move/delete files with conflict handling
-- **Rescan Functionality**: Restore permissions and runtime handles after browser reload
+- **Directory Scanning** with progress tracking, cancellation, and drag-and-drop import
+- **Advanced Filtering** by category, search text, date range, file size, duration, with saveable presets
+- **Bulk Operations** for batch category assignment, rename, move, and delete with undo support
+- **Video Player** with buffered progress, scrubbing, thumbnail preview, PiP, and media session integration
+- **Category Management** with standard and custom types, lowercase normalization, and quick-assign UI
+- **Thumbnail Generation** off-main-thread via worker/OffscreenCanvas with fallback
+- **Virtualized Rendering** for libraries with 1000+ videos using react-window
+- **File Operations** including create/delete folders, move/delete files with conflict handling
+- **Keyboard Accessibility** with full navigation and WCAG 2.1 AA compliance
+- **Optional PostgreSQL Persistence** via Drizzle ORM for shared libraries
 
-### Advanced Filtering System
-- **Date Range Filtering**: Calendar-based date selection for video creation/modification dates
-- **File Size Filtering**: Preset ranges with custom input options
-  - Small (< 100 MB), Medium (100 MB - 1 GB), Large (1 GB - 10 GB), Very Large (> 10 GB)
-  - Custom range input for precise control
-- **Duration Filtering**: Preset ranges with custom input options
-  - Short (< 5 minutes), Medium (5-30 minutes), Long (30 minutes - 2 hours), Very Long (> 2 hours)
-  - Custom minute range input
-- **Filter Integration**: Seamless combination with category and search filters
-- **Filter Presets**: Save and load filter combinations for quick access
+## Tech Stack
 
-### Bulk Operations System
-- **Multi-Selection**: Checkbox-based video selection with keyboard shortcuts
-  - `Ctrl+A` - Select all visible videos
-  - `Ctrl+Space` - Toggle selection mode
-  - `Escape` - Clear all selections
-- **Bulk Operations Toolbar**: Fixed bottom toolbar with comprehensive actions
-- **Batch Operations**:
-  - Bulk category assignment and removal
-  - Batch rename with pattern matching (prefix, suffix, numbering, case transforms)
-  - Batch move to destination folders with directory picker
-  - Batch delete with confirmation dialogs
-- **Visual Feedback**: Selection indicators, count display, total size/duration
+| Layer | Technologies |
+|-------|-------------|
+| Frontend | React 18, TypeScript, Vite, Tailwind CSS, Radix UI / shadcn |
+| Backend | Node.js, Express, Vite middleware (dev) / static serving (prod) |
+| Data | localStorage (primary), optional Drizzle ORM + PostgreSQL |
+| Testing | Vitest (jsdom), Playwright |
+| Infrastructure | Docker, Docker Compose, Traefik ingress |
 
-### Modern Video Player
-- **Advanced Controls**: Buffered progress, smooth scrubbing with thumbnail preview
-- **Keyboard Shortcuts**: 
-  - Arrow keys: ±5s skip
-  - Shift+Arrow: ±30s skip
-  - Dedicated +10m button for 600s jumps
-  - Click/double-click for play/pause and fullscreen
-- **Playlist Navigation**: Previous/Next with shuffle mode (preference persisted)
-- **Picture-in-Picture**: Native browser PiP support
-- **Media Session Integration**: OS media key support (play/pause/seek/prev/next)
-- **Inline Tagging**: Edit categories while watching from player controls
-
-### Category Management
-- **Standard Categories**: age, physical, ethnicity, relationship, acts, setting, quality, performer
-- **Custom Categories**: Unlimited custom category types and values
-- **Category Normalization**: Lowercase normalization with case-insensitive de-duplication
-- **All Categories View**: Table-like grid with distinct color tones per category type
-- **Quick Remove**: Click category chips under thumbnails to instantly remove categories
-- **Rename Assistance**: Generate filenames from category values with smart performer placement
-
-### Performance & Accessibility
-- **Virtualized Rendering**: Efficient handling of large video libraries (1000+ videos)
-- **Performance Monitoring**: Real-time FPS, memory usage, and render time tracking (development mode)
-- **Bundle Optimization**: Manual chunking, code splitting, and tree shaking
-- **Full Keyboard Navigation**: Complete keyboard accessibility with logical tab order
-- **WCAG 2.1 AA Compliance**: Screen reader support, focus indicators, ARIA labels
-- **Responsive Design**: Desktop and tablet optimized with dark/light theme support
-
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
-- **Node.js 20+** and npm
-- **Chromium-based browser** (Chrome, Edge, Opera) for full File System Access API support
-- **Docker** (optional, for containerized development)
 
-### Installation & Development
+- Node.js 20+ and npm
+- Chromium-based browser (Chrome, Edge, Opera) for File System Access API
+- Docker (optional, for containerized development)
 
-#### Local Development
+### Installation
+
 ```bash
-# Install dependencies
 npm ci
+```
 
-# Start development server
+### Local Development
+
+```bash
 npm run dev
-
-# Open browser to:
-# - Local dev: http://localhost:5100
-# - Docker dev: http://localhost:5000
+# Open http://localhost:5100
 ```
 
-#### Docker Development (Recommended)
+### Docker Development (recommended)
+
 ```bash
-# Start development environment with hot reload
-npm run docker:dev
-
-# Start in background
-npm run docker:dev:detached
-
-# View logs
-npm run docker:logs
-
-# Access container shell for debugging
-npm run docker:shell
-
-# Stop and clean up
-npm run docker:down
-npm run docker:clean
+npm run docker:dev           # Start with hot reload (port 5000)
+npm run docker:dev:detached  # Start in background
+npm run docker:logs          # View logs
+npm run docker:shell         # Shell into container
+npm run docker:down          # Stop environment
+npm run docker:clean         # Remove containers and volumes
 ```
 
-### Postgres Setup (optional shared persistence)
+## Postgres Setup (Optional)
 
-1. Create env files with alphanumeric-only secrets (no special characters):
+VideoVault works without Postgres (in-memory fallback). To enable persistent shared storage:
+
+1. Create env files with alphanumeric-only passwords (no special characters):
    - `env/.env-postgres` with `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD`
-   - `env/.env-app` with `DATABASE_URL` and `SESSION_SECRET` (and existing dev vars)
-   See `env/.env.example` for guidance.
+   - `env/.env-app` with `DATABASE_URL` and `SESSION_SECRET`
+   - See `env/.env.example` for guidance
 
-2. Start the stack (Postgres is referenced via `depends_on`):
-   - `npm run docker:dev`
+2. Start the stack:
+   ```bash
+   npm run docker:dev
+   ```
 
-3. Apply schema migrations to Postgres:
-   - In the app container shell: `npm run db:push`
+3. Apply schema:
+   ```bash
+   docker exec videovault-dev npm run db:push
+   ```
 
-When `DATABASE_URL` is set, the server uses Postgres-backed storage; otherwise it falls back to in-memory storage.
+When `DATABASE_URL` is set, the server uses Postgres. Otherwise it falls back to in-memory storage.
 
-### Build, Test, Verify
+**Password requirement**: Use alphanumeric-only passwords to avoid Docker/Postgres escaping issues.
 ```bash
-# Typecheck + unit + server e2e + build
-npm run verify
+openssl rand -base64 32 | tr -dc 'A-Za-z0-9' | head -c 32
 ```
-
-### Tailwind CSS
-- Uses a single root config: `tailwind.config.cjs`.
-- PostCSS is configured to reference it: see `postcss.config.js`.
-- `@tailwindcss/vite` removed from devDependencies (not needed with Tailwind v3).
-
-### Persistence APIs (server)
-- `GET /api/db/health` — Database connectivity status
-- `GET /api/videos` — List all videos
-- `POST /api/videos/bulk_upsert` — Upsert array of videos (shared library)
-- `PATCH /api/videos/:id` — Update single video
-- `DELETE /api/videos/:id` — Remove single video
-- `POST /api/videos/batch_delete` — Remove multiple videos by IDs
-- `GET /api/roots` — List directory roots
-- `POST /api/roots` — Set root directories (rootKey, directories, name?)
-- `POST /api/roots/add` — Add a directory to a root
-- `POST /api/roots/remove` — Remove directory (and nested) from a root
-- `DELETE /api/roots/:rootKey` — Delete a root
-- `GET /api/roots/last` — Get last active root key
-- `POST /api/roots/last` — Set last active root key
-- `GET /api/presets` — List filter presets
-- `POST /api/presets` — Create/upsert a filter preset
-- `PATCH /api/presets/:id` — Update preset
-- `DELETE /api/presets/:id` — Delete preset
-
-Run `npm run db:push` after enabling Postgres to create/update tables.
-
-### Shared Types & Errors
-- Error codes and error payload types live in `shared-infrastructure/shared/videovault/errors.ts` and are used by both client and server.
-- Common API payload schemas (Zod) are in `shared-infrastructure/shared/videovault/api.ts` (e.g., app settings endpoints).
-- Prefer importing `ErrorCodes`, `ErrorCode`, and `StoredError` from `@shared/errors` instead of redefining on the client.
-
-**Local shared path**: `VideoVault/shared-infrastructure` is a symlink to `../shared-infrastructure` so Vite can resolve shared modules and their dependencies during builds. Docker mounts `shared-infrastructure` into `/app/shared-infrastructure` for production builds.
-
-### Settings Service
-- `AppSettingsService` exposes typed helpers: `get<T>(key, parser?)` and `set<T>(key, value, serializer?)`.
-- Legacy migrations normalize old values (e.g., `'0'/'1'` for `vv.shuffle`) to booleans and persist normalized data.
-
-### Production Build
-```bash
-# Build for production
-npm run build
-
-# Start production server
-npm run start
-```
-
-### Testing & Quality
-```bash
-# Run test suite
-npm test
-
-# Run tests in watch mode
-npm run test:watch
-
-# TypeScript type checking
-npm run check
-```
-
-### E2E with Playwright (Docker)
-```bash
-# Bring up Postgres and app, then run Playwright tests
-npm run docker:pw:all
-
-# Or do it in two steps
-npm run docker:pw:up
-npm run docker:pw:run
-
-# Tear down containers and volumes when done
-npm run docker:down
-```
-Notes:
-- The Playwright container connects to the app via `http://videovault-dev:5000` on the same Docker network.
-- Test artifacts are written under `test-results/playwright`.
-  - In Docker runs, artifacts are kept inside the container (not bind-mounted), avoiding permissions issues.
-  - Local runs write to `test-results/playwright` in the repo.
 
 ## Environment Configuration
 
-Recommended structure:
-- `.env.example` (template)
-- `.env-dev` (development)
-- `.env-prod` (production)
+### File Structure
 
-Required values:
-- `SESSION_SECRET` (32-char hex, separate for dev/prod)
-- `ADMIN_PASS` (strong password for prod)
-- `MEDIA_ROOT` (path to media library)
-- `DATABASE_URL` (only if using Postgres persistence)
-
-Postgres-related files live under `env/`:
-- `env/.env-postgres` with `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD`
-- `env/.env-app` with `DATABASE_URL` and `SESSION_SECRET`
-
-## Notes & Constraints
-
-- Requires a Chromium-based browser for File System Access API features.
-- File handles are session-based; rescan after reload.
-- Thumbnails are generated on demand (not persisted).
-- Docker Playwright runs keep artifacts inside the container to avoid permissions issues.
-
-## Important Files
-
-- `docker-compose.yml`: Dev + E2E environment definitions
-- `scripts/ensure-playwright-match.mjs`: Playwright version validation
-
-## Documentation & Task Tracking
-
-Use `/home/patrick/VideoVault/docs` to track tasks, documentation, and plans, and keep them updated regularly.
-- To open the HTML report: `npm run test:pw:report` (uses `test-results/playwright-report`).
-- To run Playwright locally (outside Docker): `npm run test:pw`.
-- The Playwright services are in the `playwright` Docker Compose profile; use the npm scripts or add `--profile playwright` if running `docker-compose` directly.
-
-Optional: MSW (Mock Service Worker)
-- You can enable browser-side network mocking for E2E by setting `VITE_E2E_MSW=true` in `env/.env-playwright`.
-- Handlers live in `client/src/mocks/handlers.ts` and are started automatically for E2E when enabled.
-
-#### Playwright UI mode
-```bash
-# Start the interactive Playwright UI and expose it on localhost:9323
-npm run docker:pw:ui
-
-# or detached
-npm run docker:pw:ui:detached
 ```
-Then open http://localhost:9323 to view and run tests interactively.
+.env.example              # Template
+.env-dev                  # Development (gitignored)
+.env-prod                 # Production (gitignored)
+env/.env-postgres         # Postgres credentials
+env/.env-app.local        # Local development overrides
+env/.env-playwright       # E2E test configuration
+```
 
-Compose Playwright image is pinned to `v1.55.0-jammy` to match `@playwright/test`. Adjust `docker-compose.yml` if you need a different version.
+### Required Variables
 
-## 🎮 Control Instructions & Usage
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `NODE_ENV` | Environment | `development` |
+| `PORT` | Server port | `5100` (local), `5000` (Docker) |
+| `SESSION_SECRET` | 32-char hex session secret | -- |
+| `ADMIN_USER` | Admin username | `admin` |
+| `ADMIN_PASS` | Admin password | -- |
+| `MEDIA_ROOT` | Path to media library | -- |
+| `DATABASE_URL` | Postgres connection (optional) | -- |
+| `CORS_ORIGINS` | Allowed origins | `http://localhost:5100,http://localhost:5000` |
+| `TRUST_PROXY` | Set `true` behind Nginx/Traefik | `false` |
+| `PROCESSED_MEDIA_PATH` | Processed media path (optional) | -- |
+| `THUMBNAILS_DIR` | Thumbnail storage path (optional) | -- |
 
-### Getting Started
-1. **Directory Selection**: Click "Scan Directory" to select your video folder
-2. **File System Permissions**: Grant directory access when prompted (Chromium browsers only)
-3. **Scanning Progress**: Monitor progress bar and cancel if needed
-4. **Thumbnail Generation**: Thumbnails generate automatically in the background
+Generate secrets:
+```bash
+openssl rand -hex 32
+```
 
-### Navigation & Controls
+## Development Commands
 
-#### Video Grid/List Navigation
-- **Arrow Keys**: Navigate between video cards
-- **Home/End**: Jump to first/last video
-- **Enter**: Play selected video
-- **Space**: Toggle selection (in selection mode)
-- **Escape**: Clear focus/selection
+| Command | Purpose |
+|---------|---------|
+| `npm run dev` | Local dev server (port 5100) |
+| `npm run docker:dev` | Docker dev with hot reload (port 5000) |
+| `npm run check` | TypeScript type checking |
+| `npm run build` | Production build |
+| `npm run start` | Start production server |
+| `npm run verify` | Typecheck + unit + server e2e + build |
+| `npm run db:push` | Apply Drizzle schema to Postgres |
+| `npm test` | Run unit tests |
+| `npm run test:watch` | Watch mode |
+| `npm run test:all` | Full 6-stage test pipeline |
+| `npm run test:quick` | Types + unit tests only |
 
-#### Video Player Controls
-- **Spacebar**: Play/pause
-- **Arrow Keys**: Skip ±5 seconds
-- **Shift+Arrow Keys**: Skip ±30 seconds
-- **+10m Button**: Jump forward 600 seconds
-- **Click Progress Bar**: Seek to position
-- **Hover Progress Bar**: Preview thumbnail at time
-- **P**: Toggle Picture-in-Picture
-- **F**: Toggle fullscreen
-- **M**: Mute/unmute
+## Testing
 
-#### Advanced Filtering
-1. Click "Advanced Filters" in top toolbar
-2. **Date Range**: Use calendar pickers to set date range
-3. **File Size**: Select preset or enter custom range in MB
-4. **Duration**: Select preset or enter custom range in minutes
-5. Click "Apply Filters" to activate
-6. Use "Clear" or "Reset All" to remove filters
+### 6-Stage Test Pipeline
 
-#### Bulk Operations
-1. **Enable Selection**: Click checkbox on any video or use `Ctrl+Space`
-2. **Select Multiple**: Click checkboxes or use `Ctrl+A` for all
-3. **Access Toolbar**: Bulk operations toolbar appears at bottom
-4. **Choose Action**: Add Tags, Rename, Move, or use More dropdown
-5. **Confirm Operations**: Follow prompts for batch actions
+Run before every deployment:
 
-#### Category Management
-- **Edit Tags**: Right-click video or use player controls
-- **Quick Assign**: Use "All Categories" table for fast assignment
-- **Remove Categories**: Click category chips under thumbnails
-- **Filter by Category**: Click categories in sidebar
-- **Custom Categories**: Add any custom type:value pairs
+```bash
+npm run test:all
+```
 
-### File Operations
-- **Rename**: Single or batch rename with conflict handling
-- **Move**: Use directory picker to move files within scanned root
-- **Delete**: Remove files with confirmation (use caution)
-- **Directory Operations**: Create/delete folders within scanned structure
+| Stage | Command | What It Tests | Time |
+|-------|---------|---------------|------|
+| 1 | `npm run test:1:types` | TypeScript compilation | ~5-10s |
+| 2 | `npm run test:2:unit` | Client + server unit tests (FAST_TESTS=1) | ~30-60s |
+| 3 | `npm run test:3:integration` | Server API + DB integration | ~10-20s |
+| 4 | `npm run test:4:e2e` | Playwright E2E in Docker | ~2-5m |
+| 5 | `npm run test:5:build` | Production build verification | ~30-60s |
+| 6 | `npm run test:6:health` | Final health check | instant |
 
-### Session Management
-- **Data Persistence**: Video metadata stored in browser localStorage
-- **Handle Management**: File handles maintained per browser session
-- **Rescan Root**: Restore file access after browser reload
-- **Export/Import**: Backup and restore video metadata
-- **Filter Presets**: Save frequently used filter combinations
+Total pipeline time: ~4-8 minutes.
 
-## 🏗️ Architecture & Technical Details
+### Additional Test Commands
 
-### Tech Stack
-- **Frontend**: React 18, TypeScript, Vite, Tailwind CSS, Radix UI/shadcn
-- **Backend**: Node.js Express server with Vite middleware (dev) / static serving (prod)
-- **Data**: localStorage (primary), optional Drizzle ORM + PostgreSQL schema
-- **Testing**: Vitest with jsdom environment
-- **Containerization**: Docker with hot reload support
+```bash
+npm run test:quick           # Types + unit only (~40-70s)
+npm run test:pre-deploy      # Alias for test:all
+npm run test:client          # Client tests only
+npm run test:server          # Server tests only
+npm run test:e2e             # Server integration tests (Vitest)
+npm run test:coverage:full   # Full coverage report with thresholds
+
+# Run a single test file
+npx vitest run client/src/services/filter-engine.test.ts
+FAST_TESTS=1 npx vitest run client/src/services/filter-engine.test.ts
+```
+
+### Playwright E2E
+
+Docker-based (recommended):
+```bash
+npm run docker:pw:all        # Full suite
+npm run docker:pw:up         # Start environment only
+npm run docker:pw:run        # Run against running environment
+npm run docker:pw:ui         # Interactive UI (http://localhost:9323)
+```
+
+Local:
+```bash
+npm run test:pw              # Run locally
+npm run test:pw:ui           # Local interactive UI
+npm run test:pw:report       # Open HTML report
+npm run test:pw:install      # Install Playwright browsers
+```
+
+Notes:
+- Playwright container connects to `videovault-dev:5000` on the Docker network
+- Pinned to `v1.55.0-jammy` (must match `@playwright/test` version)
+- Docker artifacts stay inside the container to avoid permission issues
+- Optional MSW mocking via `VITE_E2E_MSW=true` in `env/.env-playwright`
+- The Playwright services use the `playwright` Docker Compose profile
+
+### Coverage Thresholds
+
+Core services have per-file coverage requirements enforced in `vitest.config.ts`:
+
+| Service | Branches | Functions | Lines | Statements |
+|---------|----------|-----------|-------|------------|
+| filter-engine.ts | 90% | 95% | 95% | 95% |
+| rename-engine.ts | 85% | 95% | 95% | 95% |
+| directory-database.ts | 90% | 95% | 95% | 95% |
+| video-database.ts | 85% | 95% | 95% | 95% |
+
+Excluded from coverage: `components/ui/**` (shadcn), `components/admin/**`, `components/layout/**`, `pages/**`, enhanced services, web workers.
+
+### Recommended Workflows
+
+| Situation | Command |
+|-----------|---------|
+| During development | `npm run test:watch` |
+| Before every commit | `npm run test:quick` |
+| Before PR or deploy | `npm run test:all` |
+| Debug failing tests | Run the individual stage that failed |
+| Debug E2E | `npm run docker:pw:ui` |
+| Check coverage | `npm run test:coverage:full` |
+
+### Troubleshooting Tests
+
+**Stage 1 (Types)**: Run `npm run check` for detailed type errors. Check for missing type definitions or tsconfig issues.
+
+**Stage 2 (Unit)**: Run `npm run test:client` or `npm run test:server` separately. Run a single file with `npx vitest run path/to/test.ts`. Check test setup in `client/src/test/setup.ts`.
+
+**Stage 3 (Integration)**: Verify `DATABASE_URL` in `.env-dev`. Run with verbose output: `npm run test:e2e -- --reporter=verbose`.
+
+**Stage 4 (E2E)**: Ensure Docker is running. Check logs with `npm run docker:logs`. Use `npm run docker:pw:ui` for interactive debugging. Verify Playwright version match with `npm run predocker:pw:all`.
+
+**Stage 5 (Build)**: Run `npm run build` directly for detailed error output.
+
+**All tests failing**: Try `rm -rf node_modules package-lock.json && npm install`.
+
+**E2E tests hanging**: Reset Docker with `npm run docker:down && npm run docker:clean && npm run docker:pw:all`.
+
+## Keyboard Shortcuts
+
+### Universal
+
+| Shortcut | Action |
+|----------|--------|
+| `Tab` / `Shift+Tab` | Navigate forward / backward between elements |
+| `Enter` | Activate button, open video, submit form |
+| `Escape` | Close modal, cancel action, exit fullscreen |
+
+### Video Grid
+
+| Shortcut | Action |
+|----------|--------|
+| `Tab` | Navigate video cards in reading order |
+| `Enter` | Open video player modal |
+| `Home` / `End` | Jump to first / last video |
+| `Ctrl+A` | Select all visible videos |
+| `Ctrl+Space` | Toggle selection mode |
+| `Escape` | Clear focus or selection |
+
+### Video Player
+
+| Shortcut | Action |
+|----------|--------|
+| `Space` | Play / pause |
+| `Left` / `Right` arrow | Skip -5s / +5s |
+| `Shift+Left` / `Shift+Right` | Skip -30s / +30s |
+| `+10m` button | Jump forward 600s |
+| `Up` / `Down` arrow | Volume +10% / -10% |
+| `F` | Toggle fullscreen |
+| `M` | Mute / unmute |
+| `P` | Toggle Picture-in-Picture |
+| Click progress bar | Seek to position |
+
+### Bulk Operations
+
+| Shortcut | Action |
+|----------|--------|
+| Click checkbox on video | Toggle selection |
+| `Ctrl+A` | Select all |
+| `Ctrl+Shift+A` | Deselect all |
+| `Shift+Click` | Select range |
+| `Escape` | Cancel selection, close bulk toolbar |
+
+### Search and Filters
+
+| Shortcut | Action |
+|----------|--------|
+| `Tab` to search field | Focus search input |
+| Type in search | Real-time filtering |
+| `Up` / `Down` in dropdown | Navigate options |
+| `Enter` in dropdown | Select option |
+
+### Accessibility
+
+- Focus indicator: cyan 2px border on all interactive elements
+- Reduced motion: respects system `prefers-reduced-motion` setting
+- High contrast: enhanced borders and text contrast when system high contrast is enabled
+- Screen reader: ARIA labels on all controls
+
+## Architecture
+
+### Client-First Design
+
+The browser is the primary data store:
+- **localStorage**: Video metadata persistence
+- **File System Access API**: Direct file access (Chromium only)
+- **Session-based handles**: File handles lost on reload, rescan required
+- **Optional Postgres**: Server-side persistence for shared libraries via Drizzle ORM
 
 ### Key Components
-- **useVideoManager**: Central state management hook orchestrating all services
-- **VideoDatabase**: localStorage-based video metadata persistence
-- **FileScanner**: Directory scanning with concurrency control
-- **FilterEngine**: Advanced filtering with category, search, date, size, duration support
-- **BulkOperationsService**: Multi-select and batch operation management
-- **VideoPlayerModal**: Full-featured player with advanced controls
 
-### Browser Compatibility
-- **Primary**: Chromium-based browsers (Chrome, Edge, Opera)
-- **File System Access API**: Required for full functionality
-- **Graceful Degradation**: Limited functionality on other browsers
-- **Mobile Support**: Responsive design for touch devices
+| Component | Responsibility |
+|-----------|---------------|
+| `useVideoManager` | Central state hook; all components use this instead of services directly |
+| `VideoDatabase` | localStorage CRUD for video metadata |
+| `FileScanner` | Directory scanning with concurrency control |
+| `FilterEngine` | Standard filtering (category, search, date, size, duration) |
+| `EnhancedFilterEngine` | FlexSearch-based instant search |
+| `BulkOperationsService` | Multi-select batch operations with undo |
+| `ThumbnailGenerator` | Worker-based encoding, OffscreenCanvas with fallback |
+| `FilesystemOps` | File/folder CRUD via File System Access API |
+| `RenameEngine` | Batch rename with patterns |
+| `DirectoryDatabase` | Directory metadata and scanned root tracking |
 
-### Performance Considerations
-- **Virtualization**: Automatic for large libraries (100+ videos)
-- **Concurrency Control**: Scanning limited by `navigator.hardwareConcurrency`
-- **Memory Management**: Thumbnails not persisted to avoid quota issues
-- **Bundle Optimization**: Code splitting and vendor chunking configured
+### Shared Types and Errors
 
-## 📝 Usage Notes & Best Practices
+Error codes and payload types live in `shared-infrastructure/shared/videovault/errors.ts`. API schemas (Zod) are in `shared-infrastructure/shared/videovault/api.ts`. Import from `@shared/errors` rather than redefining locally.
 
-### File System Access API
-- The application requires File System Access API for full functionality
-- Use Chromium-based browsers for the best experience
-- File handles are maintained per session for operations
-- After reload, use "Rescan last root" to restore permissions
+`VideoVault/shared-infrastructure` is a symlink to `../shared-infrastructure`. Docker mounts it into `/app/shared-infrastructure` for builds.
 
-### Data Management
-- Video metadata is stored in browser localStorage
-- Thumbnails are generated lazily and not persisted
-- Regular backups are recommended using the export feature
-- Category values are normalized to lowercase automatically
+### Tailwind CSS
 
-### Performance Tips
-- Enable virtualization for libraries with 100+ videos
-- Use advanced filters to reduce dataset before bulk operations
-- Monitor performance metrics in development mode
-- Consider browser memory limits for very large libraries
+Uses a single root config `tailwind.config.cjs` with PostCSS configured in `postcss.config.js`. `@tailwindcss/vite` is not used (Tailwind v3).
 
-### Troubleshooting
-- **No videos after reload**: Use "Rescan last root" to restore file access
-- **Slow performance**: Check video count, consider filtering
-- **Missing thumbnails**: Thumbnails regenerate automatically when needed
-- **Playback issues**: Ensure video files are accessible and supported formats
+### Settings Service
 
-## 🧪 Testing
+`AppSettingsService` provides typed `get<T>(key, parser?)` and `set<T>(key, value, serializer?)` helpers. Legacy migrations normalize old values automatically.
 
-### Manual Testing
-- Advanced filtering system testing
-- Bulk operations validation
-- Performance monitoring verification
-- Keyboard navigation and accessibility testing
+## API Reference
 
-### Automated Testing
-- **Unit Tests**: Comprehensive service and component testing
-- **Integration Tests**: Core workflow validation
-- **Performance Tests**: Large library handling verification
-- **Accessibility Tests**: WCAG 2.1 AA compliance validation
+### Videos
+- `GET /api/videos` -- List all videos
+- `POST /api/videos/bulk_upsert` -- Upsert array of videos
+- `PATCH /api/videos/:id` -- Update single video
+- `DELETE /api/videos/:id` -- Delete single video
+- `POST /api/videos/batch_delete` -- Batch delete by IDs
 
-### Test Data Requirements
-- **Minimum**: 50+ video files for testing virtualization
-- **Recommended**: 100+ video files for performance testing
-- **Variety**: Different file sizes, durations, and creation dates
-- **Formats**: MP4, AVI, MKV, MOV, WMV support
+### Roots
+- `GET /api/roots` -- List directory roots
+- `POST /api/roots` -- Set root directories (rootKey, directories, name?)
+- `POST /api/roots/add` -- Add directory to root
+- `POST /api/roots/remove` -- Remove directory from root
+- `DELETE /api/roots/:rootKey` -- Delete root
+- `GET /api/roots/last` -- Get last active root
+- `POST /api/roots/last` -- Set last active root
 
-## 🚀 Deployment
+### Presets
+- `GET /api/presets` -- List filter presets
+- `POST /api/presets` -- Create/upsert preset
+- `PATCH /api/presets/:id` -- Update preset
+- `DELETE /api/presets/:id` -- Delete preset
 
-### Development
-- Use `npm run dev` for local development
-- Use `npm run docker:dev` for containerized development with hot reload
-- Access at:
-  - Local dev: http://localhost:5100
-  - Docker dev: http://localhost:5000
+### Tags
+- `GET /api/tags` -- List all tags
+- `PATCH /api/tags/:id` -- Update tag
+- `POST /api/tags/rename` -- Rename tag
+- `POST /api/tags/merge` -- Merge tags
+- `POST /api/tags/synonyms` -- Add synonym
+- `GET /api/tags/synonyms` -- List synonyms
+- `DELETE /api/tags/synonyms/:id` -- Delete synonym
 
-### Production
-- Run `npm run build` to create production build
-- Use `npm run start` to serve production build
-- Configure k3d ingress if needed
+### System
+- `GET /api/health` -- Server health
+- `GET /api/db/health` -- Database health
+- `POST /api/errors` -- Report client error
+- `GET /api/thumbnails/:id` -- Generate thumbnail
+- `POST /api/duplicates/compute` -- Compute duplicates
+- `GET /api/duplicates` -- List duplicates
 
-### Docker Production
+## Deployment
+
+### Docker Development
+
 ```bash
-# Build production image
-docker build -t videovault .
-
-# Run production container
-docker run -p 5000:5000 videovault
+npm run docker:dev
+# Access at http://localhost:5000
 ```
 
-## 🤝 Contributing
+Features: hot reload via bind mounts, preserved node_modules in container, Vite file watching, connection to centralized `shared-postgres`.
 
-1. Fork the repository
-2. Create a feature branch
-3. Make changes following the existing code style
-4. Run tests: `npm test`
-5. Run type checking: `npm run check`
-6. Submit a pull request
+### Docker Production
 
-## 📄 License
+```bash
+docker build -f Dockerfile.prod -t videovault .
+docker run -p 5000:5000 --env-file .env-prod videovault
+```
+
+Production uses `Dockerfile.prod`, connects to `shared-postgres:5432`, integrates with Traefik ingress, and exposes a health check at `/api/health`.
+
+### Networks
+
+- `l2p-network` (external): Shared service network
+- `traefik-public` (external): Production ingress
+
+### Important Files
+
+- `docker-compose.yml` -- Dev + E2E environment definitions
+- `Dockerfile.prod` -- Production image
+- `scripts/ensure-playwright-match.mjs` -- Playwright version validation
+
+## Troubleshooting
+
+| Problem | Solution |
+|---------|----------|
+| No videos after reload | Use "Rescan last root" to restore file access |
+| Slow performance with large library | Enable filtering to reduce visible set; virtualization activates at 100+ videos |
+| Missing thumbnails | Thumbnails regenerate automatically on demand |
+| Playback issues | Verify file is accessible and in a supported format (MP4, AVI, MKV, MOV, WMV) |
+| File System Access API not available | Use a Chromium-based browser (Chrome, Edge, Opera) |
+| Docker E2E permission errors | Artifacts stay in container by design; use `npm run test:pw:report` to view |
+| Database connection failures | Verify `DATABASE_URL` in env files; ensure `shared-postgres` is running |
+
+## License
 
 MIT License - see LICENSE file for details.
-
----
-
-**VideoVault** - Professional video management for the modern web. Built with privacy-first local storage and cutting-edge web APIs.

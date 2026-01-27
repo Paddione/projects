@@ -283,36 +283,36 @@
   height: auto;
   position: relative;
   display: flex;
-  background: var(--cv-glass-1);
-  /* Dark backplate like Home button */
-  border: 2px solid var(--cv-border-3);
+  background: var(--cv-void-lighter);
+  /* Dark backplate like Profile button */
+  border: 2px solid rgba(255, 255, 255, 0.2);
   border-radius: var(--cv-radius-lg);
-  color: var(--cv-text-dim);
+  color: var(--cv-text-bright);
   transition: all var(--cv-duration-base) var(--cv-ease-smooth);
   overflow: hidden;
 }
 
 .answerButton:hover:not(:disabled) {
   transform: translateY(-2px);
-  border-color: var(--cv-cyan-border);
+  border-color: var(--cv-cyan);
   box-shadow: var(--cv-glow-cyan-sm);
-  background: var(--cv-glass-4);
-  color: var(--cv-text-bright);
-  animation: answer-hover-flash 0.6s var(--cv-ease-smooth) forwards;
+  background: var(--cv-void-lighter);
+  color: var(--cv-cyan);
+  animation: answer-hover-glow 0.6s var(--cv-ease-smooth) forwards;
 }
 
-@keyframes answer-hover-flash {
+@keyframes answer-hover-glow {
   0% {
-    background: var(--cv-glass-2);
+    box-shadow: 0 0 0 transparent;
   }
 
-  30% {
-    background: var(--cv-cyan-subtle);
+  50% {
     box-shadow: var(--cv-glow-cyan-md);
+    border-color: var(--cv-cyan);
   }
 
   100% {
-    background: var(--cv-glass-4);
+    box-shadow: var(--cv-glow-cyan-sm);
   }
 }
 
@@ -322,8 +322,7 @@
 }
 
 .answerEnter {
-  opacity: 0;
-  animation: answer-fade-in 240ms ease-out forwards;
+  animation: answer-fade-in 240ms ease-out both;
 }
 
 @keyframes answer-fade-in {
@@ -339,8 +338,8 @@
 }
 
 .answerSelected {
-  background: var(--cv-cyan-bg) !important;
-  color: var(--cv-text-bright) !important;
+  background: var(--cv-void-lighter) !important;
+  color: var(--cv-cyan) !important;
   border-color: var(--cv-cyan) !important;
   box-shadow: var(--cv-glow-cyan-md);
   transform: translateY(-2px) scale(1.02);

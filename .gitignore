@@ -8,6 +8,7 @@ package-lock.json
 yarn.lock
 /home/patrick/projects/Obsidian
 Obsidian/
+Notion
 browser_control_registry.json
 # Environment variables (except examples)
 .env
@@ -222,3 +223,5 @@ debug-*.jpeg
 *.debug.log
 k8s/skaffold
 k8s/test-results/
+test-results/
+k8s/tests/e2e/playwright-report/

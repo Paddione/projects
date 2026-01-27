@@ -79,7 +79,6 @@ cd VideoVault && npx vitest run client/src/services/filter-engine.test.ts
 
 # payment
 cd payment && npx vitest run test/some.test.ts
-
 ```
 
 ## Architecture
@@ -110,7 +109,7 @@ L2P uses Socket.io for multiplayer functionality:
 
 ### Client-First Architecture (VideoVault)
 
-VideoVault uses browser as primary data store:
+VideoVault uses the browser as primary data store:
 - localStorage for video metadata
 - File System Access API for file handles (Chromium only)
 - Session-based handles (lost on reload, rescan required)
