@@ -1,18 +1,23 @@
-/* CSS Variables for theming */
+/* CSS Variables for theming - Aligned with Cybervault Design System */
 :root {
-  /* Light theme colors */
-  --primary-color: #1d4ed8; /* darken for better contrast */
-  --primary-hover: #1b46c2;
-  --secondary-color: #475569; /* slate-600 for stronger contrast */
-  --background-color: #ffffff;
-  --surface-color: #f8fafc;
-  --text-primary: #0f172a; /* slate-900 */
-  --text-secondary: #334155; /* slate-700 for better contrast */
-  --border-color: #cbd5e1; /* slate-300 slightly darker */
-  --success-color: #15803d; /* green-700 */
-  --error-color: #b91c1c; /* red-700 */
-  --warning-color: #b45309; /* amber-700 */
-  
+  /* Colors - Use Cybervault tokens */
+  --primary-color: var(--cv-cyan);
+  --primary-hover: var(--cv-cyan-dim);
+  --secondary-color: var(--cv-purple);
+  --background-color: var(--cv-void);
+  --surface-color: var(--cv-glass-3);
+  --text-primary: var(--cv-text);
+  --text-secondary: var(--cv-text-dim);
+  --border-color: var(--cv-border-2);
+  --success-color: var(--cv-success);
+  --error-color: var(--cv-danger);
+  --warning-color: var(--cv-warning);
+  --card-bg: var(--cv-glass-3);
+  --input-bg: var(--cv-glass-2);
+  --avatar-bg: var(--cv-glass-4);
+  --success-bg: var(--cv-success-subtle);
+  --error-bg: var(--cv-danger-subtle);
+
   /* Spacing */
   --spacing-xs: 0.25rem;
   --spacing-sm: 0.5rem;
@@ -20,37 +25,22 @@
   --spacing-lg: 1.5rem;
   --spacing-xl: 2rem;
   --spacing-2xl: 3rem;
-  
+
   /* Border radius */
-  --radius-sm: 0.25rem;
-  --radius-md: 0.5rem;
-  --radius-lg: 0.75rem;
-  --radius-xl: 1rem;
-  
+  --radius-sm: var(--cv-radius-sm);
+  --radius-md: var(--cv-radius-md);
+  --radius-lg: var(--cv-radius-lg);
+  --radius-xl: var(--cv-radius-xl);
+
   /* Shadows */
-  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-  
+  --shadow-sm: var(--cv-shadow-sm);
+  --shadow-md: var(--cv-shadow-md);
+  --shadow-lg: var(--cv-shadow-lg);
+
   /* Transitions */
   --transition-fast: 150ms ease-in-out;
   --transition-normal: 250ms ease-in-out;
   --transition-slow: 350ms ease-in-out;
-}
-
-/* Dark theme colors */
-[data-theme="dark"] {
-  --primary-color: #60a5fa; /* blue-400 */
-  --primary-hover: #3b82f6; /* blue-500 */
-  --secondary-color: #cbd5e1; /* slate-300 */
-  --background-color: #0f172a;
-  --surface-color: #1e293b;
-  --text-primary: #f8fafc; /* slate-50 */
-  --text-secondary: #e2e8f0; /* slate-200 */
-  --border-color: #475569; /* slate-600 */
-  --success-color: #22c55e;
-  --error-color: #f87171;
-  --warning-color: #fbbf24;
 }
 
 /* Base styles */
@@ -61,13 +51,11 @@
 body {
   margin: 0;
   padding: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+  font-family: var(--cv-font-body);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: var(--background-color);
-  color: var(--text-primary);
+  background-color: var(--cv-void);
+  color: var(--cv-text);
   transition: background-color var(--transition-normal), color var(--transition-normal);
 }
 
@@ -81,13 +69,13 @@ body {
 
 /* Header */
 .header {
-  background-color: var(--surface-color);
-  border-bottom: 1px solid var(--border-color);
+  background-color: var(--cv-glass-4);
+  border-bottom: 1px solid var(--cv-border-2);
   padding: var(--spacing-md) var(--spacing-lg);
   position: sticky;
   top: 0;
   z-index: 100;
-  backdrop-filter: blur(8px);
+  backdrop-filter: var(--cv-blur-md);
   transition: background-color var(--transition-normal), border-color var(--transition-normal);
 }
 
@@ -289,13 +277,14 @@ body {
 
 .buttonOutline {
   background-color: transparent;
-  border: 2px solid var(--text-primary); /* use text color for strong contrast */
-  color: var(--text-primary);
+  border: 2px solid var(--cv-border-3);
+  color: var(--cv-text-dim);
 }
 
 .buttonOutline:hover {
-  background-color: var(--text-primary);
-  color: white;
+  background-color: var(--cv-glass-4);
+  border-color: var(--cv-cyan-border);
+  color: var(--cv-text);
 }
 
 /* Ensure link-like buttons inside header have sufficient contrast */
@@ -308,17 +297,18 @@ body {
 
 /* Card styles */
 .card {
-  background-color: var(--surface-color);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-lg);
+  background: var(--cv-glass-3);
+  border: 1px solid var(--cv-border-2);
+  border-radius: var(--cv-radius-lg);
   padding: var(--spacing-lg);
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--cv-shadow-sm);
+  backdrop-filter: var(--cv-blur-md);
   transition: all var(--transition-normal);
 }
 
 .card:hover {
-  box-shadow: var(--shadow-md);
-  transform: translateY(-2px);
+  box-shadow: var(--cv-shadow-md);
+  border-color: var(--cv-border-3);
 }
 
 /* Loading spinner */
@@ -337,7 +327,7 @@ body {
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  background-color: var(--background-color);
+  background-color: var(--cv-void);
 }
 
 .loadingSpinner {

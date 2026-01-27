@@ -18,11 +18,13 @@
 .title {
   font-size: 3.5rem;
   font-weight: 800;
-  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  font-family: var(--cv-font-display);
+  background: var(--cv-gradient-primary);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 10px var(--cv-cyan-glow));
   margin-bottom: 1rem;
-  letter-spacing: -1px;
+  letter-spacing: var(--cv-tracking-tight);
 }
 
 .subtitle {
@@ -46,23 +48,24 @@
 }
 
 .actionCard {
-  background: var(--card-bg);
-  border: 1px solid var(--border-color);
-  border-radius: 24px;
+  background: var(--cv-glass-2);
+  border: 1px solid var(--cv-border-2);
+  border-radius: var(--cv-radius-2xl);
   padding: 2.5rem;
   cursor: pointer;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.4s var(--cv-ease-smooth);
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
   position: relative;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  backdrop-filter: var(--cv-blur-md);
+  box-shadow: var(--cv-shadow-md);
 }
 
 .actionCard:hover {
   transform: translateY(-8px);
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-  border-color: rgba(var(--primary-rgb), 0.3);
+  box-shadow: var(--cv-shadow-lg);
+  border-color: var(--cv-cyan-border);
 }
 
 .cardHeader {
@@ -77,14 +80,15 @@
 }
 
 .cardBadge {
-  background: rgba(var(--primary-rgb), 0.1);
-  color: var(--primary-color);
+  background: var(--cv-cyan-subtle);
+  color: var(--cv-cyan);
+  border: 1px solid var(--cv-cyan-border);
   padding: 0.5rem 1rem;
-  border-radius: 99px;
+  border-radius: var(--cv-radius-full);
   font-size: 0.75rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: var(--cv-tracking-wider);
 }
 
 .cardBody h3 {
@@ -103,35 +107,39 @@
 
 .cardFooter {
   margin-top: auto;
-  border-top: 1px solid var(--border-color);
+  border-top: 1px solid var(--cv-border-2);
   padding-top: 1.5rem;
 }
 
 .primaryAction, .secondaryAction {
   width: 100%;
   padding: 1rem;
-  border-radius: 12px;
+  border-radius: var(--cv-radius-md);
   font-weight: 700;
   text-align: center;
-  transition: all 0.2s ease;
+  transition: all var(--cv-duration-base) var(--cv-ease-smooth);
 }
 
 .createCard .primaryAction {
-  background: var(--primary-color);
-  color: white;
+  background: var(--cv-cyan-subtle);
+  color: var(--cv-cyan);
+  border: 1px solid var(--cv-cyan-border);
 }
 
 .joinCard .secondaryAction {
-  background: var(--secondary-color);
-  color: white;
+  background: var(--cv-purple-subtle);
+  color: var(--cv-purple);
+  border: 1px solid var(--cv-purple-border);
 }
 
 .actionCard:hover .primaryAction {
-  background: var(--primary-hover);
+  background: var(--cv-cyan-bg);
+  box-shadow: var(--cv-glow-cyan-sm);
 }
 
 .actionCard:hover .secondaryAction {
-  background: var(--secondary-hover);
+  background: var(--cv-purple-bg);
+  box-shadow: var(--cv-glow-purple-sm);
 }
 
 /* Expansion for Join Card */
@@ -163,16 +171,18 @@
   font-weight: 700;
   text-align: center;
   letter-spacing: 4px;
-  border: 2px solid var(--border-color);
-  border-radius: 12px;
-  background: var(--input-bg);
-  color: var(--text-primary);
+  border: 2px solid var(--cv-border-2);
+  border-radius: var(--cv-radius-md);
+  background: var(--cv-glass-2);
+  color: var(--cv-text);
+  font-family: var(--cv-font-mono);
   text-transform: uppercase;
 }
 
 .input:focus {
   outline: none;
-  border-color: var(--secondary-color);
+  border-color: var(--cv-purple-border);
+  box-shadow: 0 0 0 3px var(--cv-purple-subtle);
 }
 
 .buttonRow {
@@ -184,14 +194,14 @@
   flex: 2;
   padding: 1rem;
   border: none;
-  border-radius: 12px;
+  border-radius: var(--cv-radius-md);
   font-weight: 700;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--cv-duration-base) var(--cv-ease-smooth);
 }
 
-.primary { background: var(--primary-color); color: white; }
-.secondary { background: var(--secondary-color); color: white; }
+.primary { background: var(--cv-cyan-subtle); color: var(--cv-cyan); border: 1px solid var(--cv-cyan-border); }
+.secondary { background: var(--cv-purple-subtle); color: var(--cv-purple); border: 1px solid var(--cv-purple-border); }
 
 .textButton {
   flex: 1;
@@ -207,21 +217,21 @@
 }
 
 .createCard {
-  background: radial-gradient(circle at top right, rgba(var(--primary-rgb), 0.05), transparent 70%), var(--card-bg);
+  background: radial-gradient(circle at top right, var(--cv-cyan-bg), transparent 70%), var(--cv-glass-2);
 }
 
 .joinCard {
-  background: radial-gradient(circle at top right, rgba(var(--secondary-rgb), 0.05), transparent 70%), var(--card-bg);
+  background: radial-gradient(circle at top right, var(--cv-purple-bg), transparent 70%), var(--cv-glass-2);
 }
 
 .testPanel {
-  border: 1px dashed var(--border-color);
-  border-radius: 16px;
+  border: 1px dashed var(--cv-border-2);
+  border-radius: var(--cv-radius-xl);
   padding: 1.5rem;
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  background: rgba(0, 0, 0, 0.02);
+  background: var(--cv-glass-1);
 }
 
 .testPanelTitle {
@@ -249,10 +259,10 @@
 .select {
   width: 100%;
   padding: 0.75rem;
-  border: 2px solid var(--border-color);
-  border-radius: 10px;
-  background: var(--input-bg);
-  color: var(--text-primary);
+  border: 2px solid var(--cv-border-2);
+  border-radius: var(--cv-radius-md);
+  background: var(--cv-glass-2);
+  color: var(--cv-text);
   font-weight: 600;
 }
 
