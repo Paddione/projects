@@ -15,11 +15,16 @@ metadata:
     app: l2p-frontend
     app.kubernetes.io/name: l2p-frontend
     app.kubernetes.io/component: frontend
+    app.kubernetes.io/part-of: korczewski
+    tier: services
 spec:
   replicas: 2
   selector:
     matchLabels:
       app: l2p-frontend
+      app.kubernetes.io/component: frontend
+      app.kubernetes.io/part-of: korczewski
+      tier: services
   strategy:
     type: RollingUpdate
     rollingUpdate:
@@ -31,6 +36,8 @@ spec:
         app: l2p-frontend
         app.kubernetes.io/name: l2p-frontend
         app.kubernetes.io/component: frontend
+        app.kubernetes.io/part-of: korczewski
+        tier: services
     spec:
       securityContext:
         runAsNonRoot: true

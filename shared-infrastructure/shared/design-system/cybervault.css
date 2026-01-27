@@ -22,6 +22,7 @@
   --cv-glass-3: rgba(255, 255, 255, 0.04);
   --cv-glass-4: rgba(255, 255, 255, 0.05);
   --cv-glass-5: rgba(255, 255, 255, 0.08);
+  --cv-glass-strong: rgba(255, 255, 255, 0.06);
 
   /* Borders */
   --cv-border-1: rgba(255, 255, 255, 0.05);
@@ -241,7 +242,7 @@ body {
 }
 
 .cv-glass-strong {
-  background: var(--cv-glass-4);
+  background: var(--cv-glass-strong);
   border: var(--cv-border-width) solid var(--cv-border-3);
   border-radius: var(--cv-radius-2xl);
   backdrop-filter: var(--cv-blur-lg);

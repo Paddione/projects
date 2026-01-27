@@ -285,17 +285,15 @@ export default function Login() {
         )}
 
         {view === 'forgot' && (
-          <form onSubmit={handleForgotPassword} className="space-y-6">
+          <form onSubmit={handleForgotPassword} className="auth-form">
             {(forgotError || forgotMessage) && (
-              <div
-                className={`${forgotError ? 'bg-red-50 border-red-200 text-red-700' : 'bg-green-50 border-green-200 text-green-700'} border px-4 py-3 rounded`}
-              >
+              <div className={`auth-message ${forgotError ? 'auth-message-error' : 'auth-message-success'}`}>
                 {forgotError || forgotMessage}
               </div>
             )}
 
-            <div>
-              <label htmlFor="resetEmail" className="block text-sm font-medium text-gray-700 mb-2">
+            <div className="auth-form-group">
+              <label htmlFor="resetEmail" className="auth-label">
                 Email
               </label>
               <input
@@ -303,7 +301,7 @@ export default function Login() {
                 type="email"
                 value={resetEmail}
                 onChange={(e) => setResetEmail(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                className="auth-input"
                 required
                 autoComplete="email"
               />
@@ -312,7 +310,7 @@ export default function Login() {
             <button
               type="submit"
               disabled={forgotLoading}
-              className="w-full bg-indigo-600 text-white py-2 px-4 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className={`auth-btn-primary ${forgotLoading ? 'auth-loading' : ''}`}
             >
               {forgotLoading ? 'Sending...' : 'Send reset link'}
             </button>
@@ -320,7 +318,7 @@ export default function Login() {
             <button
               type="button"
               onClick={handleBackToLogin}
-              className="w-full text-indigo-600 border border-indigo-200 py-2 px-4 rounded-lg hover:bg-indigo-50"
+              className="auth-btn-secondary"
             >
               Back to Sign In
             </button>
@@ -328,11 +326,9 @@ export default function Login() {
         )}
 
         {view === 'reset' && (
-          <form onSubmit={handleResetPassword} className="space-y-6">
+          <form onSubmit={handleResetPassword} className="auth-form">
             {(resetError || resetMessage) && (
-              <div
-                className={`${resetError ? 'bg-red-50 border-red-200 text-red-700' : 'bg-green-50 border-green-200 text-green-700'} border px-4 py-3 rounded`}
-              >
+              <div className={`auth-message ${resetError ? 'auth-message-error' : 'auth-message-success'}`}>
                 {resetError || resetMessage}
               </div>
             )}
@@ -341,14 +337,14 @@ export default function Login() {
               <button
                 type="button"
                 onClick={handleBackToLogin}
-                className="w-full text-indigo-600 border border-indigo-200 py-2 px-4 rounded-lg hover:bg-indigo-50"
+                className="auth-btn-secondary"
               >
                 Back to Sign In
               </button>
             ) : (
               <>
-                <div>
-                  <label htmlFor="resetToken" className="block text-sm font-medium text-gray-700 mb-2">
+                <div className="auth-form-group">
+                  <label htmlFor="resetToken" className="auth-label">
                     Reset Token
                   </label>
                   <input
@@ -356,14 +352,14 @@ export default function Login() {
                     type="text"
                     value={resetToken}
                     onChange={(e) => setResetToken(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    className="auth-input"
                     required
                     autoComplete="off"
                   />
                 </div>
 
-                <div>
-                  <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700 mb-2">
+                <div className="auth-form-group">
+                  <label htmlFor="newPassword" className="auth-label">
                     New Password
                   </label>
                   <input
@@ -371,17 +367,17 @@ export default function Login() {
                     type="password"
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    className="auth-input"
                     required
                     autoComplete="new-password"
                   />
-                  <p className="mt-1 text-xs text-gray-500">
+                  <span className="auth-input-hint">
                     Must be 8+ characters with uppercase, lowercase, number, and special character (@$!%*?&)
-                  </p>
+                  </span>
                 </div>
 
-                <div>
-                  <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
+                <div className="auth-form-group">
+                  <label htmlFor="confirmPassword" className="auth-label">
                     Confirm Password
                   </label>
                   <input
@@ -389,7 +385,7 @@ export default function Login() {
                     type="password"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    className="auth-input"
                     required
                     autoComplete="new-password"
                   />
@@ -398,7 +394,7 @@ export default function Login() {
                 <button
                   type="submit"
                   disabled={resetLoading}
-                  className="w-full bg-indigo-600 text-white py-2 px-4 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className={`auth-btn-primary ${resetLoading ? 'auth-loading' : ''}`}
                 >
                   {resetLoading ? 'Resetting...' : 'Reset Password'}
                 </button>
@@ -406,7 +402,7 @@ export default function Login() {
                 <button
                   type="button"
                   onClick={handleBackToLogin}
-                  className="w-full text-indigo-600 border border-indigo-200 py-2 px-4 rounded-lg hover:bg-indigo-50"
+                  className="auth-btn-secondary"
                 >
                   Back to Sign In
                 </button>
