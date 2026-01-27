@@ -109,8 +109,8 @@ export const PlayerGrid: React.FC<PlayerGridProps> = ({
                 <CharacterDisplay
                   character={getCharacterById(player.character)}
                   level={player.characterLevel || 1}
-                  size="small"
-                  showLevel={true}
+                  size="medium"
+                  showLevel={false}
                   showProgress={false}
                 />
                 {player.isHost && <div className={styles.hostBadge}>👑</div>}
