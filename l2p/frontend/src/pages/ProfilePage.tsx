@@ -6,7 +6,7 @@ import { ChangePasswordForm } from '../components/ChangePasswordForm'
 import PerksManager from '../components/PerksManager'
 import styles from '../styles/ProfilePage.module.css'
 import appStyles from '../styles/App.module.css'
-import { importMetaEnv } from '../utils/import-meta'
+import { Link } from 'react-router-dom'
 
 interface ProfileData {
   character: {
@@ -165,13 +165,13 @@ export const ProfilePage: React.FC = () => {
             {showPerks ? 'Close Perks' : 'Perks'}
           </button>
           {isAdmin && (
-            <a
-              href={importMetaEnv.MODE === 'development' ? 'http://localhost:3001/admin' : '/admin'}
+            <Link
+              to="/admin"
               className={`${appStyles.button} ${appStyles.buttonOutline}`}
               data-testid="admin-dashboard-link"
             >
               Admin
-            </a>
+            </Link>
           )}
         </div>
       </div>

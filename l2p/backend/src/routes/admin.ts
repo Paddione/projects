@@ -328,6 +328,35 @@ router.patch('/users/:id', authMiddleware.authenticate, requireAdmin, async (req
       });
     }
 
+    // Sync game profile fields if character_level, experience_points, or selected_character were updated
+    const gameProfileFields: Record<string, string> = {
+      character_level: 'character_level',
+      experience_points: 'experience_points',
+      selected_character: 'selected_character'
+    };
+    const profileUpdates: string[] = [];
+    const profileParams: unknown[] = [];
+    let profileParamIndex = 1;
+
+    for (const [bodyKey, dbCol] of Object.entries(gameProfileFields)) {
+      if (body[bodyKey] !== undefined) {
+        profileUpdates.push(`${dbCol} = $${profileParamIndex++}`);
+        profileParams.push(body[bodyKey]);
+      }
+    }
+
+    if (profileUpdates.length > 0) {
+      profileUpdates.push(`updated_at = CURRENT_TIMESTAMP`);
+      profileParams.push(id);
+      const profileQuery = `UPDATE user_game_profiles SET ${profileUpdates.join(', ')} WHERE auth_user_id = $${profileParamIndex}`;
+      try {
+        await pool.query(profileQuery, profileParams);
+      } catch (profileError) {
+        // Game profile may not exist for legacy users — not a fatal error
+        console.warn('Could not sync game profile for user', id, profileError);
+      }
+    }
+
     return res.status(200).json({
       success: true,
       user: result.rows[0]
