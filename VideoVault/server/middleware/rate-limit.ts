@@ -9,7 +9,9 @@ export function setupRateLimiting(app: Express) {
         max: 100, // max 100 requests per IP
         skip: (req) => {
             // Skip health check endpoints used by Kubernetes probes
-            const healthPaths = ['/api/health', '/api/db/health'];
+            // Note: req.path is relative to the mount point ('/api/'),
+            // so '/api/health' becomes '/health' inside this middleware.
+            const healthPaths = ['/health', '/db/health'];
             return healthPaths.includes(req.path);
         },
         message: {

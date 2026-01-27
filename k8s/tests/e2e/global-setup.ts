@@ -1,94 +1,58 @@
 import { spawnSync } from 'child_process';
+import { FullConfig } from '@playwright/test';
 
 /**
  * Global setup for K3d E2E tests
- *
- * Verifies that the k3d cluster is ready before running tests:
- * 1. Checks kubectl connectivity
- * 2. Verifies all pods are in Running state
+ * 
+ * Verifies that the k3d cluster is ready before running tests.
  */
-export default async function globalSetup(): Promise<void> {
-  console.log('\n========================================');
-  console.log('K3d Cluster Readiness Check');
-  console.log('========================================\n');
+async function globalSetup(config: FullConfig) {
+  console.log('\n🚀 Starting K3d Cluster Readiness Check...');
 
-  // Check kubectl connectivity
-  console.log('Checking kubectl connectivity...');
-  const clusterInfo = spawnSync('kubectl', ['cluster-info'], {
-    encoding: 'utf-8',
-    timeout: 10000,
-  });
-
+  // 1. Check kubectl connectivity
+  const clusterInfo = spawnSync('kubectl', ['cluster-info'], { encoding: 'utf-8', timeout: 5000 });
   if (clusterInfo.status !== 0) {
-    console.error('kubectl cluster-info failed:');
-    console.error(clusterInfo.stderr || clusterInfo.stdout);
-    throw new Error(
-      'kubectl not connected to cluster. Ensure k3d is running and kubectl is configured.'
-    );
+    throw new Error('❌ kubectl not connected to cluster. Is k3d running?');
   }
-  console.log('kubectl connected to cluster');
+  console.log('✅ Kubernetes cluster is reachable');
 
-  // Check pod status
-  console.log('\nChecking pod status...');
-  const podStatus = spawnSync(
-    'kubectl',
-    ['get', 'pods', '-A', '-o', 'jsonpath={range .items[*]}{.metadata.namespace}/{.metadata.name}:{.status.phase} {end}'],
-    { encoding: 'utf-8', timeout: 10000 }
-  );
+  // 2. Check Traefik (Entrypoint)
+  const traefikPods = spawnSync('kubectl', [
+    'get', 'pods',
+    '-n', 'korczewski-infra',
+    '-l', 'app.kubernetes.io/name=traefik',
+    '-o', 'jsonpath={.items[*].status.phase}'
+  ], { encoding: 'utf-8' });
 
-  if (podStatus.status !== 0) {
-    console.error('Failed to get pod status:', podStatus.stderr);
-    throw new Error('Failed to query pod status');
+  if (!traefikPods.stdout.includes('Running')) {
+    console.warn('⚠️ Traefik pods might not be fully ready yet.');
+  } else {
+    console.log('✅ Traefik is running');
   }
 
-  const pods = (podStatus.stdout || '')
-    .trim()
-    .split(' ')
-    .filter(Boolean)
-    .map((p) => {
-      const [name, phase] = p.split(':');
-      return { name, phase };
-    });
+  // 3. Check Core Services
+  const services = ['auth', 'l2p-backend', 'l2p-frontend', 'payment', 'videovault'];
+  const namespace = 'korczewski-services';
 
-  const notRunning = pods.filter(
-    (p) => p.phase !== 'Running' && p.phase !== 'Succeeded'
-  );
+  console.log(`\n🔍 Checking services in ${namespace}:`);
 
-  console.log(`Total pods: ${pods.length}`);
-  console.log(`Running/Succeeded: ${pods.length - notRunning.length}`);
-
-  if (notRunning.length > 0) {
-    console.warn(`\nWarning: ${notRunning.length} pod(s) not in Running/Succeeded state:`);
-    notRunning.forEach((p) => console.warn(`  - ${p.name}: ${p.phase}`));
-  }
-
-  // Check korczewski namespaces specifically
-  console.log('\nChecking korczewski services...');
-  const serviceStatus = spawnSync(
-    'kubectl',
-    [
+  for (const svc of services) {
+    const podStatus = spawnSync('kubectl', [
       'get', 'pods',
-      '-n', 'korczewski-services',
-      '-o', 'jsonpath={range .items[*]}{.metadata.name}:{.status.phase} {end}',
-    ],
-    { encoding: 'utf-8', timeout: 10000 }
-  );
+      '-n', namespace,
+      '-l', `app.kubernetes.io/name=${svc}`,
+      '-o', 'jsonpath={.items[0].status.phase}'
+    ], { encoding: 'utf-8' });
 
-  const servicePods = (serviceStatus.stdout || '')
-    .trim()
-    .split(' ')
-    .filter(Boolean);
-
-  const requiredServices = ['auth', 'l2p-backend', 'l2p-frontend', 'payment', 'videovault'];
-  const missingServices = requiredServices.filter(
-    (svc) => !servicePods.some((p) => p.startsWith(svc))
-  );
-
-  if (missingServices.length > 0) {
-    console.warn(`\nWarning: Missing services: ${missingServices.join(', ')}`);
+    const phase = podStatus.stdout.trim();
+    if (phase === 'Running') {
+      console.log(`  ✅ ${svc.padEnd(12)}: Running`);
+    } else {
+      console.log(`  ❌ ${svc.padEnd(12)}: ${phase || 'Not Found'}`);
+    }
   }
 
-  console.log('\n========================================');
-  console.log('Cluster ready for testing');
-  console.log('========================================\n');
+  console.log('\n🏁 Global setup complete. Proceeding to tests...\n');
 }
+
+export default globalSetup;

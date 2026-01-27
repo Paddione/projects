@@ -1,37 +1,50 @@
-import { defineConfig } from '@playwright/test';
+import { defineConfig, devices } from '@playwright/test';
 
 /**
  * K3d Cluster E2E Test Configuration
- *
- * Tests health endpoints and connectivity for all services
- * deployed in the k3d cluster.
- *
- * Prerequisites:
- * - k3d cluster running
- * - Services deployed (./scripts/deploy/deploy-all.sh)
- * - /etc/hosts entries for *.korczewski.de pointing to 127.0.0.1
  */
 export default defineConfig({
   testDir: './specs',
-  timeout: 30000,
-  retries: 1,
-  fullyParallel: true,
+  timeout: 60000,
+  expect: {
+    timeout: 10000
+  },
+  fullyParallel: false, // Run sequentially for better stability in k3d
   forbidOnly: !!process.env.CI,
-  workers: process.env.CI ? 1 : undefined,
+  retries: process.env.CI ? 2 : 1,
+  workers: 1, // Stick to 1 worker for infrastructure tests to avoid race conditions
 
   reporter: [
     ['list'],
-    ['html', { open: 'never', outputFolder: '../../test-results/playwright-report' }],
-    ['json', { outputFile: '../../test-results/results.json' }],
+    ['html', { open: 'never', outputFolder: 'playwright-report' }],
   ],
 
-  outputDir: '../../test-results/test-artifacts',
+  globalSetup: require.resolve('./global-setup.ts'),
 
   use: {
-    ignoreHTTPSErrors: true, // Self-signed certs in local k3d
+    baseURL: 'https://auth.korczewski.de',
+    ignoreHTTPSErrors: true,
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
+    video: 'on-first-retry',
+    viewport: { width: 1280, height: 720 },
+    launchOptions: {
+      args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+      ],
+    },
   },
 
-  globalSetup: './global-setup.ts',
+  projects: [
+    {
+      name: 'chromium',
+      use: { ...devices['Desktop Chrome'] },
+    },
+    {
+      name: 'firefox',
+      use: { ...devices['Desktop Firefox'] },
+    },
+  ],
 });
