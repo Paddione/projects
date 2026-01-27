@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 80" fill="none">
+  <defs>
+    <linearGradient id="vvGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#00f2ff"/>
+      <stop offset="50%" stop-color="#bc13fe"/>
+      <stop offset="100%" stop-color="#ff006e"/>
+    </linearGradient>
+    <linearGradient id="vvAccent" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#00f2ff"/>
+      <stop offset="100%" stop-color="#3eff8b"/>
+    </linearGradient>
+    <filter id="vvGlow">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <!-- vault door icon -->
+  <circle cx="36" cy="40" r="28" stroke="url(#vvGrad)" stroke-width="3" fill="none" filter="url(#vvGlow)"/>
+  <circle cx="36" cy="40" r="20" stroke="url(#vvGrad)" stroke-width="1.5" fill="none" opacity="0.4"/>
+  <!-- vault handle -->
+  <line x1="36" y1="20" x2="36" y2="16" stroke="#00f2ff" stroke-width="2" stroke-linecap="round" opacity="0.6"/>
+  <line x1="36" y1="60" x2="36" y2="64" stroke="#00f2ff" stroke-width="2" stroke-linecap="round" opacity="0.6"/>
+  <line x1="16" y1="40" x2="12" y2="40" stroke="#00f2ff" stroke-width="2" stroke-linecap="round" opacity="0.6"/>
+  <line x1="56" y1="40" x2="60" y2="40" stroke="#00f2ff" stroke-width="2" stroke-linecap="round" opacity="0.6"/>
+  <!-- play triangle in center -->
+  <polygon points="30,30 30,50 48,40" fill="url(#vvAccent)" opacity="0.7" filter="url(#vvGlow)"/>
+  <!-- VIDEO text -->
+  <text x="76" y="38" font-family="Orbitron, sans-serif" font-size="22" font-weight="bold" fill="url(#vvGrad)" filter="url(#vvGlow)" letter-spacing="2">VIDEO</text>
+  <!-- VAULT text -->
+  <text x="76" y="62" font-family="Orbitron, sans-serif" font-size="22" font-weight="bold" fill="url(#vvGrad)" filter="url(#vvGlow)" letter-spacing="4">VAULT</text>
+  <!-- scan line accent -->
+  <line x1="76" y1="44" x2="200" y2="44" stroke="#00f2ff" stroke-width="0.5" opacity="0.3"/>
+  <!-- decorative elements -->
+  <rect x="210" y="22" width="3" height="3" fill="#00f2ff" opacity="0.3"/>
+  <rect x="218" y="28" width="2" height="2" fill="#bc13fe" opacity="0.3"/>
+  <rect x="214" y="54" width="2" height="2" fill="#3eff8b" opacity="0.2"/>
+</svg>

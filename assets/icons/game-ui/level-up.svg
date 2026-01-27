@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <defs>
+    <linearGradient id="lvlGrad" x1="0.5" y1="1" x2="0.5" y2="0">
+      <stop offset="0%" stop-color="#bc13fe"/>
+      <stop offset="100%" stop-color="#00f2ff"/>
+    </linearGradient>
+    <filter id="lvlGlow">
+      <feGaussianBlur stdDeviation="2" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <!-- upward arrow -->
+  <path d="M32 56V16" stroke="url(#lvlGrad)" stroke-width="3" stroke-linecap="round" filter="url(#lvlGlow)"/>
+  <path d="M18 30l14-18 14 18" stroke="url(#lvlGrad)" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round" filter="url(#lvlGlow)"/>
+  <!-- sparkles -->
+  <path d="M12 20l2-4 2 4-2 4z" fill="#00f2ff" opacity="0.6"/>
+  <path d="M48 16l1.5-3 1.5 3-1.5 3z" fill="#bc13fe" opacity="0.6"/>
+  <path d="M8 38l1-2 1 2-1 2z" fill="#3eff8b" opacity="0.5"/>
+  <path d="M54 28l1-2 1 2-1 2z" fill="#ffa500" opacity="0.5"/>
+  <path d="M42 8l1.5-3 1.5 3-1.5 3z" fill="#00f2ff" opacity="0.4"/>
+  <path d="M20 8l1-2 1 2-1 2z" fill="#3eff8b" opacity="0.4"/>
+</svg>

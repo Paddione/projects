@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { LevelUpNotification as LevelUpNotificationType } from '../stores/gameStore'
+import { avatarService } from '../services/avatarService'
+import { Icon } from './Icon'
 
 interface LevelUpNotificationProps {
   notification: LevelUpNotificationType
@@ -106,7 +108,9 @@ export const LevelUpNotification: React.FC<LevelUpNotificationProps> = ({
       {/* Level up content */}
       <div style={{ textAlign: 'center' }}>
         <div style={{ marginBottom: 'var(--spacing-md, 0.75rem)' }}>
-          <span style={{ fontSize: '2rem', display: 'block', marginBottom: 'var(--spacing-sm, 0.5rem)' }}>🎉</span>
+          <span style={{ fontSize: '2rem', display: 'block', marginBottom: 'var(--spacing-sm, 0.5rem)' }}>
+            <Icon name="game-ui/level-up" size={40} alt="Level Up" />
+          </span>
           <h3 style={{ margin: '0 0 var(--spacing-sm, 0.5rem) 0', fontSize: '1.2rem' }}>
             Level Up!
           </h3>
@@ -114,14 +118,12 @@ export const LevelUpNotification: React.FC<LevelUpNotificationProps> = ({
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm, 0.5rem)', marginBottom: 'var(--spacing-md, 0.75rem)' }}>
           <span style={{ fontSize: '1.5rem' }}>
-            {notification.character === 'professor' && '👨‍🏫'}
-            {notification.character === 'student' && '👨‍🎓'}
-            {notification.character === 'librarian' && '👩‍💼'}
-            {notification.character === 'researcher' && '👨‍🔬'}
-            {notification.character === 'dean' && '👩‍⚖️'}
-            {notification.character === 'graduate' && '🎓'}
-            {notification.character === 'lab_assistant' && '👨‍🔬'}
-            {notification.character === 'teaching_assistant' && '👩‍🏫'}
+            {(() => {
+              const svgPath = avatarService.getAvatarSvgPath(notification.character)
+              return svgPath
+                ? <img src={svgPath} alt={notification.character} width={24} height={24} style={{ verticalAlign: 'middle' }} />
+                : avatarService.getAvatarEmoji(notification.character)
+            })()}
           </span>
           <span style={{ fontWeight: 'bold', fontSize: '1.1rem' }}>{notification.username}</span>
         </div>

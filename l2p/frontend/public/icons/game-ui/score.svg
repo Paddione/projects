@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <defs>
+    <linearGradient id="scoreGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#00f2ff"/>
+      <stop offset="100%" stop-color="#bc13fe"/>
+    </linearGradient>
+    <filter id="scoreGlow">
+      <feGaussianBlur stdDeviation="2" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <!-- star shape -->
+  <polygon points="32,6 38.5,22 56,24 43,37 46.5,54 32,46 17.5,54 21,37 8,24 25.5,22"
+    stroke="url(#scoreGrad)" stroke-width="2.5" fill="none" filter="url(#scoreGlow)" stroke-linejoin="round"/>
+  <!-- inner glow dot -->
+  <circle cx="32" cy="30" r="4" fill="#00f2ff" opacity="0.3"/>
+</svg>

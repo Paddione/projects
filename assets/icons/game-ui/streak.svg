@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <defs>
+    <linearGradient id="streakGrad" x1="0.5" y1="0" x2="0.5" y2="1">
+      <stop offset="0%" stop-color="#ffa500"/>
+      <stop offset="50%" stop-color="#ff3e3e"/>
+      <stop offset="100%" stop-color="#bc13fe"/>
+    </linearGradient>
+    <filter id="streakGlow">
+      <feGaussianBlur stdDeviation="2.5" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <!-- lightning bolt -->
+  <path d="M36 4L18 34h12L24 60 46 28H34L36 4z"
+    fill="url(#streakGrad)" filter="url(#streakGlow)" opacity="0.9"/>
+  <path d="M36 4L18 34h12L24 60 46 28H34L36 4z"
+    stroke="#ffa500" stroke-width="1" fill="none" opacity="0.5"/>
+</svg>

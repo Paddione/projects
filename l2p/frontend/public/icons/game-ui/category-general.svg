@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <defs>
+    <linearGradient id="genGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#00f2ff"/>
+      <stop offset="100%" stop-color="#bc13fe"/>
+    </linearGradient>
+    <filter id="genGlow">
+      <feGaussianBlur stdDeviation="2" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <!-- lightbulb -->
+  <path d="M32 6C22 6 14 14 14 24c0 7 4 13 10 16v4h16v-4c6-3 10-9 10-16 0-10-8-18-18-18z"
+    stroke="url(#genGrad)" stroke-width="2.5" fill="none" filter="url(#genGlow)"/>
+  <!-- filament -->
+  <path d="M28 28c0-2 2-4 4-4s4 2 4 4" stroke="#00f2ff" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+  <line x1="32" y1="28" x2="32" y2="36" stroke="#00f2ff" stroke-width="1.5" stroke-linecap="round"/>
+  <!-- base -->
+  <rect x="24" y="48" width="16" height="3" rx="1.5" stroke="url(#genGrad)" stroke-width="2" fill="none"/>
+  <rect x="26" y="53" width="12" height="3" rx="1.5" stroke="url(#genGrad)" stroke-width="2" fill="none"/>
+  <!-- rays -->
+  <line x1="32" y1="0" x2="32" y2="3" stroke="#00f2ff" stroke-width="1.5" stroke-linecap="round" opacity="0.5"/>
+  <line x1="52" y1="10" x2="50" y2="12" stroke="#00f2ff" stroke-width="1.5" stroke-linecap="round" opacity="0.5"/>
+  <line x1="12" y1="10" x2="14" y2="12" stroke="#00f2ff" stroke-width="1.5" stroke-linecap="round" opacity="0.5"/>
+  <line x1="58" y1="24" x2="55" y2="24" stroke="#bc13fe" stroke-width="1.5" stroke-linecap="round" opacity="0.4"/>
+  <line x1="6" y1="24" x2="9" y2="24" stroke="#bc13fe" stroke-width="1.5" stroke-linecap="round" opacity="0.4"/>
+</svg>

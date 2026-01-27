@@ -182,7 +182,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({ onAuthSuccess, onShowPasswor
       <div className={styles.authCard}>
         <div className={styles.header}>
           <img
-            src="/visuals/L2P-Logo.png"
+            src="/icons/branding/l2p-logo.svg"
             alt="Learn2Play Logo"
             className={styles.logo}
           />

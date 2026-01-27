@@ -4,6 +4,7 @@ import { socketService } from '../services/socketService'
 import { apiService } from '../services/apiService'
 import { navigationService } from '../services/navigationService'
 import { ErrorDisplay } from './ErrorBoundary'
+import { Icon } from './Icon'
 import styles from '../styles/GameInterface.module.css'
 import { useAudio } from '../hooks/useAudio'
 
@@ -216,7 +217,7 @@ export const GameInterface: React.FC<GameInterfaceProps> = ({ className = '' }) 
             data-testid="create-lobby-button"
           >
             <div className={styles.cardHeader}>
-              <div className={styles.cardIcon}>✨</div>
+              <div className={styles.cardIcon}><Icon name="game-ui/lobby" size={32} alt="Create Lobby" /></div>
               <div className={styles.cardBadge}>Fast Play</div>
             </div>
             <div className={styles.cardBody}>
@@ -317,7 +318,7 @@ export const GameInterface: React.FC<GameInterfaceProps> = ({ className = '' }) 
             data-testid="join-lobby-button"
           >
             <div className={styles.cardHeader}>
-              <div className={styles.cardIcon}>🔑</div>
+              <div className={styles.cardIcon}><Icon name="game-ui/multiplayer" size={32} alt="Join Game" /></div>
               <div className={styles.cardBadge}>Multiplayer</div>
             </div>
             <div className={styles.cardBody}>

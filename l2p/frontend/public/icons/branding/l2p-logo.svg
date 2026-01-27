@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 80" fill="none">
+  <defs>
+    <linearGradient id="l2pGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#00f2ff"/>
+      <stop offset="100%" stop-color="#bc13fe"/>
+    </linearGradient>
+    <linearGradient id="l2pGrad2" x1="0" y1="1" x2="1" y2="0">
+      <stop offset="0%" stop-color="#bc13fe"/>
+      <stop offset="100%" stop-color="#00f2ff"/>
+    </linearGradient>
+    <filter id="l2pGlow">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="l2pSoftGlow">
+      <feGaussianBlur stdDeviation="6" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <!-- background hex accent -->
+  <polygon points="128,2 148,12 148,32 128,42 108,32 108,12" stroke="#00f2ff" stroke-width="0.5" fill="none" opacity="0.15"/>
+  <polygon points="128,6 144,14 144,30 128,38 112,30 112,14" stroke="#bc13fe" stroke-width="0.5" fill="none" opacity="0.1"/>
+  <!-- L -->
+  <path d="M20 16v48h28" stroke="url(#l2pGrad)" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round" filter="url(#l2pGlow)"/>
+  <!-- 2 -->
+  <path d="M64 24a12 12 0 0124 0c0 8-24 24-24 32h24" stroke="url(#l2pGrad)" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round" filter="url(#l2pGlow)"/>
+  <!-- P -->
+  <path d="M108 64V16h12a14 14 0 010 28h-12" stroke="url(#l2pGrad)" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round" filter="url(#l2pGlow)"/>
+  <!-- subtitle -->
+  <text x="148" y="44" font-family="'Space Grotesk', sans-serif" font-size="11" fill="#00f2ff" opacity="0.7" letter-spacing="3">LEARN</text>
+  <text x="148" y="58" font-family="'Space Grotesk', sans-serif" font-size="11" fill="#bc13fe" opacity="0.7" letter-spacing="3">2 PLAY</text>
+  <!-- decorative dots -->
+  <circle cx="240" cy="20" r="2" fill="#00f2ff" opacity="0.3"/>
+  <circle cx="246" cy="30" r="1.5" fill="#bc13fe" opacity="0.3"/>
+  <circle cx="238" cy="40" r="1" fill="#3eff8b" opacity="0.2"/>
+</svg>

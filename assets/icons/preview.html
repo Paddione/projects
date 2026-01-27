@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Icon Preview - Cybervault Design System</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Space+Grotesk:wght@300;400;500&display=swap');
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #030408;
+      color: #e0e0e0;
+      font-family: 'Space Grotesk', sans-serif;
+      padding: 40px;
+    }
+    h1 {
+      font-family: 'Orbitron', sans-serif;
+      background: linear-gradient(135deg, #00f2ff, #bc13fe);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      font-size: 2rem;
+      margin-bottom: 10px;
+    }
+    h2 {
+      font-family: 'Orbitron', sans-serif;
+      color: #00f2ff;
+      font-size: 1.2rem;
+      margin: 40px 0 20px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(0, 242, 255, 0.2);
+    }
+    .subtitle {
+      color: rgba(255,255,255,0.4);
+      margin-bottom: 40px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 24px;
+    }
+    .grid--wide {
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    }
+    .card {
+      background: rgba(255,255,255, 0.03);
+      border: 1px solid rgba(255,255,255, 0.06);
+      border-radius: 12px;
+      padding: 24px;
+      text-align: center;
+      transition: all 0.2s ease;
+      backdrop-filter: blur(8px);
+    }
+    .card:hover {
+      border-color: rgba(0, 242, 255, 0.3);
+      transform: translateY(-4px);
+      box-shadow: 0 8px 32px rgba(0, 242, 255, 0.1);
+    }
+    .card img {
+      width: 80px;
+      height: 80px;
+      margin-bottom: 12px;
+    }
+    .card--logo img {
+      width: 100%;
+      height: auto;
+      max-height: 80px;
+    }
+    .card--character img {
+      width: 100px;
+      height: 100px;
+    }
+    .card label {
+      display: block;
+      font-size: 0.8rem;
+      color: rgba(255,255,255, 0.5);
+      font-family: 'JetBrains Mono', monospace;
+    }
+  </style>
+</head>
+<body>
+  <h1>Icon & Graphics Preview</h1>
+  <p class="subtitle">Cybervault Design System - All assets in assets/icons/</p>
+
+  <h2>Game UI Icons</h2>
+  <div class="grid">
+    <div class="card">
+      <img src="game-ui/timer.svg" alt="Timer">
+      <label>timer.svg</label>
+    </div>
+    <div class="card">
+      <img src="game-ui/score.svg" alt="Score">
+      <label>score.svg</label>
+    </div>
+    <div class="card">
+      <img src="game-ui/streak.svg" alt="Streak">
+      <label>streak.svg</label>
+    </div>
+    <div class="card">
+      <img src="game-ui/correct.svg" alt="Correct">
+      <label>correct.svg</label>
+    </div>
+    <div class="card">
+      <img src="game-ui/wrong.svg" alt="Wrong">
+      <label>wrong.svg</label>
+    </div>
+    <div class="card">
+      <img src="game-ui/trophy.svg" alt="Trophy">
+      <label>trophy.svg</label>
+    </div>
+    <div class="card">
+      <img src="game-ui/level-up.svg" alt="Level Up">
+      <label>level-up.svg</label>
+    </div>
+    <div class="card">
+      <img src="game-ui/lobby.svg" alt="Lobby">
+      <label>lobby.svg</label>
+    </div>
+    <div class="card">
+      <img src="game-ui/multiplayer.svg" alt="Multiplayer">
+      <label>multiplayer.svg</label>
+    </div>
+    <div class="card">
+      <img src="game-ui/category-science.svg" alt="Science">
+      <label>category-science.svg</label>
+    </div>
+    <div class="card">
+      <img src="game-ui/category-history.svg" alt="History">
+      <label>category-history.svg</label>
+    </div>
+    <div class="card">
+      <img src="game-ui/category-general.svg" alt="General">
+      <label>category-general.svg</label>
+    </div>
+    <div class="card">
+      <img src="game-ui/category-sports.svg" alt="Sports">
+      <label>category-sports.svg</label>
+    </div>
+  </div>
+
+  <h2>Branding</h2>
+  <div class="grid grid--wide">
+    <div class="card card--logo">
+      <img src="branding/l2p-logo.svg" alt="L2P Logo">
+      <label>l2p-logo.svg</label>
+    </div>
+    <div class="card card--logo">
+      <img src="branding/videovault-logo.svg" alt="VideoVault Logo">
+      <label>videovault-logo.svg</label>
+    </div>
+  </div>
+  <div class="grid" style="margin-top: 24px;">
+    <div class="card">
+      <img src="branding/l2p-icon.svg" alt="L2P Icon">
+      <label>l2p-icon.svg</label>
+    </div>
+    <div class="card">
+      <img src="branding/videovault-icon.svg" alt="VideoVault Icon">
+      <label>videovault-icon.svg</label>
+    </div>
+    <div class="card">
+      <img src="branding/cybervault-badge.svg" alt="Cybervault Badge">
+      <label>cybervault-badge.svg</label>
+    </div>
+  </div>
+
+  <h2>Character Avatars</h2>
+  <div class="grid">
+    <div class="card card--character">
+      <img src="characters/student.svg" alt="Student">
+      <label>student.svg</label>
+    </div>
+    <div class="card card--character">
+      <img src="characters/professor.svg" alt="Professor">
+      <label>professor.svg</label>
+    </div>
+    <div class="card card--character">
+      <img src="characters/librarian.svg" alt="Librarian">
+      <label>librarian.svg</label>
+    </div>
+    <div class="card card--character">
+      <img src="characters/researcher.svg" alt="Researcher">
+      <label>researcher.svg</label>
+    </div>
+    <div class="card card--character">
+      <img src="characters/dean.svg" alt="Dean">
+      <label>dean.svg</label>
+    </div>
+    <div class="card card--character">
+      <img src="characters/graduate.svg" alt="Graduate">
+      <label>graduate.svg</label>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" fill="none">
+  <defs>
+    <linearGradient id="deanGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#ffa500"/>
+      <stop offset="100%" stop-color="#ff3e3e"/>
+    </linearGradient>
+    <linearGradient id="deanGrad2" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#00f2ff"/>
+      <stop offset="100%" stop-color="#bc13fe"/>
+    </linearGradient>
+    <filter id="deanGlow">
+      <feGaussianBlur stdDeviation="1.5" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <radialGradient id="deanFace" cx="0.5" cy="0.4" r="0.5">
+      <stop offset="0%" stop-color="#0a1628"/>
+      <stop offset="100%" stop-color="#030408"/>
+    </radialGradient>
+  </defs>
+  <!-- background circle -->
+  <circle cx="40" cy="40" r="36" stroke="url(#deanGrad)" stroke-width="2.5" fill="url(#deanFace)" filter="url(#deanGlow)"/>
+  <!-- head -->
+  <circle cx="40" cy="28" r="12" stroke="#ffa500" stroke-width="2" fill="none"/>
+  <!-- distinguished hair - slicked back -->
+  <path d="M28 26c0-8 5-14 12-14s12 6 12 14" stroke="#ffa500" stroke-width="2" fill="none"/>
+  <path d="M29 22c1-4 4-8 8-9" stroke="#ffa500" stroke-width="1" fill="none" opacity="0.4"/>
+  <path d="M51 22c-1-4-4-8-8-9" stroke="#ffa500" stroke-width="1" fill="none" opacity="0.4"/>
+  <!-- eyes - commanding -->
+  <line x1="33" y1="26" x2="37" y2="26" stroke="#ffa500" stroke-width="1.5" stroke-linecap="round" opacity="0.5"/>
+  <line x1="43" y1="26" x2="47" y2="26" stroke="#ffa500" stroke-width="1.5" stroke-linecap="round" opacity="0.5"/>
+  <circle cx="35" cy="28" r="1.5" fill="#ffa500" opacity="0.9"/>
+  <circle cx="45" cy="28" r="1.5" fill="#ffa500" opacity="0.9"/>
+  <!-- stern but fair expression -->
+  <line x1="36" y1="34" x2="44" y2="34" stroke="#ffa500" stroke-width="1.2" stroke-linecap="round"/>
+  <!-- body - formal suit with medals -->
+  <path d="M20 58c0-10 9-17 20-17s20 7 20 17" stroke="#ffa500" stroke-width="2.5" fill="none"/>
+  <!-- suit details -->
+  <line x1="40" y1="41" x2="40" y2="58" stroke="#ffa500" stroke-width="1.5" opacity="0.4"/>
+  <!-- lapels -->
+  <path d="M40 41l-8 10" stroke="#ffa500" stroke-width="1.5" opacity="0.5"/>
+  <path d="M40 41l8 10" stroke="#ffa500" stroke-width="1.5" opacity="0.5"/>
+  <!-- medal/badge -->
+  <circle cx="34" cy="48" r="3" stroke="url(#deanGrad2)" stroke-width="1.5" fill="none" filter="url(#deanGlow)"/>
+  <polygon points="34,46 35,47.5 34,49 33,47.5" fill="#00f2ff" opacity="0.6"/>
+  <!-- second medal -->
+  <circle cx="46" cy="50" r="2.5" stroke="#3eff8b" stroke-width="1" fill="none" opacity="0.5"/>
+</svg>

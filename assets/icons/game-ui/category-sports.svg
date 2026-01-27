@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <defs>
+    <linearGradient id="sportGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#ff3e3e"/>
+      <stop offset="100%" stop-color="#ffa500"/>
+    </linearGradient>
+    <filter id="sportGlow">
+      <feGaussianBlur stdDeviation="1.5" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <!-- trophy cup -->
+  <path d="M20 10h24v8c0 8-5 16-12 18-7-2-12-10-12-18V10z"
+    stroke="url(#sportGrad)" stroke-width="2.5" fill="none" filter="url(#sportGlow)" stroke-linejoin="round"/>
+  <!-- handles -->
+  <path d="M20 14h-4a4 4 0 00-4 4v2a6 6 0 006 6h2" stroke="url(#sportGrad)" stroke-width="2" fill="none"/>
+  <path d="M44 14h4a4 4 0 014 4v2a6 6 0 01-6 6h-2" stroke="url(#sportGrad)" stroke-width="2" fill="none"/>
+  <!-- stem -->
+  <line x1="32" y1="36" x2="32" y2="46" stroke="url(#sportGrad)" stroke-width="2.5" stroke-linecap="round"/>
+  <!-- base -->
+  <path d="M22 46h20v4a2 2 0 01-2 2H24a2 2 0 01-2-2v-4z" stroke="url(#sportGrad)" stroke-width="2" fill="none"/>
+  <!-- star -->
+  <polygon points="32,16 34,21 39,21 35,24 36.5,29 32,26 27.5,29 29,24 25,21 30,21"
+    fill="#ffa500" opacity="0.5"/>
+</svg>

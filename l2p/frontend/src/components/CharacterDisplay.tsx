@@ -44,13 +44,23 @@ export const CharacterDisplay: React.FC<CharacterDisplayProps> = ({
     }
   }
 
+  const svgPath = avatarService.getAvatarSvgPath(character.id)
+
   return (
     <div className={`${styles.characterDisplay} ${getSizeClass(size)} ${className}`.trim()}>
       <div className={styles.characterContainer}>
         <div className={styles.characterAvatar}>
-          <span className={styles.characterEmoji}>
-            {avatarService.getAvatarEmoji(character.id) || character.emoji}
-          </span>
+          {svgPath ? (
+            <img
+              src={svgPath}
+              alt={character.name}
+              className={styles.characterSvg}
+            />
+          ) : (
+            <span className={styles.characterEmoji}>
+              {avatarService.getAvatarEmoji(character.id) || character.emoji}
+            </span>
+          )}
           {showLevel && (
             <div 
               className={styles.levelBadge}

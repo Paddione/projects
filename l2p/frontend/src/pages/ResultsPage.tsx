@@ -4,6 +4,7 @@ import { useGameStore, type GameResult } from '../stores/gameStore'
 import styles from '../styles/App.module.css'
 import { useAuthStore } from '../stores/authStore'
 import { useCharacterStore } from '../stores/characterStore'
+import { avatarService } from '../services/avatarService'
 
 // Component for animated score to experience conversion
 const AnimatedScoreConversion: React.FC<{
@@ -20,18 +21,12 @@ const AnimatedScoreConversion: React.FC<{
   const [showLevelUp, setShowLevelUp] = useState(false)
   const [animationStarted, setAnimationStarted] = useState(false)
 
-  const getCharacterEmoji = (character: string) => {
-    switch (character) {
-      case 'professor': return '👨‍🏫'
-      case 'student': return '👨‍🎓'
-      case 'librarian': return '👩‍💼'
-      case 'researcher': return '👨‍🔬'
-      case 'dean': return '👩‍⚖️'
-      case 'graduate': return '🎓'
-      case 'lab_assistant': return '👨‍🔬'
-      case 'teaching_assistant': return '👩‍🏫'
-      default: return '👤'
+  const renderCharacterAvatar = (character: string, size: number) => {
+    const svgPath = avatarService.getAvatarSvgPath(character)
+    if (svgPath) {
+      return <img src={svgPath} alt={character} width={size} height={size} style={{ display: 'inline-block', verticalAlign: 'middle' }} />
     }
+    return avatarService.getAvatarEmoji(character)
   }
 
   useEffect(() => {
@@ -88,7 +83,7 @@ const AnimatedScoreConversion: React.FC<{
         transition: 'transform 0.3s ease',
         transform: showLevelUp ? 'scale(1.2)' : 'scale(1)'
       }}>
-        {getCharacterEmoji(character)}
+        {renderCharacterAvatar(character, 48)}
       </div>
 
       {showLevelUp && (
@@ -239,18 +234,12 @@ export const ResultsPage: React.FC = () => {
     navigate('/')
   }
 
-  const getCharacterEmoji = (character: string) => {
-    switch (character) {
-      case 'professor': return '👨‍🏫'
-      case 'student': return '👨‍🎓'
-      case 'librarian': return '👩‍💼'
-      case 'researcher': return '👨‍🔬'
-      case 'dean': return '👩‍⚖️'
-      case 'graduate': return '🎓'
-      case 'lab_assistant': return '👨‍🔬'
-      case 'teaching_assistant': return '👩‍🏫'
-      default: return '👤'
+  const renderCharacterAvatar = (character: string, size: number) => {
+    const svgPath = avatarService.getAvatarSvgPath(character)
+    if (svgPath) {
+      return <img src={svgPath} alt={character} width={size} height={size} style={{ display: 'inline-block', verticalAlign: 'middle' }} />
     }
+    return <>{avatarService.getAvatarEmoji(character)}</>
   }
 
   const winner = finalPlayers[0]
@@ -309,7 +298,7 @@ export const ResultsPage: React.FC = () => {
                   #{index + 1}
                 </span>
                 <div className={styles.flex} style={{ alignItems: 'center', gap: 'var(--spacing-sm)' }}>
-                  <span style={{ fontSize: '1.5rem' }}>{getCharacterEmoji(player.character)}</span>
+                  <span style={{ fontSize: '1.5rem' }}>{renderCharacterAvatar(player.character, 24)}</span>
                   <div>
                     <div style={{ fontWeight: 'bold' }}>{player.username}</div>
                     <div style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
@@ -352,7 +341,7 @@ export const ResultsPage: React.FC = () => {
               backgroundColor: 'rgba(255, 255, 255, 0.02)'
             }}>
               <div style={{ fontSize: '2.5rem', marginBottom: 'var(--spacing-sm)' }}>
-                {getCharacterEmoji(player.character)}
+                {renderCharacterAvatar(player.character, 40)}
               </div>
               <div style={{ fontSize: '1.2rem', fontWeight: 'bold', marginBottom: 'var(--spacing-xs)' }}>
                 {player.username}

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { PerkUnlockNotification as PerkUnlockNotificationType } from '../stores/gameStore'
+import { avatarService } from '../services/avatarService'
 
 interface PerkUnlockNotificationProps {
   notification: PerkUnlockNotificationType
@@ -125,14 +126,12 @@ export const PerkUnlockNotification: React.FC<PerkUnlockNotificationProps> = ({
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm, 0.5rem)', marginBottom: 'var(--spacing-md, 0.75rem)' }}>
           <span style={{ fontSize: '1.5rem' }}>
-            {notification.character === 'professor' && '👨‍🏫'}
-            {notification.character === 'student' && '👨‍🎓'}
-            {notification.character === 'librarian' && '👩‍💼'}
-            {notification.character === 'researcher' && '👨‍🔬'}
-            {notification.character === 'dean' && '👩‍⚖️'}
-            {notification.character === 'graduate' && '🎓'}
-            {notification.character === 'lab_assistant' && '👨‍🔬'}
-            {notification.character === 'teaching_assistant' && '👩‍🏫'}
+            {(() => {
+              const svgPath = avatarService.getAvatarSvgPath(notification.character)
+              return svgPath
+                ? <img src={svgPath} alt={notification.character} width={24} height={24} style={{ verticalAlign: 'middle' }} />
+                : avatarService.getAvatarEmoji(notification.character)
+            })()}
           </span>
           <span style={{ fontWeight: 'bold', fontSize: '1.1rem' }}>{notification.username}</span>
         </div>

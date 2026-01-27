@@ -25,6 +25,12 @@
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
 }
 
+.characterSvg {
+  width: 48px;
+  height: 48px;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+}
+
 .levelBadge {
   position: absolute;
   top: -8px;
@@ -89,6 +95,11 @@
 }
 
 /* Size variants */
+.small .characterSvg {
+  width: 32px;
+  height: 32px;
+}
+
 .small .characterEmoji {
   font-size: 2rem;
 }
@@ -107,6 +118,11 @@
 
 .small .experienceText {
   font-size: 0.7rem;
+}
+
+.large .characterSvg {
+  width: 64px;
+  height: 64px;
 }
 
 .large .characterEmoji {
@@ -139,6 +155,11 @@
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
+  .characterSvg {
+    width: 40px;
+    height: 40px;
+  }
+
   .characterEmoji {
     font-size: 2.5rem;
   }
@@ -159,6 +180,11 @@
 }
 
 @media (max-width: 480px) {
+  .characterSvg {
+    width: 32px;
+    height: 32px;
+  }
+
   .characterEmoji {
     font-size: 2rem;
   }

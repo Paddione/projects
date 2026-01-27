@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" fill="none">
+  <defs>
+    <linearGradient id="resGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#3eff8b"/>
+      <stop offset="100%" stop-color="#00f2ff"/>
+    </linearGradient>
+    <filter id="resGlow">
+      <feGaussianBlur stdDeviation="1.5" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <radialGradient id="resFace" cx="0.5" cy="0.4" r="0.5">
+      <stop offset="0%" stop-color="#0a1628"/>
+      <stop offset="100%" stop-color="#030408"/>
+    </radialGradient>
+  </defs>
+  <!-- background circle -->
+  <circle cx="40" cy="40" r="36" stroke="url(#resGrad)" stroke-width="2" fill="url(#resFace)" filter="url(#resGlow)"/>
+  <!-- head -->
+  <circle cx="40" cy="28" r="12" stroke="#3eff8b" stroke-width="2" fill="none"/>
+  <!-- goggles on forehead -->
+  <ellipse cx="34" cy="20" rx="5" ry="3" stroke="#00f2ff" stroke-width="1.5" fill="none" opacity="0.7"/>
+  <ellipse cx="46" cy="20" rx="5" ry="3" stroke="#00f2ff" stroke-width="1.5" fill="none" opacity="0.7"/>
+  <line x1="39" y1="20" x2="41" y2="20" stroke="#00f2ff" stroke-width="1.5" opacity="0.7"/>
+  <!-- hair - wild/Einstein -->
+  <path d="M27 24c-2-6 2-14 6-14" stroke="#3eff8b" stroke-width="1.5" fill="none" opacity="0.6"/>
+  <path d="M53 24c2-6-2-14-6-14" stroke="#3eff8b" stroke-width="1.5" fill="none" opacity="0.6"/>
+  <path d="M30 18c1-8 8-10 12-8" stroke="#3eff8b" stroke-width="1.5" fill="none" opacity="0.5"/>
+  <path d="M50 18c-1-8-6-10-10-8" stroke="#3eff8b" stroke-width="1.5" fill="none" opacity="0.5"/>
+  <!-- eyes - curious, intense -->
+  <circle cx="35" cy="28" r="2" fill="#3eff8b" opacity="0.9"/>
+  <circle cx="45" cy="28" r="2" fill="#3eff8b" opacity="0.9"/>
+  <circle cx="35" cy="27.5" r="0.7" fill="#fff" opacity="0.8"/>
+  <circle cx="45" cy="27.5" r="0.7" fill="#fff" opacity="0.8"/>
+  <!-- focused expression -->
+  <path d="M37 34c1 0.5 4 0.5 5 0" stroke="#3eff8b" stroke-width="1" fill="none" stroke-linecap="round"/>
+  <!-- body - lab coat -->
+  <path d="M22 58c0-9 8-16 18-16s18 7 18 16" stroke="#3eff8b" stroke-width="2" fill="none"/>
+  <!-- coat opening -->
+  <line x1="40" y1="42" x2="40" y2="58" stroke="#3eff8b" stroke-width="1.5" opacity="0.4"/>
+  <!-- pocket with pen -->
+  <rect x="28" y="50" width="6" height="5" rx="1" stroke="#00f2ff" stroke-width="1" fill="none" opacity="0.5"/>
+  <line x1="31" y1="48" x2="31" y2="52" stroke="#00f2ff" stroke-width="1" stroke-linecap="round" opacity="0.6"/>
+  <!-- atom symbol -->
+  <ellipse cx="54" cy="50" rx="6" ry="3" stroke="#3eff8b" stroke-width="0.8" fill="none" opacity="0.4" transform="rotate(30 54 50)"/>
+  <ellipse cx="54" cy="50" rx="6" ry="3" stroke="#3eff8b" stroke-width="0.8" fill="none" opacity="0.4" transform="rotate(-30 54 50)"/>
+  <circle cx="54" cy="50" r="1.5" fill="#3eff8b" opacity="0.5"/>
+</svg>

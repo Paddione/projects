@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" fill="none">
+  <defs>
+    <linearGradient id="gradGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#00f2ff"/>
+      <stop offset="50%" stop-color="#bc13fe"/>
+      <stop offset="100%" stop-color="#3eff8b"/>
+    </linearGradient>
+    <filter id="gradGlow">
+      <feGaussianBlur stdDeviation="2" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <radialGradient id="gradFace" cx="0.5" cy="0.4" r="0.5">
+      <stop offset="0%" stop-color="#0a1628"/>
+      <stop offset="100%" stop-color="#030408"/>
+    </radialGradient>
+  </defs>
+  <!-- background circle -->
+  <circle cx="40" cy="40" r="36" stroke="url(#gradGrad)" stroke-width="2.5" fill="url(#gradFace)" filter="url(#gradGlow)"/>
+  <!-- graduation cap -->
+  <polygon points="40,10 60,18 40,26 20,18" stroke="#00f2ff" stroke-width="2" fill="#00f2ff" opacity="0.15" filter="url(#gradGlow)"/>
+  <line x1="40" y1="18" x2="40" y2="10" stroke="#00f2ff" stroke-width="1.5"/>
+  <!-- cap flat top -->
+  <line x1="20" y1="18" x2="60" y2="18" stroke="#00f2ff" stroke-width="0.5" opacity="0.3"/>
+  <!-- tassel -->
+  <path d="M55 18v8" stroke="#bc13fe" stroke-width="1.5" stroke-linecap="round"/>
+  <circle cx="55" cy="27" r="2" fill="#bc13fe" opacity="0.6"/>
+  <!-- head -->
+  <circle cx="40" cy="32" r="10" stroke="url(#gradGrad)" stroke-width="2" fill="none"/>
+  <!-- proud eyes -->
+  <circle cx="36" cy="31" r="1.5" fill="#00f2ff" opacity="0.9"/>
+  <circle cx="44" cy="31" r="1.5" fill="#bc13fe" opacity="0.9"/>
+  <circle cx="36" cy="30.5" r="0.6" fill="#fff" opacity="0.8"/>
+  <circle cx="44" cy="30.5" r="0.6" fill="#fff" opacity="0.8"/>
+  <!-- confident smile -->
+  <path d="M35 37c2 2 6 2 8 0" stroke="#3eff8b" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+  <!-- body - graduation gown -->
+  <path d="M22 62c0-10 8-18 18-18s18 8 18 18" stroke="url(#gradGrad)" stroke-width="2" fill="none"/>
+  <!-- gown v-neck -->
+  <path d="M34 44l6 8 6-8" stroke="url(#gradGrad)" stroke-width="1.5" fill="none"/>
+  <!-- diploma -->
+  <rect x="50" y="52" width="10" height="5" rx="2" stroke="#ffa500" stroke-width="1.5" fill="none" opacity="0.7" transform="rotate(-15 55 54)"/>
+  <line x1="52" y1="54" x2="58" y2="52" stroke="#ffa500" stroke-width="0.5" opacity="0.4"/>
+  <!-- sparkles of achievement -->
+  <path d="M14 14l1.5-3 1.5 3-1.5 3z" fill="#00f2ff" opacity="0.5"/>
+  <path d="M64 12l1-2 1 2-1 2z" fill="#bc13fe" opacity="0.4"/>
+  <path d="M10 40l1-2 1 2-1 2z" fill="#3eff8b" opacity="0.3"/>
+</svg>

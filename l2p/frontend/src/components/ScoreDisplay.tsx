@@ -1,4 +1,5 @@
 import React from 'react'
+import { Icon } from './Icon'
 import styles from '../styles/ScoreDisplay.module.css'
 
 interface ScoreDisplayProps {
@@ -63,7 +64,7 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
             className={`${styles.streakValue} ${getStreakColor(correctAnswers)}`}
             data-testid="streak-value"
           >
-            🔥 {correctAnswers}
+            <Icon name="game-ui/streak" size={20} alt="Streak" /> {correctAnswers}
             {totalQuestions && `/${totalQuestions}`}
           </div>
         </div>

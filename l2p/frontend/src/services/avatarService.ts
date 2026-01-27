@@ -7,16 +7,17 @@ export interface AvatarDefinition {
   description: string
   source: 'character' | 'perk' // Where the avatar comes from
   unlockLevel?: number
+  svgPath?: string
 }
 
 // Default character avatars (always available)
 const defaultCharacterAvatars: Record<string, AvatarDefinition> = {
-  student: { id: 'student', emoji: '👨‍🎓', name: 'Student', description: 'Eager learner ready for challenges', source: 'character' },
-  professor: { id: 'professor', emoji: '👨‍🏫', name: 'Professor', description: 'Wise and knowledgeable academic', source: 'character' },
-  librarian: { id: 'librarian', emoji: '👩‍💼', name: 'Librarian', description: 'Organized keeper of knowledge', source: 'character' },
-  researcher: { id: 'researcher', emoji: '👨‍🔬', name: 'Researcher', description: 'Curious explorer of new ideas', source: 'character' },
-  dean: { id: 'dean', emoji: '👩‍⚖️', name: 'Dean', description: 'Distinguished academic leader', source: 'character' },
-  graduate: { id: 'graduate', emoji: '🎓', name: 'Graduate', description: 'Accomplished scholar', source: 'character' },
+  student: { id: 'student', emoji: '👨‍🎓', name: 'Student', description: 'Eager learner ready for challenges', source: 'character', svgPath: '/icons/characters/student.svg' },
+  professor: { id: 'professor', emoji: '👨‍🏫', name: 'Professor', description: 'Wise and knowledgeable academic', source: 'character', svgPath: '/icons/characters/professor.svg' },
+  librarian: { id: 'librarian', emoji: '👩‍💼', name: 'Librarian', description: 'Organized keeper of knowledge', source: 'character', svgPath: '/icons/characters/librarian.svg' },
+  researcher: { id: 'researcher', emoji: '👨‍🔬', name: 'Researcher', description: 'Curious explorer of new ideas', source: 'character', svgPath: '/icons/characters/researcher.svg' },
+  dean: { id: 'dean', emoji: '👩‍⚖️', name: 'Dean', description: 'Distinguished academic leader', source: 'character', svgPath: '/icons/characters/dean.svg' },
+  graduate: { id: 'graduate', emoji: '🎓', name: 'Graduate', description: 'Accomplished scholar', source: 'character', svgPath: '/icons/characters/graduate.svg' },
   lab_assistant: { id: 'lab_assistant', emoji: '👨‍🔬', name: 'Lab Assistant', description: 'Hands-on experimenter', source: 'character' },
   teaching_assistant: { id: 'teaching_assistant', emoji: '👩‍🏫', name: 'Teaching Assistant', description: 'Supportive mentor and guide', source: 'character' }
 }
@@ -102,6 +103,24 @@ class AvatarService {
     const character = this.getAvatarDefinition(characterId)
     
     return character?.emoji ?? defaultCharacterAvatars['student']?.emoji ?? '🎓'
+  }
+
+  /**
+   * Get the SVG path for a user's avatar, if one exists.
+   * Priority: Active avatar perk > User's character > Default
+   */
+  getAvatarSvgPath(userCharacter?: string): string | null {
+    if (this.activeAvatarOverride) {
+      const override = this.getAvatarDefinition(this.activeAvatarOverride)
+      if (override?.svgPath) {
+        return override.svgPath
+      }
+    }
+
+    const characterId = userCharacter || this.userCharacter
+    const character = this.getAvatarDefinition(characterId)
+
+    return character?.svgPath ?? null
   }
 
   /**

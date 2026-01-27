@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" fill="none">
+  <defs>
+    <linearGradient id="cvGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#00f2ff"/>
+      <stop offset="100%" stop-color="#bc13fe"/>
+    </linearGradient>
+    <filter id="cvGlow">
+      <feGaussianBlur stdDeviation="2.5" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <!-- outer shield -->
+  <path d="M40 4L68 18v24c0 14-12 26-28 30C24 68 12 56 12 42V18L40 4z"
+    stroke="url(#cvGrad)" stroke-width="2.5" fill="none" filter="url(#cvGlow)"/>
+  <!-- inner shield -->
+  <path d="M40 12L60 22v18c0 10-8 20-20 24-12-4-20-14-20-24V22L40 12z"
+    stroke="url(#cvGrad)" stroke-width="1" fill="none" opacity="0.3"/>
+  <!-- C V letters -->
+  <text x="27" y="48" font-family="Orbitron, sans-serif" font-size="20" font-weight="bold" fill="url(#cvGrad)" filter="url(#cvGlow)">CV</text>
+  <!-- circuit lines -->
+  <line x1="20" y1="30" x2="28" y2="30" stroke="#00f2ff" stroke-width="1" opacity="0.3"/>
+  <line x1="52" y1="30" x2="60" y2="30" stroke="#bc13fe" stroke-width="1" opacity="0.3"/>
+  <circle cx="20" cy="30" r="1.5" fill="#00f2ff" opacity="0.4"/>
+  <circle cx="60" cy="30" r="1.5" fill="#bc13fe" opacity="0.4"/>
+</svg>

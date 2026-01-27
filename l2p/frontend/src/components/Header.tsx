@@ -1,6 +1,7 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
 import { apiService } from '../services/apiService'
+import { Icon } from './Icon'
 import styles from '../styles/App.module.css'
 import { useAudio } from '../hooks/useAudio'
 
@@ -103,7 +104,7 @@ export const Header: React.FC = () => {
             data-testid="logout-button"
             onClickCapture={handleMenuCancel}
           >
-            🚪
+            <Icon name="game-ui/lobby" size={20} alt="Logout" />
           </button>
         </div>
       </div>

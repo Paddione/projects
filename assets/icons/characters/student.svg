@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" fill="none">
+  <defs>
+    <linearGradient id="studentGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#00f2ff"/>
+      <stop offset="100%" stop-color="#3eff8b"/>
+    </linearGradient>
+    <filter id="studentGlow">
+      <feGaussianBlur stdDeviation="1.5" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <radialGradient id="studentFace" cx="0.5" cy="0.4" r="0.5">
+      <stop offset="0%" stop-color="#0a1628"/>
+      <stop offset="100%" stop-color="#030408"/>
+    </radialGradient>
+  </defs>
+  <!-- background circle -->
+  <circle cx="40" cy="40" r="36" stroke="url(#studentGrad)" stroke-width="2" fill="url(#studentFace)" filter="url(#studentGlow)"/>
+  <!-- head -->
+  <circle cx="40" cy="30" r="12" stroke="#00f2ff" stroke-width="2" fill="none"/>
+  <!-- hair - messy student look -->
+  <path d="M28 28c0-8 5-14 12-14s12 6 12 14" stroke="#00f2ff" stroke-width="2" fill="none"/>
+  <path d="M30 24c2-6 6-8 10-8" stroke="#3eff8b" stroke-width="1" fill="none" opacity="0.5"/>
+  <!-- eyes - eager, wide -->
+  <circle cx="35" cy="29" r="2" fill="#00f2ff" opacity="0.8"/>
+  <circle cx="45" cy="29" r="2" fill="#00f2ff" opacity="0.8"/>
+  <circle cx="35.5" cy="28.5" r="0.8" fill="#fff" opacity="0.9"/>
+  <circle cx="45.5" cy="28.5" r="0.8" fill="#fff" opacity="0.9"/>
+  <!-- smile -->
+  <path d="M35 35c2 2 6 2 8 0" stroke="#3eff8b" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+  <!-- body - casual t-shirt -->
+  <path d="M24 56c0-8 7-14 16-14s16 6 16 14" stroke="#00f2ff" stroke-width="2" fill="none"/>
+  <!-- backpack straps -->
+  <line x1="34" y1="44" x2="32" y2="56" stroke="#3eff8b" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/>
+  <line x1="46" y1="44" x2="48" y2="56" stroke="#3eff8b" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/>
+  <!-- book icon on shirt -->
+  <rect x="36" y="48" width="8" height="6" rx="1" stroke="#00f2ff" stroke-width="1" fill="none" opacity="0.5"/>
+  <line x1="40" y1="48" x2="40" y2="54" stroke="#00f2ff" stroke-width="0.5" opacity="0.4"/>
+</svg>
