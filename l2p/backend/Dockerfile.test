@@ -26,7 +26,7 @@ FROM base AS dependencies
 WORKDIR /app/backend
 
 # Copy package files first for better layer caching
-COPY backend/package*.json ./
+COPY l2p/backend/package*.json ./
 
 # Install all dependencies (including dev dependencies for testing)
 RUN npm install --include=dev --legacy-peer-deps --prefer-offline --no-audit --progress=false && \
@@ -41,7 +41,7 @@ ENV NODE_ENV=test
 ENV CI=true
 
 # Copy all source code including package files
-COPY --chown=nodejs:nodejs backend/ .
+COPY --chown=nodejs:nodejs l2p/backend/ .
 
 # Copy shared modules
 COPY --chown=nodejs:nodejs shared-infrastructure/shared/l2p /shared-infrastructure/shared/l2p

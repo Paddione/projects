@@ -120,7 +120,9 @@ class ApiService {
   private isMockEnabled: boolean
   private mockOverride: boolean | null = null
   private static mockData: MockData = {
-    users: [],
+    users: [
+      { id: '1', username: 'testuser', email: 'test@example.com', password: 'TestPassword123!', isAdmin: false, verified: true },
+    ],
     lobbies: {},
     characters: [
       { id: '1', name: 'Student', emoji: '🎓', description: 'A curious learner', unlockLevel: 1 },
@@ -545,8 +547,9 @@ class ApiService {
 
       if (endpoint === '/auth/login' && method === 'POST') {
         const body = parseBody()
-        const { username, password } = body || {}
-        const user = ApiService.mockData.users.find((u: any) => u.username === username)
+        const { username, usernameOrEmail, password } = body || {}
+        const loginName = username || usernameOrEmail
+        const user = ApiService.mockData.users.find((u: any) => u.username === loginName || u.email === loginName)
         if (!user || user.password !== password) {
           return { success: false, error: 'Invalid credentials' } as ApiResponse<T>
         }

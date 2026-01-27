@@ -36,8 +36,8 @@ services:
   # Backend Test Service
   backend-test:
     build:
-      context: .
-      dockerfile: backend/Dockerfile.test
+      context: ..
+      dockerfile: l2p/backend/Dockerfile.test
       cache_from:
         - node:20-bullseye-slim
       args:
