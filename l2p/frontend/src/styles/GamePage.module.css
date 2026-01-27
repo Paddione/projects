@@ -69,26 +69,48 @@
   flex-direction: column;
 }
 
-/* Background image for question phase */
+/* Background for question phase - Cybervault Premium Aesthetic */
 .questionBg {
   position: relative;
-  background-image: url('/visuals/background.png');
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
+  background-color: var(--cv-void-light);
+  background-image: 
+    radial-gradient(circle at 15% 15%, rgba(0, 242, 255, 0.08) 0%, transparent 45%),
+    radial-gradient(circle at 85% 85%, rgba(188, 19, 254, 0.08) 0%, transparent 45%),
+    linear-gradient(rgba(0, 242, 255, 0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 242, 255, 0.02) 1px, transparent 1px);
+  background-size: 100% 100%, 100% 100%, 40px 40px, 40px 40px;
+  border: 1px solid var(--cv-border-2);
   border-radius: var(--cv-radius-xl);
   overflow: hidden;
+  box-shadow: 
+    var(--cv-shadow-lg), 
+    inset 0 0 100px rgba(0, 0, 0, 0.5),
+    inset 0 0 20px rgba(0, 242, 255, 0.03);
+  transition: border-color var(--cv-duration-slow) var(--cv-ease-smooth);
 }
 
-/* Dark overlay for readability on Cybervault dark theme */
+/* Cybernetic scanning effect */
 .questionBg::before {
   content: '';
   position: absolute;
-  inset: 0;
-  background: radial-gradient(ellipse at center, rgba(3,4,8,0.75), rgba(3,4,8,0.85) 50%, rgba(3,4,8,0.92) 80%)
-              , linear-gradient(to bottom right, rgba(0,242,255,0.03), rgba(188,19,254,0.03));
+  top: -100%;
+  left: 0;
+  right: 0;
+  height: 60%;
+  background: linear-gradient(
+    to bottom, 
+    transparent, 
+    rgba(0, 242, 255, 0.04) 50%, 
+    transparent
+  );
   pointer-events: none;
-  border-radius: inherit;
+  animation: scanning 12s linear infinite;
+  z-index: 1;
+}
+
+@keyframes scanning {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(400%); }
 }
 
 /* Left: question + answers */
