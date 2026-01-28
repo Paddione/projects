@@ -17,6 +17,6 @@ await build({
     external,
     sourcemap: true,
     alias: {
-        '@shared': path.resolve('../shared-infrastructure/shared/videovault')
+        '@shared': path.resolve(import.meta.dirname, '../../shared-infrastructure/shared/videovault')
     }
 });
