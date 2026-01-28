@@ -14,7 +14,11 @@
     "dev": "tsx watch src/server.ts",
     "lint": "eslint src --ext .ts",
     "start": "node dist/server.js",
-    "test": "NODE_OPTIONS=--experimental-vm-modules jest --passWithNoTests --testPathIgnorePatterns=/frontend/e2e/",
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest --passWithNoTests",
+    "test:watch": "NODE_OPTIONS=--experimental-vm-modules jest --watch",
+    "test:coverage": "NODE_OPTIONS=--experimental-vm-modules jest --coverage",
+    "test:cleanup": "tsx scripts/cleanup-test-data.ts",
+    "test:cleanup:dry": "tsx scripts/cleanup-test-data.ts --dry-run --verbose",
     "typecheck": "tsc --noEmit",
     "check:deprecated": "node -e \"const fs=require('fs'); const path='package-lock.json'; if(!fs.existsSync(path)){console.log('No package-lock.json found.'); process.exit(0);} const lock=JSON.parse(fs.readFileSync(path,'utf8')); const deprecated=Object.entries(lock.packages||{}).filter(([,info])=>info.deprecated); if(!deprecated.length){console.log('No deprecated packages.'); process.exit(0);} deprecated.forEach(([name,info])=>{const pkg=name.replace(/^node_modules\\//,''); console.log(pkg + ': ' + info.deprecated);}); process.exit(1);\""
   },
@@ -67,6 +71,7 @@
     "drizzle-kit": "1.0.0-beta.9-e89174b",
     "eslint": "^9.39.2",
     "jest": "^30.2.0",
+    "ts-jest": "^29.3.4",
     "tsx": "^4.21.0",
     "typescript": "^5.3.3"
   },
