@@ -212,6 +212,26 @@ export const userAppAccess = authSchema.table('user_app_access', {
 }));
 
 // ============================================================================
+// ACCESS REQUESTS TABLE - User access requests with rate limiting
+// ============================================================================
+export const accessRequests = authSchema.table('access_requests', {
+  id: serial('id').primaryKey(),
+  user_id: integer('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  app_id: integer('app_id').notNull().references(() => apps.id, { onDelete: 'cascade' }),
+  reason: text('reason'), // Optional user-provided reason
+  status: varchar('status', { length: 20 }).default('pending').notNull(), // pending, approved, denied
+  admin_response: text('admin_response'), // Optional admin comment
+  reviewed_by: integer('reviewed_by').references(() => users.id),
+  reviewed_at: timestamp('reviewed_at'),
+  created_at: timestamp('created_at').defaultNow().notNull(),
+}, (table) => ({
+  userIdx: index('access_requests_user_id_idx').on(table.user_id),
+  appIdx: index('access_requests_app_id_idx').on(table.app_id),
+  statusIdx: index('access_requests_status_idx').on(table.status),
+  // Rate limiting (1 request per app per day) enforced in application layer
+}));
+
+// ============================================================================
 // TYPE EXPORTS for TypeScript
 // ============================================================================
 export type User = typeof users.$inferSelect;
@@ -228,3 +248,5 @@ export type OAuthClient = typeof oauthClients.$inferSelect;
 export type NewOAuthClient = typeof oauthClients.$inferInsert;
 export type OAuthAuthorizationCode = typeof oauthAuthorizationCodes.$inferSelect;
 export type NewOAuthAuthorizationCode = typeof oauthAuthorizationCodes.$inferInsert;
+export type AccessRequest = typeof accessRequests.$inferSelect;
+export type NewAccessRequest = typeof accessRequests.$inferInsert;

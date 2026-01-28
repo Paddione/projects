@@ -7,7 +7,6 @@ Application services deployed to the `korczewski-services` namespace.
 | Service | Port | Domain | Dependencies |
 |---------|------|--------|--------------|
 | Auth | 5500 | auth.korczewski.de | PostgreSQL |
-| Dashboard | 4242 | dashboard.korczewski.de | Auth |
 | L2P Backend | 3001 | l2p.korczewski.de (`/api`, `/socket.io`) | PostgreSQL, Auth |
 | L2P Frontend | 80 | l2p.korczewski.de | L2P Backend |
 | Payment | 3000 | payment.korczewski.de, shop.korczewski.de | PostgreSQL, Auth |
@@ -23,18 +22,6 @@ JWT authentication and OAuth service.
 - `/api/oauth/*` - OAuth providers (Google)
 
 **Manifests:** `deployment.yaml`, `service.yaml`, `ingressroute.yaml`, `kustomization.yaml`
-
-## Dashboard (`dashboard/`)
-
-Kubernetes Dashboard for cluster management.
-
-**Namespace:** `korczewski-infra`
-
-**Endpoints:**
-- `/health` - Health check
-- `/socket.io/*` - WebSocket connections
-
-**Manifests:** `deployment.yaml`, `service.yaml`, `ingressroute.yaml`, `rbac.yaml`, `kustomization.yaml`
 
 ## L2P Backend (`l2p-backend/`)
 
@@ -83,5 +70,5 @@ All services share:
 - Kustomize-based configuration
 - Health probes configured
 - IngressRoute for Traefik
-- Namespace: `korczewski-services` (Dashboard runs in `korczewski-infra`)
+- Namespace: `korczewski-services`
 - Labels: `app.kubernetes.io/part-of: korczewski`

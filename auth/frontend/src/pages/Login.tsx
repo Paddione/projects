@@ -45,7 +45,7 @@ export default function Login() {
       return;
     }
 
-    navigate('/apps', { replace: true });
+    navigate('/hub', { replace: true });
   }, [accessToken, refreshToken, redirectUri, navigate]);
 
   useEffect(() => {
@@ -73,7 +73,7 @@ export default function Login() {
         window.location.href = url.toString();
       } else {
         // Redirect local logins to the apps page
-        window.location.href = '/apps';
+        window.location.href = '/hub';
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login failed');

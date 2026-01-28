@@ -54,12 +54,6 @@ build:
       docker:
         dockerfile: VideoVault/Dockerfile.prod
 
-    # Dashboard
-    - image: korczewski/dashboard
-      context: ..
-      docker:
-        dockerfile: dashboard/Dockerfile
-
 # =============================================================================
 # Manifest Configuration
 # =============================================================================
@@ -74,7 +68,6 @@ manifests:
       - services/l2p-frontend
       - services/payment
       - services/videovault
-      - services/dashboard
   rawYaml:
     - base/namespaces.yaml
 

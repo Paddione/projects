@@ -1,217 +1,678 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { AuthApi, type AdminUser, type AppAccess } from '../services/authApi';
+import {
+  AuthApi,
+  type AdminUser,
+  type AppAccess,
+  type AdminAccessRequest,
+  type FullUser,
+} from '../services/authApi';
 
-export default function Admin() {
-  const [users, setUsers] = useState<AdminUser[]>([]);
-  const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
+type TabType = 'requests' | 'users' | 'access';
+
+interface ReviewModalProps {
+  request: AdminAccessRequest;
+  onClose: () => void;
+  onSubmit: (status: 'approved' | 'denied', response?: string) => Promise<void>;
+}
+
+function ReviewModal({ request, onClose, onSubmit }: ReviewModalProps) {
+  const [response, setResponse] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleSubmit = async (status: 'approved' | 'denied') => {
+    setLoading(true);
+    setError('');
+    try {
+      await onSubmit(status, response || undefined);
+      onClose();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to review request');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="hub-modal-overlay" onClick={onClose}>
+      <div className="hub-modal admin-modal" onClick={(e) => e.stopPropagation()}>
+        <h3 className="hub-modal-title">Review Access Request</h3>
+        <div className="admin-review-info">
+          <p><strong>User:</strong> {request.username} ({request.userEmail})</p>
+          <p><strong>App:</strong> {request.appName}</p>
+          {request.reason && <p><strong>Reason:</strong> "{request.reason}"</p>}
+        </div>
+        {error && <div className="auth-message auth-message-error">{error}</div>}
+        <div className="auth-form-group">
+          <label className="auth-label">Response (optional)</label>
+          <textarea
+            value={response}
+            onChange={(e) => setResponse(e.target.value)}
+            className="hub-textarea"
+            placeholder="Add a note for the user..."
+            rows={2}
+            maxLength={500}
+          />
+        </div>
+        <div className="hub-modal-actions admin-modal-actions">
+          <button type="button" onClick={onClose} className="auth-btn-secondary" disabled={loading}>
+            Cancel
+          </button>
+          <button
+            onClick={() => handleSubmit('denied')}
+            disabled={loading}
+            className="admin-btn-deny"
+          >
+            Deny
+          </button>
+          <button
+            onClick={() => handleSubmit('approved')}
+            disabled={loading}
+            className="admin-btn-approve"
+          >
+            Approve
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+interface UserEditorProps {
+  userId: number;
+  onClose: () => void;
+  onSave: () => void;
+}
+
+function UserEditor({ userId, onClose, onSave }: UserEditorProps) {
+  const [user, setUser] = useState<FullUser | null>(null);
   const [apps, setApps] = useState<AppAccess[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [formData, setFormData] = useState<Partial<FullUser>>({});
   const navigate = useNavigate();
-  useEffect(() => {
-    let isMounted = true;
-
-    const loadUsers = async () => {
-      try {
-        const result = await AuthApi.getAdminUsers();
-        if (!isMounted) return;
-        setUsers(result);
-        if (result.length > 0) {
-          setSelectedUser(result[0]);
-        }
-      } catch (err) {
-        if (!isMounted) return;
-        const status = (err as Error & { status?: number }).status;
-        if (status === 401 || status === 403) {
-          navigate('/apps', { replace: true });
-          return;
-        }
-        setError(err instanceof Error ? err.message : 'Failed to load users');
-      } finally {
-        if (isMounted) {
-          setLoading(false);
-        }
-      }
-    };
-
-    loadUsers();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [navigate]);
 
   useEffect(() => {
-    let isMounted = true;
-
-    const loadAccess = async () => {
-      if (!selectedUser) return;
-
+    const load = async () => {
       try {
-        setLoading(true);
-        const response = await AuthApi.getAdminUserApps(selectedUser.id);
-        if (!isMounted) return;
-        setApps(response.apps);
+        const [userData, appsData] = await Promise.all([
+          AuthApi.getAdminUser(userId),
+          AuthApi.getAdminUserApps(userId),
+        ]);
+        setUser(userData.user);
+        setApps(appsData.apps);
+        setFormData({});
       } catch (err) {
-        if (!isMounted) return;
         const status = (err as Error & { status?: number }).status;
         if (status === 401 || status === 403) {
-          navigate('/apps', { replace: true });
+          navigate('/hub', { replace: true });
           return;
         }
-        setError(err instanceof Error ? err.message : 'Failed to load user access');
+        setError(err instanceof Error ? err.message : 'Failed to load user');
       } finally {
-        if (isMounted) {
-          setLoading(false);
-        }
+        setLoading(false);
       }
     };
+    load();
+  }, [userId, navigate]);
 
-    loadAccess();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [selectedUser, navigate]);
-
-  const toggleAccess = (appId: number) => {
-    if (selectedUser?.role === 'ADMIN') {
-      return;
-    }
-
-    setApps((prevApps) =>
-      prevApps.map((app) =>
-        app.id === appId ? { ...app, hasAccess: !app.hasAccess } : app
-      )
-    );
+  const handleChange = (field: keyof FullUser, value: unknown) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleSave = async () => {
-    if (!selectedUser) return;
+    if (Object.keys(formData).length === 0) {
+      onClose();
+      return;
+    }
     setSaving(true);
     setError('');
-
     try {
-      const appIds = apps.filter((app) => app.hasAccess).map((app) => app.id);
-      await AuthApi.updateAdminUserApps(selectedUser.id, appIds);
+      await AuthApi.updateAdminUser(userId, formData);
+      onSave();
+      onClose();
     } catch (err) {
-      const status = (err as Error & { status?: number }).status;
-      if (status === 401 || status === 403) {
-        navigate('/apps', { replace: true });
-        return;
-      }
+      setError(err instanceof Error ? err.message : 'Failed to save');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
+      return;
+    }
+    setSaving(true);
+    try {
+      await AuthApi.deleteAdminUser(userId);
+      onSave();
+      onClose();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete');
+      setSaving(false);
+    }
+  };
+
+  const handleAppAccessChange = async (appIds: number[]) => {
+    setSaving(true);
+    try {
+      await AuthApi.updateAdminUserApps(userId, appIds);
+      setApps((prev) =>
+        prev.map((app) => ({ ...app, hasAccess: appIds.includes(app.id) }))
+      );
+    } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update access');
     } finally {
       setSaving(false);
     }
   };
 
+  const toggleApp = (appId: number) => {
+    if (user?.role === 'ADMIN') return;
+    const newAppIds = apps
+      .map((app) => (app.id === appId ? { ...app, hasAccess: !app.hasAccess } : app))
+      .filter((app) => app.hasAccess)
+      .map((app) => app.id);
+    handleAppAccessChange(newAppIds);
+  };
+
+  if (loading) {
+    return (
+      <div className="hub-modal-overlay" onClick={onClose}>
+        <div className="hub-modal admin-modal-large" onClick={(e) => e.stopPropagation()}>
+          <div className="hub-loading"><div className="hub-spinner"></div></div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="hub-modal-overlay" onClick={onClose}>
+        <div className="hub-modal" onClick={(e) => e.stopPropagation()}>
+          <p className="auth-message auth-message-error">User not found</p>
+          <button onClick={onClose} className="auth-btn-secondary">Close</button>
+        </div>
+      </div>
+    );
+  }
+
+  const getValue = (field: keyof FullUser) => {
+    return formData[field] !== undefined ? formData[field] : user[field];
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6">
-      <div className="max-w-6xl mx-auto">
-        <div className="bg-white rounded-lg shadow-xl p-6 mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Admin Access Control</h1>
-            <p className="text-gray-600 mt-1">Assign app access for each user.</p>
-          </div>
-          <div className="flex items-center gap-3">
-            <Link
-              to="/apps"
-              className="px-4 py-2 rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50"
-            >
-              Back to Apps
-            </Link>
-          </div>
+    <div className="hub-modal-overlay" onClick={onClose}>
+      <div className="hub-modal admin-modal-large" onClick={(e) => e.stopPropagation()}>
+        <div className="admin-editor-header">
+          <h3 className="hub-modal-title">Edit User: {user.username}</h3>
+          <button onClick={onClose} className="admin-close-btn">&times;</button>
         </div>
 
-        {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-6">
-            {error}
-          </div>
-        )}
+        {error && <div className="auth-message auth-message-error">{error}</div>}
 
-        <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
-          <div className="bg-white rounded-lg shadow p-4">
-            <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-3">
-              Users
-            </h2>
-            <div className="space-y-2">
-              {users.map((user) => (
-                <button
-                  key={user.id}
-                  onClick={() => setSelectedUser(user)}
-                  className={`w-full text-left px-3 py-2 rounded-lg border text-sm ${
-                    selectedUser?.id === user.id
-                      ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
-                      : 'border-transparent hover:bg-gray-50 text-gray-700'
-                  }`}
+        <div className="admin-editor-content">
+          {/* Identity Section */}
+          <fieldset className="admin-fieldset">
+            <legend>Identity</legend>
+            <div className="admin-field-grid">
+              <div className="auth-form-group">
+                <label className="auth-label">Username</label>
+                <input
+                  type="text"
+                  value={getValue('username') as string}
+                  onChange={(e) => handleChange('username', e.target.value)}
+                  className="auth-input"
+                />
+              </div>
+              <div className="auth-form-group">
+                <label className="auth-label">Email</label>
+                <input
+                  type="email"
+                  value={getValue('email') as string}
+                  onChange={(e) => handleChange('email', e.target.value)}
+                  className="auth-input"
+                />
+              </div>
+              <div className="auth-form-group">
+                <label className="auth-label">Display Name</label>
+                <input
+                  type="text"
+                  value={(getValue('name') as string) || ''}
+                  onChange={(e) => handleChange('name', e.target.value || null)}
+                  className="auth-input"
+                />
+              </div>
+              <div className="auth-form-group">
+                <label className="auth-label">Role</label>
+                <select
+                  value={getValue('role') as string}
+                  onChange={(e) => handleChange('role', e.target.value)}
+                  className="auth-input admin-select"
                 >
-                  <div className="font-semibold">{user.username}</div>
-                  <div className="text-xs text-gray-500">
-                    {user.email} · {user.role}
-                  </div>
-                </button>
+                  <option value="USER">USER</option>
+                  <option value="ADMIN">ADMIN</option>
+                </select>
+              </div>
+            </div>
+          </fieldset>
+
+          {/* Status Section */}
+          <fieldset className="admin-fieldset">
+            <legend>Account Status</legend>
+            <div className="admin-field-grid">
+              <div className="admin-checkbox-group">
+                <label className="admin-checkbox-label">
+                  <input
+                    type="checkbox"
+                    checked={getValue('is_active') as boolean}
+                    onChange={(e) => handleChange('is_active', e.target.checked)}
+                  />
+                  <span>Active</span>
+                </label>
+              </div>
+              <div className="admin-checkbox-group">
+                <label className="admin-checkbox-label">
+                  <input
+                    type="checkbox"
+                    checked={getValue('email_verified') as boolean}
+                    onChange={(e) => handleChange('email_verified', e.target.checked)}
+                  />
+                  <span>Email Verified</span>
+                </label>
+              </div>
+              <div className="auth-form-group">
+                <label className="auth-label">Failed Login Attempts</label>
+                <input
+                  type="number"
+                  min="0"
+                  value={getValue('failed_login_attempts') as number}
+                  onChange={(e) => handleChange('failed_login_attempts', parseInt(e.target.value) || 0)}
+                  className="auth-input"
+                />
+              </div>
+              <div className="auth-form-group">
+                <label className="auth-label">Locked Until</label>
+                <input
+                  type="datetime-local"
+                  value={user.account_locked_until ? new Date(user.account_locked_until).toISOString().slice(0, 16) : ''}
+                  onChange={(e) => handleChange('account_locked_until', e.target.value ? new Date(e.target.value).toISOString() : null)}
+                  className="auth-input"
+                />
+              </div>
+            </div>
+          </fieldset>
+
+          {/* L2P Stats Section */}
+          <fieldset className="admin-fieldset">
+            <legend>L2P Character</legend>
+            <div className="admin-field-grid">
+              <div className="auth-form-group">
+                <label className="auth-label">Character</label>
+                <select
+                  value={(getValue('selected_character') as string) || 'student'}
+                  onChange={(e) => handleChange('selected_character', e.target.value)}
+                  className="auth-input admin-select"
+                >
+                  <option value="student">Student</option>
+                  <option value="professor">Professor</option>
+                  <option value="librarian">Librarian</option>
+                  <option value="researcher">Researcher</option>
+                  <option value="dean">Dean</option>
+                  <option value="graduate">Graduate</option>
+                </select>
+              </div>
+              <div className="auth-form-group">
+                <label className="auth-label">Level</label>
+                <input
+                  type="number"
+                  min="1"
+                  value={getValue('character_level') as number}
+                  onChange={(e) => handleChange('character_level', parseInt(e.target.value) || 1)}
+                  className="auth-input"
+                />
+              </div>
+              <div className="auth-form-group">
+                <label className="auth-label">XP</label>
+                <input
+                  type="number"
+                  min="0"
+                  value={getValue('experience_points') as number}
+                  onChange={(e) => handleChange('experience_points', parseInt(e.target.value) || 0)}
+                  className="auth-input"
+                />
+              </div>
+            </div>
+          </fieldset>
+
+          {/* App Access Section */}
+          <fieldset className="admin-fieldset">
+            <legend>App Access</legend>
+            {user.role === 'ADMIN' && (
+              <p className="admin-note">Admins always have full access to all apps.</p>
+            )}
+            <div className="admin-apps-list">
+              {apps.map((app) => (
+                <label
+                  key={app.id}
+                  className={`admin-app-toggle ${user.role === 'ADMIN' ? 'disabled' : ''}`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={app.hasAccess}
+                    onChange={() => toggleApp(app.id)}
+                    disabled={user.role === 'ADMIN'}
+                  />
+                  <span className="admin-app-name">{app.name}</span>
+                </label>
               ))}
             </div>
-          </div>
+          </fieldset>
 
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
-              <div>
-                <h2 className="text-lg font-semibold text-gray-900">
-                  {selectedUser ? `Access for ${selectedUser.username}` : 'Select a user'}
-                </h2>
-                {selectedUser?.role === 'ADMIN' && (
-                  <p className="text-sm text-gray-500 mt-1">Admins always have full access.</p>
-                )}
-              </div>
-              <button
-                onClick={handleSave}
-                disabled={saving || !selectedUser || selectedUser.role === 'ADMIN'}
-                className="px-4 py-2 rounded-lg bg-indigo-600 text-white disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {saving ? 'Saving...' : 'Save changes'}
-              </button>
+          {/* Timestamps */}
+          <fieldset className="admin-fieldset">
+            <legend>Timestamps</legend>
+            <div className="admin-timestamps">
+              <p><strong>Created:</strong> {new Date(user.created_at).toLocaleString()}</p>
+              <p><strong>Updated:</strong> {new Date(user.updated_at).toLocaleString()}</p>
+              <p><strong>Last Login:</strong> {user.last_login ? new Date(user.last_login).toLocaleString() : 'Never'}</p>
             </div>
+          </fieldset>
+        </div>
 
-            {loading && <p className="text-gray-600">Loading access...</p>}
-
-            {!loading && selectedUser && (
-              <div className="space-y-3">
-                {apps.map((app) => (
-                  <label
-                    key={app.id}
-                    className={`flex items-start justify-between border rounded-lg p-4 ${
-                      selectedUser.role === 'ADMIN' ? 'opacity-60' : 'hover:border-indigo-300'
-                    }`}
-                  >
-                    <div>
-                      <div className="font-semibold text-gray-900">{app.name}</div>
-                      <p className="text-sm text-gray-600 mt-1">
-                        {app.description || 'No description available.'}
-                      </p>
-                      <p className="text-xs text-gray-500 mt-2">{app.url}</p>
-                    </div>
-                    <input
-                      type="checkbox"
-                      checked={app.hasAccess}
-                      onChange={() => toggleAccess(app.id)}
-                      disabled={selectedUser.role === 'ADMIN'}
-                      className="h-4 w-4 mt-1"
-                    />
-                  </label>
-                ))}
-              </div>
-            )}
-
-            {!loading && selectedUser && apps.length === 0 && (
-              <p className="text-gray-600">No apps configured yet.</p>
-            )}
+        <div className="admin-editor-footer">
+          <button onClick={handleDelete} className="admin-btn-delete" disabled={saving}>
+            Delete User
+          </button>
+          <div className="admin-editor-actions">
+            <button onClick={onClose} className="auth-btn-secondary" disabled={saving}>
+              Cancel
+            </button>
+            <button onClick={handleSave} className="auth-btn-primary" disabled={saving}>
+              {saving ? 'Saving...' : 'Save Changes'}
+            </button>
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+export default function Admin() {
+  const [activeTab, setActiveTab] = useState<TabType>('requests');
+  const [users, setUsers] = useState<AdminUser[]>([]);
+  const [apps, setApps] = useState<AppAccess[]>([]);
+  const [requests, setRequests] = useState<AdminAccessRequest[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [reviewingRequest, setReviewingRequest] = useState<AdminAccessRequest | null>(null);
+  const [editingUserId, setEditingUserId] = useState<number | null>(null);
+  const [selectedAppId, setSelectedAppId] = useState<number | null>(null);
+  const [appUsers, setAppUsers] = useState<AdminUser[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const navigate = useNavigate();
+
+  const loadData = async () => {
+    setLoading(true);
+    try {
+      const [usersRes, requestsRes, appsRes] = await Promise.all([
+        AuthApi.getAdminUsers(),
+        AuthApi.getAdminAccessRequests('pending'),
+        AuthApi.getApps(),
+      ]);
+      setUsers(usersRes);
+      setRequests(requestsRes.requests);
+      setApps(appsRes.apps);
+    } catch (err) {
+      const status = (err as Error & { status?: number }).status;
+      if (status === 401 || status === 403) {
+        navigate('/hub', { replace: true });
+        return;
+      }
+      setError(err instanceof Error ? err.message : 'Failed to load data');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadData();
+  }, [navigate]);
+
+  useEffect(() => {
+    if (selectedAppId && activeTab === 'access') {
+      AuthApi.getAppUsers(selectedAppId)
+        .then((res) => setAppUsers(res.users))
+        .catch((err) => setError(err.message));
+    }
+  }, [selectedAppId, activeTab]);
+
+  const handleReview = async (status: 'approved' | 'denied', response?: string) => {
+    if (!reviewingRequest) return;
+    await AuthApi.reviewAccessRequest(reviewingRequest.id, status, response);
+    setRequests((prev) => prev.filter((r) => r.id !== reviewingRequest.id));
+  };
+
+  const filteredUsers = users.filter(
+    (u) =>
+      u.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      u.email.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const pendingCount = requests.length;
+
+  return (
+    <div className="admin-page">
+      {/* Header */}
+      <header className="admin-header">
+        <div className="admin-header-content">
+          <div className="admin-header-title">
+            <svg viewBox="0 0 80 80" className="admin-logo">
+              <defs>
+                <linearGradient id="adminGrad" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stopColor="#00f2ff"/>
+                  <stop offset="100%" stopColor="#bc13fe"/>
+                </linearGradient>
+              </defs>
+              <path d="M40 4L68 18v24c0 14-12 26-28 30C24 68 12 56 12 42V18L40 4z"
+                stroke="url(#adminGrad)" strokeWidth="2" fill="none"/>
+              <text x="27" y="48" fontFamily="Orbitron, sans-serif" fontSize="20" fontWeight="bold" fill="url(#adminGrad)">CV</text>
+            </svg>
+            <div>
+              <h1>Admin Panel</h1>
+              <p>Manage users, access requests, and permissions</p>
+            </div>
+          </div>
+          <Link to="/hub" className="admin-back-btn">
+            <svg viewBox="0 0 20 20" fill="currentColor" className="hub-icon">
+              <path fillRule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clipRule="evenodd"/>
+            </svg>
+            Back to Hub
+          </Link>
+        </div>
+      </header>
+
+      {error && <div className="auth-message auth-message-error admin-error">{error}</div>}
+
+      {/* Tabs */}
+      <nav className="admin-tabs">
+        <button
+          className={`admin-tab ${activeTab === 'requests' ? 'active' : ''}`}
+          onClick={() => setActiveTab('requests')}
+        >
+          Access Requests
+          {pendingCount > 0 && <span className="admin-tab-badge">{pendingCount}</span>}
+        </button>
+        <button
+          className={`admin-tab ${activeTab === 'users' ? 'active' : ''}`}
+          onClick={() => setActiveTab('users')}
+        >
+          Users
+          <span className="admin-tab-count">{users.length}</span>
+        </button>
+        <button
+          className={`admin-tab ${activeTab === 'access' ? 'active' : ''}`}
+          onClick={() => setActiveTab('access')}
+        >
+          Access List
+        </button>
+      </nav>
+
+      {/* Content */}
+      <main className="admin-content">
+        {loading ? (
+          <div className="hub-loading">
+            <div className="hub-spinner"></div>
+            <p>Loading...</p>
+          </div>
+        ) : (
+          <>
+            {/* Access Requests Tab */}
+            {activeTab === 'requests' && (
+              <div className="admin-requests">
+                {requests.length === 0 ? (
+                  <div className="admin-empty">
+                    <svg viewBox="0 0 20 20" fill="currentColor" className="admin-empty-icon">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/>
+                    </svg>
+                    <p>No pending access requests</p>
+                  </div>
+                ) : (
+                  <div className="admin-requests-list">
+                    {requests.map((req) => (
+                      <div key={req.id} className="admin-request-card">
+                        <div className="admin-request-user">
+                          <span className="admin-request-username">{req.username}</span>
+                          <span className="admin-request-email">{req.userEmail}</span>
+                        </div>
+                        <div className="admin-request-app">
+                          <span className="admin-request-arrow">→</span>
+                          <span className="admin-request-appname">{req.appName}</span>
+                        </div>
+                        {req.reason && (
+                          <p className="admin-request-reason">"{req.reason}"</p>
+                        )}
+                        <div className="admin-request-actions">
+                          <span className="admin-request-date">
+                            {new Date(req.createdAt).toLocaleDateString()}
+                          </span>
+                          <button
+                            onClick={() => setReviewingRequest(req)}
+                            className="admin-btn-review"
+                          >
+                            Review
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Users Tab */}
+            {activeTab === 'users' && (
+              <div className="admin-users">
+                <div className="admin-search">
+                  <input
+                    type="text"
+                    placeholder="Search users..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="auth-input admin-search-input"
+                  />
+                </div>
+                <div className="admin-users-grid">
+                  {filteredUsers.map((user) => (
+                    <div key={user.id} className="admin-user-card">
+                      <div className="admin-user-info">
+                        <span className="admin-user-name">{user.username}</span>
+                        <span className="admin-user-email">{user.email}</span>
+                      </div>
+                      <div className="admin-user-meta">
+                        <span className={`hub-badge hub-badge-${user.role.toLowerCase()}`}>
+                          {user.role}
+                        </span>
+                        {!user.isActive && (
+                          <span className="hub-badge hub-badge-offline">Inactive</span>
+                        )}
+                      </div>
+                      <button
+                        onClick={() => setEditingUserId(user.id)}
+                        className="admin-btn-edit"
+                      >
+                        Edit
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Access List Tab */}
+            {activeTab === 'access' && (
+              <div className="admin-access">
+                <div className="admin-access-sidebar">
+                  <h3>Apps</h3>
+                  <div className="admin-access-apps">
+                    {apps.map((app) => (
+                      <button
+                        key={app.id}
+                        className={`admin-access-app ${selectedAppId === app.id ? 'active' : ''}`}
+                        onClick={() => setSelectedAppId(app.id)}
+                      >
+                        {app.name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div className="admin-access-main">
+                  {selectedAppId ? (
+                    <>
+                      <h3>Users with access to {apps.find((a) => a.id === selectedAppId)?.name}</h3>
+                      {appUsers.length === 0 ? (
+                        <p className="admin-note">No users have explicit access. Admins always have access.</p>
+                      ) : (
+                        <div className="admin-access-users">
+                          {appUsers.map((user) => (
+                            <div key={user.id} className="admin-access-user">
+                              <span className="admin-access-username">{user.username}</span>
+                              <span className="admin-access-email">{user.email}</span>
+                              <span className={`hub-badge hub-badge-${user.role.toLowerCase()}`}>
+                                {user.role}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <p className="admin-note">Select an app to view users with access.</p>
+                  )}
+                </div>
+              </div>
+            )}
+          </>
+        )}
+      </main>
+
+      {reviewingRequest && (
+        <ReviewModal
+          request={reviewingRequest}
+          onClose={() => setReviewingRequest(null)}
+          onSubmit={handleReview}
+        />
+      )}
+
+      {editingUserId && (
+        <UserEditor
+          userId={editingUserId}
+          onClose={() => setEditingUserId(null)}
+          onSave={loadData}
+        />
+      )}
     </div>
   );
 }

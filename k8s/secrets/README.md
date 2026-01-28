@@ -41,10 +41,39 @@ kubectl create secret tls korczewski-tls \
   -n korczewski-infra
 ```
 
+## External Secret Manager: HashiCorp Vault
+
+For production-grade secret management, we use **HashiCorp Vault**.
+
+### Saving Secrets to Vault
+
+1. **Deploy Vault**:
+   ```bash
+   kubectl apply -k ../infrastructure/vault
+   ```
+
+2. **Sync .env to Vault**:
+   If you have the `vault` CLI installed, use the sync script:
+   ```bash
+   ../scripts/utils/vault-sync.sh
+   ```
+
+3. **Manual Entry**:
+   ```bash
+   vault kv put secret/auth JWT_SECRET=... GOOGLE_CLIENT_ID=...
+   ```
+
+### Integrating with Kubernetes
+
+We recommend the **External Secrets Operator (ESO)** to automatically sync Vault secrets into native Kubernetes Secret objects. This allows the services to remain infrastructure-agnostic.
+
+1. Deploy ESO: `kubectl apply -k ../infrastructure/external-secrets`
+2. Create a `SecretStore` to connect ESO to Vault.
+3. Create `ExternalSecret` objects for each service.
+
 ## Security Notes
 
-1. All secret files are gitignored
-2. Never commit `.env` files or secret YAMLs
-3. Use strong, unique passwords (generate with `openssl rand -hex 32`)
-4. Rotate secrets periodically
-5. Consider using external secret managers (Vault, AWS Secrets Manager) for production
+1. All local secret files (`*.yaml`) are gitignored.
+2. Never commit `.env` files or secret YAMLs.
+3. Use strong, unique passwords.
+4. Vault secrets should be unsealed manually after a cluster restart.

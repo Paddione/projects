@@ -1,7 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './pages/Login';
 import Register from './pages/Register';
-import Apps from './pages/Apps';
+import Hub from './pages/Hub';
 import Admin from './pages/Admin';
 
 function App() {
@@ -12,7 +12,8 @@ function App() {
         <Route path="/reset-password" element={<Login />} />
         <Route path="/verify-email" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        <Route path="/apps" element={<Apps />} />
+        <Route path="/hub" element={<Hub />} />
+        <Route path="/apps" element={<Navigate to="/hub" replace />} />
         <Route path="/admin" element={<Admin />} />
         <Route path="/" element={<Navigate to="/login" replace />} />
       </Routes>

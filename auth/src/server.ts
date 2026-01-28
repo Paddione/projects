@@ -14,6 +14,7 @@ import userRoutes from './routes/user.js';
 import oauthRoutes from './routes/oauth.js';
 import appsRoutes from './routes/apps.js';
 import adminRoutes from './routes/admin.js';
+import accessRequestsRoutes from './routes/access-requests.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -128,9 +129,19 @@ app.get('/api', (_req, res) => {
       },
       admin: {
         users: 'GET /api/admin/users',
+        user: 'GET /api/admin/users/:userId',
+        updateUser: 'PATCH /api/admin/users/:userId',
+        deleteUser: 'DELETE /api/admin/users/:userId',
         apps: 'GET /api/admin/apps',
+        appUsers: 'GET /api/admin/apps/:appId/users',
         userApps: 'GET /api/admin/users/:userId/apps',
         updateUserApps: 'PUT /api/admin/users/:userId/apps',
+      },
+      accessRequests: {
+        create: 'POST /api/access-requests',
+        list: 'GET /api/access-requests',
+        adminList: 'GET /api/access-requests/admin',
+        review: 'PATCH /api/access-requests/admin/:id',
       },
       user: {
         me: 'GET /api/user/me',
@@ -153,6 +164,9 @@ app.use('/api/apps', authLimiter, appsRoutes);
 
 // Admin routes
 app.use('/api/admin', authLimiter, adminRoutes);
+
+// Access request routes
+app.use('/api/access-requests', authLimiter, accessRequestsRoutes);
 
 // User routes
 app.use('/api/user', authLimiter, userRoutes);
