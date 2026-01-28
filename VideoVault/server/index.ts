@@ -1,3 +1,4 @@
+import './env';
 import express, { type Request, Response, NextFunction } from 'express';
 import { registerRoutes } from './routes';
 import { setupVite, serveStatic, log } from './vite';
@@ -18,22 +19,6 @@ import fs from 'fs';
 
 const app = express();
 
-// Vault/Secret fallbacks for prefixed environment variables
-const fallbacks: Record<string, string> = {
-  DATABASE_URL: 'VIDEO_DATABASE_URL',
-  PORT: 'VIDEO_PORT',
-  NODE_ENV: 'VIDEO_NODE_ENV',
-  SESSION_SECRET: 'VIDEO_SESSION_SECRET',
-  TRUST_PROXY: 'VIDEO_TRUST_PROXY',
-  MEDIA_ROOT: 'VIDEO_MEDIA_ROOT',
-  PROCESSED_MEDIA_PATH: 'VIDEO_PROCESSED_MEDIA_PATH',
-};
-
-for (const [target, source] of Object.entries(fallbacks)) {
-  if (!process.env[target] && process.env[source]) {
-    process.env[target] = process.env[source];
-  }
-}
 // When behind a proxy/load balancer (e.g., Docker/NGINX), trust X-Forwarded-* for secure cookies
 if (process.env.TRUST_PROXY === '1' || process.env.NODE_ENV === 'production') {
   app.set('trust proxy', 1);
