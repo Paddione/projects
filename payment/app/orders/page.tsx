@@ -13,30 +13,32 @@ export default async function OrdersPage() {
     })
 
     return (
-        <div className="max-w-4xl mx-auto p-8">
-            <h1 className="text-3xl font-bold mb-8">Order History</h1>
+        <div className="payment-orders-container">
+            <h1 className="payment-wallet-title">Order History</h1>
 
             {orders.length === 0 ? (
-                <p>No orders yet.</p>
+                <div className="payment-alert-message">
+                    No orders recorded in your history.
+                </div>
             ) : (
-                <div className="space-y-6">
+                <div className="payment-orders-list">
                     {orders.map(order => (
-                        <div key={order.id} className="bg-white rounded shadow p-6">
-                            <div className="flex justify-between items-center mb-4 border-b pb-2">
+                        <div key={order.id} className="payment-order-card">
+                            <div className="payment-order-header">
                                 <div>
-                                    <span className="font-bold text-lg">Order #{order.id.slice(-6)}</span>
-                                    <span className="text-gray-500 text-sm ml-2">{format(order.createdAt, 'PPP p')}</span>
+                                    <span className="payment-order-id">Order #{order.id.slice(-6)}</span>
+                                    <span className="payment-order-date">{format(order.createdAt, 'PPP p')}</span>
                                 </div>
-                                <div>
-                                    <span className="bg-green-100 text-green-800 text-sm font-medium mr-2 px-2.5 py-0.5 rounded">{order.status}</span>
-                                    <span className="font-bold text-xl">{order.total.toString()} PC</span>
+                                <div className="flex items-center gap-4">
+                                    <span className="cv-badge cv-badge-success">{order.status}</span>
+                                    <span className="payment-order-total">{order.total.toString()} PC</span>
                                 </div>
                             </div>
-                            <ul className="space-y-2">
+                            <ul className="payment-order-items">
                                 {order.items.map(item => (
-                                    <li key={item.id} className="flex justify-between">
-                                        <span>{item.product.title} x {item.quantity}</span>
-                                        <span>{item.price.toString()} PC</span>
+                                    <li key={item.id} className="payment-order-item">
+                                        <span className="payment-order-item-title">{item.product.title} x {item.quantity}</span>
+                                        <span className="payment-order-item-price">{item.price.toString()} PC</span>
                                     </li>
                                 ))}
                             </ul>

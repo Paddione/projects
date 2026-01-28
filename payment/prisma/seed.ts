@@ -40,7 +40,41 @@ async function main() {
         },
     })
 
-    console.log({ admin, user })
+    // Create Products
+    const products = [
+        {
+            title: 'Gold PatrickCoin',
+            description: 'A physical representation of your digital wealth. Minted in 24k gold.',
+            price: 50.00,
+            stock: 10,
+            isService: false,
+            imageUrl: 'https://images.unsplash.com/photo-1518546305927-5a555bb7020d?auto=format&fit=crop&q=80&w=400'
+        },
+        {
+            title: 'Silver PatrickCoin Card',
+            description: 'Exclusive membership card for high-net-worth individuals.',
+            price: 25.00,
+            stock: 50,
+            isService: false,
+            imageUrl: 'https://images.unsplash.com/photo-1549421263-5ec394a5ad4c?auto=format&fit=crop&q=80&w=400'
+        },
+        {
+            title: 'Personal Financial Consulting',
+            description: '1-hour session with a financial expert to optimize your digital assets.',
+            price: 15.00,
+            stock: 100,
+            isService: true,
+            imageUrl: 'https://images.unsplash.com/photo-1454165833767-027ffea7021b?auto=format&fit=crop&q=80&w=400'
+        }
+    ]
+
+    for (const product of products) {
+        await prisma.product.create({
+            data: product
+        })
+    }
+
+    console.log({ admin, user, productCount: products.length })
 }
 
 main()

@@ -1,26 +1,55 @@
 import { test, expect } from '@playwright/test';
 
-test('home page loads', async ({ page }) => {
-    await page.goto('/');
-    // Just verify the page loads without errors
-    await expect(page).toHaveTitle(/.*/);
-    // Verify we're on the home page
-    await expect(page).toHaveURL('/');
+const AUTH_HEADERS = {
+    'x-auth-user': 'Playwright User',
+    'x-auth-email': 'playwright.user@example.com',
+    'x-auth-role': 'USER',
+    'x-auth-user-id': '123',
+    'x-user-name': 'Playwright User',
+    'x-user-email': 'playwright.user@example.com',
+    'x-user-role': 'USER',
+    'x-user-id': '123',
+};
+
+const escapeRegex = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const authServiceUrl = (process.env.AUTH_SERVICE_URL || 'https://auth.korczewski.de').replace(/\/+$/, '');
+
+const applyAuthHeaders = async (page: any) => {
+    await page.route('**/*', (route: any) => {
+        const headers = { ...route.request().headers(), ...AUTH_HEADERS };
+        route.continue({ headers });
+    });
+    await page.setExtraHTTPHeaders(AUTH_HEADERS);
+};
+
+test('home page redirects to auth when unauthenticated', async ({ request }) => {
+    const response = await request.get('/', { maxRedirects: 0 });
+    expect(response.status()).toBeGreaterThanOrEqual(300);
+    expect(response.status()).toBeLessThan(400);
+
+    const location = response.headers()['location'] || '';
+    expect(location).toMatch(new RegExp(`${escapeRegex(authServiceUrl)}/login`));
 });
 
-test('shop page is accessible', async ({ page }) => {
-    await page.goto('/shop');
-    // Verify the page loads and has some content
+test('home page loads when authenticated', async ({ page }) => {
+    await applyAuthHeaders(page);
+    await page.goto('/', { waitUntil: 'domcontentloaded' });
+    await expect(page).toHaveTitle(/.*/);
+    await expect(page.getByText('playwright.user@example.com')).toBeVisible();
+});
+
+test('shop page is accessible when authenticated', async ({ page }) => {
+    await applyAuthHeaders(page);
+    await page.goto('/shop', { waitUntil: 'domcontentloaded' });
     await page.waitForLoadState('networkidle');
-    // Check that we're on the shop page
     await expect(page).toHaveURL('/shop');
 });
 
-test('login page loads', async ({ page }) => {
-    await page.goto('/login');
-    // Verify the login page has email and password inputs
-    await expect(page.locator('input[name="email"]')).toBeVisible();
-    await expect(page.locator('input[name="password"]')).toBeVisible();
-    // Check that at least one submit button exists
-    await expect(page.locator('button[type="submit"]').first()).toBeVisible();
+test('login route redirects to auth service', async ({ request }) => {
+    const response = await request.get('/login', { maxRedirects: 0 });
+    expect(response.status()).toBeGreaterThanOrEqual(300);
+    expect(response.status()).toBeLessThan(400);
+
+    const location = response.headers()['location'] || '';
+    expect(location).toMatch(new RegExp(`${escapeRegex(authServiceUrl)}/login`));
 });

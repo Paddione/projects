@@ -1,8 +1,11 @@
 import Link from 'next/link'
-import { getCurrentUser } from '@/lib/actions/auth'
+import { headers } from 'next/headers'
+import { getAuthLoginUrlFromHeaders, getCurrentUser } from '@/lib/actions/auth'
 
 export default async function Header() {
     const user = await getCurrentUser()
+    const headersList = await headers()
+    const loginUrl = await getAuthLoginUrlFromHeaders(headersList)
 
     return (
         <header className="payment-header">
@@ -17,6 +20,7 @@ export default async function Header() {
                         <>
                             <Link href="/wallet" className="payment-nav-link">Wallet</Link>
                             <Link href="/orders" className="payment-nav-link">Orders</Link>
+                            <Link href="/appointments" className="payment-nav-link">Appointments</Link>
                             {user.role === 'ADMIN' && (
                                 <Link href="/admin" className="payment-nav-link payment-nav-admin">Admin</Link>
                             )}
@@ -26,7 +30,7 @@ export default async function Header() {
                             </a>
                         </>
                     ) : (
-                        <a href={`${process.env.AUTH_SERVICE_URL || 'https://auth.korczewski.de'}/login?redirect=${encodeURIComponent('https://shop.korczewski.de')}`} className="payment-btn-login">
+                        <a href={loginUrl} className="payment-btn-login">
                             Login
                         </a>
                     )}

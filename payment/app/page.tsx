@@ -21,7 +21,7 @@ export default function Home() {
             Browse Shop
           </Link>
           <Link
-            href="/login"
+            href="/wallet"
             className="payment-btn-secondary"
           >
             Get Started

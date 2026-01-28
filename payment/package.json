@@ -45,5 +45,8 @@
     "tsx": "^4.21.0",
     "typescript": "^5",
     "vitest": "^4.0.15"
+  },
+  "prisma": {
+    "seed": "npx tsx prisma/seed.ts"
   }
 }

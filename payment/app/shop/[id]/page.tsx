@@ -9,30 +9,36 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
     if (!product) notFound()
 
     return (
-        <div className="max-w-4xl mx-auto p-8">
-            <div className="bg-white rounded-lg shadow-lg overflow-hidden flex flex-col md:flex-row">
-                <div className="md:w-1/2">
+        <div className="payment-product-detail-container">
+            <div className="payment-product-detail-card">
+                <div className="payment-product-detail-image-section">
                     {product.imageUrl ? (
                         <>
                             {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img src={product.imageUrl} alt={product.title} className="w-full h-full object-cover" />
+                            <img src={product.imageUrl} alt={product.title} className="payment-product-detail-image" />
                         </>
                     ) : (
-                        <div className="w-full h-96 bg-gray-200 flex items-center justify-center text-gray-500">No Image</div>
+                        <div className="payment-product-detail-image-placeholder">No Image</div>
                     )}
                 </div>
-                <div className="md:w-1/2 p-8">
-                    <h1 className="text-3xl font-bold mb-4">{product.title}</h1>
-                    <div className="flex items-center mb-4">
-                        <span className="bg-green-100 text-green-800 text-sm font-medium mr-2 px-2.5 py-0.5 rounded">
-                            {product.isService ? 'Service' : 'Product'}
-                        </span>
-                        <span className="text-gray-500 text-sm">Stock: {product.stock}</span>
+                <div className="payment-product-detail-content">
+                    <div className="payment-product-detail-header">
+                        <h1 className="payment-product-detail-title">{product.title}</h1>
+                        <div className="payment-product-detail-badges">
+                            {product.isService ? (
+                                <span className="cv-badge cv-badge-purple">Service</span>
+                            ) : (
+                                <span className="cv-badge cv-badge-cyan">Product</span>
+                            )}
+                            <span className="cv-badge cv-badge-success">
+                                {product.stock} in stock
+                            </span>
+                        </div>
                     </div>
-                    <p className="text-gray-700 mb-6 text-lg leading-relaxed">{product.description}</p>
+                    <p className="payment-product-detail-description">{product.description}</p>
 
-                    <div className="border-t pt-6">
-                        <ProductPurchaseForm product={product} />
+                    <div className="payment-product-detail-purchase">
+                        <ProductPurchaseForm product={{ ...product, price: Number(product.price) }} />
                     </div>
                 </div>
             </div>

@@ -6,28 +6,28 @@ export default async function AdminLayout({
 }: {
     children: React.ReactNode;
 }) {
-    const user = await requireAdmin(); // Throws if not admin, redirects handled by ForwardAuth
+    await requireAdmin(); // Throws if not admin, redirects handled by ForwardAuth
 
     return (
-        <div className="flex min-h-screen">
-            <aside className="w-64 bg-gray-900 text-white p-6">
-                <h2 className="text-2xl font-bold mb-8 text-yellow-400">Master Control</h2>
-                <nav className="space-y-4">
-                    <Link href="/admin" className="block p-2 hover:bg-gray-800 rounded">
-                        Dashboard
+        <div className="payment-admin-layout">
+            <aside className="payment-admin-sidebar">
+                <h2 className="payment-admin-sidebar-title">Master Control</h2>
+                <nav className="payment-admin-nav">
+                    <Link href="/admin" className="payment-admin-nav-link">
+                        📊 Dashboard
                     </Link>
-                    <Link href="/admin/products" className="block p-2 hover:bg-gray-800 rounded">
-                        Products & Services
+                    <Link href="/admin/products" className="payment-admin-nav-link">
+                        📦 Products & Services
                     </Link>
-                    <Link href="/admin/users" className="block p-2 hover:bg-gray-800 rounded">
-                        User Management
+                    <Link href="/admin/users" className="payment-admin-nav-link">
+                        👥 User Management
                     </Link>
-                    <Link href="/" className="block p-2 hover:bg-gray-800 rounded text-gray-400 mt-8">
-                        Back to Public Site
+                    <Link href="/" className="payment-admin-nav-link payment-admin-nav-link-secondary">
+                        ← Back to Public Site
                     </Link>
                 </nav>
             </aside>
-            <main className="flex-1 p-8 bg-gray-100">
+            <main className="payment-admin-main">
                 {children}
             </main>
         </div>

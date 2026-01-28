@@ -2,6 +2,9 @@
 
 import { headers } from 'next/headers';
 import { db } from '@/lib/db';
+import { redirect } from 'next/navigation';
+
+const AUTH_SERVICE_URL = process.env.AUTH_SERVICE_URL || 'https://auth.korczewski.de';
 
 export type AuthUser = {
     id: string;
@@ -10,6 +13,37 @@ export type AuthUser = {
     role: 'USER' | 'ADMIN';
     authUserId?: number;
 };
+
+function buildAuthLoginUrl(redirectTo: string): string {
+    const loginUrl = new URL('/login', AUTH_SERVICE_URL);
+    loginUrl.searchParams.set('redirect', redirectTo);
+    return loginUrl.toString();
+}
+
+export async function getRequestUrlFromHeaders(headersList: Headers): Promise<string> {
+    const host = headersList.get('x-forwarded-host') || headersList.get('host');
+    const protoHeader = headersList.get('x-forwarded-proto') || headersList.get('x-forwarded-protocol');
+    const forwardedUri =
+        headersList.get('x-forwarded-uri') ||
+        headersList.get('x-original-uri') ||
+        headersList.get('next-url') ||
+        '/';
+
+    if (!host) {
+        return 'https://payment.korczewski.de';
+    }
+
+    const isLocal = host.includes('localhost') || host.startsWith('127.0.0.1');
+    const protocol = protoHeader || (isLocal ? 'http' : 'https');
+    const path = forwardedUri.startsWith('/') ? forwardedUri : `/${forwardedUri}`;
+
+    return `${protocol}://${host}${path}`;
+}
+
+export async function getAuthLoginUrlFromHeaders(headersList: Headers): Promise<string> {
+    const redirectTo = await getRequestUrlFromHeaders(headersList);
+    return buildAuthLoginUrl(redirectTo);
+}
 
 /**
  * Get the current authenticated user from ForwardAuth headers
@@ -59,18 +93,20 @@ export async function isAdmin(): Promise<boolean> {
 }
 
 /**
- * Require authentication - throws if user is not authenticated
+ * Require authentication - redirects if user is not authenticated
  */
 export async function requireAuth(): Promise<AuthUser> {
     const user = await getCurrentUser();
     if (!user) {
-        throw new Error('Authentication required');
+        const headersList = await headers();
+        const loginUrl = await getAuthLoginUrlFromHeaders(headersList);
+        redirect(loginUrl);
     }
     return user;
 }
 
 /**
- * Require admin role - throws if user is not an admin
+ * Require admin role - redirects/throws if user is not an admin
  */
 export async function requireAdmin(): Promise<AuthUser> {
     const user = await requireAuth();
