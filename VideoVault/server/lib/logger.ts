@@ -40,13 +40,13 @@ class Logger {
   private async initializeLogging() {
     try {
       await mkdir(this.logsDir, { recursive: true });
-      
+
       // Create different log streams
       const today = new Date().toISOString().split('T')[0];
-      
+
       const streams = {
         error: `error-${today}.log`,
-        warn: `warn-${today}.log`, 
+        warn: `warn-${today}.log`,
         info: `info-${today}.log`,
         debug: `debug-${today}.log`,
         combined: `combined-${today}.log`
@@ -75,34 +75,32 @@ class Logger {
 
   private writeToStream(level: string, entry: LogEntry) {
     const logLine = JSON.stringify(entry) + '\n';
-    
+
     // Write to specific level stream
     const levelStream = this.logStreams.get(level);
     levelStream?.write(logLine);
-    
+
     // Write to combined stream
     const combinedStream = this.logStreams.get('combined');
     combinedStream?.write(logLine);
-    
-    // Console output in development
-    if (process.env.NODE_ENV === 'development') {
-      const consoleMessage = `[${entry.timestamp}] ${entry.level}: ${entry.message}`;
-      
-      switch (level) {
-        case 'error':
-          console.error(consoleMessage, entry.context || '');
-          if (entry.stack) console.error(entry.stack);
-          break;
-        case 'warn':
-          console.warn(consoleMessage, entry.context || '');
-          break;
-        case 'info':
-          console.info(consoleMessage, entry.context || '');
-          break;
-        case 'debug':
-          console.debug(consoleMessage, entry.context || '');
-          break;
-      }
+
+    // Console output
+    const consoleMessage = `[${entry.timestamp}] ${entry.level}: ${entry.message}`;
+
+    switch (level) {
+      case 'error':
+        console.error(consoleMessage, entry.context || '');
+        if (entry.stack) console.error(entry.stack);
+        break;
+      case 'warn':
+        console.warn(consoleMessage, entry.context || '');
+        break;
+      case 'info':
+        console.info(consoleMessage, entry.context || '');
+        break;
+      case 'debug':
+        console.debug(consoleMessage, entry.context || '');
+        break;
     }
   }
 
@@ -200,7 +198,7 @@ class Logger {
       for (const file of files) {
         const filePath = join(this.logsDir, file);
         const stats = await fs.stat(filePath);
-        
+
         if (stats.mtime < cutoffDate) {
           await fs.unlink(filePath);
           this.info(`Cleaned up old log file: ${file}`);
