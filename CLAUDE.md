@@ -12,7 +12,9 @@ Patrick's Projects is a monorepo containing independent full-stack applications 
 | VideoVault | React, Vite, File System Access API, Express | 5100/5000 |
 | payment | Next.js 16, Prisma, NextAuth v5 | 3004 |
 | auth | Express, Passport.js, JWT/OAuth | 5500 |
+| dashboard | Express, Socket.io, Dockerode, K3s Proxy | 4242 |
 | shared-infrastructure | PostgreSQL, shared design system | 5432 |
+| Obsidian | Obsidian vault (Markdown, Dataview, Templater) | — |
 
 ## Common Commands
 
@@ -65,6 +67,12 @@ npm run test                 # Vitest tests
 npm run test:e2e             # Playwright E2E
 ```
 
+**dashboard** (from `dashboard/` directory):
+```bash
+npm run dev                  # Port 4242 (nodemon hot reload)
+npm start                    # Production server
+```
+
 ### Running Single Tests
 
 ```bash
@@ -97,6 +105,7 @@ All services connect to a single PostgreSQL instance with isolated databases:
 - `videovault_db` - VideoVault (optional persistence)
 - `payment_db` - Payment service
 - `auth_db` - Auth service
+- `webui` - Dashboard user/role management
 
 Start shared infrastructure via Kubernetes manifests in `k8s/infrastructure/`.
 
@@ -113,6 +122,29 @@ VideoVault uses the browser as primary data store:
 - localStorage for video metadata
 - File System Access API for file handles (Chromium only)
 - Session-based handles (lost on reload, rescan required)
+
+### Cluster Control Center (dashboard)
+
+Dashboard provides centralized service management with dual control modes:
+- **Docker mode**: Manages Docker Compose environments via Dockerode
+- **Kubernetes mode**: Manages K3s clusters via kubectl proxy (`K8S_PROXY_URL`)
+- Real-time status updates via Socket.io (2-second polling)
+- System metrics: CPU, RAM, Disk, GPU VRAM (nvidia-smi)
+- User administration with role-based access (admin, user, pending)
+- Namespaces: `korczewski-infra` (infrastructure), `korczewski-services` (apps)
+
+### Documentation Vault (Obsidian)
+
+The `Obsidian/` directory is an Obsidian knowledge vault serving as the high-level architecture and operations reference:
+- **Core pages**: `Home.md`, `Architecture.md`, `Services.md`, `Infrastructure.md`, `Operations.md`
+- **Service docs**: `services/{L2P,Auth,Payment,VideoVault,Dashboard}.md`
+- **Infrastructure docs**: `infrastructure/{PostgreSQL,Traefik,SMB-CSI,NFS Provisioner}.md`
+- **Assets**: 10 SVG architecture diagrams in `assets/`
+- **Plugins**: Dataview, Templater, obsidian-git
+- **Theme**: Custom Cybervault CSS (cyan/dark aesthetic)
+- **Notion mirror**: `Notion/` contains markdown exports formatted for Notion import
+
+The Obsidian vault documents Kubernetes manifest locations, environment variable mappings, deployment procedures, and service dependencies. Use service templates in `.obsidian/templates/` when adding new service documentation.
 
 ### Network Configuration
 
@@ -182,7 +214,11 @@ Each major project has its own CLAUDE.md with detailed guidance:
 - `l2p/CLAUDE.md` - Backend/frontend architecture, Socket.io patterns, test setup
 - `VideoVault/CLAUDE.md` - Client-first architecture, service patterns, test stubs
 
-Read the relevant project CLAUDE.md before making changes.
+Architecture diagrams and operational runbooks live in the Obsidian vault:
+- `Obsidian/` - High-level architecture, service docs, infrastructure docs, deployment procedures
+- `Notion/` - Notion-compatible mirror of the Obsidian vault (for team collaboration)
+
+Read the relevant project CLAUDE.md before making changes. Consult the Obsidian vault for cross-service architecture and deployment context.
 
 ## Multi-Agent Coordination
 

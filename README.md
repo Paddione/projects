@@ -12,6 +12,7 @@ A collection of independent full-stack applications sharing centralized PostgreS
 | [Auth](./auth/README.md) | Unified authentication service | Express, JWT, OAuth, PostgreSQL | 5500 |
 | Dashboard | Cluster control center | Node, Express, Socket.io | 4242 |
 | [Shared Infrastructure](./shared-infrastructure/README.md) | Centralized Postgres + shared assets | PostgreSQL, Docker | 5432 |
+| Obsidian | Architecture docs, runbooks, service guides | Obsidian, Markdown, SVG diagrams | — |
 
 ## Quick Start
 
@@ -140,7 +141,8 @@ cd payment && npm test
 │   ├── client/
 │   ├── server/
 │   └── e2e/
-├── Obsidian/                  # User guide and service docs
+├── Obsidian/                  # Architecture docs, runbooks, SVG diagrams (Obsidian vault)
+├── Notion/                    # Notion-compatible mirror of Obsidian vault
 ├── scripts/                   # Root automation scripts
 ├── AGENTS.md                  # Multi-agent coordination guidelines
 ├── CLAUDE.md                  # Claude Code guidance
