@@ -3,8 +3,8 @@ import { test, expect } from '@playwright/test';
 test.describe('VideoVault app basics', () => {
   test('shows initial empty state and directory button', async ({ page }) => {
     await page.goto('/');
-    await page.getByTestId('button-select-directory').waitFor();
-    await expect(page.getByTestId('button-select-directory')).toBeVisible();
+    await page.getByTestId('button-scan-directory').waitFor();
+    await expect(page.getByTestId('button-scan-directory')).toBeVisible();
     await expect(page.getByText('Drop Video Files Here')).toBeVisible();
   });
 

@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test';
 test.describe('VideoVault smoke', () => {
   test('loads home and shows header and sidebar', async ({ page }) => {
     await page.goto('/');
-    await page.getByRole('heading', { name: 'Video Category Manager' }).waitFor();
+    await page.getByRole('heading', { name: 'MediaVault' }).waitFor();
     await expect(page.getByTestId('button-scan-directory')).toBeVisible();
     await expect(page.getByTestId('button-clear-filters')).toBeVisible();
     await expect(page.getByTestId('input-search')).toBeVisible();
@@ -12,9 +12,15 @@ test.describe('VideoVault smoke', () => {
   test('theme toggle switches html class', async ({ page }) => {
     await page.goto('/');
     const html = page.locator('html');
-    await expect(html).toHaveClass(/light/);
+
+    // Get the initial theme (could be light or dark based on system preference)
+    const initialClass = await html.getAttribute('class');
+    const initialTheme = initialClass?.includes('dark') ? 'dark' : 'light';
+
+    // Click toggle and verify it switches
     await page.getByTestId('button-theme-toggle').click();
-    await expect(html).toHaveClass(/dark/);
+    const expectedTheme = initialTheme === 'dark' ? 'light' : 'dark';
+    await expect(html).toHaveClass(new RegExp(expectedTheme));
   });
 
   test('settings dialog opens', async ({ page }) => {

@@ -111,6 +111,12 @@ env/.env-playwright       # E2E test configuration
 | `TRUST_PROXY` | Set `true` behind Nginx/Traefik | `false` |
 | `PROCESSED_MEDIA_PATH` | Processed media path (optional) | -- |
 | `THUMBNAILS_DIR` | Thumbnail storage path (optional) | -- |
+| `MOVIES_DIR` | Movies directory for server-side processing (optional) | -- |
+| `ENABLE_MOVIE_WATCHER` | Enable automatic movie processing | `1` |
+| `MOVIE_WATCHER_INTERVAL_MS` | Polling interval for new movies | `15000` |
+| `MOVIE_WATCHER_STABILITY_MS` | File stability window before processing | `30000` |
+| `MOVIE_WATCHER_AUTO_ORGANIZE` | Auto-organize movies into folders | `1` |
+| `MOVIE_WATCHER_BACKFILL` | Backfill missing thumbnails on startup | `0` |
 
 Generate secrets:
 ```bash

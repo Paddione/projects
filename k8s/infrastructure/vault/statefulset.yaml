@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: vault
+  namespace: korczewski-infra
+spec:
+  serviceName: vault
+  replicas: 1
+  selector:
+    matchLabels:
+      app: vault
+  template:
+    metadata:
+      labels:
+        app: vault
+    spec:
+      serviceAccountName: vault
+      containers:
+        - name: vault
+          image: hashicorp/vault:1.15.2
+          args:
+            - server
+          env:
+            - name: VAULT_ADDR
+              value: "http://127.0.0.1:8200"
+            - name: VAULT_LOCAL_CONFIG
+              value: |
+                ui = true
+                listener "tcp" {
+                  address = "0.0.0.0:8200"
+                  tls_disable = 1
+                }
+                storage "file" {
+                  path = "/vault/data"
+                }
+          ports:
+            - containerPort: 8200
+              name: http
+          volumeMounts:
+            - name: vault-data
+              mountPath: /vault/data
+          securityContext:
+            capabilities:
+              add:
+                - IPC_LOCK
+  volumeClaimTemplates:
+    - metadata:
+        name: vault-data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        storageClassName: "smb-storage"
+        resources:
+          requests:
+            storage: 1Gi

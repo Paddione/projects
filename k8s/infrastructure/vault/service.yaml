@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: vault
+  namespace: korczewski-infra
+spec:
+  selector:
+    app: vault
+  ports:
+    - protocol: TCP
+      port: 8200
+      targetPort: 8200
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: vault-ui
+  namespace: korczewski-infra
+spec:
+  type: ClusterIP
+  selector:
+    app: vault
+  ports:
+    - protocol: TCP
+      port: 8200
+      targetPort: 8200
