@@ -73,6 +73,27 @@ spec:
               value: "https://videovault.korczewski.de,https://video.korczewski.de"
             - name: TRUST_PROXY
               value: "true"
+            # Map VIDEO_-prefixed secret keys to unprefixed names the app expects
+            - name: SESSION_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: videovault-credentials
+                  key: VIDEO_SESSION_SECRET
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: videovault-credentials
+                  key: VIDEO_DATABASE_URL
+            - name: ADMIN_USER
+              valueFrom:
+                secretKeyRef:
+                  name: videovault-credentials
+                  key: VIDEO_ADMIN_USER
+            - name: ADMIN_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: videovault-credentials
+                  key: VIDEO_ADMIN_PASS
           resources:
             requests:
               memory: "512Mi"
