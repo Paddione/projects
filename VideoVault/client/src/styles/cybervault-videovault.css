@@ -584,9 +584,122 @@
     display: none;
   }
 
+  .videovault-header {
+    padding: var(--cv-space-4) var(--cv-space-4);
+  }
+
+  .videovault-main {
+    padding: var(--cv-space-4);
+  }
+
   .bulk-actions-bar {
     flex-wrap: wrap;
     bottom: var(--cv-space-4);
+    left: var(--cv-space-4);
+    right: var(--cv-space-4);
+    transform: none;
+    border-radius: var(--cv-radius-lg);
+    padding: var(--cv-space-3) var(--cv-space-4);
+    gap: var(--cv-space-3);
+    padding-bottom: calc(var(--cv-space-4) + env(safe-area-inset-bottom, 0px));
+  }
+
+  /* Player modal: fullscreen on mobile */
+  .player-modal {
+    padding: 0;
+  }
+
+  .player-container {
+    max-width: 100%;
+    border-radius: 0;
+    border: none;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .player-video {
+    flex: 1;
+    aspect-ratio: unset;
+  }
+
+  .player-controls {
+    padding: var(--cv-space-3);
+    padding-bottom: calc(var(--cv-space-3) + env(safe-area-inset-bottom, 0px));
+  }
+
+  .player-title {
+    font-size: var(--cv-text-base);
+  }
+
+  .view-controls {
+    flex-wrap: wrap;
+    gap: var(--cv-space-3);
+    padding: var(--cv-space-3);
+  }
+
+  .processing-status {
+    left: var(--cv-space-4);
+    right: var(--cv-space-4);
+    bottom: var(--cv-space-4);
+  }
+}
+
+@media (max-width: 640px) {
+  .videovault-stats {
+    display: none;
+  }
+
+  .videovault-logo {
+    font-size: var(--cv-text-xl);
+  }
+
+  .video-grid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: var(--cv-space-3);
+  }
+
+  .videovault-main {
+    padding: var(--cv-space-3);
+  }
+
+  .author-works {
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  }
+
+  .media-type-tabs {
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 480px) {
+  .videovault-header {
+    padding: var(--cv-space-3);
+  }
+
+  .video-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: var(--cv-space-2);
+  }
+
+  .video-info {
+    padding: var(--cv-space-3);
+  }
+
+  .video-title {
+    font-size: var(--cv-text-sm);
+    -webkit-line-clamp: 1;
+  }
+
+  .bulk-actions-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--cv-space-2);
+  }
+
+  .bulk-action-btn {
+    width: 100%;
+    text-align: center;
   }
 }
 

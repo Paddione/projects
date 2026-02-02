@@ -44,6 +44,16 @@ declare const styles: {
   readonly error: string
   readonly success: string
   readonly warning: string
+  readonly mobileMenuToggle: string
+  readonly hamburger: string
+  readonly hamburgerOpen: string
+  readonly headerNav: string
+  readonly headerNavOpen: string
+  readonly headerNavLinks: string
+  readonly headerControls: string
+  readonly volumeControls: string
+  readonly volumeSlider: string
+  readonly mobileBackdrop: string
 }
 
 export default styles 

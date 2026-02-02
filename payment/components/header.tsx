@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { headers } from 'next/headers'
 import { getAuthLoginUrlFromHeaders, getCurrentUser } from '@/lib/actions/auth'
+import MobileNav from './mobile-nav'
 
 export default async function Header() {
     const user = await getCurrentUser()
@@ -14,7 +15,7 @@ export default async function Header() {
                     PatrickCoin
                 </Link>
 
-                <nav className="payment-nav">
+                <MobileNav>
                     <Link href="/shop" className="payment-nav-link">Shop</Link>
                     {user ? (
                         <>
@@ -34,7 +35,7 @@ export default async function Header() {
                             Login
                         </a>
                     )}
-                </nav>
+                </MobileNav>
             </div>
         </header>
     )

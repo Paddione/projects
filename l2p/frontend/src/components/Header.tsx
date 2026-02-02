@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { apiService } from '../services/apiService'
 import { Icon } from './Icon'
@@ -8,6 +8,7 @@ import { useAudio } from '../hooks/useAudio'
 export const Header: React.FC = () => {
   const currentUser = apiService.getCurrentUser()
   const isAdmin = !!currentUser?.isAdmin
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const {
     masterVolume,
     setMasterVolume,
@@ -18,6 +19,25 @@ export const Header: React.FC = () => {
     handleMenuCancel,
     handleVolumeChange
   } = useAudio()
+
+  // Close menu on resize to desktop
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth > 640) setMobileMenuOpen(false)
+    }
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
+
+  // Prevent body scroll when menu is open
+  useEffect(() => {
+    if (mobileMenuOpen) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
+    }
+    return () => { document.body.style.overflow = '' }
+  }, [mobileMenuOpen])
 
   const handleLogout = async () => {
     const reloadPage = () => {
@@ -40,6 +60,8 @@ export const Header: React.FC = () => {
     }
   }
 
+  const closeMenu = () => setMobileMenuOpen(false)
+
   return (
     <header className={styles.header} role="banner">
       <div className={styles.headerContent}>
@@ -47,67 +69,84 @@ export const Header: React.FC = () => {
           Learn2Play Quiz
         </a>
 
-        <nav className={`${styles.flex} ${styles.gapMd} ${styles.itemsCenter}`} role="navigation">
-          <a href="/" className={`${styles.button} ${styles.buttonOutline}`} data-testid="home-page" onClick={handleMenuSelect}>
-            Home
-          </a>
-          <a href="/profile" className={`${styles.button} ${styles.buttonOutline}`} data-testid="profile-link" onClick={handleMenuSelect}>
-            Profile
-          </a>
-          <a href="/question-sets" className={`${styles.button} ${styles.buttonOutline}`} onClick={handleMenuSelect}>
-            Question Sets
-          </a>
-          {isAdmin && (
-            <Link to="/admin" className={`${styles.button} ${styles.buttonOutline}`} data-testid="admin-dashboard-link" onClick={handleMenuSelect}>
-              Admin
-            </Link>
-          )}
-        </nav>
+        <button
+          className={styles.mobileMenuToggle}
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
+          aria-expanded={mobileMenuOpen}
+        >
+          <span className={`${styles.hamburger} ${mobileMenuOpen ? styles.hamburgerOpen : ''}`}>
+            <span />
+            <span />
+            <span />
+          </span>
+        </button>
 
-        <div className={`${styles.flex} ${styles.gapMd} ${styles.itemsCenter}`} data-testid="user-menu">
-          {/* Volume/Mute Controls */}
-          <div className={`${styles.flex} ${styles.itemsCenter} ${styles.gapSm}`} style={{ minWidth: 180 }}>
+        <div className={`${styles.headerNav} ${mobileMenuOpen ? styles.headerNavOpen : ''}`}>
+          <nav className={`${styles.flex} ${styles.gapMd} ${styles.itemsCenter} ${styles.headerNavLinks}`} role="navigation">
+            <a href="/" className={`${styles.button} ${styles.buttonOutline}`} data-testid="home-page" onClick={() => { handleMenuSelect(); closeMenu() }}>
+              Home
+            </a>
+            <a href="/profile" className={`${styles.button} ${styles.buttonOutline}`} data-testid="profile-link" onClick={() => { handleMenuSelect(); closeMenu() }}>
+              Profile
+            </a>
+            <a href="/question-sets" className={`${styles.button} ${styles.buttonOutline}`} onClick={() => { handleMenuSelect(); closeMenu() }}>
+              Question Sets
+            </a>
+            {isAdmin && (
+              <Link to="/admin" className={`${styles.button} ${styles.buttonOutline}`} data-testid="admin-dashboard-link" onClick={() => { handleMenuSelect(); closeMenu() }}>
+                Admin
+              </Link>
+            )}
+          </nav>
+
+          <div className={`${styles.flex} ${styles.gapMd} ${styles.itemsCenter} ${styles.headerControls}`} data-testid="user-menu">
+            {/* Volume/Mute Controls */}
+            <div className={`${styles.flex} ${styles.itemsCenter} ${styles.gapSm} ${styles.volumeControls}`}>
+              <button
+                onClick={() => {
+                  setIsMuted(!isMuted);
+                  if (!isMuted) {
+                    handleMenuCancel();
+                  } else {
+                    handleMenuConfirm();
+                  }
+                }}
+                className={`${styles.button} ${styles.buttonOutline}`}
+                title={isMuted ? 'Unmute' : 'Mute'}
+                data-testid="mute-toggle"
+              >
+                {isMuted ? '🔇' : '🔊'}
+              </button>
+              <input
+                type="range"
+                min={0}
+                max={1}
+                step={0.1}
+                value={isMuted ? 0 : masterVolume}
+                onChange={(e) => { const v = parseFloat(e.target.value); setMasterVolume(v); if (isMuted && v > 0) setIsMuted(false); handleVolumeChange() }}
+                onMouseUp={handleMenuConfirm}
+                onTouchEnd={handleMenuConfirm}
+                aria-label="Master volume"
+                className={styles.volumeSlider}
+              />
+            </div>
+
+            {/* Logout Button */}
             <button
-              onClick={() => {
-                setIsMuted(!isMuted);
-                if (!isMuted) {
-                  handleMenuCancel();
-                } else {
-                  handleMenuConfirm();
-                }
-              }}
+              onClick={handleLogout}
               className={`${styles.button} ${styles.buttonOutline}`}
-              title={isMuted ? 'Unmute' : 'Mute'}
-              data-testid="mute-toggle"
+              title="Logout"
+              data-testid="logout-button"
+              onClickCapture={handleMenuCancel}
             >
-              {isMuted ? '🔇' : '🔊'}
+              <Icon name="game-ui/lobby" size={20} alt="Logout" />
             </button>
-            <input
-              type="range"
-              min={0}
-              max={1}
-              step={0.1}
-              value={isMuted ? 0 : masterVolume}
-              onChange={(e) => { const v = parseFloat(e.target.value); setMasterVolume(v); if (isMuted && v > 0) setIsMuted(false); handleVolumeChange() }}
-              onMouseUp={handleMenuConfirm}
-              onTouchEnd={handleMenuConfirm}
-              aria-label="Master volume"
-              style={{ width: 100 }}
-            />
           </div>
-
-          {/* Logout Button */}
-          <button
-            onClick={handleLogout}
-            className={`${styles.button} ${styles.buttonOutline}`}
-            title="Logout"
-            data-testid="logout-button"
-            onClickCapture={handleMenuCancel}
-          >
-            <Icon name="game-ui/lobby" size={20} alt="Logout" />
-          </button>
         </div>
+
+        {mobileMenuOpen && <div className={styles.mobileBackdrop} onClick={closeMenu} />}
       </div>
     </header>
   )
-} 
+}

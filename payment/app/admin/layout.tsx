@@ -1,5 +1,6 @@
 import { requireAdmin } from "@/lib/actions/auth";
 import Link from "next/link";
+import AdminSidebar from "@/components/admin-sidebar";
 
 export default async function AdminLayout({
     children,
@@ -10,7 +11,7 @@ export default async function AdminLayout({
 
     return (
         <div className="payment-admin-layout">
-            <aside className="payment-admin-sidebar">
+            <AdminSidebar>
                 <h2 className="payment-admin-sidebar-title">Master Control</h2>
                 <nav className="payment-admin-nav">
                     <Link href="/admin" className="payment-admin-nav-link">
@@ -26,7 +27,7 @@ export default async function AdminLayout({
                         ← Back to Public Site
                     </Link>
                 </nav>
-            </aside>
+            </AdminSidebar>
             <main className="payment-admin-main">
                 {children}
             </main>
