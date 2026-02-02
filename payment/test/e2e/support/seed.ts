@@ -68,3 +68,42 @@ export async function cleanupSeedProducts() {
         })
     })
 }
+
+export async function cleanupAll() {
+    return withClient(async (prisma) => {
+        // Order of deletion matters for foreign key constraints
+        await prisma.transaction.deleteMany({});
+        await prisma.orderItem.deleteMany({});
+        await prisma.order.deleteMany({});
+        await prisma.booking.deleteMany({});
+        await prisma.wallet.deleteMany({});
+        await prisma.product.deleteMany({});
+        await prisma.user.deleteMany({});
+    });
+}
+
+export async function seedDefaultData() {
+    return withClient(async (prisma) => {
+        await prisma.product.createMany({
+            data: [
+                {
+                    title: 'Cyber Deck',
+                    description: 'High-end hacking rig',
+                    price: 1500,
+                    stock: 5,
+                    isService: false,
+                    imageUrl: '/placeholder-deck.jpg'
+                },
+                {
+                    title: 'Neural Link Installation',
+                    description: 'Full sensory integration',
+                    price: 2500,
+                    stock: 10,
+                    isService: true,
+                    imageUrl: '/placeholder-neural.jpg'
+                }
+            ]
+        });
+    });
+}
+

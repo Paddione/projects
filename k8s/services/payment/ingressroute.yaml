@@ -14,6 +14,13 @@ metadata:
     app.kubernetes.io/component: payment
 spec:
   routes:
+    # Route for static assets (no auth required)
+    - match: (Host(`shop.korczewski.de`) || Host(`payment.korczewski.de`)) && (PathPrefix(`/_next`) || PathPrefix(`/favicon.ico`) || PathPrefix(`/static`))
+      kind: Rule
+      services:
+        - name: payment
+          port: 3000
+    # Route for everything else (requires auth)
     - match: Host(`shop.korczewski.de`) || Host(`payment.korczewski.de`)
       kind: Rule
       services:

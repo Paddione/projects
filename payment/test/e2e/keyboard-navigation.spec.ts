@@ -11,13 +11,21 @@ const AUTH_HEADERS = {
   'x-user-id': '123',
 };
 
+import { cleanupAll, seedDefaultData } from './support/seed';
+
 test.use({ extraHTTPHeaders: AUTH_HEADERS });
 
 test.beforeEach(async ({ page }) => {
+  await cleanupAll();
+  await seedDefaultData();
   await page.route('**/*', (route) => {
     const headers = { ...route.request().headers(), ...AUTH_HEADERS };
     route.continue({ headers });
   });
+});
+
+test.afterEach(async () => {
+  await cleanupAll();
 });
 
 /**

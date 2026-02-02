@@ -85,13 +85,14 @@ while IFS='=' read -r key value || [ -n "$key" ]; do
     value=$(echo "$value" | sed -e 's/^"//' -e 's/"$//' -e "s/^'//" -e "s/'$//")
     
     entry="$key=$value"
-    
+
     if [[ "$key" =~ ^POSTGRES_ ]] || [[ "$key" =~ _DB_PASSWORD$ ]]; then
         POSTGRES+=("$entry")
     elif [[ "$key" =~ ^AUTH_ ]] || [[ "$key" =~ ^GOOGLE_ ]] || [[ "$key" =~ ^SMTP_ ]]; then
         AUTH+=("$entry")
     elif [[ "$key" =~ ^L2P_ ]]; then
-        L2P+=("$entry")
+        stripped="${key#L2P_}"
+        L2P+=("$stripped=$value")
     elif [[ "$key" =~ ^PAYMENT_ ]] || [[ "$key" =~ ^STRIPE_ ]] || [[ "$key" =~ ^NEXT_PUBLIC_STRIPE_ ]]; then
         PAYMENT+=("$entry")
     elif [[ "$key" =~ ^VIDEO_ ]] || [[ "$key" =~ ^VIDEOVAULT_ ]]; then

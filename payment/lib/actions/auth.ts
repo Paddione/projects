@@ -3,6 +3,7 @@
 import { headers } from 'next/headers';
 import { db } from '@/lib/db';
 import { redirect } from 'next/navigation';
+import { cache } from 'react';
 
 const AUTH_SERVICE_URL = process.env.AUTH_SERVICE_URL || 'https://auth.korczewski.de';
 
@@ -47,9 +48,9 @@ export async function getAuthLoginUrlFromHeaders(headersList: Headers): Promise<
 
 /**
  * Get the current authenticated user from ForwardAuth headers
- * This replaces NextAuth.js session management
+ * Wrap in React cache to prevent multiple syncs during the same request
  */
-export async function getCurrentUser(): Promise<AuthUser | null> {
+export const getCurrentUser = cache(async (): Promise<AuthUser | null> => {
     const headersList = await headers();
 
     const authEmail = headersList.get('x-user-email');
@@ -61,28 +62,49 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
         return null;
     }
 
-    // Sync user to local database
-    const user = await db.user.upsert({
-        where: { email: authEmail },
-        update: {
-            name: authName || null,
-            role: authRole === 'ADMIN' ? 'ADMIN' : 'USER',
-        },
-        create: {
-            email: authEmail,
-            name: authName || null,
-            role: authRole === 'ADMIN' ? 'ADMIN' : 'USER',
-        },
-    });
+    try {
+        // Sync user to local database
+        const user = await db.user.upsert({
+            where: { email: authEmail },
+            update: {
+                name: authName || null,
+                role: authRole === 'ADMIN' ? 'ADMIN' : 'USER',
+            },
+            create: {
+                email: authEmail,
+                name: authName || null,
+                role: authRole === 'ADMIN' ? 'ADMIN' : 'USER',
+            },
+        });
 
-    return {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        role: user.role,
-        authUserId: authUserId ? parseInt(authUserId) : undefined,
-    };
-}
+        // Ensure wallet exists
+        // Use a separate try-catch because this might fail if another call just created it
+        try {
+            await db.wallet.upsert({
+                where: { userId: user.id },
+                update: {},
+                create: {
+                    userId: user.id,
+                    balance: 0,
+                },
+            });
+        } catch (walletError) {
+            // Log but continue - another process might have created it
+            console.log('Wallet sync note (likely race condition handled):', walletError instanceof Error ? walletError.message : walletError);
+        }
+
+        return {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            role: user.role,
+            authUserId: authUserId ? parseInt(authUserId) : undefined,
+        };
+    } catch (error) {
+        console.error('User sync error:', error);
+        return null;
+    }
+});
 
 /**
  * Check if the current user is an admin

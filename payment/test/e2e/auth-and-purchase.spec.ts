@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { getSeedProductId } from './support/seed';
+import { ensureProductSeed, cleanupAll, seedDefaultData } from './support/seed';
 
 const authServiceUrl = (process.env.AUTH_SERVICE_URL || 'https://auth.korczewski.de').replace(/\/+$/, '');
 
@@ -16,15 +16,18 @@ const AUTH_HEADERS = {
 
 const escapeRegex = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
-const applyAuthHeaders = async (page: any) => {
-    await page.route('**/*', (route: any) => {
-        const headers = { ...route.request().headers(), ...AUTH_HEADERS };
-        route.continue({ headers });
+const applyAuthHeaders = async (page: import('@playwright/test').Page, role = 'USER') => {
+    const headers = {
+        ...AUTH_HEADERS,
+        'x-auth-role': role,
+        'x-user-role': role,
+    };
+    await page.route('**/*', (route: import('@playwright/test').Route) => {
+        const h = { ...route.request().headers(), ...headers };
+        route.continue({ headers: h });
     });
-    await page.setExtraHTTPHeaders(AUTH_HEADERS);
+    await page.setExtraHTTPHeaders(headers);
 };
-
-let seededProductId: string | null = null;
 
 const getRedirectTarget = (url: string): string | null => {
     try {
@@ -35,6 +38,14 @@ const getRedirectTarget = (url: string): string | null => {
 };
 
 test.describe('Payment registration and purchasing flows', () => {
+    test.beforeEach(async () => {
+        await cleanupAll();
+        await seedDefaultData();
+    });
+
+    test.afterEach(async () => {
+        await cleanupAll();
+    });
 
     test('redirects unauthenticated users to auth service login', async ({ request }) => {
         const response = await request.get('/orders', { maxRedirects: 0 });
@@ -56,29 +67,20 @@ test.describe('Payment registration and purchasing flows', () => {
     });
 
     test('attempts a purchase from the shop', async ({ page }) => {
+        const product = await ensureProductSeed();
+        const seededProductId = product.id;
+
         await applyAuthHeaders(page);
-        await page.goto('/shop', { waitUntil: 'domcontentloaded' });
+        await page.goto(`/shop/${seededProductId}`, { waitUntil: 'networkidle' });
 
-        if (!seededProductId) {
-            seededProductId = await getSeedProductId();
-        }
-
-        expect(seededProductId).toBeTruthy();
-        await page.goto(`/shop/${seededProductId}`, { waitUntil: 'domcontentloaded' });
-
-        const bookingInput = page.locator('input[type="datetime-local"]');
-        if (await bookingInput.isVisible()) {
-            const bookingDate = new Date();
-            bookingDate.setDate(bookingDate.getDate() + 1);
-            bookingDate.setHours(10, 0, 0, 0);
-            await bookingInput.fill(bookingDate.toISOString().slice(0, 16));
-        }
+        // Ensure the product page has actually loaded
+        await expect(page.getByRole('heading', { name: product.title })).toBeVisible({ timeout: 10000 });
 
         const purchaseButton = page.getByRole('button', { name: /purchase for/i });
-        await purchaseButton.waitFor({ state: 'visible' });
+        await expect(purchaseButton).toBeVisible({ timeout: 10000 });
         await purchaseButton.click();
 
-        const errorMessage = page.getByText(/insufficient patrickcoins|out of stock|booking time required|please select a booking time|wallet|not found/i);
+        const errorMessage = page.getByText(/insufficient patrickcoins|out of stock|booking time required|please select a booking time|wallet|not found/i).first();
 
         let redirected = false;
         try {
