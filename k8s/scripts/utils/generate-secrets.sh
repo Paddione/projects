@@ -182,10 +182,10 @@ metadata:
     app: videovault
 type: Opaque
 stringData:
-  DATABASE_URL: "${VIDEOVAULT_DB_URL}"
-  SESSION_SECRET: "$(get_env VIDEO_SESSION_SECRET)"
-  ADMIN_USER: "$(get_env VIDEO_ADMIN_USER admin)"
-  ADMIN_PASS: "$(get_env VIDEO_ADMIN_PASS)"
+  VIDEO_DATABASE_URL: "${VIDEOVAULT_DB_URL}"
+  VIDEO_SESSION_SECRET: "$(get_env VIDEO_SESSION_SECRET)"
+  VIDEO_ADMIN_USER: "$(get_env VIDEO_ADMIN_USER admin)"
+  VIDEO_ADMIN_PASS: "$(get_env VIDEO_ADMIN_PASS)"
 EOF
 log_info "Created videovault-secret.yaml"
 

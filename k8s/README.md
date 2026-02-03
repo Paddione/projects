@@ -8,7 +8,6 @@ This directory contains everything needed to deploy the full Korczewski stack to
 
 - **PostgreSQL** - Centralized database with isolated databases per service
 - **Traefik** - Ingress controller with TLS and middleware
-- **Dashboard** - Cluster control center (HTTP + WebSocket)
 - **Auth Service** - JWT authentication and OAuth
 - **L2P** - Multiplayer quiz platform (frontend + backend)
 - **Payment** - Next.js payment platform with Stripe
@@ -29,7 +28,7 @@ This directory contains everything needed to deploy the full Korczewski stack to
 ./scripts/deploy/deploy-all.sh
 
 # 4. Add hosts entries
-echo '127.0.0.1 l2p.korczewski.de auth.korczewski.de payment.korczewski.de shop.korczewski.de videovault.korczewski.de video.korczewski.de dashboard.korczewski.de traefik.korczewski.de' | sudo tee -a /etc/hosts
+echo '127.0.0.1 l2p.korczewski.de auth.korczewski.de payment.korczewski.de shop.korczewski.de videovault.korczewski.de video.korczewski.de traefik.korczewski.de' | sudo tee -a /etc/hosts
 ```
 
 ### Production (Multi-Node k3s)
@@ -51,9 +50,8 @@ sudo ./scripts/storage/setup-nfs-server.sh
 # Optional: On workers:
 sudo ./scripts/storage/setup-nfs-client.sh <MASTER_IP>
 
-# Optional: Update NFS provisioner config:
-# Edit infrastructure/nfs-provisioner/deployment.yaml
-# Replace REPLACE_WITH_NFS_SERVER_IP with actual IP
+# Optional: Update NFS provisioner config if IP changed:
+# Edit infrastructure/nfs-provisioner/deployment.yaml (currently 10.10.0.3)
 
 # Deploy:
 ./scripts/deploy/deploy-all.sh
@@ -76,7 +74,6 @@ k8s/
 │   └── smb-csi/          # SMB/CIFS storage class
 ├── services/             # Application services (see services/README.md)
 │   ├── auth/             # Auth service manifests
-│   ├── dashboard/        # Kubernetes dashboard
 │   ├── l2p-backend/      # L2P backend manifests
 │   ├── l2p-frontend/     # L2P frontend manifests
 │   ├── payment/          # Payment service manifests
@@ -109,11 +106,6 @@ skaffold run
 skaffold run --profile=prod
 ```
 
-Note: The dashboard is not part of the Skaffold profiles. Apply it manually:
-```bash
-kubectl apply -k services/dashboard
-```
-
 ### Manual Deployment
 
 ```bash
@@ -124,7 +116,6 @@ kubectl apply -k infrastructure/smb-csi
 ./scripts/deploy/deploy-auth.sh
 ./scripts/deploy/deploy-l2p.sh
 ./scripts/deploy/deploy-payment.sh
-kubectl apply -k services/dashboard
 ./scripts/deploy/deploy-videovault.sh
 ```
 
@@ -142,8 +133,7 @@ Services must be deployed in this order due to dependencies:
 8. **L2P Backend** - Depends on PostgreSQL, Auth
 9. **L2P Frontend** - Depends on Backend
 10. **Payment** - Depends on PostgreSQL, Auth
-11. **Dashboard** - Depends on Auth, Traefik
-12. **VideoVault** - Depends on PostgreSQL, SMB
+11. **VideoVault** - Depends on PostgreSQL, SMB
 
 ## Configuration
 
@@ -238,12 +228,10 @@ Generate `smb-secret.yaml` with `SMB_USER` and `SMB_PASSWORD` in `.env`.
 
 ### NFS Configuration
 
-Before deploying NFS provisioner, update the ConfigMap:
+NFS provisioner configuration (currently set to `10.10.0.3`):
 ```yaml
 # infrastructure/nfs-provisioner/deployment.yaml
-data:
-  nfs_server: "192.168.1.100"  # Your NFS server IP
-  nfs_path: "/srv/nfs/k8s-data"
+# Update NFS_SERVER and NFS_PATH env vars if your NFS server differs
 ```
 
 ## Validation
@@ -326,31 +314,22 @@ kubectl logs -l app=nfs-subdir-external-provisioner -n kube-system
                  │   (LoadBalancer)│
                  └────────┬────────┘
                           │
-       ┌──────────────────┼──────────────────┐
-       │                  │                  │
-┌──────▼──────┐   ┌──────▼──────┐   ┌──────▼──────┐
-│    Auth     │   │     L2P     │   │  Payment    │
-│  :5500      │   │ FE:80 BE:3001│   │   :3000     │
-└──────┬──────┘   └──────┬──────┘   └──────┬──────┘
-       │                 │                 │
-       └───────┬─────────┼─────────┬───────┘
-               │         │         │
-        ┌──────▼──────┐   │   ┌────▼───────┐
-        │ VideoVault  │   │   │ Dashboard  │
-        │   :5000     │   │   │   :4242    │
-        └──────┬──────┘   │   └────────────┘
-               │          │
-               └──────────┼──────────┐
-                          │          │
-                 ┌────────▼───────┐  │
-                 │  PostgreSQL    │  │
-                 │    :5432       │  │
-                 │  (StatefulSet) │  │
-                 └────────┬───────┘  │
-                          │          │
-                 ┌────────▼───────┐  │
-                 │   SMB Storage  │  │
-                 └────────────────┘  │
+       ┌──────────┬───────┼───────┬──────────┐
+       │          │       │       │          │
+┌──────▼───┐ ┌───▼────┐ ┌▼────┐ ┌▼───────┐ ┌▼──────────┐
+│   Auth   │ │  L2P   │ │ L2P │ │Payment │ │VideoVault │
+│  :5500   │ │Backend │ │ FE  │ │ :3000  │ │  :5000    │
+└──────┬───┘ │ :3001  │ │ :80 │ └───┬────┘ └─────┬─────┘
+       │     └───┬────┘ └─────┘     │            │
+       │         │                   │            │
+       └─────────┼───────────────────┘            │
+                 │                                │
+        ┌────────▼───────┐                ┌───────▼──────┐
+        │  PostgreSQL    │                │ SMB Storage  │
+        │    :5432       │                │ (movies,     │
+        │  (StatefulSet) │                │  audiobooks, │
+        └────────────────┘                │  ebooks)     │
+                                          └──────────────┘
 ```
 
 ## Services
@@ -358,7 +337,6 @@ kubectl logs -l app=nfs-subdir-external-provisioner -n kube-system
 | Service | Port | Health Endpoint | Domain |
 |---------|------|-----------------|--------|
 | Auth | 5500 | /health | auth.korczewski.de |
-| Dashboard | 4242 | /health | dashboard.korczewski.de |
 | L2P Backend | 3001 | /api/health | l2p.korczewski.de/api |
 | L2P Frontend | 80 | / | l2p.korczewski.de |
 | Payment | 3000 | / | payment.korczewski.de, shop.korczewski.de |

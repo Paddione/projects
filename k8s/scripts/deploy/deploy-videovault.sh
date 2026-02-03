@@ -18,17 +18,15 @@ log_warn() { echo -e "${YELLOW}[WARN]${NC} $1"; }
 echo "Deploying VideoVault Service..."
 
 # Apply manifests
-kubectl apply -f "$K8S_DIR/services/videovault/"
+kubectl apply -k "$K8S_DIR/services/videovault/"
 
-# Wait for PVCs to be bound (may take time for NFS provisioning)
+# Wait for PVCs to be bound (may take time for SMB/NFS provisioning)
 log_info "Waiting for PVCs to be bound..."
-kubectl wait --for=jsonpath='{.status.phase}'=Bound pvc/videovault-media \
-    -n korczewski-services --timeout=120s 2>/dev/null || \
-    log_warn "PVC videovault-media not bound yet (may need NFS provisioner)"
-
-kubectl wait --for=jsonpath='{.status.phase}'=Bound pvc/videovault-thumbnails \
-    -n korczewski-services --timeout=120s 2>/dev/null || \
-    log_warn "PVC videovault-thumbnails not bound yet"
+for pvc in videovault-media videovault-thumbnails videovault-movies videovault-audiobooks videovault-ebooks; do
+    kubectl wait --for=jsonpath='{.status.phase}'=Bound "pvc/$pvc" \
+        -n korczewski-services --timeout=120s 2>/dev/null || \
+        log_warn "PVC $pvc not bound yet (may need SMB-CSI or NFS provisioner)"
+done
 
 # Wait for deployment
 log_info "Waiting for VideoVault service to be ready..."

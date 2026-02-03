@@ -10,7 +10,6 @@ A collection of independent full-stack applications sharing centralized PostgreS
 | [VideoVault](./VideoVault/README.md) | Client-first video management | React, Vite, File System Access API | 5100 (dev), 5000 (k8s) |
 | [Payment](./payment/README.md) | Payment platform with Stripe | Next.js 16, Prisma, NextAuth v5 | 3004 |
 | [Auth](./auth/README.md) | Unified authentication service | Express, JWT, OAuth, PostgreSQL | 5500 |
-| Dashboard | Cluster control center | Node, Express, Socket.io | 4242 |
 | [Shared Infrastructure](./shared-infrastructure/README.md) | Centralized Postgres + shared assets | PostgreSQL, Docker | 5432 |
 | Obsidian | Architecture docs, runbooks, service guides | Obsidian, Markdown, SVG diagrams | — |
 
@@ -86,14 +85,31 @@ npm run validate:env:prod
 # Create local k3d cluster
 ./k8s/scripts/cluster/k3d-create.sh
 
-# Generate secrets
+# Generate secrets from root .env
 ./k8s/scripts/utils/generate-secrets.sh
 
-# Deploy everything (Traefik ingress + services)
+# Deploy everything (namespaces → secrets → infra → services)
 ./k8s/scripts/deploy/deploy-all.sh
 
 # Validate cluster health
 ./k8s/scripts/utils/validate-cluster.sh
+```
+
+Individual service deployment:
+```bash
+./k8s/scripts/deploy/deploy-postgres.sh     # PostgreSQL
+./k8s/scripts/deploy/deploy-traefik.sh      # Traefik ingress
+./k8s/scripts/deploy/deploy-nfs.sh          # NFS provisioner
+./k8s/scripts/deploy/deploy-auth.sh         # Auth service
+./k8s/scripts/deploy/deploy-l2p.sh          # L2P backend + frontend
+./k8s/scripts/deploy/deploy-payment.sh      # Payment service
+./k8s/scripts/deploy/deploy-videovault.sh   # VideoVault
+```
+
+Smart redeployment of only changed services:
+```bash
+./k8s/scripts/deploy/deploy-changed.sh              # Auto-detect and redeploy
+./k8s/scripts/deploy/deploy-changed.sh --dry-run     # Preview what would deploy
 ```
 
 Each service has exactly one production environment and one development environment. All deployments follow patterns defined in the k8s manifests.
@@ -129,7 +145,6 @@ cd payment && npm test
 ```
 .
 ├── auth/                      # Auth service
-├── dashboard/                 # Dashboard UI + server
 ├── k8s/                       # Kubernetes manifests and scripts
 ├── l2p/                       # Learn2Play quiz platform
 │   ├── frontend/
@@ -193,7 +208,6 @@ tar -czf env-backup-$(date +%Y%m%d).tar.gz \
 
 ## Production URLs
 
-- **Dashboard**: https://dashboard.korczewski.de
 - **Auth**: https://auth.korczewski.de
 - **L2P**: https://l2p.korczewski.de
 - **Payment**: https://payment.korczewski.de (alias: https://shop.korczewski.de)

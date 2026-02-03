@@ -23,7 +23,7 @@ kubectl apply -f https://raw.githubusercontent.com/traefik/traefik/v3.0/docs/con
     log_warn "Traefik CRDs might already be installed"
 
 # Apply Traefik manifests
-kubectl apply -f "$K8S_DIR/infrastructure/traefik/"
+kubectl apply -k "$K8S_DIR/infrastructure/traefik/"
 
 # Wait for Traefik to be ready
 log_info "Waiting for Traefik to be ready..."
@@ -37,7 +37,7 @@ kubectl wait --for=condition=ready pod -l app=traefik \
 
 # Verify Traefik health
 log_info "Verifying Traefik health..."
-kubectl exec -it deployment/traefik -n korczewski-infra -- \
+kubectl exec deployment/traefik -n korczewski-infra -- \
     wget -q -O- http://localhost:8080/ping 2>/dev/null && echo " OK" || {
     log_warn "Traefik ping check failed"
 }

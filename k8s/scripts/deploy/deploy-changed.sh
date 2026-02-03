@@ -56,7 +56,6 @@ declare -A SERVICE_DIRS=(
     ["l2p"]="l2p"
     ["payment"]="payment"
     ["videovault"]="VideoVault"
-    ["dashboard"]="dashboard"
 )
 
 # Service to Skaffold profile mapping
@@ -65,7 +64,6 @@ declare -A SERVICE_PROFILES=(
     ["l2p"]="l2p"
     ["payment"]="payment"
     ["videovault"]="videovault"
-    ["dashboard"]="dashboard"
 )
 
 # Detect changed services
@@ -159,9 +157,6 @@ wait_for_service() {
         videovault)
             app_label="app=videovault"
             ;;
-        dashboard)
-            app_label="app=dashboard"
-            ;;
     esac
     
     if [ -n "$app_label" ]; then
@@ -203,9 +198,6 @@ print_summary() {
                     ;;
                 videovault)
                     kubectl get pods -l app=videovault -n korczewski-services 2>/dev/null || true
-                    ;;
-                dashboard)
-                    kubectl get pods -l app=dashboard -n korczewski-services 2>/dev/null || true
                     ;;
             esac
         done

@@ -32,11 +32,23 @@ npm run test:all             # Run all test suites
 npm run typecheck:all        # Type check all projects
 npm run validate:env         # Validate environment files
 
-# Deployment (k8s)
-./k8s/scripts/cluster/k3d-create.sh
-./k8s/scripts/utils/generate-secrets.sh
-./k8s/scripts/deploy/deploy-all.sh
-./scripts/health-check.sh
+# Deployment (k8s) - full stack
+./k8s/scripts/cluster/k3d-create.sh          # Create local k3d cluster
+./k8s/scripts/utils/generate-secrets.sh      # Generate secrets from root .env
+./k8s/scripts/deploy/deploy-all.sh           # Deploy all (namespaces → secrets → infra → services)
+./k8s/scripts/utils/validate-cluster.sh      # Validate cluster health
+
+# Deployment (k8s) - individual services
+./k8s/scripts/deploy/deploy-postgres.sh      # PostgreSQL
+./k8s/scripts/deploy/deploy-traefik.sh       # Traefik ingress
+./k8s/scripts/deploy/deploy-nfs.sh           # NFS provisioner
+./k8s/scripts/deploy/deploy-auth.sh          # Auth service
+./k8s/scripts/deploy/deploy-l2p.sh           # L2P backend + frontend
+./k8s/scripts/deploy/deploy-payment.sh       # Payment service
+./k8s/scripts/deploy/deploy-videovault.sh    # VideoVault
+
+# Deployment (k8s) - smart redeploy
+./k8s/scripts/deploy/deploy-changed.sh       # Auto-detect and redeploy changed services
 ```
 
 ### Project-Specific Commands

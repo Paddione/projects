@@ -18,7 +18,10 @@ log_warn() { echo -e "${YELLOW}[WARN]${NC} $1"; }
 echo "Deploying PostgreSQL..."
 
 # Apply PostgreSQL manifests
-kubectl apply -f "$K8S_DIR/infrastructure/postgres/"
+kubectl apply -k "$K8S_DIR/infrastructure/postgres/"
+
+# Apply alias services separately (spans multiple namespaces)
+kubectl apply -f "$K8S_DIR/infrastructure/postgres/alias-services.yaml"
 
 # Wait for StatefulSet to be ready
 log_info "Waiting for PostgreSQL to be ready..."
@@ -32,7 +35,7 @@ kubectl wait --for=condition=ready pod -l app=postgres \
 
 # Verify PostgreSQL is accepting connections
 log_info "Verifying PostgreSQL connection..."
-kubectl exec -it statefulset/postgres -n korczewski-infra -- \
+kubectl exec statefulset/postgres -n korczewski-infra -- \
     pg_isready -U postgres || {
     log_warn "PostgreSQL not ready for connections"
     exit 1

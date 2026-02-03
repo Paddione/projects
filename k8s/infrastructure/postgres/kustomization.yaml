@@ -10,13 +10,16 @@ metadata:
 
 namespace: korczewski-infra
 
-commonLabels:
-  app.kubernetes.io/part-of: korczewski
-  app.kubernetes.io/component: database
-  tier: infrastructure
+labels:
+  - pairs:
+      app.kubernetes.io/part-of: korczewski
+      app.kubernetes.io/component: database
+      tier: infrastructure
 
 resources:
   - statefulset.yaml
   - service.yaml
   - configmap.yaml
   - init-configmap.yaml
+  # Note: alias-services.yaml is applied separately in deploy-postgres.sh
+  # because it spans multiple namespaces and kustomize would override them
