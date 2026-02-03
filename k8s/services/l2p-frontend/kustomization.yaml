@@ -10,10 +10,11 @@ metadata:
 
 namespace: korczewski-services
 
-commonLabels:
-  app.kubernetes.io/part-of: korczewski
-  app.kubernetes.io/component: frontend
-  tier: services
+labels:
+  - pairs:
+      app.kubernetes.io/part-of: korczewski
+      app.kubernetes.io/component: frontend
+      tier: services
 
 resources:
   - deployment.yaml

@@ -14,10 +14,10 @@ NC='\033[0m'
 log_info() { echo -e "${GREEN}[INFO]${NC} $1"; }
 
 echo "Deploying L2P Backend..."
-kubectl apply -f "$K8S_DIR/services/l2p-backend/"
+kubectl apply -k "$K8S_DIR/services/l2p-backend/"
 
 echo "Deploying L2P Frontend..."
-kubectl apply -f "$K8S_DIR/services/l2p-frontend/"
+kubectl apply -k "$K8S_DIR/services/l2p-frontend/"
 
 # Wait for deployments
 log_info "Waiting for L2P Backend to be ready..."

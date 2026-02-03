@@ -16,7 +16,7 @@ log_info() { echo -e "${GREEN}[INFO]${NC} $1"; }
 echo "Deploying Payment Service..."
 
 # Apply manifests
-kubectl apply -f "$K8S_DIR/services/payment/"
+kubectl apply -k "$K8S_DIR/services/payment/"
 
 # Wait for deployment
 log_info "Waiting for Payment service to be ready..."

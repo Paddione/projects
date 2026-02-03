@@ -31,7 +31,7 @@ if grep -q "REPLACE_WITH_NFS_SERVER_IP" "$NFS_CONFIG"; then
 fi
 
 # Apply NFS provisioner manifests
-kubectl apply -f "$K8S_DIR/infrastructure/nfs-provisioner/"
+kubectl apply -k "$K8S_DIR/infrastructure/nfs-provisioner/"
 
 # Wait for provisioner to be ready
 log_info "Waiting for NFS provisioner to be ready..."

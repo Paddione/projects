@@ -62,6 +62,6 @@ spec:
               httpOnly: true
               secure: true
       middlewares:
-        - name: user-auth-chain
+        - name: default-chain
           namespace: korczewski-infra
   tls: {}

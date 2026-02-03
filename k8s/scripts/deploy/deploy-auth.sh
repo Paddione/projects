@@ -16,7 +16,7 @@ log_info() { echo -e "${GREEN}[INFO]${NC} $1"; }
 echo "Deploying Auth Service..."
 
 # Apply manifests
-kubectl apply -f "$K8S_DIR/services/auth/"
+kubectl apply -k "$K8S_DIR/services/auth/"
 
 # Wait for deployment
 log_info "Waiting for Auth service to be ready..."
