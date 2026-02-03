@@ -17,12 +17,11 @@ services:
       - "5432:5432"
     volumes:
       - ./database/init-test.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
-      - ./database/test-data.sql:/docker-entrypoint-initdb.d/02-test-data.sql:ro
       - test_postgres_data:/var/lib/postgresql/data
     networks:
       - test-network
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U l2p_user -d l2p_db" ]
+      test: ["CMD-SHELL", "pg_isready -U l2p_user -d l2p_db"]
 
       interval: 5s
       timeout: 5s
@@ -64,13 +63,22 @@ services:
     ports:
       - "3006:3003"
     volumes:
-      - ./backend/src:/app/src:ro
+      - ./backend/src:/app/backend/src:ro
+      - ./backend/migrations:/app/backend/migrations:ro
       - ../shared-infrastructure/shared/l2p:/shared-infrastructure/shared/l2p:rw
       - test_backend_logs:/app/logs
     networks:
       - test-network
     healthcheck:
-      test: [ "CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3003/api/health" ]
+      test:
+        [
+          "CMD",
+          "wget",
+          "--quiet",
+          "--tries=1",
+          "--spider",
+          "http://localhost:3003/api/health",
+        ]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -102,11 +110,12 @@ services:
       - "3007:3000"
     volumes:
       - ./frontend/src:/app/src:ro
+      - ../shared-infrastructure/shared/design-system:/shared-infrastructure/shared/design-system:ro
       - test_frontend_node_modules:/app/node_modules
     networks:
       - test-network
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:3000/" ]
+      test: ["CMD", "curl", "-f", "http://localhost:3000/"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -127,7 +136,15 @@ services:
     networks:
       - test-network
     healthcheck:
-      test: [ "CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8025/" ]
+      test:
+        [
+          "CMD",
+          "wget",
+          "--quiet",
+          "--tries=1",
+          "--spider",
+          "http://localhost:8025/",
+        ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -146,7 +163,7 @@ services:
     networks:
       - test-network
     healthcheck:
-      test: [ "CMD", "redis-cli", "ping" ]
+      test: ["CMD", "redis-cli", "ping"]
       interval: 5s
       timeout: 3s
       retries: 5
@@ -179,8 +196,3 @@ volumes:
 networks:
   test-network:
     driver: bridge
-    ipam:
-      config:
-        - subnet: 172.25.0.0/16
-    driver_opts:
-      com.docker.network.bridge.name: l2p-test-bridge

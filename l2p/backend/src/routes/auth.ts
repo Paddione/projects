@@ -144,6 +144,12 @@ const proxyAuthService = async (
     }
   }
 
+  // Forward X-Requested-With header for CSRF protection in destination service
+  const xRequestedWith = req.headers['x-requested-with'];
+  if (xRequestedWith) {
+    headers['X-Requested-With'] = xRequestedWith as string;
+  }
+
   try {
     const response = await fetch(`${authApiBaseUrl}${options.path}`, {
       method: options.method ?? req.method,

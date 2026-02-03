@@ -47,7 +47,7 @@ export class MigrationService {
         checksum VARCHAR(64)
       );
     `;
-    
+
     await this.db.query(createTableQuery);
   }
 
@@ -75,7 +75,7 @@ export class MigrationService {
   private loadMigrationFiles(): Migration[] {
     const migrations: Migration[] = [];
     const seenVersions = new Set<string>();
-    
+
     try {
       const files = readdirSync(this.migrationsPath)
         .filter(file => file.endsWith('.sql'))
@@ -84,7 +84,7 @@ export class MigrationService {
       for (const file of files) {
         const filePath = join(this.migrationsPath, file);
         const content = readFileSync(filePath, 'utf8');
-        
+
         // Parse migration file format: YYYYMMDD_HHMMSS_description.sql
         const match = file.match(/^(\d{8}_\d{6})_(.+)\.sql$/);
         if (!match) {
@@ -94,18 +94,18 @@ export class MigrationService {
 
         const version = match[1] as string;
         const description = match[2] as string;
-        
+
         // Skip duplicates of the same version to prevent schema_migrations constraint errors
         if (seenVersions.has(version)) {
           console.warn(`Skipping duplicate migration version ${version} from file: ${file}`);
           continue;
         }
-        
+
         if (!version || !description) {
           console.warn(`Invalid migration file format: ${file}`);
           continue;
         }
-        
+
         // Split up and down migrations if present
         const parts = content.split('-- DOWN MIGRATION');
         const upPart = parts[0];
@@ -113,10 +113,10 @@ export class MigrationService {
           console.warn(`No UP migration found in: ${file}`);
           continue;
         }
-        
+
         const up = upPart.replace('-- UP MIGRATION', '').trim();
         const down = parts[1] ? parts[1].trim() : undefined;
-        
+
         migrations.push({
           version,
           description: description.replace(/_/g, ' '),
@@ -124,7 +124,7 @@ export class MigrationService {
           down,
           checksum: this.calculateChecksum(up)
         });
-        
+
         seenVersions.add(version);
       }
     } catch (error) {
@@ -136,21 +136,23 @@ export class MigrationService {
 
   public async runMigrations(): Promise<void> {
     console.log('Starting database migrations...');
-    
+
     try {
       await this.ensureMigrationsTable();
-      
+
       const appliedMigrations = await this.getAppliedMigrations();
       const availableMigrations = this.loadMigrationFiles();
-      
+
       // Check if we need to handle the initial schema case
       if (appliedMigrations.length === 0 && availableMigrations.length > 0) {
         // Check if tables already exist (from init.sql)
         const tablesExist = await this.checkIfTablesExist();
-        
+
         if (tablesExist) {
           // Mark the initial migration as applied without running it
-          const initialMigration = availableMigrations.find(m => m.version.includes('initial_schema'));
+          const initialMigration = availableMigrations.find(m =>
+            m.description.toLowerCase().includes('initial schema')
+          );
           if (initialMigration) {
             console.log('Database schema already exists, marking initial migration as applied');
             await this.recordMigration(initialMigration);
@@ -158,7 +160,7 @@ export class MigrationService {
           }
         }
       }
-      
+
       // Get updated applied migrations after potential initial migration marking
       const updatedAppliedMigrations = await this.getAppliedMigrations();
       const pendingMigrations = availableMigrations.filter(
@@ -174,18 +176,18 @@ export class MigrationService {
 
       for (const migration of pendingMigrations) {
         console.log(`Applying migration: ${migration.version} - ${migration.description}`);
-        
+
         await this.db.transaction(async (client) => {
           // Execute the migration
           await client.query(migration.up);
-          
+
           // Record the migration
           await client.query(
             'INSERT INTO schema_migrations (version, description, checksum) VALUES ($1, $2, $3)',
             [migration.version, migration.description, migration.checksum]
           );
         });
-        
+
         console.log(`Migration ${migration.version} applied successfully`);
       }
 
@@ -204,7 +206,7 @@ export class MigrationService {
         WHERE table_schema = 'public' 
         AND table_name IN ('users', 'lobbies', 'questions', 'question_sets')
       `);
-      
+
       const count = parseInt((result.rows[0] as any)?.['count'] || '0');
       return count >= 4; // If we have the main tables, schema exists
     } catch (error) {
@@ -215,23 +217,23 @@ export class MigrationService {
 
   public async rollbackMigration(version?: string): Promise<void> {
     console.log('Starting migration rollback...');
-    
+
     try {
       await this.ensureMigrationsTable();
-      
+
       const appliedMigrations = await this.getAppliedMigrations();
       const availableMigrations = this.loadMigrationFiles();
-      
+
       // Determine which migration to rollback
       const targetVersion = version || appliedMigrations[appliedMigrations.length - 1];
-      
+
       if (!targetVersion) {
         console.log('No migrations to rollback');
         return;
       }
 
       const migration = availableMigrations.find(m => m.version === targetVersion);
-      
+
       if (!migration) {
         throw new Error(`Migration ${targetVersion} not found`);
       }
@@ -245,7 +247,7 @@ export class MigrationService {
       await this.db.transaction(async (client) => {
         // Execute the rollback
         await client.query(migration.down!);
-        
+
         // Remove the migration record
         await client.query(
           'DELETE FROM schema_migrations WHERE version = $1',
@@ -266,10 +268,10 @@ export class MigrationService {
     total: number;
   }> {
     await this.ensureMigrationsTable();
-    
+
     const appliedMigrations = await this.getAppliedMigrations();
     const availableMigrations = this.loadMigrationFiles();
-    
+
     const pendingMigrations = availableMigrations
       .filter(migration => !appliedMigrations.includes(migration.version))
       .map(migration => migration.version);
@@ -284,28 +286,28 @@ export class MigrationService {
   public async validateMigrations(): Promise<boolean> {
     try {
       await this.ensureMigrationsTable();
-      
+
       const appliedMigrations = await this.db.query(
         'SELECT version, checksum FROM schema_migrations ORDER BY version'
       );
-      
+
       const availableMigrations = this.loadMigrationFiles();
-      
+
       for (const applied of appliedMigrations.rows as any[]) {
         const available = availableMigrations.find(m => m.version === applied['version']);
-        
+
         if (!available) {
           console.warn(`Applied migration ${applied['version']} not found in migration files - this may be from initial setup`);
           continue; // Don't fail validation for missing migration files
         }
-        
+
         if (available.checksum !== applied['checksum']) {
           console.error(`Checksum mismatch for migration ${applied['version']}`);
           console.error(`Expected: ${available.checksum}, Got: ${applied['checksum']}`);
           return false;
         }
       }
-      
+
       console.log('Migration validation completed successfully');
       return true;
     } catch (error) {

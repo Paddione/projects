@@ -8,21 +8,26 @@ import { TestDataManager } from './test-data-manager';
 export class TestHelpers {
   private static dataManager = TestDataManager.getInstance();
 
-  private static async ensureAuthForm(page: Page): Promise<void> {
+  private static async ensureAuthForm(page: Page, useMocks: boolean = true): Promise<void> {
     await page.context().clearCookies();
 
-    // Visit with test mode to enable mocks initially
-    await page.goto('/?test=true', { waitUntil: 'domcontentloaded' });
+    // Visit current page to ensure we are on the base URL
+    const url = useMocks ? '/?test=true' : '/';
+    await page.goto(url, { waitUntil: 'domcontentloaded' });
 
-    // Clear storage to ensure clean state and persist test mode
-    await page.evaluate(() => {
+    // Clear storage to ensure clean state and conditionally enable test mode
+    await page.evaluate((enableMocks) => {
       localStorage.clear();
       sessionStorage.clear();
-      sessionStorage.setItem('test_mode', 'true');
-    });
+      if (enableMocks) {
+        sessionStorage.setItem('test_mode', 'true');
+      } else {
+        sessionStorage.removeItem('test_mode');
+      }
+    }, useMocks);
 
-    // Final reload to apply cleared state and ensure we are on /?test=true still
-    await page.goto('/?test=true', { waitUntil: 'domcontentloaded' });
+    // Final reload to apply cleared state
+    await page.goto(url, { waitUntil: 'domcontentloaded' });
 
     // Wait for login tabs
     await page.waitForSelector('[data-testid="login-tab"]', { timeout: 15000 });
@@ -34,19 +39,21 @@ export class TestHelpers {
   static async registerUser(
     page: Page,
     userData?: Partial<UserData>,
-    options: { takeScreenshot?: boolean; timeout?: number } = {}
+    options: { takeScreenshot?: boolean; timeout?: number; useMocks?: boolean } = {}
   ): Promise<{ user: UserData; token: string }> {
     // Pipe browser console to host console for debugging
     page.on('console', msg => {
-      console.log(`[BROWSER ${msg.type()}] ${msg.text()}`);
+      if (msg.type() === 'error' || msg.type() === 'warning' || process.env.DEBUG) {
+        console.log(`[BROWSER ${msg.type()}] ${msg.text()}`);
+      }
     });
 
-    const { takeScreenshot = false, timeout = 15000 } = options;
+    const { takeScreenshot = false, timeout = 15000, useMocks = true } = options;
 
     try {
       const user = TestDataGenerator.generateUser(userData);
 
-      await this.ensureAuthForm(page);
+      await this.ensureAuthForm(page, useMocks);
       await page.click('[data-testid="register-tab"]');
 
       // Fill registration form
@@ -686,7 +693,7 @@ export class TestHelpers {
   static async waitForGameReady(page: Page, timeout = 30000): Promise<void> {
     await page.waitForFunction(() => {
       return document.querySelector('[data-testid="sync-countdown"]') ||
-             document.querySelector('[data-testid="question-container"]');
+        document.querySelector('[data-testid="question-container"]');
     }, { timeout });
     const syncVisible = await page.locator('[data-testid="sync-countdown"]').isVisible().catch(() => false);
     if (syncVisible) {
@@ -739,7 +746,7 @@ export class TestHelpers {
   static async waitForResults(page: Page, timeout = 60000): Promise<void> {
     await page.waitForFunction(() => {
       return document.querySelector('[data-testid="final-results"]') ||
-             window.location.pathname.includes('/results/');
+        window.location.pathname.includes('/results/');
     }, { timeout });
   }
 }

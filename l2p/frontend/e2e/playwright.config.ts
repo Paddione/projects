@@ -60,6 +60,8 @@ export default defineConfig({
     actionTimeout: 15000,
     /* Navigation timeout */
     navigationTimeout: 30000,
+    /* Ignore HTTPS errors for local k3d testing */
+    ignoreHTTPSErrors: true,
   },
 
   /* Configure projects for major browsers */

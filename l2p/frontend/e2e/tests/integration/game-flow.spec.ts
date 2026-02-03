@@ -15,7 +15,8 @@ async function createPlayer(browser: Browser): Promise<{
 }> {
   const context = await browser.newContext();
   const page = await context.newPage();
-  const { user } = await TestHelpers.registerUser(page);
+  const useMocks = process.env.USE_MOCKS !== 'false';
+  const { user } = await TestHelpers.registerUser(page, {}, { useMocks });
   return { context, page, user };
 }
 
@@ -326,7 +327,7 @@ test.describe('Multiplayer Lobby & Game E2E', () => {
       // (either through answering all questions or timeout)
     } finally {
       await host.context.close();
-      await player.context.close().catch(() => {});
+      await player.context.close().catch(() => { });
     }
   });
 
@@ -386,7 +387,7 @@ test.describe('Multiplayer Lobby & Game E2E', () => {
       }
     } finally {
       for (const p of allPlayers) {
-        await p.context.close().catch(() => {});
+        await p.context.close().catch(() => { });
       }
     }
   });
