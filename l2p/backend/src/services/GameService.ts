@@ -389,6 +389,9 @@ export class GameService {
       // Store active game
       this.activeGames.set(lobbyCode, gameState);
 
+      // Update lobby status to indicate the game is starting (synchronization phase)
+      await (this as any).lobbyService.updateLobbyStatus(lobbyCode, 'starting');
+
       // Start the game with a 5-second synchronization countdown
       let syncCountdown = 5;
 
@@ -405,6 +408,10 @@ export class GameService {
 
         if (syncCountdown <= 0) {
           clearInterval(syncTimer);
+
+          // Update lobby status to 'playing' now that synchronization is over
+          await (this as any).lobbyService.updateLobbyStatus(lobbyCode, 'playing');
+
           // Start the first question after synchronization
           await this.startNextQuestion(lobbyCode);
         } else {

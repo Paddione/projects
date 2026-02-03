@@ -189,18 +189,36 @@ export class SocketService {
     // Game event handlers
     this.socket.on('game-started', (data) => {
       console.log('Game started:', data)
-      const { setGameStarted, setTimeRemaining, lobbyCode } = useGameStore.getState()
+      const {
+        setGameStarted,
+        setTimeRemaining,
+        setPlayers,
+        setTotalQuestions,
+        lobbyCode: currentLobbyCode
+      } = useGameStore.getState()
+
       setGameStarted(true)
-      // Do not set currentQuestion here; question-started will provide the transformed object
-      if (typeof data?.gameState?.timeRemaining === 'number') {
-        setTimeRemaining(data.gameState.timeRemaining)
+
+      // Update store with state from server
+      if (data?.gameState) {
+        if (data.gameState.players) {
+          setPlayers(data.gameState.players)
+        }
+        if (typeof data.gameState.totalQuestions === 'number') {
+          setTotalQuestions(data.gameState.totalQuestions)
+        }
+        if (typeof data.gameState.timeRemaining === 'number') {
+          setTimeRemaining(data.gameState.timeRemaining)
+        }
       }
 
       // Navigate to game page (skip validation since this is triggered by server game-started event)
       // Use dynamic import to avoid circular dependency
-      if (lobbyCode) {
+      // Prioritize lobbyCode from payload if available
+      const codeToUse = data?.lobbyCode || currentLobbyCode
+      if (codeToUse) {
         import('./navigationService').then(({ navigationService }) => {
-          navigationService.navigateToGame(lobbyCode, true)
+          navigationService.navigateToGame(codeToUse, true)
         })
       }
     })

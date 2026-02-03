@@ -237,6 +237,13 @@ export const GamePage: React.FC = () => {
           <p className={gameStyles.syncMessage}>Das Spiel startet in Kürze...</p>
           <LoadingSpinner />
         </div>
+
+        <div style={{ marginTop: 'var(--spacing-xl)', width: '100%', maxWidth: '800px' }}>
+          <h3 className={gameStyles.syncMessage} style={{ textAlign: 'center', marginBottom: 'var(--spacing-md)' }}>
+            Spieler im Game
+          </h3>
+          <PlayerGrid players={players} />
+        </div>
       </div>
     )
   }

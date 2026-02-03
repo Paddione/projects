@@ -77,7 +77,7 @@ class NavigationService {
           throw new Error('Lobby not found')
         }
 
-        if (response.data.status !== 'playing') {
+        if (response.data.status !== 'playing' && response.data.status !== 'starting') {
           throw new Error('Game has not started yet')
         }
       }
