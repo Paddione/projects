@@ -196,9 +196,18 @@ router.post('/join', authenticate, asyncHandler(async (req: AuthenticatedRequest
  * DELETE /api/lobbies/:code/leave
  * Leave a lobby
  */
-router.delete('/:code/leave', asyncHandler(async (req: Request, res: Response): Promise<void> => {
+router.delete('/:code/leave', authenticate, asyncHandler(async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  if (!req.user) {
+    res.status(401).json({
+      error: 'Authentication required',
+      message: 'User must be authenticated to leave a lobby'
+    });
+    return;
+  }
+
   const { code } = req.params;
-  const { playerId } = req.body;
+  // Use authenticated user ID; ignore any client-provided playerId
+  const playerId = req.user.userId.toString();
 
   if (!code) {
     res.status(400).json({
@@ -213,14 +222,6 @@ router.delete('/:code/leave', asyncHandler(async (req: Request, res: Response): 
     res.status(400).json({
       error: 'Invalid lobby code',
       message: 'Lobby code must be 6 characters containing only letters and numbers'
-    });
-    return;
-  }
-
-  if (!playerId) {
-    res.status(400).json({
-      error: 'Missing player ID',
-      message: 'Player ID is required to leave the lobby'
     });
     return;
   }
@@ -271,8 +272,25 @@ router.delete('/:code/leave', asyncHandler(async (req: Request, res: Response): 
  * PUT /api/lobbies/:code/players/:playerId
  * Update player status in lobby
  */
-router.put('/:code/players/:playerId', asyncHandler(async (req: Request, res: Response): Promise<void> => {
+router.put('/:code/players/:playerId', authenticate, asyncHandler(async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  if (!req.user) {
+    res.status(401).json({
+      error: 'Authentication required',
+      message: 'User must be authenticated to update player status'
+    });
+    return;
+  }
+
   const { code, playerId } = req.params;
+
+  // Verify the authenticated user matches the player being updated
+  if (req.user.userId.toString() !== playerId) {
+    res.status(403).json({
+      error: 'Permission denied',
+      message: 'You can only update your own player status'
+    });
+    return;
+  }
 
   if (!code) {
     res.status(400).json({

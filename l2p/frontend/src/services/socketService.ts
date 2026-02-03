@@ -84,90 +84,126 @@ export class SocketService {
 
     // Connection event handlers
     this.socket.on('connect', () => {
-      console.log('✅ Connected to server successfully')
-      console.log('Socket ID:', this.socket?.id)
-      this.reconnectAttempts = 0
-      this.isConnecting = false
-      SocketService.globalConnectionInProgress = false
-      useGameStore.getState().setError(null)
+      try {
+        console.log('✅ Connected to server successfully')
+        console.log('Socket ID:', this.socket?.id)
+        this.reconnectAttempts = 0
+        this.isConnecting = false
+        SocketService.globalConnectionInProgress = false
+        useGameStore.getState().setError(null)
+      } catch (err) {
+        console.error('Error in connect handler:', err)
+      }
     })
 
     this.socket.on('disconnect', (reason: string) => {
-      console.log('❌ Disconnected from server:', reason)
-      this.isConnecting = false
-      SocketService.globalConnectionInProgress = false
+      try {
+        console.log('❌ Disconnected from server:', reason)
+        this.isConnecting = false
+        SocketService.globalConnectionInProgress = false
 
-      if (reason === 'io server disconnect') {
-        // Server initiated disconnect, don't reconnect
-        console.log('Server initiated disconnect, not attempting reconnect')
-        return
+        if (reason === 'io server disconnect') {
+          // Server initiated disconnect, don't reconnect
+          console.log('Server initiated disconnect, not attempting reconnect')
+          return
+        }
+
+        console.log('Client-side disconnect, attempting reconnect...')
+        this.attemptReconnect()
+      } catch (err) {
+        console.error('Error in disconnect handler:', err)
       }
-
-      console.log('Client-side disconnect, attempting reconnect...')
-      this.attemptReconnect()
     })
 
     this.socket.on('connect_error', (error: Error) => {
-      console.error('❌ Connection error:', error)
-      console.error('Error details:', {
-        message: error.message,
-        type: error.constructor.name,
-        stack: error.stack
-      })
-      this.isConnecting = false
-      SocketService.globalConnectionInProgress = false
-      useGameStore.getState().setError('Connection failed. Retrying...')
-      this.attemptReconnect()
+      try {
+        console.error('❌ Connection error:', error)
+        console.error('Error details:', {
+          message: error.message,
+          type: error.constructor.name,
+          stack: error.stack
+        })
+        this.isConnecting = false
+        SocketService.globalConnectionInProgress = false
+        useGameStore.getState().setError('Connection failed. Retrying...')
+        this.attemptReconnect()
+      } catch (err) {
+        console.error('Error in connect_error handler:', err)
+      }
     })
 
     // Optional: server-side connected confirmation
     this.socket.on('connected', (data) => {
-      console.log('Server acknowledged connection:', data)
+      try {
+        console.log('Server acknowledged connection:', data)
+      } catch (err) {
+        console.error('Error in connected handler:', err)
+      }
     })
 
     // Lobby event handlers
     this.socket.on('join-success', (data) => {
-      console.log('Joined lobby (socket):', data)
-      const { setPlayers, setLobbyCode } = useGameStore.getState()
-      setPlayers(data.lobby.players)
-      setLobbyCode(data.lobby.code)
+      try {
+        console.log('Joined lobby (socket):', data)
+        const { setPlayers, setLobbyCode } = useGameStore.getState()
+        setPlayers(data.lobby.players)
+        setLobbyCode(data.lobby.code)
+      } catch (err) {
+        console.error('Error in join-success handler:', err)
+      }
     })
 
     this.socket.on('lobby-updated', (data) => {
-      console.log('Lobby updated:', data)
-      const { setPlayers, setError } = useGameStore.getState()
-      if (data?.lobby?.players) {
-        setPlayers(data.lobby.players)
+      try {
+        console.log('Lobby updated:', data)
+        const { setPlayers, setError } = useGameStore.getState()
+        if (data?.lobby?.players) {
+          setPlayers(data.lobby.players)
 
-        // If a player left, show a notification
-        if (data.event === 'player-left') {
-          console.log(`Player ${data.playerId} left the lobby`)
-          // You could add a toast notification here if desired
+          // If a player left, show a notification
+          if (data.event === 'player-left') {
+            console.log(`Player ${data.playerId} left the lobby`)
+            // You could add a toast notification here if desired
+          }
         }
+      } catch (err) {
+        console.error('Error in lobby-updated handler:', err)
       }
     })
 
     this.socket.on('lobby-deleted', (data) => {
-      console.log('Lobby deleted:', data)
-      // Navigate all players back to home screen
-      // Use dynamic import to avoid circular dependency
-      import('./navigationService').then(({ navigationService }) => {
-        navigationService.navigateToHome()
-      })
+      try {
+        console.log('Lobby deleted:', data)
+        // Navigate all players back to home screen
+        // Use dynamic import to avoid circular dependency
+        import('./navigationService').then(({ navigationService }) => {
+          navigationService.navigateToHome()
+        })
+      } catch (err) {
+        console.error('Error in lobby-deleted handler:', err)
+      }
     })
 
     // Question set event handlers
     this.socket.on('question-sets-updated', (data) => {
-      console.log('Question sets updated:', data)
-      const { setPlayers } = useGameStore.getState()
-      if (data?.lobby?.players) {
-        setPlayers(data.lobby.players)
+      try {
+        console.log('Question sets updated:', data)
+        const { setPlayers } = useGameStore.getState()
+        if (data?.lobby?.players) {
+          setPlayers(data.lobby.players)
+        }
+      } catch (err) {
+        console.error('Error in question-sets-updated handler:', err)
       }
     })
 
     this.socket.on('question-sets-update-success', (data) => {
-      console.log('Question sets update success:', data)
-      // Success notification could be shown here
+      try {
+        console.log('Question sets update success:', data)
+        // Success notification could be shown here
+      } catch (err) {
+        console.error('Error in question-sets-update-success handler:', err)
+      }
     })
 
     this.socket.on('question-sets-update-error', (data) => {
@@ -188,366 +224,414 @@ export class SocketService {
 
     // Game event handlers
     this.socket.on('game-started', (data) => {
-      console.log('Game started:', data)
-      const {
-        setGameStarted,
-        setTimeRemaining,
-        setPlayers,
-        setTotalQuestions,
-        lobbyCode: currentLobbyCode
-      } = useGameStore.getState()
+      try {
+        console.log('Game started:', data)
+        const {
+          setGameStarted,
+          setTimeRemaining,
+          setPlayers,
+          setTotalQuestions,
+          lobbyCode: currentLobbyCode
+        } = useGameStore.getState()
 
-      setGameStarted(true)
+        setGameStarted(true)
 
-      // Update store with state from server
-      if (data?.gameState) {
-        if (data.gameState.players) {
-          setPlayers(data.gameState.players)
+        // Update store with state from server
+        if (data?.gameState) {
+          if (data.gameState.players) {
+            setPlayers(data.gameState.players)
+          }
+          if (typeof data.gameState.totalQuestions === 'number') {
+            setTotalQuestions(data.gameState.totalQuestions)
+          }
+          if (typeof data.gameState.timeRemaining === 'number') {
+            setTimeRemaining(data.gameState.timeRemaining)
+          }
         }
-        if (typeof data.gameState.totalQuestions === 'number') {
-          setTotalQuestions(data.gameState.totalQuestions)
-        }
-        if (typeof data.gameState.timeRemaining === 'number') {
-          setTimeRemaining(data.gameState.timeRemaining)
-        }
-      }
 
-      // Navigate to game page (skip validation since this is triggered by server game-started event)
-      // Use dynamic import to avoid circular dependency
-      // Prioritize lobbyCode from payload if available
-      const codeToUse = data?.lobbyCode || currentLobbyCode
-      if (codeToUse) {
-        import('./navigationService').then(({ navigationService }) => {
-          navigationService.navigateToGame(codeToUse, true)
-        })
+        // Navigate to game page (skip validation since this is triggered by server game-started event)
+        // Use dynamic import to avoid circular dependency
+        // Prioritize lobbyCode from payload if available
+        const codeToUse = data?.lobbyCode || currentLobbyCode
+        if (codeToUse) {
+          import('./navigationService').then(({ navigationService }) => {
+            navigationService.navigateToGame(codeToUse, true)
+          })
+        }
+      } catch (err) {
+        console.error('Error in game-started handler:', err)
+        useGameStore.getState().setError('Failed to start game. Please try again.')
       }
     })
 
     this.socket.on('game-syncing', (data) => {
-      console.log('Game syncing:', data)
-      const { setIsSyncing, setSyncCountdown } = useGameStore.getState()
-      setIsSyncing(true)
-      setSyncCountdown(data.countdown)
+      try {
+        console.log('Game syncing:', data)
+        const { setIsSyncing, setSyncCountdown } = useGameStore.getState()
+        setIsSyncing(true)
+        setSyncCountdown(data.countdown)
+      } catch (err) {
+        console.error('Error in game-syncing handler:', err)
+      }
     })
 
     this.socket.on('question-started', (data) => {
-      console.log('New question started:', data)
+      try {
+        console.log('New question started:', data)
 
-      // Debug the question data structure
-      console.log('Question data debug:', {
-        questionIndex: data.questionIndex,
-        fullData: data,
-        questionObject: data.question,
-        questionField: data.question?.question,
-        answersField: data.question?.answers,
-        allQuestionKeys: data.question ? Object.keys(data.question) : 'no question object'
-      })
+        // Debug the question data structure
+        console.log('Question data debug:', {
+          questionIndex: data.questionIndex,
+          fullData: data,
+          questionObject: data.question,
+          questionField: data.question?.question,
+          answersField: data.question?.answers,
+          allQuestionKeys: data.question ? Object.keys(data.question) : 'no question object'
+        })
 
-      const { setCurrentQuestion, setQuestionIndex, setTotalQuestions, setTimeRemaining, resetPlayerAnswerStatus, setPlayers, setIsSyncing } = useGameStore.getState()
+        const { setCurrentQuestion, setQuestionIndex, setTotalQuestions, setTimeRemaining, resetPlayerAnswerStatus, setPlayers, setIsSyncing } = useGameStore.getState()
 
-      // Question has started, so we are no longer syncing
-      setIsSyncing(false)
+        // Question has started, so we are no longer syncing
+        setIsSyncing(false)
 
-      // Validate that we have question data
-      if (!data.question) {
-        console.error('No question data received in question-started event')
-        return
-      }
+        // Validate that we have question data
+        if (!data.question) {
+          console.error('No question data received in question-started event')
+          return
+        }
 
-      // Transform backend question format to frontend format
-      const answers = (data.question?.answers || []) as string[]
-      const correctAnswerText: string = data.question?.correctAnswer || ''
-      const correctAnswerIndex = answers.findIndex((answer: string) => answer === correctAnswerText)
+        // Transform backend question format to frontend format
+        const answers = (data.question?.answers || []) as string[]
+        const correctAnswerText: string = data.question?.correctAnswer || ''
+        const correctAnswerIndex = answers.findIndex((answer: string) => answer === correctAnswerText)
 
-      // Extract question text - backend sends it in the 'question' field
-      // Try multiple possible field names to ensure we get the question text
-      const questionText = data.question.question ||
-        data.question.text ||
-        data.question.questionText ||
-        `Frage ${data.questionIndex + 1} (Text nicht verfügbar)`
+        // Extract question text - backend sends it in the 'question' field
+        // Try multiple possible field names to ensure we get the question text
+        const questionText = data.question.question ||
+          data.question.text ||
+          data.question.questionText ||
+          `Frage ${data.questionIndex + 1} (Text nicht verfügbar)`
 
-      console.log(`[Question ${data.questionIndex + 1}] Question data:`, {
-        questionText,
-        answers,
-        correctAnswerText,
-        correctAnswerIndex,
-        fullQuestionObject: data.question
-      })
-
-      const frontendQuestion = {
-        id: data.question?.id || String(Date.now()),
-        text: questionText,
-        answers: answers,
-        correctAnswer: correctAnswerIndex >= 0 ? correctAnswerIndex : 0, // Map answer text to index
-        timeLimit: 60
-      }
-
-      console.log('Frontend question transformed:', {
-        originalBackend: data.question,
-        transformedFrontend: frontendQuestion,
-        correctAnswerMapping: `"${correctAnswerText}" -> index ${correctAnswerIndex}`
-      })
-
-      console.log(`[Frontend] Received questionIndex: ${data.questionIndex}, will display as: ${data.questionIndex + 1}/${data.totalQuestions}`);
-      console.log(`[Frontend] Setting question in store:`, frontendQuestion);
-
-      // Ensure question text is not empty before setting
-      if (!frontendQuestion.text || frontendQuestion.text.includes('Text nicht verfügbar')) {
-        console.error('Question text is missing or invalid:', {
-          originalQuestion: data.question?.question,
-          textField: data.question?.text,
-          finalText: frontendQuestion.text,
+        console.log(`[Question ${data.questionIndex + 1}] Question data:`, {
+          questionText,
+          answers,
+          correctAnswerText,
+          correctAnswerIndex,
           fullQuestionObject: data.question
         })
-      }
 
-      setCurrentQuestion(frontendQuestion)
-      setQuestionIndex(data.questionIndex)
-      setTotalQuestions(data.totalQuestions)
-      setTimeRemaining(data.timeRemaining)
-      resetPlayerAnswerStatus()
+        const frontendQuestion = {
+          id: data.question?.id || String(Date.now()),
+          text: questionText,
+          answers: answers,
+          correctAnswer: correctAnswerIndex >= 0 ? correctAnswerIndex : 0, // Map answer text to index
+          timeLimit: 60
+        }
 
-      // Force immediate store update and verify
-      const storeState = useGameStore.getState()
-      console.log('Store state immediately after question update:', {
-        currentQuestion: storeState.currentQuestion,
-        questionText: storeState.currentQuestion?.text,
-        questionIndex: storeState.questionIndex
-      })
-
-      // Additional verification after a brief delay
-      setTimeout(() => {
-        const currentState = useGameStore.getState()
-        console.log('Store state after question update (delayed check):', {
-          currentQuestion: currentState.currentQuestion,
-          questionText: currentState.currentQuestion?.text,
-          questionIndex: currentState.questionIndex
+        console.log('Frontend question transformed:', {
+          originalBackend: data.question,
+          transformedFrontend: frontendQuestion,
+          correctAnswerMapping: `"${correctAnswerText}" -> index ${correctAnswerIndex}`
         })
 
-        // If question text is still missing, force another update
-        if (!currentState.currentQuestion?.text || currentState.currentQuestion.text.includes('wird geladen')) {
-          console.warn('Question text still missing, forcing another update...')
-          setCurrentQuestion({
-            ...frontendQuestion,
-            text: questionText // Use the extracted question text directly
+        console.log(`[Frontend] Received questionIndex: ${data.questionIndex}, will display as: ${data.questionIndex + 1}/${data.totalQuestions}`);
+        console.log(`[Frontend] Setting question in store:`, frontendQuestion);
+
+        // Ensure question text is not empty before setting
+        if (!frontendQuestion.text || frontendQuestion.text.includes('Text nicht verfügbar')) {
+          console.error('Question text is missing or invalid:', {
+            originalQuestion: data.question?.question,
+            textField: data.question?.text,
+            finalText: frontendQuestion.text,
+            fullQuestionObject: data.question
           })
         }
-      }, 50)
 
-      // Update players with current scores from server
-      if (data.players && Array.isArray(data.players)) {
-        console.log('Updating players with server data:', data.players)
-        setPlayers(data.players)
+        setCurrentQuestion(frontendQuestion)
+        setQuestionIndex(data.questionIndex)
+        setTotalQuestions(data.totalQuestions)
+        setTimeRemaining(data.timeRemaining)
+        resetPlayerAnswerStatus()
+
+        // Force immediate store update and verify
+        const storeState = useGameStore.getState()
+        console.log('Store state immediately after question update:', {
+          currentQuestion: storeState.currentQuestion,
+          questionText: storeState.currentQuestion?.text,
+          questionIndex: storeState.questionIndex
+        })
+
+        // Additional verification after a brief delay
+        setTimeout(() => {
+          const currentState = useGameStore.getState()
+          console.log('Store state after question update (delayed check):', {
+            currentQuestion: currentState.currentQuestion,
+            questionText: currentState.currentQuestion?.text,
+            questionIndex: currentState.questionIndex
+          })
+
+          // If question text is still missing, force another update
+          if (!currentState.currentQuestion?.text || currentState.currentQuestion.text.includes('wird geladen')) {
+            console.warn('Question text still missing, forcing another update...')
+            setCurrentQuestion({
+              ...frontendQuestion,
+              text: questionText // Use the extracted question text directly
+            })
+          }
+        }, 50)
+
+        // Update players with current scores from server
+        if (data.players && Array.isArray(data.players)) {
+          console.log('Updating players with server data:', data.players)
+          setPlayers(data.players)
+        }
+      } catch (err) {
+        console.error('Error in question-started handler:', err)
+        useGameStore.getState().setError('Failed to load question. Please wait for the next one.')
       }
     })
 
     this.socket.on('answer-received', (data) => {
-      console.log('Answer received:', data)
-      const { setPlayerAnswerStatus, updatePlayer, players } = useGameStore.getState()
-      const { user } = useAuthStore.getState()
+      try {
+        console.log('Answer received:', data)
+        const { setPlayerAnswerStatus, updatePlayer, players } = useGameStore.getState()
+        const { user } = useAuthStore.getState()
 
-      if (data.playerId) {
-        // Update answer status if provided
-        if (typeof data.isCorrect === 'boolean') {
-          setPlayerAnswerStatus(data.playerId, data.isCorrect ? 'correct' : 'wrong')
-        }
+        if (data.playerId) {
+          // Update answer status if provided
+          if (typeof data.isCorrect === 'boolean') {
+            setPlayerAnswerStatus(data.playerId, data.isCorrect ? 'correct' : 'wrong')
+          }
 
-        // Check if this is the current user's answer
-        const isCurrentUser = data.playerId === user?.id
+          // Check if this is the current user's answer
+          const isCurrentUser = data.playerId === user?.id
 
-        // Update player with complete score information from backend
-        const target = players.find(p => p.id === data.playerId)
-        if (target) {
-          const updates: Partial<typeof target> = {}
-          // Compute fallback scoreDelta if not provided
-          if (typeof data.scoreDelta !== 'number') {
-            const incomingScore = typeof data.newScore === 'number' ? data.newScore
-              : (typeof data.score === 'number' ? data.score : undefined)
-            if (typeof incomingScore === 'number') {
-              const delta = incomingScore - (typeof target.score === 'number' ? target.score : 0)
-              if (delta > 0) {
-                ; (data as any).scoreDelta = delta
+          // Update player with complete score information from backend
+          const target = players.find(p => p.id === data.playerId)
+          if (target) {
+            const updates: Partial<typeof target> = {}
+            // Compute fallback scoreDelta if not provided
+            if (typeof data.scoreDelta !== 'number') {
+              const incomingScore = typeof data.newScore === 'number' ? data.newScore
+                : (typeof data.score === 'number' ? data.score : undefined)
+              if (typeof incomingScore === 'number') {
+                const delta = incomingScore - (typeof target.score === 'number' ? target.score : 0)
+                if (delta > 0) {
+                  ; (data as any).scoreDelta = delta
+                }
               }
             }
-          }
 
-          if (typeof data.newScore === 'number') {
-            updates.score = data.newScore
-          }
-          if (typeof data.newMultiplier === 'number') {
-            updates.multiplier = data.newMultiplier
-          }
-          // Legacy fallbacks
-          if (updates.score === undefined && typeof data.score === 'number') {
-            updates.score = data.score
-          }
-          if (updates.multiplier === undefined && typeof data.multiplier === 'number') {
-            updates.multiplier = data.multiplier
-          }
-          if (data.isCorrect) {
-            updates.correctAnswers = (target.correctAnswers || 0) + 1
-          }
-          // Handle streak updates - backend sends 'streak', frontend uses 'currentStreak'
-          if (typeof data.streak === 'number') {
-            updates.currentStreak = data.streak
-          } else if (typeof data.currentStreak === 'number') {
-            updates.currentStreak = data.currentStreak
-          } else if (data.isCorrect) {
-            // If server doesn't provide streak but answer is correct, increment local streak
-            updates.currentStreak = (target.currentStreak || 0) + 1
-          } else if (data.isCorrect === false) {
-            // Reset streak on wrong answer
-            updates.currentStreak = 0
-          }
-
-          console.log('Updating player with server data:', { playerId: data.playerId, updates })
-          updatePlayer(target.id, updates)
-
-          // Play authoritative audio feedback for all players
-          // Use the updated streak value from the updates object
-          try {
-            if (typeof data.isCorrect === 'boolean') {
-              if (data.isCorrect) {
-                // Use the streak from updates (which has the most current value)
-                let streak = updates.currentStreak || 1
-
-                audioManager.playCorrectAnswer(streak)
-              } else {
-                audioManager.playWrongAnswer()
-              }
+            if (typeof data.newScore === 'number') {
+              updates.score = data.newScore
             }
-          } catch (e) {
-            console.warn('Audio feedback failed:', e)
+            if (typeof data.newMultiplier === 'number') {
+              updates.multiplier = data.newMultiplier
+            }
+            // Legacy fallbacks
+            if (updates.score === undefined && typeof data.score === 'number') {
+              updates.score = data.score
+            }
+            if (updates.multiplier === undefined && typeof data.multiplier === 'number') {
+              updates.multiplier = data.multiplier
+            }
+            if (data.isCorrect) {
+              updates.correctAnswers = (target.correctAnswers || 0) + 1
+            }
+            // Handle streak updates - backend sends 'streak', frontend uses 'currentStreak'
+            if (typeof data.streak === 'number') {
+              updates.currentStreak = data.streak
+            } else if (typeof data.currentStreak === 'number') {
+              updates.currentStreak = data.currentStreak
+            } else if (data.isCorrect) {
+              // If server doesn't provide streak but answer is correct, increment local streak
+              updates.currentStreak = (target.currentStreak || 0) + 1
+            } else if (data.isCorrect === false) {
+              // Reset streak on wrong answer
+              updates.currentStreak = 0
+            }
+
+            console.log('Updating player with server data:', { playerId: data.playerId, updates })
+            updatePlayer(target.id, updates)
+
+            // Play authoritative audio feedback for all players
+            // Use the updated streak value from the updates object
+            try {
+              if (typeof data.isCorrect === 'boolean') {
+                if (data.isCorrect) {
+                  // Use the streak from updates (which has the most current value)
+                  let streak = updates.currentStreak || 1
+
+                  audioManager.playCorrectAnswer(streak)
+                } else {
+                  audioManager.playWrongAnswer()
+                }
+              }
+            } catch (e) {
+              console.warn('Audio feedback failed:', e)
+            }
           }
         }
+      } catch (err) {
+        console.error('Error in answer-received handler:', err)
+        useGameStore.getState().setError('Failed to process answer update.')
       }
     })
 
     this.socket.on('question-ended', (data) => {
-      console.log('Question ended:', data)
-      // Update all player scores based on results from server
-      const { updatePlayer, players } = useGameStore.getState()
+      try {
+        console.log('Question ended:', data)
+        // Update all player scores based on results from server
+        const { updatePlayer, players } = useGameStore.getState()
 
-      if (data.results && Array.isArray(data.results)) {
-        data.results.forEach((result: Record<string, unknown>) => {
-          const existingPlayer = players.find(p => p.id === String(result['id']))
-          if (existingPlayer && typeof result['score'] === 'number') {
-            updatePlayer(String(result['id']), {
-              score: result['score'] as number,
-              multiplier: typeof result['multiplier'] === 'number' ? (result['multiplier'] as number) : existingPlayer.multiplier,
-              correctAnswers: existingPlayer.correctAnswers // Don't override until we get authoritative data
-            })
-          }
-        })
+        if (data.results && Array.isArray(data.results)) {
+          data.results.forEach((result: Record<string, unknown>) => {
+            const existingPlayer = players.find(p => p.id === String(result['id']))
+            if (existingPlayer && typeof result['score'] === 'number') {
+              updatePlayer(String(result['id']), {
+                score: result['score'] as number,
+                multiplier: typeof result['multiplier'] === 'number' ? (result['multiplier'] as number) : existingPlayer.multiplier,
+                correctAnswers: existingPlayer.correctAnswers // Don't override until we get authoritative data
+              })
+            }
+          })
+        }
+        // Keep badges visible until next question; no reset here
+      } catch (err) {
+        console.error('Error in question-ended handler:', err)
       }
-      // Keep badges visible until next question; no reset here
     })
 
     this.socket.on('time-update', (data) => {
-      console.log('Time update:', data)
-      const { setTimeRemaining } = useGameStore.getState()
-      setTimeRemaining(data.timeRemaining)
+      try {
+        // Throttle timer updates to avoid excessive re-renders
+        const update = performanceOptimizer.throttle(
+          'time-remaining-update',
+          () => {
+            useGameStore.getState().setTimeRemaining(data.timeRemaining)
+          },
+          100
+        )
+        if (typeof update === 'function') {
+          update()
+        }
+      } catch (err) {
+        console.error('Error in time-update handler:', err)
+      }
     })
 
     this.socket.on('game-ended', async (data) => {
-      console.log('Game ended:', data)
-      const { setGameEnded, setGameResults, lobbyCode } = useGameStore.getState()
-      setGameEnded(true)
-
-      // Play post-game sound
       try {
-        audioManager.playGameEnd()
-      } catch (e) {
-        console.warn('Failed to play game end sound:', e)
-      }
+        console.log('Game ended:', data)
+        const { setGameEnded, setGameResults, lobbyCode } = useGameStore.getState()
+        setGameEnded(true)
 
-      // Normalize results to ensure experienceAwarded is populated
-      const normalizedResults = Array.isArray(data.results)
-        ? data.results.map((r: any) => ({
-          ...r,
-          experienceAwarded: typeof r.experienceAwarded === 'number'
-            ? r.experienceAwarded
-            : (typeof r.experience === 'number' ? r.experience
-              : (typeof r.xp === 'number' ? r.xp
-                : (typeof r.experience_points === 'number' ? r.experience_points : 0)))
-        }))
-        : []
+        // Play post-game sound
+        try {
+          audioManager.playGameEnd()
+        } catch (e) {
+          console.warn('Failed to play game end sound:', e)
+        }
 
-      setGameResults(normalizedResults as any)
+        // Normalize results to ensure experienceAwarded is populated
+        const normalizedResults = Array.isArray(data.results)
+          ? data.results.map((r: any) => ({
+            ...r,
+            experienceAwarded: typeof r.experienceAwarded === 'number'
+              ? r.experienceAwarded
+              : (typeof r.experience === 'number' ? r.experience
+                : (typeof r.xp === 'number' ? r.xp
+                  : (typeof r.experience_points === 'number' ? r.experience_points : 0)))
+          }))
+          : []
 
-      // Award experience to the current user based on results, if available
-      try {
-        const auth = useAuthStore.getState()
-        const myUsername = auth.user?.username
-        const myId = auth.user?.id
-        const myResult = Array.isArray(normalizedResults)
-          ? (normalizedResults as any[]).find((r: any) => String(r.username) === String(myUsername) || String(r.id) === String(myId))
-          : null
-        const xp = myResult && typeof myResult.experienceAwarded === 'number' ? myResult.experienceAwarded : 0
-        if (xp > 0) {
-          // Award experience and, if needed, reflect it in the results list
-          const res = await useCharacterStore.getState().awardExperience(xp)
-          if (res && (!myResult.experienceAwarded || myResult.experienceAwarded === 0)) {
-            const patched = (normalizedResults as any[]).map((r: any) =>
-              (String(r.username) === String(myUsername) || String(r.id) === String(myId))
-                ? { ...r, experienceAwarded: xp }
-                : r
-            )
-            setGameResults(patched as any)
+        setGameResults(normalizedResults as any)
+
+        // Award experience to the current user based on results, if available
+        try {
+          const auth = useAuthStore.getState()
+          const myUsername = auth.user?.username
+          const myId = auth.user?.id
+          const myResult = Array.isArray(normalizedResults)
+            ? (normalizedResults as any[]).find((r: any) => String(r.username) === String(myUsername) || String(r.id) === String(myId))
+            : null
+          const xp = myResult && typeof myResult.experienceAwarded === 'number' ? myResult.experienceAwarded : 0
+          if (xp > 0) {
+            // Award experience and, if needed, reflect it in the results list
+            const res = await useCharacterStore.getState().awardExperience(xp)
+            if (res && (!myResult.experienceAwarded || myResult.experienceAwarded === 0)) {
+              const patched = (normalizedResults as any[]).map((r: any) =>
+                (String(r.username) === String(myUsername) || String(r.id) === String(myId))
+                  ? { ...r, experienceAwarded: xp }
+                  : r
+              )
+              setGameResults(patched as any)
+            }
           }
+        } catch (e) {
+          console.warn('Failed to award experience after game end:', e)
         }
-      } catch (e) {
-        console.warn('Failed to award experience after game end:', e)
-      }
 
-      // Process perk unlock notifications
-      const { addPerkUnlockNotification } = useGameStore.getState()
-      const playersWithPerks = normalizedResults.filter((result: any) =>
-        result.newlyUnlockedPerks && result.newlyUnlockedPerks.length > 0
-      )
+        // Process perk unlock notifications
+        const { addPerkUnlockNotification } = useGameStore.getState()
+        const playersWithPerks = normalizedResults.filter((result: any) =>
+          result.newlyUnlockedPerks && result.newlyUnlockedPerks.length > 0
+        )
 
-      playersWithPerks.forEach((result: any) => {
-        addPerkUnlockNotification({
-          playerId: result.id,
-          username: result.username,
-          character: result.character,
-          unlockedPerks: result.newlyUnlockedPerks
+        playersWithPerks.forEach((result: any) => {
+          addPerkUnlockNotification({
+            playerId: result.id,
+            username: result.username,
+            character: result.character,
+            unlockedPerks: result.newlyUnlockedPerks
+          })
         })
-      })
 
-      // Navigate to results page — skip validation since the lobby gets
-      // deleted after game end and the API check would fail
-      // Use dynamic import to avoid circular dependency
-      import('./navigationService').then(({ navigationService }) => {
-        if (lobbyCode) {
-          navigationService.navigateToResults(lobbyCode, true)
-        }
-      })
+        // Navigate to results page — skip validation since the lobby gets
+        // deleted after game end and the API check would fail
+        // Use dynamic import to avoid circular dependency
+        import('./navigationService').then(({ navigationService }) => {
+          if (lobbyCode) {
+            navigationService.navigateToResults(lobbyCode, true)
+          }
+        })
+      } catch (err) {
+        console.error('Error in game-ended handler:', err)
+        useGameStore.getState().setError('Failed to process game results.')
+      }
     })
 
     this.socket.on('player-level-up', (data) => {
-      console.log('Player level up:', data)
-      const { addLevelUpNotification } = useGameStore.getState()
-      addLevelUpNotification({
-        playerId: data.playerId,
-        username: data.username,
-        character: data.character,
-        oldLevel: data.oldLevel,
-        newLevel: data.newLevel,
-        experienceAwarded: data.experienceAwarded
-      })
+      try {
+        console.log('Player level up:', data)
+        const { addLevelUpNotification } = useGameStore.getState()
+        addLevelUpNotification({
+          playerId: data.playerId,
+          username: data.username,
+          character: data.character,
+          oldLevel: data.oldLevel,
+          newLevel: data.newLevel,
+          experienceAwarded: data.experienceAwarded
+        })
+      } catch (err) {
+        console.error('Error in player-level-up handler:', err)
+      }
     })
 
     // Real-time perk unlock notifications (may arrive before game-end)
     this.socket.on('player-perk-unlocks', (data) => {
-      console.log('Player perk unlocks:', data)
-      const { addPerkUnlockNotification } = useGameStore.getState()
-      addPerkUnlockNotification({
-        playerId: data.playerId,
-        username: data.username,
-        character: data.character,
-        unlockedPerks: Array.isArray(data.unlockedPerks) ? data.unlockedPerks : []
-      })
+      try {
+        console.log('Player perk unlocks:', data)
+        const { addPerkUnlockNotification } = useGameStore.getState()
+        addPerkUnlockNotification({
+          playerId: data.playerId,
+          username: data.username,
+          character: data.character,
+          unlockedPerks: Array.isArray(data.unlockedPerks) ? data.unlockedPerks : []
+        })
+      } catch (err) {
+        console.error('Error in player-perk-unlocks handler:', err)
+      }
     })
 
     // Error event handler

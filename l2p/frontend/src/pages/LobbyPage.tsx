@@ -60,17 +60,18 @@ export const LobbyPage: React.FC = () => {
     }
   }, [lobbyId, lobbyCode, navigate, setError, setLobbyCode, handleLobbyMusic, handleStopAllSounds])
 
-  // Auto-navigate to game when it starts
+  // Play game start audio cue when gameStarted flips (navigation is handled by
+  // the socket 'game-started' handler in socketService.ts — do NOT navigate here
+  // to avoid triple-navigation race conditions).
   useEffect(() => {
-    if (gameStarted && lobbyCode) {
-      // Play game start cue and switch music
+    if (gameStarted) {
       handleGameStart()
-      // Skip validation since gameStarted is set by socket event
-      navigationService.navigateToGame(lobbyCode, true)
     }
-  }, [gameStarted, lobbyCode, handleGameStart])
+  }, [gameStarted, handleGameStart])
 
-  // Recovery: poll lobby status to detect if game started but socket event was missed
+  // Recovery: poll lobby status to detect if game started but socket event was missed.
+  // If the socket handler already navigated, this is a no-op because gameStarted will
+  // be true and the effect exits early.
   const recoveryRef = useRef(false)
   useEffect(() => {
     if (gameStarted || !lobbyId) return
@@ -82,8 +83,10 @@ export const LobbyPage: React.FC = () => {
         if (response.success && response.data && response.data.status === 'playing') {
           recoveryRef.current = true
           clearInterval(pollInterval)
-          console.log('Recovery: detected game started via API poll')
+          console.log('Recovery: detected game started via API poll, navigating directly')
           useGameStore.getState().setGameStarted(true)
+          // Navigate directly as the socket event was missed
+          navigationService.navigateToGame(lobbyId, true)
         }
       } catch {
         // Ignore errors during recovery polling

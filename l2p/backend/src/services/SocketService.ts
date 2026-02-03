@@ -23,6 +23,7 @@ export class SocketService {
   private lobbyService: LobbyService;
   private gameService: GameService;
   private connectedUsers: Map<string, SocketUser> = new Map();
+  private rateLimiters: Map<string, { count: number; resetAt: number }> = new Map();
 
   constructor(io: Server) {
     this.io = io;
@@ -82,25 +83,45 @@ export class SocketService {
     this.io.on('connection', (socket: Socket) => {
       this.handleConnection(socket);
 
-      // Lobby management events
+      // Lobby management events (rate limited)
       socket.on('join-lobby', (data: { lobbyCode: string; player: SocketUser }) => {
+        if (!this.checkRateLimit(socket.id, 'join-lobby', 5, 10000)) {
+          socket.emit('join-error', { type: 'RATE_LIMITED', message: 'Too many join attempts, please wait' });
+          return;
+        }
         this.handleJoinLobby(socket, data);
       });
 
       socket.on('leave-lobby', (data: { lobbyCode: string; playerId: string }) => {
+        if (!this.checkRateLimit(socket.id, 'leave-lobby', 5, 10000)) {
+          socket.emit('leave-error', { type: 'RATE_LIMITED', message: 'Too many requests, please wait' });
+          return;
+        }
         this.handleLeaveLobby(socket, data);
       });
 
       socket.on('player-ready', (data: { lobbyCode: string; playerId: string; isReady: boolean }) => {
+        if (!this.checkRateLimit(socket.id, 'player-ready', 10, 10000)) {
+          socket.emit('ready-error', { type: 'RATE_LIMITED', message: 'Too many requests, please wait' });
+          return;
+        }
         this.handlePlayerReady(socket, data);
       });
 
       socket.on('start-game', (data: { lobbyCode: string; hostId: string }) => {
+        if (!this.checkRateLimit(socket.id, 'start-game', 3, 30000)) {
+          socket.emit('start-game-error', { type: 'RATE_LIMITED', message: 'Too many start attempts, please wait' });
+          return;
+        }
         this.handleStartGame(socket, data);
       });
 
       // Question set management events
       socket.on('update-question-sets', (data: { lobbyCode: string; hostId: string; questionSetIds: number[]; questionCount: number }) => {
+        if (!this.checkRateLimit(socket.id, 'update-question-sets', 10, 10000)) {
+          socket.emit('question-sets-update-error', { type: 'RATE_LIMITED', message: 'Too many requests, please wait' });
+          return;
+        }
         this.handleUpdateQuestionSets(socket, data);
       });
 
@@ -108,8 +129,12 @@ export class SocketService {
         this.handleGetQuestionSetInfo(socket, data);
       });
 
-      // Game events
+      // Game events (rate limited)
       socket.on('submit-answer', (data: { lobbyCode: string; playerId: string; answer: string; timeElapsed: number }) => {
+        if (!this.checkRateLimit(socket.id, 'submit-answer', 5, 5000)) {
+          socket.emit('answer-error', { type: 'RATE_LIMITED', message: 'Too many answer submissions, please wait' });
+          return;
+        }
         this.handleSubmitAnswer(socket, data);
       });
 
@@ -158,6 +183,11 @@ export class SocketService {
 
       const { lobbyCode, player } = data;
 
+      // Require authentication and verify identity
+      const userId = this.requireAuth(socket, 'join');
+      if (!userId) return;
+      if (!this.verifyIdentity(socket, 'join', player?.id)) return;
+
       RequestLogger.logSocketEvent(socket.id, 'join-lobby', { lobbyCode, playerId: player?.id });
 
       // Validate lobby code format
@@ -165,6 +195,16 @@ export class SocketService {
         socket.emit('join-error', {
           type: 'INVALID_CODE',
           message: 'Invalid lobby code format'
+        });
+        return;
+      }
+
+      // Check lobby status — reject joins if game is already starting or playing
+      const existingLobby = await this.lobbyService.getLobbyByCode(lobbyCode);
+      if (existingLobby && (existingLobby.status === 'starting' || existingLobby.status === 'playing')) {
+        socket.emit('join-error', {
+          type: 'GAME_IN_PROGRESS',
+          message: 'Cannot join lobby — game is already in progress'
         });
         return;
       }
@@ -199,6 +239,10 @@ export class SocketService {
           const updatedLobby = await this.lobbyService.updatePlayerConnection(lobbyCode, player.id, true);
           if (updatedLobby) {
             lobby = updatedLobby;
+          }
+          // If game is active, handle reconnection (cancel grace timer, restore status)
+          if (this.gameService.isGameActive(lobbyCode)) {
+            await this.gameService.handlePlayerReconnect(lobbyCode, player.id);
           }
         } else {
           throw error; // Re-throw other errors
@@ -259,6 +303,11 @@ export class SocketService {
     try {
       const { lobbyCode, playerId } = data;
 
+      // Require authentication and verify identity
+      const userId = this.requireAuth(socket, 'leave');
+      if (!userId) return;
+      if (!this.verifyIdentity(socket, 'leave', playerId)) return;
+
       RequestLogger.logSocketEvent(socket.id, 'leave-lobby', { lobbyCode, playerId });
 
       // Leave the lobby
@@ -303,6 +352,11 @@ export class SocketService {
     try {
       const { lobbyCode, playerId, isReady } = data;
 
+      // Require authentication and verify identity
+      const userId = this.requireAuth(socket, 'ready');
+      if (!userId) return;
+      if (!this.verifyIdentity(socket, 'ready', playerId)) return;
+
       RequestLogger.logSocketEvent(socket.id, 'player-ready', { lobbyCode, playerId, isReady });
 
       // Update player ready state
@@ -331,6 +385,11 @@ export class SocketService {
     try {
       const { lobbyCode, hostId } = data;
 
+      // Require authentication and verify identity
+      const userId = this.requireAuth(socket, 'start-game');
+      if (!userId) return;
+      if (!this.verifyIdentity(socket, 'start-game', hostId)) return;
+
       RequestLogger.logSocketEvent(socket.id, 'start-game', { lobbyCode, hostId });
 
       // Start the game session using GameService
@@ -344,24 +403,13 @@ export class SocketService {
       // Broadcast game start to all players in the socket room
       this.io.to(lobbyCode).emit('game-started', gameStartedPayload);
 
-      // Also emit directly to each known connected user for this lobby,
-      // in case their socket hasn't joined the room yet (race condition).
-      // Include both game-started and question-started since the first
-      // question-started was emitted (room-only) inside startGameSession
-      // before we reach this point.
-      const questionPayload = gameState.currentQuestion ? {
-        question: gameState.currentQuestion,
-        questionIndex: gameState.currentQuestionIndex,
-        totalQuestions: gameState.totalQuestions,
-        timeRemaining: gameState.timeRemaining
-      } : null;
-
+      // Also emit game-started directly to each known connected user for this lobby,
+      // in case their socket hasn't joined the room yet (two-phase join race condition).
+      // NOTE: Do NOT emit question-started here — startNextQuestion() already emits it
+      // to the room after the sync countdown, which would cause duplicate events.
       for (const [socketId, user] of this.connectedUsers.entries()) {
         if (user.lobbyCode === lobbyCode) {
           this.io.to(socketId).emit('game-started', gameStartedPayload);
-          if (questionPayload) {
-            this.io.to(socketId).emit('question-started', questionPayload);
-          }
         }
       }
 
@@ -377,6 +425,11 @@ export class SocketService {
   private async handleSubmitAnswer(socket: Socket, data: { lobbyCode: string; playerId: string; answer: string; timeElapsed: number }): Promise<void> {
     try {
       const { lobbyCode, playerId, answer, timeElapsed } = data;
+
+      // Require authentication and verify identity
+      const userId = this.requireAuth(socket, 'answer');
+      if (!userId) return;
+      if (!this.verifyIdentity(socket, 'answer', playerId)) return;
 
       RequestLogger.logSocketEvent(socket.id, 'submit-answer', { lobbyCode, playerId, answer, timeElapsed });
 
@@ -397,6 +450,11 @@ export class SocketService {
   private async handleUpdateQuestionSets(socket: Socket, data: { lobbyCode: string; hostId: string; questionSetIds: number[]; questionCount: number }): Promise<void> {
     try {
       const { lobbyCode, hostId, questionSetIds, questionCount } = data;
+
+      // Require authentication and verify identity
+      const userId = this.requireAuth(socket, 'question-sets-update');
+      if (!userId) return;
+      if (!this.verifyIdentity(socket, 'question-sets-update', hostId)) return;
 
       RequestLogger.logSocketEvent(socket.id, 'update-question-sets', { lobbyCode, hostId, questionSetIds, questionCount });
 
@@ -495,6 +553,68 @@ export class SocketService {
 
     // Remove from connected users
     this.connectedUsers.delete(socket.id);
+
+    // Clean up rate limit entries for this socket
+    for (const key of this.rateLimiters.keys()) {
+      if (key.startsWith(socket.id + ':')) {
+        this.rateLimiters.delete(key);
+      }
+    }
+  }
+
+  /**
+   * Check that the socket connection is authenticated.
+   * If not, emit an error event and return null.
+   * Returns the authenticated user ID on success.
+   */
+  private requireAuth(socket: Socket, event: string): string | null {
+    const userId = socket.data?.user?.id;
+    if (!userId) {
+      socket.emit(`${event}-error`, {
+        type: 'UNAUTHORIZED',
+        message: 'Authentication required'
+      });
+      return null;
+    }
+    return userId;
+  }
+
+  /**
+   * Verify that the authenticated user matches the claimed identity.
+   * Must be called AFTER requireAuth (assumes userId is already validated).
+   * Emits an error event and returns false on mismatch.
+   */
+  private verifyIdentity(socket: Socket, event: string, claimedId: string): boolean {
+    const authenticatedId = socket.data?.user?.id;
+    if (authenticatedId !== claimedId) {
+      socket.emit(`${event}-error`, {
+        type: 'IDENTITY_MISMATCH',
+        message: 'Authenticated user does not match claimed identity'
+      });
+      return false;
+    }
+    return true;
+  }
+
+  /**
+   * Per-socket rate limiting. Returns true if the request is allowed, false if rate-limited.
+   */
+  private checkRateLimit(socketId: string, event: string, maxRequests: number, windowMs: number): boolean {
+    const key = `${socketId}:${event}`;
+    const now = Date.now();
+    const limiter = this.rateLimiters.get(key);
+
+    if (!limiter || now > limiter.resetAt) {
+      this.rateLimiters.set(key, { count: 1, resetAt: now + windowMs });
+      return true;
+    }
+
+    if (limiter.count >= maxRequests) {
+      return false;
+    }
+
+    limiter.count++;
+    return true;
   }
 
   // Public methods for external use
@@ -512,5 +632,31 @@ export class SocketService {
 
   public emitToUser(socketId: string, event: string, data: any): void {
     this.io.to(socketId).emit(event, data);
+  }
+
+  /**
+   * Graceful shutdown: clear all game timers, close socket connections.
+   */
+  public shutdown(): Promise<void> {
+    return new Promise((resolve) => {
+      console.log('Shutting down SocketService...');
+
+      // Clean up all game timers and active games
+      this.gameService.cleanup();
+      console.log('Game timers and active games cleaned up');
+
+      // Clear rate limiters
+      this.rateLimiters.clear();
+
+      // Close all socket connections
+      this.io.close((err) => {
+        if (err) {
+          console.error('Error closing Socket.io:', err);
+        } else {
+          console.log('Socket.io connections closed');
+        }
+        resolve();
+      });
+    });
   }
 } 

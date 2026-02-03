@@ -483,6 +483,29 @@ export class LobbyService {
   }
 
   /**
+   * Reconcile stale lobby statuses on server startup.
+   * Lobbies in 'starting' or 'playing' status have no active in-memory game
+   * after a restart, so they need to be cleaned up.
+   */
+  async reconcileStaleLobbies(): Promise<number> {
+    let cleaned = 0;
+    try {
+      const allLobbies = await this.lobbyRepository.findActiveLobbies();
+      for (const lobby of allLobbies) {
+        if (lobby.status === 'starting' || lobby.status === 'playing') {
+          // No in-memory game exists after restart — delete these stale lobbies
+          await this.lobbyRepository.deleteLobby(lobby.id);
+          cleaned++;
+          console.log(`Reconciled stale lobby ${lobby.code} (was ${lobby.status})`);
+        }
+      }
+    } catch (error) {
+      console.error('Error reconciling stale lobbies:', error);
+    }
+    return cleaned;
+  }
+
+  /**
    * Get lobby statistics
    */
   async getLobbyStats(): Promise<{

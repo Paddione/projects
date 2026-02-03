@@ -56,6 +56,8 @@ export class GameService {
   private activeGames: Map<string, GameState> = new Map();
   private gameTimers: Map<string, NodeJS.Timeout> = new Map();
   private nextQuestionTimers: Map<string, NodeJS.Timeout> = new Map();
+  private disconnectGraceTimers: Map<string, NodeJS.Timeout> = new Map();
+  private answerLocks: Set<string> = new Set();
   private isTestEnvironment: boolean;
 
   private getIo() {
@@ -634,6 +636,21 @@ export class GameService {
   }
 
   async submitAnswer(lobbyCode: string, playerId: string, answer: string): Promise<void> {
+    // Atomic lock to prevent concurrent double-submissions for the same player
+    const lockKey = `${lobbyCode}:${playerId}`;
+    if (this.answerLocks.has(lockKey)) {
+      throw new Error('Answer submission already in progress');
+    }
+    this.answerLocks.add(lockKey);
+
+    try {
+      return await this._submitAnswerInner(lobbyCode, playerId, answer);
+    } finally {
+      this.answerLocks.delete(lockKey);
+    }
+  }
+
+  private async _submitAnswerInner(lobbyCode: string, playerId: string, answer: string): Promise<void> {
     const gameState = this.activeGames.get(lobbyCode);
     if (!gameState) {
       throw new Error('Game not active');
@@ -714,7 +731,7 @@ export class GameService {
   }
 
   /**
-   * Clean up all timers and active games (useful for testing)
+   * Clean up all timers and active games (useful for testing and shutdown)
    */
   cleanup(): void {
     // Clear all game timers
@@ -728,6 +745,15 @@ export class GameService {
       clearTimeout(timer);
     });
     this.nextQuestionTimers.clear();
+
+    // Clear all disconnect grace timers
+    this.disconnectGraceTimers.forEach((timer: NodeJS.Timeout) => {
+      clearTimeout(timer);
+    });
+    this.disconnectGraceTimers.clear();
+
+    // Clear answer locks
+    this.answerLocks.clear();
 
     // Clear active games
     this.activeGames.clear();
@@ -985,7 +1011,10 @@ export class GameService {
   }
 
   /**
-   * Clean up games for disconnected players
+   * Handle player disconnect with grace period.
+   * Broadcasts disconnect status to remaining players immediately,
+   * but waits 30 seconds before considering the player fully disconnected
+   * (giving them a chance to reconnect).
    */
   async handlePlayerDisconnect(lobbyCode: string, playerId: string): Promise<void> {
     const gameState = this.activeGames.get(lobbyCode);
@@ -993,20 +1022,99 @@ export class GameService {
       return;
     }
 
-    // Mark player as disconnected
     const player = gameState.players.find(p => p.id === playerId);
-    if (player) {
-      player.isConnected = false;
-      // Update player connection status in lobby
-      await this.lobbyService.updatePlayerConnection(lobbyCode, playerId, false);
+    if (!player) return;
+
+    // Broadcast disconnect status to remaining players immediately
+    this.getIo()?.to(lobbyCode).emit('player-disconnected', {
+      playerId,
+      username: player.username,
+      message: `${player.username} hat die Verbindung verloren...`
+    });
+
+    // Start grace period — don't mark fully disconnected yet
+    const graceKey = `${lobbyCode}:${playerId}`;
+    // Clear any existing grace timer for this player
+    const existing = this.disconnectGraceTimers.get(graceKey);
+    if (existing) {
+      clearTimeout(existing);
     }
 
-    // Check if all players are disconnected
-    const allDisconnected = gameState.players.every(p => !p.isConnected);
-    if (allDisconnected) {
-      // End game if all players disconnected
-      await this.endGameSession(lobbyCode);
+    const graceTimer = setTimeout(async () => {
+      this.disconnectGraceTimers.delete(graceKey);
+
+      // Re-check game state (may have ended during grace period)
+      const currentGameState = this.activeGames.get(lobbyCode);
+      if (!currentGameState) return;
+
+      const currentPlayer = currentGameState.players.find(p => p.id === playerId);
+      if (!currentPlayer || currentPlayer.isConnected) return; // Player reconnected
+
+      // Grace period expired — mark as fully disconnected
+      currentPlayer.isConnected = false;
+      try {
+        await this.lobbyService.updatePlayerConnection(lobbyCode, playerId, false);
+      } catch (e) {
+        console.warn('Failed to update player connection after grace period:', e);
+      }
+
+      // Notify remaining players that grace period expired
+      this.getIo()?.to(lobbyCode).emit('player-disconnect-confirmed', {
+        playerId,
+        username: currentPlayer.username,
+        message: `${currentPlayer.username} ist endgültig getrennt`
+      });
+
+      // Check if all players are disconnected
+      const allDisconnected = currentGameState.players.every(p => !p.isConnected);
+      if (allDisconnected) {
+        await this.endGameSession(lobbyCode);
+      }
+    }, 30000); // 30 second grace period
+
+    this.disconnectGraceTimers.set(graceKey, graceTimer);
+
+    // Don't keep process alive in tests
+    if (this.isTestEnvironment && graceTimer.unref) {
+      graceTimer.unref();
     }
+
+    // Temporarily mark as disconnected (for UI purposes) but don't update DB yet
+    player.isConnected = false;
+  }
+
+  /**
+   * Handle player reconnection — cancel grace timer and restore connected status.
+   */
+  async handlePlayerReconnect(lobbyCode: string, playerId: string): Promise<void> {
+    const gameState = this.activeGames.get(lobbyCode);
+    if (!gameState) return;
+
+    const player = gameState.players.find(p => p.id === playerId);
+    if (!player) return;
+
+    // Cancel grace timer if active
+    const graceKey = `${lobbyCode}:${playerId}`;
+    const graceTimer = this.disconnectGraceTimers.get(graceKey);
+    if (graceTimer) {
+      clearTimeout(graceTimer);
+      this.disconnectGraceTimers.delete(graceKey);
+    }
+
+    // Restore connected status
+    player.isConnected = true;
+    try {
+      await this.lobbyService.updatePlayerConnection(lobbyCode, playerId, true);
+    } catch (e) {
+      console.warn('Failed to update player reconnection status:', e);
+    }
+
+    // Broadcast reconnection to remaining players
+    this.getIo()?.to(lobbyCode).emit('player-reconnected', {
+      playerId,
+      username: player.username,
+      message: `${player.username} ist wieder verbunden`
+    });
   }
 
   /**

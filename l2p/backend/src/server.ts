@@ -417,7 +417,7 @@ app.use(notFoundHandler);
 app.use(errorHandler);
 
 // Initialize Socket.IO service
-new SocketService(io);
+const socketService = new SocketService(io);
 
 // Global cleanup service reference for shutdown handlers
 let cleanupService: CleanupService | null = null;
@@ -438,21 +438,28 @@ async function startServer() {
     await db.testConnection();
     console.log('Database connection established successfully');
 
-    console.log('Skipping migrations temporarily...');
-    // const migrationService = new MigrationService();
-    // await migrationService.runMigrations();
-    console.log('Database migrations skipped');
+    console.log('Running database migrations...');
+    const migrationService = new MigrationService();
+    await migrationService.runMigrations();
+    console.log('Database migrations completed successfully');
 
-    // console.log('Validating applied migrations...');
-    // const isValid = await migrationService.validateMigrations();
-    // if (!isValid) {
-    //   throw new Error('Migration validation failed');
-    // }
+    console.log('Validating applied migrations...');
+    const isValid = await migrationService.validateMigrations();
+    if (!isValid) {
+      throw new Error('Migration validation failed');
+    }
     console.log('Migration validation skipped');
 
     // Initialize cleanup service in non-test environments
     if (process.env['NODE_ENV'] !== 'test') {
       const lobbyService = new LobbyService();
+
+      // Reconcile stale lobbies left in 'starting'/'playing' from a previous crash
+      const reconciledCount = await lobbyService.reconcileStaleLobbies();
+      if (reconciledCount > 0) {
+        console.log(`Reconciled ${reconciledCount} stale lobbies from previous session`);
+      }
+
       cleanupService = new CleanupService(lobbyService);
       cleanupService.start();
       console.log('Cleanup service initialized');
@@ -472,8 +479,8 @@ async function startServer() {
 
 // Graceful shutdown handling - only set up when not running tests
 if (process.env['NODE_ENV'] !== 'test' && !process.env['JEST_WORKER_ID']) {
-  process.on('SIGTERM', async () => {
-    console.log('SIGTERM received, shutting down gracefully...');
+  const gracefulShutdown = async (signal: string) => {
+    console.log(`${signal} received, shutting down gracefully...`);
 
     try {
       // Stop cleanup service if running
@@ -481,6 +488,9 @@ if (process.env['NODE_ENV'] !== 'test' && !process.env['JEST_WORKER_ID']) {
         cleanupService.stop();
         console.log('Cleanup service stopped');
       }
+
+      // Shut down socket service (clears game timers, closes socket connections)
+      await socketService.shutdown();
 
       const db = DatabaseService.getInstance();
       await db.close();
@@ -494,31 +504,10 @@ if (process.env['NODE_ENV'] !== 'test' && !process.env['JEST_WORKER_ID']) {
       console.error('Error during shutdown:', error);
       process.exit(1);
     }
-  });
+  };
 
-  process.on('SIGINT', async () => {
-    console.log('SIGINT received, shutting down gracefully...');
-
-    try {
-      // Stop cleanup service if running
-      if (cleanupService) {
-        cleanupService.stop();
-        console.log('Cleanup service stopped');
-      }
-
-      const db = DatabaseService.getInstance();
-      await db.close();
-      console.log('Database connections closed');
-
-      server.close(() => {
-        console.log('Server closed');
-        process.exit(0);
-      });
-    } catch (error) {
-      console.error('Error during shutdown:', error);
-      process.exit(1);
-    }
-  });
+  process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+  process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 }
 
 // Start the server unless we're under Jest/tests

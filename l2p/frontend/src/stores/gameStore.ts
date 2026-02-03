@@ -1,7 +1,6 @@
 import { create } from 'zustand'
 import { devtools } from 'zustand/middleware'
 import { Player } from '../types'
-import { performanceOptimizer } from '../services/performanceOptimizer'
 
 export interface Question {
   id: string
@@ -181,21 +180,7 @@ export const useGameStore = create<GameState>()(
       setQuestionIndex: (index) => set({ questionIndex: index }),
       setTotalQuestions: (total) => set({ totalQuestions: total }),
       setTimeRemaining: (time) => {
-        // Throttle time updates to prevent excessive re-renders
-        const throttledUpdate = performanceOptimizer.throttle(
-          'time-remaining-update',
-          () => {
-            set({ timeRemaining: time })
-          },
-          100
-        ) // Update every 100ms max
-
-        if (typeof throttledUpdate === 'function') {
-          throttledUpdate()
-        } else {
-          // Fallback in case a mocked throttle returns a non-function
-          set({ timeRemaining: time })
-        }
+        set({ timeRemaining: time })
       },
       setGameEnded: (ended) => set({ gameEnded: ended }),
       setGameResults: (results) => set({ gameResults: results }),
