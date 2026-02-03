@@ -23,7 +23,7 @@ A client-first video management application with advanced filtering, bulk operat
 | Backend | Node.js, Express, Vite middleware (dev) / static serving (prod) |
 | Data | localStorage (primary), optional Drizzle ORM + PostgreSQL |
 | Testing | Vitest (jsdom), Playwright |
-| Infrastructure | Docker, Docker Compose, Traefik ingress |
+| Infrastructure | k3s (production), Docker Compose (local dev), Traefik ingress |
 
 ## Quick Start
 
@@ -383,7 +383,9 @@ Uses a single root config `tailwind.config.cjs` with PostCSS configured in `post
 
 ## Deployment
 
-### Docker Development
+### Local Development (Docker Compose)
+
+Docker Compose is used **only for local development**, not production.
 
 ```bash
 npm run docker:dev
@@ -392,24 +394,40 @@ npm run docker:dev
 
 Features: hot reload via bind mounts, preserved node_modules in container, Vite file watching, connection to centralized `shared-postgres`.
 
-### Docker Production
+### Production (k3s)
+
+Production runs on **k3s** (lightweight Kubernetes). Do not use Docker Compose or `docker build/run` for production.
 
 ```bash
-docker build -f Dockerfile.prod -t videovault .
-docker run -p 5000:5000 --env-file .env-prod videovault
+# Deploy VideoVault to the k3s cluster
+../../k8s/scripts/deploy/deploy-videovault.sh
+
+# Or deploy the full stack
+../../k8s/scripts/deploy/deploy-all.sh
+
+# Verify
+kubectl get pods -l app=videovault -n korczewski-services
 ```
 
-Production uses `Dockerfile.prod`, connects to `shared-postgres:5432`, integrates with Traefik ingress, and exposes a health check at `/api/health`.
+K8s manifests: `k8s/services/videovault/` (deployment, service, PVCs, PVs, IngressRoute).
+Full deployment guide: `k8s/README.md`.
+
+Production URL: https://videovault.korczewski.de
+
+### Docker Image (used by k3s)
+
+The production Docker image is built via `Dockerfile.prod`. It connects to `shared-postgres:5432`, integrates with Traefik ingress, and exposes a health check at `/api/health`. The image is referenced in the k8s deployment manifest, not run directly via `docker run`.
 
 ### Networks
 
-- `l2p-network` (external): Shared service network
-- `traefik-public` (external): Production ingress
+- `l2p-network` (external): Shared service network (local dev only)
+- `traefik-public` (external): Production ingress (local dev only)
+- In k3s, networking is handled by the cluster's CNI
 
 ### Important Files
 
-- `docker-compose.yml` -- Dev + E2E environment definitions
-- `Dockerfile.prod` -- Production image
+- `docker-compose.yml` -- Local dev + E2E environment definitions
+- `Dockerfile.prod` -- Production image (used by k3s deployment)
 - `scripts/ensure-playwright-match.mjs` -- Playwright version validation
 
 ## Troubleshooting

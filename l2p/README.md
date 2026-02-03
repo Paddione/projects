@@ -11,7 +11,7 @@ A multiplayer quiz platform with real-time gameplay, built with React, Express, 
 - Player progression: XP, leveling, character selection, badges
 - Admin panel for user moderation and question management
 - Comprehensive test suite: unit, integration, and E2E coverage
-- Docker-based development and production deployments
+- Docker-based local development, k3s for production
 
 ## Tech Stack
 
@@ -20,7 +20,7 @@ A multiplayer quiz platform with real-time gameplay, built with React, Express, 
 | Frontend | React 18, TypeScript, Vite, Wouter, Tailwind CSS, Radix UI, Socket.io client, Zustand |
 | Backend | Express, TypeScript, Socket.io, Drizzle ORM, PostgreSQL, Passport.js (JWT) |
 | Testing | Jest (ESM), Testing Library, Playwright, Vitest |
-| Infrastructure | Docker, PostgreSQL (shared), Redis, MailHog (dev) |
+| Infrastructure | k3s (production), Docker Compose (local dev), PostgreSQL (shared), Redis, MailHog (dev) |
 
 ## Quick Start
 
@@ -271,32 +271,38 @@ Users authenticated via the centralized auth service may not exist in the L2P lo
 
 ## Deployment
 
-### Development
+### Local Development (Docker Compose)
+
+Docker Compose is used **only for local development**, not production.
 
 ```bash
-npm run deploy:dev               # Start containers
+npm run deploy:dev               # Start local dev stack
 npm run deploy:logs              # Tail logs
 npm run deploy:down              # Stop
 ```
 
-### Production
+### Production (k3s)
+
+Production runs on **k3s** (lightweight Kubernetes). Do not use Docker Compose for production.
 
 ```bash
-cp .env-prod .env                # Deploy script reads .env
-npm run deploy:prod              # Start production stack
-npm run stop                     # Stop production
-./scripts/rebuild.sh             # Full rebuild
+# Deploy L2P to the k3s cluster
+../../k8s/scripts/deploy/deploy-l2p.sh
+
+# Or deploy the full stack
+../../k8s/scripts/deploy/deploy-all.sh
+
+# Verify
+kubectl get pods -l 'app in (l2p-backend, l2p-frontend)' -n korczewski-services
 ```
 
-Verify deployment:
-```bash
-docker ps | grep l2p
-docker logs l2p-api --tail 50
-```
+K8s manifests: `k8s/services/l2p-backend/` and `k8s/services/l2p-frontend/`.
+Full deployment guide: `k8s/README.md`.
 
 ### Production URLs
 
 - Frontend: https://l2p.korczewski.de
+- Backend API: https://l2p.korczewski.de/api
 - Auth: https://auth.korczewski.de
 
 ## Project Structure

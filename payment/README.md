@@ -67,42 +67,38 @@ npx prisma studio            # Database GUI
 
 ## Deployment
 
-### Docker
+### Production (k3s)
+
+Production runs on **k3s** (lightweight Kubernetes). Do not use Docker Compose or `docker run` for production.
 
 ```bash
-# Build image
-docker build -t payment-service .
+# Deploy payment service to the k3s cluster
+../../k8s/scripts/deploy/deploy-payment.sh
 
-# Run container
-docker run -d --name payment-service \
-  --env-file .env-prod \
-  -p 3004:3000 \
-  --network traefik-public \
-  payment-service
+# Or deploy the full stack
+../../k8s/scripts/deploy/deploy-all.sh
+
+# Verify
+kubectl get pods -l app=payment -n korczewski-services
 ```
 
-Container details:
+K8s manifests: `k8s/services/payment/`. Full deployment guide: `k8s/README.md`.
+
+Production URL: https://payment.korczewski.de (alias: https://shop.korczewski.de)
+
+### Docker Image (used by k3s)
+
+The production Docker image is built from the project `Dockerfile`. The k3s deployment manifest references this image. Do not run the image directly via `docker run` in production.
+
+```bash
+# Build image (for local testing only)
+docker build -t payment-service .
+```
+
+Container details (for reference):
 - **Port mapping**: 3004 (host) to 3000 (container)
-- **Network**: `traefik-public`
-- **Environment**: `.env-prod`
-
-### Docker Management
-
-```bash
-docker logs payment-service          # View logs
-docker logs payment-service -f       # Follow logs
-docker restart payment-service       # Restart
-docker stop payment-service          # Stop
-
-# Rebuild after code changes
-docker build -t payment-service .
-docker stop payment-service && docker rm payment-service
-docker run -d --name payment-service --env-file .env-prod -p 3004:3000 --network traefik-public payment-service
-```
-
-### Kubernetes
-
-Deployed via `./k8s/scripts/deploy/deploy-all.sh`. See `k8s/services/` for manifests.
+- **Network**: In k3s, networking is handled by the cluster's CNI
+- **Environment**: Secrets managed via k8s Secret objects
 
 ### Stripe Webhook Setup
 

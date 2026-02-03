@@ -92,16 +92,27 @@ npm run db:rollback
 npm run db:test
 ```
 
-### Deployment
+### Local Docker (development only)
 
 ```bash
-npm run deploy:dev               # Start dev stack
+npm run deploy:dev               # Start local dev stack (Docker Compose)
 npm run deploy:logs              # View logs
 npm run deploy:down              # Stop containers
-npm run deploy:prod              # Production deployment
-npm run stop                     # Stop production
-./scripts/rebuild.sh             # Full rebuild
 ```
+
+### Production Deployment (k3s)
+
+Production runs on k3s (lightweight Kubernetes), NOT Docker Compose. Never use `docker-compose` or `npm run deploy:prod` to deploy to production.
+
+```bash
+# Deploy L2P to k3s cluster
+../../k8s/scripts/deploy/deploy-l2p.sh
+
+# Or deploy everything
+../../k8s/scripts/deploy/deploy-all.sh
+```
+
+See `k8s/services/l2p-backend/` and `k8s/services/l2p-frontend/` for manifests.
 
 ## Project Structure
 

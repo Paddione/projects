@@ -9,6 +9,7 @@ npm install
 cp .env.example .env-dev
 cp .env.example .env-prod
 
+# Local development only (Docker Compose)
 docker-compose --env-file .env-dev up -d
 ```
 
@@ -31,12 +32,33 @@ OAuth redirect URIs:
 - Dev: `http://localhost:5500/api/oauth/google/callback`
 - Prod: `https://auth.korczewski.de/api/oauth/google/callback`
 
-## Docker
+## Local Development (Docker Compose)
+
+Docker Compose is used **only for local development**, not production.
 
 ```bash
-docker-compose up -d       # Start
-docker-compose down        # Stop
+docker-compose up -d       # Start local dev
+docker-compose down        # Stop local dev
 ```
+
+## Production Deployment (k3s)
+
+Production runs on **k3s** (lightweight Kubernetes). Do not use Docker Compose for production.
+
+```bash
+# Deploy auth service to the k3s cluster
+../../k8s/scripts/deploy/deploy-auth.sh
+
+# Or deploy the full stack
+../../k8s/scripts/deploy/deploy-all.sh
+
+# Verify
+kubectl get pods -l app=auth -n korczewski-services
+```
+
+K8s manifests: `k8s/services/auth/`. Full deployment guide: `k8s/README.md`.
+
+Production URL: https://auth.korczewski.de
 
 Production uses the centralized Postgres instance from `shared-infrastructure`. Use different secrets for dev and prod.
 

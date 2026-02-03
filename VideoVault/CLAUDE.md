@@ -70,6 +70,22 @@ npm run verify                 # Typecheck + unit + server e2e + build
 npm run db:push                # Apply Drizzle schema to Postgres
 ```
 
+### Deployment
+
+**Local development** uses Docker Compose (see Development commands above).
+
+**Production** runs on **k3s** (lightweight Kubernetes). Do not use Docker Compose for production.
+
+```bash
+# Deploy VideoVault to the k3s cluster
+../../k8s/scripts/deploy/deploy-videovault.sh
+
+# Or deploy the full stack
+../../k8s/scripts/deploy/deploy-all.sh
+```
+
+K8s manifests: `k8s/services/videovault/`. Full deployment guide: `k8s/README.md`.
+
 ## Directory Structure
 
 ```

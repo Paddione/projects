@@ -31,6 +31,10 @@ See `shared-infrastructure/shared/README.md` for usage details.
 
 ## Quick Start
 
+### Local Development (Docker Compose)
+
+Docker Compose is used **only for local development**, not production.
+
 ```bash
 cd shared-infrastructure
 cp .env.example .env
@@ -38,7 +42,22 @@ cp .env.example .env
 docker-compose up -d
 ```
 
-For k8s deployments, use `k8s/infrastructure/postgres/` manifests and `k8s/scripts/deploy/deploy-postgres.sh`.
+### Production (k3s)
+
+Production runs on **k3s** (lightweight Kubernetes). Do not use Docker Compose for production.
+
+```bash
+# Deploy PostgreSQL to the k3s cluster
+../../k8s/scripts/deploy/deploy-postgres.sh
+
+# Or deploy the full stack (includes Postgres)
+../../k8s/scripts/deploy/deploy-all.sh
+
+# Verify
+kubectl get pods -l app=postgres -n korczewski-infra
+```
+
+K8s manifests: `k8s/infrastructure/postgres/`. Full deployment guide: `k8s/README.md`.
 
 ## Environment Configuration
 
@@ -65,7 +84,9 @@ postgresql://<user>:<password>@shared-postgres:5432/<database>
 
 Passwords are 256-bit (64 hex chars) generated via `openssl rand -hex 32`. Never commit `.env` files.
 
-## Management Commands
+## Management Commands (Local Dev)
+
+These Docker Compose commands are for **local development only**. Production uses k3s.
 
 ```bash
 docker-compose up -d                                              # Start
@@ -75,6 +96,14 @@ docker-compose exec postgres pg_dumpall -U postgres > backup.sql  # Backup all
 docker-compose exec postgres pg_dump -U postgres auth_db > auth.sql  # Backup one
 docker-compose exec -T postgres psql -U postgres < backup.sql     # Restore
 docker-compose exec postgres psql -U postgres                     # CLI access
+```
+
+### Production (k3s)
+
+```bash
+kubectl get pods -l app=postgres -n korczewski-infra              # Status
+kubectl logs -l app=postgres -n korczewski-infra                  # Logs
+kubectl exec -it postgres-0 -n korczewski-infra -- psql -U postgres  # CLI access
 ```
 
 ## Networks
