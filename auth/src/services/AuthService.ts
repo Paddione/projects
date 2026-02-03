@@ -5,7 +5,33 @@ import { users, type User, type NewUser } from '../db/schema.js';
 import { eq, or, sql, and } from 'drizzle-orm';
 import { TokenService } from './TokenService.js';
 import { EmailService } from './EmailService.js';
-import type { LoginCredentials, RegisterData, AuthResult } from '../types/auth.js';
+import type { LoginCredentials, RegisterData, AuthResult, SafeUser } from '../types/auth.js';
+
+/**
+ * Strip sensitive internal fields from a user record.
+ * Uses an allowlist so new columns are hidden by default.
+ */
+function sanitizeUser(user: User): SafeUser {
+  return {
+    id: user.id,
+    email: user.email,
+    username: user.username,
+    name: user.name,
+    avatar_url: user.avatar_url,
+    timezone: user.timezone,
+    role: user.role,
+    selected_character: user.selected_character,
+    character_level: user.character_level,
+    experience_points: user.experience_points,
+    preferences: user.preferences,
+    notification_settings: user.notification_settings,
+    email_verified: user.email_verified,
+    is_active: user.is_active,
+    created_at: user.created_at,
+    updated_at: user.updated_at,
+    last_login: user.last_login,
+  };
+}
 
 export class AuthService {
   private tokenService: TokenService;
@@ -203,11 +229,8 @@ export class AuthService {
     // Generate tokens
     const tokens = this.tokenService.generateTokens(createdUser);
 
-    // Return user without password hash
-    const { password_hash, ...userWithoutPassword } = createdUser;
-
     return {
-      user: userWithoutPassword,
+      user: sanitizeUser(createdUser),
       tokens,
     };
   }
@@ -261,11 +284,8 @@ export class AuthService {
     // Generate tokens
     const tokens = this.tokenService.generateTokens(user);
 
-    // Return user without password hash
-    const { password_hash, ...userWithoutPassword } = user;
-
     return {
-      user: userWithoutPassword,
+      user: sanitizeUser(user),
       tokens,
     };
   }
@@ -419,15 +439,14 @@ export class AuthService {
   /**
    * Get user by ID
    */
-  async getUserById(userId: number): Promise<Omit<User, 'password_hash'> | null> {
+  async getUserById(userId: number): Promise<SafeUser | null> {
     const [user] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
 
     if (!user) {
       return null;
     }
 
-    const { password_hash, ...userWithoutPassword } = user;
-    return userWithoutPassword;
+    return sanitizeUser(user);
   }
 
   /**
@@ -449,7 +468,7 @@ export class AuthService {
   async updateProfile(
     userId: number,
     updates: Partial<Pick<User, 'name' | 'avatar_url' | 'timezone' | 'preferences' | 'notification_settings'>>
-  ): Promise<Omit<User, 'password_hash'>> {
+  ): Promise<SafeUser> {
     const [updatedUser] = await db
       .update(users)
       .set({ ...updates, updated_at: new Date() })
@@ -460,8 +479,7 @@ export class AuthService {
       throw new Error('User not found');
     }
 
-    const { password_hash, ...userWithoutPassword } = updatedUser;
-    return userWithoutPassword;
+    return sanitizeUser(updatedUser);
   }
 
   /**

@@ -12,6 +12,7 @@ import bcrypt from 'bcryptjs';
 
 // Test data prefix - all test users will have usernames/emails starting with this
 export const TEST_PREFIX = 'test_';
+export const E2E_PREFIX = 'e2e_';
 export const TEST_EMAIL_DOMAIN = '@test.local';
 
 // Standard test password that meets all requirements
@@ -140,18 +141,20 @@ export async function deleteTestUsers(userIds: number[]): Promise<void> {
 }
 
 /**
- * Delete all test users (those with TEST_PREFIX in username or email)
+ * Delete all test users (those with test_ or e2e_ prefix in username or email)
  * This is the main cleanup function for test data
  */
 export async function deleteAllTestUsers(): Promise<number> {
-  // Find all test users
+  // Find all test and e2e users
   const testUsers = await db
     .select({ id: users.id })
     .from(users)
     .where(
       or(
         like(users.username, `${TEST_PREFIX}%`),
-        like(users.email, `${TEST_PREFIX}%`)
+        like(users.email, `${TEST_PREFIX}%`),
+        like(users.username, `${E2E_PREFIX}%`),
+        like(users.email, `${E2E_PREFIX}%`)
       )
     );
 
@@ -277,7 +280,9 @@ export async function getTestDataStats(): Promise<{
     .where(
       or(
         like(users.username, `${TEST_PREFIX}%`),
-        like(users.email, `${TEST_PREFIX}%`)
+        like(users.email, `${TEST_PREFIX}%`),
+        like(users.username, `${E2E_PREFIX}%`),
+        like(users.email, `${E2E_PREFIX}%`)
       )
     );
 

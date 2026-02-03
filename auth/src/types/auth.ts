@@ -1,5 +1,3 @@
-import type { User } from '../db/schema.js';
-
 export interface TokenPayload {
   userId: number;
   username: string;
@@ -28,8 +26,32 @@ export interface RegisterData {
   name?: string;
 }
 
+/**
+ * Safe user object with sensitive internal fields stripped.
+ * Only fields safe for client exposure are included.
+ */
+export interface SafeUser {
+  id: number;
+  email: string;
+  username: string;
+  name: string | null;
+  avatar_url: string | null;
+  timezone: string | null;
+  role: string;
+  selected_character: string | null;
+  character_level: number;
+  experience_points: number;
+  preferences: unknown;
+  notification_settings: unknown;
+  email_verified: boolean;
+  is_active: boolean;
+  created_at: Date;
+  updated_at: Date;
+  last_login: Date | null;
+}
+
 export interface AuthResult {
-  user: Omit<User, 'password_hash'>;
+  user: SafeUser;
   tokens: AuthTokens;
 }
 

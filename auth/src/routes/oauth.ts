@@ -350,6 +350,16 @@ router.post('/l2p/token', async (req: Request, res: Response) => {
         return;
       }
 
+      // Check if refresh token is blacklisted
+      const isRefreshBlacklisted = await tokenService.isTokenBlacklisted(refresh_token);
+      if (isRefreshBlacklisted) {
+        res.status(400).json({
+          error: 'invalid_grant',
+          error_description: 'Refresh token has been revoked'
+        });
+        return;
+      }
+
       // Verify refresh token
       const payload = tokenService.verifyRefreshToken(refresh_token);
 

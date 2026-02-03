@@ -8,6 +8,7 @@ import rateLimit from 'express-rate-limit';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { corsMiddleware } from './middleware/cors.js';
+import { csrfProtection } from './middleware/csrf.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import authRoutes from './routes/auth.js';
 import userRoutes from './routes/user.js';
@@ -34,7 +35,19 @@ app.set('trust proxy', 1);
 // Security headers
 app.use(helmet({
   crossOriginResourcePolicy: { policy: "cross-origin" },
-  contentSecurityPolicy: false, // Disabled to allow inline styles from React
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'"], // React inline styles
+      imgSrc: ["'self'", "data:", "https:"],
+      connectSrc: ["'self'", ...(process.env.ALLOWED_ORIGINS?.split(',').map(o => o.trim()) || [])],
+      fontSrc: ["'self'"],
+      objectSrc: ["'none'"],
+      frameAncestors: ["'none'"],
+    },
+  },
+  xXssProtection: false, // Deprecated; CSP provides XSS protection instead
 }));
 
 // CORS
@@ -89,14 +102,9 @@ const strictAuthLimiter = rateLimit({
 // ROUTES
 // ============================================================================
 
-// Health check
+// Health check (minimal info to avoid service fingerprinting)
 app.get('/health', (_req, res) => {
-  res.status(200).json({
-    status: 'healthy',
-    service: 'unified-auth-service',
-    timestamp: new Date().toISOString(),
-    uptime: process.uptime(),
-  });
+  res.status(200).json({ status: 'ok' });
 });
 
 // API info (moved to /api endpoint)
@@ -151,25 +159,26 @@ app.get('/api', (_req, res) => {
   });
 });
 
-// Authentication routes (with rate limiting)
+// Authentication routes (with rate limiting + CSRF)
 app.use('/api/auth/login', strictAuthLimiter);
 app.use('/api/auth/register', strictAuthLimiter);
-app.use('/api/auth', authLimiter, authRoutes);
+app.use('/api/auth', authLimiter, csrfProtection, authRoutes);
 
-// OAuth routes
+// OAuth routes (no CSRF — Google callback is a browser redirect,
+// L2P token endpoint is server-to-server)
 app.use('/api/oauth', authLimiter, oauthRoutes);
 
-// Apps routes
-app.use('/api/apps', authLimiter, appsRoutes);
+// Apps routes (CSRF on state-changing requests)
+app.use('/api/apps', authLimiter, csrfProtection, appsRoutes);
 
-// Admin routes
-app.use('/api/admin', authLimiter, adminRoutes);
+// Admin routes (CSRF on state-changing requests)
+app.use('/api/admin', authLimiter, csrfProtection, adminRoutes);
 
-// Access request routes
-app.use('/api/access-requests', authLimiter, accessRequestsRoutes);
+// Access request routes (CSRF on state-changing requests)
+app.use('/api/access-requests', authLimiter, csrfProtection, accessRequestsRoutes);
 
-// User routes
-app.use('/api/user', authLimiter, userRoutes);
+// User routes (CSRF on state-changing requests)
+app.use('/api/user', authLimiter, csrfProtection, userRoutes);
 
 // Serve static frontend files
 // In development (tsx): __dirname = /home/patrick/projects/auth/src

@@ -73,7 +73,6 @@ router.post('/register', async (req: Request, res: Response) => {
 
     res.status(201).json({
       user: result.user,
-      tokens: result.tokens,
       message: 'Registration successful. Please check your email to verify your account.',
     });
   } catch (error) {
@@ -115,7 +114,6 @@ router.post('/login', async (req: Request, res: Response) => {
 
     res.status(200).json({
       user: result.user,
-      tokens: result.tokens,
       message: 'Login successful',
     });
   } catch (error) {
@@ -134,11 +132,18 @@ router.post('/login', async (req: Request, res: Response) => {
  */
 router.post('/logout', authenticate, async (req: Request, res: Response) => {
   try {
-    const token = req.headers.authorization?.substring(7) || req.cookies?.accessToken;
+    const accessToken = req.headers.authorization?.substring(7) || req.cookies?.accessToken;
+    const refreshToken = req.body.refreshToken || req.cookies?.refreshToken;
 
-    if (token) {
-      await tokenService.blacklistToken(token);
+    // Blacklist both access and refresh tokens
+    const blacklistPromises: Promise<void>[] = [];
+    if (accessToken) {
+      blacklistPromises.push(tokenService.blacklistToken(accessToken));
     }
+    if (refreshToken) {
+      blacklistPromises.push(tokenService.blacklistToken(refreshToken));
+    }
+    await Promise.all(blacklistPromises);
 
     // Clear cookies
     res.clearCookie('accessToken');
@@ -160,6 +165,13 @@ router.post('/refresh', async (req: Request, res: Response) => {
 
     if (!refreshToken) {
       res.status(401).json({ error: 'Refresh token required' });
+      return;
+    }
+
+    // Check if refresh token is blacklisted
+    const isBlacklisted = await tokenService.isTokenBlacklisted(refreshToken);
+    if (isBlacklisted) {
+      res.status(401).json({ error: 'Refresh token has been revoked' });
       return;
     }
 
@@ -194,7 +206,7 @@ router.post('/refresh', async (req: Request, res: Response) => {
       domain: process.env.COOKIE_DOMAIN || undefined,
     });
 
-    res.status(200).json({ tokens });
+    res.status(200).json({ message: 'Token refreshed' });
   } catch (error) {
     res.status(401).json({ error: 'Token refresh failed' });
   }
