@@ -15,7 +15,7 @@ metadata:
     app: traefik
 spec:
   headers:
-    browserXssFilter: true
+    browserXssFilter: false
     contentTypeNosniff: true
     forceSTSHeader: true
     stsIncludeSubdomains: true
