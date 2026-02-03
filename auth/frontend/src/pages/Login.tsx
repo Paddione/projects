@@ -63,14 +63,11 @@ export default function Login() {
     setLoading(true);
 
     try {
-      const response = await AuthApi.login({ usernameOrEmail, password });
+      await AuthApi.login({ usernameOrEmail, password });
 
-      // Redirect back to the project with tokens
+      // Redirect back to the project (cookies handle authentication)
       if (redirectUri) {
-        const url = new URL(redirectUri);
-        url.searchParams.set('auth_token', response.tokens.accessToken);
-        url.searchParams.set('refresh_token', response.tokens.refreshToken);
-        window.location.href = url.toString();
+        window.location.href = redirectUri;
       } else {
         // Redirect local logins to the apps page
         window.location.href = '/hub';

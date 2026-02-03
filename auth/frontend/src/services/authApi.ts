@@ -1,5 +1,7 @@
 const API_URL = import.meta.env.VITE_API_URL || '';
 
+const XHR_HEADER = { 'X-Requested-With': 'XMLHttpRequest' } as const;
+
 export interface RegisterData {
   username: string;
   email: string;
@@ -19,10 +21,6 @@ export interface AuthResponse {
     username: string;
     role: string;
     name?: string;
-  };
-  tokens: {
-    accessToken: string;
-    refreshToken: string;
   };
   message?: string;
 }
@@ -116,6 +114,7 @@ export class AuthApi {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        ...XHR_HEADER,
       },
       credentials: 'include',
       body: JSON.stringify(data),
@@ -134,6 +133,7 @@ export class AuthApi {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        ...XHR_HEADER,
       },
       credentials: 'include',
       body: JSON.stringify(data),
@@ -150,6 +150,7 @@ export class AuthApi {
   static async logout(): Promise<void> {
     await fetch(`${API_URL}/api/auth/logout`, {
       method: 'POST',
+      headers: XHR_HEADER,
       credentials: 'include',
     });
   }
@@ -159,7 +160,9 @@ export class AuthApi {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        ...XHR_HEADER,
       },
+      credentials: 'include',
       body: JSON.stringify({ email }),
     });
 
@@ -176,7 +179,9 @@ export class AuthApi {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        ...XHR_HEADER,
       },
+      credentials: 'include',
       body: JSON.stringify({ token, newPassword }),
     });
 
@@ -191,6 +196,7 @@ export class AuthApi {
   static async getApps(): Promise<AppsResponse> {
     const response = await fetch(`${API_URL}/api/apps`, {
       method: 'GET',
+      headers: XHR_HEADER,
       credentials: 'include',
     });
 
@@ -208,6 +214,7 @@ export class AuthApi {
   static async getAdminUsers(): Promise<AdminUser[]> {
     const response = await fetch(`${API_URL}/api/admin/users`, {
       method: 'GET',
+      headers: XHR_HEADER,
       credentials: 'include',
     });
 
@@ -226,6 +233,7 @@ export class AuthApi {
   static async getAdminUserApps(userId: number): Promise<{ userId: number; role: string; apps: AppAccess[] }> {
     const response = await fetch(`${API_URL}/api/admin/users/${userId}/apps`, {
       method: 'GET',
+      headers: XHR_HEADER,
       credentials: 'include',
     });
 
@@ -245,6 +253,7 @@ export class AuthApi {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
+        ...XHR_HEADER,
       },
       credentials: 'include',
       body: JSON.stringify({ appIds }),
@@ -263,7 +272,7 @@ export class AuthApi {
   static async createAccessRequest(appId: number, reason?: string): Promise<{ request: AccessRequest }> {
     const response = await fetch(`${API_URL}/api/access-requests`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...XHR_HEADER },
       credentials: 'include',
       body: JSON.stringify({ appId, reason }),
     });
@@ -281,6 +290,7 @@ export class AuthApi {
   static async getAccessRequests(): Promise<{ requests: AccessRequest[] }> {
     const response = await fetch(`${API_URL}/api/access-requests`, {
       method: 'GET',
+      headers: XHR_HEADER,
       credentials: 'include',
     });
 
@@ -297,6 +307,7 @@ export class AuthApi {
   static async getAdminAccessRequests(status: string = 'pending'): Promise<{ requests: AdminAccessRequest[] }> {
     const response = await fetch(`${API_URL}/api/access-requests/admin?status=${status}`, {
       method: 'GET',
+      headers: XHR_HEADER,
       credentials: 'include',
     });
 
@@ -313,7 +324,7 @@ export class AuthApi {
   static async reviewAccessRequest(id: number, status: 'approved' | 'denied', response?: string): Promise<void> {
     const res = await fetch(`${API_URL}/api/access-requests/admin/${id}`, {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...XHR_HEADER },
       credentials: 'include',
       body: JSON.stringify({ status, response }),
     });
@@ -330,6 +341,7 @@ export class AuthApi {
   static async getAdminUser(userId: number): Promise<{ user: FullUser; appAccess: { appId: number; appKey: string; appName: string }[] }> {
     const response = await fetch(`${API_URL}/api/admin/users/${userId}`, {
       method: 'GET',
+      headers: XHR_HEADER,
       credentials: 'include',
     });
 
@@ -346,7 +358,7 @@ export class AuthApi {
   static async updateAdminUser(userId: number, data: Partial<FullUser>): Promise<void> {
     const response = await fetch(`${API_URL}/api/admin/users/${userId}`, {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...XHR_HEADER },
       credentials: 'include',
       body: JSON.stringify(data),
     });
@@ -362,6 +374,7 @@ export class AuthApi {
   static async deleteAdminUser(userId: number): Promise<void> {
     const response = await fetch(`${API_URL}/api/admin/users/${userId}`, {
       method: 'DELETE',
+      headers: XHR_HEADER,
       credentials: 'include',
     });
 
@@ -376,6 +389,7 @@ export class AuthApi {
   static async getAppUsers(appId: number): Promise<{ app: { id: number; name: string }; users: AdminUser[] }> {
     const response = await fetch(`${API_URL}/api/admin/apps/${appId}/users`, {
       method: 'GET',
+      headers: XHR_HEADER,
       credentials: 'include',
     });
 

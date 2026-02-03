@@ -239,6 +239,7 @@ class ApiService {
     console.log('Making API request to:', url)
 
     const headers: Record<string, string> = {
+      'X-Requested-With': 'XMLHttpRequest',
       ...(options.headers as Record<string, string>),
     }
 

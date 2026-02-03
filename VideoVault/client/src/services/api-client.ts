@@ -44,7 +44,7 @@ export class ApiClient {
     path: string,
     body?: any,
   ): Promise<T> {
-    const headers: Record<string, string> = { Accept: 'application/json' };
+    const headers: Record<string, string> = { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' };
     if (method !== 'GET') headers['Content-Type'] = 'application/json';
 
     // Attach CSRF token for mutating requests

@@ -9,8 +9,6 @@ type Listener = (isAdmin: boolean) => void;
 export class AuthService {
   private static admin = false;
   private static listeners = new Set<Listener>();
-  private static tokenKey = 'accessToken';
-  private static refreshTokenKey = 'refreshToken';
 
   static subscribe(listener: Listener) {
     this.listeners.add(listener);
@@ -23,49 +21,15 @@ export class AuthService {
 
   static get cachedIsAdmin() { return this.admin; }
 
-  private static getAccessToken(): string | null {
-    if (typeof window === 'undefined') return null;
-    return window.localStorage.getItem(this.tokenKey);
-  }
-
-  private static getRefreshToken(): string | null {
-    if (typeof window === 'undefined') return null;
-    return window.localStorage.getItem(this.refreshTokenKey);
-  }
-
-  private static setTokens(tokens: { accessToken: string; refreshToken?: string }) {
-    if (typeof window === 'undefined') return;
-    window.localStorage.setItem(this.tokenKey, tokens.accessToken);
-    if (tokens.refreshToken) {
-      window.localStorage.setItem(this.refreshTokenKey, tokens.refreshToken);
-    }
-  }
-
-  private static clearTokens() {
-    if (typeof window === 'undefined') return;
-    window.localStorage.removeItem(this.tokenKey);
-    window.localStorage.removeItem(this.refreshTokenKey);
-  }
-
   private static async refreshTokens(): Promise<boolean> {
-    const refreshToken = this.getRefreshToken();
-    if (!refreshToken) return false;
-
     try {
       const response = await fetch(`${AUTH_SERVICE_API_URL}/auth/refresh`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ refreshToken }),
+        headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+        credentials: 'include',
       });
 
-      if (!response.ok) return false;
-      const data = await response.json().catch(() => null);
-      if (!data?.tokens?.accessToken) return false;
-      this.setTokens({
-        accessToken: data.tokens.accessToken,
-        refreshToken: data.tokens.refreshToken,
-      });
-      return true;
+      return response.ok;
     } catch {
       return false;
     }
@@ -73,16 +37,10 @@ export class AuthService {
 
   private static async refreshInternal(allowRefresh: boolean): Promise<boolean> {
     try {
-      const accessToken = this.getAccessToken();
-      if (!accessToken) {
-        this.admin = false;
-        this.notify();
-        return this.admin;
-      }
-
       const response = await fetch(`${AUTH_SERVICE_API_URL}/auth/verify`, {
         method: 'GET',
-        headers: { Authorization: `Bearer ${accessToken}` },
+        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+        credentials: 'include',
       });
 
       if (!response.ok) {
@@ -114,7 +72,8 @@ export class AuthService {
     try {
       const response = await fetch(`${AUTH_SERVICE_API_URL}/auth/login`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+        credentials: 'include',
         body: JSON.stringify({ usernameOrEmail: username, password }),
       });
 
@@ -127,17 +86,6 @@ export class AuthService {
       }
 
       const data = await response.json().catch(() => null);
-      if (!data?.tokens?.accessToken) {
-        this.admin = false;
-        this.notify();
-        return { ok: false, message: 'Login failed' };
-      }
-
-      this.setTokens({
-        accessToken: data.tokens.accessToken,
-        refreshToken: data.tokens.refreshToken,
-      });
-
       this.admin = data?.user?.role === 'ADMIN';
       this.notify();
       return { ok: true };
@@ -150,16 +98,13 @@ export class AuthService {
   }
 
   static async logout(): Promise<void> {
-    const accessToken = this.getAccessToken();
-    if (accessToken) {
-      try {
-        await fetch(`${AUTH_SERVICE_API_URL}/auth/logout`, {
-          method: 'POST',
-          headers: { Authorization: `Bearer ${accessToken}` },
-        });
-      } catch {}
-    }
-    this.clearTokens();
+    try {
+      await fetch(`${AUTH_SERVICE_API_URL}/auth/logout`, {
+        method: 'POST',
+        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+        credentials: 'include',
+      });
+    } catch {}
     this.admin = false;
     this.notify();
   }
