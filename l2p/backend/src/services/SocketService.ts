@@ -336,11 +336,21 @@ export class SocketService {
       // Start the game session using GameService
       const gameState = await this.gameService.startGameSession(lobbyCode, parseInt(hostId));
 
-      // Broadcast game start to all players
-      this.io.to(lobbyCode).emit('game-started', {
+      const gameStartedPayload = {
         gameState,
         message: 'Game is starting...'
-      });
+      };
+
+      // Broadcast game start to all players in the socket room
+      this.io.to(lobbyCode).emit('game-started', gameStartedPayload);
+
+      // Also emit directly to each known connected user for this lobby,
+      // in case their socket hasn't joined the room yet (race condition)
+      for (const [socketId, user] of this.connectedUsers.entries()) {
+        if (user.lobbyCode === lobbyCode) {
+          this.io.to(socketId).emit('game-started', gameStartedPayload);
+        }
+      }
 
     } catch (error) {
       console.error('Error starting game:', error);

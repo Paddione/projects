@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { LobbyView } from '../components/LobbyView'
 import { ConnectionStatus } from '../components/ConnectionStatus'
@@ -7,6 +7,7 @@ import { LoadingSpinner } from '../components/LoadingSpinner'
 import { useGameStore } from '../stores/gameStore'
 import { socketService } from '../services/socketService'
 import { navigationService } from '../services/navigationService'
+import { apiService } from '../services/apiService'
 import styles from '../styles/App.module.css'
 import { useAudio } from '../hooks/useAudio'
 
@@ -68,6 +69,29 @@ export const LobbyPage: React.FC = () => {
       navigationService.navigateToGame(lobbyCode, true)
     }
   }, [gameStarted, lobbyCode, handleGameStart])
+
+  // Recovery: poll lobby status to detect if game started but socket event was missed
+  const recoveryRef = useRef(false)
+  useEffect(() => {
+    if (gameStarted || !lobbyId) return
+
+    const pollInterval = setInterval(async () => {
+      if (recoveryRef.current) return
+      try {
+        const response = await apiService.getLobby(lobbyId)
+        if (response.success && response.data && response.data.status === 'playing') {
+          recoveryRef.current = true
+          clearInterval(pollInterval)
+          console.log('Recovery: detected game started via API poll')
+          useGameStore.getState().setGameStarted(true)
+        }
+      } catch {
+        // Ignore errors during recovery polling
+      }
+    }, 2000)
+
+    return () => clearInterval(pollInterval)
+  }, [gameStarted, lobbyId])
 
   const handleLeaveLobby = async () => {
     if (lobbyCode) {
