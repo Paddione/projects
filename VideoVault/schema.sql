@@ -60,6 +60,32 @@ CREATE TABLE IF NOT EXISTS client_errors (
   ip TEXT
 );
 
+-- Tags library
+CREATE TABLE IF NOT EXISTS tags (
+  id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid(),
+  name TEXT NOT NULL,
+  type TEXT NOT NULL DEFAULT 'general',
+  url TEXT,
+  count BIGINT DEFAULT 0,
+  created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+-- Tag synonyms table
+CREATE TABLE IF NOT EXISTS tag_synonyms (
+  source TEXT PRIMARY KEY,
+  target TEXT NOT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+-- Duplicate ignores table
+CREATE TABLE IF NOT EXISTS duplicate_ignores (
+  video1 TEXT NOT NULL,
+  video2 TEXT NOT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+  PRIMARY KEY (video1, video2)
+);
+
 
 -- Indexes for videos table
 CREATE INDEX IF NOT EXISTS idx_videos_path ON videos (path);
@@ -68,3 +94,8 @@ CREATE INDEX IF NOT EXISTS idx_videos_size ON videos (size);
 CREATE INDEX IF NOT EXISTS idx_videos_path_last_modified ON videos (path, last_modified);
 CREATE INDEX IF NOT EXISTS idx_videos_categories_gin ON videos USING GIN (categories);
 CREATE INDEX IF NOT EXISTS idx_videos_custom_categories_gin ON videos USING GIN (custom_categories);
+
+-- Indexes for tags
+CREATE INDEX IF NOT EXISTS idx_tags_name ON tags (name);
+CREATE INDEX IF NOT EXISTS idx_tags_type ON tags (type);
+

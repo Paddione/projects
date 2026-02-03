@@ -487,3 +487,14 @@ export const mediaProgress = pgTable(
 
 export type DBMediaProgress = typeof mediaProgress.$inferSelect;
 export type InsertDBMediaProgress = typeof mediaProgress.$inferInsert;
+// Session table for express-session (managed by connect-pg-simple)
+export const session = pgTable('session', {
+  sid: varchar('sid').primaryKey(),
+  sess: jsonb('sess').notNull(),
+  expire: timestamp('expire', { precision: 6 }).notNull(),
+}, (table) => ({
+  idxSessionExpire: index('IDX_session_expire').on(table.expire),
+}));
+
+export type DBSession = typeof session.$inferSelect;
+export type InsertDBSession = typeof session.$inferInsert;

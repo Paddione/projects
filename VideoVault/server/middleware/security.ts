@@ -12,7 +12,11 @@ export function setupSecurityHeaders(app: Express) {
                     styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
                     imgSrc: ["'self'", 'data:', 'blob:'],
                     mediaSrc: ["'self'", 'blob:'],
-                    connectSrc: ["'self'"],
+                    connectSrc: [
+                        "'self'",
+                        process.env.AUTH_SERVICE_URL || 'http://localhost:5500',
+                        'https://*.korczewski.de'
+                    ],
                     fontSrc: ["'self'", 'https://fonts.gstatic.com'],
                     objectSrc: ["'none'"],
                     upgradeInsecureRequests: process.env.NODE_ENV === 'production' ? [] : null,
