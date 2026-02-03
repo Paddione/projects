@@ -26,7 +26,6 @@ export default defineConfig({
     '**/tests/error-handling/**',
     '**/tests/accessibility/**',
     '**/tests/performance/**',
-    '**/tests/integration/**',
     '**/tests/examples/**',
     '**/tests/debug-*.spec.*',
     '**/tests/question-set-management.spec.*',
@@ -68,6 +67,13 @@ export default defineConfig({
     {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
+      testIgnore: ['**/tests/integration/**'],
+    },
+    {
+      name: 'integration',
+      use: { ...devices['Desktop Chrome'] },
+      testMatch: '**/tests/integration/**',
+      timeout: 120000,
     },
   ],
 

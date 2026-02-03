@@ -245,15 +245,15 @@ export const ResultsPage: React.FC = () => {
   const winner = finalPlayers[0]
 
   return (
-    <div className={styles.container}>
-      <div className={`${styles.card} ${styles.textCenter}`} style={{ marginBottom: 'var(--spacing-xl)' }}>
+    <div className={styles.container} data-testid="results-page">
+      <div className={`${styles.card} ${styles.textCenter}`} style={{ marginBottom: 'var(--spacing-xl)' }} data-testid="final-results">
         <h1>🏆 Game Results</h1>
         <p>Final scores, rankings, and experience gained</p>
       </div>
 
       {/* Winner Announcement with Animation */}
       {winner && (
-        <div className={`${styles.card} ${styles.textCenter}`} style={{ marginBottom: 'var(--spacing-xl)' }}>
+        <div className={`${styles.card} ${styles.textCenter}`} style={{ marginBottom: 'var(--spacing-xl)' }} data-testid="winner-announcement">
           <h2>🎉 Winner: {winner.username}!</h2>
           <p style={{ marginBottom: 'var(--spacing-lg)' }}>
             Level {winner.newLevel} {winner.character} • {winner.correctAnswers}/{totalQuestions || 10} correct
@@ -274,11 +274,11 @@ export const ResultsPage: React.FC = () => {
       )}
 
       {/* Final Rankings with Experience */}
-      <div className={styles.card} style={{ marginBottom: 'var(--spacing-xl)' }}>
+      <div className={styles.card} style={{ marginBottom: 'var(--spacing-xl)' }} data-testid="player-scores">
         <h3>Final Rankings & Experience</h3>
         <div style={{ gap: 'var(--spacing-md)', display: 'flex', flexDirection: 'column' }}>
           {finalPlayers.map((player, index) => (
-            <div key={player.id} className={`${styles.flex} ${styles.justifyBetween} ${styles.itemsCenter}`} style={{
+            <div key={player.id} data-testid={`result-player-${player.id}`} className={`${styles.flex} ${styles.justifyBetween} ${styles.itemsCenter}`} style={{
               padding: 'var(--spacing-md)',
               border: '1px solid var(--border-color)',
               borderRadius: 'var(--radius-md)',
@@ -308,7 +308,7 @@ export const ResultsPage: React.FC = () => {
                 </div>
               </div>
               <div className={styles.textRight}>
-                <div style={{ fontWeight: 'bold', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
+                <div style={{ fontWeight: 'bold', fontSize: '0.875rem', color: 'var(--text-secondary)' }} data-testid={`final-score-${player.id}`}>
                   {player.finalScore} pts
                 </div>
                 <div style={{ fontSize: '0.875rem', color: 'var(--color-success)', fontWeight: 'bold' }}>
@@ -422,12 +422,14 @@ export const ResultsPage: React.FC = () => {
         <button
           className={styles.button}
           onClick={handlePlayAgain}
+          data-testid="play-again-button"
         >
           Play Again
         </button>
         <button
           className={`${styles.button} ${styles.buttonSecondary}`}
           onClick={() => navigate('/')}
+          data-testid="back-to-home-button"
         >
           Back to Home
         </button>

@@ -671,6 +671,77 @@ export class TestHelpers {
       return false;
     }
   }
+
+  /**
+   * Multiplayer helpers
+   */
+  static async createLobbySimple(page: Page): Promise<string> {
+    await page.click('[data-testid="create-lobby-button"]');
+    await expect(page.locator('[data-testid="lobby-code"]')).toBeVisible({ timeout: 15000 });
+    const code = await page.locator('[data-testid="lobby-code"]').textContent();
+    if (!code) throw new Error('Failed to get lobby code');
+    return code.trim();
+  }
+
+  static async waitForGameReady(page: Page, timeout = 30000): Promise<void> {
+    await page.waitForFunction(() => {
+      return document.querySelector('[data-testid="sync-countdown"]') ||
+             document.querySelector('[data-testid="question-container"]');
+    }, { timeout });
+    const syncVisible = await page.locator('[data-testid="sync-countdown"]').isVisible().catch(() => false);
+    if (syncVisible) {
+      await expect(page.locator('[data-testid="question-container"]')).toBeVisible({ timeout: 15000 });
+    }
+  }
+
+  static async setupMultiPlayerLobby(
+    browser: import('@playwright/test').Browser,
+    playerCount: number
+  ): Promise<{
+    pages: Page[];
+    contexts: BrowserContext[];
+    lobbyCode: string;
+    users: UserData[];
+  }> {
+    const pages: Page[] = [];
+    const contexts: BrowserContext[] = [];
+    const users: UserData[] = [];
+
+    // Create host
+    const hostContext = await browser.newContext();
+    const hostPage = await hostContext.newPage();
+    const { user: hostUser } = await this.registerUser(hostPage);
+    pages.push(hostPage);
+    contexts.push(hostContext);
+    users.push(hostUser);
+
+    // Host creates lobby
+    const lobbyCode = await this.createLobbySimple(hostPage);
+
+    // Create and join additional players
+    for (let i = 1; i < playerCount; i++) {
+      const ctx = await browser.newContext();
+      const pg = await ctx.newPage();
+      const { user } = await this.registerUser(pg);
+      await this.joinLobby(pg, lobbyCode);
+      pages.push(pg);
+      contexts.push(ctx);
+      users.push(user);
+    }
+
+    return { pages, contexts, lobbyCode, users };
+  }
+
+  static async toggleReady(page: Page): Promise<void> {
+    await page.click('[data-testid="ready-toggle"]');
+  }
+
+  static async waitForResults(page: Page, timeout = 60000): Promise<void> {
+    await page.waitForFunction(() => {
+      return document.querySelector('[data-testid="final-results"]') ||
+             window.location.pathname.includes('/results/');
+    }, { timeout });
+  }
 }
 
 // Type definitions
