@@ -225,19 +225,19 @@ export class SocketService {
         lobbyCode
       });
 
-      // Only broadcast player-joined if this is a new player, not a duplicate
-      if (!isAlreadyInLobby) {
-        // Best-effort broadcast to other players in the lobby
-        try {
-          this.io.to(lobbyCode).emit('lobby-updated', {
-            lobby,
-            event: 'player-joined',
-            playerId: player.id
-          });
-        } catch (e) {
-          // Log and continue; do not fail the join on broadcast error
-          console.error('Broadcast join event failed:', e);
-        }
+      // Always broadcast lobby-updated so other players (especially the host)
+      // see the new player. The two-phase join (API then socket) means the
+      // player is already in the DB when the socket event arrives, but the
+      // host still needs the real-time notification.
+      try {
+        this.io.to(lobbyCode).emit('lobby-updated', {
+          lobby,
+          event: 'player-joined',
+          playerId: player.id
+        });
+      } catch (e) {
+        // Log and continue; do not fail the join on broadcast error
+        console.error('Broadcast join event failed:', e);
       }
 
       // Send confirmation to joining player
@@ -345,10 +345,23 @@ export class SocketService {
       this.io.to(lobbyCode).emit('game-started', gameStartedPayload);
 
       // Also emit directly to each known connected user for this lobby,
-      // in case their socket hasn't joined the room yet (race condition)
+      // in case their socket hasn't joined the room yet (race condition).
+      // Include both game-started and question-started since the first
+      // question-started was emitted (room-only) inside startGameSession
+      // before we reach this point.
+      const questionPayload = gameState.currentQuestion ? {
+        question: gameState.currentQuestion,
+        questionIndex: gameState.currentQuestionIndex,
+        totalQuestions: gameState.totalQuestions,
+        timeRemaining: gameState.timeRemaining
+      } : null;
+
       for (const [socketId, user] of this.connectedUsers.entries()) {
         if (user.lobbyCode === lobbyCode) {
           this.io.to(socketId).emit('game-started', gameStartedPayload);
+          if (questionPayload) {
+            this.io.to(socketId).emit('question-started', questionPayload);
+          }
         }
       }
 
