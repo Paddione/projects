@@ -44,15 +44,6 @@ sudo ./scripts/cluster/k3s-join-worker.sh <MASTER_IP> '<TOKEN>'
 # Update infrastructure/smb-csi/storageclass.yaml with SMB server + share
 # Set SMB_USER/SMB_PASSWORD in .env for secret generation
 
-# Optional: Setup NFS on master:
-sudo ./scripts/storage/setup-nfs-server.sh
-
-# Optional: On workers:
-sudo ./scripts/storage/setup-nfs-client.sh <MASTER_IP>
-
-# Optional: Update NFS provisioner config if IP changed:
-# Edit infrastructure/nfs-provisioner/deployment.yaml (currently 10.10.0.3)
-
 # Deploy:
 ./scripts/deploy/deploy-all.sh
 ```
@@ -63,14 +54,12 @@ sudo ./scripts/storage/setup-nfs-client.sh <MASTER_IP>
 k8s/
 ├── scripts/              # Deployment and cluster scripts (see scripts/README.md)
 │   ├── cluster/          # Cluster creation and join scripts
-│   ├── storage/          # NFS setup scripts
 │   ├── deploy/           # Per-service deployment scripts
 │   └── utils/            # Secret generation, validation, backup
 ├── base/                 # Base resources (namespaces)
 ├── infrastructure/       # Infrastructure components (see infrastructure/README.md)
 │   ├── postgres/         # PostgreSQL StatefulSet
 │   ├── traefik/          # Traefik deployment + middlewares
-│   ├── nfs-provisioner/  # NFS dynamic provisioning
 │   └── smb-csi/          # SMB/CIFS storage class
 ├── services/             # Application services (see services/README.md)
 │   ├── auth/             # Auth service manifests
@@ -126,14 +115,13 @@ Services must be deployed in this order due to dependencies:
 1. **Namespaces** - `korczewski-infra`, `korczewski-services`
 2. **Secrets** - Generate from root `.env`
 3. **SMB-CSI** - Required for VideoVault storage
-4. **NFS Provisioner** - Optional shared storage
-5. **PostgreSQL** - Database must be ready first
-6. **Traefik** - Ingress controller
-7. **Auth** - Authentication service
-8. **L2P Backend** - Depends on PostgreSQL, Auth
-9. **L2P Frontend** - Depends on Backend
-10. **Payment** - Depends on PostgreSQL, Auth
-11. **VideoVault** - Depends on PostgreSQL, SMB
+4. **PostgreSQL** - Database must be ready first
+5. **Traefik** - Ingress controller
+6. **Auth** - Authentication service
+7. **L2P Backend** - Depends on PostgreSQL, Auth
+8. **L2P Frontend** - Depends on Backend
+9. **Payment** - Depends on PostgreSQL, Auth
+10. **VideoVault** - Depends on PostgreSQL, SMB
 
 ## Configuration
 
@@ -226,14 +214,6 @@ parameters:
 
 Generate `smb-secret.yaml` with `SMB_USER` and `SMB_PASSWORD` in `.env`.
 
-### NFS Configuration
-
-NFS provisioner configuration (currently set to `10.10.0.3`):
-```yaml
-# infrastructure/nfs-provisioner/deployment.yaml
-# Update NFS_SERVER and NFS_PATH env vars if your NFS server differs
-```
-
 ## Validation
 
 After deployment, validate cluster health:
@@ -298,8 +278,6 @@ kubectl get pvc -A
 # Check SMB CSI logs
 kubectl logs -l app=csi-smb-controller -n kube-system
 
-# Check NFS provisioner (if enabled)
-kubectl logs -l app=nfs-subdir-external-provisioner -n kube-system
 ```
 
 ## Architecture

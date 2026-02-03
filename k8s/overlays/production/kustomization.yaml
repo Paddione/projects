@@ -18,7 +18,6 @@ resources:
   - ../../base
   - ../../infrastructure/postgres
   - ../../infrastructure/traefik
-  - ../../infrastructure/nfs-provisioner
   - ../../services/auth
   - ../../services/l2p-backend
   - ../../services/l2p-frontend

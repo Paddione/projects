@@ -8,7 +8,6 @@ Core infrastructure components for the Korczewski Kubernetes cluster.
 |-----------|-----------|---------|
 | PostgreSQL | `korczewski-infra` | Centralized database server |
 | Traefik | `korczewski-infra` | Ingress controller with TLS |
-| NFS Provisioner | `kube-system` | Dynamic NFS volume provisioning |
 | SMB-CSI | `kube-system` | SMB/CIFS storage class (VideoVault PVCs) |
 
 ## PostgreSQL (`postgres/`)
@@ -45,18 +44,6 @@ Traefik v3 ingress controller with dashboard and TLS support.
 - `:443` - HTTPS
 - `:8080` - Dashboard (protected, internal service)
 
-## NFS Provisioner (`nfs-provisioner/`)
-
-Dynamic provisioner for NFS-backed persistent volumes.
-
-**Files:**
-- `deployment.yaml` - Provisioner deployment with NFS config
-- `storageclass.yaml` - `nfs-client` StorageClass
-- `rbac.yaml` - ServiceAccount and permissions
-- `kustomization.yaml` - Kustomize configuration
-
-> **Note:** Update `deployment.yaml` with your NFS server IP before deploying.
-
 ## SMB-CSI (`smb-csi/`)
 
 CSI driver for SMB/CIFS storage access.
@@ -73,7 +60,7 @@ CSI driver for SMB/CIFS storage access.
 
 1. Namespaces (from `base/`)
 2. Secrets (from `secrets/`)
-3. NFS Provisioner or SMB-CSI
+3. SMB-CSI
 4. PostgreSQL
 5. Traefik
 6. Application services

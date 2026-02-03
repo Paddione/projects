@@ -20,12 +20,12 @@ echo "Deploying VideoVault Service..."
 # Apply manifests
 kubectl apply -k "$K8S_DIR/services/videovault/"
 
-# Wait for PVCs to be bound (may take time for SMB/NFS provisioning)
+# Wait for PVCs to be bound (may take time for SMB provisioning)
 log_info "Waiting for PVCs to be bound..."
 for pvc in videovault-media videovault-thumbnails videovault-movies videovault-audiobooks videovault-ebooks; do
     kubectl wait --for=jsonpath='{.status.phase}'=Bound "pvc/$pvc" \
         -n korczewski-services --timeout=120s 2>/dev/null || \
-        log_warn "PVC $pvc not bound yet (may need SMB-CSI or NFS provisioner)"
+        log_warn "PVC $pvc not bound yet (may need SMB-CSI driver)"
 done
 
 # Wait for deployment

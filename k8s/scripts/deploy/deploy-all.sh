@@ -5,7 +5,7 @@
 # Orchestrates full deployment in correct dependency order.
 # Run this after cluster is ready and secrets are generated.
 #
-# Usage: ./deploy-all.sh [--skip-secrets] [--skip-infra]
+# Usage: ./deploy-all.sh [--skip-secrets]
 # =============================================================================
 
 set -euo pipefail
@@ -98,31 +98,27 @@ deploy_infrastructure() {
         return
     fi
 
-    # NFS Provisioner
-    log_step "Step 3: Deploying NFS Provisioner"
-    "$SCRIPT_DIR/deploy-nfs.sh" || log_warn "NFS provisioner deployment skipped or failed"
-
     # PostgreSQL
-    log_step "Step 4: Deploying PostgreSQL"
+    log_step "Step 3: Deploying PostgreSQL"
     "$SCRIPT_DIR/deploy-postgres.sh"
 
     # Traefik
-    log_step "Step 5: Deploying Traefik"
+    log_step "Step 4: Deploying Traefik"
     "$SCRIPT_DIR/deploy-traefik.sh"
 }
 
 # Deploy services
 deploy_services() {
-    log_step "Step 6: Deploying Auth Service"
+    log_step "Step 5: Deploying Auth Service"
     "$SCRIPT_DIR/deploy-auth.sh"
 
-    log_step "Step 7: Deploying L2P Services"
+    log_step "Step 6: Deploying L2P Services"
     "$SCRIPT_DIR/deploy-l2p.sh"
 
-    log_step "Step 8: Deploying Payment Service"
+    log_step "Step 7: Deploying Payment Service"
     "$SCRIPT_DIR/deploy-payment.sh"
 
-    log_step "Step 9: Deploying VideoVault"
+    log_step "Step 8: Deploying VideoVault"
     "$SCRIPT_DIR/deploy-videovault.sh"
 }
 

@@ -41,7 +41,6 @@ npm run validate:env         # Validate environment files
 # Deployment (k8s) - individual services
 ./k8s/scripts/deploy/deploy-postgres.sh      # PostgreSQL
 ./k8s/scripts/deploy/deploy-traefik.sh       # Traefik ingress
-./k8s/scripts/deploy/deploy-nfs.sh           # NFS provisioner
 ./k8s/scripts/deploy/deploy-auth.sh          # Auth service
 ./k8s/scripts/deploy/deploy-l2p.sh           # L2P backend + frontend
 ./k8s/scripts/deploy/deploy-payment.sh       # Payment service
@@ -132,7 +131,7 @@ VideoVault uses the browser as primary data store:
 The `Obsidian/` directory is an Obsidian knowledge vault serving as the high-level architecture and operations reference:
 - **Core pages**: `Home.md`, `Architecture.md`, `Services.md`, `Infrastructure.md`, `Operations.md`
 - **Service docs**: `services/{L2P,Auth,Payment,VideoVault}.md`
-- **Infrastructure docs**: `infrastructure/{PostgreSQL,Traefik,SMB-CSI,NFS Provisioner}.md`
+- **Infrastructure docs**: `infrastructure/{PostgreSQL,Traefik,SMB-CSI}.md`
 - **Assets**: 10 SVG architecture diagrams in `assets/`
 - **Plugins**: Dataview, Templater, obsidian-git
 - **Theme**: Custom Cybervault CSS (cyan/dark aesthetic)

@@ -5,7 +5,7 @@
 # Two main namespaces to separate infrastructure from application services.
 # =============================================================================
 
-# Infrastructure namespace: PostgreSQL, Traefik, NFS provisioner
+# Infrastructure namespace: PostgreSQL, Traefik
 apiVersion: v1
 kind: Namespace
 metadata:
