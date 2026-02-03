@@ -27,7 +27,7 @@ export const GamePage: React.FC = () => {
     handleGameEnd,
     handleStopAllSounds,
   } = useAudio()
-  
+
   const {
     players,
     currentQuestion,
@@ -41,6 +41,8 @@ export const GamePage: React.FC = () => {
     setError,
     lobbyCode,
     resetPlayerAnswerStatus,
+    isSyncing,
+    syncCountdown,
   } = useGameStore()
   const { user } = useAuthStore()
 
@@ -52,7 +54,7 @@ export const GamePage: React.FC = () => {
   const [questionOverflowing, setQuestionOverflowing] = useState(false)
   const [focusedAnswerIndex, setFocusedAnswerIndex] = useState<number>(0)
   const questionRef = useRef<HTMLHeadingElement | null>(null)
-  
+
   // Derived UI state
   const totalTime = Math.max(currentQuestion?.timeLimit || 60, 1)
   const timePercent = Math.max(0, Math.min(100, (typeof timeRemaining === 'number' ? (timeRemaining / totalTime) * 100 : 100)))
@@ -214,11 +216,27 @@ export const GamePage: React.FC = () => {
   }
 
   // Show loading spinner while initializing
-  if (isLoading || !currentQuestion) {
+  if (isLoading || (!currentQuestion && !isSyncing)) {
     return (
       <div className={styles.container}>
         <LoadingSpinner />
         <p>Loading game...</p>
+      </div>
+    )
+  }
+
+  // Show syncing overlay
+  if (isSyncing) {
+    return (
+      <div className={styles.container}>
+        <div className={`${styles.card} ${gameStyles.syncCard}`}>
+          <h2 className={gameStyles.syncTitle}>Get Ready!</h2>
+          <div className={gameStyles.syncCountdown} data-testid="sync-countdown">
+            {syncCountdown}
+          </div>
+          <p className={gameStyles.syncMessage}>Das Spiel startet in Kürze...</p>
+          <LoadingSpinner />
+        </div>
       </div>
     )
   }
@@ -278,8 +296,8 @@ export const GamePage: React.FC = () => {
   return (
     <div className={`${styles.container} ${gameStyles.fullHeight}`}>
       {/* Error Display */}
-      <ErrorDisplay 
-        error={error} 
+      <ErrorDisplay
+        error={error}
         onClear={() => setError(null)}
         onRetry={() => window.location.reload()}
       />
@@ -292,7 +310,7 @@ export const GamePage: React.FC = () => {
           </h2>
           <div className={gameStyles.metaRow}>
             {/* Radial countdown indicator (visual only) */}
-            <div 
+            <div
               className={`${gameStyles.radialTimer} ${timerSeverity === 'warning' ? gameStyles.radialWarn : timerSeverity === 'urgent' ? gameStyles.radialUrgent : gameStyles.radialOk}`}
               aria-hidden
               title="Time remaining"
@@ -309,15 +327,15 @@ export const GamePage: React.FC = () => {
               </svg>
             </div>
             {typeof timeRemaining === 'number' && (
-              <span 
+              <span
                 className={`${gameStyles.timer} ${timerSeverity === 'warning' ? gameStyles.timerWarning : ''} ${timerSeverity === 'urgent' ? gameStyles.timerUrgent : ''}`}
-                data-testid="timer" 
+                data-testid="timer"
                 aria-live="polite"
               >
                 ⏱ {timeRemaining}s
               </span>
             )}
-            <button 
+            <button
               onClick={handleLeaveLobby}
               className={`${styles.button} ${styles.buttonOutline} ${gameStyles.leaveBtn}`}
             >
@@ -338,54 +356,54 @@ export const GamePage: React.FC = () => {
           <div className={`${styles.card} ${gameStyles.questionCard}`} data-testid="question-container">
             {/* Time progress bar */}
             <div className={gameStyles.progressContainer} aria-hidden>
-              <div 
+              <div
                 className={`${gameStyles.progressBar} ${timePercent > 50 ? gameStyles.progressOk : timePercent > 20 ? gameStyles.progressWarn : gameStyles.progressUrgent}`}
                 style={{ width: `${timePercent}%` }}
               />
             </div>
 
             <div className={gameStyles.questionInner} key={currentQuestion.id}>
-            <h3
-              id="question-heading"
-              ref={questionRef}
-              className={`${gameStyles.questionText} ${questionExpanded ? gameStyles.questionExpanded : ''}`}
-              data-testid="question-text"
-            >
-              {currentQuestion?.text || `Frage ${questionIndex + 1} wird geladen...`}
-            </h3>
-            {questionOverflowing && (
-              <div className={gameStyles.showMoreRow}>
-                <button
-                  type="button"
-                  className={gameStyles.showMoreBtn}
-                  aria-expanded={questionExpanded}
-                  aria-controls="question-heading"
-                  onClick={() => setQuestionExpanded(v => !v)}
-                  data-testid="question-toggle"
-                >
-                  {questionExpanded ? 'Weniger anzeigen' : 'Mehr anzeigen'}
-                </button>
-              </div>
-            )}
-            <div
-              className={gameStyles.answersGrid}
-              onKeyDown={handleKeyDown}
-              tabIndex={0}
-              role="radiogroup"
-              aria-label="Answer options"
-            >
-              {currentQuestion.answers.map((answer, index) => {
-                const isSelected = selectedAnswer === index
-                const isFocused = focusedAnswerIndex === index && !hasAnswered
-                const isCorrectAnswer = typeof currentQuestion.correctAnswer === 'number' && currentQuestion.correctAnswer === index
-                const showCorrectBlink = !!answerFlash && ((answerFlash === 'correct' && isSelected) || (answerFlash === 'wrong' && isCorrectAnswer))
-                const showWrongBlink = !!answerFlash && answerFlash === 'wrong' && isSelected
-
-                return (
+              <h3
+                id="question-heading"
+                ref={questionRef}
+                className={`${gameStyles.questionText} ${questionExpanded ? gameStyles.questionExpanded : ''}`}
+                data-testid="question-text"
+              >
+                {currentQuestion?.text || `Frage ${questionIndex + 1} wird geladen...`}
+              </h3>
+              {questionOverflowing && (
+                <div className={gameStyles.showMoreRow}>
                   <button
-                    key={index}
-                    data-testid={`answer-option-${index}`}
-                    className={`
+                    type="button"
+                    className={gameStyles.showMoreBtn}
+                    aria-expanded={questionExpanded}
+                    aria-controls="question-heading"
+                    onClick={() => setQuestionExpanded(v => !v)}
+                    data-testid="question-toggle"
+                  >
+                    {questionExpanded ? 'Weniger anzeigen' : 'Mehr anzeigen'}
+                  </button>
+                </div>
+              )}
+              <div
+                className={gameStyles.answersGrid}
+                onKeyDown={handleKeyDown}
+                tabIndex={0}
+                role="radiogroup"
+                aria-label="Answer options"
+              >
+                {currentQuestion.answers.map((answer, index) => {
+                  const isSelected = selectedAnswer === index
+                  const isFocused = focusedAnswerIndex === index && !hasAnswered
+                  const isCorrectAnswer = typeof currentQuestion.correctAnswer === 'number' && currentQuestion.correctAnswer === index
+                  const showCorrectBlink = !!answerFlash && ((answerFlash === 'correct' && isSelected) || (answerFlash === 'wrong' && isCorrectAnswer))
+                  const showWrongBlink = !!answerFlash && answerFlash === 'wrong' && isSelected
+
+                  return (
+                    <button
+                      key={index}
+                      data-testid={`answer-option-${index}`}
+                      className={`
                       ${styles.button}
                       ${gameStyles.answerButton}
                       ${gameStyles.answerEnter}
@@ -394,24 +412,24 @@ export const GamePage: React.FC = () => {
                       ${showCorrectBlink ? gameStyles.answerCorrectBlink : ''}
                       ${showWrongBlink ? gameStyles.answerWrongBlink : ''}
                     `}
-                    onClick={() => handleAnswerClick(index)}
-                    disabled={hasAnswered || timeRemaining === 0}
-                    style={{ animationDelay: `${index * 60}ms` }}
-                    aria-checked={isSelected}
-                    role="radio"
-                  >
-                    <span className={gameStyles.answerLabel}>{String.fromCharCode(65 + index)}.</span>
-                    <span className={gameStyles.answerText}>{answer}</span>
-                  </button>
-                )
-              })}
-            </div>
-
-            {hasAnswered && (
-              <div className={gameStyles.submittedNote} data-testid="answer-feedback">
-                Antwort gesendet! Warten auf andere Spieler...
+                      onClick={() => handleAnswerClick(index)}
+                      disabled={hasAnswered || timeRemaining === 0}
+                      style={{ animationDelay: `${index * 60}ms` }}
+                      aria-checked={isSelected}
+                      role="radio"
+                    >
+                      <span className={gameStyles.answerLabel}>{String.fromCharCode(65 + index)}.</span>
+                      <span className={gameStyles.answerText}>{answer}</span>
+                    </button>
+                  )
+                })}
               </div>
-            )}
+
+              {hasAnswered && (
+                <div className={gameStyles.submittedNote} data-testid="answer-feedback">
+                  Antwort gesendet! Warten auf andere Spieler...
+                </div>
+              )}
             </div>
           </div>
         </section>
@@ -429,11 +447,11 @@ export const GamePage: React.FC = () => {
             )}
           </div>
           <div className={`${styles.card} ${gameStyles.playersCard}`}>
-            <PlayerGrid 
+            <PlayerGrid
               players={sortedPlayersForPlates}
               rankings={rankings}
               maxPlayers={2}
-              showScores={true} 
+              showScores={true}
               showMultipliers={true}
             />
           </div>
@@ -442,4 +460,4 @@ export const GamePage: React.FC = () => {
     </div>
   )
 }
- 
+

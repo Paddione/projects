@@ -47,7 +47,7 @@ export interface QuestionData {
 }
 
 export class GameService {
-  private io: Server;
+  public io: Server;
   private lobbyService: LobbyService;
   private questionService: QuestionService;
   private scoringService: ScoringService;
@@ -57,6 +57,13 @@ export class GameService {
   private gameTimers: Map<string, NodeJS.Timeout> = new Map();
   private nextQuestionTimers: Map<string, NodeJS.Timeout> = new Map();
   private isTestEnvironment: boolean;
+
+  private getIo() {
+    if (typeof this.io === 'undefined' || this.io === null) {
+      return null;
+    }
+    return this.io;
+  }
 
   /**
    * Clear all timers for a lobby
@@ -116,13 +123,13 @@ export class GameService {
       gameState.timeRemaining--;
 
       // Emit time update to all clients
-      this.io.to(lobbyCode).emit('time-update', {
+      this.getIo()?.to(lobbyCode).emit('time-update', {
         timeRemaining: gameState.timeRemaining
       });
 
       // Check for time warnings
       if (gameState.timeRemaining === 10 || gameState.timeRemaining === 5) {
-        this.io.to(lobbyCode).emit('time-warning', {
+        this.getIo()?.to(lobbyCode).emit('time-warning', {
           timeRemaining: gameState.timeRemaining
         });
       }
@@ -182,7 +189,7 @@ export class GameService {
     });
 
     // Emit the next question to all players (send full object; use 0-based index)
-    this.io.to(lobbyCode).emit('question-started', {
+    this.getIo()?.to(lobbyCode).emit('question-started', {
       question: currentQuestion,
       questionIndex: gameState.currentQuestionIndex,
       totalQuestions: gameState.totalQuestions,
@@ -382,8 +389,32 @@ export class GameService {
       // Store active game
       this.activeGames.set(lobbyCode, gameState);
 
-      // Start the first question
-      await this.startNextQuestion(lobbyCode);
+      // Start the game with a 5-second synchronization countdown
+      let syncCountdown = 5;
+
+      // Emit initial sync event
+      if (this.io && typeof this.io.to === 'function') {
+        this.io.to(lobbyCode).emit('game-syncing', {
+          countdown: syncCountdown,
+          message: 'Synchronisiere Spieler...'
+        });
+      }
+
+      const syncTimer = setInterval(async () => {
+        syncCountdown--;
+
+        if (syncCountdown <= 0) {
+          clearInterval(syncTimer);
+          // Start the first question after synchronization
+          await this.startNextQuestion(lobbyCode);
+        } else {
+          // Emit sync update
+          this.io?.to(lobbyCode).emit('game-syncing', {
+            countdown: syncCountdown,
+            message: 'Synchronisiere Spieler...'
+          });
+        }
+      }, 1000);
 
       RequestLogger.logGameEvent('game-started', lobbyCode, undefined, {
         gameSessionId: gameSession.id,
@@ -417,7 +448,9 @@ export class GameService {
       // Calculate and emit results
       const results = this.calculateQuestionResults(gameState);
       // Legacy/internal event
-      this.io.to(lobbyCode).emit('question-results', results);
+      if (this.io) {
+        this.getIo()?.to(lobbyCode).emit('question-results', results);
+      }
       // Frontend expects 'question-ended' with a flat results array of players
       const endedPayload = {
         results: gameState.players.map(p => ({ id: p.id, score: p.score, multiplier: p.multiplier })),
@@ -425,7 +458,9 @@ export class GameService {
         questionIndex: gameState.currentQuestionIndex,
         totalQuestions: gameState.totalQuestions
       };
-      this.io.to(lobbyCode).emit('question-ended', endedPayload);
+      if (this.io) {
+        this.getIo()?.to(lobbyCode).emit('question-ended', endedPayload);
+      }
 
       // Player scores are already updated in calculateQuestionResults
 
@@ -563,7 +598,7 @@ export class GameService {
       await this.savePlayerResults(gameState);
 
       // Emit game over event
-      this.io.to(lobbyCode).emit('game-over', {
+      this.getIo()?.to(lobbyCode).emit('game-over', {
         leaderboard: gameState.players
           .map(p => ({
             playerId: p.id,
@@ -649,7 +684,7 @@ export class GameService {
     });
 
     // Emit answer received event (include both legacy and explicit fields)
-    this.io.to(lobbyCode).emit('answer-received', {
+    this.getIo()?.to(lobbyCode).emit('answer-received', {
       playerId: player.id,
       username: player.username,
       hasAnswered: true,
@@ -744,7 +779,7 @@ export class GameService {
           // Emit real-time perk unlock notifications if any
           if (experienceResult.newlyUnlockedPerks && experienceResult.newlyUnlockedPerks.length > 0) {
             try {
-              this.io.to(gameState.lobbyCode).emit('player-perk-unlocks', {
+              this.getIo()?.to(gameState.lobbyCode).emit('player-perk-unlocks', {
                 playerId: player.id,
                 username: player.username,
                 character: player.character,
@@ -780,7 +815,7 @@ export class GameService {
       .sort((a, b) => b.finalScore - a.finalScore);
 
     // Broadcast game end with experience and level-up information
-    this.io.to(gameState.lobbyCode).emit('game-ended', {
+    this.getIo()?.to(gameState.lobbyCode).emit('game-ended', {
       results: finalResults,
       gameSessionId: gameState.gameSessionId,
       questionSetIds: gameState.selectedQuestionSetIds
@@ -789,7 +824,7 @@ export class GameService {
     // Send individual level-up notifications
     for (const result of finalResults) {
       if (result.levelUp) {
-        this.io.to(gameState.lobbyCode).emit('player-level-up', {
+        this.getIo()?.to(gameState.lobbyCode).emit('player-level-up', {
           playerId: result.id,
           username: result.username,
           character: result.character,

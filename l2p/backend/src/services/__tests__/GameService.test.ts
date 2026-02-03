@@ -215,7 +215,7 @@ describe('GameService', () => {
 
     // Ensure io mock can handle room emissions where io.to(...).emit === io.emit
     (mockIo as any).emit = jest.fn();
-    (mockIo as any).to = jest.fn(() => mockIo);
+    (mockIo as any).to = jest.fn().mockImplementation(() => mockIo);
     // Create GameService instance
     gameService = new GameService(mockIo);
 
@@ -225,9 +225,9 @@ describe('GameService', () => {
     (gameService as any).scoringService = mockScoringService;
     (gameService as any).characterService = mockCharacterService;
     (gameService as any).gameSessionRepository = mockGameSessionRepository;
-    
+
     // Mock private methods that create timers to prevent Socket.IO errors in tests
-    jest.spyOn(gameService as any, 'startQuestionTimer').mockImplementation(() => {});
+    jest.spyOn(gameService as any, 'startQuestionTimer').mockImplementation(() => { });
   });
 
   // Add cleanup to specific test groups that need it
@@ -993,7 +993,7 @@ describe('GameService', () => {
     afterEach(() => {
       jest.useRealTimers();
       // Re-mock the timer to prevent issues in other tests
-      jest.spyOn(gameService as any, 'startQuestionTimer').mockImplementation(() => {});
+      jest.spyOn(gameService as any, 'startQuestionTimer').mockImplementation(() => { });
     });
 
     it('should start question timer and update time remaining', async () => {
@@ -1039,7 +1039,7 @@ describe('GameService', () => {
 
       const updatedGameState = (gameService as any).activeGames.get('ABC123');
       expect(updatedGameState.timeRemaining).toBe(55);
-      
+
       // Check that time-update events were emitted
       expect(mockIo.emit).toHaveBeenCalledWith('time-update', { timeRemaining: 59 });
       expect(mockIo.emit).toHaveBeenCalledWith('time-update', { timeRemaining: 58 });
@@ -1147,7 +1147,7 @@ describe('GameService', () => {
 
       // Mock endQuestion to prevent game from ending when all players answer
       jest.spyOn(gameService as any, 'endQuestion').mockResolvedValue(undefined);
-      
+
       mockScoringService.calculateScore.mockReturnValue({
         timeElapsed: 10,
         multiplier: 1,

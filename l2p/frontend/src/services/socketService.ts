@@ -31,6 +31,7 @@ export interface SocketEvents {
   'question-set-info-error': (data: { type: string; message: string }) => void
 
   // Game events
+  'game-syncing': (data: { countdown: number; message: string }) => void
   'game-started': (data: { gameState: Record<string, unknown>; message: string }) => void
   'question-started': (data: { question: Record<string, unknown>; questionIndex: number; totalQuestions: number; timeRemaining: number }) => void
   'answer-received': (data: {
@@ -204,6 +205,13 @@ export class SocketService {
       }
     })
 
+    this.socket.on('game-syncing', (data) => {
+      console.log('Game syncing:', data)
+      const { setIsSyncing, setSyncCountdown } = useGameStore.getState()
+      setIsSyncing(true)
+      setSyncCountdown(data.countdown)
+    })
+
     this.socket.on('question-started', (data) => {
       console.log('New question started:', data)
 
@@ -217,7 +225,10 @@ export class SocketService {
         allQuestionKeys: data.question ? Object.keys(data.question) : 'no question object'
       })
 
-      const { setCurrentQuestion, setQuestionIndex, setTotalQuestions, setTimeRemaining, resetPlayerAnswerStatus, setPlayers } = useGameStore.getState()
+      const { setCurrentQuestion, setQuestionIndex, setTotalQuestions, setTimeRemaining, resetPlayerAnswerStatus, setPlayers, setIsSyncing } = useGameStore.getState()
+
+      // Question has started, so we are no longer syncing
+      setIsSyncing(false)
 
       // Validate that we have question data
       if (!data.question) {

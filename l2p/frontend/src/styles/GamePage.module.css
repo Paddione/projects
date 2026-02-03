@@ -600,3 +600,54 @@
     /* recommended touch target */
   }
 }
+
+/* Synchronization Phase Styles */
+.syncCard {
+  text-align: center;
+  padding: var(--spacing-xxl) var(--spacing-xl);
+  max-width: 500px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xl);
+  background: var(--cv-glass-void);
+  border: 1px solid var(--cv-border-2);
+  box-shadow: var(--cv-glow-cyan-lg);
+  animation: card-pop-in 400ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.syncTitle {
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--cv-text-bright);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin: 0;
+  background: var(--cv-gradient-cyan);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 0 30px rgba(0, 242, 255, 0.3);
+}
+
+.syncCountdown {
+  font-size: 6rem;
+  font-weight: 900;
+  font-family: var(--cv-font-mono);
+  color: var(--cv-cyan);
+  text-shadow: 0 0 20px rgba(0, 242, 255, 0.5), 0 0 40px rgba(0, 242, 255, 0.2);
+  line-height: 1;
+  animation: digit-pop 1s ease-out infinite;
+}
+
+@keyframes digit-pop {
+  0% { transform: scale(0.8); opacity: 0.5; }
+  10% { transform: scale(1.1); opacity: 1; }
+  100% { transform: scale(1); opacity: 0.8; }
+}
+
+.syncMessage {
+  font-size: 1.125rem;
+  color: var(--cv-text-muted);
+  font-weight: 500;
+  margin: 0;
+}

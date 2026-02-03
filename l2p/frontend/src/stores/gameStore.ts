@@ -77,27 +77,29 @@ export interface GameState {
   players: Player[]
   maxPlayers: number
   questionSetInfo: QuestionSetInfo | null
-  
+
   // Game session state
   gameStarted: boolean
+  isSyncing: boolean
+  syncCountdown: number
   currentQuestion: Question | null
   questionIndex: number
   totalQuestions: number
   timeRemaining: number
   gameEnded: boolean
-  
+
   // Game results and experience
   gameResults: GameResult[]
   levelUpNotifications: LevelUpNotification[]
   perkUnlockNotifications: PerkUnlockNotification[]
-  
+
   // UI state
   isLoading: boolean
   error: string | null
 
   // Per-round UI status
   playerAnswerStatus: Record<string, AnswerStatus | undefined>
-  
+
   // Actions
   setLobbyCode: (code: string | null) => void
   setIsHost: (isHost: boolean) => void
@@ -107,6 +109,8 @@ export interface GameState {
   updatePlayer: (playerId: string, updates: Partial<Player>) => void
   setQuestionSetInfo: (info: QuestionSetInfo | null) => void
   setGameStarted: (started: boolean) => void
+  setIsSyncing: (isSyncing: boolean) => void
+  setSyncCountdown: (countdown: number) => void
   setCurrentQuestion: (question: Question | null) => void
   setQuestionIndex: (index: number) => void
   setTotalQuestions: (total: number) => void
@@ -135,6 +139,8 @@ const initialState = {
   maxPlayers: 8,
   questionSetInfo: null,
   gameStarted: false,
+  isSyncing: false,
+  syncCountdown: 0,
   currentQuestion: null,
   questionIndex: 0,
   totalQuestions: 0,
@@ -152,23 +158,25 @@ export const useGameStore = create<GameState>()(
   devtools(
     (set) => ({
       ...initialState,
-      
+
       setLobbyCode: (code) => set({ lobbyCode: code }),
       setIsHost: (isHost) => set({ isHost }),
       setPlayers: (players) => set({ players }),
-      addPlayer: (player) => set((state) => ({ 
-        players: [...state.players, player] 
+      addPlayer: (player) => set((state) => ({
+        players: [...state.players, player]
       })),
-      removePlayer: (playerId) => set((state) => ({ 
-        players: state.players.filter(p => p.id !== playerId) 
+      removePlayer: (playerId) => set((state) => ({
+        players: state.players.filter(p => p.id !== playerId)
       })),
       updatePlayer: (playerId, updates) => set((state) => ({
-        players: state.players.map(p => 
+        players: state.players.map(p =>
           p.id === playerId ? { ...p, ...updates } : p
         )
       })),
       setQuestionSetInfo: (info) => set({ questionSetInfo: info }),
       setGameStarted: (started) => set({ gameStarted: started }),
+      setIsSyncing: (isSyncing) => set({ isSyncing }),
+      setSyncCountdown: (countdown) => set({ syncCountdown: countdown }),
       setCurrentQuestion: (question) => set({ currentQuestion: question }),
       setQuestionIndex: (index) => set({ questionIndex: index }),
       setTotalQuestions: (total) => set({ totalQuestions: total }),
