@@ -168,26 +168,21 @@ export class AuthService {
       throw new Error(passwordValidation.errors.join(', '));
     }
 
-    // Check if email already exists (case-insensitive)
-    const existingEmail = await db
-      .select()
+    // Check if email or username already exists (case-insensitive)
+    // Uses a single generic error to prevent user enumeration
+    const existingUser = await db
+      .select({ id: users.id })
       .from(users)
-      .where(sql`LOWER(${users.email}) = LOWER(${data.email})`)
+      .where(
+        or(
+          sql`LOWER(${users.email}) = LOWER(${data.email})`,
+          sql`LOWER(${users.username}) = LOWER(${data.username})`
+        )
+      )
       .limit(1);
 
-    if (existingEmail.length > 0) {
-      throw new Error('Email already registered');
-    }
-
-    // Check if username already exists (case-insensitive)
-    const existingUsername = await db
-      .select()
-      .from(users)
-      .where(sql`LOWER(${users.username}) = LOWER(${data.username})`)
-      .limit(1);
-
-    if (existingUsername.length > 0) {
-      throw new Error('Username already taken');
+    if (existingUser.length > 0) {
+      throw new Error('Registration could not be completed. If you already have an account, try logging in or resetting your password.');
     }
 
     // Hash password

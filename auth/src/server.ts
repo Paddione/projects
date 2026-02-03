@@ -69,6 +69,7 @@ app.use(
     cookie: {
       secure: process.env.NODE_ENV === 'production',
       httpOnly: true,
+      sameSite: 'lax',
       maxAge: parseInt(process.env.SESSION_MAX_AGE || '2592000000'), // 30 days
     },
   })
@@ -84,7 +85,7 @@ const isProduction = process.env.NODE_ENV === 'production';
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: process.env.AUTH_RATE_LIMIT_MAX ? parseInt(process.env.AUTH_RATE_LIMIT_MAX) : (isProduction ? 100 : 1000), // much higher limit for dev/test
-  message: 'Too many requests from this IP, please try again later',
+  message: { error: 'Too many requests from this IP, please try again later' },
   standardHeaders: true,
   legacyHeaders: false,
 });
@@ -92,7 +93,7 @@ const authLimiter = rateLimit({
 const strictAuthLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: process.env.AUTH_STRICT_RATE_LIMIT_MAX ? parseInt(process.env.AUTH_STRICT_RATE_LIMIT_MAX) : (isProduction ? 5 : 100), // Increased for E2E testing in dev
-  message: 'Too many authentication attempts, please try again later',
+  message: { error: 'Too many authentication attempts, please try again later' },
   standardHeaders: true,
   legacyHeaders: false,
   skipSuccessfulRequests: true, // Don't count successful requests
@@ -162,6 +163,7 @@ app.get('/api', (_req, res) => {
 // Authentication routes (with rate limiting + CSRF)
 app.use('/api/auth/login', strictAuthLimiter);
 app.use('/api/auth/register', strictAuthLimiter);
+app.use('/api/auth/forgot-password', strictAuthLimiter);
 app.use('/api/auth', authLimiter, csrfProtection, authRoutes);
 
 // OAuth routes (no CSRF — Google callback is a browser redirect,
