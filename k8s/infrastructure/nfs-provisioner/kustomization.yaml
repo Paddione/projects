@@ -11,10 +11,11 @@ metadata:
 # Note: NFS provisioner is deployed to kube-system namespace
 # but StorageClass is cluster-scoped
 
-commonLabels:
-  app.kubernetes.io/part-of: korczewski
-  app.kubernetes.io/component: storage
-  tier: infrastructure
+labels:
+  - pairs:
+      app.kubernetes.io/part-of: korczewski
+      app.kubernetes.io/component: storage
+      tier: infrastructure
 
 resources:
   - rbac.yaml

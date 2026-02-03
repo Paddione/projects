@@ -10,10 +10,11 @@ metadata:
 
 namespace: korczewski-infra
 
-commonLabels:
-  app.kubernetes.io/part-of: korczewski
-  app.kubernetes.io/component: ingress-controller
-  tier: infrastructure
+labels:
+  - pairs:
+      app.kubernetes.io/part-of: korczewski
+      app.kubernetes.io/component: ingress-controller
+      tier: infrastructure
 
 resources:
   - rbac.yaml
