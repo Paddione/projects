@@ -41,17 +41,17 @@ test.describe('Help Screen', () => {
     const content = page.getByTestId('help-content');
 
     // Default: Getting Started
-    await expect(content.getByText('Getting Started')).toBeVisible();
+    await expect(content.getByRole('heading', { name: 'Getting Started' })).toBeVisible();
     await expect(content.locator('li')).not.toHaveCount(0);
 
     // Switch to Scanning & Importing
     await page.getByRole('button', { name: 'Scanning & Importing' }).click();
-    await expect(content.getByText('Scanning & Importing')).toBeVisible();
+    await expect(content.getByRole('heading', { name: 'Scanning & Importing' })).toBeVisible();
     await expect(content.getByText(/Scan Directory/)).toBeVisible();
 
     // Switch to Focus Mode
     await page.getByRole('button', { name: 'Focus Mode' }).click();
-    await expect(content.getByText('Focus Mode')).toBeVisible();
+    await expect(content.getByRole('heading', { name: 'Focus Mode' })).toBeVisible();
   });
 
   test('help dialog can be closed via close button', async ({ page }) => {

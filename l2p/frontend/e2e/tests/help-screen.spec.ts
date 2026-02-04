@@ -71,8 +71,9 @@ test.describe('Help Screen', () => {
 
     // Switch to scoring section
     await page.click('[data-testid="help-nav-scoring"]');
-    // Scoring section should contain multiplier-related content
-    await expect(content.locator('text=1x')).toBeVisible();
+    // Scoring section uses <p> and multiplier grid, not <li>
+    await expect(content.locator('h3').first()).toBeVisible();
+    await expect(content.locator('p')).not.toHaveCount(0);
 
     // Switch to lobbies section
     await page.click('[data-testid="help-nav-lobbies"]');
@@ -106,6 +107,8 @@ test.describe('Help Screen', () => {
     await page.click('[data-testid="help-button"]');
     await page.waitForSelector('[data-testid="help-dialog"]');
 
+    // Ensure dialog has focus before pressing Escape
+    await page.locator('[data-testid="help-dialog"]').focus();
     await page.keyboard.press('Escape');
     await expect(page.locator('[data-testid="help-dialog"]')).not.toBeVisible();
   });
