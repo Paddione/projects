@@ -16,6 +16,7 @@ import ResetPasswordPage from './pages/ResetPasswordPage'
 import { PerformanceMonitor } from './components/PerformanceMonitor'
 import { LevelUpNotificationManager } from './components/LevelUpNotificationManager'
 import ErrorBoundary from './components/ErrorBoundary'
+import { HelpScreen, HelpButton } from './components/HelpScreen'
 import { useSettingsStore } from './stores/settingsStore'
 import { useEffect, useState } from 'react'
 import styles from './styles/App.module.css'
@@ -24,6 +25,7 @@ import { importMetaEnv } from './utils/import-meta'
 // Separate AppContent component for easier testing
 export function AppContent() {
   const [isHydrated, setIsHydrated] = useState(false)
+  const [helpOpen, setHelpOpen] = useState(false)
   const theme = useSettingsStore((state) => state.theme)
   // Check if we're in test environment
   const isTestEnvironment = (() => {
@@ -98,6 +100,8 @@ export function AppContent() {
                 </AuthGuard>
               </div>
             </main>
+            <HelpButton onClick={() => setHelpOpen(true)} />
+            <HelpScreen isOpen={helpOpen} onClose={() => setHelpOpen(false)} />
             <PerformanceMonitor />
             <LevelUpNotificationManager />
           </ThemeProvider>

@@ -64,5 +64,107 @@
     "move": "Move",
     "split": "Split",
     "play": "Play"
+  },
+  "help": {
+    "title": "Hilfe",
+    "sections": {
+      "gettingStarted": {
+        "title": "Erste Schritte",
+        "items": [
+          "MediaVault ist deine persoenliche Medienbibliothek fuer Videos, Hoerbuecher und E-Books.",
+          "Starte mit dem Scannen eines Verzeichnisses um deine Mediendateien zu importieren.",
+          "Nutze die Seitenleiste zum Filtern und Durchsuchen deiner Bibliothek.",
+          "Klicke auf ein Medium um Details anzuzeigen, abzuspielen oder Metadaten zu bearbeiten."
+        ]
+      },
+      "scanning": {
+        "title": "Scannen & Importieren",
+        "items": [
+          "Klicke auf 'Verzeichnis scannen' in der Kopfleiste um einen Ordner auszuwaehlen.",
+          "Das Scannen erkennt Video-, Audio- und E-Book-Dateien automatisch.",
+          "Grosse Verzeichnisse werden progressiv gescannt — du kannst waehrend des Scans browsen.",
+          "Scanne jederzeit erneut um neue oder geaenderte Dateien zu erfassen.",
+          "Importiere Daten aus externen Quellen ueber den Import-Button."
+        ]
+      },
+      "browsing": {
+        "title": "Bibliothek durchsuchen",
+        "items": [
+          "Deine Medien erscheinen in einer Rasteransicht mit Vorschaubildern.",
+          "Klicke auf ein Video um den Player zu oeffnen, oder rechtsklicke fuer mehr Optionen.",
+          "Nutze die Suchleiste um Medien nach Dateiname oder Metadaten zu finden.",
+          "Sortiere nach Name, Datum, Groesse oder Dauer ueber die Werkzeugleiste.",
+          "Die Bibliothek nutzt virtuelles Scrollen fuer fluessige Performance bei grossen Sammlungen."
+        ]
+      },
+      "filtering": {
+        "title": "Filtern & Suchen",
+        "items": [
+          "Oeffne das Filter-Panel in der Seitenleiste fuer erweiterte Filter.",
+          "Filtere nach Dateityp, Dauer, Dateigroesse, Qualitaet und Datum.",
+          "Kombiniere mehrere Filter fuer praezise Ergebnisse.",
+          "Speichere Filterkombinationen als Voreinstellungen fuer schnellen Zugriff.",
+          "Nutze den Voreinstellungs-Manager zum Erstellen, Bearbeiten und Anwenden."
+        ]
+      },
+      "tagging": {
+        "title": "Tags & Kategorien",
+        "items": [
+          "Fuege Tags zu jedem Medium fuer einfache Organisation hinzu.",
+          "Durchsuche alle Tags auf der Tags-Seite (ueber die Kopfleiste erreichbar).",
+          "Nutze Massenoperationen um mehrere Elemente gleichzeitig zu taggen.",
+          "Kategorien werden aus Dateipfaden extrahiert und koennen angepasst werden.",
+          "Importiere Tags aus externen Quellen ueber den Tag-Importer."
+        ]
+      },
+      "focusMode": {
+        "title": "Fokus-Modus",
+        "items": [
+          "Der Fokus-Modus bietet eine dedizierte Oberflaeche zum Organisieren eines einzelnen Videos.",
+          "Vorschau, Kategorien bearbeiten und Stapelumbenennung auf einem Bildschirm.",
+          "Zugang zum Fokus-Modus ueber das Fokus-Symbol auf jeder Videokarte.",
+          "Nutze den Kategorie-Editor zum Zuweisen und Anpassen von Kategorien.",
+          "Benenne Dateien mit musterbasierter Stapelumbenennung um."
+        ]
+      },
+      "duplicates": {
+        "title": "Duplikaterkennung",
+        "items": [
+          "Oeffne die Duplikate-Seite ueber die Kopfleiste um doppelte Dateien zu finden.",
+          "Duplikate werden durch Datei-Hash, Namensaehnlichkeit und Dateigroesse erkannt.",
+          "Vergleiche Duplikate nebeneinander um zu entscheiden welche behalten werden.",
+          "Nutze Massenoperationen um mehrere Duplikate gleichzeitig zu bereinigen."
+        ]
+      },
+      "mediaTypes": {
+        "title": "Medientypen",
+        "items": [
+          "VideoVault unterstuetzt Videos, Hoerbuecher und E-Books.",
+          "Videos werden in einem integrierten Player mit allen Steuerungen abgespielt.",
+          "Hoerbuecher haben einen dedizierten Player mit Kapitelnavigation.",
+          "E-Books (EPUB/PDF) oeffnen sich in einem integrierten Reader mit Seitennavigation.",
+          "Wechsle zwischen Medientypen ueber die Tabs in der Bibliotheksansicht."
+        ]
+      },
+      "analytics": {
+        "title": "Analysen & Statistiken",
+        "items": [
+          "Sieh dir Bibliotheksstatistiken auf der Analyse-Seite an.",
+          "Zeige Formatverteilung, Speichernutzung und Bibliothekswachstum.",
+          "Verfolge deine meistgesehenen Inhalte und Wiedergabezeit.",
+          "Ueberwache Groesse und Zusammensetzung deiner Bibliothek ueber die Zeit."
+        ]
+      },
+      "settings": {
+        "title": "Einstellungen",
+        "items": [
+          "Zugang zu den Einstellungen ueber das Zahnrad-Symbol in der Kopfleiste.",
+          "Konfiguriere Scan-Einstellungen und Vorschaubild-Qualitaet.",
+          "Setze Anzeige-Praeferenzen und Standard-Sortierung.",
+          "Verwalte Bibliothekspfade und automatisches Scannen.",
+          "Wechsle zwischen hellem und dunklem Design."
+        ]
+      }
+    }
   }
 }

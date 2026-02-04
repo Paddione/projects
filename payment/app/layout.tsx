@@ -4,6 +4,7 @@ import "./globals.css";
 import "./cybervault-payment.css";
 import Header from '@/components/header'
 import KeyboardNavigation from '@/components/KeyboardNavigation'
+import HelpScreen from '@/components/HelpScreen'
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -35,6 +36,7 @@ export default function RootLayout({
         <main>
           {children}
         </main>
+        <HelpScreen />
       </body>
     </html>
   );

@@ -5,6 +5,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { ThemeProvider } from '@/components/ui/theme-provider';
 import { ShortcutsOverlay } from '@/components/shortcuts/shortcuts-overlay';
+import { HelpScreen } from '@/components/help-screen';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import Home from '@/pages/home';
 import AdminErrorsPage from '@/pages/admin-errors';
@@ -36,6 +37,7 @@ function App() {
           <TooltipProvider>
             <ShortcutsOverlay />
             <Toaster />
+            <HelpScreen />
             <Router />
           </TooltipProvider>
         </ThemeProvider>

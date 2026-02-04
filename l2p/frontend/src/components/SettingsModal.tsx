@@ -188,62 +188,54 @@ const HelpContent: React.FC = () => {
       <section className={styles.helpSection}>
         <h3>{t('help.howToPlay')}</h3>
         <div className={styles.helpText}>
-          <p>1. Create or join a game using a unique code</p>
-          <p>2. Wait for all players to be ready</p>
-          <p>3. Answer questions within the time limit</p>
-          <p>4. Build up your multiplier with consecutive correct answers</p>
-          <p>5. Submit your score to the Hall of Fame</p>
+          {[1, 2, 3, 4, 5, 6].map(i => (
+            <p key={i}>{t(`help.howToPlay.${i}`)}</p>
+          ))}
         </div>
       </section>
 
       <section className={styles.helpSection}>
         <h3>{t('help.scoring')}</h3>
         <div className={styles.helpText}>
-          <p>• Points = (60 - seconds elapsed) × multiplier</p>
-          <p>• Multiplier increases with consecutive correct answers</p>
-          <p>• Wrong answers reset multiplier to 1x</p>
-          <p>• Higher multipliers = more points per correct answer</p>
+          <p>{t('help.scoring.formula')}</p>
+          <p>{t('help.scoring.fast')}</p>
+          <p>{t('help.scoring.streak')}</p>
+          <p>{t('help.scoring.wrong')}</p>
         </div>
       </section>
 
       <section className={styles.helpSection}>
         <h3>{t('help.multipliers')}</h3>
         <div className={styles.helpText}>
-          <p>• 1x: Starting multiplier</p>
-          <p>• 2x: After 1 consecutive correct answer</p>
-          <p>• 3x: After 2 consecutive correct answers</p>
-          <p>• 4x: After 3 consecutive correct answers</p>
-          <p>• 5x: After 4 consecutive correct answers (maximum)</p>
+          <p>{t('help.multipliers.desc')}</p>
+          {['1x', '2x', '3x', '4x', '5x'].map(m => (
+            <p key={m}>{t(`help.multipliers.${m}`)}</p>
+          ))}
         </div>
       </section>
 
       <section className={styles.helpSection}>
         <h3>{t('help.audio')}</h3>
         <div className={styles.helpText}>
-          <p>• Adjust music and sound effect volumes independently</p>
-          <p>• Mute all audio with the master mute button</p>
-          <p>• Test audio with the provided test buttons</p>
-          <p>• Settings are automatically saved</p>
+          <p>{t('help.audio.master')}</p>
+          <p>{t('help.audio.settings')}</p>
+          <p>{t('help.audio.mute')}</p>
         </div>
       </section>
 
       <section className={styles.helpSection}>
         <h3>{t('help.language')}</h3>
         <div className={styles.helpText}>
-          <p>• Switch between German and English</p>
-          <p>• Language preference is saved automatically</p>
-          <p>• All UI elements update instantly</p>
-          <p>• Fallback to English for missing translations</p>
+          <p>{t('help.language.switch')}</p>
+          <p>{t('help.language.auto')}</p>
         </div>
       </section>
 
       <section className={styles.helpSection}>
         <h3>{t('help.contact')}</h3>
         <div className={styles.helpText}>
-          <p>For support or questions:</p>
-          <p>• Email: support@learn2play.com</p>
-          <p>• GitHub: github.com/learn2play</p>
-          <p>• Discord: discord.gg/learn2play</p>
+          <p>Email: support@learn2play.com</p>
+          <p>GitHub: github.com/learn2play</p>
         </div>
       </section>
     </div>
