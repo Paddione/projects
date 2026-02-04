@@ -594,19 +594,23 @@ export class GameService {
     if (!gameState) return;
 
     try {
-      // Save game results to database
-      await this.gameSessionRepository.endGameSession(gameState.gameSessionId, {
-        scores: gameState.players.map(p => ({
-          playerId: p.id,
-          score: p.score,
-          correctAnswers: p.correctAnswers
-        }))
-      });
+      // Save game results to database (non-fatal — continue even if this fails)
+      try {
+        await this.gameSessionRepository.endGameSession(gameState.gameSessionId, {
+          scores: gameState.players.map(p => ({
+            playerId: p.id,
+            score: p.score,
+            correctAnswers: p.correctAnswers
+          }))
+        });
+      } catch (dbError) {
+        console.error(`[GameService] Failed to save game session ${gameState.gameSessionId} to DB:`, dbError);
+      }
 
-      // Save player results and calculate experience
+      // Save player results and calculate experience — this also emits game-ended
       await this.savePlayerResults(gameState);
 
-      // Emit game over event
+      // Emit game over event (legacy, for any listeners)
       this.getIo()?.to(lobbyCode).emit('game-over', {
         leaderboard: gameState.players
           .map(p => ({
@@ -787,42 +791,67 @@ export class GameService {
         }
 
         // Award experience points if we have a valid userId
-        const experienceResult = userId ? await this.characterService.awardExperience(userId, player.score) : null;
-
-        await this.scoringService.savePlayerResult(gameState.gameSessionId, {
-          ...(userId && { userId }),
-          username: player.username,
-          characterName: player.character,
-          finalScore: player.score,
-          correctAnswers: player.correctAnswers,
-          totalQuestions: gameState.totalQuestions,
-          maxMultiplier: player.multiplier,
-          answerDetails: [], // Will be populated with actual answer details
-          skipExperienceAward: true
-        });
-
-        if (experienceResult) {
-          experienceResults.push({
-            playerId: player.id,
-            characterName: player.character,
-            experienceAwarded: player.score,
-            ...experienceResult
-          });
-
-          // Emit real-time perk unlock notifications if any
-          if (experienceResult.newlyUnlockedPerks && experienceResult.newlyUnlockedPerks.length > 0) {
-            try {
-              this.getIo()?.to(gameState.lobbyCode).emit('player-perk-unlocks', {
-                playerId: player.id,
-                username: player.username,
-                character: player.character,
-                unlockedPerks: experienceResult.newlyUnlockedPerks
-              });
-            } catch { }
+        let experienceResult = null;
+        if (userId) {
+          try {
+            experienceResult = await this.characterService.awardExperience(userId, player.score);
+          } catch (xpError) {
+            console.error(`[GameService] Failed to award XP for player ${player.id} (userId=${userId}):`, xpError);
           }
         }
+
+        try {
+          await this.scoringService.savePlayerResult(gameState.gameSessionId, {
+            ...(userId && { userId }),
+            username: player.username,
+            characterName: player.character,
+            finalScore: player.score,
+            correctAnswers: player.correctAnswers,
+            totalQuestions: gameState.totalQuestions,
+            maxMultiplier: player.multiplier,
+            answerDetails: [], // Will be populated with actual answer details
+            skipExperienceAward: true
+          });
+        } catch (saveError) {
+          console.error(`[GameService] Failed to save result for player ${player.id}:`, saveError);
+        }
+
+        // Always push an entry so every player appears in final results with XP
+        experienceResults.push({
+          playerId: player.id,
+          characterName: player.character,
+          experienceAwarded: player.score,
+          ...(experienceResult || {}),
+          // Ensure levelUp/newLevel are always present
+          levelUp: experienceResult?.levelUp || false,
+          newLevel: experienceResult?.newLevel || player.characterLevel || 1,
+          oldLevel: experienceResult?.oldLevel || player.characterLevel || 1,
+          newlyUnlockedPerks: experienceResult?.newlyUnlockedPerks || []
+        });
+
+        // Emit real-time perk unlock notifications if any
+        if (experienceResult?.newlyUnlockedPerks && experienceResult.newlyUnlockedPerks.length > 0) {
+          try {
+            this.getIo()?.to(gameState.lobbyCode).emit('player-perk-unlocks', {
+              playerId: player.id,
+              username: player.username,
+              character: player.character,
+              unlockedPerks: experienceResult.newlyUnlockedPerks
+            });
+          } catch { }
+        }
       } catch (error) {
-        console.error('Error saving player result:', error);
+        console.error(`[GameService] Error processing player ${player.id} results:`, error);
+        // Still push a basic entry so the player appears in final results
+        experienceResults.push({
+          playerId: player.id,
+          characterName: player.character,
+          experienceAwarded: player.score,
+          levelUp: false,
+          newLevel: player.characterLevel || 1,
+          oldLevel: player.characterLevel || 1,
+          newlyUnlockedPerks: []
+        });
       }
     }
 
@@ -838,7 +867,7 @@ export class GameService {
           finalScore: player.score,
           correctAnswers: player.correctAnswers,
           multiplier: player.multiplier,
-          experienceAwarded: experienceResult?.experienceAwarded || 0,
+          experienceAwarded: experienceResult?.experienceAwarded || player.score,
           levelUp: experienceResult?.levelUp || false,
           newLevel: experienceResult?.newLevel || player.characterLevel || 1,
           oldLevel: experienceResult?.oldLevel || player.characterLevel || 1,

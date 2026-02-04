@@ -404,7 +404,7 @@ export class SocketService {
           }
 
           // Check if this is the current user's answer
-          const isCurrentUser = data.playerId === user?.id
+          const isCurrentUser = String(data.playerId) === String(user?.id)
 
           // Update player with complete score information from backend
           const target = players.find(p => p.id === data.playerId)

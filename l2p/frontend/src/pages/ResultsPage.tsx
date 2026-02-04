@@ -380,7 +380,7 @@ export const ResultsPage: React.FC = () => {
               </div>
 
               {/* Progress toward next level if it's the current player's character */}
-              {player.id === user?.id && progress && (
+              {String(player.id) === String(user?.id) && progress && (
                 <div style={{ marginTop: 'var(--spacing-md)', textAlign: 'left' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', marginBottom: 'var(--spacing-xs)' }}>
                     <span>Next Level</span>

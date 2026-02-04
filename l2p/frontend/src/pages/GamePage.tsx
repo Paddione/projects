@@ -88,7 +88,7 @@ export const GamePage: React.FC = () => {
 
     // Listen for score updates from server
     const handleScoreUpdate = (data: { playerId: string; hasAnswered: boolean; isCorrect?: boolean; scoreDelta?: number; newScore?: number; newMultiplier?: number }) => {
-      if (data.playerId === String(user?.id)) {
+      if (String(data.playerId) === String(user?.id)) {
         const delta = typeof data.scoreDelta === 'number' ? data.scoreDelta : undefined
         if (typeof delta === 'number' && delta > 0) {
           // Force a synchronous paint for immediate visibility (helps tests too)
@@ -288,7 +288,7 @@ export const GamePage: React.FC = () => {
     )
   }
 
-  const currentPlayer = players.find(p => (user?.id ? p.id === user.id : false)) || players.find(p => p.isHost) || players[0]!
+  const currentPlayer = players.find(p => (user?.id ? String(p.id) === String(user.id) : false)) || players.find(p => p.isHost) || players[0]!
   const { score, multiplier, correctAnswers } = currentPlayer
 
   // Build global rankings by score (desc), 0-based rank index
