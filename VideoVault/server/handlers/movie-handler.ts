@@ -9,7 +9,7 @@ import { v4 as uuidv4 } from 'uuid';
 import crypto from 'crypto';
 
 // Supported movie file extensions
-const MOVIE_EXTENSIONS = ['.mp4', '.mkv', '.avi', '.mov', '.wmv', '.webm', '.m4v'];
+export const MOVIE_EXTENSIONS = ['.mp4', '.mkv', '.avi', '.mov', '.wmv', '.webm', '.m4v'];
 
 // Regex patterns to extract title and year from filenames
 const TITLE_YEAR_PATTERNS = [
@@ -190,7 +190,7 @@ async function calculateFileHash(filePath: string): Promise<string> {
 /**
  * Generate thumbnail for a movie file
  */
-async function generateMovieThumbnail(
+export async function generateMovieThumbnail(
   inputPath: string,
   outputDir: string,
 ): Promise<{ thumb: string; sprite: string }> {
