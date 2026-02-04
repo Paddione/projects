@@ -2210,6 +2210,57 @@ class ApiService {
       method: 'POST',
     })
   }
+
+  // Perk Draft methods
+  async getPendingDrafts(): Promise<ApiResponse<{ pendingDrafts: any[]; count: number }>> {
+    return this.request('/perks/draft/pending')
+  }
+
+  async pickDraftPerk(level: number, perkId: number): Promise<ApiResponse<{ message: string }>> {
+    return this.request('/perks/draft/pick', {
+      method: 'POST',
+      body: JSON.stringify({ level, perkId }),
+    })
+  }
+
+  async dumpDraftOffer(level: number): Promise<ApiResponse<{ message: string }>> {
+    return this.request('/perks/draft/dump', {
+      method: 'POST',
+      body: JSON.stringify({ level }),
+    })
+  }
+
+  async getDraftHistory(): Promise<ApiResponse<any[]>> {
+    return this.request('/perks/draft/history')
+  }
+
+  async getActiveGameplayPerks(): Promise<ApiResponse<any[]>> {
+    return this.request('/perks/draft/active')
+  }
+
+  async getAvailablePool(): Promise<ApiResponse<{ pool: any[]; size: number }>> {
+    return this.request('/perks/draft/pool')
+  }
+
+  async resetDrafts(): Promise<ApiResponse<any>> {
+    return this.request('/perks/draft/reset', {
+      method: 'POST',
+    })
+  }
+
+  async checkNeedsRedraft(): Promise<ApiResponse<{ needsRedraft: boolean }>> {
+    return this.request('/perks/draft/needs-redraft')
+  }
+
+  async clearRedraftFlag(): Promise<ApiResponse<{ message: string }>> {
+    return this.request('/perks/draft/clear-redraft', {
+      method: 'POST',
+    })
+  }
+
+  async getSkillTreeData(): Promise<ApiResponse<any>> {
+    return this.request('/perks/draft/skill-tree')
+  }
 }
 
 // Export singleton instance and types

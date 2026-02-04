@@ -12,6 +12,7 @@ import questionManagementRoutes from './routes/question-management.js';
 import scoringRoutes from './routes/scoring.js';
 console.log('🔵 Attempting to import perks routes...');
 import perksRoutes from './routes/perks.js';
+import perkDraftRoutes from './routes/perkDraft.js';
 console.log('🟢 Perks routes imported successfully!');
 
 export function setupApp(app: Application) {
@@ -84,6 +85,7 @@ export function setupApp(app: Application) {
   app.use('/api/questions', questionRoutes);
   app.use('/api/admin/questions', questionManagementRoutes);
   app.use('/api/scoring', scoringRoutes);
+  app.use('/api/perks/draft', perkDraftRoutes);
   app.use('/api/perks', perksRoutes);
 
   // Health check endpoint

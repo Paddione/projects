@@ -5,6 +5,8 @@ import { ScoringService } from './ScoringService.js';
 import { RequestLogger } from '../middleware/logging.js';
 import { LobbyService } from './LobbyService.js';
 import { CharacterService } from './CharacterService.js';
+import { PerkDraftService, DraftOffer } from './PerkDraftService.js';
+import { PerkEffectEngine, GameplayModifiers, ScoreContext } from './PerkEffectEngine.js';
 
 export interface GameState {
   lobbyCode: string;
@@ -29,11 +31,15 @@ export interface GamePlayer {
   score: number;
   multiplier: number;
   correctAnswers: number;
+  wrongAnswers: number;
   currentStreak: number; // Track consecutive correct answers for streak sounds
+  lastWrongStreak: number; // Track consecutive wrong answers for phoenix perk
   hasAnsweredCurrentQuestion: boolean;
   currentAnswer?: string | undefined;
   answerTime?: number | undefined;
   isConnected: boolean;
+  perkModifiers?: GameplayModifiers;
+  freeWrongsUsed: number;
 }
 
 export interface QuestionData {
@@ -52,6 +58,7 @@ export class GameService {
   private questionService: QuestionService;
   private scoringService: ScoringService;
   private characterService: CharacterService;
+  private perkDraftService: PerkDraftService;
   private gameSessionRepository: GameSessionRepository;
   private activeGames: Map<string, GameState> = new Map();
   private gameTimers: Map<string, NodeJS.Timeout> = new Map();
@@ -208,6 +215,7 @@ export class GameService {
     this.questionService = new QuestionService();
     this.scoringService = new ScoringService();
     this.characterService = new CharacterService();
+    this.perkDraftService = PerkDraftService.getInstance();
     this.gameSessionRepository = new GameSessionRepository();
     this.isTestEnvironment = process.env['NODE_ENV'] === 'test' || process.env['TEST_ENVIRONMENT'] === 'local';
   }
@@ -382,14 +390,33 @@ export class GameService {
           score: 0,
           multiplier: 1,
           correctAnswers: 0,
-          currentStreak: 0, // Initialize streak
+          wrongAnswers: 0,
+          currentStreak: 0,
+          lastWrongStreak: 0,
           hasAnsweredCurrentQuestion: false,
-          isConnected: player.isConnected
+          isConnected: player.isConnected,
+          freeWrongsUsed: 0,
         }))
       };
 
       // Store active game
       this.activeGames.set(lobbyCode, gameState);
+
+      // Load perk modifiers for each player
+      for (const player of gameState.players) {
+        try {
+          const numericId = parseInt(player.id, 10);
+          if (!isNaN(numericId)) {
+            const activePerks = await this.perkDraftService.getActiveGameplayPerks(numericId);
+            if (activePerks.length > 0) {
+              player.perkModifiers = PerkEffectEngine.buildModifiers(activePerks);
+            }
+          }
+        } catch (e) {
+          // Non-fatal: player plays without perk modifiers
+          console.warn(`[GameService] Failed to load perks for player ${player.id}:`, e);
+        }
+      }
 
       // Update lobby status to indicate the game is starting (synchronization phase)
       await (this as any).lobbyService.updateLobbyStatus(lobbyCode, 'starting');
@@ -686,18 +713,43 @@ export class GameService {
     // Check if answer is correct
     const isCorrect = answer === gameState.currentQuestion.correctAnswer;
 
-    // Calculate score using ScoringService
+    // Build score context for perk effects
+    const scoreContext: ScoreContext | undefined = player.perkModifiers ? {
+      questionIndex: gameState.currentQuestionIndex,
+      totalQuestions: gameState.totalQuestions,
+      playerAccuracy: player.correctAnswers / Math.max(1, player.correctAnswers + player.wrongAnswers),
+      wrongAnswersUsed: player.freeWrongsUsed,
+      lastWrongStreak: player.lastWrongStreak,
+      isLastWrong: player.lastWrongStreak > 0,
+    } : undefined;
+
+    // Calculate score using ScoringService (with optional perk modifiers)
     const scoreCalculation = this.scoringService.calculateScore(
       timeElapsed,
       player.multiplier,
       isCorrect,
-      player.currentStreak || 0
+      player.currentStreak || 0,
+      player.perkModifiers,
+      scoreContext
     );
 
     // Update player stats
     if (isCorrect) {
       player.correctAnswers++;
       player.score += scoreCalculation.pointsEarned;
+      player.lastWrongStreak = 0;
+    } else {
+      player.wrongAnswers++;
+      player.lastWrongStreak++;
+      // Track free wrong answers used
+      if (player.perkModifiers && player.perkModifiers.freeWrongAnswers > 0 &&
+          player.freeWrongsUsed < player.perkModifiers.freeWrongAnswers) {
+        player.freeWrongsUsed++;
+      }
+      // Still add partial credit points if any
+      if (scoreCalculation.pointsEarned > 0) {
+        player.score += scoreCalculation.pointsEarned;
+      }
     }
 
     // Update streak and multiplier
@@ -791,10 +843,20 @@ export class GameService {
         }
 
         // Award experience points if we have a valid userId
+        // Apply XP modifiers from perks
         let experienceResult = null;
+        let modifiedXP = player.score;
         if (userId) {
           try {
-            experienceResult = await this.characterService.awardExperience(userId, player.score);
+            if (player.perkModifiers) {
+              modifiedXP = PerkEffectEngine.calculateModifiedXP(player.score, player.perkModifiers, {
+                accuracy: player.correctAnswers / Math.max(1, gameState.totalQuestions),
+                isPerfect: player.correctAnswers === gameState.totalQuestions,
+                uniqueSetCount: gameState.selectedQuestionSetIds.length,
+                maxStreak: player.currentStreak,
+              });
+            }
+            experienceResult = await this.characterService.awardExperience(userId, modifiedXP);
           } catch (xpError) {
             console.error(`[GameService] Failed to award XP for player ${player.id} (userId=${userId}):`, xpError);
           }
@@ -816,27 +878,46 @@ export class GameService {
           console.error(`[GameService] Failed to save result for player ${player.id}:`, saveError);
         }
 
+        // Get pending draft levels for this player
+        let pendingDrafts: DraftOffer[] = [];
+        if (userId && experienceResult?.levelUp) {
+          try {
+            const pendingLevels = await this.perkDraftService.getPendingDraftLevels(
+              userId,
+              experienceResult.newLevel
+            );
+            for (const lvl of pendingLevels) {
+              const offer = await this.perkDraftService.generateDraftOffer(userId, lvl);
+              if (offer.perks.length > 0 && !offer.drafted) {
+                pendingDrafts.push(offer);
+              }
+            }
+          } catch (e) {
+            console.warn(`[GameService] Failed to generate draft offers for player ${player.id}:`, e);
+          }
+        }
+
         // Always push an entry so every player appears in final results with XP
         experienceResults.push({
           playerId: player.id,
           characterName: player.character,
-          experienceAwarded: player.score,
+          experienceAwarded: modifiedXP,
           ...(experienceResult || {}),
           // Ensure levelUp/newLevel are always present
           levelUp: experienceResult?.levelUp || false,
           newLevel: experienceResult?.newLevel || player.characterLevel || 1,
           oldLevel: experienceResult?.oldLevel || player.characterLevel || 1,
-          newlyUnlockedPerks: experienceResult?.newlyUnlockedPerks || []
+          newlyUnlockedPerks: experienceResult?.newlyUnlockedPerks || [],
+          pendingDrafts,
         });
 
-        // Emit real-time perk unlock notifications if any
-        if (experienceResult?.newlyUnlockedPerks && experienceResult.newlyUnlockedPerks.length > 0) {
+        // Emit draft availability notification if any
+        if (pendingDrafts.length > 0) {
           try {
-            this.getIo()?.to(gameState.lobbyCode).emit('player-perk-unlocks', {
+            this.getIo()?.to(gameState.lobbyCode).emit('perk:draft-available', {
               playerId: player.id,
               username: player.username,
-              character: player.character,
-              unlockedPerks: experienceResult.newlyUnlockedPerks
+              pendingDrafts,
             });
           } catch { }
         }
@@ -871,7 +952,8 @@ export class GameService {
           levelUp: experienceResult?.levelUp || false,
           newLevel: experienceResult?.newLevel || player.characterLevel || 1,
           oldLevel: experienceResult?.oldLevel || player.characterLevel || 1,
-          newlyUnlockedPerks: experienceResult?.newlyUnlockedPerks || []
+          newlyUnlockedPerks: experienceResult?.newlyUnlockedPerks || [],
+          pendingDrafts: experienceResult?.pendingDrafts || [],
         };
       })
       .sort((a, b) => b.finalScore - a.finalScore);

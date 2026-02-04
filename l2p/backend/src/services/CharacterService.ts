@@ -2,6 +2,7 @@ import { UserRepository, User } from '../repositories/UserRepository.js';
 import { PerksManager, UserPerk } from './PerksManager.js';
 import { GameProfileService, GameProfile } from './GameProfileService.js';
 import { DatabaseService } from './DatabaseService.js';
+import { PerkDraftService, DraftOffer } from './PerkDraftService.js';
 
 export interface Character {
   id: string;
@@ -250,6 +251,7 @@ export class CharacterService {
     oldLevel: number;
     progress: { currentLevel: number; progress: number; expInLevel: number; expForNextLevel: number };
     newlyUnlockedPerks: UserPerk[];
+    pendingDrafts: DraftOffer[];
   }> {
     // Try to update game profile first (OAuth users)
     try {
@@ -285,14 +287,21 @@ export class CharacterService {
 
       const progress = this.calculateLevelProgress(newExperiencePoints);
 
-      // Check for newly unlocked perks if user leveled up
+      // Generate draft offers for newly reached levels (1-30 only)
       let newlyUnlockedPerks: UserPerk[] = [];
+      let pendingDrafts: DraftOffer[] = [];
       if (levelUp) {
         try {
-          newlyUnlockedPerks = await this.perksManager.checkAndUnlockPerksForLevel(userId, newLevel);
+          const perkDraftService = PerkDraftService.getInstance();
+          // Generate draft offers for each new level reached (capped at 30)
+          for (let lvl = oldLevel + 1; lvl <= Math.min(newLevel, 30); lvl++) {
+            const offer = await perkDraftService.generateDraftOffer(userId, lvl);
+            if (offer.perks.length > 0 && !offer.drafted) {
+              pendingDrafts.push(offer);
+            }
+          }
         } catch (error) {
-          console.warn('Failed to unlock perks for user level up:', error);
-          newlyUnlockedPerks = [];
+          console.warn('Failed to generate draft offers for level up:', error);
         }
       }
 
@@ -302,7 +311,8 @@ export class CharacterService {
         newLevel,
         oldLevel,
         progress,
-        newlyUnlockedPerks
+        newlyUnlockedPerks,
+        pendingDrafts,
       };
     } catch (error) {
       // Fall back to legacy user repository
@@ -328,14 +338,20 @@ export class CharacterService {
 
       const progress = this.calculateLevelProgress(newExperiencePoints);
 
-      // Check for newly unlocked perks if user leveled up
+      // Generate draft offers for newly reached levels (1-30 only)
       let newlyUnlockedPerks: UserPerk[] = [];
+      let pendingDrafts: DraftOffer[] = [];
       if (levelUp) {
         try {
-          newlyUnlockedPerks = await this.perksManager.checkAndUnlockPerksForLevel(userId, newLevel);
+          const perkDraftService = PerkDraftService.getInstance();
+          for (let lvl = oldLevel + 1; lvl <= Math.min(newLevel, 30); lvl++) {
+            const offer = await perkDraftService.generateDraftOffer(userId, lvl);
+            if (offer.perks.length > 0 && !offer.drafted) {
+              pendingDrafts.push(offer);
+            }
+          }
         } catch (error) {
-          console.warn('Failed to unlock perks for user level up:', error);
-          newlyUnlockedPerks = [];
+          console.warn('Failed to generate draft offers for level up:', error);
         }
       }
 
@@ -345,7 +361,8 @@ export class CharacterService {
         newLevel,
         oldLevel,
         progress,
-        newlyUnlockedPerks
+        newlyUnlockedPerks,
+        pendingDrafts,
       };
     }
   }

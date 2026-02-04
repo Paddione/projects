@@ -265,7 +265,37 @@ const enTranslations: Translations = {
   'info.readyToStart': 'Ready to start when all players are ready',
   'info.audioNotSupported': 'Audio not supported in this browser',
   'info.languageChanged': 'Language changed successfully',
-  'info.themeChanged': 'Theme changed successfully'
+  'info.themeChanged': 'Theme changed successfully',
+
+  // Perk Draft Panel
+  'draft.chooseTitle': 'Choose a perk:',
+  'draft.choose': 'Choose',
+  'draft.dumpAll': 'Reject all 3',
+  'draft.confirmTitle': 'Are you sure?',
+  'draft.confirmText': 'All 3 perks will be permanently removed from your pool. This cannot be undone.',
+  'draft.confirmYes': 'Reject all',
+  'draft.confirmNo': 'Cancel',
+  'draft.complete': 'All drafts complete!',
+  'draft.poolExhausted': 'No perks remaining in the pool.',
+
+  // Skill Tree
+  'skillTree.title': 'Skill Tree',
+  'skillTree.loading': 'Loading skill tree...',
+  'skillTree.noData': 'No skill tree data available.',
+  'skillTree.reset': 'Reset',
+  'skillTree.resetConfirmTitle': 'Reset all perks?',
+  'skillTree.resetConfirmText': 'All chosen perks will be returned to the pool. You will need to re-draft from level 1.',
+  'skillTree.resetConfirmYes': 'Reset all',
+  'skillTree.resetConfirmNo': 'Cancel',
+  'skillTree.dumped': 'Dumped',
+  'skillTree.pending': 'Available — draft pending',
+
+  // Perk Categories
+  'perk.category.time': 'Time',
+  'perk.category.info': 'Information',
+  'perk.category.scoring': 'Scoring',
+  'perk.category.recovery': 'Recovery',
+  'perk.category.xp': 'XP'
 }
 
 // German translations
@@ -517,7 +547,37 @@ const deTranslations: Translations = {
   'info.readyToStart': 'Bereit zum Starten wenn alle Spieler bereit sind',
   'info.audioNotSupported': 'Audio wird in diesem Browser nicht unterstützt',
   'info.languageChanged': 'Sprache erfolgreich geändert',
-  'info.themeChanged': 'Design erfolgreich geändert'
+  'info.themeChanged': 'Design erfolgreich geändert',
+
+  // Perk Draft Panel
+  'draft.chooseTitle': 'Waehle einen Perk:',
+  'draft.choose': 'Waehlen',
+  'draft.dumpAll': 'Alle 3 ablehnen',
+  'draft.confirmTitle': 'Bist du sicher?',
+  'draft.confirmText': 'Alle 3 Perks werden dauerhaft aus deinem Pool entfernt. Das kann nicht rueckgaengig gemacht werden.',
+  'draft.confirmYes': 'Alle ablehnen',
+  'draft.confirmNo': 'Abbrechen',
+  'draft.complete': 'Alle Drafts abgeschlossen!',
+  'draft.poolExhausted': 'Keine Perks mehr im Pool.',
+
+  // Skill Tree
+  'skillTree.title': 'Skill-Baum',
+  'skillTree.loading': 'Skill-Baum wird geladen...',
+  'skillTree.noData': 'Keine Skill-Baum-Daten verfuegbar.',
+  'skillTree.reset': 'Zuruecksetzen',
+  'skillTree.resetConfirmTitle': 'Alle Perks zuruecksetzen?',
+  'skillTree.resetConfirmText': 'Alle gewaehlten Perks werden in den Pool zurueckgelegt. Du musst ab Level 1 neu waehlen.',
+  'skillTree.resetConfirmYes': 'Alle zuruecksetzen',
+  'skillTree.resetConfirmNo': 'Abbrechen',
+  'skillTree.dumped': 'Abgelehnt',
+  'skillTree.pending': 'Verfuegbar — Draft ausstehend',
+
+  // Perk Categories
+  'perk.category.time': 'Zeit',
+  'perk.category.info': 'Information',
+  'perk.category.scoring': 'Punkte',
+  'perk.category.recovery': 'Erholung',
+  'perk.category.xp': 'XP'
 }
 
 export class LocalizationService {

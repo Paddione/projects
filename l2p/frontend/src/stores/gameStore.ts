@@ -36,6 +36,22 @@ export interface UserPerk {
   }
 }
 
+export interface DraftOfferResult {
+  level: number
+  perks: Array<{
+    id: number
+    name: string
+    description: string
+    category: string
+    tier: number
+    effect_type: string
+    effect_config: Record<string, any>
+  }>
+  drafted: boolean
+  dumped: boolean
+  chosenPerkId?: number
+}
+
 export interface GameResult {
   id: string
   username: string
@@ -49,6 +65,7 @@ export interface GameResult {
   newLevel: number
   oldLevel: number
   newlyUnlockedPerks?: UserPerk[]
+  pendingDrafts?: DraftOfferResult[]
 }
 
 export interface LevelUpNotification {

@@ -1,0 +1,216 @@
+.draftPanel {
+  padding: var(--spacing-xl);
+  text-align: center;
+}
+
+.draftHeader {
+  margin-bottom: var(--spacing-lg);
+}
+
+.draftTitle {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin-bottom: var(--spacing-xs);
+}
+
+.draftProgress {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.cardsContainer {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--spacing-lg);
+  margin-bottom: var(--spacing-xl);
+  max-width: 800px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.perkCard {
+  position: relative;
+  border: 2px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg);
+  cursor: pointer;
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+  background: rgba(255, 255, 255, 0.03);
+  text-align: center;
+  overflow: hidden;
+}
+
+.perkCard:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+.categoryStripe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+}
+
+.categoryTime { background-color: #42a5f5; }
+.categoryInfo { background-color: #ffca28; }
+.categoryScoring { background-color: #66bb6a; }
+.categoryRecovery { background-color: #ef5350; }
+.categoryXp { background-color: #ab47bc; }
+
+.perkCard:hover .categoryTime + .perkName,
+.perkCard.categoryTimeCard:hover {
+  border-color: #42a5f5;
+}
+
+.perkCard.categoryTimeCard { border-color: rgba(66, 165, 245, 0.3); }
+.perkCard.categoryTimeCard:hover { border-color: #42a5f5; }
+.perkCard.categoryInfoCard { border-color: rgba(255, 202, 40, 0.3); }
+.perkCard.categoryInfoCard:hover { border-color: #ffca28; }
+.perkCard.categoryScoringCard { border-color: rgba(102, 187, 106, 0.3); }
+.perkCard.categoryScoringCard:hover { border-color: #66bb6a; }
+.perkCard.categoryRecoveryCard { border-color: rgba(239, 83, 80, 0.3); }
+.perkCard.categoryRecoveryCard:hover { border-color: #ef5350; }
+.perkCard.categoryXpCard { border-color: rgba(171, 71, 188, 0.3); }
+.perkCard.categoryXpCard:hover { border-color: #ab47bc; }
+
+.perkIcon {
+  font-size: 2rem;
+  margin: var(--spacing-sm) 0;
+}
+
+.perkName {
+  font-size: 1.1rem;
+  font-weight: bold;
+  margin-bottom: var(--spacing-xs);
+}
+
+.perkDescription {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin-bottom: var(--spacing-md);
+  line-height: 1.4;
+}
+
+.perkTier {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  margin-bottom: var(--spacing-sm);
+}
+
+.pickButton {
+  width: 100%;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border: none;
+  border-radius: var(--radius-md);
+  background: var(--primary-color);
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.pickButton:hover {
+  background: var(--primary-color-dark, #1565c0);
+}
+
+.pickButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.dumpButton {
+  display: inline-block;
+  padding: var(--spacing-sm) var(--spacing-lg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: border-color 0.2s ease, color 0.2s ease;
+  font-size: 0.9rem;
+}
+
+.dumpButton:hover {
+  border-color: #ef5350;
+  color: #ef5350;
+}
+
+.dumpButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.confirmOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.confirmDialog {
+  background: var(--card-bg, #1e1e1e);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-xl);
+  max-width: 400px;
+  text-align: center;
+}
+
+.confirmTitle {
+  font-size: 1.2rem;
+  font-weight: bold;
+  margin-bottom: var(--spacing-md);
+}
+
+.confirmText {
+  color: var(--text-secondary);
+  margin-bottom: var(--spacing-lg);
+  font-size: 0.9rem;
+}
+
+.confirmActions {
+  display: flex;
+  gap: var(--spacing-md);
+  justify-content: center;
+}
+
+.confirmYes {
+  padding: var(--spacing-sm) var(--spacing-lg);
+  border: none;
+  border-radius: var(--radius-md);
+  background: #ef5350;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.confirmNo {
+  padding: var(--spacing-sm) var(--spacing-lg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--text-primary, white);
+  cursor: pointer;
+}
+
+.exhaustedMessage {
+  font-size: 1.1rem;
+  color: var(--text-secondary);
+  padding: var(--spacing-xl);
+  text-align: center;
+}
+
+.completeMessage {
+  color: var(--color-success);
+  font-size: 1.1rem;
+  font-weight: bold;
+  padding: var(--spacing-lg);
+}

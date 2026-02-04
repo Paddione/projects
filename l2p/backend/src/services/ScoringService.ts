@@ -1,6 +1,7 @@
 import { GameSessionRepository, CreatePlayerResultData, PlayerResult } from '../repositories/GameSessionRepository.js';
 import { CharacterService } from './CharacterService.js';
 import { RequestLogger } from '../middleware/logging.js';
+import { GameplayModifiers, ScoreContext, PerkEffectEngine } from './PerkEffectEngine.js';
 
 export interface ScoreCalculation {
   timeElapsed: number;
@@ -9,6 +10,7 @@ export interface ScoreCalculation {
   pointsEarned: number;
   newMultiplier: number;
   streakCount: number;
+  bonusPoints: number;
 }
 
 export interface PlayerStatistics {
@@ -34,26 +36,102 @@ export class ScoringService {
   }
 
   /**
-   * Calculate score for a player's answer
+   * Calculate score for a player's answer.
+   * When `modifiers` is provided, perk effects are applied.
+   * When absent, formula is identical to the original (backward compatible).
    */
-  calculateScore(timeElapsed: number, currentMultiplier: number, isCorrect: boolean, currentStreak: number): ScoreCalculation {
+  calculateScore(
+    timeElapsed: number,
+    currentMultiplier: number,
+    isCorrect: boolean,
+    currentStreak: number,
+    modifiers?: GameplayModifiers,
+    context?: ScoreContext
+  ): ScoreCalculation {
     let pointsEarned = 0;
+    let bonusPoints = 0;
     let newMultiplier = currentMultiplier;
     let newStreak = currentStreak;
 
+    const maxStreak = modifiers?.maxStreakMultiplier ?? 5;
+    const growthRate = modifiers?.streakGrowthRate ?? 1.0;
+
     if (isCorrect) {
-      // Calculate points: (60 - seconds_elapsed) × multiplier
-      const timeBonus = Math.max(0, 60 - timeElapsed);
+      // Apply time perk bonuses to effective time
+      let effectiveTimeElapsed = timeElapsed;
+      if (modifiers) {
+        effectiveTimeElapsed = Math.max(0, timeElapsed - modifiers.bonusSeconds);
+        effectiveTimeElapsed *= modifiers.timerSpeedMultiplier;
+      }
+
+      // Base formula: (60 - effective_seconds) × multiplier
+      const timeBonus = Math.max(0, 60 - effectiveTimeElapsed);
       pointsEarned = timeBonus * currentMultiplier;
 
-      // Increase streak and multiplier
+      // Apply speed bonus multiplier
+      if (modifiers && modifiers.speedBonusMultiplier !== 1.0) {
+        pointsEarned = Math.round(pointsEarned * modifiers.speedBonusMultiplier);
+      }
+
+      // Apply base score multiplier
+      if (modifiers && modifiers.baseScoreMultiplier !== 1.0) {
+        pointsEarned = Math.round(pointsEarned * modifiers.baseScoreMultiplier);
+      }
+
+      // Speed threshold bonus (Early Bird / Flash Answer)
+      if (modifiers && modifiers.speedThresholdSeconds > 0 && timeElapsed <= modifiers.speedThresholdSeconds) {
+        bonusPoints += modifiers.speedBonusPoints;
+      }
+
+      // Closer bonus (last N questions)
+      if (modifiers && context && modifiers.closerBonusPercentage > 0) {
+        const isCloserQuestion = context.questionIndex >= (context.totalQuestions - modifiers.lastQuestionsCount);
+        if (isCloserQuestion) {
+          bonusPoints += Math.round(pointsEarned * modifiers.closerBonusPercentage);
+        }
+      }
+
+      // Bounce back bonus (first correct after wrong)
+      if (modifiers && context && context.isLastWrong && modifiers.bounceBackBonus > 0) {
+        bonusPoints += modifiers.bounceBackBonus;
+      }
+
+      // Phoenix bonus (correct after consecutive wrong streak)
+      if (modifiers && context && modifiers.phoenixThreshold > 0 &&
+          context.lastWrongStreak >= modifiers.phoenixThreshold) {
+        pointsEarned = Math.round(pointsEarned * modifiers.phoenixMultiplier);
+      }
+
+      // Comeback bonus
+      if (modifiers && context && modifiers.comebackThreshold > 0 &&
+          context.playerAccuracy < modifiers.comebackThreshold) {
+        pointsEarned = Math.round(pointsEarned * modifiers.comebackMultiplier);
+      }
+
+      pointsEarned += bonusPoints;
+
+      // Increase streak and multiplier (with growth rate modifier)
       newStreak = currentStreak + 1;
-      newMultiplier = Math.min(5, Math.floor(newStreak / 2) + 1); // 1x, 2x, 3x, 4x, 5x
+      const effectiveStreak = Math.floor(newStreak * growthRate);
+      newMultiplier = Math.min(maxStreak, Math.floor(effectiveStreak / 2) + 1);
     } else {
-      // Reset multiplier and streak for incorrect answer
-      pointsEarned = 0;
-      newMultiplier = 1;
-      newStreak = 0;
+      // Check for free wrong answers (recovery perk)
+      if (modifiers && context && modifiers.freeWrongAnswers > 0 &&
+          context.wrongAnswersUsed < modifiers.freeWrongAnswers) {
+        // Don't reset streak, but no points earned
+        newStreak = currentStreak;
+        newMultiplier = currentMultiplier;
+      } else {
+        // Reset multiplier and streak for incorrect answer
+        newMultiplier = modifiers?.baseMultiplier ?? 1;
+        newStreak = 0;
+      }
+
+      // Partial credit on wrong answers
+      if (modifiers && modifiers.partialCreditRate > 0) {
+        const timeBonus = Math.max(0, 60 - timeElapsed);
+        pointsEarned = Math.round(timeBonus * currentMultiplier * modifiers.partialCreditRate);
+      }
     }
 
     return {
@@ -62,7 +140,8 @@ export class ScoringService {
       isCorrect,
       pointsEarned,
       newMultiplier,
-      streakCount: newStreak
+      streakCount: newStreak,
+      bonusPoints,
     };
   }
 

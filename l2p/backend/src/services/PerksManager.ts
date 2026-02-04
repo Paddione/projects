@@ -58,6 +58,7 @@ export class PerksManager {
 
   /**
    * Get all available perks (with caching)
+   * After migration, perks table uses tier/effect_type instead of level_required
    */
   async getAllPerks(): Promise<Perk[]> {
     // Check cache validity
@@ -68,7 +69,7 @@ export class PerksManager {
     const query = `
       SELECT * FROM perks
       WHERE is_active = true
-      ORDER BY level_required ASC, category ASC
+      ORDER BY tier ASC, category ASC
     `;
 
     const result = await this.db.query(query);
@@ -220,15 +221,55 @@ export class PerksManager {
   }
 
   /**
-   * Get active perks for a user
+   * Get active perks for a user (draft-based: chosen perks from user_perk_drafts)
    */
   async getActivePerks(userId: number): Promise<UserPerk[]> {
+    // Try draft-based perks first
+    const draftQuery = `
+      SELECT p.*, d.level AS draft_level
+      FROM user_perk_drafts d
+      JOIN perks p ON d.chosen_perk_id = p.id
+      WHERE d.user_id = $1 AND d.chosen_perk_id IS NOT NULL
+      ORDER BY d.level ASC
+    `;
+
+    try {
+      const draftResult = await this.db.query(draftQuery, [userId]);
+      if (draftResult.rows.length > 0) {
+        return draftResult.rows.map((row: any) => ({
+          id: row.id,
+          user_id: userId,
+          perk_id: row.id,
+          is_unlocked: true,
+          is_active: true,
+          configuration: row.effect_config || {},
+          updated_at: new Date(),
+          perk: {
+            id: row.id,
+            name: row.name,
+            category: row.category,
+            type: row.type,
+            level_required: 0,
+            title: row.title || row.name,
+            description: row.description,
+            asset_data: row.asset_data,
+            is_active: true,
+            created_at: row.created_at,
+            updated_at: row.updated_at,
+          }
+        })) as UserPerk[];
+      }
+    } catch (e) {
+      // Fall through to legacy query if draft table doesn't exist yet
+    }
+
+    // Legacy fallback
     const query = `
-      SELECT up.*, p.name, p.category, p.type, p.level_required, p.title, p.description, p.asset_data
+      SELECT up.*, p.name, p.category, p.type, p.title, p.description, p.asset_data
       FROM user_perks up
       JOIN perks p ON up.perk_id = p.id
       WHERE up.user_id = $1 AND up.is_unlocked = true AND up.is_active = true
-      ORDER BY p.level_required ASC, p.category ASC
+      ORDER BY p.category ASC
     `;
 
     const result = await this.db.query(query, [userId]);
