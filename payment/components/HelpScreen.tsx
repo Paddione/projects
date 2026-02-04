@@ -175,36 +175,39 @@ export default function HelpScreen() {
         onClick={() => setIsOpen(true)}
         aria-label="Help"
         title="Help"
+        data-testid="help-button"
       >
         ?
       </button>
 
       {isOpen && (
         <div className="payment-help-overlay" onClick={handleOverlayClick}>
-          <div className="payment-help-modal" ref={modalRef} role="dialog" aria-modal="true">
+          <div className="payment-help-modal" ref={modalRef} role="dialog" aria-modal="true" data-testid="help-dialog">
             <div className="payment-help-header">
               <h2>{c.title}</h2>
               <div className="payment-help-header-actions">
                 <button
                   className={`payment-help-lang-btn ${lang === 'en' ? 'active' : ''}`}
                   onClick={() => setLang('en')}
+                  data-testid="help-lang-en"
                 >
                   EN
                 </button>
                 <button
                   className={`payment-help-lang-btn ${lang === 'de' ? 'active' : ''}`}
                   onClick={() => setLang('de')}
+                  data-testid="help-lang-de"
                 >
                   DE
                 </button>
-                <button className="payment-help-close" onClick={() => setIsOpen(false)} aria-label="Close">
+                <button className="payment-help-close" onClick={() => setIsOpen(false)} aria-label="Close" data-testid="help-close">
                   &times;
                 </button>
               </div>
             </div>
 
             <div className="payment-help-body">
-              <nav className="payment-help-sidebar">
+              <nav className="payment-help-sidebar" data-testid="help-sidebar">
                 {c.sections.map((s, i) => (
                   <button
                     key={i}
@@ -216,7 +219,7 @@ export default function HelpScreen() {
                 ))}
               </nav>
 
-              <div className="payment-help-content">
+              <div className="payment-help-content" data-testid="help-content">
                 <h3>{c.sections[activeSection].heading}</h3>
                 <ul>
                   {c.sections[activeSection].items.map((item, i) => (

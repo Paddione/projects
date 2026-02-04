@@ -50,6 +50,7 @@ export const HelpScreen: React.FC<HelpScreenProps> = ({ isOpen, onClose }) => {
         role="dialog"
         aria-modal="true"
         aria-labelledby="help-screen-title"
+        data-testid="help-dialog"
         tabIndex={-1}
       >
         <div className={styles.header}>
@@ -70,6 +71,7 @@ export const HelpScreen: React.FC<HelpScreenProps> = ({ isOpen, onClose }) => {
                 key={key}
                 className={`${styles.navItem} ${activeSection === key ? styles.navItemActive : ''}`}
                 onClick={() => setActiveSection(key)}
+                data-testid={`help-nav-${key}`}
               >
                 <span className={styles.navIcon}>{icon}</span>
                 <span className={styles.navLabel}>{t(`help.${key === 'settings' ? 'audio' : key}`, key)}</span>
@@ -77,7 +79,7 @@ export const HelpScreen: React.FC<HelpScreenProps> = ({ isOpen, onClose }) => {
             ))}
           </nav>
 
-          <div className={styles.content}>
+          <div className={styles.content} data-testid="help-content">
             {activeSection === 'howToPlay' && <HowToPlaySection />}
             {activeSection === 'scoring' && <ScoringSection />}
             {activeSection === 'lobbies' && <LobbiesSection />}
@@ -261,6 +263,7 @@ export const HelpButton: React.FC<HelpButtonProps> = ({ onClick }) => {
       onClick={onClick}
       aria-label={t('help.title')}
       title={t('help.title')}
+      data-testid="help-button"
     >
       ?
     </button>

@@ -39,12 +39,13 @@ export function HelpScreen() {
         onClick={() => setIsOpen(true)}
         aria-label={t('help.title', 'Help')}
         title={t('help.title', 'Help')}
+        data-testid="help-button"
       >
         <HelpCircle className="w-5 h-5" />
       </button>
 
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="max-w-[800px] w-[92vw] max-h-[85vh] p-0 gap-0 overflow-hidden">
+        <DialogContent className="max-w-[800px] w-[92vw] max-h-[85vh] p-0 gap-0 overflow-hidden" data-testid="help-dialog">
           <DialogHeader className="px-6 py-4 border-b">
             <DialogTitle>{t('help.title', 'Help Guide')}</DialogTitle>
           </DialogHeader>
@@ -87,7 +88,7 @@ export function HelpScreen() {
             </div>
 
             {/* Content */}
-            <div className="flex-1 overflow-y-auto p-6">
+            <div className="flex-1 overflow-y-auto p-6" data-testid="help-content">
               <h3 className="text-lg font-semibold mb-4">
                 {t(`help.sections.${SECTIONS[activeSection].key}.title`, SECTIONS[activeSection].key)}
               </h3>
