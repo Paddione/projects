@@ -1,6 +1,10 @@
 import { Video } from '@/types/video';
 import { VideoUrlRegistry } from '@/services/video-url-registry';
 
+function encodePathSegments(urlPath: string): string {
+  return urlPath.split('/').map(encodeURIComponent).join('/');
+}
+
 export const getVideoSrc = (video: Video): string | undefined => {
   // 1. Check local registry (for newly dropped/imported files not yet uploaded/persisted)
   const localUrl = VideoUrlRegistry.get(video.id);
@@ -50,6 +54,11 @@ export const getVideoSrc = (video: Video): string | undefined => {
         .replace('%2F', '/')
         .replace('%2F', '/');
     }
+  }
+
+  // Movies directory (indexed from disk)
+  if (video.path.startsWith('movies/')) {
+    return encodePathSegments(`/media/${video.path}`);
   }
 
   // Basic fallback: if path is absolute but we don't recognize root,
@@ -129,6 +138,12 @@ export const getThumbnailSrc = (video: Video): string | undefined => {
     }
   }
 
+  // Movies directory (indexed from disk) — uses _thumb.jpg (underscore)
+  if (video.path.startsWith('movies/')) {
+    const dir = video.path.substring(0, video.path.lastIndexOf('/'));
+    return encodePathSegments(`/media/${dir}/Thumbnails/${baseName}_thumb.jpg`);
+  }
+
   return undefined;
 };
 
@@ -195,6 +210,12 @@ export const getSpriteSrc = (video: Video): string | undefined => {
         .replace('%2F', '/')
         .replace('%2F', '/');
     }
+  }
+
+  // Movies directory (indexed from disk) — uses _sprite.jpg (underscore)
+  if (video.path.startsWith('movies/')) {
+    const dir = video.path.substring(0, video.path.lastIndexOf('/'));
+    return encodePathSegments(`/media/${dir}/Thumbnails/${baseName}_sprite.jpg`);
   }
 
   return undefined;

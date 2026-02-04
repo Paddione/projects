@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import path from 'path';
 import fs from 'fs/promises';
+import crypto from 'crypto';
 import { eq, like } from 'drizzle-orm';
 import { videos } from '@shared/schema';
 import { handleMovieProcessing, scanMoviesDirectory, batchProcessMovies, generateMovieThumbnail, MOVIE_EXTENSIONS } from '../handlers/movie-handler';
@@ -383,6 +384,133 @@ router.post('/movies/organize-inbox', async (req: Request, res: Response) => {
     });
   } catch (error: any) {
     logger.error('[Processing] Organize inbox failed', { error: error.message });
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * POST /api/processing/movies/index
+ * Index existing movie directories into the videos DB table (no ffmpeg, just readdir + stat + upsert)
+ */
+router.post('/movies/index', async (req: Request, res: Response) => {
+  try {
+    const { subdirectory, forceReindex = false } = req.body;
+    const scanRoot = subdirectory
+      ? resolveAndValidateMovieDir(subdirectory)
+      : MOVIES_DIR;
+
+    // Verify directory exists
+    await fs.access(scanRoot);
+
+    let indexed = 0;
+    let skipped = 0;
+    let errors = 0;
+    const errorDetails: Array<{ path: string; error: string }> = [];
+
+    // Recursively find movie directories (directories containing a video file)
+    async function scanDir(dir: string): Promise<void> {
+      let entries;
+      try {
+        entries = await fs.readdir(dir, { withFileTypes: true });
+      } catch {
+        return;
+      }
+
+      // Check if this directory contains a video file
+      const videoFile = entries.find(
+        (e) => e.isFile() && MOVIE_EXTENSIONS.includes(path.extname(e.name).toLowerCase()),
+      );
+
+      if (videoFile) {
+        // This is a movie directory — index it
+        try {
+          const videoPath = path.join(dir, videoFile.name);
+          const relDir = path.relative(MOVIES_DIR, dir);
+          const relVideoPath = path.join(relDir, videoFile.name);
+          const baseName = path.basename(videoFile.name, path.extname(videoFile.name));
+
+          // Deterministic ID from relative path
+          const id = crypto.createHash('sha256').update('movies:' + relVideoPath).digest('hex').slice(0, 36);
+
+          // Check if already indexed
+          if (!forceReindex) {
+            const existing = await db.select({ id: videos.id }).from(videos).where(eq(videos.id, id)).limit(1);
+            if (existing.length > 0) {
+              skipped++;
+              return;
+            }
+          }
+
+          // Stat the video file
+          const stat = await fs.stat(videoPath);
+
+          // Check for thumbnails
+          const thumbPath = path.join(dir, 'Thumbnails', `${baseName}_thumb.jpg`);
+          let thumbUrl: string | null = null;
+          try {
+            await fs.access(thumbPath);
+            thumbUrl = `/media/movies/${relDir}/Thumbnails/${encodeURIComponent(baseName)}_thumb.jpg`;
+          } catch {}
+
+          // Upsert into videos table
+          const dbPath = `movies/${relVideoPath}`;
+          await db
+            .insert(videos)
+            .values({
+              id,
+              filename: videoFile.name,
+              displayName: baseName,
+              path: dbPath,
+              size: stat.size,
+              lastModified: stat.mtime,
+              metadata: { duration: 0, width: 0, height: 0 },
+              categories: {},
+              customCategories: {},
+              thumbnail: thumbUrl ? { generated: true, dataUrl: thumbUrl } : null,
+              rootKey: 'movies',
+            })
+            .onConflictDoUpdate({
+              target: videos.id,
+              set: {
+                filename: videoFile.name,
+                displayName: baseName,
+                path: dbPath,
+                size: stat.size,
+                lastModified: stat.mtime,
+                thumbnail: thumbUrl ? { generated: true, dataUrl: thumbUrl } : null,
+              },
+            });
+
+          indexed++;
+        } catch (err: any) {
+          errors++;
+          errorDetails.push({ path: path.relative(MOVIES_DIR, dir), error: err.message });
+        }
+        return; // Don't recurse into subdirectories of a movie directory
+      }
+
+      // Recurse into subdirectories (skip Thumbnails)
+      for (const entry of entries) {
+        if (entry.isDirectory() && entry.name !== 'Thumbnails') {
+          await scanDir(path.join(dir, entry.name));
+        }
+      }
+    }
+
+    await scanDir(scanRoot);
+
+    logger.info(`[Processing] Movie index complete: ${indexed} indexed, ${skipped} skipped, ${errors} errors`);
+
+    res.json({
+      success: true,
+      indexed,
+      skipped,
+      errors,
+      total: indexed + skipped + errors,
+      ...(errorDetails.length > 0 && { errorDetails: errorDetails.slice(0, 20) }),
+    });
+  } catch (error: any) {
+    logger.error('[Processing] Movie index failed', { error: error.message });
     res.status(500).json({ error: error.message });
   }
 });
