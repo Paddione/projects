@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm';
-import { pgTable, text, varchar, jsonb, bigint, timestamp, index, primaryKey } from 'drizzle-orm/pg-core';
+import { pgTable, text, varchar, jsonb, bigint, timestamp, index, uniqueIndex, primaryKey } from 'drizzle-orm/pg-core';
 import type { VideoShape, FilterPreset, VideoThumbnail } from '@shared/types';
 import { createInsertSchema } from 'drizzle-zod';
 import { z } from 'zod';
@@ -61,7 +61,7 @@ export const videos = pgTable(
       ),
       idxVideosHashFast: index('idx_videos_hash_fast').on(table.hashFast),
       idxVideosHashPerceptual: index('idx_videos_hash_perceptual').on(table.hashPerceptual),
-      idxVideosFileHash: index('idx_videos_file_hash').on(table.fileHash),
+      idxVideosFileHash: uniqueIndex('idx_videos_file_hash').on(table.fileHash),
       idxVideosProcessingStatus: index('idx_videos_processing_status').on(table.processingStatus),
       idxVideosBitrate: index('idx_videos_bitrate').on(table.bitrate),
       idxVideosFps: index('idx_videos_fps').on(table.fps),
