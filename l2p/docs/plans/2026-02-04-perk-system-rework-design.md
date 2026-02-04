@@ -1,7 +1,7 @@
 # Perk System Rework — Skill Tree & Draft Mechanic
 
 **Date:** 2026-02-04
-**Status:** Approved Design
+**Status:** Phase 1 Implemented (Gameplay Perks + Draft Mechanic + Skill Tree + Perk Effects)
 
 ## Overview
 
@@ -305,3 +305,71 @@ Horizontal scrollable path from level 1 (left) to level 30 (right). Central line
 3. Players keep levels and XP
 4. On first login post-migration, players with level > 1 enter the respec flow to draft perks from level 1 to current level
 5. Old perk definitions replaced with 40 new gameplay perks + cosmetic catalog
+
+---
+
+## Phase 1 Implementation Status
+
+**Completed:** 2026-02-04 | **Commit:** `feat(l2p): implement draft-based perk system with 40 gameplay perks`
+
+### What Was Built
+
+| Component | File(s) | Status |
+|-----------|---------|--------|
+| DB Migration | `backend/migrations/20260204_120000_rework_perks_draft_system.sql` | Done - migrated |
+| PerkDraftService | `backend/src/services/PerkDraftService.ts` | Done |
+| PerkEffectEngine | `backend/src/services/PerkEffectEngine.ts` | Done |
+| ScoringService integration | `backend/src/services/ScoringService.ts` | Done |
+| GameService integration | `backend/src/services/GameService.ts` | Done |
+| CharacterService integration | `backend/src/services/CharacterService.ts` | Done |
+| Draft API routes (10 endpoints) | `backend/src/routes/perkDraft.ts` | Done |
+| Socket events (perk:pick, perk:dump) | `backend/src/services/SocketService.ts` | Done |
+| PerksManager rework | `backend/src/services/PerksManager.ts` | Done |
+| Frontend perkDraftStore | `frontend/src/stores/perkDraftStore.ts` | Done |
+| Frontend API client methods | `frontend/src/services/apiService.ts` | Done |
+| Frontend socket handlers | `frontend/src/services/socketService.ts` | Done |
+| PerkDraftPanel component | `frontend/src/components/PerkDraftPanel.tsx` | Done |
+| SkillTree component | `frontend/src/components/SkillTree.tsx` | Done |
+| ResultsPage integration | `frontend/src/pages/ResultsPage.tsx` | Done |
+| ProfilePage integration | `frontend/src/pages/ProfilePage.tsx` | Done |
+| EN/DE localization | `frontend/src/services/localization.ts` | Done |
+
+### Database Verification
+
+- `user_perk_drafts` table created with correct schema
+- 40 gameplay perks seeded (8 per category: time, info, scoring, recovery, xp)
+- Old tables archived to `perks_archive` and `user_perks_archive`
+- `needs_perk_redraft` flag added to `user_game_profiles` and `users`
+
+### API Endpoints
+
+```
+GET  /api/perks/draft/pending       — pending draft offers for current user
+POST /api/perks/draft/pick          — pick a perk { level, perkId }
+POST /api/perks/draft/dump          — dump all 3 { level }
+GET  /api/perks/draft/history       — full draft history
+GET  /api/perks/draft/active        — all active gameplay perks
+GET  /api/perks/draft/pool          — remaining available pool
+POST /api/perks/draft/reset         — full respec
+GET  /api/perks/draft/needs-redraft — check migration flag
+POST /api/perks/draft/clear-redraft — clear migration flag
+GET  /api/perks/draft/skill-tree    — combined tree data (history + perk defs)
+```
+
+### Perk Effects Applied Server-Side
+
+| Category | Effect Types |
+|----------|-------------|
+| Time | bonus_seconds, timer_speed, speed_threshold |
+| Info | eliminate_wrong, show_category, show_difficulty, show_hint, show_answer_stats |
+| Scoring | base_score_multiplier, max_streak_multiplier, streak_growth, speed_bonus_multiplier, perfect_bonus, closer_bonus |
+| Recovery | free_wrong_answers, partial_credit, bounce_back, base_multiplier, comeback, phoenix |
+| XP | xp_multiplier, study_bonus, completion_bonus, accuracy_xp, streak_xp, mastery_xp |
+
+### What Is Deferred to Phase 2
+
+- Cosmetic system (character creator, SVG avatar layers, cosmetic unlocks)
+- Perk icons (currently using category emoji placeholders)
+- Information perks that modify question display (eliminate wrong, show hint) — server flags are set but frontend question UI doesn't yet consume them
+- E2E and unit tests
+- Per-player question payloads (needed for info perks that show/hide answer options)
