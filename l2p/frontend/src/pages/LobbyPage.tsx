@@ -29,6 +29,8 @@ export const LobbyPage: React.FC = () => {
     setLobbyCode
   } = useGameStore()
 
+  const hasJoinedRoom = useRef(false)
+
   useEffect(() => {
     const initializeLobby = async () => {
       if (!lobbyId) {
@@ -47,8 +49,48 @@ export const LobbyPage: React.FC = () => {
         socketService.connect()
       }
 
-      // Validate the lobby exists
-      await navigationService.validateCurrentRoute()
+      // Fetch lobby data from API so the store has players immediately
+      try {
+        const response = await apiService.getLobby(lobbyId)
+        if (response.success && response.data) {
+          const { setPlayers, setIsHost } = useGameStore.getState()
+          if (response.data.players) {
+            setPlayers(response.data.players)
+          }
+          // Determine if current user is host
+          const currentUser = apiService.getCurrentUser()
+          if (currentUser && response.data.hostId) {
+            setIsHost(String(currentUser.id) === String(response.data.hostId))
+          }
+        } else {
+          setError('Lobby not found')
+          navigate('/')
+          return
+        }
+      } catch {
+        setError('Failed to load lobby')
+        navigate('/')
+        return
+      }
+
+      // Join the socket room so we receive real-time updates
+      // (only once per mount to avoid duplicate joins)
+      if (!hasJoinedRoom.current) {
+        hasJoinedRoom.current = true
+        try {
+          await socketService.waitForConnectionPublic()
+          const user = apiService.getCurrentUser()
+          const player = {
+            id: String(user?.id || ''),
+            username: String(user?.username || 'guest'),
+            character: (user as Record<string, unknown>)?.['character'] || 'student',
+            isHost: false,
+          }
+          socketService.emit('join-lobby', { lobbyCode: lobbyId, player })
+        } catch {
+          console.warn('Could not join socket room, relying on API data')
+        }
+      }
     }
 
     initializeLobby()

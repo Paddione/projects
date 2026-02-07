@@ -842,6 +842,11 @@ export class SocketService {
     })
   }
 
+  /** Public access to waitForConnection for components that need to join rooms */
+  waitForConnectionPublic(timeoutMs: number = 5000): Promise<void> {
+    return this.waitForConnection(timeoutMs)
+  }
+
   emit(event: string, data?: Record<string, unknown>) {
     if (this.socket?.connected) {
       console.log('📤 Emitting socket event:', event, data)
