@@ -322,10 +322,10 @@ export class PerksManager {
    * Activate a perk for a user
    */
   async activatePerk(userId: number, perkId: number, configuration: any = {}): Promise<boolean> {
-    // First check if perk is unlocked
+    // Check if perk is unlocked via draft system (chosen_perk_id in user_perk_drafts)
     const unlockedQuery = `
-      SELECT id FROM user_perks 
-      WHERE user_id = $1 AND perk_id = $2 AND is_unlocked = true
+      SELECT d.id FROM user_perk_drafts d
+      WHERE d.user_id = $1 AND d.chosen_perk_id = $2
     `;
     const unlockedResult = await this.db.query(unlockedQuery, [userId, perkId]);
 
@@ -333,7 +333,7 @@ export class PerksManager {
       return false;
     }
 
-    // Deactivate other perks of the same type (only one active per type)
+    // Get perk type for settings update
     const perkTypeQuery = `SELECT type FROM perks WHERE id = $1`;
     const perkTypeResult = await this.db.query(perkTypeQuery, [perkId]);
 
@@ -343,46 +343,38 @@ export class PerksManager {
 
     const perkType = perkTypeResult.rows[0]!['type'];
 
-    // Deactivate other perks of same type
-    const deactivateQuery = `
-      UPDATE user_perks SET is_active = false, updated_at = CURRENT_TIMESTAMP
-      WHERE user_id = $1 AND perk_id IN (
-        SELECT id FROM perks WHERE type = $2
-      )
-    `;
-    await this.db.query(deactivateQuery, [userId, perkType]);
+    // Update user's active settings based on perk type (avatar, theme, badge)
+    await this.updateUserActiveSettings(userId, perkId, perkType, configuration);
 
-    // Activate the selected perk
-    const activateQuery = `
-      UPDATE user_perks 
-      SET is_active = true, configuration = $3, activated_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
-      WHERE user_id = $1 AND perk_id = $2
-      RETURNING id
-    `;
-
-    const result = await this.db.query(activateQuery, [userId, perkId, JSON.stringify(configuration)]);
-
-    // Update user's active settings based on perk type
-    if (result.rows.length > 0) {
-      await this.updateUserActiveSettings(userId, perkId, perkType, configuration);
-    }
-
-    return result.rows.length > 0;
+    return true;
   }
 
   /**
    * Deactivate a perk for a user
    */
   async deactivatePerk(userId: number, perkId: number): Promise<boolean> {
-    const query = `
-      UPDATE user_perks 
-      SET is_active = false, activated_at = null, updated_at = CURRENT_TIMESTAMP
-      WHERE user_id = $1 AND perk_id = $2
-      RETURNING id
+    // Verify perk was chosen in draft system
+    const unlockedQuery = `
+      SELECT d.id FROM user_perk_drafts d
+      WHERE d.user_id = $1 AND d.chosen_perk_id = $2
     `;
+    const unlockedResult = await this.db.query(unlockedQuery, [userId, perkId]);
 
-    const result = await this.db.query(query, [userId, perkId]);
-    return result.rows.length > 0;
+    if (unlockedResult.rows.length === 0) {
+      return false;
+    }
+
+    // Get perk type to reset the corresponding user setting
+    const perkTypeQuery = `SELECT type FROM perks WHERE id = $1`;
+    const perkTypeResult = await this.db.query(perkTypeQuery, [perkId]);
+
+    if (perkTypeResult.rows.length > 0) {
+      const perkType = perkTypeResult.rows[0]!['type'];
+      const defaults = this.getDefaultConfigurationForPerk(perkType);
+      await this.updateUserActiveSettings(userId, perkId, perkType, defaults);
+    }
+
+    return true;
   }
 
   /**
