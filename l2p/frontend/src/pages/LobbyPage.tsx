@@ -57,10 +57,13 @@ export const LobbyPage: React.FC = () => {
           if (response.data.players) {
             setPlayers(response.data.players)
           }
-          // Determine if current user is host
+          // Determine if current user is host from the player list
           const currentUser = apiService.getCurrentUser()
-          if (currentUser && response.data.hostId) {
-            setIsHost(String(currentUser.id) === String(response.data.hostId))
+          if (currentUser && response.data.players) {
+            const me = response.data.players.find(
+              (p: { id: string }) => String(p.id) === String(currentUser.id)
+            )
+            setIsHost(!!me?.isHost)
           }
         } else {
           setError('Lobby not found')
