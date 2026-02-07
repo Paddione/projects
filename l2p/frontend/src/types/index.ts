@@ -200,12 +200,41 @@ export interface AuthData {
   };
 }
 
+export interface MockDraftPerk {
+  id: number;
+  name: string;
+  description: string;
+  category: string;
+  tier: number;
+  effect_type: string;
+  effect_config: Record<string, any>;
+}
+
+export interface MockDraftOffer {
+  level: number;
+  perks: MockDraftPerk[];
+  drafted: boolean;
+  dumped: boolean;
+  chosenPerkId?: number;
+}
+
+export interface MockDraftRecord {
+  level: number;
+  offeredPerkIds: number[];
+  chosenPerkId: number | null;
+  dumped: boolean;
+  draftedAt: string;
+}
+
 export interface MockData {
   users: any[];
   lobbies: Record<string, MockLobby>;
   characters: Character[];
   questionSets: QuestionSetData[];
   questions: QuestionData[];
+  gameplayPerks?: MockDraftPerk[];
+  pendingDrafts?: MockDraftOffer[];
+  draftHistory?: MockDraftRecord[];
 }
 
 // Additional types for API responses

@@ -74,8 +74,8 @@ export const PerkDraftPanel: React.FC<PerkDraftPanelProps> = ({
 
   if (currentIndex >= draftOffers.length) {
     return (
-      <div className={styles.draftPanel}>
-        <div className={styles.completeMessage}>
+      <div className={styles.draftPanel} data-testid="perk-draft-panel">
+        <div className={styles.completeMessage} data-testid="draft-complete-message">
           {t('draft.complete')}
         </div>
       </div>
@@ -87,8 +87,8 @@ export const PerkDraftPanel: React.FC<PerkDraftPanelProps> = ({
 
   if (currentOffer.perks.length === 0) {
     return (
-      <div className={styles.draftPanel}>
-        <div className={styles.exhaustedMessage}>
+      <div className={styles.draftPanel} data-testid="perk-draft-panel">
+        <div className={styles.exhaustedMessage} data-testid="draft-pool-exhausted">
           {t('draft.poolExhausted')}
         </div>
       </div>
@@ -111,35 +111,39 @@ export const PerkDraftPanel: React.FC<PerkDraftPanelProps> = ({
   }
 
   return (
-    <div className={styles.draftPanel}>
-      <div className={styles.draftHeader}>
-        <div className={styles.draftTitle}>
+    <div className={styles.draftPanel} data-testid="perk-draft-panel">
+      <div className={styles.draftHeader} data-testid="draft-header">
+        <div className={styles.draftTitle} data-testid="draft-title">
           Level {currentOffer.level}! {t('draft.chooseTitle')}
         </div>
         {draftOffers.length > 1 && (
-          <div className={styles.draftProgress}>
+          <div className={styles.draftProgress} data-testid="draft-progress">
             Draft {currentIndex + 1}/{draftOffers.length}
           </div>
         )}
       </div>
 
-      <div className={styles.cardsContainer}>
-        {currentOffer.perks.map((perk: DraftPerk) => (
+      <div className={styles.cardsContainer} data-testid="draft-cards-container">
+        {currentOffer.perks.map((perk: DraftPerk, index: number) => (
           <div
             key={perk.id}
             className={`${styles.perkCard} ${getCategoryCardClass(perk.category)}`}
+            data-testid={`draft-perk-card-${index}`}
+            data-perk-id={perk.id}
+            data-perk-category={perk.category}
           >
             <div className={`${styles.categoryStripe} ${getCategoryStripeClass(perk.category)}`} />
             <div className={styles.perkIcon}>
               {CATEGORY_ICONS[perk.category] || '\u2728'}
             </div>
-            <div className={styles.perkName}>{perk.name}</div>
-            <div className={styles.perkTier}>{getTierLabel(perk.tier)}</div>
-            <div className={styles.perkDescription}>{perk.description}</div>
+            <div className={styles.perkName} data-testid={`draft-perk-name-${index}`}>{perk.name}</div>
+            <div className={styles.perkTier} data-testid={`draft-perk-tier-${index}`}>{getTierLabel(perk.tier)}</div>
+            <div className={styles.perkDescription} data-testid={`draft-perk-description-${index}`}>{perk.description}</div>
             <button
               className={styles.pickButton}
               onClick={() => handlePick(perk.id)}
               disabled={isLoading}
+              data-testid={`draft-pick-button-${index}`}
             >
               {t('draft.choose')}
             </button>
@@ -151,20 +155,21 @@ export const PerkDraftPanel: React.FC<PerkDraftPanelProps> = ({
         className={styles.dumpButton}
         onClick={() => setShowDumpConfirm(true)}
         disabled={isLoading}
+        data-testid="draft-dump-all-button"
       >
         {t('draft.dumpAll')}
       </button>
 
       {showDumpConfirm && (
-        <div className={styles.confirmOverlay} onClick={() => setShowDumpConfirm(false)}>
-          <div className={styles.confirmDialog} onClick={(e) => e.stopPropagation()}>
+        <div className={styles.confirmOverlay} onClick={() => setShowDumpConfirm(false)} data-testid="dump-confirm-overlay">
+          <div className={styles.confirmDialog} onClick={(e) => e.stopPropagation()} data-testid="dump-confirm-dialog">
             <div className={styles.confirmTitle}>{t('draft.confirmTitle')}</div>
             <div className={styles.confirmText}>{t('draft.confirmText')}</div>
             <div className={styles.confirmActions}>
-              <button className={styles.confirmYes} onClick={handleDump} disabled={isLoading}>
+              <button className={styles.confirmYes} onClick={handleDump} disabled={isLoading} data-testid="dump-confirm-yes">
                 {t('draft.confirmYes')}
               </button>
-              <button className={styles.confirmNo} onClick={() => setShowDumpConfirm(false)}>
+              <button className={styles.confirmNo} onClick={() => setShowDumpConfirm(false)} data-testid="dump-confirm-no">
                 {t('draft.confirmNo')}
               </button>
             </div>

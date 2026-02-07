@@ -271,6 +271,16 @@ export class CharacterService {
       `;
       const result = await this.db.query(updateQuery, [newExperiencePoints, newLevel, userId]);
 
+      // Sync users table so admin panel shows correct values
+      try {
+        await this.db.query(
+          'UPDATE users SET experience_points = $1, character_level = $2 WHERE id = $3',
+          [newExperiencePoints, newLevel, userId]
+        );
+      } catch (syncError) {
+        console.warn('[CharacterService] Failed to sync users table:', syncError);
+      }
+
       if (!result.rows[0]) {
         throw new Error('Failed to update experience');
       }

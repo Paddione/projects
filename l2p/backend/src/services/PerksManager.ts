@@ -120,79 +120,66 @@ export class PerksManager {
   }
 
   /**
-   * Get perks available for a specific level
+   * Get perks available for a specific level (now returns all gameplay perks since level_required was removed)
    */
   async getPerksForLevel(level: number): Promise<Perk[]> {
     const query = `
-      SELECT * FROM perks 
-      WHERE level_required <= $1 AND is_active = true 
-      ORDER BY level_required ASC, category ASC
+      SELECT *, 0 AS level_required FROM perks
+      WHERE is_active = true
+      ORDER BY tier ASC, category ASC
     `;
 
-    const result = await this.db.query(query, [level]);
+    const result = await this.db.query(query);
     return result.rows as Perk[];
   }
 
   /**
-   * Get all perks for a user (unlocked and locked)
+   * Get all perks for a user (draft-based: shows all gameplay perks with draft status)
    */
   async getUserPerks(userId: number): Promise<UserPerk[]> {
-    // Use LEFT JOIN from perks to include all perks, and join the specific user's row
-    // Alias columns to avoid collisions and ensure perk id is always available
+    // After migration: perks are draft-based gameplay perks (no level_required column).
+    // Show all perks with their draft status from user_perk_drafts.
     const query = `
-      SELECT 
+      SELECT
         p.id                AS perk_master_id,
         p.name              AS perk_name,
         p.category          AS perk_category,
         p.type              AS perk_type,
-        p.level_required    AS perk_level_required,
+        p.tier              AS perk_tier,
         p.title             AS perk_title,
         p.description       AS perk_description,
+        p.effect_type       AS perk_effect_type,
+        p.effect_config     AS perk_effect_config,
         p.asset_data        AS perk_asset_data,
         p.created_at        AS perk_created_at,
         p.updated_at        AS perk_updated_at,
-        up.id               AS user_perk_id,
-        up.user_id          AS user_perk_user_id,
-        up.perk_id          AS user_perk_perk_id,
-        up.is_unlocked      AS user_perk_is_unlocked,
-        up.is_active        AS user_perk_is_active,
-        up.configuration    AS user_perk_configuration,
-        up.unlocked_at      AS user_perk_unlocked_at,
-        up.activated_at     AS user_perk_activated_at,
-        up.updated_at       AS user_perk_updated_at
+        d.chosen_perk_id    AS draft_chosen_perk_id
       FROM perks p
-      LEFT JOIN user_perks up 
-        ON up.perk_id = p.id AND up.user_id = $1
+      LEFT JOIN user_perk_drafts d
+        ON d.chosen_perk_id = p.id AND d.user_id = $1
       WHERE p.is_active = true
-      ORDER BY p.level_required ASC, p.category ASC
+      ORDER BY p.tier ASC, p.category ASC
     `;
 
     const result = await this.db.query(query, [userId]);
     return result.rows.map(row => {
       const perkId = row['perk_master_id'] as number;
-      const userPerkId = row['user_perk_id'] as number | null;
-      const isUnlocked = (row['user_perk_is_unlocked'] as boolean) ?? false;
-      const isActive = (row['user_perk_is_active'] as boolean) ?? false;
-      const configuration = row['user_perk_configuration'] ?? {};
-      const updatedAt = (row['user_perk_updated_at'] as Date) ?? new Date();
+      const isChosen = row['draft_chosen_perk_id'] != null;
 
       return {
-        // Preserve an id field even when user has not unlocked the perk yet
-        id: userPerkId ?? perkId,
-        user_id: (row['user_perk_user_id'] as number) ?? userId,
+        id: perkId,
+        user_id: userId,
         perk_id: perkId,
-        is_unlocked: isUnlocked,
-        is_active: isActive,
-        configuration,
-        unlocked_at: row['user_perk_unlocked_at'] as Date | undefined,
-        activated_at: row['user_perk_activated_at'] as Date | undefined,
-        updated_at: updatedAt,
+        is_unlocked: isChosen,
+        is_active: isChosen,
+        configuration: row['perk_effect_config'] ?? {},
+        updated_at: (row['perk_updated_at'] as Date) ?? new Date(),
         perk: {
           id: perkId,
           name: row['perk_name'] as string,
           category: row['perk_category'] as string,
           type: row['perk_type'] as string,
-          level_required: row['perk_level_required'] as number,
+          level_required: (row['perk_tier'] as number) ?? 0,
           title: row['perk_title'] as string,
           description: row['perk_description'] as string,
           asset_data: row['perk_asset_data'],
@@ -205,19 +192,40 @@ export class PerksManager {
   }
 
   /**
-   * Get only unlocked perks for a user
+   * Get only unlocked/chosen perks for a user (draft-based)
    */
   async getUnlockedPerks(userId: number): Promise<UserPerk[]> {
     const query = `
-      SELECT up.*, p.name, p.category, p.type, p.level_required, p.title, p.description, p.asset_data
-      FROM user_perks up
-      JOIN perks p ON up.perk_id = p.id
-      WHERE up.user_id = $1 AND up.is_unlocked = true
-      ORDER BY p.level_required ASC, p.category ASC
+      SELECT p.*, d.level AS draft_level, 0 AS level_required
+      FROM user_perk_drafts d
+      JOIN perks p ON d.chosen_perk_id = p.id
+      WHERE d.user_id = $1 AND d.chosen_perk_id IS NOT NULL
+      ORDER BY d.level ASC
     `;
 
     const result = await this.db.query(query, [userId]);
-    return result.rows as UserPerk[];
+    return result.rows.map((row: any) => ({
+      id: row.id,
+      user_id: userId,
+      perk_id: row.id,
+      is_unlocked: true,
+      is_active: true,
+      configuration: row.effect_config || {},
+      updated_at: row.updated_at || new Date(),
+      perk: {
+        id: row.id,
+        name: row.name,
+        category: row.category,
+        type: row.type,
+        level_required: 0,
+        title: row.title || row.name,
+        description: row.description,
+        asset_data: row.asset_data,
+        is_active: true,
+        created_at: row.created_at || new Date(),
+        updated_at: row.updated_at || new Date(),
+      }
+    })) as UserPerk[];
   }
 
   /**
@@ -277,34 +285,12 @@ export class PerksManager {
   }
 
   /**
-   * Check if user can unlock a specific perk
+   * Check if user can unlock a specific perk (legacy - perks are now draft-based)
    */
   async canUnlockPerk(userId: number, perkId: number): Promise<boolean> {
-    // Get user's current level
-    const userQuery = `SELECT character_level FROM users WHERE id = $1`;
-    const userResult = await this.db.query(userQuery, [userId]);
-
-    if (userResult.rows.length === 0) {
-      return false;
-    }
-
-    const userLevel = userResult.rows[0]!['character_level'];
-
-    // Get perk requirements
-    const perkQuery = `SELECT level_required FROM perks WHERE id = $1 AND is_active = true`;
-    const perkResult = await this.db.query(perkQuery, [perkId]);
-
-    if (perkResult.rows.length === 0) {
-      return false;
-    }
-
-    const requiredLevel = perkResult.rows[0]!['level_required'];
-
-    // Check if already unlocked
-    const unlockedQuery = `SELECT id FROM user_perks WHERE user_id = $1 AND perk_id = $2 AND is_unlocked = true`;
-    const unlockedResult = await this.db.query(unlockedQuery, [userId, perkId]);
-
-    return userLevel >= requiredLevel && unlockedResult.rows.length === 0;
+    // In the draft system, perks are chosen through the draft flow, not unlocked by level
+    // Return false - perks should be acquired through the draft panel
+    return false;
   }
 
   /**
@@ -429,91 +415,13 @@ export class PerksManager {
   }
 
   /**
-   * Auto-unlock perks when user levels up and auto-activate non-badge perks
-   * OPTIMIZED: Uses batch insert for better performance
+   * Legacy: Auto-unlock perks when user levels up.
+   * In the new draft system, perks are acquired through the draft panel.
+   * This method now returns empty — draft offers are generated by PerkDraftService.
    */
   async checkAndUnlockPerksForLevel(userId: number, newLevel: number): Promise<UserPerk[]> {
-    // Get legacy user ID for OAuth users (bridge to support both user types)
-    const legacyUserId = await this.getLegacyUserId(userId);
-
-    // Get all perks that should be unlocked at this level
-    const perksQuery = `
-      SELECT id, type, name, title, description, category, level_required, asset_data
-      FROM perks
-      WHERE level_required <= $1 AND is_active = true
-      AND id NOT IN (
-        SELECT perk_id FROM user_perks
-        WHERE user_id = $2 AND is_unlocked = true
-      )
-    `;
-
-    const perksResult = await this.db.query(perksQuery, [newLevel, legacyUserId]);
-
-    if (perksResult.rows.length === 0) {
-      return [];
-    }
-
-    // Batch unlock all perks in a single query
-    const perkIds = perksResult.rows.map(p => p['id']);
-    const values = perkIds.map((_, idx) => `($1, $${idx + 2}, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`).join(', ');
-
-    const batchUnlockQuery = `
-      INSERT INTO user_perks (user_id, perk_id, is_unlocked, unlocked_at, updated_at)
-      VALUES ${values}
-      ON CONFLICT (user_id, perk_id)
-      DO UPDATE SET
-        is_unlocked = true,
-        unlocked_at = CURRENT_TIMESTAMP,
-        updated_at = CURRENT_TIMESTAMP
-      RETURNING id, user_id, perk_id, is_unlocked, is_active, configuration, unlocked_at, activated_at, updated_at
-    `;
-
-    const unlockResult = await this.db.query(batchUnlockQuery, [legacyUserId, ...perkIds]);
-
-    // Build UserPerk objects with perk details
-    const newlyUnlocked: UserPerk[] = unlockResult.rows.map((row) => {
-      const perkDetails = perksResult.rows.find(p => p['id'] === row['perk_id']);
-      if (!perkDetails) {
-        throw new Error(`Perk details not found for perk_id ${row['perk_id']}`);
-      }
-      return {
-        id: row['id'],
-        user_id: row['user_id'],
-        perk_id: row['perk_id'],
-        is_unlocked: row['is_unlocked'],
-        is_active: row['is_active'],
-        configuration: row['configuration'] ?? {},
-        unlocked_at: row['unlocked_at'],
-        activated_at: row['activated_at'],
-        updated_at: row['updated_at'],
-        perk: {
-          id: perkDetails['id'],
-          name: perkDetails['name'],
-          category: perkDetails['category'],
-          type: perkDetails['type'],
-          level_required: perkDetails['level_required'],
-          title: perkDetails['title'],
-          description: perkDetails['description'],
-          asset_data: perkDetails['asset_data'],
-          is_active: true,
-          created_at: new Date(),
-          updated_at: new Date()
-        } as Perk
-      };
-    });
-
-    // Auto-activate non-badge perks (in batch)
-    const perksToActivate = newlyUnlocked.filter(up => up.perk?.type !== 'badge');
-    if (perksToActivate.length > 0) {
-      for (const userPerk of perksToActivate) {
-        if (userPerk.perk) {
-          const defaultConfig = this.getDefaultConfigurationForPerk(userPerk.perk.type);
-          await this.activatePerk(userId, userPerk.perk.id, defaultConfig);
-        }
-      }
-    }
-
-    return newlyUnlocked;
+    // Perks are now draft-based. Draft offers are generated by PerkDraftService.
+    return [];
   }
 
   /**
@@ -531,35 +439,29 @@ export class PerksManager {
   }
 
   /**
-   * Get a specific user perk
+   * Get a specific user perk (draft-based: checks if perk was chosen in a draft)
    */
   private async getUserPerk(userId: number, perkId: number): Promise<UserPerk | null> {
     const query = `
       SELECT
-        up.id AS user_perk_id,
-        up.user_id,
-        up.perk_id,
-        up.is_unlocked,
-        up.is_active,
-        up.configuration,
-        up.unlocked_at,
-        up.activated_at,
-        up.updated_at,
         p.id AS perk_master_id,
         p.name AS perk_name,
         p.category AS perk_category,
         p.type AS perk_type,
-        p.level_required AS perk_level_required,
+        p.tier AS perk_tier,
         p.title AS perk_title,
         p.description AS perk_description,
         p.config_schema AS perk_config_schema,
         p.asset_data AS perk_asset_data,
+        p.effect_config AS perk_effect_config,
         p.is_active AS perk_is_active,
         p.created_at AS perk_created_at,
-        p.updated_at AS perk_updated_at
-      FROM user_perks up
-      JOIN perks p ON up.perk_id = p.id
-      WHERE up.user_id = $1 AND up.perk_id = $2
+        p.updated_at AS perk_updated_at,
+        d.id AS draft_id,
+        d.chosen_perk_id
+      FROM perks p
+      LEFT JOIN user_perk_drafts d ON d.chosen_perk_id = p.id AND d.user_id = $1
+      WHERE p.id = $2
     `;
 
     const result = await this.db.query(query, [userId, perkId]);
@@ -569,22 +471,21 @@ export class PerksManager {
     }
 
     const row = result.rows[0]!;
+    const isChosen = row['chosen_perk_id'] != null;
     return {
-      id: row['user_perk_id'],
-      user_id: row['user_id'],
-      perk_id: row['perk_id'],
-      is_unlocked: row['is_unlocked'],
-      is_active: row['is_active'],
-      configuration: row['configuration'] ?? {},
-      unlocked_at: row['unlocked_at'] ?? undefined,
-      activated_at: row['activated_at'] ?? undefined,
-      updated_at: row['updated_at'],
+      id: row['draft_id'] ?? row['perk_master_id'],
+      user_id: userId,
+      perk_id: row['perk_master_id'],
+      is_unlocked: isChosen,
+      is_active: isChosen,
+      configuration: row['perk_effect_config'] ?? {},
+      updated_at: row['perk_updated_at'],
       perk: {
         id: row['perk_master_id'],
         name: row['perk_name'],
         category: row['perk_category'],
         type: row['perk_type'],
-        level_required: row['perk_level_required'],
+        level_required: 0,
         title: row['perk_title'],
         description: row['perk_description'],
         config_schema: row['perk_config_schema'],
@@ -701,9 +602,9 @@ export class PerksManager {
    */
   async getPerksByCategory(category: string): Promise<Perk[]> {
     const query = `
-      SELECT * FROM perks 
-      WHERE category = $1 AND is_active = true 
-      ORDER BY level_required ASC
+      SELECT *, 0 AS level_required FROM perks
+      WHERE category = $1 AND is_active = true
+      ORDER BY tier ASC
     `;
 
     const result = await this.db.query(query, [category]);

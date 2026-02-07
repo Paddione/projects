@@ -130,7 +130,21 @@ class ApiService {
       { id: '3', name: 'Scientist', emoji: '🧪', description: 'A brilliant mind', unlockLevel: 20 },
     ],
     questionSets: [],
-    questions: []
+    questions: [],
+    gameplayPerks: [
+      { id: 1, name: 'Quick Thinker', description: '+3 seconds per question', category: 'time', tier: 1, effect_type: 'bonus_seconds', effect_config: { bonusSeconds: 3 } },
+      { id: 2, name: 'Speed Demon', description: 'Timer runs 20% slower', category: 'time', tier: 2, effect_type: 'timer_speed', effect_config: { timerSpeedMultiplier: 0.8 } },
+      { id: 3, name: 'Category Insight', description: 'See question category before answering', category: 'info', tier: 1, effect_type: 'show_category', effect_config: { showCategory: true } },
+      { id: 4, name: 'Hint Helper', description: 'Get one hint per game', category: 'info', tier: 2, effect_type: 'show_hint', effect_config: { hintUsesPerGame: 1 } },
+      { id: 5, name: 'Score Boost', description: '+15% base score', category: 'scoring', tier: 1, effect_type: 'base_score_multiplier', effect_config: { baseScoreMultiplier: 1.15 } },
+      { id: 6, name: 'Streak Master', description: 'Faster streak growth', category: 'scoring', tier: 2, effect_type: 'streak_growth', effect_config: { streakGrowthRate: 1.5 } },
+      { id: 7, name: 'Second Chance', description: 'One free wrong answer', category: 'recovery', tier: 1, effect_type: 'free_wrong_answers', effect_config: { freeWrongAnswers: 1 } },
+      { id: 8, name: 'Comeback Kid', description: 'Bonus when recovering from mistakes', category: 'recovery', tier: 2, effect_type: 'comeback_bonus', effect_config: { comebackMultiplier: 1.3 } },
+      { id: 9, name: 'XP Boost', description: '+10% XP from all sources', category: 'xp', tier: 1, effect_type: 'xp_multiplier', effect_config: { xpMultiplier: 1.1 } },
+      { id: 10, name: 'Study Bonus', description: 'Extra XP for accuracy', category: 'xp', tier: 2, effect_type: 'accuracy_bonus', effect_config: { accuracyThreshold: 0.8, accuracyXpBonus: 50 } },
+    ],
+    pendingDrafts: [],
+    draftHistory: []
   }
 
   constructor() {
@@ -859,6 +873,136 @@ class ApiService {
             offset,
             sort: { by: sort, dir },
             total
+          }
+        } as ApiResponse<T>
+      }
+
+      // Perk Draft System endpoints
+      if (endpoint === '/perks/draft/pending' && method === 'GET') {
+        // Return mock pending drafts - simulate a level-up scenario
+        const mockDraftOffers = ApiService.mockData.pendingDrafts || []
+        return {
+          success: true,
+          data: {
+            pendingDrafts: mockDraftOffers,
+            count: mockDraftOffers.length
+          } as any
+        } as ApiResponse<T>
+      }
+
+      if (endpoint === '/perks/draft/pick' && method === 'POST') {
+        const body = parseBody()
+        const { level, perkId } = body || {}
+        if (typeof level !== 'number' || typeof perkId !== 'number') {
+          return { success: false, error: 'level and perkId are required as numbers' } as ApiResponse<T>
+        }
+        // Remove the draft from pending
+        const pendingDrafts = ApiService.mockData.pendingDrafts || []
+        const draftIndex = pendingDrafts.findIndex((d: any) => d.level === level)
+        if (draftIndex >= 0) {
+          const draft = pendingDrafts[draftIndex]
+          if (draft) {
+            // Store as picked in history
+            if (!ApiService.mockData.draftHistory) {
+              (ApiService.mockData as any).draftHistory = []
+            }
+            ;(ApiService.mockData as any).draftHistory.push({
+              level,
+              offeredPerkIds: draft.perks.map((p: any) => p.id),
+              chosenPerkId: perkId,
+              dumped: false,
+              draftedAt: new Date().toISOString()
+            })
+            pendingDrafts.splice(draftIndex, 1)
+          }
+        }
+        return { success: true, message: 'Perk selected' } as unknown as ApiResponse<T>
+      }
+
+      if (endpoint === '/perks/draft/dump' && method === 'POST') {
+        const body = parseBody()
+        const { level } = body || {}
+        if (typeof level !== 'number') {
+          return { success: false, error: 'level is required as a number' } as ApiResponse<T>
+        }
+        // Remove the draft from pending and mark as dumped
+        const pendingDrafts = ApiService.mockData.pendingDrafts || []
+        const draftIndex = pendingDrafts.findIndex((d: any) => d.level === level)
+        if (draftIndex >= 0) {
+          const draft = pendingDrafts[draftIndex]
+          if (draft) {
+            if (!ApiService.mockData.draftHistory) {
+              (ApiService.mockData as any).draftHistory = []
+            }
+            ;(ApiService.mockData as any).draftHistory.push({
+              level,
+              offeredPerkIds: draft.perks.map((p: any) => p.id),
+              chosenPerkId: null,
+              dumped: true,
+              draftedAt: new Date().toISOString()
+            })
+            pendingDrafts.splice(draftIndex, 1)
+          }
+        }
+        return { success: true, message: 'Offer dumped' } as unknown as ApiResponse<T>
+      }
+
+      if (endpoint === '/perks/draft/history' && method === 'GET') {
+        const history = ApiService.mockData.draftHistory || []
+        return { success: true, data: history } as ApiResponse<T>
+      }
+
+      if (endpoint === '/perks/draft/active' && method === 'GET') {
+        // Return perks that have been picked (not dumped)
+        const history = ApiService.mockData.draftHistory || []
+        const pickedPerkIds = history
+          .filter((h: any) => h.chosenPerkId !== null)
+          .map((h: any) => h.chosenPerkId)
+        const allGameplayPerks = ApiService.mockData.gameplayPerks || []
+        const activePerks = allGameplayPerks.filter((p: any) => pickedPerkIds.includes(p.id))
+        return { success: true, data: activePerks } as ApiResponse<T>
+      }
+
+      if (endpoint === '/perks/draft/pool' && method === 'GET') {
+        // Return available perks (not picked or dumped)
+        const history = ApiService.mockData.draftHistory || []
+        const usedPerkIds = new Set<number>()
+        history.forEach((h: any) => {
+          if (h.chosenPerkId) usedPerkIds.add(h.chosenPerkId)
+          if (h.dumped && h.offeredPerkIds) {
+            h.offeredPerkIds.forEach((id: number) => usedPerkIds.add(id))
+          }
+        })
+        const allGameplayPerks = ApiService.mockData.gameplayPerks || []
+        const pool = allGameplayPerks.filter((p: any) => !usedPerkIds.has(p.id))
+        return { success: true, data: { pool, size: pool.length } } as ApiResponse<T>
+      }
+
+      if (endpoint === '/perks/draft/reset' && method === 'POST') {
+        // Clear all draft history
+        ;(ApiService.mockData as any).draftHistory = []
+        ;(ApiService.mockData as any).pendingDrafts = []
+        return { success: true, data: { message: 'Drafts reset' } } as ApiResponse<T>
+      }
+
+      if (endpoint === '/perks/draft/needs-redraft' && method === 'GET') {
+        return { success: true, data: { needsRedraft: false } } as ApiResponse<T>
+      }
+
+      if (endpoint === '/perks/draft/clear-redraft' && method === 'POST') {
+        return { success: true, message: 'Redraft flag cleared' } as unknown as ApiResponse<T>
+      }
+
+      if (endpoint === '/perks/draft/skill-tree' && method === 'GET') {
+        const history = ApiService.mockData.draftHistory || []
+        const allGameplayPerks = ApiService.mockData.gameplayPerks || []
+        return {
+          success: true,
+          data: {
+            history,
+            allPerks: allGameplayPerks,
+            maxLevel: 30,
+            currentLevel: 10
           }
         } as ApiResponse<T>
       }

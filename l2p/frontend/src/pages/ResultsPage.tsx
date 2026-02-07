@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useGameStore, type GameResult } from '../stores/gameStore'
 import styles from '../styles/App.module.css'
@@ -22,6 +22,8 @@ const AnimatedScoreConversion: React.FC<{
   const [currentExperience, setCurrentExperience] = useState(0)
   const [showLevelUp, setShowLevelUp] = useState(false)
   const [animationStarted, setAnimationStarted] = useState(false)
+  const onCompleteRef = useRef(onAnimationComplete)
+  onCompleteRef.current = onAnimationComplete
 
   const renderCharacterAvatar = (character: string, size: number) => {
     const svgPath = avatarService.getAvatarSvgPath(character)
@@ -34,6 +36,7 @@ const AnimatedScoreConversion: React.FC<{
   useEffect(() => {
     // Use finalScore as experience if experienceAwarded is 0 or undefined
     const expToGain = experienceAwarded > 0 ? experienceAwarded : finalScore
+    let intervalId: ReturnType<typeof setInterval> | null = null
 
     // Start animation after 1 second
     const startTimeout = setTimeout(() => {
@@ -46,7 +49,7 @@ const AnimatedScoreConversion: React.FC<{
       const experienceIncrement = expToGain / steps
 
       let step = 0
-      const interval = setInterval(() => {
+      intervalId = setInterval(() => {
         step++
 
         const newScore = Math.max(0, Math.round(finalScore - (scoreDecrement * step)))
@@ -56,7 +59,7 @@ const AnimatedScoreConversion: React.FC<{
         setCurrentExperience(newExperience)
 
         if (step >= steps) {
-          clearInterval(interval)
+          if (intervalId) clearInterval(intervalId)
           setCurrentScore(0)
           setCurrentExperience(expToGain)
 
@@ -65,15 +68,16 @@ const AnimatedScoreConversion: React.FC<{
             setTimeout(() => setShowLevelUp(true), 200)
           }
 
-          onAnimationComplete?.()
+          onCompleteRef.current?.()
         }
       }, stepDuration)
-
-      return () => clearInterval(interval)
     }, 1000)
 
-    return () => clearTimeout(startTimeout)
-  }, [finalScore, experienceAwarded, levelUp, onAnimationComplete])
+    return () => {
+      clearTimeout(startTimeout)
+      if (intervalId) clearInterval(intervalId)
+    }
+  }, [finalScore, experienceAwarded, levelUp])
 
   // Use finalScore as experience if experienceAwarded is 0 or undefined
   const expToGain = experienceAwarded > 0 ? experienceAwarded : finalScore
@@ -179,6 +183,10 @@ export const ResultsPage: React.FC = () => {
   const [animationDone, setAnimationDone] = useState(false)
   const hasPendingDrafts = pendingDrafts.length > 0 && !draftComplete
 
+  const handleAnimationComplete = useCallback(() => {
+    setAnimationDone(true)
+  }, [])
+
   const handleDraftComplete = useCallback(() => {
     // Drafts are done, re-enable navigation buttons
   }, [])
@@ -275,16 +283,14 @@ export const ResultsPage: React.FC = () => {
             oldLevel={winner.oldLevel}
             newLevel={winner.newLevel}
             character={winner.character}
-            onAnimationComplete={() => {
-              setAnimationDone(true)
-            }}
+            onAnimationComplete={handleAnimationComplete}
           />
         </div>
       )}
 
       {/* Perk Draft Panel — shown after XP animation if there are pending drafts */}
       {animationDone && hasPendingDrafts && (
-        <div className={styles.card} style={{ marginBottom: 'var(--spacing-xl)' }}>
+        <div className={styles.card} style={{ marginBottom: 'var(--spacing-xl)' }} data-testid="perk-draft-section">
           <PerkDraftPanel
             draftOffers={pendingDrafts}
             currentIndex={currentDraftIndex}

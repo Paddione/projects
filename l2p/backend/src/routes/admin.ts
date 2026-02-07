@@ -76,13 +76,16 @@ router.get('/users', authMiddleware.authenticate, requireAdmin, async (req: Requ
     const sortField = allowedSortFields.includes(sort as string) ? sort as string : 'created_at';
     const sortDir = dir === 'ASC' ? 'ASC' : 'DESC';
     
-    // Build query
+    // Build query — prefer game profile data for character_level/experience_points/selected_character
     let query = `
-      SELECT 
-        id, username, email, is_admin, is_active, selected_character, 
-        character_level, experience_points, created_at, last_login, 
-        avatar_url, timezone
-      FROM users
+      SELECT
+        u.id, u.username, u.email, u.is_admin, u.is_active,
+        COALESCE(ugp.selected_character, u.selected_character) AS selected_character,
+        COALESCE(ugp.character_level, u.character_level) AS character_level,
+        COALESCE(ugp.experience_points, u.experience_points) AS experience_points,
+        u.created_at, u.last_login, u.avatar_url, u.timezone
+      FROM users u
+      LEFT JOIN user_game_profiles ugp ON ugp.auth_user_id = u.id
       WHERE 1=1
     `;
     
