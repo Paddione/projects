@@ -109,6 +109,7 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
             character: userData.selected_character || 'student',
             level: userData.character_level || 1
           })
+          setToken('session')
           setIsAuthenticated(true)
           setIsValidating(false)
           return

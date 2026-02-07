@@ -114,14 +114,14 @@ const PerksManager: React.FC = () => {
 
   useEffect(() => {
     console.log('PerksManager: useEffect triggered, user:', !!user, 'token:', !!token);
-    // Only fetch if both token and user are present
-    if (token && user) {
+    // Only fetch if user is present (token may be absent in session-cookie auth)
+    if (user) {
       console.log('PerksManager: Calling fetchUserPerks');
       fetchUserPerks();
     } else {
-      console.log('PerksManager: Skipping fetchUserPerks - user or token missing');
+      console.log('PerksManager: Skipping fetchUserPerks - user missing');
     }
-  }, [token, user]);
+  }, [user]);
 
   useEffect(() => {
     if (perksData) {
@@ -130,7 +130,8 @@ const PerksManager: React.FC = () => {
   }, [perksData]);
 
   // Don't render if user is not authenticated (must come after all hooks)
-  if (!user || !token) {
+  // Note: only check `user` — token may be absent in session-cookie auth
+  if (!user) {
     console.log('PerksManager: User not authenticated, returning empty div');
     return <div></div>;
   }
