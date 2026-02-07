@@ -62,6 +62,8 @@ export interface SocketEvents {
   'perk:pool-exhausted': (data: { message: string }) => void
 
   // Error events
+  'start-game-error': (data: { type: string; message: string }) => void
+  'ready-error': (data: { type: string; message: string }) => void
   'error': (data: { message: string }) => void
 }
 
@@ -267,6 +269,16 @@ export class SocketService {
         console.error('Error in game-started handler:', err)
         useGameStore.getState().setError('Failed to start game. Please try again.')
       }
+    })
+
+    this.socket.on('start-game-error', (data: { type: string; message: string }) => {
+      console.error('Start game error:', data)
+      useGameStore.getState().setError(data.message || 'Failed to start game')
+    })
+
+    this.socket.on('ready-error', (data: { type: string; message: string }) => {
+      console.error('Ready error:', data)
+      useGameStore.getState().setError(data.message || 'Failed to update ready state')
     })
 
     this.socket.on('game-syncing', (data) => {

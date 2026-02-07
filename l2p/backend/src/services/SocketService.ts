@@ -2,6 +2,7 @@ import { Server, Socket } from 'socket.io';
 import { LobbyService } from './LobbyService.js';
 import { GameService } from './GameService.js';
 import { PerkDraftService } from './PerkDraftService.js';
+import { AuthService } from './AuthService.js';
 import { RequestLogger } from '../middleware/logging.js';
 
 export interface SocketUser {
@@ -40,39 +41,61 @@ export class SocketService {
     // Add authentication middleware for socket connections
     this.io.use(async (socket, next) => {
       try {
-        const token = socket.handshake.auth?.['token'] || socket.handshake.headers?.authorization?.replace('Bearer ', '');
-
-        if (!token) {
-          console.log('Socket connection without token - allowing for public access');
-          return next();
-        }
-
         const authServiceUrl = process.env['AUTH_SERVICE_URL'] || 'http://localhost:5500';
-        const response = await fetch(`${authServiceUrl}/api/auth/verify`, {
-          method: 'GET',
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        const token = socket.handshake.auth?.['token'] || socket.handshake.headers?.authorization?.replace('Bearer ', '');
+        const cookies = socket.handshake.headers?.cookie;
 
-        if (!response.ok) {
-          console.warn('Socket auth rejected by auth service:', response.status);
-          return next();
+        // Strategy 1: Try JWT token verification
+        if (token) {
+          try {
+            const response = await fetch(`${authServiceUrl}/api/auth/verify`, {
+              method: 'GET',
+              headers: { Authorization: `Bearer ${token}` }
+            });
+
+            if (response.ok) {
+              const data = await response.json().catch(() => null);
+              if (data?.user) {
+                await this.resolveSocketUser(socket, data.user);
+                if (socket.data.user) {
+                  console.log('Socket authenticated via JWT for user:', socket.data.user.username);
+                  return next();
+                }
+              }
+            } else {
+              console.warn('Socket JWT auth rejected:', response.status);
+            }
+          } catch (err) {
+            console.warn('Socket JWT auth error:', err instanceof Error ? err.message : 'Unknown error');
+          }
         }
 
-        const data = await response.json().catch(() => null);
-        const user = data?.user;
+        // Strategy 2: Try cookie-based auth (forwarding browser cookies to auth service)
+        if (!socket.data.user && cookies) {
+          try {
+            const response = await fetch(`${authServiceUrl}/api/auth/verify`, {
+              method: 'GET',
+              headers: { Cookie: cookies }
+            });
 
-        if (!user) {
-          console.warn('Socket auth response missing user payload');
-          return next();
+            if (response.ok) {
+              const data = await response.json().catch(() => null);
+              if (data?.user) {
+                await this.resolveSocketUser(socket, data.user);
+                if (socket.data.user) {
+                  console.log('Socket authenticated via cookie for user:', socket.data.user.username);
+                  return next();
+                }
+              }
+            }
+          } catch (err) {
+            console.warn('Socket cookie auth error:', err instanceof Error ? err.message : 'Unknown error');
+          }
         }
 
-        socket.data.user = {
-          id: String(user.userId),
-          username: user.username,
-          email: user.email
-        };
-
-        console.log('Socket authenticated for user:', user.username);
+        if (!socket.data.user) {
+          console.log('Socket connection without auth - allowing for public access');
+        }
         next();
       } catch (error) {
         console.warn('Socket authentication failed:', error instanceof Error ? error.message : 'Unknown error');
@@ -80,6 +103,34 @@ export class SocketService {
         next();
       }
     });
+  }
+
+  /**
+   * Resolve auth service user to local L2P user and set socket.data.user.
+   */
+  private async resolveSocketUser(socket: Socket, user: { userId: number; username: string; email: string }): Promise<void> {
+    if (user.email) {
+      try {
+        const authService = new AuthService();
+        const localUser = await authService.getOrCreateUserFromUnifiedAuth({
+          userId: user.userId,
+          username: user.username,
+          email: user.email
+        });
+        socket.data.user = {
+          id: String(localUser.id),
+          username: localUser.username,
+          email: localUser.email
+        };
+      } catch (err) {
+        console.error('Failed to resolve socket user to local L2P user:', err instanceof Error ? err.message : err);
+        // Do NOT fall back to auth service ID — it would mismatch with frontend's local L2P ID
+        // Leave socket.data.user unset so requireAuth returns UNAUTHORIZED instead of IDENTITY_MISMATCH
+      }
+    } else {
+      console.warn('Socket auth: no email in user payload, cannot resolve to local L2P user');
+      // Without email we cannot map to a local user; leave unauthenticated
+    }
   }
 
   private setupEventHandlers(): void {
@@ -652,6 +703,7 @@ export class SocketService {
   private verifyIdentity(socket: Socket, event: string, claimedId: string): boolean {
     const authenticatedId = socket.data?.user?.id;
     if (authenticatedId !== claimedId) {
+      console.warn(`Identity mismatch on '${event}': socket authenticated as '${authenticatedId}', client claimed '${claimedId}'`);
       socket.emit(`${event}-error`, {
         type: 'IDENTITY_MISMATCH',
         message: 'Authenticated user does not match claimed identity'
