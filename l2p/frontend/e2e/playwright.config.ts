@@ -12,9 +12,7 @@ const ignoredSuites = [
   '**/accessibility/**',
   '**/performance/**',
   '**/examples/**',
-  '**/debug-*.spec.*',
   '**/question-set-management.spec.*',
-  '**/auth-flow.spec.*',
   '**/smoke/basic-functionality.spec.ts',
 ];
 

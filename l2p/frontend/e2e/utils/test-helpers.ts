@@ -8,41 +8,20 @@ import { TestDataManager } from './test-data-manager';
 export class TestHelpers {
   private static dataManager = TestDataManager.getInstance();
 
-  private static async ensureAuthForm(page: Page, useMocks: boolean = true): Promise<void> {
-    await page.context().clearCookies();
-
-    // Visit current page to ensure we are on the base URL
-    const url = useMocks ? '/?test=true' : '/';
-    await page.goto(url, { waitUntil: 'domcontentloaded' });
-
-    // Clear storage to ensure clean state and conditionally enable test mode
-    await page.evaluate((enableMocks) => {
-      localStorage.clear();
-      sessionStorage.clear();
-      if (enableMocks) {
-        sessionStorage.setItem('test_mode', 'true');
-      } else {
-        sessionStorage.removeItem('test_mode');
-        // Signal apiService to bypass mocks even when VITE_TEST_MODE=true (Docker env)
-        sessionStorage.setItem('disable_mocks', 'true');
-      }
-    }, useMocks);
-
-    // Final reload to apply cleared state
-    await page.goto(url, { waitUntil: 'domcontentloaded' });
-
-    // Wait for login tabs
-    await page.waitForSelector('[data-testid="login-tab"]', { timeout: 15000 });
-  }
-
   /**
-   * Authentication helpers
+   * Inject auth state into localStorage so AuthGuard considers the user authenticated.
+   * Replaces the old form-based ensureAuthForm/registerUser/loginUser flow.
+   *
+   * When useMocks=true (default): generates a fake JWT compatible with apiService mock.
+   * When useMocks=false: registers via the real backend API, gets a real JWT, then injects it.
    */
-  static async registerUser(
+  static async injectAuth(
     page: Page,
     userData?: Partial<UserData>,
-    options: { takeScreenshot?: boolean; timeout?: number; useMocks?: boolean } = {}
+    options: { timeout?: number; useMocks?: boolean } = {}
   ): Promise<{ user: UserData; token: string }> {
+    const { timeout = 15000, useMocks = true } = options;
+
     // Pipe browser console to host console for debugging
     page.on('console', msg => {
       if (msg.type() === 'error' || msg.type() === 'warning' || process.env.DEBUG) {
@@ -50,62 +29,147 @@ export class TestHelpers {
       }
     });
 
+    const user = TestDataGenerator.generateUser(userData);
+
+    // Step 1: Clear cookies and navigate to base URL
+    await page.context().clearCookies();
+    const url = useMocks ? '/?test=true' : '/';
+    await page.goto(url, { waitUntil: 'domcontentloaded' });
+
+    let token: string;
+
+    if (useMocks) {
+      // Mock path: generate a fake JWT in the browser
+      const result = await page.evaluate(({ user }) => {
+        localStorage.clear();
+        sessionStorage.clear();
+        sessionStorage.setItem('test_mode', 'true');
+
+        const userId = String(Math.floor(Math.random() * 9000) + 1000);
+
+        // Generate a mock JWT token (same base64 format as apiService mock)
+        const header = btoa(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
+        const payload = btoa(JSON.stringify({
+          id: userId,
+          username: user.username,
+          email: user.email,
+          isAdmin: false,
+          type: 'access',
+          exp: Math.floor(Date.now() / 1000) + (15 * 60),
+          iat: Math.floor(Date.now() / 1000)
+        }));
+        const secret = 'N8mK2xR9qW4eT6yU3oP7sA1dF5gH8jL0cV9bM6nQ4wE7rY2tI5uO3pA8sD1fG6hJ';
+        const signature = btoa(`${header}.${payload}.${secret}`);
+        const token = `${header}.${payload}.${signature}`;
+
+        const userObj = {
+          id: userId,
+          username: user.username,
+          email: user.email,
+          isAdmin: false,
+          characterLevel: 10,
+          selectedCharacter: 'student'
+        };
+        localStorage.setItem('auth_token', token);
+        localStorage.setItem('user_data', JSON.stringify(userObj));
+
+        const existingUsers = JSON.parse(localStorage.getItem('mock_users') || '[]');
+        existingUsers.push({
+          id: userId,
+          username: user.username,
+          email: user.email,
+          password: user.password,
+          isAdmin: false,
+          verified: true
+        });
+        localStorage.setItem('mock_users', JSON.stringify(existingUsers));
+
+        return { token };
+      }, { user });
+      token = result.token;
+    } else {
+      // Real backend path: register via API, inject the real JWT
+      await page.evaluate(() => {
+        localStorage.clear();
+        sessionStorage.clear();
+        sessionStorage.setItem('disable_mocks', 'true');
+      });
+
+      // Call the real backend directly (not through Vite, which disables proxy in test mode)
+      const apiBase = process.env.VITE_API_URL || 'http://127.0.0.1:3001/api';
+
+      const response = await page.request.post(`${apiBase}/auth/register`, {
+        data: {
+          username: user.username,
+          email: user.email,
+          password: user.password,
+        },
+      });
+
+      if (!response.ok()) {
+        const body = await response.text();
+        throw new Error(`Real backend registration failed (${response.status()}): ${body}`);
+      }
+
+      const data = await response.json();
+      const authData = data.data || data;
+      const accessToken = authData.tokens?.accessToken || authData.token;
+      const refreshToken = authData.tokens?.refreshToken;
+      if (!accessToken) {
+        throw new Error(`No token in registration response: ${JSON.stringify(data)}`);
+      }
+
+      const userObj = {
+        id: String(authData.user?.id || ''),
+        username: authData.user?.username || user.username,
+        email: authData.user?.email || user.email,
+        isAdmin: false,
+        characterLevel: authData.user?.characterLevel ?? authData.user?.character_level ?? 1,
+        selectedCharacter: authData.user?.selectedCharacter ?? authData.user?.selected_character ?? 'student'
+      };
+
+      await page.evaluate(({ accessToken, refreshToken, userObj }) => {
+        localStorage.setItem('auth_token', accessToken);
+        if (refreshToken) localStorage.setItem('refresh_token', refreshToken);
+        localStorage.setItem('user_data', JSON.stringify(userObj));
+      }, { accessToken, refreshToken, userObj });
+
+      token = accessToken;
+    }
+
+    // Reload so AuthGuard picks up the injected auth state
+    await page.goto(url, { waitUntil: 'domcontentloaded' });
+
+    // Wait for authenticated UI to confirm injection worked
+    await page.waitForSelector('[data-testid="create-lobby-button"]', { timeout });
+
+    console.log(`[E2E] auth injected for ${user.username}, token length: ${token.length}`);
+    return { user, token };
+  }
+
+  /**
+   * Authentication helpers — delegates to injectAuth for backward compatibility
+   */
+  static async registerUser(
+    page: Page,
+    userData?: Partial<UserData>,
+    options: { takeScreenshot?: boolean; timeout?: number; useMocks?: boolean } = {}
+  ): Promise<{ user: UserData; token: string }> {
     const { takeScreenshot = false, timeout = 15000, useMocks = true } = options;
 
     try {
-      const user = TestDataGenerator.generateUser(userData);
-
-      await this.ensureAuthForm(page, useMocks);
-      await page.click('[data-testid="register-tab"]');
-
-      // Fill registration form
-      await page.fill('[data-testid="username-input"]', user.username);
-      await page.fill('[data-testid="email-input"]', user.email);
-      await page.fill('[data-testid="password-input"]', user.password);
-      await page.fill('[data-testid="confirm-password-input"]', user.password);
-
-      // Select character if available
-      const characterSelector = '[data-testid="character-1"]';
-      if (await page.locator(characterSelector).isVisible()) {
-        await page.click(characterSelector);
-      }
-
-      // Submit registration
-      await expect(page.locator('[data-testid="register-button"]')).toBeEnabled({ timeout });
-      await page.click('[data-testid="register-button"]');
-
-      // Wait for registration to complete
-      await page.waitForFunction(() => {
-        const userMenu = document.querySelector('[data-testid="user-menu"]');
-        const errorMessage = document.querySelector('[data-testid="registration-error"]');
-        return userMenu || errorMessage;
-      }, { timeout });
-
-      // Check for registration errors
-      const errorElement = page.locator('[data-testid="registration-error"]');
-      if (await errorElement.isVisible()) {
-        const errorText = await errorElement.textContent();
-        throw new Error(`Registration failed: ${errorText}`);
-      }
-
-      // Verify successful authentication
-      await expect(page.locator('[data-testid="user-menu"]')).toBeVisible();
-
-      // Retrieve token from localStorage
-      const token = await page.evaluate(() => localStorage.getItem('auth_token')) || '';
+      const result = await this.injectAuth(page, userData, { timeout, useMocks });
 
       if (takeScreenshot) {
         await page.screenshot({
-          path: `registration-success-${user.username}-${Date.now()}.png`,
+          path: `registration-success-${result.user.username}-${Date.now()}.png`,
           fullPage: true
         });
       }
 
-      console.log(`[E2E] registration successful for ${user.username}, token length: ${token.length}`);
-      return { user, token };
-
+      return result;
     } catch (error) {
-      console.error('Registration failed:', error);
+      console.error('Registration (auth injection) failed:', error);
 
       if (takeScreenshot) {
         await page.screenshot({
@@ -126,15 +190,7 @@ export class TestHelpers {
     const { takeScreenshot = false, timeout = 10000 } = options;
 
     try {
-      await this.ensureAuthForm(page);
-      await page.click('[data-testid="login-tab"]');
-
-      await page.fill('[data-testid="username-input"]', user.username);
-      await page.fill('[data-testid="password-input"]', user.password);
-      await page.click('[data-testid="login-button"]');
-
-      // Wait for login to complete
-      await expect(page.locator('[data-testid="user-menu"]')).toBeVisible({ timeout });
+      await this.injectAuth(page, user, { timeout });
 
       if (takeScreenshot) {
         await page.screenshot({
@@ -142,9 +198,8 @@ export class TestHelpers {
           fullPage: true
         });
       }
-
     } catch (error) {
-      console.error('Login failed:', error);
+      console.error('Login (auth injection) failed:', error);
 
       if (takeScreenshot) {
         await page.screenshot({

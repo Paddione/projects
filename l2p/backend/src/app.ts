@@ -10,10 +10,8 @@ import lobbyRoutes from './routes/lobbies.js';
 import questionRoutes from './routes/questions.js';
 import questionManagementRoutes from './routes/question-management.js';
 import scoringRoutes from './routes/scoring.js';
-console.log('🔵 Attempting to import perks routes...');
 import perksRoutes from './routes/perks.js';
 import perkDraftRoutes from './routes/perkDraft.js';
-console.log('🟢 Perks routes imported successfully!');
 
 export function setupApp(app: Application) {
   // Trust proxy for rate limiting behind Nginx/Traefik
@@ -49,10 +47,11 @@ export function setupApp(app: Application) {
     credentials: true,
   }));
 
-  // Rate limiting
+  // Rate limiting — higher limit in test/dev environments for E2E test throughput
+  const isTestEnv = process.env.NODE_ENV === 'test' || process.env.VITE_TEST_MODE === 'true';
   const apiLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 300, // limit each IP to 300 requests per windowMs
+    max: isTestEnv ? 5000 : 300, // 5000 in test, 300 in production
     skip: (req) => {
       // Skip health check endpoints used by Kubernetes probes
       return req.path === '/api/health' || req.path === '/healthz';

@@ -259,6 +259,11 @@ class ApiService {
       ...(options.headers as Record<string, string>),
     }
 
+    // Signal Vite mock middleware to pass through to the real backend proxy
+    if (runtimeDisable) {
+      headers['X-Bypass-Mock'] = 'true'
+    }
+
     // Only set Content-Type to application/json if body is not FormData
     if (!(options.body instanceof FormData)) {
       headers['Content-Type'] = 'application/json'
@@ -535,6 +540,22 @@ class ApiService {
 
       if (endpoint === '/user/me' && method === 'GET') {
         return { success: false, error: 'Unauthorized', status: 401 } as ApiResponse<T>;
+      }
+
+      // Session check — return current user if token exists
+      if (endpoint === '/auth/me' && method === 'GET') {
+        if (this.token || localStorage.getItem('auth_token')) {
+          const userData = this.getCurrentUser()
+          if (userData) {
+            return { success: true, data: { user: userData } } as ApiResponse<T>
+          }
+        }
+        return { success: false, error: 'Not authenticated' } as ApiResponse<T>
+      }
+
+      // OAuth config — return null in mock mode (tests inject auth directly)
+      if (endpoint === '/auth/oauth/config' && method === 'GET') {
+        return { success: true, data: { authServiceUrl: null } } as ApiResponse<T>
       }
 
       // Auth endpoints

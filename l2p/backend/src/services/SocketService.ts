@@ -41,12 +41,32 @@ export class SocketService {
     // Add authentication middleware for socket connections
     this.io.use(async (socket, next) => {
       try {
-        const authServiceUrl = process.env['AUTH_SERVICE_URL'] || 'http://localhost:5500';
+        const configuredUrl = process.env['AUTH_SERVICE_URL'];
+        const authServiceUrl = configuredUrl && configuredUrl.trim() ? configuredUrl.trim() : null;
         const token = socket.handshake.auth?.['token'] || socket.handshake.headers?.authorization?.replace('Bearer ', '');
         const cookies = socket.handshake.headers?.cookie;
 
-        // Strategy 1: Try JWT token verification
-        if (token) {
+        // Strategy 1: Local JWT verification (when no external auth service configured)
+        if (token && !authServiceUrl) {
+          try {
+            const authService = new AuthService();
+            const user = await authService.getUserByToken(token);
+            if (user) {
+              socket.data.user = {
+                id: String(user.id),
+                username: user.username,
+                email: user.email
+              };
+              console.log('Socket authenticated via local JWT for user:', socket.data.user.username);
+              return next();
+            }
+          } catch (err) {
+            console.warn('Socket local JWT auth error:', err instanceof Error ? err.message : 'Unknown error');
+          }
+        }
+
+        // Strategy 2: Try JWT token verification via external auth service
+        if (token && authServiceUrl) {
           try {
             const response = await fetch(`${authServiceUrl}/api/auth/verify`, {
               method: 'GET',
@@ -70,8 +90,8 @@ export class SocketService {
           }
         }
 
-        // Strategy 2: Try cookie-based auth (forwarding browser cookies to auth service)
-        if (!socket.data.user && cookies) {
+        // Strategy 3: Try cookie-based auth (forwarding browser cookies to auth service)
+        if (!socket.data.user && cookies && authServiceUrl) {
           try {
             const response = await fetch(`${authServiceUrl}/api/auth/verify`, {
               method: 'GET',

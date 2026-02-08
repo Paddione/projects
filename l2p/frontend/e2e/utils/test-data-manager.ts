@@ -266,53 +266,60 @@ export class TestDataManager {
   }
 
   /**
-   * Register a user with error handling
+   * Register a user via localStorage injection (no form interaction needed).
+   * Inlined to avoid circular imports with TestHelpers.
    */
   private async registerUser(page: Page, user: UserData): Promise<void> {
-    await page.goto('/');
-    await page.waitForLoadState('domcontentloaded');
+    await page.context().clearCookies();
+    await page.goto('/?test=true', { waitUntil: 'domcontentloaded' });
 
-    const authTabs = page.locator('[data-testid="register-tab"], [data-testid="login-tab"]');
-    if (!(await authTabs.first().isVisible())) {
-      const authenticatedContent = page.locator('[data-testid="create-lobby-button"], [data-testid="welcome-message"]');
-      if (await authenticatedContent.first().isVisible()) {
-        await page.click('[data-testid="logout-button"]');
-      }
-      await page.evaluate(() => {
-        localStorage.clear();
-        sessionStorage.clear();
+    await page.evaluate((userData) => {
+      localStorage.clear();
+      sessionStorage.clear();
+      sessionStorage.setItem('test_mode', 'true');
+
+      const userId = String(Math.floor(Math.random() * 9000) + 1000);
+
+      // Generate mock JWT (same format as apiService mock)
+      const header = btoa(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
+      const payload = btoa(JSON.stringify({
+        id: userId,
+        username: userData.username,
+        email: userData.email,
+        isAdmin: false,
+        type: 'access',
+        exp: Math.floor(Date.now() / 1000) + (15 * 60),
+        iat: Math.floor(Date.now() / 1000)
+      }));
+      const secret = 'N8mK2xR9qW4eT6yU3oP7sA1dF5gH8jL0cV9bM6nQ4wE7rY2tI5uO3pA8sD1fG6hJ';
+      const signature = btoa(`${header}.${payload}.${secret}`);
+      const token = `${header}.${payload}.${signature}`;
+
+      localStorage.setItem('auth_token', token);
+      localStorage.setItem('user_data', JSON.stringify({
+        id: userId,
+        username: userData.username,
+        email: userData.email,
+        isAdmin: false,
+        characterLevel: 10,
+        selectedCharacter: 'student'
+      }));
+
+      const existingUsers = JSON.parse(localStorage.getItem('mock_users') || '[]');
+      existingUsers.push({
+        id: userId,
+        username: userData.username,
+        email: userData.email,
+        password: userData.password,
+        isAdmin: false,
+        verified: true
       });
-      await page.reload();
-      await page.waitForLoadState('domcontentloaded');
-    }
+      localStorage.setItem('mock_users', JSON.stringify(existingUsers));
+    }, user);
 
-    await page.waitForSelector('[data-testid="register-tab"]', { timeout: 15000 });
-    await page.click('[data-testid="register-tab"]');
-    
-    await page.fill('[data-testid="username-input"]', user.username);
-    await page.fill('[data-testid="email-input"]', user.email);
-    await page.fill('[data-testid="password-input"]', user.password);
-    await page.fill('[data-testid="confirm-password-input"]', user.password);
-    
-    if (await page.locator('[data-testid="character-1"]').isVisible()) {
-      await page.click('[data-testid="character-1"]');
-    }
-    
-    await page.click('[data-testid="register-button"]');
-    
-    // Wait for registration to complete
-    await page.waitForFunction(() => {
-      const userMenu = document.querySelector('[data-testid="user-menu"]');
-      const errorMessage = document.querySelector('[data-testid="registration-error"]');
-      return userMenu || errorMessage;
-    }, { timeout: 15000 });
-    
-    // Check for errors
-    const errorElement = page.locator('[data-testid="registration-error"]');
-    if (await errorElement.isVisible()) {
-      const errorText = await errorElement.textContent();
-      throw new Error(`Registration failed: ${errorText}`);
-    }
+    // Reload so AuthGuard picks up the injected auth state
+    await page.goto('/?test=true', { waitUntil: 'domcontentloaded' });
+    await page.waitForSelector('[data-testid="create-lobby-button"]', { timeout: 15000 });
   }
 
   /**

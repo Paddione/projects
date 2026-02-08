@@ -143,7 +143,7 @@ export class TestDataGenerator {
     const uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
     const lowercase = 'abcdefghijklmnopqrstuvwxyz';
     const numbers = '0123456789';
-    const symbols = '!@#$%^&*';
+    const symbols = '@$!%*?&';
 
     const allChars = uppercase + lowercase + numbers + symbols;
 

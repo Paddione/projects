@@ -58,6 +58,11 @@ function mockApiMiddleware() {
           return next()
         }
 
+        // Integration tests set X-Bypass-Mock header to reach the real backend via proxy
+        if (req.headers['x-bypass-mock'] === 'true') {
+          return next()
+        }
+
         res.setHeader('Content-Type', 'application/json')
 
         const url = new URL(req.url, 'http://localhost')
@@ -250,7 +255,10 @@ export default defineConfig({
   server: {
     port: 3000,
     host: true,
-    proxy: process.env.VITE_TEST_MODE === 'true' ? undefined : {
+    // Always enable proxy — the mock system intercepts requests at the application
+    // layer (apiService.mockRequest) before fetch() runs, so the proxy is harmless
+    // when mocks are active and required when integration tests disable mocks.
+    proxy: {
       '/api': {
         target: process.env.VITE_BACKEND_URL || 'http://localhost:3001',
         changeOrigin: true,

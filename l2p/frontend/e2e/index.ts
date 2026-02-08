@@ -8,13 +8,13 @@
 import type { Page, Browser } from '@playwright/test';
 
 // Test fixtures
-export { test, expect } from './fixtures/auth';
 export { test as gameTest } from './fixtures/game';
-export type { AuthUser, AuthFixtures } from './fixtures/auth';
 export type { GameLobby, GameSession, GameFixtures } from './fixtures/game';
 
+// Re-export Playwright test/expect for convenience
+export { test, expect } from '@playwright/test';
+
 // Page Object Models
-export { AuthPage } from './page-objects/auth-page';
 export { LobbyPage } from './page-objects/lobby-page';
 export { GamePage } from './page-objects/game-page';
 
@@ -44,12 +44,6 @@ export type {
 } from './utils/test-helpers';
 
 // Helper functions for common operations
-export {
-  loginUser,
-  logoutUser,
-  verifyAuthState
-} from './fixtures/auth';
-
 export {
   joinLobby,
   startGame,

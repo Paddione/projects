@@ -1,40 +1,9 @@
-import { test, expect, Page } from '@playwright/test';
-
-const registerAndLogin = async (page: Page) => {
-  await page.goto('/');
-  await page.waitForLoadState('domcontentloaded');
-
-  await page.waitForFunction(() => {
-    const authForm = document.querySelector('[data-testid="register-tab"], [data-testid="login-tab"]');
-    const authenticated = document.querySelector('[data-testid="create-lobby-button"]');
-    return authForm || authenticated;
-  }, { timeout: 15000 });
-
-  // If already authenticated, skip registration
-  const createLobby = page.locator('[data-testid="create-lobby-button"]');
-  if (await createLobby.isVisible().catch(() => false)) {
-    return;
-  }
-
-  const timestamp = Date.now();
-  const username = `helpuser${timestamp}`;
-  const email = `helpuser${timestamp}@example.com`;
-  const password = 'TestPassword123!';
-
-  await page.click('[data-testid="register-tab"]');
-  await page.fill('[data-testid="username-input"]', username);
-  await page.fill('[data-testid="email-input"]', email);
-  await page.fill('[data-testid="password-input"]', password);
-  await page.fill('[data-testid="confirm-password-input"]', password);
-  await page.click('[data-testid="register-button"]');
-
-  await page.waitForURL(/.*\/$/, { timeout: 10000 });
-  await page.waitForSelector('[data-testid="create-lobby-button"]', { timeout: 15000 });
-};
+import { test, expect } from '@playwright/test';
+import { TestHelpers } from '../utils/test-helpers';
 
 test.describe('Help Screen', () => {
   test.beforeEach(async ({ page }) => {
-    await registerAndLogin(page);
+    await TestHelpers.injectAuth(page);
   });
 
   test('help button is visible on the page', async ({ page }) => {
