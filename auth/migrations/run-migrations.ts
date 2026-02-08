@@ -53,6 +53,31 @@ async function runMigrations() {
       console.log('Skipping migration 003 (auth.oauth_clients already exists)\n');
     }
 
+    const [{ to_regclass: accessRequestsTable }] = await sql`SELECT to_regclass('auth.access_requests')`;
+    if (!accessRequestsTable) {
+      console.log('Running migration 004_add_access_requests.sql...');
+      const migration004 = readFileSync(join(__dirname, '004_add_access_requests.sql'), 'utf-8');
+      await sql.unsafe(migration004);
+      console.log('✅ Migration 004 completed successfully\n');
+    } else {
+      console.log('Skipping migration 004 (auth.access_requests already exists)\n');
+    }
+
+    // Always sync app catalog — ensures URLs match codebase on every deploy
+    console.log('Syncing app catalog (URLs and metadata)...');
+    await sql`
+      INSERT INTO auth.apps (key, name, description, url)
+      VALUES
+        ('l2p', 'Learn2Play', 'Multiplayer quiz platform', 'https://l2p.korczewski.de'),
+        ('videovault', 'VideoVault', 'Video manager', 'https://videovault.korczewski.de'),
+        ('payment', 'Payment', 'Payments and wallet dashboard', 'https://shop.korczewski.de')
+      ON CONFLICT (key) DO UPDATE SET
+        name = EXCLUDED.name,
+        description = EXCLUDED.description,
+        url = EXCLUDED.url
+    `;
+    console.log('✅ App catalog synced\n');
+
     console.log('🎉 All migrations completed successfully!');
   } catch (error) {
     console.error('❌ Migration failed:', error);

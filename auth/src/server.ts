@@ -16,6 +16,7 @@ import oauthRoutes from './routes/oauth.js';
 import appsRoutes from './routes/apps.js';
 import adminRoutes from './routes/admin.js';
 import accessRequestsRoutes from './routes/access-requests.js';
+import { client } from './config/database.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -214,13 +215,35 @@ app.use(errorHandler);
 // START SERVER
 // ============================================================================
 
-const server = app.listen(PORT, () => {
+// Sync app catalog URLs on startup to ensure production domains are always current
+async function syncAppCatalog() {
+  try {
+    await client`
+      INSERT INTO auth.apps (key, name, description, url)
+      VALUES
+        ('l2p', 'Learn2Play', 'Multiplayer quiz platform', 'https://l2p.korczewski.de'),
+        ('videovault', 'VideoVault', 'Video manager', 'https://videovault.korczewski.de'),
+        ('payment', 'Payment', 'Payments and wallet dashboard', 'https://shop.korczewski.de')
+      ON CONFLICT (key) DO UPDATE SET
+        name = EXCLUDED.name,
+        description = EXCLUDED.description,
+        url = EXCLUDED.url
+    `;
+    console.log('✅ App catalog URLs synced');
+  } catch (err) {
+    // Non-fatal: table may not exist yet if migrations haven't run
+    console.warn('⚠️  App catalog sync skipped (table may not exist yet):', (err as Error).message);
+  }
+}
+
+const server = app.listen(PORT, async () => {
   console.log('================================================================================');
   console.log('🚀 Unified Authentication Service');
   console.log('================================================================================');
   console.log(`✅ Server running on port ${PORT}`);
   console.log(`✅ Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`✅ API URL: ${process.env.APP_URL || `http://localhost:${PORT}`}`);
+  await syncAppCatalog();
   console.log('================================================================================');
   console.log('Available endpoints:');
   console.log(`  - Health Check:    GET  http://localhost:${PORT}/health`);
