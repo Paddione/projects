@@ -41,6 +41,7 @@ jest.mock('../../stores/audioStore', () => ({
 jest.mock('../../services/avatarService', () => ({
   avatarService: {
     getAvatarEmoji: jest.fn(() => null), // Return null to fall back to character.emoji
+    getAvatarSvgPath: jest.fn(() => null), // Return null to fall back to emoji display
     initialize: jest.fn(),
     setActiveAvatarOverride: jest.fn()
   }

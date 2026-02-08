@@ -6,6 +6,7 @@ import { useAuthStore } from '../stores/authStore'
 import { useCharacterStore } from '../stores/characterStore'
 // import { navigationService } from './navigationService'
 import { apiService } from './apiService'
+import { importMetaEnv } from '../utils/import-meta'
 
 export interface SocketEvents {
   // Connection events
@@ -769,10 +770,14 @@ export class SocketService {
       }
     }, 10000) // 10 second timeout
 
-    // Resolve environment URL using process.env or fallback
-    const envUrl: string | undefined =
-      (typeof process !== 'undefined' && (process.env?.VITE_SOCKET_URL as string | undefined)) ||
-      undefined
+    // Resolve environment URL — prefer import.meta.env (Vite), fall back to process.env (Jest/Node)
+    let envUrl: string | undefined
+    if (typeof importMetaEnv.VITE_SOCKET_URL === 'string' && importMetaEnv.VITE_SOCKET_URL) {
+      envUrl = importMetaEnv.VITE_SOCKET_URL as string
+    }
+    if (!envUrl && typeof process !== 'undefined' && typeof process.env?.VITE_SOCKET_URL === 'string') {
+      envUrl = process.env.VITE_SOCKET_URL
+    }
 
     // Prefer provided URL or env var; otherwise, use current origin (handles https/wss in prod)
     const serverUrl = url || envUrl || (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3001')

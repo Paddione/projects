@@ -343,24 +343,28 @@ describe('ValidationMiddleware', () => {
       });
     });
 
-    it('should reset rate limit after window expires', (done) => {
-      // Arrange
-      const rateLimit = ValidationMiddleware.rateLimitValidation(2, 100); // 2 requests per 100ms
+    it('should reset rate limit after window expires', () => {
+      jest.useFakeTimers();
+      try {
+        // Arrange
+        const rateLimit = ValidationMiddleware.rateLimitValidation(2, 100); // 2 requests per 100ms
 
-      // Act
-      rateLimit(mockRequest as Request, mockResponse as Response, mockNext);
-      rateLimit(mockRequest as Request, mockResponse as Response, mockNext);
-      // 3rd request should be blocked
-      rateLimit(mockRequest as Request, mockResponse as Response, mockNext);
+        // Act
+        rateLimit(mockRequest as Request, mockResponse as Response, mockNext);
+        rateLimit(mockRequest as Request, mockResponse as Response, mockNext);
+        // 3rd request should be blocked
+        rateLimit(mockRequest as Request, mockResponse as Response, mockNext);
 
-      // Wait for window to expire
-      setTimeout(() => {
+        // Advance time past the window
+        jest.advanceTimersByTime(150);
+
         // 4th request should be allowed after window expires
         rateLimit(mockRequest as Request, mockResponse as Response, mockNext);
 
         expect(mockNext).toHaveBeenCalledTimes(3); // 2 initial + 1 after reset
-        done();
-      }, 150);
+      } finally {
+        jest.useRealTimers();
+      }
     });
 
     it('should handle different client IPs separately', () => {
@@ -712,24 +716,12 @@ describe('ValidationMiddleware', () => {
         const schema = ValidationMiddleware.schemas.createQuestion;
         mockRequest.body = {
           question_set_id: 1,
-          question_text: {
-            en: 'What is 2 + 2?',
-            de: 'Was ist 2 + 2?'
-          },
+          question_text: 'Was ist 2 + 2?',
           answers: [
-            {
-              text: { en: '3', de: '3' },
-              correct: false
-            },
-            {
-              text: { en: '4', de: '4' },
-              correct: true
-            }
+            { text: '3', correct: false },
+            { text: '4', correct: true }
           ],
-          explanation: {
-            en: 'Basic addition',
-            de: 'Einfache Addition'
-          },
+          explanation: 'Einfache Addition',
           difficulty: 1
         };
 
@@ -745,15 +737,9 @@ describe('ValidationMiddleware', () => {
         const schema = ValidationMiddleware.schemas.createQuestion;
         mockRequest.body = {
           question_set_id: 1,
-          question_text: {
-            en: 'What is 2 + 2?',
-            de: 'Was ist 2 + 2?'
-          },
+          question_text: 'Was ist 2 + 2?',
           answers: [
-            {
-              text: { en: '4', de: '4' },
-              correct: true
-            }
+            { text: '4', correct: true }
           ]
         };
 

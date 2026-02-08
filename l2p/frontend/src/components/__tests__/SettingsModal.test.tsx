@@ -327,47 +327,45 @@ describe('SettingsModal Component', () => {
     })
 
     it('displays how to play instructions', () => {
-      expect(screen.getByText('1. Create or join a game using a unique code')).toBeInTheDocument()
-      expect(screen.getByText('2. Wait for all players to be ready')).toBeInTheDocument()
-      expect(screen.getByText('3. Answer questions within the time limit')).toBeInTheDocument()
-      expect(screen.getByText('4. Build up your multiplier with consecutive correct answers')).toBeInTheDocument()
-      expect(screen.getByText('5. Submit your score to the Hall of Fame')).toBeInTheDocument()
+      // The mock t() returns the key itself for unmapped keys
+      expect(screen.getByText('help.howToPlay.1')).toBeInTheDocument()
+      expect(screen.getByText('help.howToPlay.2')).toBeInTheDocument()
+      expect(screen.getByText('help.howToPlay.3')).toBeInTheDocument()
+      expect(screen.getByText('help.howToPlay.4')).toBeInTheDocument()
+      expect(screen.getByText('help.howToPlay.5')).toBeInTheDocument()
+      expect(screen.getByText('help.howToPlay.6')).toBeInTheDocument()
     })
 
     it('displays scoring system information', () => {
-      expect(screen.getByText('• Points = (60 - seconds elapsed) × multiplier')).toBeInTheDocument()
-      expect(screen.getByText('• Multiplier increases with consecutive correct answers')).toBeInTheDocument()
-      expect(screen.getByText('• Wrong answers reset multiplier to 1x')).toBeInTheDocument()
-      expect(screen.getByText('• Higher multipliers = more points per correct answer')).toBeInTheDocument()
+      expect(screen.getByText('help.scoring.formula')).toBeInTheDocument()
+      expect(screen.getByText('help.scoring.fast')).toBeInTheDocument()
+      expect(screen.getByText('help.scoring.streak')).toBeInTheDocument()
+      expect(screen.getByText('help.scoring.wrong')).toBeInTheDocument()
     })
 
     it('displays multiplier information', () => {
-      expect(screen.getByText('• 1x: Starting multiplier')).toBeInTheDocument()
-      expect(screen.getByText('• 2x: After 1 consecutive correct answer')).toBeInTheDocument()
-      expect(screen.getByText('• 3x: After 2 consecutive correct answers')).toBeInTheDocument()
-      expect(screen.getByText('• 4x: After 3 consecutive correct answers')).toBeInTheDocument()
-      expect(screen.getByText('• 5x: After 4 consecutive correct answers (maximum)')).toBeInTheDocument()
+      expect(screen.getByText('help.multipliers.desc')).toBeInTheDocument()
+      expect(screen.getByText('help.multipliers.1x')).toBeInTheDocument()
+      expect(screen.getByText('help.multipliers.2x')).toBeInTheDocument()
+      expect(screen.getByText('help.multipliers.3x')).toBeInTheDocument()
+      expect(screen.getByText('help.multipliers.4x')).toBeInTheDocument()
+      expect(screen.getByText('help.multipliers.5x')).toBeInTheDocument()
     })
 
     it('displays audio settings help', () => {
-      expect(screen.getByText('• Adjust music and sound effect volumes independently')).toBeInTheDocument()
-      expect(screen.getByText('• Mute all audio with the master mute button')).toBeInTheDocument()
-      expect(screen.getByText('• Test audio with the provided test buttons')).toBeInTheDocument()
-      expect(screen.getByText('• Settings are automatically saved')).toBeInTheDocument()
+      expect(screen.getByText('help.audio.master')).toBeInTheDocument()
+      expect(screen.getByText('help.audio.settings')).toBeInTheDocument()
+      expect(screen.getByText('help.audio.mute')).toBeInTheDocument()
     })
 
     it('displays language settings help', () => {
-      expect(screen.getByText('• Switch between German and English')).toBeInTheDocument()
-      expect(screen.getByText('• Language preference is saved automatically')).toBeInTheDocument()
-      expect(screen.getByText('• All UI elements update instantly')).toBeInTheDocument()
-      expect(screen.getByText('• Fallback to English for missing translations')).toBeInTheDocument()
+      expect(screen.getByText('help.language.switch')).toBeInTheDocument()
+      expect(screen.getByText('help.language.auto')).toBeInTheDocument()
     })
 
     it('displays contact information', () => {
-      expect(screen.getByText('For support or questions:')).toBeInTheDocument()
-      expect(screen.getByText('• Email: support@learn2play.com')).toBeInTheDocument()
-      expect(screen.getByText('• GitHub: github.com/learn2play')).toBeInTheDocument()
-      expect(screen.getByText('• Discord: discord.gg/learn2play')).toBeInTheDocument()
+      expect(screen.getByText('Email: support@learn2play.com')).toBeInTheDocument()
+      expect(screen.getByText('GitHub: github.com/learn2play')).toBeInTheDocument()
     })
   })
 

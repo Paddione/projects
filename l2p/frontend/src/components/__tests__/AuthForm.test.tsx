@@ -36,7 +36,7 @@ describe('AuthForm', () => {
 
       const logo = screen.getByAltText('Learn2Play Logo')
       expect(logo).toBeInTheDocument()
-      expect(logo).toHaveAttribute('src', '/visuals/L2P-Logo.png')
+      expect(logo).toHaveAttribute('src', '/icons/branding/l2p-logo.svg')
     })
 
     it('should render forgot password link when callback provided', () => {

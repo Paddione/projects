@@ -364,7 +364,7 @@ describe('LobbyRepository', () => {
         const result = await lobbyRepository.findLobbiesByHost(1);
 
         expect(mockDb.query).toHaveBeenCalledWith(
-          'SELECT * FROM lobbies WHERE host_id = $1 ORDER BY created_at DESC',
+          'SELECT * FROM lobbies WHERE host_id = $1 OR auth_user_id = $1 ORDER BY created_at DESC',
           [1]
         );
         expect(result).toEqual(hostLobbies);

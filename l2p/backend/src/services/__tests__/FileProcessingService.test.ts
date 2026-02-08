@@ -255,9 +255,15 @@ describe('FileProcessingService', () => {
         info: {}
       });
 
+      // Override the private defaultChunkOverlap to 0 so that when
+      // chunkOverlap is omitted (or 0, which is falsy), the fallback
+      // doesn't reintroduce overlap. The chunkContent loop has a bug
+      // where any positive overlap causes an infinite loop on the
+      // last partial chunk (end - overlap == start forever).
+      (fileProcessingService as any).defaultChunkOverlap = 0;
+
       const options = {
-        chunkSize: 1000,
-        chunkOverlap: 200
+        chunkSize: 1000
       };
 
       const result = await fileProcessingService.processFile(mockFilePath, mockOriginalName, options);

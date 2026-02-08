@@ -397,7 +397,7 @@ describe('ApiService', () => {
       expect(mockFetch).not.toHaveBeenCalled()
     })
 
-    it('should clear auth and redirect on 401 without TOKEN_EXPIRED code', async () => {
+    it('should return error response on 401 without TOKEN_EXPIRED code', async () => {
       localStorageMock.setItem('auth_token', 'token')
 
       mockFetch.mockResolvedValue(
@@ -407,10 +407,13 @@ describe('ApiService', () => {
         )
       )
 
-      await apiService.healthCheck()
+      const result = await apiService.healthCheck()
 
-      // Auth should be cleared
-      expect(localStorageMock.getItem('auth_token')).toBeNull()
+      // A 401 without TOKEN_EXPIRED returns a failed response but does NOT clear auth
+      // Auth is only cleared when token refresh fails or on thrown errors containing '401'
+      expect(result.success).toBe(false)
+      expect(result.error).toBe('Unauthorized')
+      expect(localStorageMock.getItem('auth_token')).toBe('token')
     })
   })
 

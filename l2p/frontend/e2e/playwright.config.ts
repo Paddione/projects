@@ -3,6 +3,22 @@
 import { defineConfig, devices } from '@playwright/test';
 
 /**
+ * Shared ignore patterns for non-essential test suites.
+ * Project-level testIgnore overrides global testIgnore in Playwright,
+ * so we define them once and spread into each project.
+ */
+const ignoredSuites = [
+  '**/error-handling/**',
+  '**/accessibility/**',
+  '**/performance/**',
+  '**/examples/**',
+  '**/debug-*.spec.*',
+  '**/question-set-management.spec.*',
+  '**/auth-flow.spec.*',
+  '**/smoke/basic-functionality.spec.ts',
+];
+
+/**
  * @see https://playwright.dev/docs/test-configuration
  */
 export default defineConfig({
@@ -21,17 +37,8 @@ export default defineConfig({
     ['json', { outputFile: 'test-results.json' }],
     ['junit', { outputFile: 'test-results.xml' }]
   ],
-  /* Ignore non-essential suites */
-  testIgnore: [
-    '**/tests/error-handling/**',
-    '**/tests/accessibility/**',
-    '**/tests/performance/**',
-    '**/tests/examples/**',
-    '**/tests/debug-*.spec.*',
-    '**/tests/question-set-management.spec.*',
-    '**/tests/auth-flow.spec.*',
-    '**/tests/smoke/basic-functionality.spec.ts'
-  ],
+  /* Global ignore (applies unless overridden by project-level testIgnore) */
+  testIgnore: ignoredSuites,
   webServer: {
     command: 'npm --prefix .. run dev -- --host 127.0.0.1 --port 3000',
     url: process.env.BASE_URL || 'http://127.0.0.1:3000',
@@ -69,12 +76,15 @@ export default defineConfig({
     {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
-      testIgnore: ['**/tests/integration/**'],
+      /* Must include all ignoredSuites + integration (project-level overrides global) */
+      testIgnore: [...ignoredSuites, '**/integration/**'],
     },
     {
       name: 'integration',
       use: { ...devices['Desktop Chrome'] },
-      testMatch: '**/tests/integration/**',
+      testMatch: '**/integration/**',
+      /* Must include ignoredSuites so only integration tests run (not other excluded suites) */
+      testIgnore: ignoredSuites,
       timeout: 120000,
     },
   ],

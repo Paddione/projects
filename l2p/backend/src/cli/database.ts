@@ -107,7 +107,7 @@ async function runCommand() {
         const checks: Array<{sql: string; params?: any[]; name: string;}> = [
           { name: 'UserRepository.findByEmail', sql: 'SELECT * FROM users WHERE email = $1', params: ['example@example.com'] },
           { name: 'LobbyRepository.findByCode', sql: 'SELECT * FROM lobbies WHERE code = $1', params: ['ABC123'] },
-          { name: 'QuestionRepository.searchQuestions', sql: "SELECT * FROM questions WHERE (question_text->>'en' ILIKE $1 OR question_text->>'de' ILIKE $1) ORDER BY id LIMIT 50", params: ['%test%'] },
+          { name: 'QuestionRepository.searchQuestions', sql: "SELECT * FROM questions WHERE question_text ILIKE $1 ORDER BY id LIMIT 50", params: ['%test%'] },
           { name: 'HallOfFameRepository.getTopScores', sql: 'SELECT * FROM hall_of_fame ORDER BY score DESC, completed_at ASC LIMIT $1', params: [10] },
         ];
         let failures = 0;

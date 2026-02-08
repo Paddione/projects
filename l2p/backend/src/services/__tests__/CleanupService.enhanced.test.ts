@@ -65,20 +65,23 @@ d('CleanupService - Enhanced Testing', () => {
 
       cleanupService.start();
 
+      // Wait for initial immediate cleanup to resolve
+      await Promise.resolve();
+
       // Clear initial call
       mockLobbyService.cleanupInactiveLobbies.mockClear();
       mockLobbyService.cleanupOldLobbies.mockClear();
 
-      // Advance time by 5 minutes (cleanup interval)
+      // Advance time by 5 minutes (cleanup interval) and flush promises
       jest.advanceTimersByTime(5 * 60 * 1000);
-      await jest.runOnlyPendingTimersAsync();
+      await Promise.resolve();
 
       expect(mockLobbyService.cleanupInactiveLobbies).toHaveBeenCalledTimes(1);
       expect(mockLobbyService.cleanupOldLobbies).toHaveBeenCalledTimes(1);
 
       // Advance by another 5 minutes
       jest.advanceTimersByTime(5 * 60 * 1000);
-      await jest.runOnlyPendingTimersAsync();
+      await Promise.resolve();
 
       expect(mockLobbyService.cleanupInactiveLobbies).toHaveBeenCalledTimes(2);
       expect(mockLobbyService.cleanupOldLobbies).toHaveBeenCalledTimes(2);
@@ -300,30 +303,34 @@ d('CleanupService - Enhanced Testing', () => {
       mockLobbyService.cleanupInactiveLobbies.mockResolvedValue(1);
       mockLobbyService.cleanupOldLobbies.mockResolvedValue(1);
 
-      cleanupService.start();
-      
-      // Track timestamps
+      // Track timestamps via monkeypatch BEFORE starting
       const timestamps: number[] = [];
-      const originalPerformCleanup = (cleanupService as any).performCleanup;
-      
+      const originalPerformCleanup = (cleanupService as any).performCleanup.bind(cleanupService);
+
       (cleanupService as any).performCleanup = async function() {
         timestamps.push(Date.now());
-        return originalPerformCleanup.call(this);
+        return originalPerformCleanup();
       };
 
-      // Run multiple cleanup cycles
-      await jest.runOnlyPendingTimersAsync(); // Initial
+      cleanupService.start();
+
+      // Initial immediate cleanup
+      await Promise.resolve();
+
+      // First interval
       jest.advanceTimersByTime(5 * 60 * 1000);
-      await jest.runOnlyPendingTimersAsync(); // First interval
+      await Promise.resolve();
+
+      // Second interval
       jest.advanceTimersByTime(5 * 60 * 1000);
-      await jest.runOnlyPendingTimersAsync(); // Second interval
+      await Promise.resolve();
 
       expect(timestamps).toHaveLength(3);
-      
+
       // Verify intervals are consistent (allowing for small timing variations)
       const interval1 = timestamps[1]! - timestamps[0]!;
       const interval2 = timestamps[2]! - timestamps[1]!;
-      
+
       expect(Math.abs(interval1 - (5 * 60 * 1000))).toBeLessThan(100);
       expect(Math.abs(interval2 - (5 * 60 * 1000))).toBeLessThan(100);
     });
@@ -410,11 +417,13 @@ d('CleanupService - Enhanced Testing', () => {
 
       cleanupService.start();
 
-      // Use jest timer controls
+      // Use jest timer controls - setInterval creates a pending timer
       expect(jest.getTimerCount()).toBeGreaterThan(0);
 
-      // Run all pending timers
-      await jest.runAllTimersAsync();
+      // Advance by one interval and flush promises (runAllTimersAsync loops
+      // forever on setInterval, so use advanceTimersByTime instead)
+      jest.advanceTimersByTime(5 * 60 * 1000);
+      await Promise.resolve();
 
       expect(mockLobbyService.cleanupInactiveLobbies).toHaveBeenCalled();
       expect(mockLobbyService.cleanupOldLobbies).toHaveBeenCalled();
@@ -429,18 +438,18 @@ d('CleanupService - Enhanced Testing', () => {
 
       cleanupService.start();
 
-      // Initial cleanup
-      await jest.runOnlyPendingTimersAsync();
+      // Initial immediate cleanup fires synchronously (non-timer), flush its promise
+      await Promise.resolve();
       expect(cleanupCallCount).toBe(1);
 
       // Advance by exact interval
       jest.advanceTimersByTime(5 * 60 * 1000);
-      await jest.runOnlyPendingTimersAsync();
+      await Promise.resolve();
       expect(cleanupCallCount).toBe(2);
 
-      // Advance by multiple intervals
-      jest.advanceTimersByTime(15 * 60 * 1000); // 3 intervals
-      await jest.runAllTimersAsync();
+      // Advance by multiple intervals (3 x 5 minutes)
+      jest.advanceTimersByTime(15 * 60 * 1000);
+      await Promise.resolve();
       expect(cleanupCallCount).toBe(5); // 2 + 3 more
     });
   });

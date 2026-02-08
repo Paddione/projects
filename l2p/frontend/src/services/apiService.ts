@@ -242,7 +242,9 @@ class ApiService {
     baseUrlOverride?: string
   ): Promise<ApiResponse<T>> {
     // Use lightweight front-end mocks in test mode to avoid backend dependency
-    const useMock = this.mockOverride ?? this.isMockEnabled
+    // Allow runtime override via sessionStorage for integration tests that need real backend
+    const runtimeDisable = typeof sessionStorage !== 'undefined' && sessionStorage.getItem('disable_mocks') === 'true';
+    const useMock = runtimeDisable ? false : (this.mockOverride ?? this.isMockEnabled)
 
     if (useMock) {
       return this.mockRequest<T>(endpoint, options)

@@ -132,13 +132,13 @@ export class GameService {
       gameState.timeRemaining--;
 
       // Emit time update to all clients
-      this.getIo()?.to(lobbyCode).emit('time-update', {
+      this.getIo()?.to(lobbyCode)?.emit('time-update', {
         timeRemaining: gameState.timeRemaining
       });
 
       // Check for time warnings
       if (gameState.timeRemaining === 10 || gameState.timeRemaining === 5) {
-        this.getIo()?.to(lobbyCode).emit('time-warning', {
+        this.getIo()?.to(lobbyCode)?.emit('time-warning', {
           timeRemaining: gameState.timeRemaining
         });
       }
@@ -198,7 +198,7 @@ export class GameService {
     });
 
     // Emit the next question to all players (send full object; use 0-based index)
-    this.getIo()?.to(lobbyCode).emit('question-started', {
+    this.getIo()?.to(lobbyCode)?.emit('question-started', {
       question: currentQuestion,
       questionIndex: gameState.currentQuestionIndex,
       totalQuestions: gameState.totalQuestions,
@@ -426,7 +426,7 @@ export class GameService {
 
       // Emit initial sync event
       if (this.io && typeof this.io.to === 'function') {
-        this.io.to(lobbyCode).emit('game-syncing', {
+        this.io?.to(lobbyCode)?.emit('game-syncing', {
           countdown: syncCountdown,
           message: 'Synchronisiere Spieler...'
         });
@@ -438,19 +438,30 @@ export class GameService {
         if (syncCountdown <= 0) {
           clearInterval(syncTimer);
 
-          // Update lobby status to 'playing' now that synchronization is over
-          await (this as any).lobbyService.updateLobbyStatus(lobbyCode, 'playing');
+          try {
+            // Update lobby status to 'playing' now that synchronization is over
+            await (this as any).lobbyService.updateLobbyStatus(lobbyCode, 'playing');
 
-          // Start the first question after synchronization
-          await this.startNextQuestion(lobbyCode);
+            // Start the first question after synchronization
+            await this.startNextQuestion(lobbyCode);
+          } catch (error) {
+            if (!this.isTestEnvironment) {
+              console.error(`Error in sync timer for lobby ${lobbyCode}:`, error);
+            }
+          }
         } else {
           // Emit sync update
-          this.io?.to(lobbyCode).emit('game-syncing', {
+          this.io?.to(lobbyCode)?.emit('game-syncing', {
             countdown: syncCountdown,
             message: 'Synchronisiere Spieler...'
           });
         }
       }, 1000);
+
+      // Prevent sync timer from keeping the event loop alive in tests
+      if (this.isTestEnvironment && syncTimer.unref) {
+        syncTimer.unref();
+      }
 
       RequestLogger.logGameEvent('game-started', lobbyCode, undefined, {
         gameSessionId: gameSession.id,
@@ -485,7 +496,7 @@ export class GameService {
       const results = this.calculateQuestionResults(gameState);
       // Legacy/internal event
       if (this.io) {
-        this.getIo()?.to(lobbyCode).emit('question-results', results);
+        this.getIo()?.to(lobbyCode)?.emit('question-results', results);
       }
       // Frontend expects 'question-ended' with a flat results array of players
       const endedPayload = {
@@ -495,7 +506,7 @@ export class GameService {
         totalQuestions: gameState.totalQuestions
       };
       if (this.io) {
-        this.getIo()?.to(lobbyCode).emit('question-ended', endedPayload);
+        this.getIo()?.to(lobbyCode)?.emit('question-ended', endedPayload);
       }
 
       // Player scores are already updated in calculateQuestionResults
@@ -638,7 +649,7 @@ export class GameService {
       await this.savePlayerResults(gameState);
 
       // Emit game over event (legacy, for any listeners)
-      this.getIo()?.to(lobbyCode).emit('game-over', {
+      this.getIo()?.to(lobbyCode)?.emit('game-over', {
         leaderboard: gameState.players
           .map(p => ({
             playerId: p.id,
@@ -764,7 +775,7 @@ export class GameService {
     });
 
     // Emit answer received event (include both legacy and explicit fields)
-    this.getIo()?.to(lobbyCode).emit('answer-received', {
+    this.getIo()?.to(lobbyCode)?.emit('answer-received', {
       playerId: player.id,
       username: player.username,
       hasAnswered: true,
@@ -914,7 +925,7 @@ export class GameService {
         // Emit draft availability notification if any
         if (pendingDrafts.length > 0) {
           try {
-            this.getIo()?.to(gameState.lobbyCode).emit('perk:draft-available', {
+            this.getIo()?.to(gameState.lobbyCode)?.emit('perk:draft-available', {
               playerId: player.id,
               username: player.username,
               pendingDrafts,
@@ -959,7 +970,7 @@ export class GameService {
       .sort((a, b) => b.finalScore - a.finalScore);
 
     // Broadcast game end with experience and level-up information
-    this.getIo()?.to(gameState.lobbyCode).emit('game-ended', {
+    this.getIo()?.to(gameState.lobbyCode)?.emit('game-ended', {
       results: finalResults,
       gameSessionId: gameState.gameSessionId,
       questionSetIds: gameState.selectedQuestionSetIds
@@ -968,7 +979,7 @@ export class GameService {
     // Send individual level-up notifications
     for (const result of finalResults) {
       if (result.levelUp) {
-        this.getIo()?.to(gameState.lobbyCode).emit('player-level-up', {
+        this.getIo()?.to(gameState.lobbyCode)?.emit('player-level-up', {
           playerId: result.id,
           username: result.username,
           character: result.character,
@@ -1137,7 +1148,7 @@ export class GameService {
     if (!player) return;
 
     // Broadcast disconnect status to remaining players immediately
-    this.getIo()?.to(lobbyCode).emit('player-disconnected', {
+    this.getIo()?.to(lobbyCode)?.emit('player-disconnected', {
       playerId,
       username: player.username,
       message: `${player.username} hat die Verbindung verloren...`
@@ -1170,7 +1181,7 @@ export class GameService {
       }
 
       // Notify remaining players that grace period expired
-      this.getIo()?.to(lobbyCode).emit('player-disconnect-confirmed', {
+      this.getIo()?.to(lobbyCode)?.emit('player-disconnect-confirmed', {
         playerId,
         username: currentPlayer.username,
         message: `${currentPlayer.username} ist endgültig getrennt`
@@ -1221,7 +1232,7 @@ export class GameService {
     }
 
     // Broadcast reconnection to remaining players
-    this.getIo()?.to(lobbyCode).emit('player-reconnected', {
+    this.getIo()?.to(lobbyCode)?.emit('player-reconnected', {
       playerId,
       username: player.username,
       message: `${player.username} ist wieder verbunden`

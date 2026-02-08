@@ -159,13 +159,16 @@ describe('PlayerGrid Component', () => {
     expect(container.firstChild).toHaveClass('custom-grid')
   })
 
-  it('displays correct answers count as streak', () => {
+  it('does not display streak text in player cards', () => {
+    // PlayerGrid renders streaks only as confetti celebrations on milestones,
+    // not as visible text. Scores and multipliers are shown instead.
     render(<PlayerGrid players={mockPlayers} />)
 
-    expect(screen.getByText('🔥 5')).toBeInTheDocument()
-    expect(screen.getByText('🔥 3')).toBeInTheDocument()
-    expect(screen.getByText('🔥 7')).toBeInTheDocument()
-    expect(screen.queryByText('🔥 0')).not.toBeInTheDocument() // Zero streak not shown
+    // Scores are visible
+    expect(screen.getByText('1250')).toBeInTheDocument()
+    expect(screen.getByText('890')).toBeInTheDocument()
+    // Streak counts are not rendered as text
+    expect(screen.queryByText(/🔥/)).not.toBeInTheDocument()
   })
 
   it('can hide scores', () => {

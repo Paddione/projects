@@ -38,10 +38,10 @@ describe('PerksManager', () => {
   });
 
   describe('getAllPerks', () => {
-    it('should return all active perks ordered by level', async () => {
+    it('should return all active perks ordered by tier', async () => {
       const mockPerks = [
-        { id: 1, name: 'starter_badge', category: 'cosmetic', type: 'badge', level_required: 3, title: 'Starter Badge' },
-        { id: 2, name: 'custom_avatars', category: 'cosmetic', type: 'avatar', level_required: 5, title: 'Character Collection' }
+        { id: 1, name: 'starter_badge', category: 'cosmetic', type: 'badge', tier: 1, title: 'Starter Badge' },
+        { id: 2, name: 'custom_avatars', category: 'cosmetic', type: 'avatar', tier: 2, title: 'Character Collection' }
       ];
 
       mockDb.query.mockResolvedValue({ rows: mockPerks } as any);
@@ -66,10 +66,10 @@ describe('PerksManager', () => {
   });
 
   describe('getPerksForLevel', () => {
-    it('should return perks available for specified level', async () => {
+    it('should return all active perks (draft-based, no level filter)', async () => {
       const mockPerks = [
-        { id: 1, name: 'starter_badge', level_required: 3 },
-        { id: 2, name: 'custom_avatars', level_required: 5 }
+        { id: 1, name: 'starter_badge', level_required: 0 },
+        { id: 2, name: 'custom_avatars', level_required: 0 }
       ];
 
       mockDb.query.mockResolvedValue({ rows: mockPerks } as any);
@@ -77,103 +77,40 @@ describe('PerksManager', () => {
       const result = await perksManager.getPerksForLevel(5);
 
       expect(mockDb.query).toHaveBeenCalledWith(
-        expect.stringContaining('WHERE level_required <= $1'),
-        [5]
+        expect.stringContaining('WHERE is_active = true')
       );
       expect(result).toEqual(mockPerks);
     });
   });
 
   describe('canUnlockPerk', () => {
-    it('should return true when user level meets requirement and perk not unlocked', async () => {
-      // Mock user level
-      mockDb.query
-        .mockResolvedValueOnce({ rows: [{ character_level: 5 }] } as any) // User query
-        .mockResolvedValueOnce({ rows: [{ level_required: 5 }] } as any) // Perk query
-        .mockResolvedValueOnce({ rows: [] } as any); // Already unlocked check
-
+    it('should always return false (perks are now draft-based)', async () => {
+      // In the draft system, perks are chosen through the draft flow, not unlocked by level
       const result = await perksManager.canUnlockPerk(1, 2);
-
-      expect(result).toBe(true);
-      expect(mockDb.query).toHaveBeenCalledTimes(3);
-    });
-
-    it('should return false when user level is too low', async () => {
-      mockDb.query
-        .mockResolvedValueOnce({ rows: [{ character_level: 3 }] } as any) // User query
-        .mockResolvedValueOnce({ rows: [{ level_required: 5 }] } as any) // Perk query
-        .mockResolvedValueOnce({ rows: [] } as any); // Already unlocked check
-
-      const result = await perksManager.canUnlockPerk(1, 2);
-
       expect(result).toBe(false);
     });
 
-    it('should return false when perk already unlocked', async () => {
-      mockDb.query
-        .mockResolvedValueOnce({ rows: [{ character_level: 5 }] } as any) // User query
-        .mockResolvedValueOnce({ rows: [{ level_required: 5 }] } as any) // Perk query
-        .mockResolvedValueOnce({ rows: [{ id: 1 }] } as any); // Already unlocked
-
-      const result = await perksManager.canUnlockPerk(1, 2);
-
-      expect(result).toBe(false);
-    });
-
-    it('should return false when user does not exist', async () => {
-      mockDb.query.mockResolvedValueOnce({ rows: [] } as any); // User not found
-
+    it('should return false regardless of user level', async () => {
       const result = await perksManager.canUnlockPerk(999, 2);
-
-      expect(result).toBe(false);
-    });
-
-    it('should return false when perk does not exist', async () => {
-      mockDb.query
-        .mockResolvedValueOnce({ rows: [{ character_level: 5 }] } as any) // User query
-        .mockResolvedValueOnce({ rows: [] } as any); // Perk not found
-
-      const result = await perksManager.canUnlockPerk(1, 999);
-
       expect(result).toBe(false);
     });
   });
 
   describe('unlockPerk', () => {
-    it('should unlock perk when requirements are met', async () => {
-      // Mock canUnlockPerk to return true
-      jest.spyOn(perksManager as any, 'canUnlockPerk').mockResolvedValue(true);
-      
-      mockDb.query.mockResolvedValue({ rows: [{ id: 1 }] } as any);
-
+    it('should always return false (perks are now draft-based)', async () => {
+      // canUnlockPerk always returns false in draft system
       const result = await perksManager.unlockPerk(1, 2);
-
-      expect(result).toBe(true);
-      expect(mockDb.query).toHaveBeenCalledWith(
-        expect.stringContaining('INSERT INTO user_perks'),
-        [1, 2]
-      );
-    });
-
-    it('should not unlock perk when requirements are not met', async () => {
-      jest.spyOn(perksManager as any, 'canUnlockPerk').mockResolvedValue(false);
-
-      const result = await perksManager.unlockPerk(1, 2);
-
       expect(result).toBe(false);
-      expect(mockDb.query).not.toHaveBeenCalled();
     });
   });
 
   describe('activatePerk', () => {
-    it('should activate unlocked perk', async () => {
-      // Mock perk is unlocked
+    it('should activate perk chosen in draft system', async () => {
+      // Mock: perk is chosen in user_perk_drafts
       mockDb.query
-        .mockResolvedValueOnce({ rows: [{ id: 1 }] } as any) // Unlocked check
-        .mockResolvedValueOnce({ rows: [{ type: 'avatar' }] } as any) // Perk type
-        .mockResolvedValueOnce({ rows: [] } as any) // Deactivate others
-        .mockResolvedValueOnce({ rows: [{ id: 1 }] } as any) // Activate perk
-        .mockResolvedValueOnce({ rows: [] } as any); // Update user settings
+        .mockResolvedValueOnce({ rows: [{ id: 1 }] } as any) // Draft unlocked check (user_perk_drafts)
+        .mockResolvedValueOnce({ rows: [{ type: 'avatar' }] } as any) // Perk type query
+        .mockResolvedValueOnce({ rows: [] } as any); // updateUserActiveSettings query
 
       // Mock updateUserActiveSettings
       jest.spyOn(perksManager as any, 'updateUserActiveSettings').mockResolvedValue(undefined);
@@ -181,53 +118,42 @@ describe('PerksManager', () => {
       const result = await perksManager.activatePerk(1, 2, { selected_avatar: 'scientist' });
 
       expect(result).toBe(true);
+      // First query should check user_perk_drafts
       expect(mockDb.query).toHaveBeenCalledWith(
-        expect.stringContaining('UPDATE user_perks'),
-        [1, 2, JSON.stringify({ selected_avatar: 'scientist' })]
+        expect.stringContaining('user_perk_drafts'),
+        [1, 2]
       );
     });
 
-    it('should not activate locked perk', async () => {
-      mockDb.query.mockResolvedValue({ rows: [] } as any); // Not unlocked
+    it('should not activate perk not chosen in draft', async () => {
+      mockDb.query.mockResolvedValue({ rows: [] } as any); // Not found in drafts
 
       const result = await perksManager.activatePerk(1, 2);
 
       expect(result).toBe(false);
     });
-
-    it('should deactivate other perks of same type', async () => {
-      mockDb.query
-        .mockResolvedValueOnce({ rows: [{ id: 1 }] } as any) // Unlocked check
-        .mockResolvedValueOnce({ rows: [{ type: 'avatar' }] } as any) // Perk type
-        .mockResolvedValueOnce({ rows: [] } as any) // Deactivate others
-        .mockResolvedValueOnce({ rows: [{ id: 1 }] } as any) // Activate perk
-        .mockResolvedValueOnce({ rows: [] } as any); // Update user settings
-
-      jest.spyOn(perksManager as any, 'updateUserActiveSettings').mockResolvedValue(undefined);
-
-      await perksManager.activatePerk(1, 2);
-
-      expect(mockDb.query).toHaveBeenCalledWith(
-        expect.stringContaining('UPDATE user_perks SET is_active = false'),
-        [1, 'avatar']
-      );
-    });
   });
 
   describe('deactivatePerk', () => {
-    it('should deactivate perk', async () => {
-      mockDb.query.mockResolvedValue({ rows: [{ id: 1 }] } as any);
+    it('should deactivate perk chosen in draft system', async () => {
+      mockDb.query
+        .mockResolvedValueOnce({ rows: [{ id: 1 }] } as any) // Draft check (user_perk_drafts)
+        .mockResolvedValueOnce({ rows: [{ type: 'avatar' }] } as any) // Perk type query
+        .mockResolvedValueOnce({ rows: [] } as any); // updateUserActiveSettings query
+
+      jest.spyOn(perksManager as any, 'updateUserActiveSettings').mockResolvedValue(undefined);
 
       const result = await perksManager.deactivatePerk(1, 2);
 
       expect(result).toBe(true);
+      // First query should check user_perk_drafts
       expect(mockDb.query).toHaveBeenCalledWith(
-        expect.stringContaining('SET is_active = false'),
+        expect.stringContaining('user_perk_drafts'),
         [1, 2]
       );
     });
 
-    it('should return false when perk not found', async () => {
+    it('should return false when perk not found in drafts', async () => {
       mockDb.query.mockResolvedValue({ rows: [] } as any);
 
       const result = await perksManager.deactivatePerk(1, 2);
@@ -274,41 +200,14 @@ describe('PerksManager', () => {
   });
 
   describe('checkAndUnlockPerksForLevel', () => {
-    it('should unlock perks available for new level with batch insert', async () => {
-      const mockAvailablePerks = [
-        { id: 1, type: 'badge', name: 'starter_badge', title: 'Starter Badge', description: 'First badge', category: 'cosmetic', level_required: 3, asset_data: {} },
-        { id: 2, type: 'avatar', name: 'custom_avatars', title: 'Custom Avatars', description: 'Avatar perks', category: 'cosmetic', level_required: 5, asset_data: {} }
-      ];
-
-      const mockInsertResult = [
-        { id: 101, user_id: 1, perk_id: 1, is_unlocked: true, is_active: false, configuration: {}, unlocked_at: new Date(), updated_at: new Date() },
-        { id: 102, user_id: 1, perk_id: 2, is_unlocked: true, is_active: false, configuration: {}, unlocked_at: new Date(), updated_at: new Date() }
-      ];
-
-      // First call returns available perks, second call returns inserted user_perks
-      mockDb.query
-        .mockResolvedValueOnce({ rows: [{ legacy_user_id: 1 }] } as any)
-        .mockResolvedValueOnce({ rows: mockAvailablePerks } as any)
-        .mockResolvedValueOnce({ rows: mockInsertResult } as any);
-
-      jest.spyOn(perksManager, 'activatePerk').mockResolvedValue(true);
-
+    it('should return empty array (perks are now draft-based)', async () => {
+      // In the draft system, perks are acquired through PerkDraftService, not level-based unlocking
       const result = await perksManager.checkAndUnlockPerksForLevel(1, 5);
-
-      expect(result).toHaveLength(2);
-      expect(result[0].perk_id).toBe(1);
-      expect(result[1].perk_id).toBe(2);
-      // Should auto-activate non-badge perks (avatar but not badge)
-      expect(perksManager.activatePerk).toHaveBeenCalledTimes(1);
+      expect(result).toEqual([]);
     });
 
-    it('should return empty array when no perks to unlock', async () => {
-      mockDb.query
-        .mockResolvedValueOnce({ rows: [{ legacy_user_id: 1 }] } as any)
-        .mockResolvedValueOnce({ rows: [] } as any);
-
+    it('should return empty array regardless of level', async () => {
       const result = await perksManager.checkAndUnlockPerksForLevel(1, 1);
-
       expect(result).toEqual([]);
     });
   });
@@ -380,10 +279,10 @@ describe('PerksManager', () => {
   });
 
   describe('getPerksByCategory', () => {
-    it('should return perks filtered by category', async () => {
+    it('should return perks filtered by category ordered by tier', async () => {
       const mockPerks = [
-        { id: 1, category: 'cosmetic', name: 'badge' },
-        { id: 2, category: 'cosmetic', name: 'avatar' }
+        { id: 1, category: 'cosmetic', name: 'badge', level_required: 0 },
+        { id: 2, category: 'cosmetic', name: 'avatar', level_required: 0 }
       ];
 
       mockDb.query.mockResolvedValue({ rows: mockPerks } as any);
@@ -399,9 +298,9 @@ describe('PerksManager', () => {
   });
 
   describe('getUnlockedPerks', () => {
-    it('should return only unlocked perks for user', async () => {
+    it('should return chosen perks from user_perk_drafts', async () => {
       const mockPerks = [
-        { id: 1, user_id: 1, perk_id: 2, is_unlocked: true, name: 'custom_avatars' }
+        { id: 1, name: 'custom_avatars', category: 'cosmetic', type: 'avatar', draft_level: 3, effect_config: {} }
       ];
 
       mockDb.query.mockResolvedValue({ rows: mockPerks } as any);
@@ -409,17 +308,17 @@ describe('PerksManager', () => {
       const result = await perksManager.getUnlockedPerks(1);
 
       expect(mockDb.query).toHaveBeenCalledWith(
-        expect.stringContaining('AND up.is_unlocked = true'),
+        expect.stringContaining('user_perk_drafts'),
         [1]
       );
-      expect(result).toEqual(mockPerks);
+      expect(result).toHaveLength(1);
     });
   });
 
   describe('getActivePerks', () => {
-    it('should return only active perks for user', async () => {
+    it('should return chosen perks from user_perk_drafts', async () => {
       const mockPerks = [
-        { id: 1, user_id: 1, perk_id: 2, is_unlocked: true, is_active: true, name: 'custom_avatars' }
+        { id: 1, name: 'custom_avatars', category: 'cosmetic', type: 'avatar', draft_level: 3, effect_config: {} }
       ];
 
       mockDb.query.mockResolvedValue({ rows: mockPerks } as any);
@@ -427,10 +326,10 @@ describe('PerksManager', () => {
       const result = await perksManager.getActivePerks(1);
 
       expect(mockDb.query).toHaveBeenCalledWith(
-        expect.stringContaining('AND up.is_active = true'),
+        expect.stringContaining('user_perk_drafts'),
         [1]
       );
-      expect(result).toEqual(mockPerks);
+      expect(result).toHaveLength(1);
     });
   });
 });

@@ -1,8 +1,8 @@
 import express, { Request, Response } from 'express';
-import { Pool } from 'pg';
 import { AuthMiddleware } from '../middleware/auth.js';
 import { GeminiService, QuestionGenerationRequest } from '../services/GeminiService.js';
 import { QuestionService } from '../services/QuestionService.js';
+import { DatabaseService } from '../services/DatabaseService.js';
 
 const router = express.Router();
 const authMiddleware = new AuthMiddleware();
@@ -11,10 +11,10 @@ const authMiddleware = new AuthMiddleware();
 const geminiService = new GeminiService();
 const questionService = new QuestionService();
 
-// Database connection
-const pool = new Pool({
-  connectionString: process.env['DATABASE_URL'],
-});
+// Use DatabaseService for consistent connection handling (including test environment)
+const pool = {
+  query: (...args: Parameters<DatabaseService['query']>) => DatabaseService.getInstance().query(...args),
+};
 
 // Get all question sets
 router.get('/question-sets', async (req: Request, res: Response) => {
@@ -52,7 +52,7 @@ router.get('/question-sets/:id', async (req: Request, res: Response) => {
     // Get questions
     const questionsResult = await pool.query('SELECT * FROM questions WHERE question_set_id = $1 ORDER BY id', [id]);
 
-    const questionSet = setResult.rows[0];
+    const questionSet = setResult.rows[0]!;
     questionSet.questions = questionsResult.rows.map(q => ({
       ...q,
       answers: typeof q.answers === 'string' ? JSON.parse(q.answers) : q.answers
@@ -93,13 +93,14 @@ router.get('/question-sets/:id/stats', async (req: Request, res: Response) => {
       });
     }
 
+    const stats = statsResult.rows[0]!;
     return res.json({
       success: true,
       data: {
-        total_questions: parseInt(statsResult.rows[0].total_questions) || 0,
-        avg_difficulty: parseFloat(statsResult.rows[0].avg_difficulty) || 0,
-        min_difficulty: parseInt(statsResult.rows[0].min_difficulty) || 0,
-        max_difficulty: parseInt(statsResult.rows[0].max_difficulty) || 0
+        total_questions: parseInt(stats.total_questions) || 0,
+        avg_difficulty: parseFloat(stats.avg_difficulty) || 0,
+        min_difficulty: parseInt(stats.min_difficulty) || 0,
+        max_difficulty: parseInt(stats.max_difficulty) || 0
       }
     });
   } catch (error) {
@@ -311,7 +312,7 @@ router.post('/question-sets/import', authMiddleware.authenticate, async (req: Re
       [name, description, category, difficulty, is_active]
     );
 
-    const setId = setResult.rows[0].id;
+    const setId = setResult.rows[0]!.id;
 
     // Import questions with robust handling
     let importedCount = 0;

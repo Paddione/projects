@@ -1,12 +1,90 @@
 {
-  "timestamp": "2026-01-02T18:55:02.289Z",
-  "duration": 20630.808,
+  "timestamp": "2026-02-07T16:13:32.465Z",
+  "duration": 454.99800000000005,
   "total": 0,
   "passed": 0,
   "failed": 0,
-  "skipped": 8,
+  "skipped": 176,
   "flaky": 0,
   "projects": [
+    {
+      "name": "accessibility/a11y-tests.spec.ts",
+      "tests": 0,
+      "passed": 0,
+      "failed": 0
+    },
+    {
+      "name": "accessibility/comprehensive-a11y.spec.ts",
+      "tests": 0,
+      "passed": 0,
+      "failed": 0
+    },
+    {
+      "name": "accessibility/keyboard-navigation.spec.ts",
+      "tests": 0,
+      "passed": 0,
+      "failed": 0
+    },
+    {
+      "name": "auth-flow.spec.ts",
+      "tests": 0,
+      "passed": 0,
+      "failed": 0
+    },
+    {
+      "name": "debug-auth.spec.ts",
+      "tests": 0,
+      "passed": 0,
+      "failed": 0
+    },
+    {
+      "name": "error-handling/authentication-errors.spec.ts",
+      "tests": 0,
+      "passed": 0,
+      "failed": 0
+    },
+    {
+      "name": "error-handling/database-errors.spec.ts",
+      "tests": 0,
+      "passed": 0,
+      "failed": 0
+    },
+    {
+      "name": "error-handling/file-upload-errors.spec.ts",
+      "tests": 0,
+      "passed": 0,
+      "failed": 0
+    },
+    {
+      "name": "error-handling/network-errors.spec.ts",
+      "tests": 0,
+      "passed": 0,
+      "failed": 0
+    },
+    {
+      "name": "error-handling/validation-errors.spec.ts",
+      "tests": 0,
+      "passed": 0,
+      "failed": 0
+    },
+    {
+      "name": "examples/enhanced-auth-flow.spec.ts",
+      "tests": 0,
+      "passed": 0,
+      "failed": 0
+    },
+    {
+      "name": "help-screen.spec.ts",
+      "tests": 0,
+      "passed": 0,
+      "failed": 0
+    },
+    {
+      "name": "performance/load-testing.spec.ts",
+      "tests": 0,
+      "passed": 0,
+      "failed": 0
+    },
     {
       "name": "perks-management.spec.ts",
       "tests": 0,
@@ -14,7 +92,25 @@
       "failed": 0
     },
     {
+      "name": "question-set-management.spec.ts",
+      "tests": 0,
+      "passed": 0,
+      "failed": 0
+    },
+    {
       "name": "smoke/basic-functionality-mock.spec.ts",
+      "tests": 0,
+      "passed": 0,
+      "failed": 0
+    },
+    {
+      "name": "smoke/basic-functionality.spec.ts",
+      "tests": 0,
+      "passed": 0,
+      "failed": 0
+    },
+    {
+      "name": "integration/game-flow.spec.ts",
       "tests": 0,
       "passed": 0,
       "failed": 0

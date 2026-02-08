@@ -3,11 +3,13 @@ import { LobbyService, CreateLobbyRequest, JoinLobbyRequest, Player, LobbyWithPl
 import { LobbyRepository, Lobby } from '../../repositories/LobbyRepository';
 import { UserRepository, User } from '../../repositories/UserRepository';
 import { QuestionService } from '../QuestionService';
+import { GameProfileService } from '../GameProfileService';
 
 // Mock the dependencies
 jest.mock('../../repositories/LobbyRepository');
 jest.mock('../../repositories/UserRepository');
 jest.mock('../QuestionService');
+jest.mock('../GameProfileService');
 
 // Provide explicit mock implementations so methods are jest.fn()
 const createLobbyRepoMock = () => ({
@@ -39,6 +41,10 @@ const createQuestionServiceMock = () => ({
   getAllQuestionSetsWithStats: jest.fn(),
 });
 
+const createGameProfileServiceMock = () => ({
+  getOrCreateProfile: jest.fn(),
+});
+
 // Note: Rather than mocking constructors (which may not be jest.Mock in ESM),
 // we build plain mocked objects and inject them into the service under test.
 
@@ -47,6 +53,7 @@ describe('LobbyService', () => {
   let mockLobbyRepository: jest.Mocked<LobbyRepository>;
   let mockUserRepository: jest.Mocked<UserRepository>;
   let mockQuestionService: jest.Mocked<QuestionService>;
+  let mockGameProfileService: jest.Mocked<GameProfileService>;
 
   // Test data
   const mockUser: User = {
@@ -121,6 +128,7 @@ describe('LobbyService', () => {
     mockLobbyRepository = createLobbyRepoMock() as unknown as jest.Mocked<LobbyRepository>;
     mockUserRepository = createUserRepoMock() as unknown as jest.Mocked<UserRepository>;
     mockQuestionService = createQuestionServiceMock() as unknown as jest.Mocked<QuestionService>;
+    mockGameProfileService = createGameProfileServiceMock() as unknown as jest.Mocked<GameProfileService>;
 
     // Create LobbyService instance
     lobbyService = new LobbyService();
@@ -129,6 +137,7 @@ describe('LobbyService', () => {
     (lobbyService as any).lobbyRepository = mockLobbyRepository;
     (lobbyService as any).userRepository = mockUserRepository;
     (lobbyService as any).questionService = mockQuestionService;
+    (lobbyService as any).gameProfileService = mockGameProfileService;
 
     // Provide safe default implementations for update methods to avoid throwy branches
     mockLobbyRepository.updateLobby.mockImplementation(async (_id: number, data: Record<string, unknown>) => ({
@@ -156,6 +165,8 @@ describe('LobbyService', () => {
 
       it('should create a lobby successfully with valid data', async () => {
         // Arrange
+        // GameProfileService throws so createLobby falls back to legacy UserRepository path
+        mockGameProfileService.getOrCreateProfile.mockRejectedValue(new Error('No profile'));
         mockUserRepository.findUserById.mockResolvedValue(mockUser);
         mockLobbyRepository.codeExists.mockResolvedValue(false);
         mockLobbyRepository.createLobby.mockResolvedValue(mockLobby);
@@ -199,6 +210,8 @@ describe('LobbyService', () => {
 
       it('should throw error when host user not found', async () => {
         // Arrange
+        // GameProfileService throws so createLobby falls back to legacy UserRepository path
+        mockGameProfileService.getOrCreateProfile.mockRejectedValue(new Error('No profile'));
         mockUserRepository.findUserById.mockResolvedValue(null);
 
         // Act & Assert
@@ -212,6 +225,7 @@ describe('LobbyService', () => {
       it('should use default values when optional parameters not provided', async () => {
         // Arrange
         const minimalRequest: CreateLobbyRequest = { hostId: 1 };
+        mockGameProfileService.getOrCreateProfile.mockRejectedValue(new Error('No profile'));
         mockUserRepository.findUserById.mockResolvedValue(mockUser);
         mockLobbyRepository.codeExists.mockResolvedValue(false);
         mockLobbyRepository.createLobby.mockResolvedValue(mockLobby);
@@ -234,6 +248,7 @@ describe('LobbyService', () => {
 
       it('should retry code generation when duplicate code exists', async () => {
         // Arrange
+        mockGameProfileService.getOrCreateProfile.mockRejectedValue(new Error('No profile'));
         mockUserRepository.findUserById.mockResolvedValue(mockUser);
         mockLobbyRepository.codeExists
           .mockResolvedValueOnce(true)  // First attempt fails
@@ -250,6 +265,7 @@ describe('LobbyService', () => {
 
       it('should throw error after maximum code generation attempts', async () => {
         // Arrange
+        mockGameProfileService.getOrCreateProfile.mockRejectedValue(new Error('No profile'));
         mockUserRepository.findUserById.mockResolvedValue(mockUser);
         mockLobbyRepository.codeExists.mockResolvedValue(true); // Always return true
 
@@ -1180,6 +1196,8 @@ describe('LobbyService', () => {
 
     it('should handle user repository errors gracefully', async () => {
       // Arrange
+      // GameProfileService throws so createLobby falls back to legacy UserRepository path
+      mockGameProfileService.getOrCreateProfile.mockRejectedValue(new Error('No profile'));
       mockUserRepository.findUserById.mockRejectedValue(new Error('User service unavailable'));
 
       // Act & Assert

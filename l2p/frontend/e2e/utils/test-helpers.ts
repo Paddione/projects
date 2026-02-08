@@ -23,6 +23,8 @@ export class TestHelpers {
         sessionStorage.setItem('test_mode', 'true');
       } else {
         sessionStorage.removeItem('test_mode');
+        // Signal apiService to bypass mocks even when VITE_TEST_MODE=true (Docker env)
+        sessionStorage.setItem('disable_mocks', 'true');
       }
     }, useMocks);
 
@@ -162,7 +164,7 @@ export class TestHelpers {
 
       // Verify logout
       await expect(page.locator('[data-testid="user-menu"]')).not.toBeVisible();
-      await expect(page.locator('text=Login')).toBeVisible();
+      await expect(page.locator('[data-testid="login-tab"]')).toBeVisible();
 
     } catch (error) {
       console.error('Logout failed:', error);
@@ -684,6 +686,18 @@ export class TestHelpers {
    */
   static async createLobbySimple(page: Page): Promise<string> {
     await page.click('[data-testid="create-lobby-button"]');
+
+    // In test mode, clicking opens a config panel instead of creating immediately.
+    // We need to fill the required fields and click confirm.
+    const confirmButton = page.locator('[data-testid="confirm-create-lobby"]');
+    if (await confirmButton.isVisible({ timeout: 1000 }).catch(() => false)) {
+      // Select a question set (required — default is empty "Select a set")
+      await page.selectOption('[data-testid="question-set-select"]', 'general');
+      await confirmButton.click();
+    }
+
+    // Wait for lobby page navigation
+    await page.waitForURL(/.*lobby\/[A-Z0-9]{4,8}/, { timeout: 15000 });
     await expect(page.locator('[data-testid="lobby-code"]')).toBeVisible({ timeout: 15000 });
     const code = await page.locator('[data-testid="lobby-code"]').textContent();
     if (!code) throw new Error('Failed to get lobby code');

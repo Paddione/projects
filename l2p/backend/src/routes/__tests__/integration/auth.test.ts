@@ -171,7 +171,8 @@ describe('Authentication API', () => {
         .expect(200)
 
       expect(response.body).toHaveProperty('user')
-      expect(response.body.user).toHaveProperty('id', userId)
+      // /me returns JWT payload which uses userId (not id)
+      expect(response.body.user).toHaveProperty('userId')
       expect(response.body.user).toHaveProperty('username', 'testuser')
     })
 

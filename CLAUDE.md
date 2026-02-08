@@ -32,22 +32,20 @@ npm run test:all             # Run all test suites
 npm run typecheck:all        # Type check all projects
 npm run validate:env         # Validate environment files
 
-# Deployment (k8s) - full stack
+# Deployment (k8s) - Skaffold (build + deploy, use for code changes)
+cd k8s && skaffold run                        # Full stack build + deploy
+cd k8s && skaffold run -p l2p                 # L2P only (backend + frontend)
+cd k8s && skaffold run -p auth                # Auth service only
+cd k8s && skaffold run -p payment             # Payment service only
+cd k8s && skaffold run -p videovault          # VideoVault only
+cd k8s && skaffold run -p infra               # Infrastructure only (no builds)
+
+# Deployment (k8s) - shell scripts (manifest-only, NO image rebuild)
 ./k8s/scripts/cluster/k3d-create.sh          # Create local k3d cluster
 ./k8s/scripts/utils/generate-secrets.sh      # Generate secrets from root .env
-./k8s/scripts/deploy/deploy-all.sh           # Deploy all (namespaces → secrets → infra → services)
+./k8s/scripts/deploy/deploy-all.sh           # Deploy all manifests
 ./k8s/scripts/utils/validate-cluster.sh      # Validate cluster health
-
-# Deployment (k8s) - individual services
-./k8s/scripts/deploy/deploy-postgres.sh      # PostgreSQL
-./k8s/scripts/deploy/deploy-traefik.sh       # Traefik ingress
-./k8s/scripts/deploy/deploy-auth.sh          # Auth service
-./k8s/scripts/deploy/deploy-l2p.sh           # L2P backend + frontend
-./k8s/scripts/deploy/deploy-payment.sh       # Payment service
-./k8s/scripts/deploy/deploy-videovault.sh    # VideoVault
-
-# Deployment (k8s) - smart redeploy
-./k8s/scripts/deploy/deploy-changed.sh       # Auto-detect and redeploy changed services
+./k8s/scripts/deploy/deploy-changed.sh       # Auto-detect and redeploy changed manifests
 ```
 
 ### Project-Specific Commands
@@ -117,7 +115,20 @@ Start shared infrastructure via Kubernetes manifests in `k8s/infrastructure/`.
 L2P uses Socket.io for multiplayer functionality:
 - Backend: `SocketService.ts` manages WebSocket connections
 - Frontend: `socket.io-client` in service layer
-- Events: `lobby:*`, `game:*`, `player:*`
+- Client events: `join-lobby`, `leave-lobby`, `player-ready`, `start-game`, `submit-answer`, `perk:pick`, `perk:dump`
+- Server events: `lobby-updated`, `game-started`, `question-started`, `join-success`, `join-error`, `*-error`
+
+### Authentication (Dual-Auth Pattern)
+
+L2P has two auth layers that must stay in sync:
+- **apiService** (localStorage): `auth_token`, `user_data` — used for HTTP requests
+- **Zustand authStore**: `user`, `token` — used for React component rendering
+- **AuthGuard** bridges the two — must call BOTH `setUser()` AND `setToken()` for all auth paths
+- Session-cookie auth (unified auth mode) uses `setToken('session')` as a sentinel value
+
+### API Response Convention
+
+Backend returns raw PostgreSQL column names (**snake_case**: `host_id`, `selected_character`). Frontend TypeScript types use **camelCase**. Always check the actual API response shape when accessing fields.
 
 ### Client-First Architecture (VideoVault)
 
@@ -217,14 +228,12 @@ Read the relevant project CLAUDE.md before making changes. Consult the Obsidian 
 
 When multiple agents work simultaneously:
 
-1. **Check `.agent-tasks.md`** at repo root
-2. **Add task entries**: `[YYYY-MM-DD HH:MM] [project] [STATUS] Description`
-3. **Work in different projects** or different subsystems
-4. **Avoid simultaneous edits** to the same file
+1. **Work in different projects** or different subsystems
+2. **Avoid simultaneous edits** to the same file
 
 **Critical sections** requiring exclusive access:
 - Git operations (commit/merge/branch)
-- Docker operations (rebuild/restart)
+- Skaffold / Docker operations (rebuild/restart)
 - Database migrations
 - Dependency updates
 
@@ -245,3 +254,4 @@ When multiple agents work simultaneously:
 - Run the smallest relevant test suite for your change
 - Update existing docs rather than creating new ones
 - Always deploy changes to k3s after committing (don't leave changes undeployed)
+- **Deploy with Skaffold** (`skaffold run -p <profile>`) for code changes — shell scripts only apply manifests without rebuilding images

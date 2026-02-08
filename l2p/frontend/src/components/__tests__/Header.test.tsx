@@ -2,6 +2,7 @@ import React from 'react'
 import { describe, it, expect, beforeEach, jest } from '@jest/globals'
 import { render, screen, fireEvent } from '@testing-library/react'
 import '@testing-library/jest-dom/jest-globals'
+import { MemoryRouter } from 'react-router-dom'
 import { Header } from '../Header'
 import { apiService } from '../../services/apiService'
 
@@ -46,7 +47,7 @@ describe('Header', () => {
       email: 'test@example.com',
     })
 
-    render(<Header />)
+    render(<MemoryRouter><Header /></MemoryRouter>)
 
     expect(screen.getByText('Learn2Play Quiz')).toBeInTheDocument()
     expect(screen.getByTestId('home-page')).toBeInTheDocument()
@@ -62,7 +63,7 @@ describe('Header', () => {
       isAdmin: true,
     })
 
-    render(<Header />)
+    render(<MemoryRouter><Header /></MemoryRouter>)
 
     expect(screen.getByTestId('admin-dashboard-link')).toBeInTheDocument()
   })
@@ -75,7 +76,7 @@ describe('Header', () => {
       isAdmin: false,
     })
 
-    render(<Header />)
+    render(<MemoryRouter><Header /></MemoryRouter>)
 
     expect(screen.queryByTestId('admin-dashboard-link')).not.toBeInTheDocument()
   })
@@ -87,21 +88,21 @@ describe('Header', () => {
       email: 'test@example.com',
     })
 
-    render(<Header />)
+    render(<MemoryRouter><Header /></MemoryRouter>)
 
     expect(screen.getByTestId('mute-toggle')).toBeInTheDocument()
   })
 
-  it('should render theme toggle button', () => {
+  it('should render volume slider', () => {
     jest.mocked(apiService.getCurrentUser).mockReturnValue({
       id: '1',
       username: 'testuser',
       email: 'test@example.com',
     })
 
-    render(<Header />)
+    render(<MemoryRouter><Header /></MemoryRouter>)
 
-    expect(screen.getByTestId('theme-toggle')).toBeInTheDocument()
+    expect(screen.getByLabelText('Master volume')).toBeInTheDocument()
   })
 
   it('should render logout button', () => {
@@ -111,7 +112,7 @@ describe('Header', () => {
       email: 'test@example.com',
     })
 
-    render(<Header />)
+    render(<MemoryRouter><Header /></MemoryRouter>)
 
     expect(screen.getByTestId('logout-button')).toBeInTheDocument()
   })
@@ -124,7 +125,7 @@ describe('Header', () => {
     })
     jest.mocked(apiService.logout).mockResolvedValue({ success: true })
 
-    render(<Header />)
+    render(<MemoryRouter><Header /></MemoryRouter>)
 
     fireEvent.click(screen.getByTestId('logout-button'))
 
@@ -141,7 +142,7 @@ describe('Header', () => {
     })
     jest.mocked(apiService.logout).mockRejectedValue(new Error('Logout failed'))
 
-    render(<Header />)
+    render(<MemoryRouter><Header /></MemoryRouter>)
 
     fireEvent.click(screen.getByTestId('logout-button'))
 

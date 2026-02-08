@@ -90,7 +90,7 @@ describe('QuestionService', () => {
     jest.clearAllMocks();
 
     // Create a complete mock of QuestionRepository
-    const repoMock: Partial<QuestionRepository> = {
+    const repoMock: Record<string, jest.Mock> = {
       // Question Set methods
       findQuestionSetById: jest.fn(),
       findAllQuestionSets: jest.fn(),
@@ -217,9 +217,7 @@ describe('QuestionService', () => {
           description: 'A new question set',
           category: 'History',
           difficulty: 'easy',
-          is_active: true,
-          is_public: true,
-          tags: ['history', 'easy']
+          is_active: true
         };
 
         const createdQuestionSet = { ...mockQuestionSet, ...createData, id: 3 };
@@ -328,17 +326,14 @@ describe('QuestionService', () => {
       it('should create a new question', async () => {
         const createData: CreateQuestionData = {
           question_set_id: 1,
-          question_text: {
-            en: 'What is the largest planet?',
-            de: 'Was ist der größte Planet?'
-          },
+          question_text: 'What is the largest planet?',
           answers: [
             {
-              text: { en: 'Jupiter', de: 'Jupiter' },
+              text: 'Jupiter',
               correct: true
             },
             {
-              text: { en: 'Saturn', de: 'Saturn' },
+              text: 'Saturn',
               correct: false
             }
           ],
@@ -705,7 +700,8 @@ describe('QuestionService', () => {
       it('should reject question set data without name', () => {
         const invalidData: CreateQuestionSetData = {
           name: '',
-          description: 'A test set'
+          description: 'A test set',
+          difficulty: 'easy'
         };
 
         const result = questionService.validateQuestionSetData(invalidData);
@@ -717,7 +713,8 @@ describe('QuestionService', () => {
       it('should reject question set data with name too long', () => {
         const invalidData: CreateQuestionSetData = {
           name: 'A'.repeat(101),
-          description: 'A test set'
+          description: 'A test set',
+          difficulty: 'easy'
         };
 
         const result = questionService.validateQuestionSetData(invalidData);

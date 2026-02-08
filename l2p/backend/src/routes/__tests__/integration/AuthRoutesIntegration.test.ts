@@ -57,8 +57,8 @@ describe('Auth Routes Integration Tests', () => {
     it('should register a new user successfully', async () => {
       const uniq = Math.floor(Math.random() * 1e9);
       const userData = {
-        username: `testuser_${uniq}`,
-        email: `test_${uniq}@example.com`,
+        username: `testuser${uniq}`,
+        email: `test${uniq}@example.com`,
         password: 'TestPass123!',
         selectedCharacter: 'student',
         preferences: {
@@ -107,8 +107,8 @@ describe('Auth Routes Integration Tests', () => {
     it('should return 409 for duplicate username', async () => {
       const uniq = Math.floor(Math.random() * 1e9);
       const userData = {
-        username: `testuser_${uniq}`,
-        email: `test_${uniq}@example.com`,
+        username: `testuser${uniq}`,
+        email: `test${uniq}@example.com`,
         password: 'TestPass123!'
       };
 
@@ -183,8 +183,8 @@ describe('Auth Routes Integration Tests', () => {
       // Create a test user
       const uniq = Math.floor(Math.random() * 1e9);
       const userData = {
-        username: `testuser_${uniq}`,
-        email: `test_${uniq}@example.com`,
+        username: `testuser${uniq}`,
+        email: `test${uniq}@example.com`,
         password: 'TestPass123!'
       };
 
@@ -550,7 +550,8 @@ describe('Auth Routes Integration Tests', () => {
         .expect(200);
 
       expect(response.body).toHaveProperty('user');
-      expect(response.body.user).toHaveProperty('id');
+      // /me returns JWT payload which uses userId (not id)
+      expect(response.body.user).toHaveProperty('userId');
       expect(response.body.user).toHaveProperty('username', 'testuser');
       expect(response.body.user).toHaveProperty('email', 'test@example.com');
       expect(response.body.user).not.toHaveProperty('password');

@@ -44,11 +44,12 @@ describe('ApiService Perks Methods', () => {
 
       const result = await apiService.getAllPerks();
 
-      expect(mockFetch).toHaveBeenCalledWith('/api/perks/all', {
+      expect(mockFetch).toHaveBeenCalledWith('http://localhost:3001/api/perks/all', {
         credentials: 'include',
         headers: {
+          'X-Requested-With': 'XMLHttpRequest',
+          'Content-Type': 'application/json',
           'Authorization': `Bearer ${mockToken}`,
-          'Content-Type': 'application/json'
         }
       });
 
@@ -110,11 +111,12 @@ describe('ApiService Perks Methods', () => {
 
       const result = await apiService.getUserPerks();
 
-      expect(mockFetch).toHaveBeenCalledWith('/api/perks/user', {
+      expect(mockFetch).toHaveBeenCalledWith('http://localhost:3001/api/perks/user', {
         credentials: 'include',
         headers: {
+          'X-Requested-With': 'XMLHttpRequest',
+          'Content-Type': 'application/json',
           'Authorization': `Bearer ${mockToken}`,
-          'Content-Type': 'application/json'
         }
       });
 
@@ -137,12 +139,13 @@ describe('ApiService Perks Methods', () => {
 
       const result = await apiService.unlockPerk(perkId);
 
-      expect(mockFetch).toHaveBeenCalledWith(`/api/perks/unlock/${perkId}`, {
+      expect(mockFetch).toHaveBeenCalledWith(`http://localhost:3001/api/perks/unlock/${perkId}`, {
         credentials: 'include',
         method: 'POST',
         headers: {
+          'X-Requested-With': 'XMLHttpRequest',
+          'Content-Type': 'application/json',
           'Authorization': `Bearer ${mockToken}`,
-          'Content-Type': 'application/json'
         }
       });
 
@@ -184,12 +187,13 @@ describe('ApiService Perks Methods', () => {
 
       const result = await apiService.activatePerk(perkId, configuration);
 
-      expect(mockFetch).toHaveBeenCalledWith(`/api/perks/activate/${perkId}`, {
+      expect(mockFetch).toHaveBeenCalledWith(`http://localhost:3001/api/perks/activate/${perkId}`, {
         credentials: 'include',
         method: 'POST',
         headers: {
+          'X-Requested-With': 'XMLHttpRequest',
+          'Content-Type': 'application/json',
           'Authorization': `Bearer ${mockToken}`,
-          'Content-Type': 'application/json'
         },
         body: JSON.stringify({ configuration })
       });
@@ -212,12 +216,13 @@ describe('ApiService Perks Methods', () => {
 
       const result = await apiService.activatePerk(perkId);
 
-      expect(mockFetch).toHaveBeenCalledWith(`/api/perks/activate/${perkId}`, {
+      expect(mockFetch).toHaveBeenCalledWith(`http://localhost:3001/api/perks/activate/${perkId}`, {
         credentials: 'include',
         method: 'POST',
         headers: {
+          'X-Requested-With': 'XMLHttpRequest',
+          'Content-Type': 'application/json',
           'Authorization': `Bearer ${mockToken}`,
-          'Content-Type': 'application/json'
         },
         body: JSON.stringify({ configuration: {} })
       });
@@ -258,12 +263,13 @@ describe('ApiService Perks Methods', () => {
 
       const result = await apiService.deactivatePerk(perkId);
 
-      expect(mockFetch).toHaveBeenCalledWith(`/api/perks/deactivate/${perkId}`, {
+      expect(mockFetch).toHaveBeenCalledWith(`http://localhost:3001/api/perks/deactivate/${perkId}`, {
         credentials: 'include',
         method: 'POST',
         headers: {
+          'X-Requested-With': 'XMLHttpRequest',
+          'Content-Type': 'application/json',
           'Authorization': `Bearer ${mockToken}`,
-          'Content-Type': 'application/json'
         }
       });
 
@@ -310,11 +316,12 @@ describe('ApiService Perks Methods', () => {
 
       const result = await apiService.getUserLoadout();
 
-      expect(mockFetch).toHaveBeenCalledWith('/api/perks/loadout', {
+      expect(mockFetch).toHaveBeenCalledWith('http://localhost:3001/api/perks/loadout', {
         credentials: 'include',
         headers: {
+          'X-Requested-With': 'XMLHttpRequest',
+          'Content-Type': 'application/json',
           'Authorization': `Bearer ${mockToken}`,
-          'Content-Type': 'application/json'
         }
       });
 
@@ -368,11 +375,12 @@ describe('ApiService Perks Methods', () => {
 
       const result = await apiService.getPerksByCategory(category);
 
-      expect(mockFetch).toHaveBeenCalledWith(`/api/perks/category/${category}`, {
+      expect(mockFetch).toHaveBeenCalledWith(`http://localhost:3001/api/perks/category/${category}`, {
         credentials: 'include',
         headers: {
+          'X-Requested-With': 'XMLHttpRequest',
+          'Content-Type': 'application/json',
           'Authorization': `Bearer ${mockToken}`,
-          'Content-Type': 'application/json'
         }
       });
 
@@ -411,12 +419,13 @@ describe('ApiService Perks Methods', () => {
 
       const result = await apiService.checkPerkUnlocks();
 
-      expect(mockFetch).toHaveBeenCalledWith('/api/perks/check-unlocks', {
+      expect(mockFetch).toHaveBeenCalledWith('http://localhost:3001/api/perks/check-unlocks', {
         credentials: 'include',
         method: 'POST',
         headers: {
+          'X-Requested-With': 'XMLHttpRequest',
+          'Content-Type': 'application/json',
           'Authorization': `Bearer ${mockToken}`,
-          'Content-Type': 'application/json'
         }
       });
 

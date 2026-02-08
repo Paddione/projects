@@ -111,7 +111,8 @@ describe('ScoringService', () => {
         isCorrect: true,
         pointsEarned: 100, // (60 - 10) * 2
         newMultiplier: 3, // Math.min(5, Math.floor(4/2) + 1)
-        streakCount: 4
+        streakCount: 4,
+        bonusPoints: 0
       });
     });
 
@@ -124,7 +125,8 @@ describe('ScoringService', () => {
         isCorrect: true,
         pointsEarned: 5, // (60 - 55) * 1
         newMultiplier: 1, // Math.min(5, Math.floor(1/2) + 1)
-        streakCount: 1
+        streakCount: 1,
+        bonusPoints: 0
       });
     });
 
@@ -137,7 +139,8 @@ describe('ScoringService', () => {
         isCorrect: true,
         pointsEarned: 0, // Math.max(0, 60 - 65) * 3
         newMultiplier: 4, // Math.min(5, Math.floor(6/2) + 1)
-        streakCount: 6
+        streakCount: 6,
+        bonusPoints: 0
       });
     });
 
@@ -150,7 +153,8 @@ describe('ScoringService', () => {
         isCorrect: false,
         pointsEarned: 0,
         newMultiplier: 1,
-        streakCount: 0
+        streakCount: 0,
+        bonusPoints: 0
       });
     });
 
@@ -163,7 +167,8 @@ describe('ScoringService', () => {
         isCorrect: true,
         pointsEarned: 200, // (60 - 20) * 5
         newMultiplier: 5, // Capped at 5
-        streakCount: 11
+        streakCount: 11,
+        bonusPoints: 0
       });
     });
 
@@ -176,7 +181,8 @@ describe('ScoringService', () => {
         isCorrect: true,
         pointsEarned: 60, // (60 - 0) * 1
         newMultiplier: 1,
-        streakCount: 1
+        streakCount: 1,
+        bonusPoints: 0
       });
     });
 
@@ -189,7 +195,8 @@ describe('ScoringService', () => {
         isCorrect: true,
         pointsEarned: 130, // (60 - (-5)) * 2
         newMultiplier: 2, // Math.min(5, Math.floor(2/2) + 1)
-        streakCount: 2
+        streakCount: 2,
+        bonusPoints: 0
       });
     });
   });
@@ -240,7 +247,9 @@ describe('ScoringService', () => {
         levelUp: true,
         newLevel: 3,
         oldLevel: 2,
-        progress: { currentLevel: 3, progress: 0.5, expInLevel: 500, expForNextLevel: 1000 }
+        progress: { currentLevel: 3, progress: 0.5, expInLevel: 500, expForNextLevel: 1000 },
+        newlyUnlockedPerks: [],
+        pendingDrafts: []
       };
 
       mockGameSessionRepository.createPlayerResult.mockResolvedValue(mockPlayerResult);
@@ -650,7 +659,9 @@ describe('ScoringService', () => {
         levelUp: false,
         newLevel: 2,
         oldLevel: 2,
-        progress: { currentLevel: 2, progress: 0.7, expInLevel: 700, expForNextLevel: 1000 }
+        progress: { currentLevel: 2, progress: 0.7, expInLevel: 700, expForNextLevel: 1000 },
+        newlyUnlockedPerks: [],
+        pendingDrafts: []
       };
 
       mockGameSessionRepository.createPlayerResult.mockResolvedValue(mockPlayerResult);

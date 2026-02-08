@@ -1,19 +1,6 @@
 
 import { useGameStore, type GameState, type Question, type QuestionSetInfo, type GameResult, type LevelUpNotification } from '../gameStore'
-import { performanceOptimizer } from '../../services/performanceOptimizer'
 import { Player } from '../../types'
-
-// Mock performanceOptimizer
-jest.mock('../../services/performanceOptimizer', () => ({
-  performanceOptimizer: {
-    throttle: jest.fn((key, fn, _delay) => {
-      // Return a function that when called, executes the original function immediately
-      return () => {
-        fn();
-      };
-    })
-  }
-}))
 
 // Mock localStorage for persistence
 const localStorageMock = {
@@ -257,14 +244,9 @@ describe('GameStore', () => {
       expect(useGameStore.getState().totalQuestions).toBe(20)
     })
 
-    it('should set time remaining with throttling', () => {
+    it('should set time remaining', () => {
       store.setTimeRemaining(45)
-      
-      expect(performanceOptimizer.throttle).toHaveBeenCalledWith(
-        'time-remaining-update',
-        expect.any(Function),
-        100
-      )
+
       expect(useGameStore.getState().timeRemaining).toBe(45)
     })
 
@@ -536,31 +518,17 @@ describe('GameStore', () => {
     })
   })
 
-  describe('Performance Optimization', () => {
-    it('should use throttling for time remaining updates', () => {
+  describe('Time Remaining Updates', () => {
+    it('should set time remaining directly', () => {
       store.setTimeRemaining(45)
-      
-      expect(performanceOptimizer.throttle).toHaveBeenCalledWith(
-        'time-remaining-update',
-        expect.any(Function),
-        100
-      )
+
+      expect(useGameStore.getState().timeRemaining).toBe(45)
     })
 
-    it('should call throttled function immediately', () => {
-      const mockThrottledFn = jest.fn()
-      const spy = jest
-        .spyOn(performanceOptimizer, 'throttle')
-        .mockImplementation((key: string, fn: () => void) => {
-          mockThrottledFn()
-          return () => fn()
-        })
-      
+    it('should update time remaining to new value', () => {
       store.setTimeRemaining(30)
-      
-      expect(mockThrottledFn).toHaveBeenCalled()
+
       expect(useGameStore.getState().timeRemaining).toBe(30)
-      spy.mockRestore()
     })
   })
 

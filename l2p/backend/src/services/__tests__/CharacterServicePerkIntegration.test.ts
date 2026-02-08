@@ -1,11 +1,13 @@
 import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
 import { CharacterService } from '../CharacterService.js';
 import { PerksManager, Perk } from '../PerksManager.js';
+import { PerkDraftService, DraftOffer } from '../PerkDraftService.js';
 import { DatabaseService } from '../DatabaseService.js';
 
 // Mock dependencies
 jest.mock('../DatabaseService.js');
 jest.mock('../PerksManager.js');
+jest.mock('../PerkDraftService.js');
 
 const buildMockPerk = (overrides: Partial<Perk> & { id?: number } = {}): Perk => ({
   id: overrides.id ?? 1,
@@ -26,6 +28,7 @@ describe('CharacterService - Perk Integration', () => {
   let characterService: CharacterService;
   let mockDb: jest.Mocked<DatabaseService>;
   let mockPerksManager: jest.Mocked<PerksManager>;
+  let mockPerkDraftService: jest.Mocked<PerkDraftService>;
   const buildProfile = (userId: number, level: number, experiencePoints: number) => ({
     authUserId: userId,
     selectedCharacter: 'student',
@@ -57,6 +60,14 @@ describe('CharacterService - Perk Integration', () => {
 
     (PerksManager.getInstance as jest.Mock).mockReturnValue(mockPerksManager);
 
+    // Mock perk draft service
+    mockPerkDraftService = {
+      generateDraftOffer: jest.fn(),
+      getInstance: jest.fn()
+    } as any;
+
+    (PerkDraftService.getInstance as jest.Mock).mockReturnValue(mockPerkDraftService);
+
     characterService = new CharacterService();
   });
 
@@ -66,7 +77,7 @@ describe('CharacterService - Perk Integration', () => {
   });
 
   describe('awardExperience - Perk Integration', () => {
-    it('should check and unlock perks when user levels up', async () => {
+    it('should generate draft offers when user levels up', async () => {
       const userId = 1;
       const oldLevel = 4;
       const newLevel = oldLevel + 1;
@@ -80,23 +91,24 @@ describe('CharacterService - Perk Integration', () => {
       jest.spyOn((characterService as any).gameProfileService, 'getOrCreateProfile')
         .mockResolvedValue(buildProfile(userId, oldLevel, currentXp));
 
-      const newlyUnlockedPerks = [
-        {
-          id: 1,
-          user_id: userId,
-          perk_id: 1,
-          is_unlocked: true,
-          is_active: false,
-          configuration: {},
-          updated_at: new Date(),
-          perk: buildMockPerk({
+      const draftOffer: DraftOffer = {
+        level: newLevel,
+        perks: [
+          {
             id: 1,
-            name: 'starter_badge',
-            title: 'Starter Badge',
-            level_required: 5
-          })
-        }
-      ];
+            name: 'starter_perk',
+            category: 'scoring',
+            type: 'gameplay',
+            effect_type: 'score_bonus',
+            effect_config: {},
+            tier: 1,
+            title: 'Starter Perk',
+            description: 'A starter perk'
+          }
+        ],
+        drafted: false,
+        dumped: false
+      };
 
       // Mock database update for experience/level
       mockDb.query.mockResolvedValueOnce({
@@ -113,8 +125,11 @@ describe('CharacterService - Perk Integration', () => {
         ]
       } as any);
 
-      // Mock perk unlocking
-      mockPerksManager.checkAndUnlockPerksForLevel.mockResolvedValue(newlyUnlockedPerks);
+      // Mock database update for users table sync
+      mockDb.query.mockResolvedValueOnce({ rows: [] } as any);
+
+      // Mock draft offer generation
+      mockPerkDraftService.generateDraftOffer.mockResolvedValue(draftOffer);
 
       const result = await characterService.awardExperience(userId, experienceGained);
 
@@ -122,15 +137,19 @@ describe('CharacterService - Perk Integration', () => {
         newLevel,
         levelUp: true,
         oldLevel,
-        newlyUnlockedPerks,
+        newlyUnlockedPerks: [], // Always empty in draft system
         user: expect.objectContaining({
           experiencePoints: updatedXp,
           characterLevel: newLevel
         })
       });
 
-      // Verify perk check was called with correct level
-      expect(mockPerksManager.checkAndUnlockPerksForLevel).toHaveBeenCalledWith(userId, newLevel);
+      // Verify draft offer was generated for the new level
+      expect(result.pendingDrafts).toEqual([draftOffer]);
+      expect(mockPerkDraftService.generateDraftOffer).toHaveBeenCalledWith(userId, newLevel);
+
+      // Verify legacy perk check was NOT called (draft system replaces it)
+      expect(mockPerksManager.checkAndUnlockPerksForLevel).not.toHaveBeenCalled();
     });
 
     it('should not check perks when user does not level up', async () => {
@@ -177,7 +196,7 @@ describe('CharacterService - Perk Integration', () => {
       expect(mockPerksManager.checkAndUnlockPerksForLevel).not.toHaveBeenCalled();
     });
 
-    it('should handle multiple level ups with perk unlocks', async () => {
+    it('should generate draft offers for each level on multiple level ups', async () => {
       const userId = 1;
       const startingLevel = 1;
       const targetLevel = 8;
@@ -188,53 +207,25 @@ describe('CharacterService - Perk Integration', () => {
       jest.spyOn((characterService as any).gameProfileService, 'getOrCreateProfile')
         .mockResolvedValue(buildProfile(userId, startingLevel, currentXp));
 
-      const newlyUnlockedPerks = [
-        {
-          id: 1,
-          user_id: userId,
-          perk_id: 1,
-          is_unlocked: true,
-          is_active: false,
-          configuration: {},
-          updated_at: new Date(),
-          perk: buildMockPerk({
-            id: 1,
-            name: 'level_3_perk',
-            title: 'Level 3 Perk',
-            level_required: 3
-          })
-        },
-        {
-          id: 2,
-          user_id: userId,
-          perk_id: 2,
-          is_unlocked: true,
-          is_active: false,
-          configuration: {},
-          updated_at: new Date(),
-          perk: buildMockPerk({
-            id: 2,
-            name: 'level_5_perk',
-            title: 'Level 5 Perk',
-            level_required: 5
-          })
-        },
-        {
-          id: 3,
-          user_id: userId,
-          perk_id: 3,
-          is_unlocked: true,
-          is_active: false,
-          configuration: {},
-          updated_at: new Date(),
-          perk: buildMockPerk({
-            id: 3,
-            name: 'level_8_perk',
-            title: 'Level 8 Perk',
-            level_required: 8
-          })
-        }
-      ];
+      // Create draft offers for each level from 2 to newLevel (capped at 30)
+      const buildDraftOffer = (level: number): DraftOffer => ({
+        level,
+        perks: [
+          {
+            id: level * 10,
+            name: `level_${level}_perk`,
+            category: 'scoring',
+            type: 'gameplay',
+            effect_type: 'score_bonus',
+            effect_config: {},
+            tier: 1,
+            title: `Level ${level} Perk`,
+            description: `A perk for level ${level}`
+          }
+        ],
+        drafted: false,
+        dumped: false
+      });
 
       // Mock database update
       mockDb.query.mockResolvedValueOnce({
@@ -251,21 +242,35 @@ describe('CharacterService - Perk Integration', () => {
         ]
       } as any);
 
-      // Mock multiple perk unlocks
-      mockPerksManager.checkAndUnlockPerksForLevel.mockResolvedValue(newlyUnlockedPerks);
+      // Mock database update for users table sync
+      mockDb.query.mockResolvedValueOnce({ rows: [] } as any);
+
+      // Mock draft offer generation for each level
+      for (let lvl = startingLevel + 1; lvl <= Math.min(newLevel, 30); lvl++) {
+        mockPerkDraftService.generateDraftOffer.mockResolvedValueOnce(buildDraftOffer(lvl));
+      }
 
       const result = await characterService.awardExperience(userId, experienceGained);
 
       expect(result.levelUp).toBe(true);
       expect(result.newLevel).toBe(newLevel);
-      expect(result.newlyUnlockedPerks).toEqual(newlyUnlockedPerks);
-      expect(result.newlyUnlockedPerks.length).toBe(3);
+      expect(result.newlyUnlockedPerks).toEqual([]); // Always empty in draft system
 
-      // Verify perk check was called with final level
-      expect(mockPerksManager.checkAndUnlockPerksForLevel).toHaveBeenCalledWith(userId, newLevel);
+      // Verify draft offers were generated for each new level
+      const expectedLevels = Math.min(newLevel, 30) - startingLevel;
+      expect(result.pendingDrafts.length).toBe(expectedLevels);
+      expect(mockPerkDraftService.generateDraftOffer).toHaveBeenCalledTimes(expectedLevels);
+
+      // Verify each level was called
+      for (let lvl = startingLevel + 1; lvl <= Math.min(newLevel, 30); lvl++) {
+        expect(mockPerkDraftService.generateDraftOffer).toHaveBeenCalledWith(userId, lvl);
+      }
+
+      // Verify legacy perk check was NOT called
+      expect(mockPerksManager.checkAndUnlockPerksForLevel).not.toHaveBeenCalled();
     });
 
-    it('should handle perk unlock errors gracefully', async () => {
+    it('should handle draft offer generation errors gracefully', async () => {
       const userId = 1;
       const oldLevel = 4;
       const newLevel = oldLevel + 1;
@@ -291,26 +296,30 @@ describe('CharacterService - Perk Integration', () => {
         ]
       } as any);
 
-      // Mock perk manager error
-      mockPerksManager.checkAndUnlockPerksForLevel.mockRejectedValue(
-        new Error('Perk unlock failed')
+      // Mock database update for users table sync
+      mockDb.query.mockResolvedValueOnce({ rows: [] } as any);
+
+      // Mock draft service error
+      mockPerkDraftService.generateDraftOffer.mockRejectedValue(
+        new Error('Draft generation failed')
       );
 
       const result = await characterService.awardExperience(userId, experienceGained);
 
-      // Should still return successful experience addition, but with no newly unlocked perks
+      // Should still return successful experience addition, but with no pending drafts
       expect(result).toMatchObject({
         newLevel,
         levelUp: true,
         oldLevel,
-        newlyUnlockedPerks: [], // Empty due to error
+        newlyUnlockedPerks: [], // Always empty in draft system
+        pendingDrafts: [], // Empty due to error
         user: expect.objectContaining({
           experiencePoints: updatedXp,
           characterLevel: newLevel
         })
       });
 
-      expect(mockPerksManager.checkAndUnlockPerksForLevel).toHaveBeenCalledWith(userId, newLevel);
+      expect(mockPerkDraftService.generateDraftOffer).toHaveBeenCalledWith(userId, newLevel);
     });
 
     it('should handle edge case where user level is already at max', async () => {
@@ -395,7 +404,7 @@ describe('CharacterService - Perk Integration', () => {
   });
 
   describe('Perk-Related Error Scenarios', () => {
-    it('should handle database transaction rollback when perk operations fail', async () => {
+    it('should handle draft service errors gracefully during level up', async () => {
       const userId = 1;
       const currentLevel = 4;
       const currentXp = characterService.getTotalExperienceForLevel(currentLevel - 1) + 10;
@@ -418,19 +427,23 @@ describe('CharacterService - Perk Integration', () => {
         }]
       } as any);
 
-      // Mock perk manager throwing an error
-      mockPerksManager.checkAndUnlockPerksForLevel.mockRejectedValue(
+      // Mock database update for users table sync
+      mockDb.query.mockResolvedValueOnce({ rows: [] } as any);
+
+      // Mock draft service throwing an error (e.g., database constraint violation)
+      mockPerkDraftService.generateDraftOffer.mockRejectedValue(
         new Error('Database constraint violation')
       );
 
       const result = await characterService.awardExperience(userId, experienceGained);
 
-      // Should still succeed with experience gain, even if perk unlock fails
+      // Should still succeed with experience gain, even if draft generation fails
       expect(result.newLevel).toBe(currentLevel + 1);
       expect(result.newlyUnlockedPerks).toEqual([]);
+      expect(result.pendingDrafts).toEqual([]);
     });
 
-    it('should handle partial perk unlocks correctly', async () => {
+    it('should handle partial draft offers correctly when some levels have no perks', async () => {
       const userId = 1;
       const startLevel = 3;
       const targetLevel = 7;
@@ -453,33 +466,50 @@ describe('CharacterService - Perk Integration', () => {
         }]
       } as any);
 
-      // Mock some perks unlocking successfully, some failing
-      const partiallyUnlockedPerks = [
-        {
-          id: 1,
-          user_id: userId,
-          perk_id: 1,
-          is_unlocked: true,
-          is_active: false,
-          configuration: {},
-          updated_at: new Date(),
-          perk: buildMockPerk({
-            id: 1,
-            name: 'perk_1',
-            title: 'Perk 1',
-            level_required: 5
-          })
-        }
-        // Note: Only one perk even though user went from level 3 to 7
-        // This simulates partial failures or conditional unlocks
-      ];
+      // Mock database update for users table sync
+      mockDb.query.mockResolvedValueOnce({ rows: [] } as any);
 
-      mockPerksManager.checkAndUnlockPerksForLevel.mockResolvedValue(partiallyUnlockedPerks);
+      // Mock draft offers: some levels have perks available, some have empty pools or are already drafted
+      const draftWithPerks: DraftOffer = {
+        level: 4,
+        perks: [{ id: 1, name: 'perk_1', category: 'scoring', type: 'gameplay', effect_type: 'score_bonus', effect_config: {}, tier: 1, title: 'Perk 1', description: 'A perk' }],
+        drafted: false,
+        dumped: false
+      };
+      const draftAlreadyDrafted: DraftOffer = {
+        level: 5,
+        perks: [{ id: 2, name: 'perk_2', category: 'time', type: 'gameplay', effect_type: 'time_bonus', effect_config: {}, tier: 1, title: 'Perk 2', description: 'Another perk' }],
+        drafted: true, // Already drafted, should not be included in pendingDrafts
+        dumped: false
+      };
+      const draftEmptyPool: DraftOffer = {
+        level: 6,
+        perks: [], // No perks available, should not be included
+        drafted: false,
+        dumped: false
+      };
+      const draftWithPerks7: DraftOffer = {
+        level: 7,
+        perks: [{ id: 3, name: 'perk_3', category: 'xp', type: 'gameplay', effect_type: 'xp_bonus', effect_config: {}, tier: 1, title: 'Perk 3', description: 'Yet another perk' }],
+        drafted: false,
+        dumped: false
+      };
+
+      // Mock generateDraftOffer for levels 4, 5, 6, 7
+      mockPerkDraftService.generateDraftOffer
+        .mockResolvedValueOnce(draftWithPerks)      // level 4
+        .mockResolvedValueOnce(draftAlreadyDrafted)  // level 5
+        .mockResolvedValueOnce(draftEmptyPool)        // level 6
+        .mockResolvedValueOnce(draftWithPerks7);      // level 7
 
       const result = await characterService.awardExperience(userId, experienceGained);
 
-      expect(result.newlyUnlockedPerks).toEqual(partiallyUnlockedPerks);
-      expect(result.newlyUnlockedPerks.length).toBe(1);
+      // newlyUnlockedPerks is always empty in draft system
+      expect(result.newlyUnlockedPerks).toEqual([]);
+
+      // Only drafts with perks.length > 0 AND drafted === false are included
+      expect(result.pendingDrafts.length).toBe(2);
+      expect(result.pendingDrafts).toEqual([draftWithPerks, draftWithPerks7]);
     });
   });
 });

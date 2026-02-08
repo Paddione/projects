@@ -24,9 +24,12 @@ describe('ScoreDisplay Component', () => {
     expect(screen.getByText('×3')).toBeInTheDocument()
   })
 
-  it('displays correct answers count', () => {
-    render(<ScoreDisplay {...defaultProps} />)
-    expect(screen.getByText('🔥 5')).toBeInTheDocument()
+  it('displays correct answers count when showStreak is true', () => {
+    render(<ScoreDisplay {...defaultProps} showStreak={true} />)
+    const streakElement = screen.getByTestId('streak-value')
+    // Icon renders as <img alt="Streak">, not emoji text
+    expect(streakElement).toHaveTextContent('5')
+    expect(screen.getByAltText('Streak')).toBeInTheDocument()
   })
 
   it('handles zero score', () => {
@@ -51,10 +54,11 @@ describe('ScoreDisplay Component', () => {
     expect(screen.getByText('12,345')).toBeInTheDocument()
   })
 
-  it('shows streak when correct answers > 0', () => {
-    render(<ScoreDisplay {...defaultProps} correctAnswers={3} />)
+  it('shows streak when correct answers > 0 and showStreak is true', () => {
+    render(<ScoreDisplay {...defaultProps} correctAnswers={3} showStreak={true} />)
     const streakElement = screen.getByTestId('streak-value')
-    expect(streakElement).toHaveTextContent('🔥 3')
+    expect(streakElement).toHaveTextContent('3')
+    expect(screen.getByAltText('Streak')).toBeInTheDocument()
   })
 
   it('applies custom className', () => {
@@ -63,13 +67,14 @@ describe('ScoreDisplay Component', () => {
   })
 
   it('handles missing optional props', () => {
-    render(<ScoreDisplay score={100} multiplier={1} correctAnswers={2} />)
+    render(<ScoreDisplay score={100} multiplier={1} correctAnswers={2} showStreak={true} />)
     expect(screen.getByText('100')).toBeInTheDocument()
-    expect(screen.getByText('🔥 2')).toBeInTheDocument()
+    const streakElement = screen.getByTestId('streak-value')
+    expect(streakElement).toHaveTextContent('2')
   })
 
   it('displays progress with total questions', () => {
-    render(<ScoreDisplay {...defaultProps} correctAnswers={3} totalQuestions={10} />)
+    render(<ScoreDisplay {...defaultProps} correctAnswers={3} totalQuestions={10} showStreak={true} />)
     const progressFill = screen.getByTestId('progress-fill')
     expect(progressFill).toBeInTheDocument()
     expect(progressFill).toHaveStyle({ width: '30%' })
@@ -85,7 +90,7 @@ describe('ScoreDisplay Component', () => {
   })
 
   it('handles zero correct answers (no streak shown)', () => {
-    render(<ScoreDisplay {...defaultProps} correctAnswers={0} />)
+    render(<ScoreDisplay {...defaultProps} correctAnswers={0} showStreak={true} />)
     expect(screen.queryByTestId('streak-value')).not.toBeInTheDocument()
   })
 
@@ -99,8 +104,15 @@ describe('ScoreDisplay Component', () => {
     expect(screen.queryByTestId('streak-value')).not.toBeInTheDocument()
   })
 
+  it('does not show streak by default (showStreak defaults to false)', () => {
+    render(<ScoreDisplay {...defaultProps} correctAnswers={3} />)
+    expect(screen.queryByTestId('streak-value')).not.toBeInTheDocument()
+  })
+
   it('shows streak with total questions', () => {
-    render(<ScoreDisplay {...defaultProps} correctAnswers={3} totalQuestions={10} />)
-    expect(screen.getByText('🔥 3/10')).toBeInTheDocument()
+    render(<ScoreDisplay {...defaultProps} correctAnswers={3} totalQuestions={10} showStreak={true} />)
+    const streakElement = screen.getByTestId('streak-value')
+    // Renders as: <Icon alt="Streak" /> 3/10
+    expect(streakElement).toHaveTextContent('3/10')
   })
 }) 

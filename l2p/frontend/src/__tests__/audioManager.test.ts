@@ -353,65 +353,35 @@ describe('AudioManager', () => {
       mockInit.mockRestore();
     })
 
-    it('should handle initialization errors gracefully', async () => {
-      // Mock loadAllAudioFiles to throw an error
-      const mockLoad = jest.spyOn(privateManager as unknown as { loadAllAudioFiles: () => Promise<void> }, 'loadAllAudioFiles')
-        .mockRejectedValue(new Error('Network error'));
-      
-      const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    it('should handle initialization gracefully when disabled', async () => {
+      // With DISABLED = true, init() returns immediately without error
+      const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
 
-      await expect(privateManager.init()).rejects.toThrow('Network error');
-      
-      // Should log the error but not crash
-      expect(consoleSpy).toHaveBeenCalledWith('Failed to initialize AudioManager:', expect.any(Error));
-      // Should not be initialized due to error
+      await privateManager.init();
+
+      // Should log that AudioManager is disabled
+      expect(consoleSpy).toHaveBeenCalledWith('AudioManager is disabled');
+      // Should not be initialized (DISABLED short-circuits before setting isInitialized)
       expect(privateManager.isInitialized).toBe(false);
-      
-      // Restore original implementations
-      mockLoad.mockRestore();
+
       consoleSpy.mockRestore();
     })
   })
 
   describe('Auto-initialization', () => {
-    it('should auto-initialize when playSound is called for the first time', async () => {
-      // Create a fresh AudioManager and prevent constructor init
+    it('should return immediately from playSound when disabled', async () => {
+      // With DISABLED = true, playSound() returns immediately without calling ensureInitialized
       const freshAudioManager = new AudioManager();
       const freshPrivate = asPrivate(freshAudioManager);
-      
-      // Mock the init method - store the spy to clean up later
-      const initSpy = jest.spyOn(freshPrivate, 'init').mockResolvedValue(undefined);
 
-      // Mock ensureInitialized to track calls and simulate success
-      const ensureInitSpy = jest.spyOn(freshPrivate, 'ensureInitialized').mockImplementation(async function (this: AudioManagerPrivate) {
-        this.isInitialized = true;
-        this.audioContext = mockAudioContext as unknown as AudioContext;
-        // Initialize gain nodes map if needed
-        if (!this.gainNodes) {
-          this.gainNodes = new Map();
-        }
-        return Promise.resolve();
-      });
+      const ensureInitSpy = jest.spyOn(freshPrivate, 'ensureInitialized');
 
-      // Mock isReady to return false initially, then true after ensureInitialized
-      let readyCallCount = 0;
-      const isReadySpy = jest.spyOn(freshPrivate, 'isReady').mockImplementation(() => {
-        readyCallCount++;
-        return readyCallCount > 1; // false first time, true after that
-      });
+      await freshAudioManager.playSound('test-sound');
 
-      try {
-        // Call playSound - this should trigger auto-initialization via the wrapper
-        await freshAudioManager.playSound('test-sound');
+      // ensureInitialized should NOT be called because DISABLED causes early return
+      expect(ensureInitSpy).not.toHaveBeenCalled();
 
-        // Should have called ensureInitialized
-        expect(ensureInitSpy).toHaveBeenCalled();
-      } finally {
-        // Clean up all spies
-        initSpy.mockRestore();
-        ensureInitSpy.mockRestore();
-        isReadySpy.mockRestore();
-      }
+      ensureInitSpy.mockRestore();
     })
 
     it('should not re-initialize if already initialized', async () => {
@@ -429,22 +399,17 @@ describe('AudioManager', () => {
       expect(initSpy).not.toHaveBeenCalled()
     })
 
-    it('should handle initialization errors gracefully', async () => {
-      // Create a fresh AudioManager
+    it('should return early from playSound without warnings when disabled', async () => {
+      // With DISABLED = true, playSound() returns at the very first check
+      // No warnings are logged because it never reaches the initialization or ready checks
       const freshAudioManager = new AudioManager()
 
-      // Mock ensureInitialized to throw an error
-      jest.spyOn(freshAudioManager, 'ensureInitialized').mockRejectedValue(new Error('Init failed'))
-
-      // Mock isReady to return false
-      jest.spyOn(freshAudioManager, 'isReady').mockReturnValue(false)
-
-      // Should not crash and should log a warning
       const consoleSpy = jest.spyOn(console, 'warn')
 
       await freshAudioManager.playSound('test-sound')
 
-      expect(consoleSpy).toHaveBeenCalledWith('AudioManager not initialized')
+      // Should NOT warn because DISABLED causes immediate return before any checks
+      expect(consoleSpy).not.toHaveBeenCalled()
     })
   })
 
@@ -474,12 +439,13 @@ describe('AudioManager', () => {
       expect(consoleSpy).not.toHaveBeenCalledWith('AudioManager not initialized')
     })
 
-    it('should handle unknown sound names gracefully', () => {
+    it('should return early for any sound when disabled', () => {
       const consoleSpy = jest.spyOn(console, 'warn')
 
       audioManager.playSound('unknown-sound')
 
-      expect(consoleSpy).toHaveBeenCalledWith('Audio file not found: unknown-sound')
+      // With DISABLED = true, playSound returns immediately without reaching the lookup
+      expect(consoleSpy).not.toHaveBeenCalled()
     })
   })
 })

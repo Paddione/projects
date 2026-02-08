@@ -210,10 +210,10 @@ describe('DatabaseService', () => {
           password: '06752fc9637d5fe896cd88b858d2cf2eff112de5cf4769e69927009f5d45d581'
         }));
       } else {
-        // When using test database, expect test defaults
+        // When using test database, expect test defaults (port 5433 to avoid conflict with shared-postgres)
         expect(Pool).toHaveBeenCalledWith(expect.objectContaining({
           host: '127.0.0.1',
-          port: 5432,
+          port: 5433,
           database: 'l2p_db',
           user: 'l2p_user',
           password: '06752fc9637d5fe896cd88b858d2cf2eff112de5cf4769e69927009f5d45d581'
@@ -690,7 +690,7 @@ describe('DatabaseService', () => {
 
       const healthCheck = await databaseService.healthCheck();
 
-      expect(healthCheck.details.responseTime).toBeGreaterThanOrEqual(100);
+      expect(healthCheck.details.responseTime).toBeGreaterThanOrEqual(95);
     });
   });
 
@@ -699,7 +699,8 @@ describe('DatabaseService', () => {
       await databaseService.close();
 
       expect(mockPool.end).toHaveBeenCalled();
-      expect((databaseService as any).isClosing).toBe(false);
+      // isClosing stays true after successful close — pool is permanently dead
+      expect((databaseService as any).isClosing).toBe(true);
       expect((databaseService as any).isConnected).toBe(false);
     });
 

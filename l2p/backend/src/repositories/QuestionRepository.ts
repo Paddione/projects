@@ -256,8 +256,8 @@ export class QuestionRepository extends BaseRepository {
 
   async searchQuestions(searchTerm: string, questionSetId?: number): Promise<Question[]> {
     let query = `
-      SELECT * FROM questions 
-      WHERE (question_text->>'en' ILIKE $1 OR question_text->>'de' ILIKE $1)
+      SELECT * FROM questions
+      WHERE question_text ILIKE $1
     `;
     const params: unknown[] = [`%${searchTerm}%`];
 
@@ -288,7 +288,7 @@ export class QuestionRepository extends BaseRepository {
     const sortDir = this.sanitizeDir(options.sortDir);
 
     const params: unknown[] = [`%${searchTerm}%`];
-    let where = `(question_text->>'en' ILIKE $1 OR question_text->>'de' ILIKE $1)`;
+    let where = `question_text ILIKE $1`;
     let idx = 2;
     if (options.questionSetId) {
       where += ` AND question_set_id = $${idx}`;

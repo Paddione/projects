@@ -2,6 +2,32 @@ import React from 'react'
 import { describe, it, expect, beforeEach, jest } from '@jest/globals'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import '@testing-library/jest-dom/jest-globals'
+
+// Mock avatarService — return null for SVG path so component falls back to getAvatarEmoji.
+// Using plain functions (not jest.fn()) because resetMocks:true in jest config
+// clears mock implementations between tests. Emoji map must be inside the factory
+// because jest.mock() is hoisted above variable declarations.
+jest.mock('../../services/avatarService', () => {
+  const emojis: Record<string, string> = {
+    student: '👨‍🎓',
+    professor: '👨‍🏫',
+    librarian: '👩‍💼',
+    researcher: '👨‍🔬',
+    dean: '👩‍⚖️',
+    graduate: '🎓',
+    lab_assistant: '👨‍🔬',
+    teaching_assistant: '👩‍🏫',
+  }
+  return {
+    avatarService: {
+      getAvatarSvgPath: () => null,
+      getAvatarEmoji: (character: string) => emojis[character] || '🎓',
+      initialize: () => {},
+      setActiveAvatarOverride: () => {},
+    }
+  }
+})
+
 import { LevelUpNotification } from '../LevelUpNotification'
 
 // Mock timers

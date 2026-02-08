@@ -202,52 +202,34 @@ export class ValidationMiddleware {
       })
     },
 
-    // Create question validation
+    // Create question validation (single-language format after migration)
     createQuestion: {
       body: Joi.object({
         question_set_id: Joi.number().integer().positive().required(),
-        question_text: Joi.object({
-          en: Joi.string().min(1).required(),
-          de: Joi.string().min(1).required()
-        }).required(),
+        question_text: Joi.string().min(1).required(),
         answers: Joi.array().items(
           Joi.object({
-            text: Joi.object({
-              en: Joi.string().min(1).required(),
-              de: Joi.string().min(1).required()
-            }).required(),
+            text: Joi.string().min(1).required(),
             correct: Joi.boolean().required()
           })
         ).min(2).required(),
-        explanation: Joi.object({
-          en: Joi.string(),
-          de: Joi.string()
-        }),
+        explanation: Joi.string().allow(''),
         difficulty: Joi.number().integer().min(1).max(5).default(1)
       })
     },
 
-    // Update question validation
+    // Update question validation (single-language format after migration)
     updateQuestion: {
       body: Joi.object({
         question_set_id: Joi.number().integer().positive(),
-        question_text: Joi.object({
-          en: Joi.string().min(1),
-          de: Joi.string().min(1)
-        }),
+        question_text: Joi.string().min(1),
         answers: Joi.array().items(
           Joi.object({
-            text: Joi.object({
-              en: Joi.string().min(1),
-              de: Joi.string().min(1)
-            }),
+            text: Joi.string().min(1),
             correct: Joi.boolean()
           })
         ).min(2),
-        explanation: Joi.object({
-          en: Joi.string(),
-          de: Joi.string()
-        }),
+        explanation: Joi.string().allow(''),
         difficulty: Joi.number().integer().min(1).max(5)
       })
     },

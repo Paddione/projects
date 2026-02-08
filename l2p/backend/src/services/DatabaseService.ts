@@ -80,7 +80,7 @@ export class DatabaseService {
       // Fallback to test database defaults
       return {
         host: process.env['TEST_DB_HOST'] || '127.0.0.1',
-        port: parseInt(process.env['TEST_DB_PORT'] || '5432'),
+        port: parseInt(process.env['TEST_DB_PORT'] || '5433'),
         database: process.env['TEST_DB_NAME'] || 'l2p_db',
         user: process.env['TEST_DB_USER'] || 'l2p_user',
         password: process.env['TEST_DB_PASSWORD'] || '06752fc9637d5fe896cd88b858d2cf2eff112de5cf4769e69927009f5d45d581',
@@ -164,6 +164,8 @@ export class DatabaseService {
     });
 
     this.pool.on('error', (err: Error) => {
+      // Don't log or reconnect if we're intentionally closing
+      if (this.isClosing) return;
       console.error('Database pool error:', err);
       this.isConnected = false;
 
@@ -183,11 +185,13 @@ export class DatabaseService {
   }
 
   private async reconnect(): Promise<void> {
+    if (this.isClosing) return;
     try {
       console.log('Attempting to reconnect to database...');
       await this.testConnection();
       console.log('Database reconnection successful');
     } catch (error) {
+      if (this.isClosing) return;
       console.error('Database reconnection failed:', error);
       // Retry after another delay
       const retryDelay = process.env['NODE_ENV'] === 'test' ? 100 : 10000;
@@ -327,11 +331,13 @@ export class DatabaseService {
       this.isConnected = false;
       await this.pool.end();
       console.log('Database connection pool closed');
+      // isClosing stays true — the pool is permanently dead after end().
+      // A new instance will be created via getInstance() if needed.
     } catch (error) {
+      // Reset on failure so a retry is possible (pool may still be alive)
+      this.isClosing = false;
       console.error('Error closing database connection pool:', error);
       throw error;
-    } finally {
-      this.isClosing = false;
     }
   }
 

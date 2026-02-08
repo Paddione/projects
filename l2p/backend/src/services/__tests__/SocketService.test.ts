@@ -18,6 +18,7 @@ jest.mock('../LobbyService', () => {
     leaveLobby: jest.fn(),
     updatePlayerReady: jest.fn(),
     updatePlayerConnection: jest.fn(),
+    getLobbyByCode: jest.fn(),
     getLobbyQuestionSetInfo: jest.fn(),
     updateLobbyQuestionSets: jest.fn(),
   };
@@ -140,7 +141,7 @@ describe('SocketService', () => {
       }
     } as any;
 
-    // Create mock Socket
+    // Create mock Socket with authenticated user data (required by requireAuth)
     mockSocket = {
       id: 'socket-123',
       join: jest.fn(),
@@ -149,6 +150,13 @@ describe('SocketService', () => {
       on: jest.fn(),
       disconnect: jest.fn(),
       rooms: new Set(['room1']),
+      data: {
+        user: {
+          id: '1',
+          username: 'testuser',
+          email: 'test@example.com'
+        }
+      },
       handshake: {
         auth: {},
         headers: {},
@@ -234,8 +242,8 @@ describe('SocketService', () => {
       expect(mockSocket.emit).toHaveBeenCalledWith('connected', {
         socketId: 'socket-123',
         timestamp: expect.any(Number),
-        authenticated: false,
-        user: null
+        authenticated: true,
+        user: { id: '1', username: 'testuser' }
       });
     });
 
@@ -871,9 +879,10 @@ describe('SocketService', () => {
       if (joinHandler) {
         const promises: Promise<unknown>[] = [];
         for (let i = 0; i < 5; i++) {
+          // Use socket.data.user.id ('1') as the player id so verifyIdentity passes
           promises.push(joinHandler({
             lobbyCode: 'ABC123',
-            player: { ...mockSocketUser, id: `user-${i}` }
+            player: { ...mockSocketUser, id: '1' }
           }));
         }
 
@@ -905,8 +914,9 @@ describe('SocketService', () => {
 
         await Promise.all(promises);
 
-        // Should handle all submissions without errors
-        expect(mockGameService.submitAnswer).toHaveBeenCalledTimes(10);
+        // Rate limiter allows 5 submit-answer events per 5-second window,
+        // so only the first 5 of 10 rapid submissions get through
+        expect(mockGameService.submitAnswer).toHaveBeenCalledTimes(5);
       }
     });
   });
@@ -1006,8 +1016,8 @@ describe('SocketService', () => {
       expect(mockSocket.emit).toHaveBeenCalledWith('connected', {
         socketId: 'socket-123',
         timestamp: expect.any(Number),
-        authenticated: false,
-        user: null
+        authenticated: true,
+        user: { id: '1', username: 'testuser' }
       });
     });
 

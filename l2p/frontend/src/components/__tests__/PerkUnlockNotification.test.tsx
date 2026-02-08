@@ -1,6 +1,31 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
+
+// Mock avatarService — return null for SVG path so component falls back to getAvatarEmoji.
+// Using plain functions (not jest.fn()) because resetMocks:true in jest config
+// clears mock implementations between tests.
+jest.mock('../../services/avatarService', () => {
+  const emojis: Record<string, string> = {
+    student: '👨‍🎓',
+    professor: '👨‍🏫',
+    librarian: '👩‍💼',
+    researcher: '👨‍🔬',
+    dean: '👩‍⚖️',
+    graduate: '🎓',
+    lab_assistant: '👨‍🔬',
+    teaching_assistant: '👩‍🏫',
+  };
+  return {
+    avatarService: {
+      getAvatarSvgPath: () => null,
+      getAvatarEmoji: (character: string) => emojis[character] || '🎓',
+      initialize: () => {},
+      setActiveAvatarOverride: () => {},
+    }
+  };
+});
+
 import { PerkUnlockNotification } from '../PerkUnlockNotification';
 import { PerkUnlockNotification as PerkUnlockNotificationType } from '../../stores/gameStore';
 
