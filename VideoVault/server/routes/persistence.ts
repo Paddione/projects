@@ -10,6 +10,7 @@ import {
 } from '@shared/schema';
 import { eq, inArray } from 'drizzle-orm';
 import { randomUUID } from 'crypto';
+import { resolveInputPath } from '../lib/path-resolver';
 
 function requireDb(res: Response) {
   if (!db) {
@@ -114,6 +115,31 @@ export async function batchDeleteVideos(req: Request, res: Response) {
   if (!Array.isArray(ids) || ids.length === 0) return res.json({ deleted: 0 });
   const result = await db!.delete(videos).where(inArray(videos.id, ids)).returning();
   res.json({ deleted: result.length });
+}
+
+export async function cleanupMissingVideos(_req: Request, res: Response) {
+  if (!requireDb(res)) return;
+
+  try {
+    const allVideos = await db!.select().from(videos);
+    const missingIds: string[] = [];
+
+    for (const video of allVideos) {
+      const resolved = await resolveInputPath(video.path, video.rootKey || undefined, db);
+      if (!resolved) {
+        missingIds.push(video.id);
+      }
+    }
+
+    if (missingIds.length > 0) {
+      const deleted = await db!.delete(videos).where(inArray(videos.id, missingIds)).returning();
+      return res.json({ deletedCount: deleted.length, missingIds });
+    }
+
+    res.json({ deletedCount: 0, missingIds: [] });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
 }
 
 // Directory Roots

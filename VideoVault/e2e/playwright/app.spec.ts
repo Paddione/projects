@@ -1,6 +1,19 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
+import { afterTestCleanup } from './test-utils';
 
 test.describe('VideoVault app basics', () => {
+  test.beforeAll(async ({ browser }) => {
+    const page: Page = await browser.newPage();
+    await afterTestCleanup(page);
+    await page.close();
+  });
+
+
+  test.afterEach(async ({ page }: { page: Page }) => {
+    await afterTestCleanup(page);
+  });
+
+
   test('shows initial empty state and directory button', async ({ page }) => {
     await page.goto('/');
     await page.getByTestId('button-scan-directory').waitFor();

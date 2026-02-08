@@ -399,4 +399,12 @@ export class VideoDatabase {
   static async syncAllToServer(videos: Video[]): Promise<void> {
     await this.syncBulkUpsert(videos);
   }
+
+  static async cleanupMissingVideos(): Promise<{ deletedCount: number; missingIds: string[] }> {
+    const healthy = await serverHealth.isHealthy();
+    if (!healthy) throw new Error('Server not reachable');
+    return await ApiClient.post<{ deletedCount: number; missingIds: string[] }>(
+      '/api/videos/cleanup_missing',
+    );
+  }
 }

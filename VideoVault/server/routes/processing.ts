@@ -177,13 +177,13 @@ router.post('/movies/rename', async (req: Request, res: Response) => {
       await fs.access(thumbOld);
       await fs.rename(thumbOld, thumbNew);
       thumbExists = true;
-    } catch {}
+    } catch { }
 
     try {
       await fs.access(spriteOld);
       await fs.rename(spriteOld, spriteNew);
       spriteExists = true;
-    } catch {}
+    } catch { }
 
     // 2. Rename the video file
     const videoOld = path.join(resolvedDir, videoFile.name);
@@ -433,7 +433,7 @@ router.post('/movies/index', async (req: Request, res: Response) => {
           const id = crypto.createHash('sha256').update('movies:' + relVideoPath).digest('hex').slice(0, 36);
 
           // Check if already indexed
-          if (!forceReindex) {
+          if (!forceReindex && db) {
             const existing = await db.select({ id: videos.id }).from(videos).where(eq(videos.id, id)).limit(1);
             if (existing.length > 0) {
               skipped++;
@@ -450,38 +450,57 @@ router.post('/movies/index', async (req: Request, res: Response) => {
           try {
             await fs.access(thumbPath);
             thumbUrl = `/media/movies/${relDir}/Thumbnails/${encodeURIComponent(baseName)}_thumb.jpg`;
-          } catch {}
+          } catch { }
 
           // Upsert into videos table
-          const dbPath = `movies/${relVideoPath}`;
-          await db
-            .insert(videos)
-            .values({
-              id,
-              filename: videoFile.name,
-              displayName: baseName,
-              path: dbPath,
-              size: stat.size,
-              lastModified: stat.mtime,
-              metadata: { duration: 0, width: 0, height: 0 },
-              categories: {},
-              customCategories: {},
-              thumbnail: thumbUrl ? { generated: true, dataUrl: thumbUrl } : null,
-              rootKey: 'movies',
-            })
-            .onConflictDoUpdate({
-              target: videos.id,
-              set: {
+          if (db) {
+            const dbPath = `movies/${relVideoPath}`;
+            await db
+              .insert(videos)
+              .values({
+                id,
                 filename: videoFile.name,
                 displayName: baseName,
                 path: dbPath,
                 size: stat.size,
                 lastModified: stat.mtime,
-                thumbnail: thumbUrl ? { generated: true, dataUrl: thumbUrl } : null,
-              },
-            });
+                metadata: {
+                  duration: 0,
+                  width: 0,
+                  height: 0,
+                  bitrate: 0,
+                  codec: '',
+                  fps: 0,
+                  aspectRatio: '',
+                },
+                categories: {
+                  age: [],
+                  physical: [],
+                  ethnicity: [],
+                  relationship: [],
+                  acts: [],
+                  setting: [],
+                  quality: [],
+                  performer: [],
+                },
+                customCategories: {},
+                thumbnail: thumbUrl ? { generated: true, dataUrl: thumbUrl, timestamp: new Date().toISOString() } : null,
+                rootKey: 'movies',
+              })
+              .onConflictDoUpdate({
+                target: videos.id,
+                set: {
+                  filename: videoFile.name,
+                  displayName: baseName,
+                  path: dbPath,
+                  size: stat.size,
+                  lastModified: stat.mtime,
+                  thumbnail: thumbUrl ? { generated: true, dataUrl: thumbUrl, timestamp: new Date().toISOString() } : null,
+                },
+              });
 
-          indexed++;
+            indexed++;
+          }
         } catch (err: any) {
           errors++;
           errorDetails.push({ path: path.relative(MOVIES_DIR, dir), error: err.message });

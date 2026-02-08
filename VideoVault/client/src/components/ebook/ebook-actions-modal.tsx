@@ -176,9 +176,15 @@ export function EbookActionsModal({
                     </div>
                     <div className="flex items-center gap-2">
                       {info.canRead && (
-                        <BookOpen className="h-4 w-4 text-green-500" title="Can read in browser" />
+                        <>
+                          <BookOpen className="h-4 w-4 text-green-500" />
+                          <span className="sr-only">Can read in browser</span>
+                        </>
                       )}
-                      <Download className="h-4 w-4 text-muted-foreground" title="Can download" />
+                      <>
+                        <Download className="h-4 w-4 text-muted-foreground" />
+                        <span className="sr-only">Can download</span>
+                      </>
                     </div>
                   </button>
                 );

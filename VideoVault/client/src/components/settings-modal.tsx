@@ -21,6 +21,8 @@ import {
 } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
+import { AuthService } from '@/services/auth';
+import { VideoDatabase } from '@/services/video-database';
 import {
   Settings,
   Save,
@@ -33,8 +35,9 @@ import {
   LogIn,
   LogOut,
   Languages,
+  Trash2,
+  Loader2,
 } from 'lucide-react';
-import { AuthService } from '@/services/auth';
 
 interface Settings {
   // File scanning preferences
@@ -86,6 +89,7 @@ export function SettingsModal({ isOpen, onClose, onSettingsChange }: SettingsMod
   const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
   const [hasChanges, setHasChanges] = useState(false);
   const [isAdmin, setIsAdmin] = useState(AuthService.cachedIsAdmin);
+  const [isCleaning, setIsCleaning] = useState(false);
 
   // Load settings from server on mount
   useEffect(() => {
@@ -139,6 +143,22 @@ export function SettingsModal({ isOpen, onClose, onSettingsChange }: SettingsMod
   const handleReset = () => {
     setSettings(DEFAULT_SETTINGS);
     setHasChanges(true);
+  };
+
+  const handleCleanupMissing = async () => {
+    if (!confirm('This will remove all database entries that do not have a corresponding file on disk. Continue?')) {
+      return;
+    }
+
+    setIsCleaning(true);
+    try {
+      const result = await VideoDatabase.cleanupMissingVideos();
+      alert(`Cleanup complete! Removed ${result.deletedCount} missing entries.`);
+    } catch (error: any) {
+      alert(`Cleanup failed: ${error.message}`);
+    } finally {
+      setIsCleaning(false);
+    }
   };
 
   const handleClose = () => {
@@ -502,6 +522,40 @@ export function SettingsModal({ isOpen, onClose, onSettingsChange }: SettingsMod
               <p className="text-xs text-muted-foreground">
                 Disable on low-power devices to reduce CPU/memory during hover previews.
               </p>
+            </div>
+          </div>
+
+          <Separator />
+
+          {/* Maintenance Section */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <Trash2 className="h-4 w-4 text-primary" />
+              <h3 className="font-medium">Maintenance</h3>
+            </div>
+
+            <div className="space-y-3">
+              <div className="flex flex-col gap-2">
+                <Label>Database Cleanup</Label>
+                <p className="text-xs text-muted-foreground">
+                  Remove entries for files that no longer exist on disk. Use this if you have moved or deleted files outside of VideoVault.
+                </p>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={handleCleanupMissing}
+                  disabled={isCleaning || !isAdmin}
+                  className="w-fit flex items-center gap-2"
+                >
+                  {isCleaning ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                  Clear Missing Entries
+                </Button>
+                {!isAdmin && (
+                  <p className="text-xs text-amber-600 flex items-center gap-1">
+                    <ShieldAlert className="h-3 w-3" /> Admin login required for cleanup
+                  </p>
+                )}
+              </div>
             </div>
           </div>
         </div>

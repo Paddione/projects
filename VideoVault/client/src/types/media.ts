@@ -68,6 +68,8 @@ export interface EbookFile {
 }
 
 export interface EbookMetadata {
+  title?: string;
+  author?: string;
   publisher?: string;
   publishDate?: string;
   isbn?: string;

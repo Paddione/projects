@@ -98,6 +98,10 @@ export default defineConfig({
           'enhanced-thumbnail-service.ts'
         ),
       },
+      {
+        find: 'zod',
+        replacement: path.resolve(__dirname, 'node_modules', 'zod'),
+      },
     ],
   },
   test: {
@@ -105,11 +109,8 @@ export default defineConfig({
     globals: true,
     setupFiles: ['src/test/setup.ts'],
     pool: 'threads',
-    poolOptions: {
-      threads: {
-        singleThread: true,
-      },
-    },
+    maxWorkers: 1,
+    isolate: true,
     bail: 1,
     testTimeout: 20000,
     hookTimeout: 10000,

@@ -42,6 +42,14 @@ export class JobQueue extends EventEmitter {
         return this.queue.find((j) => j.id === id) || this.processing.get(id);
     }
 
+    getStats() {
+        return {
+            pending: this.queue.length,
+            processing: this.processing.size,
+            concurrency: this.concurrency,
+        };
+    }
+
     private async process() {
         if (this.isRunning) return;
         this.isRunning = true;

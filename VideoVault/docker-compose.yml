@@ -63,7 +63,7 @@ services:
       dockerfile: Dockerfile
     container_name: videovault-dev
     expose:
-      - "5000"
+      - "${VIDEO_PORT:-5000}"
     ports:
       - "${VIDEO_PORT:-5000}:${VIDEO_PORT:-5000}"
     volumes:
@@ -110,14 +110,14 @@ services:
       - THUMBNAILS_DIR=/app/media/Processed/Thumbnails
     stdin_open: true
     tty: true
-    command: sh -lc "npm install && npm run dev"
+    command: sh -lc "npm install --legacy-peer-deps && npm run dev"
     restart: unless-stopped
     networks:
       - l2p-network
     external_links:
       - shared-postgres
     healthcheck:
-      test: ['CMD-SHELL', 'curl -fsS http://localhost:5000/api/health || exit 1']
+      test: ['CMD-SHELL', 'curl -fsS http://localhost:${VIDEO_PORT:-5000}/api/health || exit 1']
       interval: 30s
       timeout: 10s
       retries: 10
@@ -154,7 +154,7 @@ services:
   #   ... (removed, using shared-postgres instead)
 
   playwright:
-    image: mcr.microsoft.com/playwright:v1.55.0-jammy
+    image: mcr.microsoft.com/playwright:v1.57.0-jammy
     container_name: videovault-playwright
     profiles:
       - playwright
@@ -173,16 +173,16 @@ services:
       - CI=1
       - PW_SKIP_WEB_SERVER=1
       - PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
-      - BASE_URL=http://videovault-dev:5000
+      - BASE_URL=http://videovault-dev:${VIDEO_PORT:-5000}
       - NODE_ENV=development
     volumes:
       - ./:/work:cached
       - /work/node_modules
     # Install deps and run Playwright tests
-    command: bash -lc "npm ci && npm run test:pw"
+    command: bash -lc "npm install --legacy-peer-deps && npm run test:pw"
 
   playwright-ui:
-    image: mcr.microsoft.com/playwright:v1.55.0-jammy
+    image: mcr.microsoft.com/playwright:v1.57.0-jammy
     container_name: videovault-playwright-ui
     profiles:
       - playwright
@@ -201,14 +201,14 @@ services:
       - CI=1
       - PW_SKIP_WEB_SERVER=1
       - PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
-      - BASE_URL=http://videovault-dev:5000
+      - BASE_URL=http://videovault-dev:${VIDEO_PORT:-5000}
       - NODE_ENV=development
     ports:
       - '0.0.0.0:9323:9323'
     volumes:
       - ./:/work:cached
       - /work/node_modules
-    command: bash -lc "npm ci && npm run test:pw:ui -- --ui-host 0.0.0.0 --ui-port 9323"
+    command: bash -lc "npm install --legacy-peer-deps && npm run test:pw:ui -- --ui-host 0.0.0.0 --ui-port 9323"
 
 networks:
   l2p-network:

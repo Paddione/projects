@@ -8,7 +8,6 @@ import { getCategoryColorClasses } from '@/lib/category-colors';
 import { Play, Clock, FileVideo, Tags, Edit, FolderPlus, Trash2, Scissors } from 'lucide-react';
 import { ThumbnailGenerator } from '@/services/thumbnail-generator';
 import { VideoThumbnailService } from '@/services/video-thumbnail';
-import { VideoUrlRegistry } from '@/services/video-url-registry';
 import { BulkOperationsService } from '@/services/bulk-operations';
 import { cn } from '@/lib/utils';
 import { SpriteCache } from '@/services/sprite-cache';
@@ -507,6 +506,8 @@ export function VideoCard({
         }
         setIsHovering(false);
       }}
+      onMouseEnter={() => setIsHovering(true)}
+      onMouseLeave={() => setIsHovering(false)}
       onClick={handleCardClick}
       onKeyDown={handleCardKeyDown}
       tabIndex={0}
@@ -516,7 +517,7 @@ export function VideoCard({
       {...props}
     >
       {/* Selection Checkbox */}
-      {showSelection && (
+      {(showSelection || isHovering) && (
         <div className="absolute top-2 left-2 z-10">
           <Checkbox
             checked={isSelected}

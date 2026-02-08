@@ -29,6 +29,7 @@ import {
   deletePreset,
   listTags,
   updateTag,
+  cleanupMissingVideos,
 } from './routes/persistence';
 import { dbHealth } from './routes/db';
 import { getSetting, setSetting, deleteSetting } from './routes/settings';
@@ -77,7 +78,7 @@ async function fetchAuthUser(req: Request): Promise<AuthServiceUser | null> {
   if (!token) return null;
 
   try {
-      const response = await fetch(`${AUTH_SERVICE_API_URL}/auth/verify`, {
+    const response = await fetch(`${AUTH_SERVICE_API_URL}/auth/verify`, {
       method: 'GET',
       headers: { Authorization: `Bearer ${token}` },
     });
@@ -163,7 +164,7 @@ export function registerRoutes(app: Express): Server {
           method: 'POST',
           headers: { Authorization: `Bearer ${token}` },
         });
-      } catch {}
+      } catch { }
     }
     res.json({ ok: true });
   });
@@ -209,6 +210,7 @@ export function registerRoutes(app: Express): Server {
   app.patch('/api/videos/:id', asyncHandler(patchVideo));
   app.delete('/api/videos/:id', asyncHandler(deleteVideo));
   app.post('/api/videos/batch_delete', asyncHandler(batchDeleteVideos));
+  app.post('/api/videos/cleanup_missing', requireAdmin, asyncHandler(cleanupMissingVideos));
 
   app.get('/api/roots', asyncHandler(getRoots));
   app.post('/api/roots', asyncHandler(setRoot));

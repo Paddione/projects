@@ -6,6 +6,7 @@ export default defineConfig({
   resolve: {
     alias: {
       '@shared': path.resolve(__dirname, '..', 'shared-infrastructure', 'shared', 'videovault'),
+      'zod': path.resolve(__dirname, '..', 'node_modules', 'zod'),
     },
   },
   test: {
@@ -17,9 +18,8 @@ export default defineConfig({
     hookTimeout: 10000,
     teardownTimeout: 10000,
     pool: 'threads',
-    poolOptions: {
-      threads: { singleThread: true },
-    },
+    maxWorkers: 1,
+    isolate: false,
     bail: 1,
   },
 });
