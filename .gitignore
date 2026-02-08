@@ -214,6 +214,16 @@ conda/
 anaconda/
 vllm/pinokio/bin/miniconda/
 
+# Local binaries
+k8s/skaffold
+
+# Test artifacts and reports (all projects)
+**/test-artifacts/
+**/playwright-report/
+**/test-results/
+**/coverage-reports/
+**/test-reports/
+
 # Debug and temporary files
 debug-*.png
 debug-*.jpg
@@ -221,7 +231,3 @@ debug-*.jpeg
 *-debug.png
 *-debug.jpg
 *.debug.log
-k8s/skaffold
-k8s/test-results/
-test-results/
-k8s/tests/e2e/playwright-report/

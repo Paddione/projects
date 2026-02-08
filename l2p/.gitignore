@@ -1,3 +1,6 @@
+# Test artifacts (all subdirectories)
+**/test-artifacts/
+
 data
 .env
 .env-dev
@@ -127,19 +130,16 @@ chroma/
 
 # Cursor IDE files
 .cursor/
+
+# Static assets (generated/downloaded)
 frontend/public/audio
 frontend/public/images
-test-artifacts/performance/reports
-backend/test-artifacts/performance/reports
-backend/coverage-reports
+
+# Coverage reports
+**/coverage-reports/
+
+# Environment overrides
 backend/.env.development
-frontend/coverage-reports
-coverage-reports
-backend/test-artifacts/performance/reports
-frontend/test-artifacts
-backend/test-artifacts/performance/reports
-.env.dev
-.env.dev
 set_gemini_env.sh
 
 # Debug files and screenshots

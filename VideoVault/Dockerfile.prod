@@ -50,6 +50,7 @@ COPY VideoVault/package*.json ./
 RUN npm install -g npm@11 && npm install --legacy-peer-deps --omit=dev
 
 COPY --from=build /app/dist /app/dist
+COPY VideoVault/migrations/ ./migrations/
 COPY VideoVault/scripts/ ./scripts/
 
 EXPOSE 5000

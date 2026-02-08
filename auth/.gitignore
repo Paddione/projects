@@ -27,3 +27,9 @@ logs/
 *.swp
 *.swo
 *~
+
+# Test artifacts and coverage
+coverage/
+test-results/
+playwright-report/
+*.lcov

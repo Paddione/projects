@@ -4,6 +4,7 @@ import { registerRoutes } from './routes';
 import { setupVite, serveStatic, log } from './vite';
 import { logger } from './lib/logger';
 import { ensureDbReady, db as dbInstance } from './db';
+import { runMigrations } from './migrate';
 import cookieParser from 'cookie-parser';
 import { globalErrorHandler } from './middleware/errorHandler';
 import { requestId, requestLogger, metricsMiddleware } from './middleware/observability';
@@ -99,6 +100,7 @@ app.use(requestLogger);
   if (process.env.DATABASE_URL && dbInstance) {
     try {
       await ensureDbReady();
+      await runMigrations();
       app.locals.db = dbInstance;
       logger.info('Database connection verified');
     } catch (err) {
