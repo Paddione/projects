@@ -58,10 +58,6 @@ jest.mock('../components/AuthGuard', () => ({
   )
 }))
 
-jest.mock('../components/EmailVerificationPage', () => ({
-  EmailVerificationPage: () => <div data-testid="email-verification-page">Email Verification Page</div>
-}))
-
 jest.mock('../pages/ProfilePage', () => ({
   ProfilePage: () => <div data-testid="profile-page">Profile Page</div>
 }))
@@ -72,11 +68,6 @@ jest.mock('../pages/QuestionSetManagerPage', () => ({
 
 jest.mock('../components/LevelUpNotificationManager', () => ({
   LevelUpNotificationManager: () => <div data-testid="level-up-notification-manager">Level Up Notification Manager</div>
-}))
-
-jest.mock('../pages/ResetPasswordPage', () => ({
-  __esModule: true,
-  default: () => <div data-testid="reset-password-page">Reset Password Page</div>
 }))
 
 jest.mock('../pages/AdminLogsPage', () => ({

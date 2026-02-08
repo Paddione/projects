@@ -214,7 +214,21 @@ export class AuthMiddleware {
 
       try {
         const payload = await this.verifyWithAuthService(token);
-        req.user = payload;
+
+        // Resolve auth-service user ID to local L2P user ID
+        if (payload.email) {
+          const localUser = await this.authService.getOrCreateUserFromUnifiedAuth(payload);
+          req.user = {
+            ...payload,
+            userId: localUser.id,
+            selectedCharacter: localUser.selected_character,
+            characterLevel: localUser.character_level,
+            isAdmin: localUser.is_admin || payload.isAdmin
+          };
+        } else {
+          req.user = payload;
+        }
+
         next();
         return;
       } catch (error) {
@@ -305,7 +319,19 @@ export class AuthMiddleware {
         } else {
           try {
             const payload = await this.verifyWithAuthService(token);
-            req.user = payload;
+            // Resolve auth-service user ID to local L2P user ID
+            if (payload.email) {
+              const localUser = await this.authService.getOrCreateUserFromUnifiedAuth(payload);
+              req.user = {
+                ...payload,
+                userId: localUser.id,
+                selectedCharacter: localUser.selected_character,
+                characterLevel: localUser.character_level,
+                isAdmin: localUser.is_admin || payload.isAdmin
+              };
+            } else {
+              req.user = payload;
+            }
           } catch {
             // Ignore auth failures for optional auth.
           }

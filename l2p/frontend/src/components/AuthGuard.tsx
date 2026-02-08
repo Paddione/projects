@@ -1,8 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { apiService } from '../services/apiService'
 import { useAuthStore } from '../stores/authStore'
-import { AuthForm } from './AuthForm'
-import { PasswordResetForm } from './PasswordResetForm'
 import { extractOAuthParams, validateState, getOAuthState, clearOAuthState, clearOAuthParamsFromUrl } from '../utils/oauth'
 import { importMetaEnv } from '../utils/import-meta'
 
@@ -13,11 +11,35 @@ interface AuthGuardProps {
 export const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null)
   const [isValidating, setIsValidating] = useState(true)
-  const [showPasswordReset, setShowPasswordReset] = useState(false)
   const [oauthError, setOauthError] = useState<string | null>(null)
   const { setUser, setToken, clearAuth } = useAuthStore()
 
   const processingOAuth = React.useRef(false)
+
+  const redirectToAuthService = useCallback(async () => {
+    const callbackURL = window.location.origin + window.location.pathname
+
+    // Use VITE_AUTH_SERVICE_URL if available
+    if (importMetaEnv.VITE_AUTH_SERVICE_URL) {
+      const authUrl = String(importMetaEnv.VITE_AUTH_SERVICE_URL).replace(/\/api$/, '')
+      window.location.href = `${authUrl}/login?callbackURL=${encodeURIComponent(callbackURL)}`
+      return
+    }
+
+    // Fallback: fetch auth URL from backend's OAuth config endpoint
+    try {
+      const config = await apiService.getOAuthConfig()
+      if (config?.authServiceUrl) {
+        const authUrl = String(config.authServiceUrl).replace(/\/api$/, '')
+        window.location.href = `${authUrl}/login?callbackURL=${encodeURIComponent(callbackURL)}`
+      } else {
+        setOauthError('Authentication service URL not configured')
+      }
+    } catch (error) {
+      console.error('AuthGuard: Failed to fetch auth config:', error)
+      setOauthError('Unable to reach authentication service')
+    }
+  }, [])
 
   // Define callbacks BEFORE useEffect hooks that reference them
   const handleOAuthCallback = useCallback(async (code: string, state: string) => {
@@ -103,11 +125,11 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
           apiService.setAuth('', '', userData)
 
           setUser({
-            id: String(userData.id),
+            id: String(userData.id || userData.userId),
             username: userData.username,
             email: userData.email,
-            character: userData.selected_character || 'student',
-            level: userData.character_level || 1
+            character: userData.selectedCharacter || userData.selected_character || 'student',
+            level: userData.characterLevel || userData.character_level || 1
           })
           setToken('session')
           setIsAuthenticated(true)
@@ -116,15 +138,8 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
         }
 
         setIsAuthenticated(false)
-
-        // If in unified auth mode, redirect to central login instead of showing local form
-        if (importMetaEnv.VITE_AUTH_SERVICE_URL) {
-          const authUrl = String(importMetaEnv.VITE_AUTH_SERVICE_URL).replace(/\/api$/, '')
-          const callbackURL = window.location.origin + window.location.pathname
-          window.location.href = `${authUrl}/login?callbackURL=${encodeURIComponent(callbackURL)}`
-        }
-
         setIsValidating(false)
+        redirectToAuthService()
         return;
       }
 
@@ -157,9 +172,10 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
           }
         }
       } else {
-        console.log('AuthGuard: Validation failed, clearing auth')
+        console.log('AuthGuard: Validation failed, clearing auth and redirecting')
         apiService.clearAuth()
         clearAuth()
+        redirectToAuthService()
       }
     } catch (error) {
       console.error('AuthGuard: Validation error:', error)
@@ -167,10 +183,11 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
       apiService.clearAuth()
       clearAuth()
       setIsAuthenticated(false)
+      redirectToAuthService()
     } finally {
       setIsValidating(false)
     }
-  }, [setUser, setToken, clearAuth])
+  }, [setUser, setToken, clearAuth, redirectToAuthService])
 
   // Handle OAuth callback first (before any other validation)
   useEffect(() => {
@@ -210,41 +227,6 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
     return () => window.removeEventListener('storage', handleStorageChange)
   }, [validateAuthentication])
 
-  const handleAuthSuccess = () => {
-    console.log('AuthGuard: Auth success callback called')
-    console.log('AuthGuard: Current token after auth success:', apiService.getToken())
-
-    // Update Zustand store with user data and token
-    const userData = apiService.getCurrentUser()
-    const token = apiService.getToken()
-
-    if (userData && token) {
-      console.log('AuthGuard: Updating Zustand store after auth success:', userData)
-      const userDataWithOptional = userData as { id: string; username: string; email: string; selectedCharacter?: string; characterLevel?: number }
-      setUser({
-        id: userData.id,
-        username: userData.username,
-        email: userData.email,
-        character: userDataWithOptional.selectedCharacter || 'student',
-        level: userDataWithOptional.characterLevel || 1
-      })
-      setToken(token)
-    }
-
-    // Directly set authenticated state since we just successfully authenticated
-    // No need to re-validate as the authentication just completed successfully
-    setIsAuthenticated(true)
-    setIsValidating(false)
-  }
-
-  const handleShowPasswordReset = () => {
-    setShowPasswordReset(true)
-  }
-
-  const handleBackToLogin = () => {
-    setShowPasswordReset(false)
-  }
-
   // Show loading state while validating
   if (isValidating) {
     return (
@@ -272,49 +254,44 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
     )
   }
 
-  // Show password reset form if requested
-  if (showPasswordReset) {
-    return <PasswordResetForm onBackToLogin={handleBackToLogin} />
-  }
-
-  // Show login form if not authenticated (fallback for local dev)
+  // Not authenticated — show redirect spinner (redirect already triggered in validateAuthentication)
   if (!isAuthenticated) {
-    // If we're in unified mode, we've already triggered a redirect in validateAuthentication
-    if (importMetaEnv.VITE_AUTH_SERVICE_URL) {
-      return (
-        <div style={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          minHeight: '100vh',
-          background: 'var(--background-color)',
-          color: 'var(--text-primary)'
-        }}>
-          <p>Redirecting to login...</p>
-        </div>
-      )
-    }
-
     return (
-      <>
-        {oauthError && (
-          <div style={{
-            position: 'fixed',
-            top: '20px',
-            left: '50%',
-            transform: 'translateX(-50%)',
-            background: 'var(--error-color, #dc2626)',
-            color: 'white',
-            padding: '1rem 2rem',
-            borderRadius: '8px',
-            boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-            zIndex: 1000
-          }}>
-            {oauthError}
-          </div>
-        )}
-        <AuthForm onAuthSuccess={handleAuthSuccess} onShowPasswordReset={handleShowPasswordReset} />
-      </>
+      <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        minHeight: '100vh',
+        background: 'var(--background-color)',
+        color: 'var(--text-primary)'
+      }}>
+        <div style={{ textAlign: 'center' }}>
+          {oauthError ? (
+            <div style={{
+              background: 'var(--error-color, #dc2626)',
+              color: 'white',
+              padding: '1rem 2rem',
+              borderRadius: '8px',
+              boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+            }}>
+              {oauthError}
+            </div>
+          ) : (
+            <>
+              <div style={{
+                width: '40px',
+                height: '40px',
+                border: '3px solid var(--border-color)',
+                borderTop: '3px solid var(--primary-color)',
+                borderRadius: '50%',
+                animation: 'spin 1s linear infinite',
+                margin: '0 auto 1rem'
+              }} />
+              <p>Redirecting to authentication service...</p>
+            </>
+          )}
+        </div>
+      </div>
     )
   }
 

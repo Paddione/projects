@@ -3,7 +3,6 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import { ThemeProvider } from './components/ThemeProvider'
 import { Header } from './components/Header'
 import { AuthGuard } from './components/AuthGuard'
-import { EmailVerificationPage } from './components/EmailVerificationPage'
 import { HomePage } from './pages/HomePage'
 import { ProfilePage } from './pages/ProfilePage'
 import { LobbyPage } from './pages/LobbyPage'
@@ -12,7 +11,6 @@ import { ResultsPage } from './pages/ResultsPage'
 import { QuestionSetManagerPage } from './pages/QuestionSetManagerPage'
 import AdminPanel from './pages/AdminPanel'
 import { DemoPage } from './components/DemoPage'
-import ResetPasswordPage from './pages/ResetPasswordPage'
 import { PerformanceMonitor } from './components/PerformanceMonitor'
 import { LevelUpNotificationManager } from './components/LevelUpNotificationManager'
 import ErrorBoundary from './components/ErrorBoundary'
@@ -87,8 +85,6 @@ export function AppContent() {
                   <Routes>
                     <Route path="/" element={<HomePage />} />
                     <Route path="/dashboard" element={<HomePage />} />
-                    <Route path="/verify-email" element={<EmailVerificationPage />} />
-                    <Route path="/reset-password" element={<ResetPasswordPage />} />
                     <Route path="/profile" element={<ProfilePage />} />
                     <Route path="/lobby/:lobbyId" element={<LobbyPage />} />
                     <Route path="/game/:lobbyId" element={<GamePage />} />

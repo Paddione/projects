@@ -15,24 +15,14 @@ jest.mock('../../services/apiService', () => ({
     getCurrentUserFromServer: jest.fn(),
     getToken: jest.fn(),
     clearAuth: jest.fn(),
+    getOAuthConfig: jest.fn(),
   },
 }))
 
-// Mock AuthForm and PasswordResetForm
-jest.mock('../AuthForm', () => ({
-  AuthForm: ({ onAuthSuccess }: any) => (
-    <div data-testid="auth-form">
-      <button onClick={onAuthSuccess} data-testid="auth-success-button">Auth Success</button>
-    </div>
-  ),
-}))
-
-jest.mock('../PasswordResetForm', () => ({
-  PasswordResetForm: ({ onBackToLogin }: any) => (
-    <div data-testid="password-reset-form">
-      <button onClick={onBackToLogin} data-testid="back-to-login-button">Back</button>
-    </div>
-  ),
+// Mock import-meta — no VITE_AUTH_SERVICE_URL so redirectToAuthService
+// falls through to getOAuthConfig (which we mock to avoid actual redirects)
+jest.mock('../../utils/import-meta', () => ({
+  importMetaEnv: {},
 }))
 
 describe('AuthGuard', () => {
@@ -43,6 +33,8 @@ describe('AuthGuard', () => {
     // Reset auth store
     useAuthStore.getState().clearAuth()
     jest.mocked(apiService.getCurrentUserFromServer).mockResolvedValue({ success: false })
+    // Mock getOAuthConfig to return null (no redirect will happen, error shown instead)
+    jest.mocked(apiService.getOAuthConfig).mockResolvedValue(null)
   })
 
   describe('Authentication validation', () => {
@@ -87,18 +79,29 @@ describe('AuthGuard', () => {
       })
     })
 
-    it('should show auth form when not authenticated', async () => {
+    it('should show error when not authenticated and no auth service configured', async () => {
       jest.mocked(apiService.isAuthenticated).mockReturnValue(false)
 
       render(<AuthGuard>{mockChildren}</AuthGuard>)
 
       await waitFor(() => {
-        expect(screen.getByTestId('auth-form')).toBeInTheDocument()
+        // Without VITE_AUTH_SERVICE_URL, falls back to getOAuthConfig which returns null
+        expect(screen.getByText('Authentication service URL not configured')).toBeInTheDocument()
         expect(screen.queryByTestId('protected-content')).not.toBeInTheDocument()
       })
     })
 
-    it('should show auth form when token validation fails', async () => {
+    it('should attempt redirect via OAuth config when not authenticated', async () => {
+      jest.mocked(apiService.isAuthenticated).mockReturnValue(false)
+
+      render(<AuthGuard>{mockChildren}</AuthGuard>)
+
+      await waitFor(() => {
+        expect(apiService.getOAuthConfig).toHaveBeenCalled()
+      })
+    })
+
+    it('should clear auth and attempt redirect when token validation fails', async () => {
       jest.mocked(apiService.isAuthenticated).mockReturnValue(true)
       jest.mocked(apiService.validateToken).mockResolvedValue({
         success: false,
@@ -107,88 +110,33 @@ describe('AuthGuard', () => {
       render(<AuthGuard>{mockChildren}</AuthGuard>)
 
       await waitFor(() => {
-        expect(screen.getByTestId('auth-form')).toBeInTheDocument()
         expect(apiService.clearAuth).toHaveBeenCalled()
+        // Falls back to getOAuthConfig for redirect
+        expect(apiService.getOAuthConfig).toHaveBeenCalled()
       }, { timeout: 5000 })
     })
 
-    it('should handle validation errors', async () => {
+    it('should handle validation errors and attempt redirect', async () => {
       jest.mocked(apiService.isAuthenticated).mockReturnValue(true)
       jest.mocked(apiService.validateToken).mockRejectedValue(new Error('Network error'))
 
       render(<AuthGuard>{mockChildren}</AuthGuard>)
 
       await waitFor(() => {
-        expect(screen.getByTestId('auth-form')).toBeInTheDocument()
         expect(apiService.clearAuth).toHaveBeenCalled()
+        expect(apiService.getOAuthConfig).toHaveBeenCalled()
       }, { timeout: 5000 })
     })
-  })
 
-  describe('Authentication success handling', () => {
-    it('should show protected content after successful auth', async () => {
+    it('should show error when getOAuthConfig fails', async () => {
       jest.mocked(apiService.isAuthenticated).mockReturnValue(false)
+      jest.mocked(apiService.getOAuthConfig).mockRejectedValue(new Error('Network error'))
 
       render(<AuthGuard>{mockChildren}</AuthGuard>)
 
       await waitFor(() => {
-        expect(screen.getByTestId('auth-form')).toBeInTheDocument()
+        expect(screen.getByText('Unable to reach authentication service')).toBeInTheDocument()
       })
-
-      // Simulate successful authentication
-      jest.mocked(apiService.getCurrentUser).mockReturnValue({
-        id: '1',
-        username: 'testuser',
-        email: 'test@example.com',
-      })
-      jest.mocked(apiService.getToken).mockReturnValue('new-token')
-
-      const authSuccessButton = screen.getByTestId('auth-success-button')
-      authSuccessButton.click()
-
-      await waitFor(() => {
-        expect(screen.getByTestId('protected-content')).toBeInTheDocument()
-      })
-    })
-
-    it('should update auth store on successful auth', async () => {
-      jest.mocked(apiService.isAuthenticated).mockReturnValue(false)
-
-      render(<AuthGuard>{mockChildren}</AuthGuard>)
-
-      await waitFor(() => {
-        expect(screen.getByTestId('auth-form')).toBeInTheDocument()
-      })
-
-      jest.mocked(apiService.getCurrentUser).mockReturnValue({
-        id: '1',
-        username: 'testuser',
-        email: 'test@example.com',
-      })
-      jest.mocked(apiService.getToken).mockReturnValue('new-token')
-
-      const authSuccessButton = screen.getByTestId('auth-success-button')
-      authSuccessButton.click()
-
-      await waitFor(() => {
-        const authState = useAuthStore.getState()
-        expect(authState.user).toEqual({
-          id: '1',
-          username: 'testuser',
-          email: 'test@example.com',
-          character: 'student',
-          level: 1,
-        })
-        expect(authState.token).toBe('new-token')
-      })
-    })
-  })
-
-  describe('Password reset flow', () => {
-    it('should show password reset form when requested', async () => {
-      // This test would require the actual AuthForm to trigger password reset
-      // Since we're mocking it, we'll skip this for now
-      // In a real implementation, you'd need to render the actual AuthForm
     })
   })
 
@@ -257,7 +205,6 @@ describe('AuthGuard', () => {
         success: true,
         data: { valid: true },
       })
-      // AuthGuard casts getCurrentUser() to extract selectedCharacter/characterLevel at runtime
       jest.mocked(apiService.getCurrentUser).mockReturnValue({
         id: '1',
         username: 'testuser',
@@ -296,7 +243,7 @@ describe('AuthGuard', () => {
   })
 
   describe('Edge cases', () => {
-    it('should handle validation response without data', async () => {
+    it('should attempt redirect when validation response has no data', async () => {
       jest.mocked(apiService.isAuthenticated).mockReturnValue(true)
       jest.mocked(apiService.validateToken).mockResolvedValue({
         success: true,
@@ -305,7 +252,7 @@ describe('AuthGuard', () => {
       render(<AuthGuard>{mockChildren}</AuthGuard>)
 
       await waitFor(() => {
-        expect(screen.getByTestId('auth-form')).toBeInTheDocument()
+        expect(apiService.getOAuthConfig).toHaveBeenCalled()
       }, { timeout: 5000 })
     })
 

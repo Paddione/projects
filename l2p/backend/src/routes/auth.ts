@@ -1014,17 +1014,29 @@ router.post('/oauth/exchange', async (req: Request, res: Response): Promise<void
     // Exchange code for tokens via OAuth service
     const tokenResponse = await oauthService.exchangeCode(code);
 
-    // Create or update game profile for the user
-    await gameProfileService.getOrCreateProfile(tokenResponse.user.userId);
+    // Resolve auth-service user to local L2P user so the frontend stores the correct local ID.
+    // Without this, the frontend would store the auth-service ID which mismatches
+    // the local L2P ID that socket middleware resolves, causing IDENTITY_MISMATCH errors.
+    const localUser = await authService.getOrCreateUserFromUnifiedAuth({
+      userId: tokenResponse.user.userId,
+      username: tokenResponse.user.username,
+      email: tokenResponse.user.email
+    });
+
+    // Create or update game profile for the local user
+    await gameProfileService.getOrCreateProfile(localUser.id);
 
     // Set tokens in cookies
     res.cookie('accessToken', tokenResponse.access_token, getCookieOptions(ACCESS_TOKEN_COOKIE_MAX_AGE));
     res.cookie('refreshToken', tokenResponse.refresh_token, getCookieOptions(REFRESH_TOKEN_COOKIE_MAX_AGE));
 
-    // Return tokens and user data
+    // Return tokens and user data with local L2P user ID
     res.status(200).json({
       message: 'OAuth login successful',
-      user: tokenResponse.user,
+      user: {
+        ...tokenResponse.user,
+        userId: localUser.id
+      },
       tokens: {
         accessToken: tokenResponse.access_token,
         refreshToken: tokenResponse.refresh_token
@@ -1058,18 +1070,33 @@ router.post('/oauth/refresh', async (req: Request, res: Response): Promise<void>
     // Refresh tokens via OAuth service
     const tokenResponse = await oauthService.refreshToken(refreshToken);
 
+    // Resolve auth-service user to local L2P user (same fix as /oauth/exchange)
+    let resolvedUser = tokenResponse.user;
+    if (tokenResponse.user?.email) {
+      try {
+        const localUser = await authService.getOrCreateUserFromUnifiedAuth({
+          userId: tokenResponse.user.userId,
+          username: tokenResponse.user.username,
+          email: tokenResponse.user.email
+        });
+        resolvedUser = { ...tokenResponse.user, userId: localUser.id };
+      } catch (err) {
+        console.warn('Failed to resolve refreshed user to local L2P user:', err instanceof Error ? err.message : err);
+      }
+    }
+
     // Set new tokens in cookies
     res.cookie('accessToken', tokenResponse.access_token, getCookieOptions(ACCESS_TOKEN_COOKIE_MAX_AGE));
     res.cookie('refreshToken', tokenResponse.refresh_token, getCookieOptions(REFRESH_TOKEN_COOKIE_MAX_AGE));
 
-    // Return new tokens
+    // Return new tokens with local L2P user ID
     res.status(200).json({
       message: 'Tokens refreshed successfully',
       tokens: {
         accessToken: tokenResponse.access_token,
         refreshToken: tokenResponse.refresh_token
       },
-      user: tokenResponse.user
+      user: resolvedUser
     });
   } catch (error) {
     console.error('OAuth refresh error:', error);
