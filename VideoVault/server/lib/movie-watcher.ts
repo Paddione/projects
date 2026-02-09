@@ -169,7 +169,7 @@ export function startMovieWatcher(options: MovieWatcherOptions = {}) {
 
     let scanCount = 0;
     let scanning = false;
-    const cleanupEveryNScans = parseInt(process.env.MOVIE_WATCHER_CLEANUP_SCANS || '20', 10);
+    const cleanupEveryNScans = parseInt(process.env.MOVIE_WATCHER_CLEANUP_SCANS || '240', 10);
 
     const runCleanup = async () => {
       const thumbsRemoved = await cleanupOrphanedThumbnails(moviesDir);
