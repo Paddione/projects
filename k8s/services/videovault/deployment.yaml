@@ -36,9 +36,11 @@ spec:
         runAsUser: 1001
         runAsGroup: 1001
         fsGroup: 1001
+      nodeSelector:
+        kubernetes.io/arch: amd64
       containers:
         - name: videovault
-          image: korczewski/videovault:latest
+          image: registry.local:5000/korczewski/videovault:latest
           imagePullPolicy: Always
           ports:
             - name: http

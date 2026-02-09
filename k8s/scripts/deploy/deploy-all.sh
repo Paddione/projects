@@ -82,7 +82,7 @@ deploy_secrets() {
 
     # Apply all secret files
     for secret_file in "$SECRETS_DIR"/*.yaml; do
-        if [ -f "$secret_file" ]; then
+        if [ -f "$secret_file" ] && [ -s "$secret_file" ]; then
             log_info "Applying $(basename "$secret_file")..."
             kubectl apply -f "$secret_file"
         fi

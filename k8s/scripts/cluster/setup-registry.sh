@@ -19,8 +19,8 @@ K8S_DIR="$(dirname "$(dirname "$SCRIPT_DIR")")"
 DEPLOY_DIR="$K8S_DIR/scripts/deploy"
 
 # Node IPs (all control plane + workers)
-NODES="${NODES:-10.10.0.21 10.10.0.22 10.10.0.23 10.10.0.31 10.10.0.32 10.10.0.33}"
-SSH_USER="${SSH_USER:-root}"
+NODES="${NODES:-10.0.3.1 10.0.3.2 10.0.3.3 10.0.31.1 10.0.31.2 10.0.31.3}"
+SSH_USER="${SSH_USER:-patrick}"
 
 # Colors
 GREEN='\033[0;32m'
@@ -91,9 +91,10 @@ log_info "Step 4: Distributing registries.yaml to all nodes..."
 
 for NODE in $NODES; do
     log_info "Copying to ${NODE}..."
-    if scp -o StrictHostKeyChecking=no "$GENERATED" "${SSH_USER}@${NODE}:/etc/rancher/k3s/registries.yaml" 2>/dev/null; then
+    if scp -o StrictHostKeyChecking=no "$GENERATED" "${SSH_USER}@${NODE}:/tmp/registries.yaml" 2>/dev/null && \
+       ssh -o StrictHostKeyChecking=no "${SSH_USER}@${NODE}" "sudo cp /tmp/registries.yaml /etc/rancher/k3s/registries.yaml" 2>/dev/null; then
         # Restart k3s on the node to pick up new registry config
-        if ssh -o StrictHostKeyChecking=no "${SSH_USER}@${NODE}" "systemctl restart k3s 2>/dev/null || systemctl restart k3s-agent 2>/dev/null" 2>/dev/null; then
+        if ssh -o StrictHostKeyChecking=no "${SSH_USER}@${NODE}" "sudo systemctl restart k3s 2>/dev/null || sudo systemctl restart k3s-agent 2>/dev/null" 2>/dev/null; then
             log_info "  ${NODE}: registries.yaml applied, k3s restarted"
         else
             log_warn "  ${NODE}: registries.yaml applied, could not restart k3s (may need manual restart)"

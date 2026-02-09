@@ -1,0 +1,105 @@
+---
+# =============================================================================
+# Cert Renewal CronJob
+# =============================================================================
+# Renews *.korczewski.de wildcard cert via Let's Encrypt DNS-01 with IPv64.
+# Runs monthly on the 1st at 03:00 UTC. Updates the korczewski-tls secret
+# and restarts Traefik to pick up the new cert.
+#
+# Manual trigger: kubectl create job cert-renewal-manual --from=cronjob/cert-renewal -n korczewski-infra
+# =============================================================================
+
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: cert-renewal
+  namespace: korczewski-infra
+  labels:
+    app: cert-renewal
+    app.kubernetes.io/name: cert-renewal
+    app.kubernetes.io/component: tls
+spec:
+  schedule: "0 3 1 * *"  # 1st of every month at 03:00 UTC
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      backoffLimit: 3
+      activeDeadlineSeconds: 600
+      template:
+        metadata:
+          labels:
+            app: cert-renewal
+        spec:
+          serviceAccountName: cert-renewal
+          restartPolicy: OnFailure
+          nodeSelector:
+            kubernetes.io/arch: amd64
+          containers:
+            - name: cert-renewal
+              image: neilpang/acme.sh:latest
+              command: ["/bin/sh", "-c"]
+              args:
+                - |
+                  set -e
+
+                  echo "=== Cert Renewal: $(date) ==="
+
+                  # Register account if needed
+                  acme.sh --register-account -m "$ACME_EMAIL" --server letsencrypt 2>/dev/null || true
+
+                  # Issue/renew wildcard cert using IPv64 DNS-01
+                  echo "Requesting wildcard cert for *.korczewski.de..."
+                  acme.sh --issue \
+                    --dns dns_ipv64 \
+                    -d "*.korczewski.de" \
+                    -d "korczewski.de" \
+                    --server letsencrypt \
+                    --force \
+                    --keylength ec-256
+
+                  # Read the cert and key
+                  CERT_DIR="/acme.sh/*.korczewski.de_ecc"
+                  CERT=$(cat "$CERT_DIR/fullchain.cer" | base64 | tr -d '\n')
+                  KEY=$(cat "$CERT_DIR/*.korczewski.de.key" | base64 | tr -d '\n')
+
+                  echo "Cert obtained, updating Kubernetes secret..."
+
+                  # Install kubectl
+                  apk add --no-cache curl >/dev/null 2>&1
+                  curl -sLO "https://dl.k8s.io/release/$(curl -sL https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+                  chmod +x kubectl && mv kubectl /usr/local/bin/
+
+                  # Update the korczewski-tls secret
+                  kubectl apply -f - <<EOF
+                  apiVersion: v1
+                  kind: Secret
+                  metadata:
+                    name: korczewski-tls
+                    namespace: korczewski-infra
+                  type: kubernetes.io/tls
+                  data:
+                    tls.crt: ${CERT}
+                    tls.key: ${KEY}
+                  EOF
+
+                  # Restart Traefik to pick up new cert
+                  kubectl rollout restart deployment/traefik -n korczewski-infra
+
+                  echo "=== Cert renewal complete ==="
+              env:
+                - name: IPv64_Token
+                  valueFrom:
+                    secretKeyRef:
+                      name: cert-renewal-credentials
+                      key: IPV64_API_KEY
+                - name: ACME_EMAIL
+                  value: "patrick@korczewski.de"
+              resources:
+                requests:
+                  memory: "64Mi"
+                  cpu: "50m"
+                limits:
+                  memory: "256Mi"
+                  cpu: "500m"

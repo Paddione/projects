@@ -44,9 +44,11 @@ spec:
         runAsUser: 1001
         runAsGroup: 1001
         fsGroup: 1001
+      nodeSelector:
+        kubernetes.io/arch: amd64
       containers:
         - name: shop
-          image: korczewski/shop:latest
+          image: registry.local:5000/korczewski/shop:latest
           imagePullPolicy: Always
           ports:
             - name: http

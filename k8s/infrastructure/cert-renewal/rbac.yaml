@@ -1,0 +1,48 @@
+---
+# =============================================================================
+# Cert Renewal RBAC
+# =============================================================================
+# ServiceAccount and Role for the cert renewal CronJob to update the
+# korczewski-tls secret in korczewski-infra namespace.
+# =============================================================================
+
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: cert-renewal
+  namespace: korczewski-infra
+  labels:
+    app: cert-renewal
+    app.kubernetes.io/name: cert-renewal
+    app.kubernetes.io/component: tls
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: cert-renewal
+  namespace: korczewski-infra
+  labels:
+    app: cert-renewal
+rules:
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["get", "create", "update", "patch"]
+  - apiGroups: ["apps"]
+    resources: ["deployments"]
+    verbs: ["get", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: cert-renewal
+  namespace: korczewski-infra
+  labels:
+    app: cert-renewal
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: cert-renewal
+subjects:
+  - kind: ServiceAccount
+    name: cert-renewal
+    namespace: korczewski-infra

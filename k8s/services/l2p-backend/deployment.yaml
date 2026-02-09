@@ -43,9 +43,11 @@ spec:
         runAsUser: 1001
         runAsGroup: 1001
         fsGroup: 1001
+      nodeSelector:
+        kubernetes.io/arch: amd64
       containers:
         - name: l2p-backend
-          image: korczewski/l2p-backend:latest
+          image: registry.local:5000/korczewski/l2p-backend:latest
           imagePullPolicy: Always
           ports:
             - name: http

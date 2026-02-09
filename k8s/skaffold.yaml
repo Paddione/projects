@@ -18,7 +18,6 @@ build:
   # Skaffold auto-prefixes image names: korczewski/* → registry.local:5000/korczewski/*
   tagPolicy:
     sha256: {}
-  defaultRepo: registry.local:5000
 
   artifacts:
     # Auth Service
@@ -68,6 +67,7 @@ manifests:
       - infrastructure/postgres
       - infrastructure/traefik
       - infrastructure/smb-csi
+      - infrastructure/cert-renewal
       - services/auth
       - services/l2p-backend
       - services/l2p-frontend
@@ -200,5 +200,6 @@ profiles:
           - infrastructure/postgres
           - infrastructure/traefik
           - infrastructure/smb-csi
+          - infrastructure/cert-renewal
       rawYaml:
         - base/namespaces.yaml
