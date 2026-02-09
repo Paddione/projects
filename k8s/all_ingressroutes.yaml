@@ -176,26 +176,26 @@ items:
   metadata:
     annotations:
       kubectl.kubernetes.io/last-applied-configuration: |
-        {"apiVersion":"traefik.io/v1alpha1","kind":"IngressRoute","metadata":{"annotations":{},"labels":{"app":"payment","app.kubernetes.io/component":"payment","app.kubernetes.io/name":"payment"},"name":"payment","namespace":"korczewski-services"},"spec":{"routes":[{"kind":"Rule","match":"Host(`shop.korczewski.de`) || Host(`payment.korczewski.de`)","middlewares":[{"name":"user-auth-chain","namespace":"korczewski-infra"}],"services":[{"name":"payment","port":3000}]}],"tls":{}}}
+        {"apiVersion":"traefik.io/v1alpha1","kind":"IngressRoute","metadata":{"annotations":{},"labels":{"app":"shop","app.kubernetes.io/component":"shop","app.kubernetes.io/name":"shop"},"name":"shop","namespace":"korczewski-services"},"spec":{"routes":[{"kind":"Rule","match":"Host(`shop.korczewski.de`)","middlewares":[{"name":"user-auth-chain","namespace":"korczewski-infra"}],"services":[{"name":"shop","port":3000}]}],"tls":{}}}
     creationTimestamp: "2026-01-15T00:06:51Z"
     generation: 6
     labels:
-      app: payment
-      app.kubernetes.io/component: payment
-      app.kubernetes.io/name: payment
-    name: payment
+      app: shop
+      app.kubernetes.io/component: shop
+      app.kubernetes.io/name: shop
+    name: shop
     namespace: korczewski-services
     resourceVersion: "455082"
     uid: 06c52dd6-a18d-4c5d-aaf3-3daa08b6f545
   spec:
     routes:
     - kind: Rule
-      match: Host(`shop.korczewski.de`) || Host(`payment.korczewski.de`)
+      match: Host(`shop.korczewski.de`)
       middlewares:
       - name: user-auth-chain
         namespace: korczewski-infra
       services:
-      - name: payment
+      - name: shop
         port: 3000
     tls: {}
 - apiVersion: traefik.io/v1alpha1

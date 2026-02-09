@@ -1,6 +1,6 @@
 import { PrismaClient } from '@prisma/client'
 
-const DEFAULT_DATABASE_URL = 'postgresql://payment_user:2e67a4d8576773457fcaac19b3de8b1c@localhost:5432/payment_test?schema=public'
+const DEFAULT_DATABASE_URL = 'postgresql://shop_user:2e67a4d8576773457fcaac19b3de8b1c@localhost:5432/shop_test?schema=public'
 
 if (!process.env.DATABASE_URL) {
     process.env.DATABASE_URL = DEFAULT_DATABASE_URL

@@ -26,7 +26,7 @@ export default defineConfig({
         reuseExistingServer: true,
         timeout: 120 * 1000,
         env: {
-            DATABASE_URL: 'postgresql://payment_user:2e67a4d8576773457fcaac19b3de8b1c@localhost:5432/payment_test?schema=public'
+            DATABASE_URL: 'postgresql://shop_user:2e67a4d8576773457fcaac19b3de8b1c@localhost:5432/shop_test?schema=public'
         }
     },
 });

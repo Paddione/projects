@@ -64,7 +64,10 @@ export default async function AdminProductsPage() {
                                     )}
                                 </td>
                                 <td className="shop-admin-table-actions">
-                                    <form action={deleteProduct.bind(null, product.id)}>
+                                    <Link href={`/admin/products/${product.id}/edit`} className="shop-admin-btn-edit">
+                                        Edit
+                                    </Link>
+                                    <form action={deleteProduct.bind(null, product.id)} style={{ display: 'inline' }}>
                                         <button type="submit" className="shop-admin-btn-delete">Delete</button>
                                     </form>
                                 </td>

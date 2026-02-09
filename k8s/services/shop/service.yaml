@@ -1,17 +1,17 @@
 ---
 # =============================================================================
-# Payment Service
+# Shop Service
 # =============================================================================
 
 apiVersion: v1
 kind: Service
 metadata:
-  name: payment
+  name: shop
   namespace: korczewski-services
   labels:
-    app: payment
-    app.kubernetes.io/name: payment
-    app.kubernetes.io/component: payment
+    app: shop
+    app.kubernetes.io/name: shop
+    app.kubernetes.io/component: shop
 spec:
   type: ClusterIP
   ports:
@@ -20,4 +20,4 @@ spec:
       protocol: TCP
       name: http
   selector:
-    app: payment
+    app: shop

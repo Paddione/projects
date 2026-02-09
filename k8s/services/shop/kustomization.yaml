@@ -1,19 +1,19 @@
 # =============================================================================
-# Payment Service Kustomization
+# Shop Service Kustomization
 # =============================================================================
 
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 metadata:
-  name: payment
+  name: shop
 
 namespace: korczewski-services
 
 labels:
   - pairs:
       app.kubernetes.io/part-of: korczewski
-      app.kubernetes.io/component: payment
+      app.kubernetes.io/component: shop
       tier: services
 
 resources:

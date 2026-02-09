@@ -54,7 +54,7 @@ done
 declare -A SERVICE_DIRS=(
     ["auth"]="auth"
     ["l2p"]="l2p"
-    ["payment"]="payment"
+    ["shop"]="shop"
     ["videovault"]="VideoVault"
 )
 
@@ -62,7 +62,7 @@ declare -A SERVICE_DIRS=(
 declare -A SERVICE_PROFILES=(
     ["auth"]="auth"
     ["l2p"]="l2p"
-    ["payment"]="payment"
+    ["shop"]="shop"
     ["videovault"]="videovault"
 )
 
@@ -151,8 +151,8 @@ wait_for_service() {
         l2p)
             app_label="app in (l2p-backend, l2p-frontend)"
             ;;
-        payment)
-            app_label="app=payment"
+        shop)
+            app_label="app=shop"
             ;;
         videovault)
             app_label="app=videovault"
@@ -193,8 +193,8 @@ print_summary() {
                 l2p)
                     kubectl get pods -l 'app in (l2p-backend, l2p-frontend)' -n korczewski-services 2>/dev/null || true
                     ;;
-                payment)
-                    kubectl get pods -l app=payment -n korczewski-services 2>/dev/null || true
+                shop)
+                    kubectl get pods -l app=shop -n korczewski-services 2>/dev/null || true
                     ;;
                 videovault)
                     kubectl get pods -l app=videovault -n korczewski-services 2>/dev/null || true

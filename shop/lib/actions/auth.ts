@@ -31,7 +31,7 @@ export async function getRequestUrlFromHeaders(headersList: Headers): Promise<st
         '/';
 
     if (!host) {
-        return 'https://payment.korczewski.de';
+        return 'https://shop.korczewski.de';
     }
 
     const isLocal = host.includes('localhost') || host.startsWith('127.0.0.1');

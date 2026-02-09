@@ -23,7 +23,7 @@ StatefulSet running PostgreSQL with persistent storage.
 **Databases:**
 - `auth_db` - Auth service
 - `l2p_db` - L2P service
-- `payment_db` - Payment service
+- `shop_db` - Shop service
 - `videovault_db` - VideoVault service
 
 ## Traefik (`traefik/`)

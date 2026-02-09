@@ -27,7 +27,7 @@ data:
       -- Create databases
       CREATE DATABASE auth_db;
       CREATE DATABASE l2p_db;
-      CREATE DATABASE payment_db;
+      CREATE DATABASE shop_db;
       CREATE DATABASE videovault_db;
     EOSQL
 
@@ -36,18 +36,18 @@ data:
       -- Create users
       CREATE USER auth_user WITH PASSWORD "$AUTH_DB_PASSWORD";
       CREATE USER l2p_user WITH PASSWORD "$L2P_DB_PASSWORD";
-      CREATE USER payment_user WITH PASSWORD "$PAYMENT_DB_PASSWORD";
+      CREATE USER shop_user WITH PASSWORD "$SHOP_DB_PASSWORD";
       CREATE USER videovault_user WITH PASSWORD "$VIDEOVAULT_DB_PASSWORD";
 
       -- Grant database access
       GRANT ALL PRIVILEGES ON DATABASE auth_db TO auth_user;
       GRANT ALL PRIVILEGES ON DATABASE l2p_db TO l2p_user;
-      GRANT ALL PRIVILEGES ON DATABASE payment_db TO payment_user;
+      GRANT ALL PRIVILEGES ON DATABASE shop_db TO shop_user;
       GRANT ALL PRIVILEGES ON DATABASE videovault_db TO videovault_user;
     EOSQL
 
     # Grant schema permissions for each database
-    for db_info in "auth_db:auth_user" "l2p_db:l2p_user" "payment_db:payment_user" "videovault_db:videovault_user"; do
+    for db_info in "auth_db:auth_user" "l2p_db:l2p_user" "shop_db:shop_user" "videovault_db:videovault_user"; do
       db=$(echo $db_info | cut -d: -f1)
       user=$(echo $db_info | cut -d: -f2)
       echo "Granting schema permissions on $db to $user..."

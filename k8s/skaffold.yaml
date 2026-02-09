@@ -42,11 +42,11 @@ build:
           VITE_SOCKET_URL: "https://l2p.korczewski.de"
           VITE_AUTH_SERVICE_URL: "https://auth.korczewski.de"
 
-    # Payment Service
-    - image: korczewski/payment
+    # Shop Service
+    - image: korczewski/shop
       context: ..
       docker:
-        dockerfile: payment/Dockerfile
+        dockerfile: shop/Dockerfile
 
     # VideoVault
     - image: korczewski/videovault
@@ -66,7 +66,7 @@ manifests:
       - services/auth
       - services/l2p-backend
       - services/l2p-frontend
-      - services/payment
+      - services/shop
       - services/videovault
   rawYaml:
     - base/namespaces.yaml
@@ -116,7 +116,7 @@ portForward:
     port: 80
     localPort: 3000
   - resourceType: service
-    resourceName: payment
+    resourceName: shop
     namespace: korczewski-services
     port: 3000
     localPort: 3004
@@ -161,18 +161,18 @@ profiles:
           - services/l2p-backend
           - services/l2p-frontend
 
-  # Payment only
-  - name: payment
+  # Shop only
+  - name: shop
     build:
       artifacts:
-        - image: korczewski/payment
+        - image: korczewski/shop
           context: ..
           docker:
-            dockerfile: payment/Dockerfile
+            dockerfile: shop/Dockerfile
     manifests:
       kustomize:
         paths:
-          - services/payment
+          - services/shop
 
   # VideoVault only
   - name: videovault

@@ -81,7 +81,7 @@ stringData:
   POSTGRES_DB: "$(get_env POSTGRES_DB postgres)"
   AUTH_DB_PASSWORD: "$(get_env AUTH_DB_PASSWORD)"
   L2P_DB_PASSWORD: "$(get_env L2P_DB_PASSWORD)"
-  PAYMENT_DB_PASSWORD: "$(get_env PAYMENT_DB_PASSWORD)"
+  SHOP_DB_PASSWORD: "$(get_env SHOP_DB_PASSWORD)"
   VIDEOVAULT_DB_PASSWORD: "$(get_env VIDEOVAULT_DB_PASSWORD)"
 EOF
 log_info "Created postgres-secret.yaml"
@@ -140,31 +140,31 @@ EOF
 log_info "Created l2p-backend-secret.yaml"
 
 # =============================================================================
-# Payment Service Secret
+# Shop Service Secret
 # =============================================================================
-PAYMENT_DB_URL="postgresql://$(get_env PAYMENT_DB_USER payment_user):$(get_env PAYMENT_DB_PASSWORD)@${PG_HOST}:5432/payment_db?schema=public"
+SHOP_DB_URL="postgresql://$(get_env SHOP_DB_USER shop_user):$(get_env SHOP_DB_PASSWORD)@${PG_HOST}:5432/shop_db?schema=public"
 
-cat > "$SECRETS_DIR/payment-secret.yaml" <<EOF
+cat > "$SECRETS_DIR/shop-secret.yaml" <<EOF
 ---
 apiVersion: v1
 kind: Secret
 metadata:
-  name: payment-credentials
+  name: shop-credentials
   namespace: korczewski-services
   labels:
-    app: payment
+    app: shop
 type: Opaque
 stringData:
-  DATABASE_URL: "${PAYMENT_DB_URL}"
-  NEXTAUTH_SECRET: "$(get_env PAYMENT_NEXTAUTH_SECRET)"
-  AUTH_SECRET: "$(get_env PAYMENT_AUTH_SECRET)"
-  AUTH_GOOGLE_ID: "$(get_env PAYMENT_AUTH_GOOGLE_ID)"
-  AUTH_GOOGLE_SECRET: "$(get_env PAYMENT_AUTH_GOOGLE_SECRET)"
+  DATABASE_URL: "${SHOP_DB_URL}"
+  NEXTAUTH_SECRET: "$(get_env SHOP_NEXTAUTH_SECRET)"
+  AUTH_SECRET: "$(get_env SHOP_AUTH_SECRET)"
+  AUTH_GOOGLE_ID: "$(get_env SHOP_AUTH_GOOGLE_ID)"
+  AUTH_GOOGLE_SECRET: "$(get_env SHOP_AUTH_GOOGLE_SECRET)"
   STRIPE_SECRET_KEY: "$(get_env STRIPE_SECRET_KEY)"
   STRIPE_WEBHOOK_SECRET: "$(get_env STRIPE_WEBHOOK_SECRET)"
   STRIPE_PUBLISHABLE_KEY: "$(get_env NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY)"
 EOF
-log_info "Created payment-secret.yaml"
+log_info "Created shop-secret.yaml"
 
 # =============================================================================
 # VideoVault Service Secret

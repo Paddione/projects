@@ -7,7 +7,7 @@ on:
 
 defaults:
   run:
-    working-directory: payment
+    working-directory: shop
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -17,7 +17,7 @@ jobs:
         with:
             node-version: 18
             cache: npm
-            cache-dependency-path: payment/package-lock.json
+            cache-dependency-path: shop/package-lock.json
       - run: npm ci
       - run: npx playwright install --with-deps
       - run: npm run test

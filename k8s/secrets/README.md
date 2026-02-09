@@ -16,7 +16,7 @@ This reads from the root `.env` file and creates:
 - `postgres-secret.yaml` - PostgreSQL credentials
 - `auth-secret.yaml` - Auth service secrets (JWT, OAuth, SMTP)
 - `l2p-backend-secret.yaml` - L2P backend secrets
-- `payment-secret.yaml` - Payment service secrets (Stripe, NextAuth)
+- `shop-secret.yaml` - Shop service secrets (Stripe, NextAuth)
 - `videovault-secret.yaml` - VideoVault secrets
 - `traefik-secret.yaml` - Traefik dashboard auth
 - `ipv64-secret.yaml` - IPv64 DNS credentials (ACME DNS-01)

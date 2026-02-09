@@ -9,7 +9,7 @@ Application services deployed to the `korczewski-services` namespace.
 | Auth | 5500 | auth.korczewski.de | PostgreSQL |
 | L2P Backend | 3001 | l2p.korczewski.de (`/api`, `/socket.io`) | PostgreSQL, Auth |
 | L2P Frontend | 80 | l2p.korczewski.de | L2P Backend |
-| Payment | 3000 | payment.korczewski.de, shop.korczewski.de | PostgreSQL, Auth |
+| Shop | 3000 | shop.korczewski.de | PostgreSQL, Auth |
 | VideoVault | 5000 | videovault.korczewski.de, video.korczewski.de | PostgreSQL, SMB |
 
 ## Auth (`auth/`)
@@ -40,9 +40,9 @@ React SPA for the L2P quiz platform.
 
 **Manifests:** `deployment.yaml`, `service.yaml`, `ingressroute.yaml`, `kustomization.yaml`
 
-## Payment (`payment/`)
+## Shop (`shop/`)
 
-Next.js payment platform with Stripe integration.
+Next.js shop platform with Stripe integration.
 
 **Endpoints:**
 - `/` - Main application

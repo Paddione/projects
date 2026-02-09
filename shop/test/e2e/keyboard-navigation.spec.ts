@@ -29,7 +29,7 @@ test.afterEach(async () => {
 });
 
 /**
- * Keyboard Navigation Tests for Payment Application
+ * Keyboard Navigation Tests for Shop Application
  *
  * Tests keyboard accessibility for financial transactions,
  * shop navigation, and wallet management.
@@ -46,7 +46,7 @@ test.describe('Keyboard Navigation - Home/Landing Page', () => {
     // Tab to logo
     await page.keyboard.press('Tab');
 
-    const logo = page.locator('.payment-logo');
+    const logo = page.locator('.shop-logo');
     await expect(logo).toBeFocused();
 
     // Tab to Shop link
@@ -110,11 +110,11 @@ test.describe('Keyboard Navigation - Home/Landing Page', () => {
 test.describe('Keyboard Navigation - Shop Page', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/shop', { waitUntil: 'domcontentloaded' });
-    await page.waitForSelector('.payment-product-card, [data-testid="product-card"]');
+    await page.waitForSelector('.shop-product-card, [data-testid="product-card"]');
   });
 
   test('should navigate product grid with Tab', async ({ page }) => {
-    const firstProduct = page.locator('.payment-product-card, [data-testid="product-card"]').first();
+    const firstProduct = page.locator('.shop-product-card, [data-testid="product-card"]').first();
 
     // Tab to first product
     let focused = false;
@@ -127,7 +127,7 @@ test.describe('Keyboard Navigation - Shop Page', () => {
   });
 
   test('should navigate to View Details with Tab', async ({ page }) => {
-    const viewDetailsButton = page.locator('.payment-btn-view-details').first();
+    const viewDetailsButton = page.locator('.shop-btn-view-details').first();
 
     let focused = false;
     for (let i = 0; i < 30 && !focused; i++) {
@@ -139,7 +139,7 @@ test.describe('Keyboard Navigation - Shop Page', () => {
   });
 
   test('should activate View Details with Enter', async ({ page }) => {
-    const viewDetailsButton = page.locator('.payment-btn-view-details').first();
+    const viewDetailsButton = page.locator('.shop-btn-view-details').first();
     await viewDetailsButton.focus();
 
     await viewDetailsButton.press('Enter');
@@ -149,7 +149,7 @@ test.describe('Keyboard Navigation - Shop Page', () => {
   });
 
   test('Product images should not receive focus (Issue #2)', async ({ page }) => {
-    const productImage = page.locator('.payment-product-image').first();
+    const productImage = page.locator('.shop-product-image').first();
 
     // Tab through page
     for (let i = 0; i < 50; i++) {
@@ -162,7 +162,7 @@ test.describe('Keyboard Navigation - Shop Page', () => {
   });
 
   test('Product cards should have visible focus indicators', async ({ page }) => {
-    const firstCard = page.locator('.payment-product-card').first();
+    const firstCard = page.locator('.shop-product-card').first();
 
     // Tab until focused
     let focused = false;
@@ -244,7 +244,7 @@ test.describe('Keyboard Navigation - Wallet Page', () => {
   });
 
   test('Balance amount should not be focusable', async ({ page }) => {
-    const balanceAmount = page.locator('.payment-balance-amount');
+    const balanceAmount = page.locator('.shop-balance-amount');
 
     if (await balanceAmount.isVisible()) {
       // Tab through page
@@ -265,7 +265,7 @@ test.describe('Keyboard Navigation - Header Navigation', () => {
   });
 
   test('should navigate all header links with Tab', async ({ page }) => {
-    const logo = page.locator('.payment-logo');
+    const logo = page.locator('.shop-logo');
     const shopLink = page.getByRole('link', { name: 'Shop', exact: true });
 
     // Tab to logo
@@ -289,18 +289,18 @@ test.describe('Keyboard Navigation - Header Navigation', () => {
   });
 
   test('Admin link is hidden for non-admin users', async ({ page }) => {
-    const adminLink = page.locator('.payment-nav-admin');
+    const adminLink = page.locator('.shop-nav-admin');
     await expect(adminLink).toHaveCount(0);
   });
 
   test('Login button is hidden when authenticated', async ({ page }) => {
-    const loginButton = page.locator('.payment-btn-login');
+    const loginButton = page.locator('.shop-btn-login');
     await expect(loginButton).toHaveCount(0);
   });
 
   test('Sign Out button should be keyboard accessible', async ({ page }) => {
     // Requires authentication
-    const signOutButton = page.locator('.payment-btn-signout');
+    const signOutButton = page.locator('.shop-btn-signout');
 
     if (await signOutButton.isVisible()) {
       await signOutButton.focus();
@@ -372,7 +372,7 @@ test.describe('Keyboard Navigation - Form Inputs', () => {
     await page.goto('/wallet', { waitUntil: 'domcontentloaded' });
 
     // Might be redirected to login
-    const input = page.locator('.payment-form-input').first();
+    const input = page.locator('.shop-form-input').first();
     await input.waitFor({ state: 'visible' }).catch(() => { });
 
     if (await input.isVisible()) {
@@ -397,7 +397,7 @@ test.describe('Accessibility - Focus Indicators', () => {
   test('All buttons should have visible focus', async ({ page }) => {
     await page.goto('/', { waitUntil: 'domcontentloaded' });
 
-    const buttons = page.locator('button, a.payment-btn-primary, a.payment-btn-secondary');
+    const buttons = page.locator('button, a.shop-btn-primary, a.shop-btn-secondary');
     const count = await buttons.count();
 
     if (count > 0) {
@@ -440,7 +440,7 @@ test.describe('Accessibility - Reduced Motion', () => {
     await page.emulateMedia({ reducedMotion: 'reduce' });
     await page.goto('/', { waitUntil: 'domcontentloaded' });
 
-    const hero = page.locator('.payment-hero');
+    const hero = page.locator('.shop-hero');
 
     if (await hero.isVisible()) {
       const animationDuration = await hero.evaluate((el) => {
@@ -458,7 +458,7 @@ test.describe('Accessibility - High Contrast', () => {
     await page.emulateMedia({ colorScheme: 'dark', contrast: 'more' });
     await page.goto('/', { waitUntil: 'domcontentloaded' });
 
-    const productCard = page.locator('.payment-product-card').first();
+    const productCard = page.locator('.shop-product-card').first();
 
     if (await productCard.isVisible()) {
       const borderWidth = await productCard.evaluate((el) => {

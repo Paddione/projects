@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { headers } from 'next/headers'
 import { getAuthLoginUrlFromHeaders, getCurrentUser } from '@/lib/actions/auth'
 import MobileNav from './mobile-nav'
+import NotificationBell from './notification-bell'
 
 export default async function Header() {
     const user = await getCurrentUser()
@@ -23,7 +24,10 @@ export default async function Header() {
                             <Link href="/orders" className="shop-nav-link">Orders</Link>
                             <Link href="/appointments" className="shop-nav-link">Appointments</Link>
                             {user.role === 'ADMIN' && (
-                                <Link href="/admin" className="shop-nav-link shop-nav-admin">Admin</Link>
+                                <>
+                                    <Link href="/admin" className="shop-nav-link shop-nav-admin">Admin</Link>
+                                    <NotificationBell />
+                                </>
                             )}
                             <span className="shop-nav-user">{user.email}</span>
                             <a href={`${process.env.AUTH_SERVICE_URL || 'https://auth.korczewski.de'}/logout`} className="shop-btn-signout">

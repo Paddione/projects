@@ -1,28 +1,28 @@
 ---
 # =============================================================================
-# Payment Service Deployment
+# Shop Service Deployment
 # =============================================================================
-# Next.js 16 payment platform with Stripe integration.
+# Next.js 16 shop platform with Stripe integration.
 # Uses standalone output mode for optimized production builds.
 # =============================================================================
 
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: payment
+  name: shop
   namespace: korczewski-services
   labels:
-    app: payment
-    app.kubernetes.io/component: payment
-    app.kubernetes.io/name: payment
+    app: shop
+    app.kubernetes.io/component: shop
+    app.kubernetes.io/name: shop
     app.kubernetes.io/part-of: korczewski
     tier: services
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: payment
-      app.kubernetes.io/component: payment
+      app: shop
+      app.kubernetes.io/component: shop
       app.kubernetes.io/part-of: korczewski
       tier: services
   strategy:
@@ -33,9 +33,9 @@ spec:
   template:
     metadata:
       labels:
-        app: payment
-        app.kubernetes.io/component: payment
-        app.kubernetes.io/name: payment
+        app: shop
+        app.kubernetes.io/component: shop
+        app.kubernetes.io/name: shop
         app.kubernetes.io/part-of: korczewski
         tier: services
     spec:
@@ -45,8 +45,8 @@ spec:
         runAsGroup: 1001
         fsGroup: 1001
       containers:
-        - name: payment
-          image: korczewski/payment:latest
+        - name: shop
+          image: korczewski/shop:latest
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
@@ -54,7 +54,7 @@ spec:
               protocol: TCP
           envFrom:
             - secretRef:
-                name: payment-credentials
+                name: shop-credentials
           env:
             - name: NODE_ENV
               value: "production"

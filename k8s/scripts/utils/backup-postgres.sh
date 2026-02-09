@@ -35,7 +35,7 @@ fi
 log_info "Backing up databases from pod: $POD"
 
 # Databases to backup
-DATABASES=("auth_db" "l2p_db" "payment_db" "videovault_db")
+DATABASES=("auth_db" "l2p_db" "shop_db" "videovault_db")
 
 for db in "${DATABASES[@]}"; do
     BACKUP_FILE="$BACKUP_DIR/${db}_${TIMESTAMP}.sql.gz"

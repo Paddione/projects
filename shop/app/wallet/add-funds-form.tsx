@@ -1,8 +1,13 @@
 'use client'
 import { useState } from 'react'
 
+const PRESETS = [100, 500, 1000, 5000, 10000]
+const MIN = 100
+const MAX = 10000
+const STEP = 100
+
 export default function AddFundsForm() {
-    const [amount, setAmount] = useState(10)
+    const [amount, setAmount] = useState(500)
 
     const handleCheckout = async () => {
         const res = await fetch('/api/stripe/checkout', {
@@ -18,28 +23,50 @@ export default function AddFundsForm() {
 
     return (
         <div className="shop-form">
+            {/* Preset quick-buy buttons */}
+            <div className="shop-preset-buttons">
+                {PRESETS.map((preset) => (
+                    <button
+                        key={preset}
+                        className={`shop-preset-btn ${amount === preset ? 'active' : ''}`}
+                        onClick={() => setAmount(preset)}
+                        type="button"
+                    >
+                        {preset.toLocaleString()} GC
+                    </button>
+                ))}
+            </div>
+
+            {/* Range slider */}
             <div className="shop-form-group">
-                <label className="shop-form-label">Amount (GC)</label>
+                <label className="shop-form-label">Custom Amount</label>
                 <input
-                    type="number"
+                    type="range"
+                    min={MIN}
+                    max={MAX}
+                    step={STEP}
                     value={amount}
                     onChange={(e) => setAmount(Number(e.target.value))}
-                    className="shop-form-input"
+                    className="shop-slider"
                 />
-                <p className="shop-form-hint">100 GC = 1.00 EUR</p>
+                <div className="shop-slider-labels">
+                    <span>{MIN} GC</span>
+                    <span>{MAX.toLocaleString()} GC</span>
+                </div>
             </div>
+
+            {/* Live conversion display */}
+            <div className="shop-conversion-display">
+                <span className="shop-conversion-amount">{amount.toLocaleString()} GC</span>
+                <span className="shop-conversion-equals">=</span>
+                <span className="shop-conversion-eur">{(amount / 100).toFixed(2)} EUR</span>
+            </div>
+
             <button
                 onClick={handleCheckout}
                 className="shop-btn-submit"
             >
-                Pay with Card (Stripe)
-            </button>
-            <button
-                disabled
-                className="shop-btn-submit"
-                style={{ opacity: 0.5, cursor: 'not-allowed', background: 'var(--cv-glass-3)', border: '1px solid var(--cv-border-1)', color: 'var(--cv-text-muted)' }}
-            >
-                Pay with PayPal (Coming Soon)
+                Pay {(amount / 100).toFixed(2)} EUR with Card (Stripe)
             </button>
         </div>
     )

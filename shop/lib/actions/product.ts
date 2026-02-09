@@ -37,6 +37,29 @@ export async function createProduct(formData: FormData) {
     redirect('/admin/products')
 }
 
+export async function updateProduct(id: string, formData: FormData) {
+    await requireAdmin()
+
+    const rawData = {
+        title: formData.get('title'),
+        description: formData.get('description'),
+        price: formData.get('price'),
+        stock: formData.get('stock'),
+        imageUrl: formData.get('imageUrl') || undefined,
+        isService: formData.get('isService') === 'on',
+    }
+
+    const validatedData = productSchema.parse(rawData)
+
+    await db.product.update({
+        where: { id },
+        data: validatedData,
+    })
+
+    revalidatePath('/admin/products')
+    redirect('/admin/products')
+}
+
 export async function deleteProduct(id: string) {
     await requireAdmin() // Throws if not admin
 

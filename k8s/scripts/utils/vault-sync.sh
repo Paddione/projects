@@ -72,7 +72,7 @@ push_to_vault() {
 POSTGRES=()
 AUTH=()
 L2P=()
-PAYMENT=()
+SHOP=()
 VIDEOVAULT=()
 GLOBAL=()
 
@@ -93,8 +93,8 @@ while IFS='=' read -r key value || [ -n "$key" ]; do
     elif [[ "$key" =~ ^L2P_ ]]; then
         stripped="${key#L2P_}"
         L2P+=("$stripped=$value")
-    elif [[ "$key" =~ ^PAYMENT_ ]] || [[ "$key" =~ ^STRIPE_ ]] || [[ "$key" =~ ^NEXT_PUBLIC_STRIPE_ ]]; then
-        PAYMENT+=("$entry")
+    elif [[ "$key" =~ ^SHOP_ ]] || [[ "$key" =~ ^STRIPE_ ]] || [[ "$key" =~ ^NEXT_PUBLIC_STRIPE_ ]]; then
+        SHOP+=("$entry")
     elif [[ "$key" =~ ^VIDEO_ ]] || [[ "$key" =~ ^VIDEOVAULT_ ]]; then
         VIDEOVAULT+=("$entry")
     else
@@ -105,7 +105,7 @@ done < "$ENV_FILE"
 push_to_vault "postgres" "${POSTGRES[@]}"
 push_to_vault "auth" "${AUTH[@]}"
 push_to_vault "l2p" "${L2P[@]}"
-push_to_vault "payment" "${PAYMENT[@]}"
+push_to_vault "shop" "${SHOP[@]}"
 push_to_vault "videovault" "${VIDEOVAULT[@]}"
 push_to_vault "global" "${GLOBAL[@]}"
 

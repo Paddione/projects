@@ -10,7 +10,7 @@ This directory contains everything needed to deploy the full Korczewski stack to
 - **Traefik** - Ingress controller with TLS and middleware
 - **Auth Service** - JWT authentication and OAuth
 - **L2P** - Multiplayer quiz platform (frontend + backend)
-- **Payment** - Next.js payment platform with Stripe
+- **Shop** - Next.js shop platform with Stripe
 - **VideoVault** - Video management with SMB-backed storage
 
 ## Quick Start
@@ -28,7 +28,7 @@ This directory contains everything needed to deploy the full Korczewski stack to
 ./scripts/deploy/deploy-all.sh
 
 # 4. Add hosts entries
-echo '127.0.0.1 l2p.korczewski.de auth.korczewski.de payment.korczewski.de shop.korczewski.de videovault.korczewski.de video.korczewski.de traefik.korczewski.de' | sudo tee -a /etc/hosts
+echo '127.0.0.1 l2p.korczewski.de auth.korczewski.de shop.korczewski.de videovault.korczewski.de video.korczewski.de traefik.korczewski.de' | sudo tee -a /etc/hosts
 ```
 
 ### Production (Multi-Node k3s)
@@ -65,7 +65,7 @@ k8s/
 │   ├── auth/             # Auth service manifests
 │   ├── l2p-backend/      # L2P backend manifests
 │   ├── l2p-frontend/     # L2P frontend manifests
-│   ├── payment/          # Payment service manifests
+│   ├── shop/             # Shop service manifests
 │   └── videovault/       # VideoVault manifests
 ├── overlays/             # Kustomize overlays (dev/prod)
 ├── secrets/              # Generated secrets (see secrets/README.md)
@@ -84,7 +84,7 @@ skaffold dev
 # Single service
 skaffold dev --profile=auth
 skaffold dev --profile=l2p
-skaffold dev --profile=payment
+skaffold dev --profile=shop
 skaffold dev --profile=videovault
 skaffold dev --profile=infra
 
@@ -104,7 +104,7 @@ kubectl apply -k infrastructure/smb-csi
 ./scripts/deploy/deploy-traefik.sh
 ./scripts/deploy/deploy-auth.sh
 ./scripts/deploy/deploy-l2p.sh
-./scripts/deploy/deploy-payment.sh
+./scripts/deploy/deploy-shop.sh
 ./scripts/deploy/deploy-videovault.sh
 ```
 
@@ -120,7 +120,7 @@ Services must be deployed in this order due to dependencies:
 6. **Auth** - Authentication service
 7. **L2P Backend** - Depends on PostgreSQL, Auth
 8. **L2P Frontend** - Depends on Backend
-9. **Payment** - Depends on PostgreSQL, Auth
+9. **Shop** - Depends on PostgreSQL, Auth
 10. **VideoVault** - Depends on PostgreSQL, SMB
 
 ## Configuration
@@ -135,7 +135,7 @@ POSTGRES_USER=postgres
 POSTGRES_PASSWORD=<strong-password>
 AUTH_DB_PASSWORD=<password>
 L2P_DB_PASSWORD=<password>
-PAYMENT_DB_PASSWORD=<password>
+SHOP_DB_PASSWORD=<password>
 VIDEOVAULT_DB_PASSWORD=<password>
 
 # Auth Service
@@ -149,11 +149,11 @@ AUTH_GOOGLE_CLIENT_SECRET=<oauth-secret>
 L2P_JWT_SECRET=<64-char-hex>
 L2P_JWT_REFRESH_SECRET=<64-char-hex>
 
-# Payment
-PAYMENT_NEXTAUTH_SECRET=<64-char-hex>
-PAYMENT_AUTH_SECRET=<64-char-hex>
-PAYMENT_AUTH_GOOGLE_ID=<oauth-client-id>
-PAYMENT_AUTH_GOOGLE_SECRET=<oauth-secret>
+# Shop
+SHOP_NEXTAUTH_SECRET=<64-char-hex>
+SHOP_AUTH_SECRET=<64-char-hex>
+SHOP_AUTH_GOOGLE_ID=<oauth-client-id>
+SHOP_AUTH_GOOGLE_SECRET=<oauth-secret>
 STRIPE_SECRET_KEY=sk_...
 STRIPE_WEBHOOK_SECRET=whsec_...
 NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_...
@@ -295,7 +295,7 @@ kubectl logs -l app=csi-smb-controller -n kube-system
        ┌──────────┬───────┼───────┬──────────┐
        │          │       │       │          │
 ┌──────▼───┐ ┌───▼────┐ ┌▼────┐ ┌▼───────┐ ┌▼──────────┐
-│   Auth   │ │  L2P   │ │ L2P │ │Payment │ │VideoVault │
+│   Auth   │ │  L2P   │ │ L2P │ │ Shop  │ │VideoVault │
 │  :5500   │ │Backend │ │ FE  │ │ :3000  │ │  :5000    │
 └──────┬───┘ │ :3001  │ │ :80 │ └───┬────┘ └─────┬─────┘
        │     └───┬────┘ └─────┘     │            │
@@ -317,7 +317,7 @@ kubectl logs -l app=csi-smb-controller -n kube-system
 | Auth | 5500 | /health | auth.korczewski.de |
 | L2P Backend | 3001 | /api/health | l2p.korczewski.de/api |
 | L2P Frontend | 80 | / | l2p.korczewski.de |
-| Payment | 3000 | / | payment.korczewski.de, shop.korczewski.de |
+| Shop | 3000 | / | shop.korczewski.de |
 | VideoVault | 5000 | /api/health | videovault.korczewski.de, video.korczewski.de |
 | PostgreSQL | 5432 | pg_isready | (internal) |
 | Traefik Dashboard | 8080 | /ping | traefik.korczewski.de |

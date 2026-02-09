@@ -21,7 +21,7 @@ resources:
   - ../../services/auth
   - ../../services/l2p-backend
   - ../../services/l2p-frontend
-  - ../../services/payment
+  - ../../services/shop
   - ../../services/videovault
 
 # Common labels for production

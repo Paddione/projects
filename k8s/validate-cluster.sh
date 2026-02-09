@@ -1,5 +1,5 @@
 #!/bin/bash
-DOMAINS=("auth.korczewski.de" "l2p.korczewski.de" "payment.korczewski.de" "videovault.korczewski.de")
+DOMAINS=("auth.korczewski.de" "l2p.korczewski.de" "shop.korczewski.de" "videovault.korczewski.de")
 ENDPOINTS=("/api/health" "/api/health" "/api/health" "/api/health")
 
 echo "Validating cluster services..."

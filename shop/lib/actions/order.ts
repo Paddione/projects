@@ -3,7 +3,7 @@
 import { requireAuth } from '@/lib/actions/auth'
 import { db } from '@/lib/db'
 import { checkAvailability } from '@/lib/booking'
-import { TxType } from '@prisma/client'
+import { TxType, NotificationType } from '@prisma/client'
 import { addHours } from 'date-fns'
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
@@ -91,6 +91,19 @@ export async function purchaseProduct(productId: string, quantity: number = 1, b
                     endTime: addHours(bookingStartTime, 1),
                     status: 'CONFIRMED'
                 }
+            })
+        }
+
+        // 11. Notify all admins about the purchase
+        const admins = await tx.user.findMany({ where: { role: 'ADMIN' } })
+        if (admins.length > 0) {
+            await tx.notification.createMany({
+                data: admins.map(admin => ({
+                    userId: admin.id,
+                    type: NotificationType.PURCHASE,
+                    message: `${user.name || user.email} purchased ${product.title} x${quantity} for ${total} GC`,
+                    metadata: { productId, quantity, total, buyerEmail: user.email },
+                })),
             })
         }
     })

@@ -1,6 +1,6 @@
 #!/bin/bash
 # =============================================================================
-# Deploy Payment Service
+# Deploy Shop Service
 # =============================================================================
 
 set -euo pipefail
@@ -13,15 +13,15 @@ NC='\033[0m'
 
 log_info() { echo -e "${GREEN}[INFO]${NC} $1"; }
 
-echo "Deploying Payment Service..."
+echo "Deploying Shop Service..."
 
 # Apply manifests
-kubectl apply -k "$K8S_DIR/services/payment/"
+kubectl apply -k "$K8S_DIR/services/shop/"
 
 # Wait for deployment
-log_info "Waiting for Payment service to be ready..."
-kubectl wait --for=condition=ready pod -l app=payment \
+log_info "Waiting for Shop service to be ready..."
+kubectl wait --for=condition=ready pod -l app=shop \
     -n korczewski-services --timeout=180s
 
-log_info "Payment service deployed successfully!"
-kubectl get pods -l app=payment -n korczewski-services
+log_info "Shop service deployed successfully!"
+kubectl get pods -l app=shop -n korczewski-services

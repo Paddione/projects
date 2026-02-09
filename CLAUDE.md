@@ -10,7 +10,7 @@ Patrick's Projects is a monorepo containing independent full-stack applications 
 |---------|-------|-------|
 | l2p | React, Express, Socket.io, Drizzle ORM | 3000, 3001 |
 | VideoVault | React, Vite, File System Access API, Express | 5100/5000 |
-| payment | Next.js 16, Prisma, NextAuth v5 | 3004 |
+| shop | Next.js 16, Prisma, NextAuth v5 | 3004 |
 | auth | Express, Passport.js, JWT/OAuth | 5500 |
 | shared-infrastructure | PostgreSQL, shared design system | 5432 |
 | Obsidian | Obsidian vault (Markdown, Dataview, Templater) | — |
@@ -24,7 +24,7 @@ Patrick's Projects is a monorepo containing independent full-stack applications 
 npm run dev:all              # Start all services concurrently
 npm run dev:l2p              # L2P frontend + backend
 npm run dev:videovault       # VideoVault dev server
-npm run dev:payment          # Payment dev server
+npm run dev:shop             # Shop dev server
 
 # Build & Test
 npm run build:all            # Build all services
@@ -36,7 +36,7 @@ npm run validate:env         # Validate environment files
 cd k8s && skaffold run                        # Full stack build + deploy
 cd k8s && skaffold run -p l2p                 # L2P only (backend + frontend)
 cd k8s && skaffold run -p auth                # Auth service only
-cd k8s && skaffold run -p payment             # Payment service only
+cd k8s && skaffold run -p shop                # Shop service only
 cd k8s && skaffold run -p videovault          # VideoVault only
 cd k8s && skaffold run -p infra               # Infrastructure only (no builds)
 
@@ -68,7 +68,7 @@ npm run test:all             # 6-stage test pipeline
 npm run docker:pw:all        # Playwright E2E in Docker
 ```
 
-**payment** (from `payment/` directory):
+**shop** (from `shop/` directory):
 ```bash
 npm run dev                  # Port 3004
 npm run test                 # Vitest tests
@@ -87,8 +87,8 @@ cd l2p/frontend && NODE_ENV=test npx jest src/components/Login.test.tsx
 # VideoVault
 cd VideoVault && npx vitest run client/src/services/filter-engine.test.ts
 
-# payment
-cd payment && npx vitest run test/some.test.ts
+# shop
+cd shop && npx vitest run test/some.test.ts
 ```
 
 ## Architecture
@@ -105,7 +105,7 @@ Each service follows a three-layer architecture:
 All services connect to a single PostgreSQL instance with isolated databases:
 - `l2p_db` - L2P quiz platform
 - `videovault_db` - VideoVault (optional persistence)
-- `payment_db` - Payment service
+- `shop_db` - Shop service
 - `auth_db` - Auth service
 
 Start shared infrastructure via Kubernetes manifests in `k8s/infrastructure/`.
@@ -141,7 +141,7 @@ VideoVault uses the browser as primary data store:
 
 The `Obsidian/` directory is an Obsidian knowledge vault serving as the high-level architecture and operations reference:
 - **Core pages**: `Home.md`, `Architecture.md`, `Services.md`, `Infrastructure.md`, `Operations.md`
-- **Service docs**: `services/{L2P,Auth,Payment,VideoVault}.md`
+- **Service docs**: `services/{L2P,Auth,Shop,VideoVault}.md`
 - **Infrastructure docs**: `infrastructure/{PostgreSQL,Traefik,SMB-CSI}.md`
 - **Assets**: 10 SVG architecture diagrams in `assets/`
 - **Plugins**: Dataview, Templater, obsidian-git
@@ -239,7 +239,7 @@ When multiple agents work simultaneously:
 
 - **Auth**: https://auth.korczewski.de
 - **L2P**: https://l2p.korczewski.de
-- **Payment**: https://payment.korczewski.de (alias: https://shop.korczewski.de)
+- **Shop**: https://shop.korczewski.de
 - **VideoVault**: https://videovault.korczewski.de (alias: https://video.korczewski.de)
 - **Traefik**: https://traefik.korczewski.de
 

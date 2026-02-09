@@ -36,6 +36,7 @@ model User {
   wallet        Wallet?
   orders        Order[]
   bookings      Booking[]
+  notifications Notification[]
 }
 
 model Account {
@@ -140,4 +141,21 @@ model Booking {
   endTime   DateTime
   status    String   @default("CONFIRMED") // CONFIRMED, CANCELLED
   createdAt DateTime @default(now())
+}
+
+enum NotificationType {
+  PURCHASE
+  BOOKING
+  SYSTEM
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  user      User             @relation(fields: [userId], references: [id])
+  type      NotificationType
+  message   String
+  read      Boolean          @default(false)
+  metadata  Json?
+  createdAt DateTime         @default(now())
 }

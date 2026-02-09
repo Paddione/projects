@@ -1,6 +1,6 @@
-# Payment Service
+# Shop Service
 
-Next.js 16 payment platform with Stripe integration, NextAuth v5 authentication, and Prisma ORM.
+Next.js 16 shop platform with Stripe integration, NextAuth v5 authentication, and Prisma ORM.
 
 ## Overview
 
@@ -28,10 +28,10 @@ File structure:
 - `.env-prod` (production, gitignored)
 
 Required variables:
-- `DATABASE_URL` - points to `shared-postgres:5432/payment_db`
+- `DATABASE_URL` - points to `shared-postgres:5432/shop_db`
 - `NEXTAUTH_SECRET` - 32-char hex, unique per env
 - `AUTH_SECRET` - 32-char hex, unique per env
-- `NEXTAUTH_URL` - dev: `http://localhost:3004`, prod: `https://payment.korczewski.de`
+- `NEXTAUTH_URL` - dev: `http://localhost:3004`, prod: `https://shop.korczewski.de`
 - `AUTH_SERVICE_URL` - dev: `http://localhost:5500`, prod: `https://auth.korczewski.de`
 - Stripe keys (test keys in dev, production keys in prod)
 - `STRIPE_WEBHOOK_SECRET` - required for webhook signature validation
@@ -72,19 +72,19 @@ npx prisma studio            # Database GUI
 Production runs on **k3s** (lightweight Kubernetes). Do not use Docker Compose or `docker run` for production.
 
 ```bash
-# Deploy payment service to the k3s cluster
-../../k8s/scripts/deploy/deploy-payment.sh
+# Deploy shop service to the k3s cluster
+../../k8s/scripts/deploy/deploy-shop.sh
 
 # Or deploy the full stack
 ../../k8s/scripts/deploy/deploy-all.sh
 
 # Verify
-kubectl get pods -l app=payment -n korczewski-services
+kubectl get pods -l app=shop -n korczewski-services
 ```
 
-K8s manifests: `k8s/services/payment/`. Full deployment guide: `k8s/README.md`.
+K8s manifests: `k8s/services/shop/`. Full deployment guide: `k8s/README.md`.
 
-Production URL: https://payment.korczewski.de (alias: https://shop.korczewski.de)
+Production URL: https://shop.korczewski.de
 
 ### Docker Image (used by k3s)
 
@@ -92,7 +92,7 @@ The production Docker image is built from the project `Dockerfile`. The k3s depl
 
 ```bash
 # Build image (for local testing only)
-docker build -t payment-service .
+docker build -t shop-service .
 ```
 
 Container details (for reference):
@@ -111,7 +111,7 @@ stripe trigger checkout.session.completed
 
 **Production** (Stripe Dashboard):
 1. Go to https://dashboard.stripe.com/test/webhooks
-2. Add endpoint: `https://payment.korczewski.de/api/stripe/webhook`
+2. Add endpoint: `https://shop.korczewski.de/api/stripe/webhook`
 3. Select events: `checkout.session.completed`
 4. Copy signing secret to `.env-prod`
 
@@ -149,7 +149,7 @@ The payment flow uses Stripe Checkout (hosted page), which has full keyboard acc
 
 ## Troubleshooting
 
-- **Container won't start**: check `docker logs payment-service` and verify `.env-prod` exists
+- **Container won't start**: check `docker logs shop-service` and verify `.env-prod` exists
 - **Webhook signature fails**: verify `STRIPE_WEBHOOK_SECRET` matches Stripe Dashboard; check test vs live mode
 - **Database connection errors**: verify `DATABASE_URL` and ensure Postgres container is running
 - **Build error "Neither apiKey nor config.authenticator"**: Stripe client initializes conditionally; ensure `lib/stripe.ts` handles missing keys at build time

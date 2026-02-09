@@ -1,30 +1,30 @@
 ---
 # =============================================================================
-# Payment Service IngressRoute
+# Shop Service IngressRoute
 # =============================================================================
 
 apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
 metadata:
-  name: payment
+  name: shop
   namespace: korczewski-services
   labels:
-    app: payment
-    app.kubernetes.io/name: payment
-    app.kubernetes.io/component: payment
+    app: shop
+    app.kubernetes.io/name: shop
+    app.kubernetes.io/component: shop
 spec:
   routes:
     # Route for static assets (no auth required)
-    - match: (Host(`shop.korczewski.de`) || Host(`payment.korczewski.de`)) && (PathPrefix(`/_next`) || PathPrefix(`/favicon.ico`) || PathPrefix(`/static`))
+    - match: Host(`shop.korczewski.de`) && (PathPrefix(`/_next`) || PathPrefix(`/favicon.ico`) || PathPrefix(`/static`))
       kind: Rule
       services:
-        - name: payment
+        - name: shop
           port: 3000
     # Route for everything else (requires auth)
-    - match: Host(`shop.korczewski.de`) || Host(`payment.korczewski.de`)
+    - match: Host(`shop.korczewski.de`)
       kind: Rule
       services:
-        - name: payment
+        - name: shop
           port: 3000
       middlewares:
         - name: user-auth-chain

@@ -115,8 +115,8 @@ deploy_services() {
     log_step "Step 6: Deploying L2P Services"
     "$SCRIPT_DIR/deploy-l2p.sh"
 
-    log_step "Step 7: Deploying Payment Service"
-    "$SCRIPT_DIR/deploy-payment.sh"
+    log_step "Step 7: Deploying Shop Service"
+    "$SCRIPT_DIR/deploy-shop.sh"
 
     log_step "Step 8: Deploying VideoVault"
     "$SCRIPT_DIR/deploy-videovault.sh"
@@ -144,7 +144,7 @@ print_summary() {
     echo "=========================================="
     echo "  - https://l2p.korczewski.de"
     echo "  - https://auth.korczewski.de"
-    echo "  - https://payment.korczewski.de"
+    echo "  - https://shop.korczewski.de"
     echo "  - https://videovault.korczewski.de"
     echo "  - https://traefik.korczewski.de (dashboard)"
     echo ""

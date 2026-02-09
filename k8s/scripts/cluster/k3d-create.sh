@@ -173,7 +173,7 @@ print_summary() {
     echo "   k3d cluster delete ${CLUSTER_NAME}"
     echo ""
     echo "4. Add hosts entries for domain routing:"
-    echo "   echo '127.0.0.1 l2p.korczewski.de auth.korczewski.de payment.korczewski.de videovault.korczewski.de' | sudo tee -a /etc/hosts"
+    echo "   echo '127.0.0.1 l2p.korczewski.de auth.korczewski.de shop.korczewski.de videovault.korczewski.de' | sudo tee -a /etc/hosts"
     echo ""
 }
 

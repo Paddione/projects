@@ -5,9 +5,9 @@ import dotenv from 'dotenv';
 const projectRoot = path.resolve(__dirname, '..');
 
 const envVarPriority = [
-    ['PAYMENT_DATABASE_URL_PROD', 'DATABASE_URL_PROD'],
-    ['PAYMENT_DATABASE_URL_DEV', 'DATABASE_URL_DEV'],
-    ['PAYMENT_DATABASE_URL_TEST', 'DATABASE_URL_TEST'],
+    ['SHOP_DATABASE_URL_PROD', 'DATABASE_URL_PROD'],
+    ['SHOP_DATABASE_URL_DEV', 'DATABASE_URL_DEV'],
+    ['SHOP_DATABASE_URL_TEST', 'DATABASE_URL_TEST'],
 ];
 
 const envFilePriority = ['.env-prod', '.env-dev', '.env-test'];
@@ -23,24 +23,24 @@ const pickFirstEnvValue = (keys: string[]): string | undefined => {
 const readDatabaseUrlFromFile = (filePath: string): string | undefined => {
     if (!fs.existsSync(filePath)) return undefined;
     const parsed = dotenv.parse(fs.readFileSync(filePath));
-    return parsed.DATABASE_URL || parsed.PAYMENT_DATABASE_URL;
+    return parsed.DATABASE_URL || parsed.SHOP_DATABASE_URL;
 };
 
 const deriveTestDatabaseUrl = (): string => {
-    const fallback = 'postgresql://payment_user:payment_password@localhost:5432/payment_test?schema=public';
+    const fallback = 'postgresql://shop_user:shop_password@localhost:5432/shop_test?schema=public';
     const examplePath = path.join(projectRoot, '.env.example');
 
     if (!fs.existsSync(examplePath)) return fallback;
 
     const parsed = dotenv.parse(fs.readFileSync(examplePath));
-    const baseUrl = parsed.DATABASE_URL || parsed.PAYMENT_DATABASE_URL;
+    const baseUrl = parsed.DATABASE_URL || parsed.SHOP_DATABASE_URL;
     if (!baseUrl) return fallback;
 
     if (!baseUrl.includes('localhost') && !baseUrl.includes('127.0.0.1')) {
         return fallback;
     }
 
-    return baseUrl.replace(/\/([^/?]+)(\?|$)/, '/payment_test$2');
+    return baseUrl.replace(/\/([^/?]+)(\?|$)/, '/shop_test$2');
 };
 
 const resolveDatabaseUrl = (): string | undefined => {

@@ -29,7 +29,7 @@ Deployment and cluster management scripts for the Korczewski Kubernetes infrastr
 | `deploy-traefik.sh` | Deploy Traefik ingress controller |
 | `deploy-auth.sh` | Deploy Auth service |
 | `deploy-l2p.sh` | Deploy L2P backend + frontend |
-| `deploy-payment.sh` | Deploy Payment service |
+| `deploy-shop.sh` | Deploy Shop service |
 | `deploy-videovault.sh` | Deploy VideoVault service |
 
 Note: SMB-CSI is deployed via `kubectl apply -k k8s/infrastructure/smb-csi` (no dedicated script).

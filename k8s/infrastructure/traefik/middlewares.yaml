@@ -73,7 +73,7 @@ spec:
     accessControlAllowOriginList:
       - "https://l2p.korczewski.de"
       - "https://auth.korczewski.de"
-      - "https://payment.korczewski.de"
+      - "https://shop.korczewski.de"
       - "https://videovault.korczewski.de"
       - "https://video.korczewski.de"
     accessControlAllowHeaders:

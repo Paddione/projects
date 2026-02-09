@@ -3,23 +3,23 @@
 # Run this after ensuring your host disk has free space and Docker Desktop is running cleanly.
 
 echo "Stopping containers..."
-docker stop payment-db-1 || true
+docker stop shop-db-1 || true
 
 echo "Removing container (force)..."
-docker rm -f payment-db-1 || true
+docker rm -f shop-db-1 || true
 
 echo "Removing volume..."
-docker volume rm payment_db_data || true
+docker volume rm shop_db_data || true
 
 echo "Starting db container..."
 # Using the same config as compose.yaml
 docker run -d \
-  --name payment-db-1 \
+  --name shop-db-1 \
   -p 5432:5432 \
-  -e POSTGRES_USER=payment_user \
+  -e POSTGRES_USER=shop_user \
   -e POSTGRES_PASSWORD=ZknuT3kvngLBKjxpQu6lOW7GYba4xZoN \
-  -e POSTGRES_DB=payment_db \
-  -v payment_db_data:/var/lib/postgresql/data \
+  -e POSTGRES_DB=shop_db \
+  -v shop_db_data:/var/lib/postgresql/data \
   postgres:15-alpine
 
 echo "Waiting for DB to start..."

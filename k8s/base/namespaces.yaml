@@ -15,7 +15,7 @@ metadata:
     app.kubernetes.io/managed-by: kubectl
     tier: infrastructure
 ---
-# Services namespace: auth, l2p, payment, videovault
+# Services namespace: auth, l2p, shop, videovault
 apiVersion: v1
 kind: Namespace
 metadata:
