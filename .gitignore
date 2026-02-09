@@ -48,6 +48,12 @@ Thumbs.db
 *.swo
 *~
 
+# MCP config (contains DB credentials)
+.mcp.json
+
+# Hookify rules (personal, per-developer)
+.claude/*.local.md
+
 # IDE files
 .vscode/
 .idea/
@@ -216,6 +222,10 @@ vllm/pinokio/bin/miniconda/
 
 # Local binaries
 k8s/skaffold
+
+# Kubernetes secrets (contain credentials)
+k8s/secrets/
+k8s/infrastructure/vault/unseal-secret.yaml
 
 # Test artifacts and reports (all projects)
 **/test-artifacts/
