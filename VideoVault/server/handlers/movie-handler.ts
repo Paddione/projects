@@ -353,26 +353,26 @@ export async function handleMovieProcessing(
     // 7. Store in database
     const id = movieId || uuidv4();
     if (db) {
+      const baseName = path.basename(finalPath);
       await db
         .insert(videos)
         .values({
           id,
-          name: path.basename(finalPath),
+          filename: baseName,
+          displayName: title + (year ? ` (${year})` : ''),
           path: relativePath,
+          size: stats.size,
+          lastModified: stats.mtime,
           fileHash,
-          fileSize: stats.size,
-          duration: metadata.duration,
-          width: metadata.width,
-          height: metadata.height,
           bitrate: metadata.bitrate,
           codec: metadata.codec,
-          fps: metadata.fps.toString(),
+          fps: metadata.fps,
           aspectRatio: metadata.aspectRatio,
-          mediaType: 'movie',
           categories: {
             title,
             year: year?.toString() || '',
           },
+          customCategories: {},
           metadata: {
             title,
             year,
@@ -382,16 +382,14 @@ export async function handleMovieProcessing(
           },
           processingStatus: 'completed',
           metadataExtractedAt: new Date(),
-          createdAt: new Date(),
-          updatedAt: new Date(),
         })
         .onConflictDoUpdate({
           target: videos.fileHash,
           set: {
-            name: path.basename(finalPath),
+            filename: baseName,
+            displayName: title + (year ? ` (${year})` : ''),
             path: relativePath,
             processingStatus: 'completed',
-            updatedAt: new Date(),
           },
         });
 
