@@ -47,7 +47,7 @@ spec:
       containers:
         - name: shop
           image: korczewski/shop:latest
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Always
           ports:
             - name: http
               containerPort: 3000

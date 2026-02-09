@@ -1,0 +1,10 @@
+# =============================================================================
+# k3s Registry Mirror Configuration
+# =============================================================================
+# Copied to /etc/rancher/k3s/registries.yaml on all k3s nodes.
+# REGISTRY_IP is replaced by setup-registry.sh with the actual LB IP.
+# =============================================================================
+mirrors:
+  "registry.local:5000":
+    endpoint:
+      - "http://REGISTRY_IP:5000"

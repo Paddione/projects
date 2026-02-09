@@ -39,7 +39,7 @@ spec:
       containers:
         - name: videovault
           image: korczewski/videovault:latest
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Always
           ports:
             - name: http
               containerPort: 5000

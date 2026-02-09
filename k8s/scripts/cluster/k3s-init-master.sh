@@ -19,6 +19,7 @@ EXTERNAL_IP="${1:-$(hostname -I | awk '{print $1}')}"
 K3S_VERSION="${K3S_VERSION:-v1.29.0+k3s1}"
 CLUSTER_CIDR="${CLUSTER_CIDR:-10.42.0.0/16}"
 SERVICE_CIDR="${SERVICE_CIDR:-10.43.0.0/16}"
+VIP="${VIP:-10.10.0.20}"
 
 # Colors for output
 RED='\033[0;31m'
@@ -71,6 +72,7 @@ install_k3s() {
         --disable servicelb \
         --disable local-storage \
         --tls-san "${EXTERNAL_IP}" \
+        --tls-san "${VIP}" \
         --node-external-ip "${EXTERNAL_IP}" \
         --write-kubeconfig-mode 644 \
         --cluster-cidr "${CLUSTER_CIDR}" \
@@ -113,8 +115,8 @@ setup_kubeconfig() {
     mkdir -p "${SUDO_USER_HOME}/.kube"
     cp /etc/rancher/k3s/k3s.yaml "${SUDO_USER_HOME}/.kube/config"
 
-    # Replace localhost with external IP for remote access
-    sed -i "s/127.0.0.1/${EXTERNAL_IP}/g" "${SUDO_USER_HOME}/.kube/config"
+    # Replace localhost with VIP for remote access (clients connect via VIP)
+    sed -i "s/127.0.0.1/${VIP}/g" "${SUDO_USER_HOME}/.kube/config"
 
     if [ -n "${SUDO_USER:-}" ]; then
         chown -R "${SUDO_USER}:${SUDO_USER}" "${SUDO_USER_HOME}/.kube"
@@ -143,6 +145,7 @@ print_summary() {
     echo "=========================================="
     echo ""
     echo "Master IP: ${EXTERNAL_IP}"
+    echo "API VIP: ${VIP}"
     echo "K3s Version: ${K3S_VERSION}"
     echo ""
     echo "Node Status:"

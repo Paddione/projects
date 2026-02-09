@@ -19,6 +19,7 @@ MASTER_IP="${1:?Error: Master IP required. Usage: $0 MASTER_IP TOKEN [EXTERNAL_I
 TOKEN="${2:?Error: Join token required. Usage: $0 MASTER_IP TOKEN [EXTERNAL_IP]}"
 EXTERNAL_IP="${3:-$(hostname -I | awk '{print $1}')}"
 K3S_VERSION="${K3S_VERSION:-v1.29.0+k3s1}"
+VIP="${VIP:-10.10.0.20}"
 
 # Colors for output
 RED='\033[0;31m'
@@ -84,6 +85,7 @@ install_k3s_server() {
         --disable servicelb \
         --disable local-storage \
         --tls-san "${EXTERNAL_IP}" \
+        --tls-san "${VIP}" \
         --node-external-ip "${EXTERNAL_IP}" \
         --write-kubeconfig-mode 644 \
         --kubelet-arg "max-pods=110"
@@ -120,7 +122,7 @@ setup_kubeconfig() {
 
     mkdir -p "${SUDO_USER_HOME}/.kube"
     cp /etc/rancher/k3s/k3s.yaml "${SUDO_USER_HOME}/.kube/config"
-    sed -i "s/127.0.0.1/${EXTERNAL_IP}/g" "${SUDO_USER_HOME}/.kube/config"
+    sed -i "s/127.0.0.1/${VIP}/g" "${SUDO_USER_HOME}/.kube/config"
 
     if [ -n "${SUDO_USER:-}" ]; then
         chown -R "${SUDO_USER}:${SUDO_USER}" "${SUDO_USER_HOME}/.kube"

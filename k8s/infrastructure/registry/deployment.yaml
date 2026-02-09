@@ -1,0 +1,69 @@
+---
+# =============================================================================
+# Private Docker Registry Deployment
+# =============================================================================
+# In-cluster Docker registry for Skaffold-built images.
+# Replaces k3d's built-in registry for multi-node bare-metal clusters.
+# =============================================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: registry
+  namespace: korczewski-infra
+  labels:
+    app: registry
+    app.kubernetes.io/name: registry
+    app.kubernetes.io/component: image-registry
+    app.kubernetes.io/part-of: korczewski
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: registry
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: registry
+        app.kubernetes.io/name: registry
+        app.kubernetes.io/component: image-registry
+        app.kubernetes.io/part-of: korczewski
+    spec:
+      containers:
+        - name: registry
+          image: registry:2
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 5000
+              protocol: TCP
+          env:
+            - name: REGISTRY_STORAGE_DELETE_ENABLED
+              value: "true"
+          volumeMounts:
+            - name: registry-data
+              mountPath: /var/lib/registry
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          livenessProbe:
+            httpGet:
+              path: /v2/
+              port: 5000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /v2/
+              port: 5000
+            initialDelaySeconds: 3
+            periodSeconds: 5
+      volumes:
+        - name: registry-data
+          persistentVolumeClaim:
+            claimName: registry-data

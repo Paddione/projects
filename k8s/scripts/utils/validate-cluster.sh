@@ -170,6 +170,64 @@ check_service "VideoVault" "korczewski-services" "app=videovault" "5000" "/api/h
 echo ""
 
 # =============================================================================
+# Multi-Node Checks (conditional)
+# =============================================================================
+NODE_COUNT=$(kubectl get nodes --no-headers 2>/dev/null | wc -l)
+if [ "$NODE_COUNT" -gt 1 ]; then
+    echo "3b. Multi-Node Checks"
+    echo "----------------------------------------"
+
+    # Node count
+    if [ "$NODE_COUNT" -ge 6 ]; then
+        log_pass "Node count: $NODE_COUNT (expected >= 6)"
+    else
+        log_warn "Node count: $NODE_COUNT (expected >= 6 for full cluster)"
+    fi
+
+    # Control plane count
+    CP_COUNT=$(kubectl get nodes --selector='node-role.kubernetes.io/control-plane' --no-headers 2>/dev/null | wc -l)
+    if [ "$CP_COUNT" -ge 3 ]; then
+        log_pass "Control plane nodes: $CP_COUNT (HA quorum)"
+    else
+        log_warn "Control plane nodes: $CP_COUNT (need >= 3 for HA)"
+    fi
+
+    # kube-vip pods
+    echo -n "   kube-vip DaemonSet: "
+    KVIP_PODS=$(kubectl get pods -n kube-system -l app=kube-vip --no-headers 2>/dev/null | wc -l)
+    if [ "$KVIP_PODS" -gt 0 ]; then
+        log_pass "$KVIP_PODS pod(s) running"
+    else
+        log_warn "Not deployed (single-node cluster?)"
+    fi
+
+    # VIP reachability
+    VIP="${VIP:-10.10.0.20}"
+    echo -n "   API VIP ($VIP): "
+    if timeout 3 bash -c "echo > /dev/tcp/${VIP}/6443" 2>/dev/null; then
+        log_pass "Reachable"
+    else
+        log_fail "Not reachable"
+        ERRORS=$((ERRORS + 1))
+    fi
+
+    # Private registry
+    echo -n "   Private Registry: "
+    REGISTRY_IP=$(kubectl get svc registry -n korczewski-infra -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2>/dev/null || echo "")
+    if [ -n "$REGISTRY_IP" ]; then
+        if curl -sf "http://${REGISTRY_IP}:5000/v2/" > /dev/null 2>&1; then
+            log_pass "Accessible at ${REGISTRY_IP}:5000"
+        else
+            log_warn "Service exists (${REGISTRY_IP}) but not responding"
+        fi
+    else
+        log_info "Not deployed (single-node cluster uses local images)"
+    fi
+
+    echo ""
+fi
+
+# =============================================================================
 # Ingress Status
 # =============================================================================
 echo "4. IngressRoutes"

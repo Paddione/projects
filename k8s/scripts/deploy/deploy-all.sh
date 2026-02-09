@@ -98,13 +98,32 @@ deploy_infrastructure() {
         return
     fi
 
+    # kube-vip (multi-node only — skip if single-node/k3d)
+    NODE_COUNT=$(kubectl get nodes --no-headers 2>/dev/null | wc -l)
+    if [ "$NODE_COUNT" -gt 1 ] && [ -f "$SCRIPT_DIR/deploy-kube-vip.sh" ]; then
+        log_step "Step 3a: Deploying kube-vip"
+        "$SCRIPT_DIR/deploy-kube-vip.sh"
+    fi
+
+    # SMB-CSI driver
+    if [ -f "$SCRIPT_DIR/deploy-smb-csi.sh" ]; then
+        log_step "Step 3b: Deploying SMB-CSI Driver"
+        "$SCRIPT_DIR/deploy-smb-csi.sh"
+    fi
+
     # PostgreSQL
-    log_step "Step 3: Deploying PostgreSQL"
+    log_step "Step 3c: Deploying PostgreSQL"
     "$SCRIPT_DIR/deploy-postgres.sh"
 
     # Traefik
     log_step "Step 4: Deploying Traefik"
     "$SCRIPT_DIR/deploy-traefik.sh"
+
+    # Private registry (multi-node only)
+    if [ "$NODE_COUNT" -gt 1 ] && [ -f "$SCRIPT_DIR/deploy-registry.sh" ]; then
+        log_step "Step 4b: Deploying Private Registry"
+        "$SCRIPT_DIR/deploy-registry.sh"
+    fi
 }
 
 # Deploy services

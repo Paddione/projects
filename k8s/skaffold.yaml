@@ -11,9 +11,14 @@ metadata:
 # =============================================================================
 build:
   local:
-    push: false
+    push: true
     useBuildkit: true
     concurrency: 2
+  # All images are pushed to the private registry (registry.local:5000)
+  # Skaffold auto-prefixes image names: korczewski/* → registry.local:5000/korczewski/*
+  tagPolicy:
+    sha256: {}
+  defaultRepo: registry.local:5000
 
   artifacts:
     # Auth Service

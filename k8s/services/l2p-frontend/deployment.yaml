@@ -46,7 +46,7 @@ spec:
       containers:
         - name: l2p-frontend
           image: korczewski/l2p-frontend:latest
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Always
           ports:
             - name: http
               containerPort: 80

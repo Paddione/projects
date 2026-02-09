@@ -1,0 +1,21 @@
+---
+# =============================================================================
+# Private Docker Registry PVC
+# =============================================================================
+# Persistent storage for Docker images via SMB.
+# =============================================================================
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: registry-data
+  namespace: korczewski-infra
+  labels:
+    app: registry
+    app.kubernetes.io/part-of: korczewski
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: smb-storage
+  resources:
+    requests:
+      storage: 50Gi

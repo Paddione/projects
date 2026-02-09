@@ -1,0 +1,53 @@
+---
+# =============================================================================
+# kube-vip Cloud Controller
+# =============================================================================
+# Watches for LoadBalancer services and assigns IPs from the configured range.
+# Replaces k3d's built-in servicelb and MetalLB for bare-metal clusters.
+#
+# IP Range: 10.10.0.40-10.10.0.55 (16 addresses)
+# =============================================================================
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kubevip
+  namespace: kube-system
+data:
+  cidr-global: "10.10.0.40/28"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kube-vip-cloud-provider
+  namespace: kube-system
+  labels:
+    app: kube-vip-cloud-provider
+spec:
+  replicas: 1
+  revisionHistoryLimit: 5
+  selector:
+    matchLabels:
+      app: kube-vip-cloud-provider
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: kube-vip-cloud-provider
+    spec:
+      serviceAccountName: kube-vip
+      tolerations:
+        - key: node-role.kubernetes.io/control-plane
+          effect: NoSchedule
+        - key: node-role.kubernetes.io/master
+          effect: NoSchedule
+      containers:
+        - name: kube-vip-cloud-provider
+          image: ghcr.io/kube-vip/kube-vip-cloud-provider:v0.0.10
+          imagePullPolicy: IfNotPresent
+          command:
+            - /kube-vip-cloud-provider
+            - --leader-elect-resource-name=kube-vip-cloud-provider

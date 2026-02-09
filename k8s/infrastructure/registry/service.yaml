@@ -1,0 +1,26 @@
+---
+# =============================================================================
+# Private Docker Registry Service
+# =============================================================================
+# LoadBalancer type — kube-vip assigns an IP from 10.10.0.40/28.
+# All k3s nodes reach the registry via this IP.
+# =============================================================================
+apiVersion: v1
+kind: Service
+metadata:
+  name: registry
+  namespace: korczewski-infra
+  labels:
+    app: registry
+    app.kubernetes.io/name: registry
+    app.kubernetes.io/component: image-registry
+    app.kubernetes.io/part-of: korczewski
+spec:
+  type: LoadBalancer
+  ports:
+    - name: http
+      port: 5000
+      targetPort: 5000
+      protocol: TCP
+  selector:
+    app: registry

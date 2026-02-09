@@ -46,6 +46,13 @@ cd k8s && skaffold run -p infra               # Infrastructure only (no builds)
 ./k8s/scripts/deploy/deploy-all.sh           # Deploy all manifests
 ./k8s/scripts/utils/validate-cluster.sh      # Validate cluster health
 ./k8s/scripts/deploy/deploy-changed.sh       # Auto-detect and redeploy changed manifests
+
+# Multi-node cluster (production - 6 bare-metal nodes)
+./k8s/scripts/cluster/bootstrap-cluster.sh   # Full cluster bootstrap (SSH to all nodes)
+./k8s/scripts/cluster/node-prerequisites.sh  # Prepare Ubuntu node for k3s
+./k8s/scripts/deploy/deploy-kube-vip.sh      # Deploy kube-vip (API VIP + Service LB)
+./k8s/scripts/deploy/deploy-smb-csi.sh       # Install SMB-CSI driver via Helm
+./k8s/scripts/cluster/setup-registry.sh      # Deploy private registry + configure nodes
 ```
 
 ### Project-Specific Commands
@@ -154,6 +161,17 @@ The Obsidian vault documents Kubernetes manifest locations, environment variable
 - `traefik-public` - External routing network
 - `l2p-network` - Internal service network
 - Services connect to `shared-postgres:5432`
+
+### Multi-Node Cluster (Production)
+
+Production uses 6 bare-metal Ubuntu 24.04 nodes (3 CP + 3 workers) with:
+- **kube-vip**: API VIP at 10.10.0.20, Service LB range 10.10.0.40/28
+- **Private registry**: In-cluster Docker registry at `registry.local:5000`
+- **Skaffold**: Pushes images to registry (`push: true`, `defaultRepo: registry.local:5000`)
+- **imagePullPolicy: Always** on all service deployments
+- **No hostPort** on Traefik — uses LoadBalancer service via kube-vip
+
+See `Obsidian/infrastructure/Kubernetes.md` for full multi-node setup guide.
 
 ## Environment Configuration
 
