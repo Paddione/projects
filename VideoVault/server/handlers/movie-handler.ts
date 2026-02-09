@@ -451,9 +451,11 @@ export async function handleMovieProcessing(
 export async function scanMoviesDirectory(
   directory?: string,
   recursive = true,
+  skipDirs: string[] = ['Thumbnails'],
 ): Promise<string[]> {
   const MOVIES_DIR = directory || process.env.MOVIES_DIR || path.join(process.cwd(), 'media', 'movies');
   const movies: string[] = [];
+  const skipSet = new Set(skipDirs);
 
   async function scanDir(dir: string): Promise<void> {
     try {
@@ -463,8 +465,7 @@ export async function scanMoviesDirectory(
         const fullPath = path.join(dir, entry.name);
 
         if (entry.isDirectory()) {
-          // Skip Thumbnails directories
-          if (entry.name === 'Thumbnails') continue;
+          if (skipSet.has(entry.name)) continue;
           if (recursive) {
             await scanDir(fullPath);
           }
@@ -522,4 +523,164 @@ export async function batchProcessMovies(
   }
 
   return { processed, failed, skipped };
+}
+
+/**
+ * Clean up orphaned Thumbnails directories and their contents.
+ * - Removes Thumbnails dirs whose parent has no video files
+ * - Removes thumbnail files whose corresponding video no longer exists
+ * - Removes empty Thumbnails dirs after cleanup
+ */
+export async function cleanupOrphanedThumbnails(directory?: string): Promise<number> {
+  const MOVIES_DIR = directory || process.env.MOVIES_DIR || path.join(process.cwd(), 'media', 'movies');
+  let removed = 0;
+
+  async function findThumbnailDirs(dir: string): Promise<string[]> {
+    const result: string[] = [];
+    let entries;
+    try {
+      entries = await fs.readdir(dir, { withFileTypes: true });
+    } catch {
+      return result;
+    }
+    for (const entry of entries) {
+      if (!entry.isDirectory()) continue;
+      const fullPath = path.join(dir, entry.name);
+      if (entry.name === 'Thumbnails') {
+        result.push(fullPath);
+      } else {
+        result.push(...await findThumbnailDirs(fullPath));
+      }
+    }
+    return result;
+  }
+
+  const thumbDirs = await findThumbnailDirs(MOVIES_DIR);
+
+  for (const thumbDir of thumbDirs) {
+    const parentDir = path.dirname(thumbDir);
+
+    let parentEntries;
+    try {
+      parentEntries = await fs.readdir(parentDir, { withFileTypes: true });
+    } catch {
+      continue;
+    }
+
+    const videoFiles = parentEntries
+      .filter(e => e.isFile() && MOVIE_EXTENSIONS.includes(path.extname(e.name).toLowerCase()))
+      .map(e => path.basename(e.name, path.extname(e.name)));
+
+    // No videos in parent → remove entire Thumbnails dir
+    if (videoFiles.length === 0) {
+      try {
+        await fs.rm(thumbDir, { recursive: true, force: true });
+        removed++;
+        logger.info(`[MovieHandler] Removed orphaned Thumbnails dir: ${path.relative(MOVIES_DIR, thumbDir)}`);
+      } catch (err: any) {
+        logger.warn(`[MovieHandler] Failed to remove Thumbnails dir: ${thumbDir}`, { error: err.message });
+      }
+      continue;
+    }
+
+    // Check individual thumbnail files for orphans
+    let thumbEntries;
+    try {
+      thumbEntries = await fs.readdir(thumbDir, { withFileTypes: true });
+    } catch {
+      continue;
+    }
+
+    const videoBaseNames = new Set(videoFiles);
+
+    for (const entry of thumbEntries) {
+      if (!entry.isFile()) continue;
+      const match = entry.name.match(/^(.+?)_(thumb|sprite)\.jpg$/);
+      if (!match) continue;
+      if (!videoBaseNames.has(match[1])) {
+        try {
+          await fs.unlink(path.join(thumbDir, entry.name));
+          removed++;
+          logger.info(`[MovieHandler] Removed orphaned thumbnail: ${path.relative(MOVIES_DIR, path.join(thumbDir, entry.name))}`);
+        } catch (err: any) {
+          logger.warn(`[MovieHandler] Failed to remove orphaned thumbnail: ${entry.name}`, { error: err.message });
+        }
+      }
+    }
+
+    // If Thumbnails dir is now empty, remove it
+    try {
+      const remaining = await fs.readdir(thumbDir);
+      if (remaining.length === 0) {
+        await fs.rmdir(thumbDir);
+        removed++;
+        logger.info(`[MovieHandler] Removed empty Thumbnails dir: ${path.relative(MOVIES_DIR, thumbDir)}`);
+      }
+    } catch {
+      // Already removed or still has contents
+    }
+  }
+
+  return removed;
+}
+
+/**
+ * Remove empty directories from the movies directory tree.
+ * A directory is "empty" if it contains no video files and no subdirs with video files.
+ * Never removes root MOVIES_DIR, Thumbnails/, or staging directories (1_inbox, etc.).
+ */
+const PROTECTED_DIR_NAMES = new Set(['1_inbox', '2_processing', '3_complete']);
+
+export async function cleanupEmptyDirectories(directory?: string): Promise<number> {
+  const MOVIES_DIR = directory || process.env.MOVIES_DIR || path.join(process.cwd(), 'media', 'movies');
+  let removed = 0;
+
+  async function hasVideoContent(dir: string): Promise<boolean> {
+    let entries;
+    try {
+      entries = await fs.readdir(dir, { withFileTypes: true });
+    } catch {
+      return false;
+    }
+
+    for (const entry of entries) {
+      if (entry.isFile()) {
+        const ext = path.extname(entry.name).toLowerCase();
+        if (MOVIE_EXTENSIONS.includes(ext)) return true;
+      } else if (entry.isDirectory() && entry.name !== 'Thumbnails') {
+        if (await hasVideoContent(path.join(dir, entry.name))) return true;
+      }
+    }
+    return false;
+  }
+
+  async function cleanDir(dir: string): Promise<void> {
+    let entries;
+    try {
+      entries = await fs.readdir(dir, { withFileTypes: true });
+    } catch {
+      return;
+    }
+
+    // Recurse into subdirectories first (bottom-up cleanup)
+    for (const entry of entries) {
+      if (entry.isDirectory() && entry.name !== 'Thumbnails') {
+        await cleanDir(path.join(dir, entry.name));
+      }
+    }
+
+    // Never remove root, protected staging dirs, or dirs with video content
+    if (dir !== MOVIES_DIR && !PROTECTED_DIR_NAMES.has(path.basename(dir)) && !(await hasVideoContent(dir))) {
+      try {
+        await fs.rm(dir, { recursive: true, force: true });
+        removed++;
+        logger.info(`[MovieHandler] Removed empty directory: ${path.relative(MOVIES_DIR, dir)}`);
+      } catch (err: any) {
+        logger.warn(`[MovieHandler] Failed to remove empty directory: ${dir}`, { error: err.message });
+      }
+    }
+  }
+
+  await cleanDir(MOVIES_DIR);
+  return removed;
 }

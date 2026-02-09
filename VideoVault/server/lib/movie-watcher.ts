@@ -1,6 +1,6 @@
 import fs from 'fs/promises';
 import path from 'path';
-import { scanMoviesDirectory } from '../handlers/movie-handler';
+import { scanMoviesDirectory, cleanupOrphanedThumbnails, cleanupEmptyDirectories } from '../handlers/movie-handler';
 import { jobQueue } from './job-queue';
 import { logger } from './logger';
 
@@ -41,7 +41,7 @@ export function startMovieWatcher(options: MovieWatcherOptions = {}) {
 
   const seedKnownFiles = async () => {
     try {
-      const movies = await scanMoviesDirectory(moviesDir, true);
+      const movies = await scanMoviesDirectory(moviesDir, true, ['Thumbnails']);
       movies.forEach((movie) => knownFiles.add(movie));
       logger.info('[MovieWatcher] Seeded existing movies', {
         directory: moviesDir,
@@ -89,7 +89,7 @@ export function startMovieWatcher(options: MovieWatcherOptions = {}) {
 
   const scanAndQueue = async () => {
     const now = Date.now();
-    const movies = await scanMoviesDirectory(moviesDir, true);
+    const movies = await scanMoviesDirectory(moviesDir, true, ['Thumbnails']);
     const currentSet = new Set(movies);
 
     for (const moviePath of movies) {
@@ -148,7 +148,7 @@ export function startMovieWatcher(options: MovieWatcherOptions = {}) {
     await seedKnownFiles();
     if (backfillMissingThumbnails) {
       try {
-        const movies = await scanMoviesDirectory(moviesDir, true);
+        const movies = await scanMoviesDirectory(moviesDir, true, ['Thumbnails']);
         let queued = 0;
 
         for (const moviePath of movies) {
@@ -167,16 +167,39 @@ export function startMovieWatcher(options: MovieWatcherOptions = {}) {
       }
     }
 
-    timer = setInterval(() => {
-      scanAndQueue().catch((error) => {
-        logger.warn('[MovieWatcher] Movie scan failed', { error: error.message });
-      });
+    let scanCount = 0;
+    let scanning = false;
+    const cleanupEveryNScans = parseInt(process.env.MOVIE_WATCHER_CLEANUP_SCANS || '20', 10);
+
+    const runCleanup = async () => {
+      const thumbsRemoved = await cleanupOrphanedThumbnails(moviesDir);
+      const dirsRemoved = await cleanupEmptyDirectories(moviesDir);
+      if (thumbsRemoved > 0 || dirsRemoved > 0) {
+        logger.info('[MovieWatcher] Cleanup completed', { thumbsRemoved, dirsRemoved });
+      }
+    };
+
+    timer = setInterval(async () => {
+      if (scanning) return;
+      scanning = true;
+      try {
+        await scanAndQueue();
+        scanCount++;
+        if (scanCount % cleanupEveryNScans === 0) {
+          await runCleanup();
+        }
+      } catch (error: any) {
+        logger.warn('[MovieWatcher] Scan cycle failed', { error: error.message });
+      } finally {
+        scanning = false;
+      }
     }, pollIntervalMs);
 
     logger.info('[MovieWatcher] Watching for new movies', {
       directory: moviesDir,
       pollIntervalMs,
       stabilityMs,
+      cleanupEveryNScans,
     });
   };
 

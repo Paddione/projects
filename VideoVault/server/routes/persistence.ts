@@ -8,7 +8,7 @@ import {
   tags,
   type InsertDBVideo,
 } from '@shared/schema';
-import { eq, inArray } from 'drizzle-orm';
+import { eq, inArray, isNotNull, and } from 'drizzle-orm';
 import { randomUUID } from 'crypto';
 import { resolveInputPath } from '../lib/path-resolver';
 
@@ -21,9 +21,24 @@ function requireDb(res: Response) {
 }
 
 // Videos
-export async function listVideos(_req: Request, res: Response) {
+export async function listVideos(req: Request, res: Response) {
   if (!requireDb(res)) return;
-  const rows = await db!.select().from(videos);
+  const includeIncomplete = req.query.includeIncomplete === 'true';
+
+  let rows;
+  if (includeIncomplete) {
+    rows = await db!.select().from(videos);
+  } else {
+    rows = await db!
+      .select()
+      .from(videos)
+      .where(
+        and(
+          isNotNull(videos.thumbnail),
+          eq(videos.processingStatus, 'completed'),
+        ),
+      );
+  }
   res.json(rows);
 }
 

@@ -4,7 +4,7 @@ import fs from 'fs/promises';
 import crypto from 'crypto';
 import { eq, like } from 'drizzle-orm';
 import { videos } from '@shared/schema';
-import { handleMovieProcessing, scanMoviesDirectory, batchProcessMovies, generateMovieThumbnail, MOVIE_EXTENSIONS } from '../handlers/movie-handler';
+import { handleMovieProcessing, scanMoviesDirectory, batchProcessMovies, generateMovieThumbnail, cleanupEmptyDirectories, MOVIE_EXTENSIONS } from '../handlers/movie-handler';
 import { handleAudiobookProcessing, scanAudiobooksDirectory } from '../handlers/audiobook-handler';
 import { handleEbookProcessing, scanEbooksDirectory } from '../handlers/ebook-handler';
 import { jobQueue } from '../lib/job-queue';
@@ -210,20 +210,60 @@ router.post('/movies/rename', async (req: Request, res: Response) => {
       }
     }
 
-    // 5. Update database record if it exists
+    // 5. Update database: delete old records, upsert with deterministic ID
     const oldRelPath = path.relative(MOVIES_DIR, resolvedDir);
     const newRelPath = path.relative(MOVIES_DIR, newDirPath);
+    const newRelVideoPath = path.join(newRelPath, `${sanitizedNewName}${ext}`);
+    const newDbPath = `movies/${newRelVideoPath}`;
+    const newId = crypto.createHash('sha256').update('movies:' + newRelVideoPath).digest('hex').slice(0, 36);
 
     try {
       if (db) {
+        // Delete old records that match the old path
+        await db.delete(videos).where(like(videos.path, `movies/${oldRelPath}/%`));
+
+        // Check for thumbnail to build thumbnail URL
+        const newThumbsDir = path.join(newDirPath, 'Thumbnails');
+        const thumbPath = path.join(newThumbsDir, `${sanitizedNewName}_thumb.jpg`);
+        let thumbUrl: string | null = null;
+        try {
+          await fs.access(thumbPath);
+          thumbUrl = `/media/movies/${newRelPath}/Thumbnails/${encodeURIComponent(sanitizedNewName)}_thumb.jpg`;
+        } catch { }
+
+        // Stat the new video file
+        const newVideoPath = path.join(newDirPath, `${sanitizedNewName}${ext}`);
+        const stat = await fs.stat(newVideoPath);
+
+        // Upsert with the deterministic ID that /movies/index would generate
         await db
-          .update(videos)
-          .set({
-            path: `${newRelPath}/${sanitizedNewName}${ext}`,
+          .insert(videos)
+          .values({
+            id: newId,
             filename: `${sanitizedNewName}${ext}`,
             displayName: sanitizedNewName,
+            path: newDbPath,
+            size: stat.size,
+            lastModified: stat.mtime,
+            metadata: { duration: 0, width: 0, height: 0, bitrate: 0, codec: '', fps: 0, aspectRatio: '' },
+            categories: { age: [], physical: [], ethnicity: [], relationship: [], acts: [], setting: [], quality: [], performer: [] },
+            customCategories: {},
+            thumbnail: thumbUrl ? { generated: true, dataUrl: thumbUrl, timestamp: new Date().toISOString() } : null,
+            rootKey: 'movies',
+            processingStatus: thumbUrl ? 'completed' : 'pending',
           })
-          .where(like(videos.path, `${oldRelPath}/%`));
+          .onConflictDoUpdate({
+            target: videos.id,
+            set: {
+              filename: `${sanitizedNewName}${ext}`,
+              displayName: sanitizedNewName,
+              path: newDbPath,
+              size: stat.size,
+              lastModified: stat.mtime,
+              thumbnail: thumbUrl ? { generated: true, dataUrl: thumbUrl, timestamp: new Date().toISOString() } : null,
+              processingStatus: thumbUrl ? 'completed' : 'pending',
+            },
+          });
       }
     } catch (dbError: any) {
       logger.warn('[Processing] DB update failed during rename (non-fatal)', {
@@ -269,19 +309,37 @@ router.post('/movies/delete', async (req: Request, res: Response) => {
     // Remove the entire directory
     await fs.rm(resolvedDir, { recursive: true, force: true });
 
-    // Delete matching database records
+    // Delete matching database records (paths stored as "movies/<relPath>/...")
     let dbDeleted = 0;
     try {
       if (db) {
         const result = await db
           .delete(videos)
-          .where(like(videos.path, `${relPath}/%`));
+          .where(like(videos.path, `movies/${relPath}/%`));
         dbDeleted = result?.rowCount ?? 0;
       }
     } catch (dbError: any) {
       logger.warn('[Processing] DB delete failed during movie delete (non-fatal)', {
         error: dbError.message,
       });
+    }
+
+    // Clean up empty parent directories
+    let parentDir = path.dirname(resolvedDir);
+    const resolvedMoviesDir = path.resolve(MOVIES_DIR);
+    while (parentDir !== resolvedMoviesDir && parentDir.startsWith(resolvedMoviesDir)) {
+      try {
+        const entries = await fs.readdir(parentDir);
+        if (entries.length === 0) {
+          await fs.rmdir(parentDir);
+          logger.info(`[Processing] Removed empty parent directory: ${path.relative(MOVIES_DIR, parentDir)}`);
+          parentDir = path.dirname(parentDir);
+        } else {
+          break;
+        }
+      } catch {
+        break;
+      }
     }
 
     logger.info(`[Processing] Movie deleted: ${relPath}`, { dbDeleted });
@@ -351,13 +409,25 @@ router.post('/movies/organize-inbox', async (req: Request, res: Response) => {
         const newVideoPath = path.join(tempDir, entry.name);
         await fs.rename(videoPath, newVideoPath);
 
-        // Generate thumbnails
+        // Generate thumbnails — rollback if this fails
         try {
           await generateMovieThumbnail(newVideoPath, thumbsDir);
         } catch (thumbError: any) {
-          logger.warn(`[Processing] Thumbnail generation failed for ${entry.name}`, {
+          logger.error(`[Processing] Thumbnail generation failed for ${entry.name}, rolling back`, {
             error: thumbError.message,
           });
+          // Rollback: move video back to inbox and remove temp directory
+          try {
+            await fs.rename(newVideoPath, videoPath);
+            await fs.rm(tempDir, { recursive: true, force: true });
+          } catch (rollbackError: any) {
+            logger.error(`[Processing] Rollback failed for ${entry.name}`, {
+              error: rollbackError.message,
+            });
+          }
+          results.push({ file: entry.name, status: 'error', error: `Thumbnail generation failed: ${thumbError.message}` });
+          failed++;
+          continue;
         }
 
         // Move organized directory to destination
@@ -374,12 +444,21 @@ router.post('/movies/organize-inbox', async (req: Request, res: Response) => {
       }
     }
 
-    logger.info(`[Processing] Inbox organized: ${processed} processed, ${failed} failed`);
+    // Clean up empty directories left behind in inbox
+    let cleaned = 0;
+    try {
+      cleaned = await cleanupEmptyDirectories(sourceDir);
+    } catch (cleanError: any) {
+      logger.warn('[Processing] Inbox cleanup failed (non-fatal)', { error: cleanError.message });
+    }
+
+    logger.info(`[Processing] Inbox organized: ${processed} processed, ${failed} failed, ${cleaned} empty dirs removed`);
 
     res.json({
       success: true,
       processed,
       failed,
+      cleaned,
       results,
     });
   } catch (error: any) {
@@ -429,6 +508,19 @@ router.post('/movies/index', async (req: Request, res: Response) => {
           const relVideoPath = path.join(relDir, videoFile.name);
           const baseName = path.basename(videoFile.name, path.extname(videoFile.name));
 
+          // Require both thumbnail and sprite to exist — skip incomplete entries
+          const thumbPath = path.join(dir, 'Thumbnails', `${baseName}_thumb.jpg`);
+          const spritePath = path.join(dir, 'Thumbnails', `${baseName}_sprite.jpg`);
+          let thumbExists = false;
+          let spriteExists = false;
+          try { await fs.access(thumbPath); thumbExists = true; } catch { }
+          try { await fs.access(spritePath); spriteExists = true; } catch { }
+
+          if (!thumbExists || !spriteExists) {
+            skipped++;
+            return;
+          }
+
           // Deterministic ID from relative path
           const id = crypto.createHash('sha256').update('movies:' + relVideoPath).digest('hex').slice(0, 36);
 
@@ -444,13 +536,7 @@ router.post('/movies/index', async (req: Request, res: Response) => {
           // Stat the video file
           const stat = await fs.stat(videoPath);
 
-          // Check for thumbnails
-          const thumbPath = path.join(dir, 'Thumbnails', `${baseName}_thumb.jpg`);
-          let thumbUrl: string | null = null;
-          try {
-            await fs.access(thumbPath);
-            thumbUrl = `/media/movies/${relDir}/Thumbnails/${encodeURIComponent(baseName)}_thumb.jpg`;
-          } catch { }
+          const thumbUrl = `/media/movies/${relDir}/Thumbnails/${encodeURIComponent(baseName)}_thumb.jpg`;
 
           // Upsert into videos table
           if (db) {
@@ -484,8 +570,9 @@ router.post('/movies/index', async (req: Request, res: Response) => {
                   performer: [],
                 },
                 customCategories: {},
-                thumbnail: thumbUrl ? { generated: true, dataUrl: thumbUrl, timestamp: new Date().toISOString() } : null,
+                thumbnail: { generated: true, dataUrl: thumbUrl, timestamp: new Date().toISOString() },
                 rootKey: 'movies',
+                processingStatus: 'completed',
               })
               .onConflictDoUpdate({
                 target: videos.id,
@@ -495,7 +582,8 @@ router.post('/movies/index', async (req: Request, res: Response) => {
                   path: dbPath,
                   size: stat.size,
                   lastModified: stat.mtime,
-                  thumbnail: thumbUrl ? { generated: true, dataUrl: thumbUrl, timestamp: new Date().toISOString() } : null,
+                  thumbnail: { generated: true, dataUrl: thumbUrl, timestamp: new Date().toISOString() },
+                  processingStatus: 'completed',
                 },
               });
 
@@ -508,9 +596,9 @@ router.post('/movies/index', async (req: Request, res: Response) => {
         return; // Don't recurse into subdirectories of a movie directory
       }
 
-      // Recurse into subdirectories (skip Thumbnails)
+      // Recurse into subdirectories (skip Thumbnails and 1_inbox)
       for (const entry of entries) {
-        if (entry.isDirectory() && entry.name !== 'Thumbnails') {
+        if (entry.isDirectory() && entry.name !== 'Thumbnails' && entry.name !== '1_inbox') {
           await scanDir(path.join(dir, entry.name));
         }
       }
@@ -518,18 +606,49 @@ router.post('/movies/index', async (req: Request, res: Response) => {
 
     await scanDir(scanRoot);
 
-    logger.info(`[Processing] Movie index complete: ${indexed} indexed, ${skipped} skipped, ${errors} errors`);
+    // Clean up empty directories left behind by moves/deletes
+    let cleaned = 0;
+    try {
+      cleaned = await cleanupEmptyDirectories();
+    } catch (cleanError: any) {
+      logger.warn('[Processing] Empty directory cleanup failed (non-fatal)', { error: cleanError.message });
+    }
+
+    logger.info(`[Processing] Movie index complete: ${indexed} indexed, ${skipped} skipped, ${errors} errors, ${cleaned} empty dirs removed`);
 
     res.json({
       success: true,
       indexed,
       skipped,
       errors,
+      cleaned,
       total: indexed + skipped + errors,
       ...(errorDetails.length > 0 && { errorDetails: errorDetails.slice(0, 20) }),
     });
   } catch (error: any) {
     logger.error('[Processing] Movie index failed', { error: error.message });
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * POST /api/processing/movies/cleanup
+ * Remove empty directories from the movies directory tree
+ */
+router.post('/movies/cleanup', async (req: Request, res: Response) => {
+  try {
+    const { directory } = req.body;
+    const targetDir = directory ? resolveAndValidateMovieDir(directory) : undefined;
+    const removed = await cleanupEmptyDirectories(targetDir);
+
+    logger.info(`[Processing] Cleanup complete: ${removed} empty directories removed`);
+
+    res.json({
+      success: true,
+      removed,
+    });
+  } catch (error: any) {
+    logger.error('[Processing] Cleanup failed', { error: error.message });
     res.status(500).json({ error: error.message });
   }
 });

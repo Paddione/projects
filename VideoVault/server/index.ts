@@ -3,7 +3,7 @@ import express, { type Request, Response, NextFunction } from 'express';
 import { registerRoutes } from './routes';
 import { setupVite, serveStatic, log } from './vite';
 import { logger } from './lib/logger';
-import { ensureDbReady, db as dbInstance } from './db';
+import { ensureDbReady, db as dbInstance, pool } from './db';
 import { runMigrations } from './migrate';
 import cookieParser from 'cookie-parser';
 import { globalErrorHandler } from './middleware/errorHandler';
@@ -101,6 +101,18 @@ app.use(requestLogger);
     try {
       await ensureDbReady();
       await runMigrations();
+
+      // Clear transient video data on startup so the UI starts fresh.
+      // File handles are session-based (lost on reload), so stale DB records
+      // would show inaccessible videos. Preserves user config (settings,
+      // presets, tags, directory roots, media progress).
+      try {
+        await pool!.query('TRUNCATE videos, thumbnails, scan_state, processing_jobs CASCADE');
+        logger.info('Cleared transient video data on startup');
+      } catch (cleanupErr) {
+        logger.warn('Failed to clear transient data', { error: (cleanupErr as Error).message });
+      }
+
       app.locals.db = dbInstance;
       logger.info('Database connection verified');
     } catch (err) {

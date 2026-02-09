@@ -146,7 +146,6 @@ The `Obsidian/` directory is an Obsidian knowledge vault serving as the high-lev
 - **Assets**: 10 SVG architecture diagrams in `assets/`
 - **Plugins**: Dataview, Templater, obsidian-git
 - **Theme**: Custom Cybervault CSS (cyan/dark aesthetic)
-- **Notion mirror**: `Notion/` contains markdown exports formatted for Notion import
 
 The Obsidian vault documents Kubernetes manifest locations, environment variable mappings, deployment procedures, and service dependencies. Use service templates in `.obsidian/templates/` when adding new service documentation.
 
@@ -220,7 +219,6 @@ Each major project has its own CLAUDE.md with detailed guidance:
 
 Architecture diagrams and operational runbooks live in the Obsidian vault:
 - `Obsidian/` - High-level architecture, service docs, infrastructure docs, deployment procedures
-- `Notion/` - Notion-compatible mirror of the Obsidian vault (for team collaboration)
 
 Read the relevant project CLAUDE.md before making changes. Consult the Obsidian vault for cross-service architecture and deployment context.
 

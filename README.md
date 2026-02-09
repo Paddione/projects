@@ -157,7 +157,6 @@ cd payment && npm test
 │   ├── server/
 │   └── e2e/
 ├── Obsidian/                  # Architecture docs, runbooks, SVG diagrams (Obsidian vault)
-├── Notion/                    # Notion-compatible mirror of Obsidian vault
 ├── scripts/                   # Root automation scripts
 ├── AGENTS.md                  # Multi-agent coordination guidelines
 ├── CLAUDE.md                  # Claude Code guidance
