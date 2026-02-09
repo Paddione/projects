@@ -35,29 +35,29 @@ export default function ProductPurchaseForm({ product }: { product: ProductProps
     }
 
     return (
-        <div className="payment-purchase-form">
+        <div className="shop-purchase-form">
             {product.isService && (
-                <div className="payment-form-group">
-                    <label className="payment-form-label">Select Booking Time</label>
+                <div className="shop-form-group">
+                    <label className="shop-form-label">Select Booking Time</label>
                     <input
                         type="datetime-local"
                         value={date}
                         onChange={e => setDate(e.target.value)}
-                        className="payment-form-input"
+                        className="shop-form-input"
                     />
-                    <p className="payment-form-hint">Business Hours: Mon-Fri 09:00 - 17:00</p>
+                    <p className="shop-form-hint">Business Hours: Mon-Fri 09:00 - 17:00</p>
                 </div>
             )}
 
             <button
                 onClick={handleSubmit}
                 disabled={loading}
-                className="payment-btn-purchase"
+                className="shop-btn-purchase"
             >
-                {loading ? 'Processing...' : `Purchase for ${product.price} PC`}
+                {loading ? 'Processing...' : `Purchase for ${product.price} GC`}
             </button>
 
-            {error && <p className="payment-error-message">{error}</p>}
+            {error && <p className="shop-error-message">{error}</p>}
         </div>
     )
 }

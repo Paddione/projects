@@ -40,7 +40,7 @@ export async function purchaseProduct(productId: string, quantity: number = 1, b
         // 5. Get Wallet & Check Balance
         const wallet = await tx.wallet.findUniqueOrThrow({ where: { userId } })
         if (wallet.balance.toNumber() < total) {
-            throw new Error('Insufficient PatrickCoins')
+            throw new Error('Insufficient GoldCoins')
         }
 
         // 6. Deduct Balance

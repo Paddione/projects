@@ -4,14 +4,14 @@ import bcrypt from 'bcryptjs'
 const prisma = new PrismaClient()
 
 async function main() {
-    const passwordHash = await bcrypt.hash('P@trickC0inAdmin2025!', 10)
+    const passwordHash = await bcrypt.hash('G0ldC0insAdmin2025!', 10)
 
     // Master Account
     const admin = await prisma.user.upsert({
-        where: { email: 'admin@patrickcoin.com' },
+        where: { email: 'admin@goldcoins.shop' },
         update: { passwordHash },
         create: {
-            email: 'admin@patrickcoin.com',
+            email: 'admin@goldcoins.shop',
             name: 'Patrick Master',
             role: 'ADMIN',
             passwordHash,
@@ -43,17 +43,17 @@ async function main() {
     // Create Products
     const products = [
         {
-            title: 'Gold PatrickCoin',
+            title: 'Gold Coin Collectible',
             description: 'A physical representation of your digital wealth. Minted in 24k gold.',
-            price: 50.00,
+            price: 5000,
             stock: 10,
             isService: false,
             imageUrl: 'https://images.unsplash.com/photo-1518546305927-5a555bb7020d?auto=format&fit=crop&q=80&w=400'
         },
         {
-            title: 'Silver PatrickCoin Card',
+            title: 'Silver Membership Card',
             description: 'Exclusive membership card for high-net-worth individuals.',
-            price: 25.00,
+            price: 2500,
             stock: 50,
             isService: false,
             imageUrl: 'https://images.unsplash.com/photo-1549421263-5ec394a5ad4c?auto=format&fit=crop&q=80&w=400'
@@ -61,7 +61,7 @@ async function main() {
         {
             title: 'Personal Financial Consulting',
             description: '1-hour session with a financial expert to optimize your digital assets.',
-            price: 15.00,
+            price: 1500,
             stock: 100,
             isService: true,
             imageUrl: 'https://images.unsplash.com/photo-1454165833767-027ffea7021b?auto=format&fit=crop&q=80&w=400'

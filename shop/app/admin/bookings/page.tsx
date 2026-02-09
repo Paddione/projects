@@ -19,20 +19,20 @@ export default async function AdminBookingsPage() {
     const productsMap = new Map(products.map(p => [p.id, p]))
 
     return (
-        <div className="payment-admin-container">
-            <div className="payment-admin-header">
-                <h1 className="payment-admin-title">Booking Management</h1>
+        <div className="shop-admin-container">
+            <div className="shop-admin-header">
+                <h1 className="shop-admin-title">Booking Management</h1>
             </div>
 
-            <div className="payment-admin-table-container">
-                <table className="payment-admin-table">
+            <div className="shop-admin-table-container">
+                <table className="shop-admin-table">
                     <thead>
                         <tr>
                             <th>User</th>
                             <th>Service</th>
                             <th>Time Slot</th>
                             <th>Status</th>
-                            <th className="payment-admin-table-actions-header">Actions</th>
+                            <th className="shop-admin-table-actions-header">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -41,9 +41,9 @@ export default async function AdminBookingsPage() {
                             return (
                                 <tr key={booking.id}>
                                     <td>
-                                        <div className="payment-admin-table-product-info">
-                                            <span className="payment-admin-table-product-title">{booking.user.name || booking.user.email}</span>
-                                            <span className="payment-admin-table-product-description">{booking.user.email}</span>
+                                        <div className="shop-admin-table-product-info">
+                                            <span className="shop-admin-table-product-title">{booking.user.name || booking.user.email}</span>
+                                            <span className="shop-admin-table-product-description">{booking.user.email}</span>
                                         </div>
                                     </td>
                                     <td>{product ? product.title : 'General Service'}</td>
@@ -54,14 +54,14 @@ export default async function AdminBookingsPage() {
                                         </div>
                                     </td>
                                     <td>
-                                        <span className={`payment-appointment-status ${booking.status === 'CONFIRMED' ? 'status-confirmed' : 'status-cancelled'}`}>
+                                        <span className={`shop-appointment-status ${booking.status === 'CONFIRMED' ? 'status-confirmed' : 'status-cancelled'}`}>
                                             {booking.status}
                                         </span>
                                     </td>
-                                    <td className="payment-admin-table-actions">
+                                    <td className="shop-admin-table-actions">
                                         {booking.status === 'CONFIRMED' && (
                                             <form action={cancelBooking.bind(null, booking.id)}>
-                                                <button type="submit" className="payment-admin-btn-delete">
+                                                <button type="submit" className="shop-admin-btn-delete">
                                                     Cancel
                                                 </button>
                                             </form>

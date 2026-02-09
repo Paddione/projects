@@ -29,12 +29,12 @@ const content: Record<Lang, {
         ],
       },
       {
-        heading: 'Wallet & PatrickCoin',
+        heading: 'Wallet & GoldCoins',
         items: [
-          'Your wallet shows your current PatrickCoin balance.',
+          'Your wallet shows your current GoldCoins balance.',
           'Add funds to your wallet via the Add Funds form (processed through Stripe).',
           'View your transaction history to track deposits and purchases.',
-          'PatrickCoin is the digital currency used for all transactions.',
+          'GoldCoins is the digital currency used for all transactions.',
         ],
       },
       {
@@ -93,12 +93,12 @@ const content: Record<Lang, {
         ],
       },
       {
-        heading: 'Wallet & PatrickCoin',
+        heading: 'Wallet & GoldCoins',
         items: [
-          'Dein Wallet zeigt deinen aktuellen PatrickCoin-Kontostand.',
+          'Dein Wallet zeigt deinen aktuellen GoldCoins-Kontostand.',
           'Lade Guthaben ueber das Auflade-Formular auf (wird ueber Stripe abgewickelt).',
           'Sieh dir deinen Transaktionsverlauf an um Einzahlungen und Kaeufe nachzuverfolgen.',
-          'PatrickCoin ist die digitale Waehrung fuer alle Transaktionen.',
+          'GoldCoins ist die digitale Waehrung fuer alle Transaktionen.',
         ],
       },
       {
@@ -171,7 +171,7 @@ export default function HelpScreen() {
   return (
     <>
       <button
-        className="payment-help-button"
+        className="shop-help-button"
         onClick={() => setIsOpen(true)}
         aria-label="Help"
         title="Help"
@@ -181,37 +181,37 @@ export default function HelpScreen() {
       </button>
 
       {isOpen && (
-        <div className="payment-help-overlay" onClick={handleOverlayClick}>
-          <div className="payment-help-modal" ref={modalRef} role="dialog" aria-modal="true" data-testid="help-dialog">
-            <div className="payment-help-header">
+        <div className="shop-help-overlay" onClick={handleOverlayClick}>
+          <div className="shop-help-modal" ref={modalRef} role="dialog" aria-modal="true" data-testid="help-dialog">
+            <div className="shop-help-header">
               <h2>{c.title}</h2>
-              <div className="payment-help-header-actions">
+              <div className="shop-help-header-actions">
                 <button
-                  className={`payment-help-lang-btn ${lang === 'en' ? 'active' : ''}`}
+                  className={`shop-help-lang-btn ${lang === 'en' ? 'active' : ''}`}
                   onClick={() => setLang('en')}
                   data-testid="help-lang-en"
                 >
                   EN
                 </button>
                 <button
-                  className={`payment-help-lang-btn ${lang === 'de' ? 'active' : ''}`}
+                  className={`shop-help-lang-btn ${lang === 'de' ? 'active' : ''}`}
                   onClick={() => setLang('de')}
                   data-testid="help-lang-de"
                 >
                   DE
                 </button>
-                <button className="payment-help-close" onClick={() => setIsOpen(false)} aria-label="Close" data-testid="help-close">
+                <button className="shop-help-close" onClick={() => setIsOpen(false)} aria-label="Close" data-testid="help-close">
                   &times;
                 </button>
               </div>
             </div>
 
-            <div className="payment-help-body">
-              <nav className="payment-help-sidebar" data-testid="help-sidebar">
+            <div className="shop-help-body">
+              <nav className="shop-help-sidebar" data-testid="help-sidebar">
                 {c.sections.map((s, i) => (
                   <button
                     key={i}
-                    className={`payment-help-nav-item ${activeSection === i ? 'active' : ''}`}
+                    className={`shop-help-nav-item ${activeSection === i ? 'active' : ''}`}
                     onClick={() => setActiveSection(i)}
                   >
                     {s.heading}
@@ -219,7 +219,7 @@ export default function HelpScreen() {
                 ))}
               </nav>
 
-              <div className="payment-help-content" data-testid="help-content">
+              <div className="shop-help-content" data-testid="help-content">
                 <h3>{c.sections[activeSection].heading}</h3>
                 <ul>
                   {c.sections[activeSection].items.map((item, i) => (

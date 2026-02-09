@@ -8,27 +8,27 @@ export default async function AdminProductsPage() {
     const products = await db.product.findMany({ orderBy: { createdAt: 'desc' } })
 
     return (
-        <div className="payment-admin-container">
-            <div className="payment-admin-header">
+        <div className="shop-admin-container">
+            <div className="shop-admin-header">
                 <div>
-                    <h1 className="payment-admin-title">Products & Services</h1>
-                    <p className="payment-admin-subtitle">Manage your shop inventory</p>
+                    <h1 className="shop-admin-title">Products & Services</h1>
+                    <p className="shop-admin-subtitle">Manage your shop inventory</p>
                 </div>
                 <Link href="/admin/products/new" className="cv-btn cv-btn-primary">
                     + Add New Item
                 </Link>
             </div>
 
-            <div className="payment-admin-table-container">
-                <table className="payment-admin-table">
+            <div className="shop-admin-table-container">
+                <table className="shop-admin-table">
                     <thead>
                         <tr>
                             <th>Image</th>
                             <th>Name</th>
-                            <th>Price (PC)</th>
+                            <th>Price (GC)</th>
                             <th>Stock</th>
                             <th>Type</th>
-                            <th className="payment-admin-table-actions-header">Actions</th>
+                            <th className="shop-admin-table-actions-header">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -38,18 +38,18 @@ export default async function AdminProductsPage() {
                                     {product.imageUrl && (
                                         <>
                                             {/* eslint-disable-next-line @next/next/no-img-element */}
-                                            <img src={product.imageUrl} alt={product.title} className="payment-admin-table-image" />
+                                            <img src={product.imageUrl} alt={product.title} className="shop-admin-table-image" />
                                         </>
                                     )}
                                 </td>
                                 <td>
-                                    <div className="payment-admin-table-product-info">
-                                        <div className="payment-admin-table-product-title">{product.title}</div>
-                                        <div className="payment-admin-table-product-description">{product.description}</div>
+                                    <div className="shop-admin-table-product-info">
+                                        <div className="shop-admin-table-product-title">{product.title}</div>
+                                        <div className="shop-admin-table-product-description">{product.description}</div>
                                     </div>
                                 </td>
                                 <td>
-                                    <span className="payment-admin-table-price">{product.price.toString()}</span>
+                                    <span className="shop-admin-table-price">{product.price.toString()}</span>
                                 </td>
                                 <td>
                                     <span className={product.stock > 0 ? 'cv-badge cv-badge-success' : 'cv-badge cv-badge-danger'}>
@@ -63,9 +63,9 @@ export default async function AdminProductsPage() {
                                         <span className="cv-badge cv-badge-cyan">Product</span>
                                     )}
                                 </td>
-                                <td className="payment-admin-table-actions">
+                                <td className="shop-admin-table-actions">
                                     <form action={deleteProduct.bind(null, product.id)}>
-                                        <button type="submit" className="payment-admin-btn-delete">Delete</button>
+                                        <button type="submit" className="shop-admin-btn-delete">Delete</button>
                                     </form>
                                 </td>
                             </tr>

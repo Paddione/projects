@@ -10,25 +10,25 @@ export default async function AdminLayout({
     await requireAdmin(); // Throws if not admin, redirects handled by ForwardAuth
 
     return (
-        <div className="payment-admin-layout">
+        <div className="shop-admin-layout">
             <AdminSidebar>
-                <h2 className="payment-admin-sidebar-title">Master Control</h2>
-                <nav className="payment-admin-nav">
-                    <Link href="/admin" className="payment-admin-nav-link">
+                <h2 className="shop-admin-sidebar-title">Master Control</h2>
+                <nav className="shop-admin-nav">
+                    <Link href="/admin" className="shop-admin-nav-link">
                         📊 Dashboard
                     </Link>
-                    <Link href="/admin/products" className="payment-admin-nav-link">
+                    <Link href="/admin/products" className="shop-admin-nav-link">
                         📦 Products & Services
                     </Link>
-                    <Link href="/admin/users" className="payment-admin-nav-link">
+                    <Link href="/admin/users" className="shop-admin-nav-link">
                         👥 User Management
                     </Link>
-                    <Link href="/" className="payment-admin-nav-link payment-admin-nav-link-secondary">
+                    <Link href="/" className="shop-admin-nav-link shop-admin-nav-link-secondary">
                         ← Back to Public Site
                     </Link>
                 </nav>
             </AdminSidebar>
-            <main className="payment-admin-main">
+            <main className="shop-admin-main">
                 {children}
             </main>
         </div>

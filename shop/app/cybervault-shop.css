@@ -1,5 +1,5 @@
 /**
- * CYBERVAULT PAYMENT THEME
+ * CYBERVAULT SHOP THEME
  *
  * Financial command center with trust-building aesthetic
  * Focus: Secure transactions, wallet management, premium shopping
@@ -9,7 +9,7 @@
 @import url('../../shared-infrastructure/shared/design-system/cybervault.css');
 
 /* ============================================================================
-   PAYMENT-SPECIFIC DESIGN TOKENS
+   SHOP-SPECIFIC DESIGN TOKENS
    ========================================================================= */
 
 :root {
@@ -39,10 +39,10 @@
 }
 
 /* ============================================================================
-   LAYOUT - Financial Command Center
+   LAYOUT - Shop Command Center
    ========================================================================= */
 
-.payment-app {
+.shop-app {
   min-height: 100vh;
   background: var(--cv-void);
   font-family: var(--cv-font-body);
@@ -53,7 +53,7 @@
    HEADER - Secure Navigation
    ========================================================================= */
 
-.payment-header {
+.shop-header {
   background: var(--cv-glass-strong);
   border-bottom: var(--cv-border-width) solid var(--cv-border-2);
   backdrop-filter: var(--cv-glass-blur);
@@ -64,7 +64,7 @@
   box-shadow: var(--cv-glow-cyan-sm);
 }
 
-.payment-header-content {
+.shop-header-content {
   max-width: 1400px;
   margin: 0 auto;
   display: flex;
@@ -72,7 +72,7 @@
   align-items: center;
 }
 
-.payment-logo {
+.shop-logo {
   font-family: var(--cv-font-display);
   font-size: var(--cv-text-2xl);
   font-weight: 700;
@@ -85,24 +85,24 @@
   transition: all var(--cv-duration-base) var(--cv-ease-smooth);
 }
 
-.payment-logo:hover {
+.shop-logo:hover {
   filter: drop-shadow(0 0 8px var(--cv-cyan-glow));
   transform: translateY(-1px);
 }
 
-.payment-logo:focus-visible {
+.shop-logo:focus-visible {
   outline: 2px solid var(--cv-cyan);
   outline-offset: 4px;
   border-radius: var(--cv-radius-sm);
 }
 
-.payment-nav {
+.shop-nav {
   display: flex;
   align-items: center;
   gap: var(--cv-space-6);
 }
 
-.payment-nav-link {
+.shop-nav-link {
   color: var(--cv-text-secondary);
   text-decoration: none;
   font-size: var(--cv-text-sm);
@@ -113,7 +113,7 @@
   position: relative;
 }
 
-.payment-nav-link::after {
+.shop-nav-link::after {
   content: '';
   position: absolute;
   bottom: -2px;
@@ -125,22 +125,22 @@
   transition: width var(--cv-duration-base) var(--cv-ease-smooth);
 }
 
-.payment-nav-link:hover {
+.shop-nav-link:hover {
   color: var(--cv-cyan);
 }
 
-.payment-nav-link:hover::after {
+.shop-nav-link:hover::after {
   width: 100%;
 }
 
-.payment-nav-link:focus,
-.payment-nav-link:focus-visible {
+.shop-nav-link:focus,
+.shop-nav-link:focus-visible {
   outline: 2px solid var(--cv-cyan) !important;
   outline-offset: 2px !important;
   color: var(--cv-cyan) !important;
 }
 
-.payment-nav-user {
+.shop-nav-user {
   color: var(--cv-text-tertiary);
   font-size: var(--cv-text-sm);
   padding: var(--cv-space-2) var(--cv-space-4);
@@ -148,13 +148,13 @@
   margin-left: var(--cv-space-2);
 }
 
-.payment-nav-user:focus,
-.payment-nav-user:focus-visible {
+.shop-nav-user:focus,
+.shop-nav-user:focus-visible {
   outline: 2px solid var(--cv-cyan) !important;
   outline-offset: 2px !important;
 }
 
-.payment-btn-signout {
+.shop-btn-signout {
   background: var(--cv-glass-2);
   color: var(--cv-text-secondary);
   border: var(--cv-border-width) solid var(--cv-border-2);
@@ -167,22 +167,22 @@
   text-decoration: none;
 }
 
-.payment-btn-signout:hover {
+.shop-btn-signout:hover {
   background: var(--cv-glass-3);
   border-color: var(--cv-cyan-border);
   color: var(--cv-cyan);
   box-shadow: var(--cv-glow-cyan-sm);
 }
 
-.payment-btn-signout:focus,
-.payment-btn-signout:focus-visible {
+.shop-btn-signout:focus,
+.shop-btn-signout:focus-visible {
   outline: 2px solid var(--cv-cyan) !important;
   outline-offset: 2px !important;
 }
 
 
 
-.payment-btn-login {
+.shop-btn-login {
   background: var(--cv-gradient-primary);
   color: var(--cv-void);
   border: none;
@@ -196,18 +196,18 @@
   text-decoration: none;
 }
 
-.payment-btn-login:hover {
+.shop-btn-login:hover {
   transform: translateY(-2px);
   box-shadow: var(--cv-glow-cyan-lg);
 }
 
-.payment-btn-login:focus,
-.payment-btn-login:focus-visible {
+.shop-btn-login:focus,
+.shop-btn-login:focus-visible {
   outline: 2px solid var(--cv-cyan) !important;
   outline-offset: 2px !important;
 }
 
-.payment-nav-admin {
+.shop-nav-admin {
   font-weight: 700;
   color: var(--cv-purple);
   border-left: 1px solid var(--cv-purple-border);
@@ -218,7 +218,7 @@
    HERO - Landing Page
    ========================================================================= */
 
-.payment-hero {
+.shop-hero {
   min-height: 80vh;
   display: flex;
   flex-direction: column;
@@ -234,7 +234,7 @@
   overflow: hidden;
 }
 
-.payment-hero::before {
+.shop-hero::before {
   content: '';
   position: absolute;
   top: 0;
@@ -266,7 +266,7 @@
   }
 }
 
-.payment-hero-title {
+.shop-hero-title {
   font-family: var(--cv-font-display);
   font-size: clamp(var(--cv-text-4xl), 8vw, var(--cv-text-6xl));
   font-weight: 900;
@@ -281,7 +281,7 @@
   z-index: 1;
 }
 
-.payment-hero-subtitle {
+.shop-hero-subtitle {
   font-size: var(--cv-text-xl);
   color: var(--cv-text-secondary);
   max-width: 600px;
@@ -292,7 +292,7 @@
   z-index: 1;
 }
 
-.payment-hero-actions {
+.shop-hero-actions {
   display: flex;
   gap: var(--cv-space-4);
   flex-wrap: wrap;
@@ -302,7 +302,7 @@
   z-index: 1;
 }
 
-.payment-btn-primary {
+.shop-btn-primary {
   background: var(--cv-gradient-primary);
   color: var(--cv-void);
   border: none;
@@ -317,18 +317,18 @@
   display: inline-block;
 }
 
-.payment-btn-primary:hover {
+.shop-btn-primary:hover {
   transform: translateY(-4px) scale(1.02);
   box-shadow: var(--cv-glow-cyan-xl), var(--cv-shadow-xl);
 }
 
-.payment-btn-primary:focus,
-.payment-btn-primary:focus-visible {
+.shop-btn-primary:focus,
+.shop-btn-primary:focus-visible {
   outline: 2px solid var(--cv-cyan) !important;
   outline-offset: 2px !important;
 }
 
-.payment-btn-secondary {
+.shop-btn-secondary {
   background: transparent;
   color: var(--cv-cyan);
   border: 2px solid var(--cv-cyan-border);
@@ -342,14 +342,14 @@
   display: inline-block;
 }
 
-.payment-btn-secondary:hover {
+.shop-btn-secondary:hover {
   background: var(--cv-glass-2);
   box-shadow: var(--cv-glow-cyan-md);
   transform: translateY(-2px);
 }
 
-.payment-btn-secondary:focus,
-.payment-btn-secondary:focus-visible {
+.shop-btn-secondary:focus,
+.shop-btn-secondary:focus-visible {
   outline: 2px solid var(--cv-cyan) !important;
   outline-offset: 2px !important;
 }
@@ -358,12 +358,12 @@
    FEATURES - Value Propositions
    ========================================================================= */
 
-.payment-features {
+.shop-features {
   padding: var(--cv-space-16) var(--cv-space-8);
   background: var(--cv-glass-1);
 }
 
-.payment-features-grid {
+.shop-features-grid {
   max-width: 1200px;
   margin: 0 auto;
   display: grid;
@@ -371,7 +371,7 @@
   gap: var(--cv-space-8);
 }
 
-.payment-feature-card {
+.shop-feature-card {
   text-align: center;
   padding: var(--cv-space-8);
   background: var(--cv-glass-2);
@@ -381,13 +381,13 @@
   transition: all var(--cv-duration-base) var(--cv-ease-smooth);
 }
 
-.payment-feature-card:hover {
+.shop-feature-card:hover {
   transform: translateY(-8px);
   border-color: var(--cv-cyan-border);
   box-shadow: var(--cv-glow-cyan-md);
 }
 
-.payment-feature-icon {
+.shop-feature-icon {
   width: 64px;
   height: 64px;
   margin: 0 auto var(--cv-space-4);
@@ -401,7 +401,7 @@
   box-shadow: var(--cv-glow-cyan-sm);
 }
 
-.payment-feature-title {
+.shop-feature-title {
   font-family: var(--cv-font-display);
   font-size: var(--cv-text-xl);
   font-weight: 700;
@@ -409,7 +409,7 @@
   margin-bottom: var(--cv-space-2);
 }
 
-.payment-feature-description {
+.shop-feature-description {
   color: var(--cv-text-secondary);
   line-height: 1.6;
 }
@@ -418,13 +418,13 @@
    WALLET - Balance & Management
    ========================================================================= */
 
-.payment-wallet-container {
+.shop-wallet-container {
   max-width: 900px;
   margin: 0 auto;
   padding: var(--cv-space-8);
 }
 
-.payment-wallet-title {
+.shop-wallet-title {
   font-family: var(--cv-font-display);
   font-size: var(--cv-text-3xl);
   font-weight: 700;
@@ -432,7 +432,7 @@
   margin-bottom: var(--cv-space-8);
 }
 
-.payment-balance-card {
+.shop-balance-card {
   background: var(--cv-glass-2);
   border: var(--cv-border-width) solid var(--cv-cyan-border);
   border-radius: var(--cv-radius-lg);
@@ -444,7 +444,7 @@
   overflow: hidden;
 }
 
-.payment-balance-card::before {
+.shop-balance-card::before {
   content: '';
   position: absolute;
   top: -50%;
@@ -456,14 +456,14 @@
   pointer-events: none;
 }
 
-.payment-balance-label {
+.shop-balance-label {
   font-size: var(--cv-text-lg);
   color: var(--cv-text-secondary);
   margin-bottom: var(--cv-space-2);
   font-weight: 600;
 }
 
-.payment-balance-amount {
+.shop-balance-amount {
   font-family: var(--cv-font-display);
   font-size: clamp(var(--cv-text-3xl), 6vw, var(--cv-text-5xl));
   font-weight: 900;
@@ -472,7 +472,7 @@
   animation: cv-pulse-glow 3s ease-in-out infinite;
 }
 
-.payment-add-funds-card {
+.shop-add-funds-card {
   background: var(--cv-glass-2);
   border: var(--cv-border-width) solid var(--cv-border-2);
   border-radius: var(--cv-radius-lg);
@@ -480,7 +480,7 @@
   backdrop-filter: var(--cv-glass-blur);
 }
 
-.payment-card-title {
+.shop-card-title {
   font-family: var(--cv-font-display);
   font-size: var(--cv-text-xl);
   font-weight: 700;
@@ -492,13 +492,13 @@
    SHOP - Product Grid
    ========================================================================= */
 
-.payment-shop-container {
+.shop-shop-container {
   max-width: 1400px;
   margin: 0 auto;
   padding: var(--cv-space-8);
 }
 
-.payment-shop-title {
+.shop-shop-title {
   font-family: var(--cv-font-display);
   font-size: var(--cv-text-4xl);
   font-weight: 700;
@@ -510,13 +510,13 @@
   margin-bottom: var(--cv-space-10);
 }
 
-.payment-products-grid {
+.shop-products-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   gap: var(--cv-space-8);
 }
 
-.payment-product-card {
+.shop-product-card {
   background: var(--cv-glass-2);
   border: var(--cv-border-width) solid var(--cv-border-2);
   border-radius: var(--cv-radius-lg);
@@ -527,29 +527,29 @@
   flex-direction: column;
 }
 
-.payment-product-card:hover {
+.shop-product-card:hover {
   transform: translateY(-8px) scale(1.02);
   border-color: var(--cv-cyan-border);
   box-shadow: var(--cv-glow-cyan-lg), var(--cv-shadow-xl);
 }
 
-.payment-product-card:focus,
-.payment-product-card:focus-visible,
-.payment-product-card:focus-within {
+.shop-product-card:focus,
+.shop-product-card:focus-visible,
+.shop-product-card:focus-within {
   border-color: var(--cv-cyan-border) !important;
   box-shadow: var(--cv-glow-cyan-lg), var(--cv-shadow-xl) !important;
   outline: 2px solid var(--cv-cyan) !important;
   outline-offset: 2px !important;
 }
 
-.payment-product-image {
+.shop-product-image {
   width: 100%;
   height: 220px;
   object-fit: cover;
   border-bottom: var(--cv-border-width) solid var(--cv-border-2);
 }
 
-.payment-product-image-placeholder {
+.shop-product-image-placeholder {
   width: 100%;
   height: 220px;
   background: var(--cv-glass-1);
@@ -561,14 +561,14 @@
   font-size: var(--cv-text-sm);
 }
 
-.payment-product-content {
+.shop-product-content {
   padding: var(--pay-card-spacing);
   flex: 1;
   display: flex;
   flex-direction: column;
 }
 
-.payment-product-title {
+.shop-product-title {
   font-family: var(--cv-font-display);
   font-size: var(--cv-text-xl);
   font-weight: 700;
@@ -576,7 +576,7 @@
   margin-bottom: var(--cv-space-3);
 }
 
-.payment-product-description {
+.shop-product-description {
   color: var(--cv-text-secondary);
   font-size: var(--cv-text-sm);
   line-height: 1.6;
@@ -589,14 +589,14 @@
   overflow: hidden;
 }
 
-.payment-product-footer {
+.shop-product-footer {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-top: auto;
 }
 
-.payment-product-price {
+.shop-product-price {
   font-family: var(--cv-font-display);
   font-size: var(--cv-text-2xl);
   font-weight: 900;
@@ -604,7 +604,7 @@
   text-shadow: 0 0 10px var(--pay-trust-green-glow);
 }
 
-.payment-btn-view-details {
+.shop-btn-view-details {
   background: var(--cv-glass-3);
   color: var(--cv-cyan);
   border: var(--cv-border-width) solid var(--cv-cyan-border);
@@ -618,13 +618,13 @@
   display: inline-block;
 }
 
-.payment-btn-view-details:hover {
+.shop-btn-view-details:hover {
   background: var(--cv-cyan);
   color: var(--cv-void);
   box-shadow: var(--cv-glow-cyan-md);
 }
 
-.payment-btn-view-details:focus-visible {
+.shop-btn-view-details:focus-visible {
   outline: 2px solid var(--cv-cyan);
   outline-offset: 2px;
 }
@@ -633,19 +633,19 @@
    FORMS - Secure Input Fields
    ========================================================================= */
 
-.payment-form {
+.shop-form {
   display: flex;
   flex-direction: column;
   gap: var(--cv-space-6);
 }
 
-.payment-form-group {
+.shop-form-group {
   display: flex;
   flex-direction: column;
   gap: var(--cv-space-2);
 }
 
-.payment-form-label {
+.shop-form-label {
   font-size: var(--cv-text-sm);
   font-weight: 600;
   color: var(--cv-text-secondary);
@@ -653,7 +653,7 @@
   letter-spacing: 0.05em;
 }
 
-.payment-form-input {
+.shop-form-input {
   background: var(--cv-glass-1);
   border: var(--cv-border-width) solid var(--cv-border-2);
   border-radius: var(--cv-radius-md);
@@ -664,7 +664,7 @@
   transition: all var(--cv-duration-fast) var(--cv-ease-smooth);
 }
 
-.payment-form-input:focus {
+.shop-form-input:focus {
   outline: 2px solid var(--cv-cyan);
   outline-offset: 2px;
   border-color: var(--cv-cyan-border);
@@ -672,7 +672,7 @@
   background: var(--cv-glass-2);
 }
 
-.payment-form-select {
+.shop-form-select {
   background: var(--cv-glass-1);
   border: var(--cv-border-width) solid var(--cv-border-2);
   border-radius: var(--cv-radius-md);
@@ -684,13 +684,13 @@
   transition: all var(--cv-duration-fast) var(--cv-ease-smooth);
 }
 
-.payment-form-select:focus {
+.shop-form-select:focus {
   outline: none;
   border-color: var(--cv-cyan-border);
   box-shadow: var(--cv-glow-cyan-sm);
 }
 
-.payment-btn-submit {
+.shop-btn-submit {
   background: var(--cv-gradient-primary);
   color: var(--cv-void);
   border: none;
@@ -705,12 +705,12 @@
   letter-spacing: 0.05em;
 }
 
-.payment-btn-submit:hover:not(:disabled) {
+.shop-btn-submit:hover:not(:disabled) {
   transform: translateY(-2px);
   box-shadow: var(--cv-glow-cyan-lg);
 }
 
-.payment-btn-submit:disabled {
+.shop-btn-submit:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
@@ -719,20 +719,20 @@
    ADMIN - Product Management
    ========================================================================= */
 
-.payment-admin-container {
+.shop-admin-container {
   max-width: 1400px;
   margin: 0 auto;
   padding: var(--cv-space-8);
 }
 
-.payment-admin-header {
+.shop-admin-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: var(--cv-space-8);
 }
 
-.payment-admin-title {
+.shop-admin-title {
   font-family: var(--cv-font-display);
   font-size: var(--cv-text-3xl);
   font-weight: 700;
@@ -740,7 +740,7 @@
   text-shadow: 0 0 20px var(--cv-purple-glow);
 }
 
-.payment-btn-new-product {
+.shop-btn-new-product {
   background: var(--cv-glass-2);
   color: var(--cv-purple);
   border: var(--cv-border-width) solid var(--cv-purple-border);
@@ -754,7 +754,7 @@
   display: inline-block;
 }
 
-.payment-btn-new-product:hover {
+.shop-btn-new-product:hover {
   background: var(--cv-purple);
   color: var(--cv-void);
   box-shadow: var(--cv-glow-purple-md);
@@ -764,13 +764,13 @@
    ADMIN LAYOUT - Sidebar Navigation
    ========================================================================= */
 
-.payment-admin-layout {
+.shop-admin-layout {
   display: flex;
   min-height: 100vh;
   background: var(--cv-void);
 }
 
-.payment-admin-sidebar {
+.shop-admin-sidebar {
   width: 280px;
   background: var(--cv-glass-2);
   border-right: var(--cv-border-width) solid var(--cv-border-2);
@@ -782,7 +782,7 @@
   overflow-y: auto;
 }
 
-.payment-admin-sidebar-title {
+.shop-admin-sidebar-title {
   font-family: var(--cv-font-display);
   font-size: var(--cv-text-2xl);
   font-weight: 900;
@@ -793,13 +793,13 @@
   border-bottom: var(--cv-border-width) solid var(--cv-purple-border);
 }
 
-.payment-admin-nav {
+.shop-admin-nav {
   display: flex;
   flex-direction: column;
   gap: var(--cv-space-2);
 }
 
-.payment-admin-nav-link {
+.shop-admin-nav-link {
   display: flex;
   align-items: center;
   gap: var(--cv-space-3);
@@ -813,7 +813,7 @@
   border: var(--cv-border-width) solid transparent;
 }
 
-.payment-admin-nav-link:hover {
+.shop-admin-nav-link:hover {
   background: var(--cv-glass-3);
   color: var(--cv-purple);
   border-color: var(--cv-purple-border);
@@ -821,25 +821,25 @@
   transform: translateX(4px);
 }
 
-.payment-admin-nav-link:focus-visible {
+.shop-admin-nav-link:focus-visible {
   outline: 2px solid var(--cv-purple);
   outline-offset: 2px;
 }
 
-.payment-admin-nav-link-secondary {
+.shop-admin-nav-link-secondary {
   margin-top: var(--cv-space-8);
   color: var(--cv-text-muted);
   border-top: var(--cv-border-width) solid var(--cv-border-1);
   padding-top: var(--cv-space-6);
 }
 
-.payment-admin-nav-link-secondary:hover {
+.shop-admin-nav-link-secondary:hover {
   color: var(--cv-cyan);
   border-color: var(--cv-cyan-border);
   box-shadow: var(--cv-glow-cyan-sm);
 }
 
-.payment-admin-main {
+.shop-admin-main {
   flex: 1;
   padding: var(--cv-space-8);
   background: var(--cv-void);
@@ -851,7 +851,7 @@
    TRANSACTION FEEDBACK - Success/Error States
    ========================================================================= */
 
-.payment-success-message {
+.shop-success-message {
   background: var(--cv-glass-2);
   border: var(--cv-border-width) solid var(--pay-trust-green);
   border-radius: var(--cv-radius-md);
@@ -878,7 +878,7 @@
   }
 }
 
-.payment-error-message {
+.shop-error-message {
   background: var(--cv-glass-2);
   border: var(--cv-border-width) solid var(--pay-danger-red);
   border-radius: var(--cv-radius-md);
@@ -888,7 +888,7 @@
   box-shadow: 0 0 20px var(--pay-danger-red-glow);
 }
 
-.payment-alert-message {
+.shop-alert-message {
   background: var(--cv-glass-2);
   border: var(--cv-border-width) solid var(--pay-alert-amber);
   border-radius: var(--cv-radius-md);
@@ -902,7 +902,7 @@
    MOBILE NAVIGATION - Hamburger Menu
    ========================================================================= */
 
-.payment-mobile-menu-toggle {
+.shop-mobile-menu-toggle {
   display: none;
   background: none;
   border: none;
@@ -911,14 +911,14 @@
   z-index: calc(var(--cv-z-sticky) + 2);
 }
 
-.payment-hamburger {
+.shop-hamburger {
   display: flex;
   flex-direction: column;
   gap: 5px;
   width: 24px;
 }
 
-.payment-hamburger span {
+.shop-hamburger span {
   display: block;
   height: 2px;
   width: 100%;
@@ -927,19 +927,19 @@
   transition: all var(--cv-duration-fast) var(--cv-ease-smooth);
 }
 
-.payment-hamburger.open span:nth-child(1) {
+.shop-hamburger.open span:nth-child(1) {
   transform: translateY(7px) rotate(45deg);
 }
 
-.payment-hamburger.open span:nth-child(2) {
+.shop-hamburger.open span:nth-child(2) {
   opacity: 0;
 }
 
-.payment-hamburger.open span:nth-child(3) {
+.shop-hamburger.open span:nth-child(3) {
   transform: translateY(-7px) rotate(-45deg);
 }
 
-.payment-mobile-backdrop {
+.shop-mobile-backdrop {
   display: none;
 }
 
@@ -947,7 +947,7 @@
    MOBILE ADMIN SIDEBAR
    ========================================================================= */
 
-.payment-admin-sidebar-toggle {
+.shop-admin-sidebar-toggle {
   display: none;
   background: var(--cv-glass-2);
   border: var(--cv-border-width) solid var(--cv-purple-border);
@@ -961,12 +961,12 @@
   z-index: calc(var(--cv-z-sticky) + 1);
 }
 
-.payment-admin-sidebar-toggle:hover {
+.shop-admin-sidebar-toggle:hover {
   background: var(--cv-purple);
   color: var(--cv-void);
 }
 
-.payment-admin-mobile-backdrop {
+.shop-admin-mobile-backdrop {
   display: none;
 }
 
@@ -976,7 +976,7 @@
 
 /* --- Tablet (max-width: 1024px) --- */
 @media (max-width: 1024px) {
-  .payment-admin-stats-grid {
+  .shop-admin-stats-grid {
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   }
 }
@@ -984,11 +984,11 @@
 /* --- Mobile (max-width: 768px) --- */
 @media (max-width: 768px) {
   /* Header: hamburger menu */
-  .payment-mobile-menu-toggle {
+  .shop-mobile-menu-toggle {
     display: flex;
   }
 
-  .payment-nav {
+  .shop-nav {
     position: fixed;
     top: 0;
     right: 0;
@@ -1006,17 +1006,17 @@
     overflow-y: auto;
   }
 
-  .payment-nav-open {
+  .shop-nav-open {
     transform: translateX(0);
   }
 
-  .payment-nav > div {
+  .shop-nav > div {
     display: flex;
     flex-direction: column;
     gap: var(--cv-space-2);
   }
 
-  .payment-nav-link {
+  .shop-nav-link {
     padding: var(--cv-space-3) var(--cv-space-4);
     font-size: var(--cv-text-base);
     border-radius: var(--cv-radius-md);
@@ -1025,15 +1025,15 @@
     align-items: center;
   }
 
-  .payment-nav-link:hover {
+  .shop-nav-link:hover {
     background: var(--cv-glass-2);
   }
 
-  .payment-nav-link::after {
+  .shop-nav-link::after {
     display: none;
   }
 
-  .payment-nav-admin {
+  .shop-nav-admin {
     border-left: none;
     padding-left: var(--cv-space-4);
     border-top: 1px solid var(--cv-purple-border);
@@ -1041,7 +1041,7 @@
     margin-top: var(--cv-space-2);
   }
 
-  .payment-nav-user {
+  .shop-nav-user {
     border-left: none;
     margin-left: 0;
     padding: var(--cv-space-3) var(--cv-space-4);
@@ -1049,8 +1049,8 @@
     margin-top: var(--cv-space-2);
   }
 
-  .payment-btn-signout,
-  .payment-btn-login {
+  .shop-btn-signout,
+  .shop-btn-login {
     min-height: 44px;
     display: flex;
     align-items: center;
@@ -1060,7 +1060,7 @@
     margin-top: var(--cv-space-2);
   }
 
-  .payment-mobile-backdrop {
+  .shop-mobile-backdrop {
     display: block;
     position: fixed;
     inset: 0;
@@ -1070,82 +1070,82 @@
   }
 
   /* Hero */
-  .payment-hero {
+  .shop-hero {
     min-height: 60vh;
     padding: var(--cv-space-8) var(--cv-space-4);
   }
 
-  .payment-hero-actions {
+  .shop-hero-actions {
     flex-direction: column;
     width: 100%;
   }
 
-  .payment-btn-primary,
-  .payment-btn-secondary {
+  .shop-btn-primary,
+  .shop-btn-secondary {
     width: 100%;
     text-align: center;
   }
 
   /* Grids */
-  .payment-products-grid {
+  .shop-products-grid {
     grid-template-columns: 1fr;
   }
 
-  .payment-features-grid {
+  .shop-features-grid {
     grid-template-columns: 1fr;
   }
 
   /* Containers */
-  .payment-shop-container,
-  .payment-wallet-container,
-  .payment-orders-container,
-  .payment-appointments-container,
-  .payment-product-detail-container {
+  .shop-shop-container,
+  .shop-wallet-container,
+  .shop-orders-container,
+  .shop-appointments-container,
+  .shop-product-detail-container {
     padding: var(--cv-space-4);
   }
 
   /* Product Detail */
-  .payment-product-detail-card {
+  .shop-product-detail-card {
     grid-template-columns: 1fr;
   }
 
-  .payment-product-detail-image-section {
+  .shop-product-detail-image-section {
     min-height: 250px;
   }
 
-  .payment-product-detail-content {
+  .shop-product-detail-content {
     padding: var(--cv-space-6);
   }
 
-  .payment-product-detail-title {
+  .shop-product-detail-title {
     font-size: var(--cv-text-2xl);
   }
 
   /* Orders / Appointments */
-  .payment-order-header {
+  .shop-order-header {
     flex-direction: column;
     align-items: flex-start;
     gap: var(--cv-space-2);
   }
 
-  .payment-appointment-card {
+  .shop-appointment-card {
     flex-direction: column;
     align-items: flex-start;
     gap: var(--cv-space-3);
   }
 
   /* Admin layout */
-  .payment-admin-sidebar-toggle {
+  .shop-admin-sidebar-toggle {
     display: flex;
     align-items: center;
     gap: var(--cv-space-2);
   }
 
-  .payment-admin-layout {
+  .shop-admin-layout {
     flex-direction: column;
   }
 
-  .payment-admin-sidebar {
+  .shop-admin-sidebar {
     position: fixed;
     top: 0;
     left: 0;
@@ -1156,11 +1156,11 @@
     box-shadow: var(--cv-shadow-xl);
   }
 
-  .payment-admin-sidebar.payment-admin-sidebar-open {
+  .shop-admin-sidebar.shop-admin-sidebar-open {
     transform: translateX(0);
   }
 
-  .payment-admin-mobile-backdrop {
+  .shop-admin-mobile-backdrop {
     display: block;
     position: fixed;
     inset: 0;
@@ -1169,106 +1169,106 @@
     backdrop-filter: blur(4px);
   }
 
-  .payment-admin-main {
+  .shop-admin-main {
     padding: var(--cv-space-4);
     width: 100%;
   }
 
-  .payment-admin-header {
+  .shop-admin-header {
     flex-direction: column;
     align-items: flex-start;
     gap: var(--cv-space-4);
   }
 
-  .payment-admin-stats-grid {
+  .shop-admin-stats-grid {
     grid-template-columns: 1fr;
   }
 
   /* Admin table */
-  .payment-admin-table-container {
+  .shop-admin-table-container {
     overflow-x: auto;
   }
 
-  .payment-admin-table {
+  .shop-admin-table {
     min-width: 600px;
   }
 }
 
 /* --- Small phones (max-width: 480px) --- */
 @media (max-width: 480px) {
-  .payment-header {
+  .shop-header {
     padding: var(--cv-space-3) var(--cv-space-4);
   }
 
-  .payment-logo {
+  .shop-logo {
     font-size: var(--cv-text-xl);
   }
 
-  .payment-hero {
+  .shop-hero {
     min-height: 50vh;
     padding: var(--cv-space-6) var(--cv-space-3);
   }
 
-  .payment-hero-subtitle {
+  .shop-hero-subtitle {
     font-size: var(--cv-text-base);
   }
 
-  .payment-btn-primary,
-  .payment-btn-secondary {
+  .shop-btn-primary,
+  .shop-btn-secondary {
     padding: var(--cv-space-3) var(--cv-space-6);
     font-size: var(--cv-text-base);
   }
 
-  .payment-features {
+  .shop-features {
     padding: var(--cv-space-8) var(--cv-space-3);
   }
 
-  .payment-feature-card {
+  .shop-feature-card {
     padding: var(--cv-space-6);
   }
 
-  .payment-shop-container,
-  .payment-wallet-container,
-  .payment-orders-container,
-  .payment-appointments-container,
-  .payment-product-detail-container {
+  .shop-shop-container,
+  .shop-wallet-container,
+  .shop-orders-container,
+  .shop-appointments-container,
+  .shop-product-detail-container {
     padding: var(--cv-space-3);
   }
 
-  .payment-shop-title {
+  .shop-shop-title {
     font-size: var(--cv-text-2xl);
   }
 
-  .payment-wallet-title {
+  .shop-wallet-title {
     font-size: var(--cv-text-2xl);
   }
 
-  .payment-balance-card {
+  .shop-balance-card {
     padding: var(--cv-space-6);
   }
 
-  .payment-product-detail-image-section {
+  .shop-product-detail-image-section {
     min-height: 200px;
   }
 
-  .payment-product-detail-content {
+  .shop-product-detail-content {
     padding: var(--cv-space-4);
   }
 
-  .payment-product-detail-title {
+  .shop-product-detail-title {
     font-size: var(--cv-text-xl);
   }
 
-  .payment-order-card,
-  .payment-appointment-card {
+  .shop-order-card,
+  .shop-appointment-card {
     padding: var(--cv-space-4);
   }
 
-  .payment-admin-main {
+  .shop-admin-main {
     padding: var(--cv-space-3);
   }
 
-  .payment-admin-title {
+  .shop-admin-title {
     font-size: var(--cv-text-2xl);
   }
 }
@@ -1288,11 +1288,11 @@
   }
 }
 
-.payment-form-input:focus-visible,
-.payment-form-select:focus-visible,
-.payment-btn-primary:focus-visible,
-.payment-btn-secondary:focus-visible,
-.payment-btn-submit:focus-visible {
+.shop-form-input:focus-visible,
+.shop-form-select:focus-visible,
+.shop-btn-primary:focus-visible,
+.shop-btn-secondary:focus-visible,
+.shop-btn-submit:focus-visible {
   outline: 2px solid var(--cv-cyan);
   outline-offset: 2px;
 }
@@ -1301,7 +1301,7 @@
    SHOP - Additional Styles
    ========================================================================= */
 
-.payment-shop-subtitle {
+.shop-shop-subtitle {
   font-size: var(--cv-text-lg);
   color: var(--cv-text-dim);
   text-align: center;
@@ -1311,7 +1311,7 @@
   margin-right: auto;
 }
 
-.payment-product-header {
+.shop-product-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
@@ -1323,13 +1323,13 @@
    PRODUCT DETAIL PAGE
    ========================================================================= */
 
-.payment-product-detail-container {
+.shop-product-detail-container {
   max-width: 1200px;
   margin: 0 auto;
   padding: var(--cv-space-8);
 }
 
-.payment-product-detail-card {
+.shop-product-detail-card {
   background: var(--cv-glass-2);
   border: var(--cv-border-width) solid var(--cv-border-2);
   border-radius: var(--cv-radius-2xl);
@@ -1339,18 +1339,18 @@
   gap: 0;
 }
 
-.payment-product-detail-image-section {
+.shop-product-detail-image-section {
   position: relative;
   min-height: 500px;
 }
 
-.payment-product-detail-image {
+.shop-product-detail-image {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-.payment-product-detail-image-placeholder {
+.shop-product-detail-image-placeholder {
   width: 100%;
   height: 100%;
   min-height: 500px;
@@ -1362,17 +1362,17 @@
   font-size: var(--cv-text-lg);
 }
 
-.payment-product-detail-content {
+.shop-product-detail-content {
   padding: var(--cv-space-10);
   display: flex;
   flex-direction: column;
 }
 
-.payment-product-detail-header {
+.shop-product-detail-header {
   margin-bottom: var(--cv-space-6);
 }
 
-.payment-product-detail-title {
+.shop-product-detail-title {
   font-family: var(--cv-font-display);
   font-size: var(--cv-text-4xl);
   font-weight: 900;
@@ -1383,13 +1383,13 @@
   margin-bottom: var(--cv-space-4);
 }
 
-.payment-product-detail-badges {
+.shop-product-detail-badges {
   display: flex;
   gap: var(--cv-space-3);
   flex-wrap: wrap;
 }
 
-.payment-product-detail-description {
+.shop-product-detail-description {
   font-size: var(--cv-text-lg);
   color: var(--cv-text-dim);
   line-height: 1.8;
@@ -1397,7 +1397,7 @@
   flex: 1;
 }
 
-.payment-product-detail-purchase {
+.shop-product-detail-purchase {
   border-top: var(--cv-border-width) solid var(--cv-border-2);
   padding-top: var(--cv-space-6);
 }
@@ -1406,19 +1406,19 @@
    PURCHASE FORM
    ========================================================================= */
 
-.payment-purchase-form {
+.shop-purchase-form {
   display: flex;
   flex-direction: column;
   gap: var(--cv-space-6);
 }
 
-.payment-form-hint {
+.shop-form-hint {
   font-size: var(--cv-text-xs);
   color: var(--cv-text-muted);
   margin-top: var(--cv-space-1);
 }
 
-.payment-btn-purchase {
+.shop-btn-purchase {
   width: 100%;
   background: var(--cv-gradient-primary);
   color: var(--cv-void);
@@ -1434,12 +1434,12 @@
   letter-spacing: 0.05em;
 }
 
-.payment-btn-purchase:hover:not(:disabled) {
+.shop-btn-purchase:hover:not(:disabled) {
   transform: translateY(-2px);
   box-shadow: var(--cv-glow-cyan-lg);
 }
 
-.payment-btn-purchase:disabled {
+.shop-btn-purchase:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
@@ -1448,20 +1448,20 @@
    ADMIN DASHBOARD
    ========================================================================= */
 
-.payment-admin-subtitle {
+.shop-admin-subtitle {
   font-size: var(--cv-text-base);
   color: var(--cv-text-dim);
   margin-bottom: var(--cv-space-8);
 }
 
-.payment-admin-stats-grid {
+.shop-admin-stats-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: var(--cv-space-6);
   margin-bottom: var(--cv-space-10);
 }
 
-.payment-admin-stat-card {
+.shop-admin-stat-card {
   background: var(--cv-glass-2);
   border: var(--cv-border-width) solid var(--cv-border-2);
   border-radius: var(--cv-radius-xl);
@@ -1472,13 +1472,13 @@
   transition: all var(--cv-duration-base) var(--cv-ease-smooth);
 }
 
-.payment-admin-stat-card:hover {
+.shop-admin-stat-card:hover {
   transform: translateY(-4px);
   border-color: var(--cv-purple-border);
   box-shadow: var(--cv-glow-purple-md);
 }
 
-.payment-admin-stat-icon {
+.shop-admin-stat-icon {
   font-size: var(--cv-text-4xl);
   width: 80px;
   height: 80px;
@@ -1491,11 +1491,11 @@
   box-shadow: var(--cv-glow-purple-sm);
 }
 
-.payment-admin-stat-content {
+.shop-admin-stat-content {
   flex: 1;
 }
 
-.payment-admin-stat-label {
+.shop-admin-stat-label {
   font-size: var(--cv-text-sm);
   color: var(--cv-text-dim);
   text-transform: uppercase;
@@ -1503,7 +1503,7 @@
   margin-bottom: var(--cv-space-2);
 }
 
-.payment-admin-stat-value {
+.shop-admin-stat-value {
   font-family: var(--cv-font-display);
   font-size: var(--cv-text-4xl);
   font-weight: 900;
@@ -1511,7 +1511,7 @@
   text-shadow: 0 0 15px var(--cv-purple-glow);
 }
 
-.payment-admin-actions {
+.shop-admin-actions {
   display: flex;
   gap: var(--cv-space-4);
   flex-wrap: wrap;
@@ -1521,7 +1521,7 @@
    ADMIN TABLE
    ========================================================================= */
 
-.payment-admin-table-container {
+.shop-admin-table-container {
   background: var(--cv-glass-2);
   border: var(--cv-border-width) solid var(--cv-border-2);
   border-radius: var(--cv-radius-xl);
@@ -1529,17 +1529,17 @@
   backdrop-filter: var(--cv-blur-md);
 }
 
-.payment-admin-table {
+.shop-admin-table {
   width: 100%;
   border-collapse: collapse;
 }
 
-.payment-admin-table thead {
+.shop-admin-table thead {
   background: var(--cv-glass-3);
   border-bottom: var(--cv-border-width) solid var(--cv-border-3);
 }
 
-.payment-admin-table th {
+.shop-admin-table th {
   padding: var(--cv-space-4) var(--cv-space-6);
   text-align: left;
   font-size: var(--cv-text-xs);
@@ -1549,25 +1549,25 @@
   letter-spacing: 0.1em;
 }
 
-.payment-admin-table-actions-header {
+.shop-admin-table-actions-header {
   text-align: right;
 }
 
-.payment-admin-table tbody tr {
+.shop-admin-table tbody tr {
   border-bottom: var(--cv-border-width) solid var(--cv-border-1);
   transition: all var(--cv-duration-fast) var(--cv-ease-smooth);
 }
 
-.payment-admin-table tbody tr:hover {
+.shop-admin-table tbody tr:hover {
   background: var(--cv-glass-3);
 }
 
-.payment-admin-table td {
+.shop-admin-table td {
   padding: var(--cv-space-4) var(--cv-space-6);
   color: var(--cv-text);
 }
 
-.payment-admin-table-image {
+.shop-admin-table-image {
   width: 60px;
   height: 60px;
   object-fit: cover;
@@ -1575,18 +1575,18 @@
   border: var(--cv-border-width) solid var(--cv-border-2);
 }
 
-.payment-admin-table-product-info {
+.shop-admin-table-product-info {
   display: flex;
   flex-direction: column;
   gap: var(--cv-space-1);
 }
 
-.payment-admin-table-product-title {
+.shop-admin-table-product-title {
   font-weight: 600;
   color: var(--cv-text-bright);
 }
 
-.payment-admin-table-product-description {
+.shop-admin-table-product-description {
   font-size: var(--cv-text-sm);
   color: var(--cv-text-dim);
   max-width: 400px;
@@ -1595,17 +1595,17 @@
   white-space: nowrap;
 }
 
-.payment-admin-table-price {
+.shop-admin-table-price {
   font-family: var(--cv-font-mono);
   font-weight: 700;
   color: var(--pay-trust-green);
 }
 
-.payment-admin-table-actions {
+.shop-admin-table-actions {
   text-align: right;
 }
 
-.payment-admin-btn-delete {
+.shop-admin-btn-delete {
   background: transparent;
   color: var(--cv-danger);
   border: var(--cv-border-width) solid var(--cv-danger-border);
@@ -1617,7 +1617,7 @@
   transition: all var(--cv-duration-fast) var(--cv-ease-smooth);
 }
 
-.payment-admin-btn-delete:hover {
+.shop-admin-btn-delete:hover {
   background: var(--cv-danger);
   color: var(--cv-void);
   box-shadow: var(--cv-glow-danger);
@@ -1629,13 +1629,13 @@
    ORDERS PAGE
    ========================================================================= */
 
-.payment-orders-container {
+.shop-orders-container {
   max-width: 1000px;
   margin: 0 auto;
   padding: var(--cv-space-8);
 }
 
-.payment-order-card {
+.shop-order-card {
   background: var(--cv-glass-2);
   border: var(--cv-border-width) solid var(--cv-border-2);
   border-radius: var(--cv-radius-xl);
@@ -1645,12 +1645,12 @@
   transition: all var(--cv-duration-base) var(--cv-ease-smooth);
 }
 
-.payment-order-card:hover {
+.shop-order-card:hover {
   border-color: var(--cv-cyan-border);
   box-shadow: var(--cv-glow-cyan-sm);
 }
 
-.payment-order-header {
+.shop-order-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -1659,20 +1659,20 @@
   border-bottom: 1px solid var(--cv-border-1);
 }
 
-.payment-order-id {
+.shop-order-id {
   font-family: var(--cv-font-display);
   font-size: var(--cv-text-lg);
   font-weight: 700;
   color: var(--cv-cyan);
 }
 
-.payment-order-date {
+.shop-order-date {
   font-size: var(--cv-text-sm);
   color: var(--cv-text-dim);
   margin-left: var(--cv-space-3);
 }
 
-.payment-order-total {
+.shop-order-total {
   font-family: var(--cv-font-mono);
   font-size: var(--cv-text-xl);
   font-weight: 700;
@@ -1680,20 +1680,20 @@
   text-shadow: 0 0 10px var(--pay-trust-green-glow);
 }
 
-.payment-order-items {
+.shop-order-items {
   list-style: none;
   padding: 0;
   margin: 0;
 }
 
-.payment-order-item {
+.shop-order-item {
   display: flex;
   justify-content: space-between;
   padding: var(--cv-space-2) 0;
   color: var(--cv-text-secondary);
 }
 
-.payment-order-item-title {
+.shop-order-item-title {
   font-weight: 500;
   color: var(--cv-text-primary);
 }
@@ -1702,13 +1702,13 @@
    APPOINTMENTS PAGE
    ========================================================================= */
 
-.payment-appointments-container {
+.shop-appointments-container {
   max-width: 1000px;
   margin: 0 auto;
   padding: var(--cv-space-8);
 }
 
-.payment-appointment-card {
+.shop-appointment-card {
   background: var(--cv-glass-2);
   border: var(--cv-border-width) solid var(--cv-border-2);
   border-radius: var(--cv-radius-xl);
@@ -1721,31 +1721,31 @@
   transition: all var(--cv-duration-base) var(--cv-ease-smooth);
 }
 
-.payment-appointment-card:hover {
+.shop-appointment-card:hover {
   border-color: var(--cv-purple-border);
   box-shadow: var(--cv-glow-purple-sm);
 }
 
-.payment-appointment-info {
+.shop-appointment-info {
   display: flex;
   flex-direction: column;
   gap: var(--cv-space-1);
 }
 
-.payment-appointment-service {
+.shop-appointment-service {
   font-family: var(--cv-font-display);
   font-size: var(--cv-text-xl);
   font-weight: 700;
   color: var(--cv-purple);
 }
 
-.payment-appointment-time {
+.shop-appointment-time {
   font-family: var(--cv-font-mono);
   font-size: var(--cv-text-sm);
   color: var(--cv-text-dim);
 }
 
-.payment-appointment-status {
+.shop-appointment-status {
   padding: var(--cv-space-1) var(--cv-space-3);
   border-radius: var(--cv-radius-full);
   font-size: var(--cv-text-xs);
@@ -1770,7 +1770,7 @@
    USER MANAGEMENT
    ========================================================================= */
 
-.payment-admin-back-link {
+.shop-admin-back-link {
   display: inline-block;
   margin-bottom: var(--cv-space-4);
   color: var(--cv-text-dim);
@@ -1779,17 +1779,17 @@
   transition: color var(--cv-duration-fast) var(--cv-ease-smooth);
 }
 
-.payment-admin-back-link:hover {
+.shop-admin-back-link:hover {
   color: var(--cv-purple);
 }
 
-.payment-user-info {
+.shop-user-info {
   display: flex;
   align-items: center;
   gap: var(--cv-space-3);
 }
 
-.payment-user-avatar {
+.shop-user-avatar {
   width: 32px;
   height: 32px;
   border-radius: var(--cv-radius-full);
@@ -1804,7 +1804,7 @@
   font-size: var(--cv-text-xs);
 }
 
-.payment-role-badge {
+.shop-role-badge {
   padding: var(--cv-space-1) var(--cv-space-3);
   border-radius: var(--cv-radius-full);
   font-size: var(--cv-text-xs);
@@ -1812,19 +1812,19 @@
   text-transform: uppercase;
 }
 
-.payment-role-badge.admin {
+.shop-role-badge.admin {
   background: var(--cv-glass-purple);
   color: var(--cv-purple);
   border: 1px solid var(--cv-purple-border);
 }
 
-.payment-role-badge.user {
+.shop-role-badge.user {
   background: var(--cv-glass-1);
   color: var(--cv-text-dim);
   border: 1px solid var(--cv-border-1);
 }
 
-.payment-balance-preview {
+.shop-balance-preview {
   font-family: var(--cv-font-mono);
   font-weight: 700;
   color: var(--pay-trust-green);
@@ -1834,7 +1834,7 @@
    HELP SCREEN
    ========================================================================= */
 
-.payment-help-button {
+.shop-help-button {
   position: fixed;
   bottom: 24px;
   right: 24px;
@@ -1855,12 +1855,12 @@
   z-index: 900;
 }
 
-.payment-help-button:hover {
+.shop-help-button:hover {
   transform: scale(1.1) translateY(-2px);
   box-shadow: var(--cv-glow-cyan-lg);
 }
 
-.payment-help-overlay {
+.shop-help-overlay {
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.6);
@@ -1871,7 +1871,7 @@
   backdrop-filter: blur(4px);
 }
 
-.payment-help-modal {
+.shop-help-modal {
   background: var(--cv-surface-1);
   border: var(--cv-border-width) solid var(--cv-border-2);
   border-radius: var(--cv-radius-xl);
@@ -1884,7 +1884,7 @@
   box-shadow: var(--cv-shadow-xl);
 }
 
-.payment-help-header {
+.shop-help-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -1893,7 +1893,7 @@
   background: var(--cv-glass-2);
 }
 
-.payment-help-header h2 {
+.shop-help-header h2 {
   margin: 0;
   font-family: var(--cv-font-display);
   font-size: var(--cv-text-xl);
@@ -1901,13 +1901,13 @@
   color: var(--cv-text-primary);
 }
 
-.payment-help-header-actions {
+.shop-help-header-actions {
   display: flex;
   align-items: center;
   gap: var(--cv-space-2);
 }
 
-.payment-help-lang-btn {
+.shop-help-lang-btn {
   background: var(--cv-glass-2);
   border: var(--cv-border-width) solid var(--cv-border-2);
   color: var(--cv-text-dim);
@@ -1919,18 +1919,18 @@
   transition: all var(--cv-duration-fast) var(--cv-ease-smooth);
 }
 
-.payment-help-lang-btn.active {
+.shop-help-lang-btn.active {
   background: var(--cv-cyan);
   color: var(--cv-void);
   border-color: var(--cv-cyan);
 }
 
-.payment-help-lang-btn:hover:not(.active) {
+.shop-help-lang-btn:hover:not(.active) {
   border-color: var(--cv-cyan-border);
   color: var(--cv-cyan);
 }
 
-.payment-help-close {
+.shop-help-close {
   background: none;
   border: none;
   font-size: 1.5rem;
@@ -1946,19 +1946,19 @@
   height: 32px;
 }
 
-.payment-help-close:hover {
+.shop-help-close:hover {
   background: var(--cv-glass-3);
   color: var(--cv-text-primary);
 }
 
-.payment-help-body {
+.shop-help-body {
   display: flex;
   flex: 1;
   overflow: hidden;
   min-height: 0;
 }
 
-.payment-help-sidebar {
+.shop-help-sidebar {
   width: 200px;
   flex-shrink: 0;
   background: var(--cv-glass-1);
@@ -1967,7 +1967,7 @@
   padding: var(--cv-space-2);
 }
 
-.payment-help-nav-item {
+.shop-help-nav-item {
   display: block;
   width: 100%;
   padding: var(--cv-space-3) var(--cv-space-4);
@@ -1982,24 +1982,24 @@
   font-weight: 500;
 }
 
-.payment-help-nav-item:hover {
+.shop-help-nav-item:hover {
   background: var(--cv-glass-2);
   color: var(--cv-text-primary);
 }
 
-.payment-help-nav-item.active {
+.shop-help-nav-item.active {
   background: var(--cv-cyan);
   color: var(--cv-void);
   font-weight: 700;
 }
 
-.payment-help-content {
+.shop-help-content {
   flex: 1;
   overflow-y: auto;
   padding: var(--cv-space-6);
 }
 
-.payment-help-content h3 {
+.shop-help-content h3 {
   margin: 0 0 var(--cv-space-4) 0;
   font-family: var(--cv-font-display);
   font-size: var(--cv-text-lg);
@@ -2007,13 +2007,13 @@
   color: var(--cv-text-primary);
 }
 
-.payment-help-content ul {
+.shop-help-content ul {
   list-style: none;
   padding: 0;
   margin: 0;
 }
 
-.payment-help-content li {
+.shop-help-content li {
   padding: var(--cv-space-3) var(--cv-space-4);
   color: var(--cv-text-dim);
   font-size: var(--cv-text-sm);
@@ -2023,7 +2023,7 @@
   padding-left: var(--cv-space-6);
 }
 
-.payment-help-content li::before {
+.shop-help-content li::before {
   content: '\2022';
   color: var(--cv-cyan);
   position: absolute;
@@ -2031,21 +2031,21 @@
   font-weight: bold;
 }
 
-.payment-help-content li:last-child {
+.shop-help-content li:last-child {
   border-bottom: none;
 }
 
 @media (max-width: 640px) {
-  .payment-help-modal {
+  .shop-help-modal {
     width: 98%;
     max-height: 95vh;
   }
 
-  .payment-help-body {
+  .shop-help-body {
     flex-direction: column;
   }
 
-  .payment-help-sidebar {
+  .shop-help-sidebar {
     width: 100%;
     border-right: none;
     border-bottom: var(--cv-border-width) solid var(--cv-border-2);
@@ -2056,14 +2056,14 @@
     flex-shrink: 0;
   }
 
-  .payment-help-nav-item {
+  .shop-help-nav-item {
     white-space: nowrap;
     min-width: max-content;
     padding: var(--cv-space-2) var(--cv-space-3);
     font-size: var(--cv-text-xs);
   }
 
-  .payment-help-content {
+  .shop-help-content {
     padding: var(--cv-space-4);
   }
 }

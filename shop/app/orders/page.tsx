@@ -13,32 +13,32 @@ export default async function OrdersPage() {
     })
 
     return (
-        <div className="payment-orders-container">
-            <h1 className="payment-wallet-title">Order History</h1>
+        <div className="shop-orders-container">
+            <h1 className="shop-wallet-title">Order History</h1>
 
             {orders.length === 0 ? (
-                <div className="payment-alert-message">
+                <div className="shop-alert-message">
                     No orders recorded in your history.
                 </div>
             ) : (
-                <div className="payment-orders-list">
+                <div className="shop-orders-list">
                     {orders.map(order => (
-                        <div key={order.id} className="payment-order-card">
-                            <div className="payment-order-header">
+                        <div key={order.id} className="shop-order-card">
+                            <div className="shop-order-header">
                                 <div>
-                                    <span className="payment-order-id">Order #{order.id.slice(-6)}</span>
-                                    <span className="payment-order-date">{format(order.createdAt, 'PPP p')}</span>
+                                    <span className="shop-order-id">Order #{order.id.slice(-6)}</span>
+                                    <span className="shop-order-date">{format(order.createdAt, 'PPP p')}</span>
                                 </div>
                                 <div className="flex items-center gap-4">
                                     <span className="cv-badge cv-badge-success">{order.status}</span>
-                                    <span className="payment-order-total">{order.total.toString()} PC</span>
+                                    <span className="shop-order-total">{order.total.toString()} GC</span>
                                 </div>
                             </div>
-                            <ul className="payment-order-items">
+                            <ul className="shop-order-items">
                                 {order.items.map(item => (
-                                    <li key={item.id} className="payment-order-item">
-                                        <span className="payment-order-item-title">{item.product.title} x {item.quantity}</span>
-                                        <span className="payment-order-item-price">{item.price.toString()} PC</span>
+                                    <li key={item.id} className="shop-order-item">
+                                        <span className="shop-order-item-title">{item.product.title} x {item.quantity}</span>
+                                        <span className="shop-order-item-price">{item.price.toString()} GC</span>
                                     </li>
                                 ))}
                             </ul>

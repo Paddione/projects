@@ -17,26 +17,26 @@ export default function AddFundsForm() {
     }
 
     return (
-        <div className="payment-form">
-            <div className="payment-form-group">
-                <label className="payment-form-label">Amount (PC)</label>
+        <div className="shop-form">
+            <div className="shop-form-group">
+                <label className="shop-form-label">Amount (GC)</label>
                 <input
                     type="number"
                     value={amount}
                     onChange={(e) => setAmount(Number(e.target.value))}
-                    className="payment-form-input"
+                    className="shop-form-input"
                 />
-                <p className="payment-form-hint">1 PC = $1.00 USD</p>
+                <p className="shop-form-hint">100 GC = 1.00 EUR</p>
             </div>
             <button
                 onClick={handleCheckout}
-                className="payment-btn-submit"
+                className="shop-btn-submit"
             >
                 Pay with Card (Stripe)
             </button>
             <button
                 disabled
-                className="payment-btn-submit"
+                className="shop-btn-submit"
                 style={{ opacity: 0.5, cursor: 'not-allowed', background: 'var(--cv-glass-3)', border: '1px solid var(--cv-border-1)', color: 'var(--cv-text-muted)' }}
             >
                 Pay with PayPal (Coming Soon)

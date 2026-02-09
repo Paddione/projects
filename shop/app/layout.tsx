@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import "./cybervault-payment.css";
+import "./cybervault-shop.css";
 import Header from '@/components/header'
 import KeyboardNavigation from '@/components/KeyboardNavigation'
 import HelpScreen from '@/components/HelpScreen'
@@ -17,7 +17,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "PatrickCoin - Digital Currency Platform",
+  title: "GoldCoins Shop",
   description: "Secure digital currency for exclusive goods and services",
 };
 
@@ -29,7 +29,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased payment-app`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased shop-app`}
       >
         <KeyboardNavigation />
         <Header />

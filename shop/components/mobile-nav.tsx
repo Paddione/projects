@@ -27,23 +27,23 @@ export default function MobileNav({ children }: { children: React.ReactNode }) {
     return (
         <>
             <button
-                className="payment-mobile-menu-toggle"
+                className="shop-mobile-menu-toggle"
                 onClick={() => setIsOpen(!isOpen)}
                 aria-label={isOpen ? 'Close menu' : 'Open menu'}
                 aria-expanded={isOpen}
             >
-                <span className={`payment-hamburger ${isOpen ? 'open' : ''}`}>
+                <span className={`shop-hamburger ${isOpen ? 'open' : ''}`}>
                     <span />
                     <span />
                     <span />
                 </span>
             </button>
-            <nav className={`payment-nav ${isOpen ? 'payment-nav-open' : ''}`}>
+            <nav className={`shop-nav ${isOpen ? 'shop-nav-open' : ''}`}>
                 <div onClick={() => setIsOpen(false)}>
                     {children}
                 </div>
             </nav>
-            {isOpen && <div className="payment-mobile-backdrop" onClick={() => setIsOpen(false)} />}
+            {isOpen && <div className="shop-mobile-backdrop" onClick={() => setIsOpen(false)} />}
         </>
     )
 }

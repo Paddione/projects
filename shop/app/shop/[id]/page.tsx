@@ -9,22 +9,22 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
     if (!product) notFound()
 
     return (
-        <div className="payment-product-detail-container">
-            <div className="payment-product-detail-card">
-                <div className="payment-product-detail-image-section">
+        <div className="shop-product-detail-container">
+            <div className="shop-product-detail-card">
+                <div className="shop-product-detail-image-section">
                     {product.imageUrl ? (
                         <>
                             {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img src={product.imageUrl} alt={product.title} className="payment-product-detail-image" />
+                            <img src={product.imageUrl} alt={product.title} className="shop-product-detail-image" />
                         </>
                     ) : (
-                        <div className="payment-product-detail-image-placeholder">No Image</div>
+                        <div className="shop-product-detail-image-placeholder">No Image</div>
                     )}
                 </div>
-                <div className="payment-product-detail-content">
-                    <div className="payment-product-detail-header">
-                        <h1 className="payment-product-detail-title">{product.title}</h1>
-                        <div className="payment-product-detail-badges">
+                <div className="shop-product-detail-content">
+                    <div className="shop-product-detail-header">
+                        <h1 className="shop-product-detail-title">{product.title}</h1>
+                        <div className="shop-product-detail-badges">
                             {product.isService ? (
                                 <span className="cv-badge cv-badge-purple">Service</span>
                             ) : (
@@ -35,9 +35,9 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
                             </span>
                         </div>
                     </div>
-                    <p className="payment-product-detail-description">{product.description}</p>
+                    <p className="shop-product-detail-description">{product.description}</p>
 
-                    <div className="payment-product-detail-purchase">
+                    <div className="shop-product-detail-purchase">
                         <ProductPurchaseForm product={{ ...product, price: Number(product.price) }} />
                     </div>
                 </div>

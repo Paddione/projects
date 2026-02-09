@@ -102,7 +102,7 @@ model Product {
   title       String
   description String
   imageUrl    String?
-  price       Decimal  @db.Decimal(10, 2) // Price in PatrickCoins
+  price       Decimal  @db.Decimal(10, 2) // Price in GoldCoins
   stock       Int
   isService   Boolean  @default(false)
   createdAt   DateTime @default(now())

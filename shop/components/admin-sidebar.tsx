@@ -25,19 +25,19 @@ export default function AdminSidebar({ children }: { children: React.ReactNode }
     return (
         <>
             <button
-                className="payment-admin-sidebar-toggle"
+                className="shop-admin-sidebar-toggle"
                 onClick={() => setIsOpen(!isOpen)}
                 aria-label={isOpen ? 'Close sidebar' : 'Open sidebar'}
                 aria-expanded={isOpen}
             >
                 ☰ Menu
             </button>
-            <aside className={`payment-admin-sidebar ${isOpen ? 'payment-admin-sidebar-open' : ''}`}>
+            <aside className={`shop-admin-sidebar ${isOpen ? 'shop-admin-sidebar-open' : ''}`}>
                 <div onClick={() => setIsOpen(false)}>
                     {children}
                 </div>
             </aside>
-            {isOpen && <div className="payment-admin-mobile-backdrop" onClick={() => setIsOpen(false)} />}
+            {isOpen && <div className="shop-admin-mobile-backdrop" onClick={() => setIsOpen(false)} />}
         </>
     )
 }

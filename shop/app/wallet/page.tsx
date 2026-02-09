@@ -10,16 +10,16 @@ export default async function WalletPage() {
     })
 
     return (
-        <div className="payment-wallet-container">
-            <h1 className="payment-wallet-title">My Wallet</h1>
+        <div className="shop-wallet-container">
+            <h1 className="shop-wallet-title">My Wallet</h1>
 
-            <div className="payment-balance-card">
-                <h2 className="payment-balance-label">Current Balance</h2>
-                <p className="payment-balance-amount">{wallet?.balance.toString()} PC</p>
+            <div className="shop-balance-card">
+                <h2 className="shop-balance-label">Current Balance</h2>
+                <p className="shop-balance-amount">{wallet?.balance.toString()} GC</p>
             </div>
 
-            <div className="payment-add-funds-card">
-                <h2 className="payment-card-title">Add Funds</h2>
+            <div className="shop-add-funds-card">
+                <h2 className="shop-card-title">Add Funds</h2>
                 <AddFundsForm />
             </div>
         </div>

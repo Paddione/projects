@@ -9,29 +9,29 @@ export default async function Header() {
     const loginUrl = await getAuthLoginUrlFromHeaders(headersList)
 
     return (
-        <header className="payment-header">
-            <div className="payment-header-content">
-                <Link href="/" className="payment-logo">
-                    PatrickCoin
+        <header className="shop-header">
+            <div className="shop-header-content">
+                <Link href="/" className="shop-logo">
+                    GoldCoins
                 </Link>
 
                 <MobileNav>
-                    <Link href="/shop" className="payment-nav-link">Shop</Link>
+                    <Link href="/shop" className="shop-nav-link">Shop</Link>
                     {user ? (
                         <>
-                            <Link href="/wallet" className="payment-nav-link">Wallet</Link>
-                            <Link href="/orders" className="payment-nav-link">Orders</Link>
-                            <Link href="/appointments" className="payment-nav-link">Appointments</Link>
+                            <Link href="/wallet" className="shop-nav-link">Wallet</Link>
+                            <Link href="/orders" className="shop-nav-link">Orders</Link>
+                            <Link href="/appointments" className="shop-nav-link">Appointments</Link>
                             {user.role === 'ADMIN' && (
-                                <Link href="/admin" className="payment-nav-link payment-nav-admin">Admin</Link>
+                                <Link href="/admin" className="shop-nav-link shop-nav-admin">Admin</Link>
                             )}
-                            <span className="payment-nav-user">{user.email}</span>
-                            <a href={`${process.env.AUTH_SERVICE_URL || 'https://auth.korczewski.de'}/logout`} className="payment-btn-signout">
+                            <span className="shop-nav-user">{user.email}</span>
+                            <a href={`${process.env.AUTH_SERVICE_URL || 'https://auth.korczewski.de'}/logout`} className="shop-btn-signout">
                                 Sign Out
                             </a>
                         </>
                     ) : (
-                        <a href={loginUrl} className="payment-btn-login">
+                        <a href={loginUrl} className="shop-btn-login">
                             Login
                         </a>
                     )}

@@ -9,18 +9,18 @@ export async function POST(req: Request) {
     }
 
     const { amount } = await req.json()
-    // Amount in PatrickCoins. 1 PC = 1 USD.
+    // Amount in GoldCoins. 1 GC = 1 euro cent. 100 GC = 1 EUR.
 
     const checkoutSession = await stripe.checkout.sessions.create({
-        payment_method_types: ['card'], // PayPal requires different setup or checking 'paypal' here if supported in Stripe account
+        payment_method_types: ['card'],
         line_items: [
             {
                 price_data: {
-                    currency: 'usd',
+                    currency: 'eur',
                     product_data: {
-                        name: 'PatrickCoin',
+                        name: 'GoldCoins',
                     },
-                    unit_amount: 100, // $1.00 in cents
+                    unit_amount: 1, // 1 euro cent per GoldCoin
                 },
                 quantity: amount,
             },

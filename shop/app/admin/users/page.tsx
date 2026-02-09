@@ -15,16 +15,16 @@ export default async function AdminUsersPage() {
     });
 
     return (
-        <div className="payment-admin-container">
-            <div className="payment-admin-header">
-                <Link href="/admin" className="payment-admin-back-link">
+        <div className="shop-admin-container">
+            <div className="shop-admin-header">
+                <Link href="/admin" className="shop-admin-back-link">
                     ← Back to Dashboard
                 </Link>
-                <h1 className="payment-admin-title">User Management</h1>
+                <h1 className="shop-admin-title">User Management</h1>
             </div>
 
-            <div className="payment-admin-table-container">
-                <table className="payment-admin-table">
+            <div className="shop-admin-table-container">
+                <table className="shop-admin-table">
                     <thead>
                         <tr>
                             <th>User</th>
@@ -38,8 +38,8 @@ export default async function AdminUsersPage() {
                         {users.map((user) => (
                             <tr key={user.id}>
                                 <td>
-                                    <div className="payment-user-info">
-                                        <div className="payment-user-avatar">
+                                    <div className="shop-user-info">
+                                        <div className="shop-user-avatar">
                                             {user.name?.[0] || user.email[0]}
                                         </div>
                                         <span>{user.name || 'No Name'}</span>
@@ -47,13 +47,13 @@ export default async function AdminUsersPage() {
                                 </td>
                                 <td>{user.email}</td>
                                 <td>
-                                    <span className={`payment-role-badge ${user.role.toLowerCase()}`}>
+                                    <span className={`shop-role-badge ${user.role.toLowerCase()}`}>
                                         {user.role}
                                     </span>
                                 </td>
                                 <td>
-                                    <span className="payment-balance-preview">
-                                        {user.wallet?.balance?.toString() || '0.00'} PC
+                                    <span className="shop-balance-preview">
+                                        {user.wallet?.balance?.toString() || '0.00'} GC
                                     </span>
                                 </td>
                                 <td>
