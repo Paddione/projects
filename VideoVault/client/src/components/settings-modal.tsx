@@ -22,6 +22,7 @@ import {
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { AuthService } from '@/services/auth';
+import { ApiClient } from '@/services/api-client';
 import { VideoDatabase } from '@/services/video-database';
 import {
   Settings,
@@ -37,6 +38,7 @@ import {
   Languages,
   Trash2,
   Loader2,
+  RefreshCw,
 } from 'lucide-react';
 
 interface Settings {
@@ -90,6 +92,7 @@ export function SettingsModal({ isOpen, onClose, onSettingsChange }: SettingsMod
   const [hasChanges, setHasChanges] = useState(false);
   const [isAdmin, setIsAdmin] = useState(AuthService.cachedIsAdmin);
   const [isCleaning, setIsCleaning] = useState(false);
+  const [isRescanning, setIsRescanning] = useState(false);
 
   // Load settings from server on mount
   useEffect(() => {
@@ -158,6 +161,18 @@ export function SettingsModal({ isOpen, onClose, onSettingsChange }: SettingsMod
       alert(`Cleanup failed: ${error.message}`);
     } finally {
       setIsCleaning(false);
+    }
+  };
+
+  const handleRescanMovies = async () => {
+    setIsRescanning(true);
+    try {
+      const result = await ApiClient.post<{ queued: number; message: string }>('/api/processing/movies/rescan');
+      alert(result.message);
+    } catch (error: any) {
+      alert(`Rescan failed: ${error.message}`);
+    } finally {
+      setIsRescanning(false);
     }
   };
 
@@ -555,6 +570,23 @@ export function SettingsModal({ isOpen, onClose, onSettingsChange }: SettingsMod
                     <ShieldAlert className="h-3 w-3" /> Admin login required for cleanup
                   </p>
                 )}
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <Label>Rescan Movies</Label>
+                <p className="text-xs text-muted-foreground">
+                  Force a fresh scan of the movies directory. Queues any files missing thumbnails for processing.
+                </p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleRescanMovies}
+                  disabled={isRescanning}
+                  className="w-fit flex items-center gap-2"
+                >
+                  {isRescanning ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+                  Rescan Movies
+                </Button>
               </div>
             </div>
           </div>

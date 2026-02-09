@@ -2,6 +2,7 @@ import type { NextFunction, Request, Response } from 'express';
 import crypto from 'crypto';
 
 const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
+const CSRF_EXEMPT_PATHS = new Set(['/api/processing/movies/rescan']);
 const CSRF_HEADER = 'x-csrf-token';
 
 function ensureCsrfToken(req: Request): string {
@@ -33,7 +34,7 @@ export function attachCsrfToken(req: Request, _res: Response, next: NextFunction
 }
 
 export function csrfProtection(req: Request, _res: Response, next: NextFunction) {
-  if (SAFE_METHODS.has(req.method)) {
+  if (SAFE_METHODS.has(req.method) || CSRF_EXEMPT_PATHS.has(req.originalUrl)) {
     return next();
   }
 
