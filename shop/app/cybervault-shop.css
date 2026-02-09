@@ -514,6 +514,11 @@
   text-align: center;
 }
 
+.shop-preset-btn:focus-visible {
+  outline: 2px solid var(--cv-cyan);
+  outline-offset: 2px;
+}
+
 .shop-preset-btn:hover {
   border-color: var(--cv-cyan-border);
   color: var(--cv-cyan);
@@ -1028,6 +1033,12 @@
   cursor: pointer;
   padding: var(--cv-space-2);
   z-index: calc(var(--cv-z-sticky) + 2);
+}
+
+.shop-mobile-menu-toggle:focus-visible {
+  outline: 2px solid var(--cv-cyan);
+  outline-offset: 2px;
+  border-radius: var(--cv-radius-md);
 }
 
 .shop-hamburger {
@@ -1993,6 +2004,11 @@
   box-shadow: var(--cv-glow-cyan-md);
   transition: all var(--cv-duration-base) var(--cv-ease-smooth);
   z-index: 900;
+}
+
+.shop-help-button:focus-visible {
+  outline: 2px solid var(--cv-cyan);
+  outline-offset: 2px;
 }
 
 .shop-help-button:hover {

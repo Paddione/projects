@@ -47,7 +47,7 @@ test.describe('Help Screen', () => {
         await expect(navItems).toHaveCount(7);
 
         const expectedSections = [
-            'Getting Started', 'Shop', 'Wallet & PatrickCoin',
+            'Getting Started', 'Shop', 'Wallet & GoldCoins',
             'Orders', 'Appointments', 'Admin Panel', 'Security & Payments',
         ];
         for (const heading of expectedSections) {
@@ -70,8 +70,8 @@ test.describe('Help Screen', () => {
         await expect(content.getByText('Browse products on the Shop page.')).toBeVisible();
 
         // Switch to Wallet
-        await page.getByTestId('help-sidebar').getByText('Wallet & PatrickCoin').click();
-        await expect(content.getByRole('heading', { name: 'Wallet & PatrickCoin' })).toBeVisible();
+        await page.getByTestId('help-sidebar').getByText('Wallet & GoldCoins').click();
+        await expect(content.getByRole('heading', { name: 'Wallet & GoldCoins' })).toBeVisible();
     });
 
     test('language toggle switches between English and German', async ({ page }) => {
