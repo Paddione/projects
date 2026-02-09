@@ -207,6 +207,25 @@ export function startMovieWatcher(options: MovieWatcherOptions = {}) {
     logger.warn('[MovieWatcher] Failed to start', { error: error.message });
   });
 
+  const rescan = async (): Promise<number> => {
+    logger.info('[MovieWatcher] Manual rescan triggered');
+    const movies = await scanMoviesDirectory(moviesDir, true, ['Thumbnails']);
+    let queued = 0;
+
+    for (const moviePath of movies) {
+      if (await hasThumbnails(moviePath)) {
+        knownFiles.add(moviePath);
+        continue;
+      }
+
+      queueMovie(moviePath);
+      queued++;
+    }
+
+    logger.info('[MovieWatcher] Manual rescan completed', { queued });
+    return queued;
+  };
+
   return {
     stop: () => {
       if (timer) {
@@ -214,5 +233,18 @@ export function startMovieWatcher(options: MovieWatcherOptions = {}) {
         timer = null;
       }
     },
+    rescan,
   };
+}
+
+export type MovieWatcher = ReturnType<typeof startMovieWatcher>;
+
+let _instance: MovieWatcher | undefined;
+
+export function setMovieWatcherInstance(watcher: MovieWatcher) {
+  _instance = watcher;
+}
+
+export function getMovieWatcherInstance(): MovieWatcher | undefined {
+  return _instance;
 }

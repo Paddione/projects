@@ -4,7 +4,8 @@ import fs from 'fs/promises';
 import crypto from 'crypto';
 import { eq, like } from 'drizzle-orm';
 import { videos } from '@shared/schema';
-import { handleMovieProcessing, scanMoviesDirectory, batchProcessMovies, generateMovieThumbnail, cleanupEmptyDirectories, MOVIE_EXTENSIONS } from '../handlers/movie-handler';
+import { handleMovieProcessing, scanMoviesDirectory, batchProcessMovies, generateMovieThumbnail, cleanupEmptyDirectories, cleanupOrphanedThumbnails, MOVIE_EXTENSIONS } from '../handlers/movie-handler';
+import { getMovieWatcherInstance } from '../lib/movie-watcher';
 import { handleAudiobookProcessing, scanAudiobooksDirectory } from '../handlers/audiobook-handler';
 import { handleEbookProcessing, scanEbooksDirectory } from '../handlers/ebook-handler';
 import { jobQueue } from '../lib/job-queue';
@@ -105,6 +106,30 @@ router.post('/movies/batch', async (req: Request, res: Response) => {
     });
   } catch (error: any) {
     logger.error('[Processing] Movie batch failed', { error: error.message });
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * POST /api/processing/movies/rescan
+ * Force a fresh scan of all movies, queuing any missing thumbnails for processing
+ */
+router.post('/movies/rescan', async (req: Request, res: Response) => {
+  try {
+    const watcher = getMovieWatcherInstance();
+    if (!watcher) {
+      return res.status(503).json({ error: 'Movie watcher is not running' });
+    }
+
+    const queued = await watcher.rescan();
+
+    res.json({
+      success: true,
+      message: `Rescan complete — queued ${queued} movies for processing`,
+      queued,
+    });
+  } catch (error: any) {
+    logger.error('[Processing] Movie rescan failed', { error: error.message });
     res.status(500).json({ error: error.message });
   }
 });

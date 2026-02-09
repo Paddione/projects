@@ -159,8 +159,9 @@ app.use(requestLogger);
   const server = registerRoutes(app);
 
   if (process.env.ENABLE_MOVIE_WATCHER !== '0') {
-    const { startMovieWatcher } = await import('./lib/movie-watcher');
-    startMovieWatcher();
+    const { startMovieWatcher, setMovieWatcherInstance } = await import('./lib/movie-watcher');
+    const watcher = startMovieWatcher();
+    if (watcher) setMovieWatcherInstance(watcher);
   }
 
   // Handle CSRF errors with 403 instead of 500
