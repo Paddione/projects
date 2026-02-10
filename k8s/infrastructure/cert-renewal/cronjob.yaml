@@ -64,28 +64,64 @@ spec:
                   CERT=$(cat "$CERT_DIR/fullchain.cer" | base64 | tr -d '\n')
                   KEY=$(cat "$CERT_DIR/*.korczewski.de.key" | base64 | tr -d '\n')
 
-                  echo "Cert obtained, updating Kubernetes secret..."
+                  echo "Cert obtained, updating Kubernetes secret via API..."
 
-                  # Install kubectl
-                  apk add --no-cache curl >/dev/null 2>&1
-                  curl -sLO "https://dl.k8s.io/release/$(curl -sL https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
-                  chmod +x kubectl && mv kubectl /usr/local/bin/
+                  # Use the Kubernetes API directly with the service account token
+                  SA_TOKEN=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
+                  API_SERVER="https://kubernetes.default.svc"
+                  CA_CERT="/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
 
                   # Update the korczewski-tls secret
-                  kubectl apply -f - <<EOF
-                  apiVersion: v1
-                  kind: Secret
-                  metadata:
-                    name: korczewski-tls
-                    namespace: korczewski-infra
-                  type: kubernetes.io/tls
-                  data:
-                    tls.crt: ${CERT}
-                    tls.key: ${KEY}
-                  EOF
+                  apk add --no-cache curl jq >/dev/null 2>&1
 
-                  # Restart Traefik to pick up new cert
-                  kubectl rollout restart deployment/traefik -n korczewski-infra
+                  SECRET_JSON=$(cat <<ENDJSON
+                  {
+                    "apiVersion": "v1",
+                    "kind": "Secret",
+                    "metadata": {
+                      "name": "korczewski-tls",
+                      "namespace": "korczewski-infra"
+                    },
+                    "type": "kubernetes.io/tls",
+                    "data": {
+                      "tls.crt": "${CERT}",
+                      "tls.key": "${KEY}"
+                    }
+                  }
+                  ENDJSON
+                  )
+
+                  # Try PUT (update), fall back to POST (create) on 404
+                  HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
+                    --cacert "$CA_CERT" \
+                    -H "Authorization: Bearer $SA_TOKEN" \
+                    -H "Content-Type: application/json" \
+                    -X PUT \
+                    -d "$SECRET_JSON" \
+                    "$API_SERVER/api/v1/namespaces/korczewski-infra/secrets/korczewski-tls")
+
+                  if [ "$HTTP_CODE" = "404" ]; then
+                    curl -sf --cacert "$CA_CERT" \
+                      -H "Authorization: Bearer $SA_TOKEN" \
+                      -H "Content-Type: application/json" \
+                      -X POST \
+                      -d "$SECRET_JSON" \
+                      "$API_SERVER/api/v1/namespaces/korczewski-infra/secrets"
+                  elif [ "$HTTP_CODE" != "200" ] && [ "$HTTP_CODE" != "201" ]; then
+                    echo "ERROR: Failed to update secret (HTTP $HTTP_CODE)"
+                    exit 1
+                  fi
+
+                  echo "Secret updated successfully"
+
+                  # Restart Traefik by patching the deployment annotation
+                  PATCH_JSON="{\"spec\":{\"template\":{\"metadata\":{\"annotations\":{\"cert-renewal/restartedAt\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\"}}}}}"
+                  curl -sf --cacert "$CA_CERT" \
+                    -H "Authorization: Bearer $SA_TOKEN" \
+                    -H "Content-Type: application/strategic-merge-patch+json" \
+                    -X PATCH \
+                    -d "$PATCH_JSON" \
+                    "$API_SERVER/apis/apps/v1/namespaces/korczewski-infra/deployments/traefik"
 
                   echo "=== Cert renewal complete ==="
               env:

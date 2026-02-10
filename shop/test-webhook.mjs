@@ -114,7 +114,7 @@ const req = client.request(options, (res) => {
 req.on('error', (error) => {
     console.error('');
     console.error('❌ Request Error:', error.message);
-    console.error('   Make sure the payment service is running on port 3004');
+    console.error('   Make sure the shop service is running on port 3004');
 });
 
 req.write(payload);

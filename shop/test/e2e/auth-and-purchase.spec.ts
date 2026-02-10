@@ -37,7 +37,7 @@ const getRedirectTarget = (url: string): string | null => {
     }
 };
 
-test.describe('Payment registration and purchasing flows', () => {
+test.describe('Shop registration and purchasing flows', () => {
     test.beforeEach(async () => {
         await cleanupAll();
         await seedDefaultData();
@@ -80,7 +80,7 @@ test.describe('Payment registration and purchasing flows', () => {
         await expect(purchaseButton).toBeVisible({ timeout: 10000 });
         await purchaseButton.click();
 
-        const errorMessage = page.getByText(/insufficient patrickcoins|out of stock|booking time required|please select a booking time|wallet|not found/i).first();
+        const errorMessage = page.getByText(/insufficient goldcoins|out of stock|booking time required|please select a booking time|wallet|not found/i).first();
 
         let redirected = false;
         try {

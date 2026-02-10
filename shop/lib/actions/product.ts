@@ -63,6 +63,11 @@ export async function updateProduct(id: string, formData: FormData) {
 export async function deleteProduct(id: string) {
     await requireAdmin() // Throws if not admin
 
+    const hasOrders = await db.orderItem.count({ where: { productId: id } })
+    if (hasOrders > 0) {
+        throw new Error('Cannot delete product with existing orders')
+    }
+
     await db.product.delete({
         where: { id },
     })

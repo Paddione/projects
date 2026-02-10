@@ -1,14 +1,14 @@
 #!/usr/bin/env node
 
 /**
- * Health check for payment service endpoints
+ * Health check for shop service endpoints
  */
 
 import http from 'http';
 
 const tests = [
     {
-        name: 'Payment Service Health Check',
+        name: 'Shop Service Health Check',
         url: 'http://localhost:3004/',
         method: 'GET',
         expectedStatus: 200
@@ -74,7 +74,7 @@ async function runTest(test) {
 }
 
 async function main() {
-    console.log('🏥 Payment Service Health Check');
+    console.log('🏥 Shop Service Health Check');
     console.log('================================\n');
 
     for (const test of tests) {

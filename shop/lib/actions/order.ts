@@ -11,6 +11,10 @@ import { revalidatePath } from 'next/cache'
 export async function purchaseProduct(productId: string, quantity: number = 1, bookingStartTime?: Date) {
     const user = await requireAuth() // Throws if not authenticated
 
+    if (!Number.isInteger(quantity) || quantity < 1) {
+        throw new Error('Invalid quantity')
+    }
+
     const userId = user.id
 
     // Start Transaction
@@ -18,24 +22,26 @@ export async function purchaseProduct(productId: string, quantity: number = 1, b
         // 1. Fetch Product
         const product = await tx.product.findUniqueOrThrow({ where: { id: productId } })
 
-        // 2. Validate Stock
-        if (product.stock < quantity) {
-            throw new Error('Out of stock')
-        }
-
-        // 3. Validate Booking if Service
+        // 2. Validate Booking if Service
         if (product.isService) {
             if (!bookingStartTime) throw new Error('Booking time required for services')
 
             const endTime = addHours(bookingStartTime, 1)
-            const availability = await checkAvailability(productId, bookingStartTime, endTime) // Note: checkAvailability implementation uses `db`, effectively outside this tx? 
-            // checkAvailability is read-only mostly, but uses `db`. Ideally should accept `tx`.
-            // For now, simpler to assume read-committed isolation or acceptable risk.
+            const availability = await checkAvailability(productId, bookingStartTime, endTime)
             if (!availability.available) throw new Error(availability.reason)
         }
 
-        // 4. Calculate Total
-        const total = product.price.toNumber() * quantity // price is Decimal, convert to number for simplicity or use Decimal math
+        // 3. Calculate Total
+        const total = product.price.toNumber() * quantity
+
+        // 4. Atomically decrement stock (check + decrement in one query to prevent overselling)
+        const stockUpdate = await tx.product.updateMany({
+            where: { id: productId, stock: { gte: quantity } },
+            data: { stock: { decrement: quantity } }
+        })
+        if (stockUpdate.count === 0) {
+            throw new Error('Out of stock')
+        }
 
         // 5. Get Wallet & Check Balance
         const wallet = await tx.wallet.findUniqueOrThrow({ where: { userId } })
@@ -73,12 +79,6 @@ export async function purchaseProduct(productId: string, quantity: number = 1, b
                     }
                 }
             }
-        })
-
-        // 9. Update Stock
-        await tx.product.update({
-            where: { id: productId },
-            data: { stock: { decrement: quantity } }
         })
 
         // 10. Create Booking if Service

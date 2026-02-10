@@ -31,7 +31,7 @@ async function globalSetup(config: FullConfig) {
   }
 
   // 3. Check Core Services
-  const services = ['auth', 'l2p-backend', 'l2p-frontend', 'payment', 'videovault'];
+  const services = ['auth', 'l2p-backend', 'l2p-frontend', 'shop', 'videovault'];
   const namespace = 'korczewski-services';
 
   console.log(`\n🔍 Checking services in ${namespace}:`);

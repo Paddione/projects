@@ -175,7 +175,7 @@ step_4_join_workers() {
 
         for NODE in $WORKER_NODES; do
             log_info "Joining worker node ${NODE}..."
-            ssh_cmd "$NODE" "curl -sfL https://get.k3s.io | sudo INSTALL_K3S_VERSION=${K3S_VERSION} K3S_URL=https://${CP1}:6443 K3S_TOKEN='${JOIN_TOKEN}' sh -s - agent --node-external-ip ${NODE}"
+            ssh_cmd "$NODE" "sudo sh -c 'export K3S_TOKEN=\"${JOIN_TOKEN}\" && curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION=${K3S_VERSION} K3S_URL=https://${CP1}:6443 sh -s - agent --node-external-ip ${NODE}'"
         done
     fi
 

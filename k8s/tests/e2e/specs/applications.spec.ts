@@ -9,7 +9,7 @@ import { test, expect } from '@playwright/test';
 const APPS = [
     { name: 'L2P', url: 'https://l2p.korczewski.de', title: /L2P|Learn|Quiz/i, protected: true },
     { name: 'VideoVault', url: 'https://videovault.korczewski.de', title: /MediaVault|VideoVault|Video/i, protected: true },
-    { name: 'Payment/Shop', url: 'https://payment.korczewski.de', title: /Shop|Payment/i, protected: true },
+    { name: 'Shop', url: 'https://shop.korczewski.de', title: /Shop/i, protected: true },
     { name: 'Dashboard', url: 'https://dashboard.korczewski.de', title: /Dashboard/i, protected: true },
 ];
 

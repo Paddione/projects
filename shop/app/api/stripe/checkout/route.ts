@@ -11,6 +11,10 @@ export async function POST(req: Request) {
     const { amount } = await req.json()
     // Amount in GoldCoins. 1 GC = 1 euro cent. 100 GC = 1 EUR.
 
+    if (typeof amount !== 'number' || !Number.isInteger(amount) || amount < 100 || amount > 10000) {
+        return new NextResponse('Invalid amount', { status: 400 })
+    }
+
     const checkoutSession = await stripe.checkout.sessions.create({
         payment_method_types: ['card'],
         line_items: [
