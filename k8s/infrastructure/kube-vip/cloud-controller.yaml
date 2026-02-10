@@ -5,7 +5,7 @@
 # Watches for LoadBalancer services and assigns IPs from the configured range.
 # Replaces k3d's built-in servicelb and MetalLB for bare-metal clusters.
 #
-# IP Range: 10.10.0.32-10.10.0.47 (CIDR 10.10.0.40/28 = /28 block starting at .32)
+# IP Range: 10.10.0.40-10.10.0.55 (explicit range avoids CIDR alignment issues)
 # =============================================================================
 apiVersion: v1
 kind: ConfigMap
@@ -13,7 +13,7 @@ metadata:
   name: kubevip
   namespace: kube-system
 data:
-  cidr-global: "10.10.0.40/28"
+  range-global: "10.10.0.40-10.10.0.55"
 ---
 apiVersion: apps/v1
 kind: Deployment

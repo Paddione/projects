@@ -2,7 +2,7 @@
 # =============================================================================
 # Private Docker Registry Service
 # =============================================================================
-# LoadBalancer type — kube-vip assigns an IP from 10.10.0.40/28.
+# LoadBalancer type — kube-vip assigns IP 10.10.0.41 from range.
 # All k3s nodes reach the registry via this IP.
 # =============================================================================
 apiVersion: v1
@@ -18,6 +18,7 @@ metadata:
     tier: infrastructure
 spec:
   type: LoadBalancer
+  loadBalancerIP: "10.10.0.41"
   ports:
     - name: http
       port: 5000

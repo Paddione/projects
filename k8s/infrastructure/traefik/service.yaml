@@ -20,6 +20,7 @@ metadata:
     tier: infrastructure
 spec:
   type: LoadBalancer
+  loadBalancerIP: "10.10.0.40"
   externalTrafficPolicy: Local
   ports:
     - name: web
