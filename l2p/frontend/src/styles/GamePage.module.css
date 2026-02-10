@@ -2,8 +2,8 @@
 
 .fullHeight {
   /* Allow the internal grid to size against viewport height */
-  min-height: 100vh;
-  max-height: 100vh;
+  min-height: 100dvh;
+  max-height: 100dvh;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -527,13 +527,49 @@
   }
 }
 
+/* Mobile stats bar — hidden on desktop, shown at ≤768px */
+.mobileStatsBar {
+  display: none;
+}
+
 @media (max-width: 768px) {
 
-  /* Stack vertically on small screens but still keep content compact */
+  /* Show compact stats bar, hide full right pane */
+  .mobileStatsBar {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-xs) var(--spacing-sm);
+    background: var(--cv-glass-2);
+    border: 1px solid var(--cv-border-2);
+    border-radius: var(--cv-radius-md);
+    overflow-x: auto;
+    flex-shrink: 0;
+  }
+
+  .mobileStatsBar > * {
+    flex-shrink: 0;
+  }
+
+  .mobileStatsDivider {
+    width: 1px;
+    height: 20px;
+    background: var(--cv-border-3);
+    flex-shrink: 0;
+  }
+
+  .rightPane {
+    display: none;
+  }
+
   .layout {
     grid-template-columns: 1fr;
-    grid-template-areas: 'left' 'right';
-    gap: var(--spacing-md);
+    grid-template-areas: 'left';
+    gap: var(--spacing-sm);
+  }
+
+  .topBar {
+    margin: var(--spacing-xs) 0;
   }
 
   .compactTitle {
@@ -541,23 +577,28 @@
   }
 
   .questionText {
-    --question-lines: 6;
-    font-size: 1.1rem;
+    --question-lines: 5;
+    font-size: 1.05rem;
   }
 
   .answersGrid {
     gap: var(--spacing-sm);
   }
-}
 
-/* Very narrow portrait (e.g., Samsung S22 portrait) */
-@media (max-width: 430px) {
-  .fullHeight {
-    max-height: 100dvh;
+  .answerButton {
+    padding: var(--spacing-xs) var(--spacing-sm);
   }
 
+  .submittedNote {
+    font-size: 0.8rem;
+  }
+}
+
+/* Very narrow portrait (e.g., Samsung S22 portrait, iPhone SE) */
+@media (max-width: 430px) {
   .topBar {
-    margin: var(--spacing-sm) 0;
+    margin: var(--spacing-xs) 0;
+    gap: var(--spacing-sm);
   }
 
   .metaRow {
@@ -565,31 +606,43 @@
   }
 
   .compactTitle {
-    font-size: 0.95rem;
+    font-size: 0.9rem;
   }
 
   .questionText {
-    font-size: 1.05rem;
-    --question-lines: 6;
+    font-size: 1rem;
+    --question-lines: 5;
     line-height: 1.3;
+    padding: var(--spacing-xs) 0;
   }
 
   .answersGrid {
-    grid-template-columns: 1fr 1fr;
-    gap: var(--spacing-sm);
+    grid-template-columns: 1fr;
+    gap: var(--spacing-xs);
   }
 
   .answerButton {
     padding: var(--spacing-xs) var(--spacing-sm);
-    font-size: 0.9rem;
+    font-size: 0.85rem;
+    min-height: 40px;
   }
 
   .answerLabel {
-    font-size: 0.9rem;
+    font-size: 0.85rem;
   }
 
   .answerText {
-    font-size: 0.9rem;
+    font-size: 0.85rem;
+  }
+
+  .leaveBtn {
+    padding: var(--spacing-xs) var(--spacing-sm);
+    font-size: 0.75rem;
+  }
+
+  .mobileStatsBar {
+    padding: 2px var(--spacing-xs);
+    gap: var(--spacing-xs);
   }
 }
 

@@ -9,6 +9,7 @@ interface ScoreDisplayProps {
   totalQuestions?: number
   showMultiplier?: boolean
   showStreak?: boolean
+  compact?: boolean
   className?: string
 }
 
@@ -19,6 +20,7 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
   totalQuestions,
   showMultiplier = true,
   showStreak = false,
+  compact = false,
   className = ''
 }) => {
   const getMultiplierColor = (mult: number): string => {
@@ -37,7 +39,7 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
   }
 
   return (
-    <div className={`${styles.scoreDisplay} ${className}`}>
+    <div className={`${styles.scoreDisplay} ${compact ? styles.scoreDisplayCompact : ''} ${className}`}>
       <div className={styles.scoreSection}>
         <div className={styles.scoreLabel}>Score</div>
         <div className={styles.scoreValue} data-testid="score-value">

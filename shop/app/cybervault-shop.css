@@ -1347,6 +1347,7 @@
   .shop-btn-secondary {
     padding: var(--cv-space-3) var(--cv-space-6);
     font-size: var(--cv-text-base);
+    min-height: 44px;
   }
 
   .shop-features {
@@ -1400,6 +1401,30 @@
 
   .shop-admin-title {
     font-size: var(--cv-text-2xl);
+  }
+
+  /* Touch targets for all interactive elements */
+  .shop-btn-view-details,
+  .shop-btn-signout,
+  .shop-btn-submit,
+  .shop-btn-purchase,
+  .shop-btn-new-product,
+  .shop-preset-btn,
+  .shop-nav-link,
+  .shop-admin-btn-edit,
+  .shop-admin-btn-delete {
+    min-height: 44px;
+  }
+
+  /* Wallet balance card stacking */
+  .shop-conversion-display {
+    flex-direction: column;
+    gap: var(--cv-space-2);
+    padding: var(--cv-space-4);
+  }
+
+  .shop-add-funds-card {
+    padding: var(--cv-space-4);
   }
 }
 

@@ -269,3 +269,37 @@
     width: 100%;
   }
 }
+
+@media (max-width: 480px) {
+  .lobbyView {
+    padding: 1rem;
+    gap: 1rem;
+  }
+
+  .gameSection {
+    padding: 1rem;
+    gap: 1rem;
+  }
+
+  .sectionTitle {
+    font-size: 1.25rem;
+  }
+
+  .codeBadge {
+    padding: 0.5rem 1rem;
+  }
+
+  .codeValue {
+    font-size: 1.5rem;
+  }
+
+  .actionArea {
+    gap: 1rem;
+    padding-top: 1rem;
+  }
+
+  .startAction {
+    padding: 1rem;
+    font-size: 1rem;
+  }
+}

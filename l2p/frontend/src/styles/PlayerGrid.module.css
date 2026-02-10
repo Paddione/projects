@@ -617,3 +617,74 @@
     font-size: 0.75rem;
   }
 }
+
+/* Compact horizontal avatar row for mobile stats bar */
+.playerGridCompact {
+  display: flex;
+  flex-direction: row;
+  gap: 0.375rem;
+  padding: 0;
+  max-width: none;
+  width: auto;
+}
+
+.playerGridCompact .playerSlot {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.125rem 0.375rem;
+  min-height: auto;
+  border-radius: var(--cv-radius-full);
+  background: var(--cv-glass-2);
+  border: 1px solid var(--cv-border-2);
+}
+
+.playerGridCompact .avatarContainer {
+  margin-bottom: 0;
+  padding: 0;
+}
+
+.playerGridCompact .avatar {
+  width: 24px;
+  height: 24px;
+  border-width: 2px;
+}
+
+.playerGridCompact .playerInfo {
+  text-align: left;
+  width: auto;
+}
+
+.playerGridCompact .username {
+  font-size: 0.625rem;
+  margin-bottom: 0;
+  max-width: 48px;
+}
+
+.playerGridCompact .scoreContainer {
+  display: none;
+}
+
+.playerGridCompact .statusIndicators {
+  display: none;
+}
+
+.playerGridCompact .hostBadge,
+.playerGridCompact .disconnectedBadge,
+.playerGridCompact .medalBadge,
+.playerGridCompact .correctBadge,
+.playerGridCompact .wrongBadge {
+  display: none;
+}
+
+.playerGridCompact .sheen {
+  display: none;
+}
+
+.playerGridCompact .confettiContainer {
+  display: none;
+}
+
+.playerGridCompact .emptySlot {
+  display: none;
+}

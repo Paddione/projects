@@ -10,6 +10,7 @@ interface PlayerGridProps {
   maxPlayers?: number
   showScores?: boolean
   showMultipliers?: boolean
+  compact?: boolean
   className?: string
   'data-testid'?: string
   rankings?: Record<string, number>
@@ -21,6 +22,7 @@ export const PlayerGrid: React.FC<PlayerGridProps> = ({
   maxPlayers = 8,
   showScores = true,
   showMultipliers = true,
+  compact = false,
   className = '',
   'data-testid': dataTestId,
   rankings,
@@ -79,7 +81,7 @@ export const PlayerGrid: React.FC<PlayerGridProps> = ({
   }, [players])
 
   return (
-    <div className={`${styles.playerGrid} ${className}`} data-testid={dataTestId} style={columns ? { gridTemplateColumns: `repeat(${columns}, 1fr)` } : undefined}>
+    <div className={`${styles.playerGrid} ${compact ? styles.playerGridCompact : ''} ${className}`} data-testid={dataTestId} style={columns ? { gridTemplateColumns: `repeat(${columns}, 1fr)` } : undefined}>
       {slots.map((player, index) => (
         <div
           key={player?.id || `empty-${index}`}

@@ -353,6 +353,26 @@ export const GamePage: React.FC = () => {
         <ConnectionStatus />
       </div>
 
+      {/* Mobile Stats Bar — visible only at ≤768px via CSS */}
+      <div className={gameStyles.mobileStatsBar}>
+        <ScoreDisplay
+          score={score}
+          multiplier={multiplier}
+          correctAnswers={correctAnswers}
+          compact
+        />
+        {scoreDelta !== null && (
+          <span style={{ color: 'var(--cv-success)', fontWeight: 700, fontSize: '0.8rem', fontFamily: 'var(--cv-font-mono)' }}>+{scoreDelta}</span>
+        )}
+        <div className={gameStyles.mobileStatsDivider} />
+        <PlayerGrid
+          players={sortedPlayersForPlates}
+          rankings={rankings}
+          maxPlayers={2}
+          compact
+        />
+      </div>
+
       {/* Main Layout */}
       <div className={gameStyles.layout}>
         {/* Left Pane: Question + Answers */}
