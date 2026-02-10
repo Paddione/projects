@@ -14,6 +14,8 @@ metadata:
     app: traefik
     app.kubernetes.io/name: traefik
     app.kubernetes.io/component: dashboard
+    app.kubernetes.io/part-of: korczewski
+    tier: infrastructure
 spec:
   routes:
     - match: Host(`traefik.korczewski.de`)

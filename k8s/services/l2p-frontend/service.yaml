@@ -12,6 +12,8 @@ metadata:
     app: l2p-frontend
     app.kubernetes.io/name: l2p-frontend
     app.kubernetes.io/component: frontend
+    app.kubernetes.io/part-of: korczewski
+    tier: services
 spec:
   type: ClusterIP
   ports:

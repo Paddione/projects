@@ -15,6 +15,8 @@ metadata:
     app: postgres
     app.kubernetes.io/name: postgres
     app.kubernetes.io/component: database
+    app.kubernetes.io/part-of: korczewski
+    tier: infrastructure
 data:
   postgresql.conf: |
     # Connection Settings

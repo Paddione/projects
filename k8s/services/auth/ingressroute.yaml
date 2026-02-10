@@ -12,6 +12,8 @@ metadata:
     app: auth
     app.kubernetes.io/name: auth
     app.kubernetes.io/component: authentication
+    app.kubernetes.io/part-of: korczewski
+    tier: services
 spec:
   routes:
     - match: Host(`auth.korczewski.de`)

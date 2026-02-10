@@ -5,7 +5,7 @@
 # Watches for LoadBalancer services and assigns IPs from the configured range.
 # Replaces k3d's built-in servicelb and MetalLB for bare-metal clusters.
 #
-# IP Range: 10.10.0.40-10.10.0.55 (16 addresses)
+# IP Range: 10.10.0.32-10.10.0.47 (CIDR 10.10.0.40/28 = /28 block starting at .32)
 # =============================================================================
 apiVersion: v1
 kind: ConfigMap

@@ -15,6 +15,7 @@ metadata:
     app.kubernetes.io/name: registry
     app.kubernetes.io/component: image-registry
     app.kubernetes.io/part-of: korczewski
+    tier: infrastructure
 spec:
   replicas: 1
   selector:

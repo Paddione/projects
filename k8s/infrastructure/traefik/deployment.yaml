@@ -15,6 +15,8 @@ metadata:
     app: traefik
     app.kubernetes.io/name: traefik
     app.kubernetes.io/component: ingress-controller
+    app.kubernetes.io/part-of: korczewski
+    tier: infrastructure
 spec:
   replicas: 1
   selector:
@@ -31,6 +33,8 @@ spec:
         app: traefik
         app.kubernetes.io/name: traefik
         app.kubernetes.io/component: ingress-controller
+        app.kubernetes.io/part-of: korczewski
+        tier: infrastructure
     spec:
       serviceAccountName: traefik
       terminationGracePeriodSeconds: 30

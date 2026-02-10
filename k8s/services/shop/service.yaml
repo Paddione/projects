@@ -12,6 +12,8 @@ metadata:
     app: shop
     app.kubernetes.io/name: shop
     app.kubernetes.io/component: shop
+    app.kubernetes.io/part-of: korczewski
+    tier: services
 spec:
   type: ClusterIP
   ports:

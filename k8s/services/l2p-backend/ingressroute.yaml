@@ -15,6 +15,8 @@ metadata:
     app: l2p-backend
     app.kubernetes.io/name: l2p-backend
     app.kubernetes.io/component: backend
+    app.kubernetes.io/part-of: korczewski
+    tier: services
 spec:
   routes:
     # Public OAuth config endpoint (higher priority than general API routes)

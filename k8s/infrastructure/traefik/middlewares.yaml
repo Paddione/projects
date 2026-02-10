@@ -13,6 +13,9 @@ metadata:
   namespace: korczewski-infra
   labels:
     app: traefik
+    app.kubernetes.io/component: ingress-controller
+    app.kubernetes.io/part-of: korczewski
+    tier: infrastructure
 spec:
   headers:
     browserXssFilter: false
@@ -34,6 +37,9 @@ metadata:
   namespace: korczewski-infra
   labels:
     app: traefik
+    app.kubernetes.io/component: ingress-controller
+    app.kubernetes.io/part-of: korczewski
+    tier: infrastructure
 spec:
   rateLimit:
     average: 100
@@ -48,6 +54,9 @@ metadata:
   namespace: korczewski-infra
   labels:
     app: traefik
+    app.kubernetes.io/component: ingress-controller
+    app.kubernetes.io/part-of: korczewski
+    tier: infrastructure
 spec:
   compress:
     excludedContentTypes:
@@ -61,6 +70,9 @@ metadata:
   namespace: korczewski-infra
   labels:
     app: traefik
+    app.kubernetes.io/component: ingress-controller
+    app.kubernetes.io/part-of: korczewski
+    tier: infrastructure
 spec:
   headers:
     accessControlAllowMethods:
@@ -92,6 +104,9 @@ metadata:
   namespace: korczewski-infra
   labels:
     app: traefik
+    app.kubernetes.io/component: ingress-controller
+    app.kubernetes.io/part-of: korczewski
+    tier: infrastructure
 spec:
   headers:
     customRequestHeaders:
@@ -106,6 +121,9 @@ metadata:
   namespace: korczewski-infra
   labels:
     app: traefik
+    app.kubernetes.io/component: ingress-controller
+    app.kubernetes.io/part-of: korczewski
+    tier: infrastructure
 spec:
   chain:
     middlewares:
@@ -123,6 +141,9 @@ metadata:
   namespace: korczewski-infra
   labels:
     app: traefik
+    app.kubernetes.io/component: ingress-controller
+    app.kubernetes.io/part-of: korczewski
+    tier: infrastructure
 spec:
   chain:
     middlewares:
@@ -137,6 +158,9 @@ metadata:
   namespace: korczewski-infra
   labels:
     app: traefik
+    app.kubernetes.io/component: ingress-controller
+    app.kubernetes.io/part-of: korczewski
+    tier: infrastructure
 spec:
   basicAuth:
     secret: traefik-dashboard-auth
@@ -150,6 +174,9 @@ metadata:
   namespace: korczewski-infra
   labels:
     app: traefik
+    app.kubernetes.io/component: ingress-controller
+    app.kubernetes.io/part-of: korczewski
+    tier: infrastructure
 spec:
   forwardAuth:
     address: "http://auth.korczewski-services.svc.cluster.local:5500/api/auth/verify?requireAdmin=true"
@@ -169,6 +196,9 @@ metadata:
   namespace: korczewski-infra
   labels:
     app: traefik
+    app.kubernetes.io/component: ingress-controller
+    app.kubernetes.io/part-of: korczewski
+    tier: infrastructure
 spec:
   chain:
     middlewares:
@@ -188,6 +218,9 @@ metadata:
   namespace: korczewski-infra
   labels:
     app: traefik
+    app.kubernetes.io/component: ingress-controller
+    app.kubernetes.io/part-of: korczewski
+    tier: infrastructure
 spec:
   forwardAuth:
     address: "http://auth.korczewski-services.svc.cluster.local:5500/api/auth/verify"
@@ -207,6 +240,9 @@ metadata:
   namespace: korczewski-infra
   labels:
     app: traefik
+    app.kubernetes.io/component: ingress-controller
+    app.kubernetes.io/part-of: korczewski
+    tier: infrastructure
 spec:
   chain:
     middlewares:

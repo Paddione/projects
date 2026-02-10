@@ -16,6 +16,8 @@ metadata:
     app: postgres
     app.kubernetes.io/name: postgres
     app.kubernetes.io/component: database
+    app.kubernetes.io/part-of: korczewski
+    tier: infrastructure
 spec:
   type: ClusterIP
   ports:
@@ -36,6 +38,8 @@ metadata:
     app: postgres
     app.kubernetes.io/name: postgres
     app.kubernetes.io/component: database
+    app.kubernetes.io/part-of: korczewski
+    tier: infrastructure
 spec:
   type: ClusterIP
   clusterIP: None

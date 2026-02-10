@@ -12,6 +12,8 @@ metadata:
     app: videovault
     app.kubernetes.io/name: videovault
     app.kubernetes.io/component: media
+    app.kubernetes.io/part-of: korczewski
+    tier: services
 spec:
   type: ClusterIP
   ports:

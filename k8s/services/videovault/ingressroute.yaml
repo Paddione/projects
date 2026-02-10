@@ -14,6 +14,8 @@ metadata:
     app: videovault
     app.kubernetes.io/name: videovault
     app.kubernetes.io/component: media
+    app.kubernetes.io/part-of: korczewski
+    tier: services
 spec:
   routes:
     - match: Host(`videovault.korczewski.de`) || Host(`video.korczewski.de`)

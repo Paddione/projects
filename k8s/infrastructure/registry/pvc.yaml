@@ -12,6 +12,7 @@ metadata:
   labels:
     app: registry
     app.kubernetes.io/part-of: korczewski
+    tier: infrastructure
 spec:
   accessModes:
     - ReadWriteOnce

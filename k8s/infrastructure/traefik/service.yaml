@@ -16,6 +16,8 @@ metadata:
     app: traefik
     app.kubernetes.io/name: traefik
     app.kubernetes.io/component: ingress-controller
+    app.kubernetes.io/part-of: korczewski
+    tier: infrastructure
 spec:
   type: LoadBalancer
   externalTrafficPolicy: Local
@@ -41,6 +43,8 @@ metadata:
     app: traefik
     app.kubernetes.io/name: traefik
     app.kubernetes.io/component: dashboard
+    app.kubernetes.io/part-of: korczewski
+    tier: infrastructure
 spec:
   type: ClusterIP
   ports:

@@ -13,6 +13,9 @@ metadata:
   namespace: korczewski-infra
   labels:
     app: traefik
+    app.kubernetes.io/component: ingress-controller
+    app.kubernetes.io/part-of: korczewski
+    tier: infrastructure
 spec:
   defaultCertificate:
     secretName: korczewski-tls
@@ -25,6 +28,9 @@ metadata:
   namespace: korczewski-infra
   labels:
     app: traefik
+    app.kubernetes.io/component: ingress-controller
+    app.kubernetes.io/part-of: korczewski
+    tier: infrastructure
 spec:
   minVersion: VersionTLS12
   cipherSuites:
