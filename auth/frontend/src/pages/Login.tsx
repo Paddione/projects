@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useSearchParams, Link, useNavigate } from 'react-router-dom';
 import { AuthApi } from '../services/authApi';
 
-type LoginView = 'login' | 'forgot' | 'reset';
+type LoginView = 'login' | 'forgot' | 'reset' | 'verify';
 
 export default function Login() {
   const [usernameOrEmail, setUsernameOrEmail] = useState('');
@@ -21,6 +21,9 @@ export default function Login() {
   const [forgotLoading, setForgotLoading] = useState(false);
   const [resetLoading, setResetLoading] = useState(false);
   const [resetSuccess, setResetSuccess] = useState(false);
+  const [verifyLoading, setVerifyLoading] = useState(false);
+  const [verifyMessage, setVerifyMessage] = useState('');
+  const [verifyError, setVerifyError] = useState('');
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
 
@@ -53,8 +56,24 @@ export default function Login() {
       return;
     }
 
-    setResetToken(resetTokenParam);
-    setView('reset');
+    // Differentiate: /verify-email uses the token for verification, not password reset
+    if (window.location.pathname === '/verify-email') {
+      setView('verify');
+      setVerifyLoading(true);
+      AuthApi.verifyEmail(resetTokenParam)
+        .then((res) => {
+          setVerifyMessage(res.message || 'E-Mail erfolgreich bestätigt!');
+        })
+        .catch((err) => {
+          setVerifyError(err instanceof Error ? err.message : 'Verifizierung fehlgeschlagen');
+        })
+        .finally(() => {
+          setVerifyLoading(false);
+        });
+    } else {
+      setResetToken(resetTokenParam);
+      setView('reset');
+    }
   }, [resetTokenParam]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -165,13 +184,13 @@ export default function Login() {
     <div className="auth-page">
       <div className="auth-card">
         <div className="auth-header">
-          <h1 className={`auth-title ${view === 'login' ? 'auth-view-login' : (view === 'forgot' ? 'auth-view-forgot' : 'auth-view-reset')}`}>
-            {view === 'login' ? 'Welcome Back' : (view === 'forgot' ? 'Reset your password' : 'Choose a new password')}
+          <h1 className={`auth-title ${view === 'login' ? 'auth-view-login' : (view === 'forgot' ? 'auth-view-forgot' : (view === 'verify' ? 'auth-view-verify' : 'auth-view-reset'))}`}>
+            {view === 'login' ? 'Welcome Back' : (view === 'forgot' ? 'Reset your password' : (view === 'verify' ? 'E-Mail-Bestätigung' : 'Choose a new password'))}
           </h1>
           <p className="auth-subtitle">
             {view === 'login'
               ? 'Sign in to your account'
-              : (view === 'forgot' ? 'Enter your email to receive a reset link' : 'Enter a new password for your account')}
+              : (view === 'forgot' ? 'Enter your email to receive a reset link' : (view === 'verify' ? 'Deine E-Mail-Adresse wird überprüft' : 'Enter a new password for your account'))}
           </p>
           {project && view === 'login' && (
             <div className="auth-project-badge">
@@ -406,6 +425,47 @@ export default function Login() {
               </>
             )}
           </form>
+        )}
+
+        {view === 'verify' && (
+          <div className="auth-form">
+            {verifyLoading && (
+              <div style={{ textAlign: 'center', padding: '2rem 0' }}>
+                <div className="hub-spinner" style={{ margin: '0 auto var(--cv-space-4)' }}></div>
+                <p style={{ color: 'var(--cv-text-secondary)' }}>E-Mail wird bestätigt...</p>
+              </div>
+            )}
+
+            {!verifyLoading && verifyMessage && (
+              <>
+                <div className="auth-message auth-message-success">
+                  {verifyMessage}
+                </div>
+                <button
+                  type="button"
+                  onClick={handleBackToLogin}
+                  className="auth-btn-primary"
+                >
+                  Weiter zur Anmeldung
+                </button>
+              </>
+            )}
+
+            {!verifyLoading && verifyError && (
+              <>
+                <div className="auth-message auth-message-error">
+                  {verifyError}
+                </div>
+                <button
+                  type="button"
+                  onClick={handleBackToLogin}
+                  className="auth-btn-secondary"
+                >
+                  Zurück zur Anmeldung
+                </button>
+              </>
+            )}
+          </div>
         )}
       </div>
     </div>
