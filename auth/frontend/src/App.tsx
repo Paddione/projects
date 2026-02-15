@@ -3,10 +3,12 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Hub from './pages/Hub';
 import Admin from './pages/Admin';
+import HelpGuide from './components/HelpGuide';
 
 function App() {
   return (
     <BrowserRouter>
+      <HelpGuide />
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/reset-password" element={<Login />} />
