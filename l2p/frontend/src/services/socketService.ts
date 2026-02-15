@@ -428,7 +428,7 @@ export class SocketService {
         }, 50)
 
         // Update players with current scores from server
-        if (data.players && Array.isArray(data.players)) {
+        if (data.players && Array.isArray(data.players) && data.players.length > 0) {
           console.log('Updating players with server data:', data.players)
           setPlayers(data.players)
         }
