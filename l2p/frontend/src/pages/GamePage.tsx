@@ -342,7 +342,7 @@ export const GamePage: React.FC = () => {
 
   // Show all players including current player on plates, excluding current player from plates only if displaying 3+ players
   const playersForPlates = players.length <= 2 ? players : players.filter(p => p.id !== currentPlayer.id)
-  const sortedPlayersForPlates = playersForPlates.sort((a, b) => b.score - a.score).slice(0, 2)
+  const sortedPlayersForPlates = [...playersForPlates].sort((a, b) => b.score - a.score)
 
   return (
     <div className={`${styles.container} ${gameStyles.fullHeight}`}>
@@ -416,7 +416,7 @@ export const GamePage: React.FC = () => {
           <PlayerGrid
             players={sortedPlayersForPlates}
             rankings={rankings}
-            maxPlayers={2}
+            maxPlayers={sortedPlayersForPlates.length}
             compact
           />
         </div>
@@ -606,7 +606,7 @@ export const GamePage: React.FC = () => {
               <PlayerGrid
                 players={sortedPlayersForPlates}
                 rankings={rankings}
-                maxPlayers={2}
+                maxPlayers={sortedPlayersForPlates.length}
                 showScores={true}
                 showMultipliers={true}
               />
