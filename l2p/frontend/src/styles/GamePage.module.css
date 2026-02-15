@@ -150,6 +150,8 @@
   grid-area: right;
   display: flex;
   flex-direction: column;
+  overflow-y: auto;
+  max-height: calc(100dvh - 80px);
 }
 
 /* Background for question phase - Cybervault Premium Aesthetic */
@@ -457,8 +459,8 @@
 }
 
 .playersCard {
-  /* Remove flex: 1 and overflow-y to allow content-based sizing */
   min-height: 0;
+  flex: 1;
 }
 
 /* Score delta chip */
