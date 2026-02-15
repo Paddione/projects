@@ -420,6 +420,30 @@ body {
   color: var(--cv-text-muted);
 }
 
+/* Native Select & Option - ensure contrast in dark theme */
+select {
+  background-color: var(--cv-void-light);
+  color: var(--cv-text);
+  border: var(--cv-border-width) solid var(--cv-border-2);
+  border-radius: var(--cv-radius-sm);
+  padding: var(--cv-space-2) var(--cv-space-3);
+  font-family: var(--cv-font-body);
+  font-size: var(--cv-text-sm);
+  cursor: pointer;
+  outline: none;
+  transition: all var(--cv-duration-base) var(--cv-ease-smooth);
+}
+
+select:focus {
+  border-color: var(--cv-cyan-border);
+  box-shadow: 0 0 0 3px var(--cv-cyan-subtle);
+}
+
+select option {
+  background-color: var(--cv-void-light);
+  color: var(--cv-text);
+}
+
 /* Status Indicators */
 .cv-pulse {
   animation: cv-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;

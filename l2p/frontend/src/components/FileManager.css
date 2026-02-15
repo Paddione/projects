@@ -87,10 +87,11 @@
 .filter-select,
 .sort-select {
   padding: 10px 12px;
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--cv-border-2);
   border-radius: 6px;
   font-size: 14px;
-  background: white;
+  background: var(--cv-void-light);
+  color: var(--cv-text);
   cursor: pointer;
   transition: border-color 0.2s ease;
 }
@@ -98,8 +99,8 @@
 .filter-select:focus,
 .sort-select:focus {
   outline: none;
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  border-color: var(--cv-cyan-border);
+  box-shadow: 0 0 0 3px var(--cv-cyan-subtle);
 }
 
 /* Error Display */
@@ -443,17 +444,13 @@
     border-color: #374151;
   }
   
-  .search-input,
-  .filter-select,
-  .sort-select {
+  .search-input {
     background: #374151;
     border-color: #4b5563;
     color: #f9fafb;
   }
-  
-  .search-input:focus,
-  .filter-select:focus,
-  .sort-select:focus {
+
+  .search-input:focus {
     border-color: #60a5fa;
     box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.1);
   }

@@ -286,9 +286,10 @@
 
 .badge-selector {
   padding: 8px 16px;
-  border: 2px solid var(--color-border, #e2e8f0);
+  border: 2px solid var(--cv-border-2);
   border-radius: 8px;
-  background: var(--color-background, white);
+  background: var(--cv-void-light);
+  color: var(--cv-text);
   cursor: pointer;
   font-size: 16px;
   font-weight: 500;
@@ -297,14 +298,14 @@
 }
 
 .badge-selector:hover {
-  border-color: var(--color-primary-light, #93c5fd);
-  background: var(--color-primary-bg, #eff6ff);
+  border-color: var(--cv-cyan-border);
+  background: var(--cv-glass-4);
 }
 
 .badge-selector:focus {
   outline: none;
-  border-color: var(--color-primary, #3b82f6);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  border-color: var(--cv-cyan-border);
+  box-shadow: 0 0 0 3px var(--cv-cyan-subtle);
 }
 
 .active-perks-overview h3 {

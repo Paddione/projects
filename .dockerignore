@@ -1,4 +1,5 @@
 # Exclude problematic directories
+openclaw/
 vllm/rag/data/
 scripts/
 reverse-proxy/
