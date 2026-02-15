@@ -13,6 +13,7 @@ Patrick's Projects is a monorepo containing independent full-stack applications 
 | shop | Next.js 16, Prisma, NextAuth v5 | 3004 |
 | auth | Express, Passport.js, JWT/OAuth | 5500 |
 | shared-infrastructure | PostgreSQL, shared design system | 5432 |
+| openclaw | OpenClaw AI Assistant (Docker) | 18789 |
 | Obsidian | Obsidian vault (Markdown, Dataview, Templater) | — |
 
 ## Common Commands
@@ -33,12 +34,14 @@ npm run typecheck:all        # Type check all projects
 npm run validate:env         # Validate environment files
 
 # Deployment (k8s) - Skaffold (build + deploy, use for code changes)
-cd k8s && skaffold run                        # Full stack build + deploy
+cd k8s && skaffold run                        # Full stack build + deploy (production)
 cd k8s && skaffold run -p l2p                 # L2P only (backend + frontend)
 cd k8s && skaffold run -p auth                # Auth service only
 cd k8s && skaffold run -p shop                # Shop service only
 cd k8s && skaffold run -p videovault          # VideoVault only
 cd k8s && skaffold run -p infra               # Infrastructure only (no builds)
+cd k8s && skaffold dev -p dev                 # Dev stack (korczewski-dev namespace, dev-*.korczewski.de)
+cd k8s && skaffold delete -p dev              # Tear down dev stack
 
 # Deployment (k8s) - shell scripts (manifest-only, NO image rebuild)
 ./k8s/scripts/cluster/k3d-create.sh          # Create local k3d cluster
@@ -175,6 +178,15 @@ See `Obsidian/infrastructure/Kubernetes.md` for full multi-node setup guide.
 
 ## Environment Configuration
 
+### Environment Separation
+
+Three environments with distinct config sources:
+- **Local dev (npm)**: Uses `.env.development` files per-project (e.g., `l2p/frontend/.env.development`)
+- **Cluster dev (skaffold)**: Uses kustomize overlay patches (`k8s/overlays/development/`)
+- **Production**: Uses K8s secrets + deployment env vars
+
+> **Note**: The `l2p/.env` symlink to root `.env` has been removed. L2P frontend dev vars are now in `l2p/frontend/.env.development`.
+
 ### File Structure
 
 ```
@@ -260,6 +272,15 @@ When multiple agents work simultaneously:
 - **Shop**: https://shop.korczewski.de
 - **VideoVault**: https://videovault.korczewski.de (alias: https://video.korczewski.de)
 - **Traefik**: https://traefik.korczewski.de
+
+## Development URLs (Cluster Dev Stack)
+
+- **Auth**: https://dev-auth.korczewski.de
+- **L2P**: https://dev-l2p.korczewski.de
+- **Shop**: https://dev-shop.korczewski.de
+- **VideoVault**: https://dev-videovault.korczewski.de
+
+Dev stack runs in `korczewski-dev` namespace, parallel to production. Deploy with `cd k8s && skaffold dev -p dev`.
 
 ## Change Discipline
 

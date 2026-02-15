@@ -203,3 +203,77 @@ profiles:
           - infrastructure/cert-renewal
       rawYaml:
         - base/namespaces.yaml
+
+  # Development stack (parallel to production in korczewski-dev namespace)
+  # Usage:
+  #   skaffold dev -p dev     # Hot-reload, cleans up on Ctrl+C
+  #   skaffold run -p dev     # Deploy and leave running
+  #   skaffold delete -p dev  # Tear down dev stack
+  - name: dev
+    build:
+      artifacts:
+        - image: korczewski/auth
+          context: ..
+          docker:
+            dockerfile: auth/Dockerfile
+        - image: korczewski/l2p-backend
+          context: ..
+          docker:
+            dockerfile: l2p/backend/Dockerfile
+        - image: korczewski/l2p-frontend
+          context: ..
+          docker:
+            dockerfile: l2p/frontend/Dockerfile
+            buildArgs:
+              VITE_API_URL: "https://dev-l2p.korczewski.de/api"
+              VITE_SOCKET_URL: "https://dev-l2p.korczewski.de"
+              VITE_AUTH_SERVICE_URL: "https://dev-auth.korczewski.de"
+        - image: korczewski/shop
+          context: ..
+          docker:
+            dockerfile: shop/Dockerfile
+        - image: korczewski/videovault
+          context: ..
+          docker:
+            dockerfile: VideoVault/Dockerfile.prod
+    manifests:
+      kustomize:
+        paths:
+          - overlays/development
+    deploy:
+      kubectl:
+        hooks:
+          before:
+            - host:
+                command:
+                  [
+                    "bash",
+                    "-c",
+                    "kubectl get ns korczewski-dev >/dev/null 2>&1 || kubectl apply -f base/namespaces.yaml",
+                  ]
+    portForward:
+      - resourceType: service
+        resourceName: auth
+        namespace: korczewski-dev
+        port: 5500
+        localPort: 5501
+      - resourceType: service
+        resourceName: l2p-backend
+        namespace: korczewski-dev
+        port: 3001
+        localPort: 3101
+      - resourceType: service
+        resourceName: l2p-frontend
+        namespace: korczewski-dev
+        port: 80
+        localPort: 3100
+      - resourceType: service
+        resourceName: shop
+        namespace: korczewski-dev
+        port: 3000
+        localPort: 3104
+      - resourceType: service
+        resourceName: videovault
+        namespace: korczewski-dev
+        port: 5000
+        localPort: 5101

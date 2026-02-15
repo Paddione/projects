@@ -1,36 +1,40 @@
 # =============================================================================
 # Development Overlay
 # =============================================================================
-# Adjustments for development environment:
-# - Lower resource limits
-# - Single replicas
-# - Debug logging
+# Deploys all services to korczewski-dev namespace with dev-*.korczewski.de
+# domains. Shares infrastructure (PostgreSQL, Traefik) with production.
+#
+# Usage:
+#   cd k8s && skaffold dev -p dev    # Hot-reload, cleans up on Ctrl+C
+#   cd k8s && skaffold run -p dev    # Deploy and leave running
+#   cd k8s && skaffold delete -p dev # Tear down dev stack
+#
+# NOTE: VideoVault static-binding PVCs (movies, audiobooks, ebooks) will stay
+# Pending if the PVs are already bound to production PVCs. The dynamically-
+# provisioned PVCs (media, thumbnails) work fine in a separate namespace.
 # =============================================================================
 
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
-metadata:
-  name: korczewski-dev
+namespace: korczewski-dev
 
-# Include base and all services
 resources:
-  - ../../base
-  - ../../infrastructure/postgres
-  - ../../infrastructure/traefik
   - ../../services/auth
   - ../../services/l2p-backend
   - ../../services/l2p-frontend
   - ../../services/shop
   - ../../services/videovault
 
-# Common labels for development
-commonLabels:
-  environment: development
+labels:
+  - pairs:
+      environment: development
+    includeSelectors: true
 
-# Patches for development settings
 patches:
-  # Reduce replicas for all deployments
+  # ---------------------------------------------------------------------------
+  # Global: Reduce replicas to 1 for all deployments
+  # ---------------------------------------------------------------------------
   - patch: |-
       - op: replace
         path: /spec/replicas
@@ -38,7 +42,9 @@ patches:
     target:
       kind: Deployment
 
-  # Reduce resource limits
+  # ---------------------------------------------------------------------------
+  # Global: Lower resource limits for dev (512Mi RAM, 500m CPU)
+  # ---------------------------------------------------------------------------
   - patch: |-
       - op: replace
         path: /spec/template/spec/containers/0/resources/limits/memory
@@ -48,3 +54,183 @@ patches:
         value: "500m"
     target:
       kind: Deployment
+
+  # ---------------------------------------------------------------------------
+  # L2P Backend: Dev environment overrides
+  # ---------------------------------------------------------------------------
+  - target:
+      kind: Deployment
+      name: l2p-backend
+    patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: l2p-backend
+      spec:
+        template:
+          spec:
+            containers:
+              - name: l2p-backend
+                env:
+                  - name: NODE_ENV
+                    value: "development"
+                  - name: FRONTEND_URL
+                    value: "https://dev-l2p.korczewski.de"
+                  - name: CORS_ORIGINS
+                    value: "https://dev-l2p.korczewski.de"
+                  - name: AUTH_SERVICE_URL
+                    value: "http://auth.korczewski-dev.svc.cluster.local:5500"
+                  - name: LOG_LEVEL
+                    value: "debug"
+
+  # ---------------------------------------------------------------------------
+  # Auth: Dev environment overrides
+  # ---------------------------------------------------------------------------
+  - target:
+      kind: Deployment
+      name: auth
+    patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: auth
+      spec:
+        template:
+          spec:
+            containers:
+              - name: auth
+                env:
+                  - name: NODE_ENV
+                    value: "development"
+                  - name: APP_URL
+                    value: "https://dev-auth.korczewski.de"
+                  - name: GOOGLE_REDIRECT_URI
+                    value: "https://dev-auth.korczewski.de/api/oauth/google/callback"
+                  - name: ALLOWED_ORIGINS
+                    value: "https://dev-l2p.korczewski.de,https://dev-auth.korczewski.de,https://dev-shop.korczewski.de,https://dev-videovault.korczewski.de"
+
+  # ---------------------------------------------------------------------------
+  # Shop: Dev environment overrides
+  # ---------------------------------------------------------------------------
+  - target:
+      kind: Deployment
+      name: shop
+    patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: shop
+      spec:
+        template:
+          spec:
+            containers:
+              - name: shop
+                env:
+                  - name: NODE_ENV
+                    value: "development"
+                  - name: AUTH_SERVICE_URL
+                    value: "http://auth.korczewski-dev.svc.cluster.local:5500"
+
+  # ---------------------------------------------------------------------------
+  # VideoVault: Dev environment overrides
+  # ---------------------------------------------------------------------------
+  - target:
+      kind: Deployment
+      name: videovault
+    patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: videovault
+      spec:
+        template:
+          spec:
+            containers:
+              - name: videovault
+                env:
+                  - name: NODE_ENV
+                    value: "development"
+                  - name: CORS_ORIGINS
+                    value: "https://dev-videovault.korczewski.de,https://dev-video.korczewski.de"
+
+  # ---------------------------------------------------------------------------
+  # L2P Frontend: Dev environment reference (actual values baked at build time)
+  # ---------------------------------------------------------------------------
+  - target:
+      kind: Deployment
+      name: l2p-frontend
+    patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: l2p-frontend
+      spec:
+        template:
+          spec:
+            containers:
+              - name: l2p-frontend
+                env:
+                  - name: VITE_API_URL
+                    value: "https://dev-l2p.korczewski.de/api"
+                  - name: VITE_SOCKET_URL
+                    value: "https://dev-l2p.korczewski.de"
+                  - name: VITE_AUTH_SERVICE_URL
+                    value: "https://dev-auth.korczewski.de"
+
+  # ---------------------------------------------------------------------------
+  # IngressRoute patches: Replace Host() matchers with dev-* prefixed domains
+  # ---------------------------------------------------------------------------
+
+  # L2P Backend IngressRoute (3 routes)
+  - target:
+      kind: IngressRoute
+      name: l2p-backend
+    patch: |-
+      - op: replace
+        path: /spec/routes/0/match
+        value: "Host(`dev-l2p.korczewski.de`) && Path(`/api/auth/oauth/config`)"
+      - op: replace
+        path: /spec/routes/1/match
+        value: "Host(`dev-l2p.korczewski.de`) && PathPrefix(`/socket.io`)"
+      - op: replace
+        path: /spec/routes/2/match
+        value: "Host(`dev-l2p.korczewski.de`) && PathPrefix(`/api`)"
+
+  # L2P Frontend IngressRoute
+  - target:
+      kind: IngressRoute
+      name: l2p-frontend
+    patch: |-
+      - op: replace
+        path: /spec/routes/0/match
+        value: "Host(`dev-l2p.korczewski.de`)"
+
+  # Auth IngressRoute
+  - target:
+      kind: IngressRoute
+      name: auth
+    patch: |-
+      - op: replace
+        path: /spec/routes/0/match
+        value: "Host(`dev-auth.korczewski.de`)"
+
+  # Shop IngressRoute (2 routes: static assets + authenticated)
+  - target:
+      kind: IngressRoute
+      name: shop
+    patch: |-
+      - op: replace
+        path: /spec/routes/0/match
+        value: "Host(`dev-shop.korczewski.de`) && (PathPrefix(`/_next`) || PathPrefix(`/favicon.ico`) || PathPrefix(`/static`))"
+      - op: replace
+        path: /spec/routes/1/match
+        value: "Host(`dev-shop.korczewski.de`)"
+
+  # VideoVault IngressRoute
+  - target:
+      kind: IngressRoute
+      name: videovault
+    patch: |-
+      - op: replace
+        path: /spec/routes/0/match
+        value: "Host(`dev-videovault.korczewski.de`) || Host(`dev-video.korczewski.de`)"

@@ -1,5 +1,6 @@
-# Unified Docker Compose configuration with environment separation
-# Supports development, testing, and production profiles
+# Docker Compose configuration for LOCAL development and testing only.
+# Production runs on k3s — use Skaffold for cluster deployments.
+#
 # Usage:
 #   Development: docker-compose --profile development up
 #   Testing: docker-compose --profile test up
@@ -216,6 +217,8 @@ services:
       target: development
     container_name: l2p-backend-dev
     working_dir: /app
+    # Loads DB credentials and JWT secrets from root .env into the container.
+    # For ${VAR} substitution in this file, run: docker compose --env-file ../.env-dev
     env_file:
       - ../.env
     environment:
@@ -236,7 +239,8 @@ services:
       OAUTH_CLIENT_ID: ${L2P_OAUTH_CLIENT_ID}
       OAUTH_CLIENT_SECRET: ${L2P_OAUTH_CLIENT_SECRET}
       OAUTH_REDIRECT_URI: ${L2P_OAUTH_REDIRECT_URI}
-      AUTH_SERVICE_URL: ${AUTH_SERVICE_URL:-http://localhost:5500}
+      # Hardcode localhost — prevents connecting to production auth service
+      AUTH_SERVICE_URL: http://localhost:5500
       LOG_LEVEL: debug
       DEBUG: 'app:*'
       NODE_OPTIONS: --max-old-space-size=4096
@@ -253,7 +257,7 @@ services:
       - "9229:9229" # For Node.js debugger
     volumes:
       - ./backend/package.json:/app/package.json:rw
-      - ./backend/package-lock.json:/app/package-lock.json:rw
+      - ./package-lock.json:/app/package-lock.json:rw
       - ./backend/tsconfig.json:/app/tsconfig.json:ro
       - ./backend/src:/app/src:rw
       - ./backend/migrations:/app/migrations:ro
@@ -312,6 +316,8 @@ services:
       VITE_DEV_MODE: "true"
       # Ensure test mode is disabled so proxy works correctly
       VITE_TEST_MODE: "false"
+      # Auth service URL for development (prevents redirect to production)
+      VITE_AUTH_SERVICE_URL: http://localhost:5500
     depends_on:
       backend-dev:
         condition: service_healthy

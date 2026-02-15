@@ -2,7 +2,8 @@
 # =============================================================================
 # Kubernetes Namespaces for Korczewski Infrastructure
 # =============================================================================
-# Two main namespaces to separate infrastructure from application services.
+# Three namespaces: infrastructure, production services, and development services.
+# Dev and prod share the same infrastructure (PostgreSQL, Traefik).
 # =============================================================================
 
 # Infrastructure namespace: PostgreSQL, Traefik
@@ -15,7 +16,7 @@ metadata:
     app.kubernetes.io/managed-by: kubectl
     tier: infrastructure
 ---
-# Services namespace: auth, l2p, shop, videovault
+# Services namespace (production): auth, l2p, shop, videovault
 apiVersion: v1
 kind: Namespace
 metadata:
@@ -24,3 +25,15 @@ metadata:
     app.kubernetes.io/part-of: korczewski
     app.kubernetes.io/managed-by: kubectl
     tier: services
+    environment: production
+---
+# Development namespace: parallel dev stack (dev-*.korczewski.de)
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: korczewski-dev
+  labels:
+    app.kubernetes.io/part-of: korczewski
+    app.kubernetes.io/managed-by: kubectl
+    tier: services
+    environment: development
