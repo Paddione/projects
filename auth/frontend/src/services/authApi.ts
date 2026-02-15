@@ -193,6 +193,44 @@ export class AuthApi {
     return response.json();
   }
 
+  static async verifyEmail(token: string): Promise<{ message: string }> {
+    const response = await fetch(`${API_URL}/api/auth/verify-email`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...XHR_HEADER,
+      },
+      credentials: 'include',
+      body: JSON.stringify({ token }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      throw new Error(error.error || 'Email verification failed');
+    }
+
+    return response.json();
+  }
+
+  static async resendVerification(email: string): Promise<{ message: string }> {
+    const response = await fetch(`${API_URL}/api/auth/resend-verification`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...XHR_HEADER,
+      },
+      credentials: 'include',
+      body: JSON.stringify({ email }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      throw new Error(error.error || 'Failed to resend verification email');
+    }
+
+    return response.json();
+  }
+
   static async getApps(): Promise<AppsResponse> {
     const response = await fetch(`${API_URL}/api/apps`, {
       method: 'GET',
