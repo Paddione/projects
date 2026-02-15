@@ -253,6 +253,68 @@
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3), var(--cv-glow-danger);
 }
 
+/* ─── Game Mode Selector ─── */
+.gameModeSelector {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  background: var(--cv-glass-2);
+  border-radius: var(--cv-radius-xl);
+  padding: 1.25rem;
+  border: 1px solid var(--cv-border-2);
+}
+
+.gameModeButtons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.gameModeBtn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.75rem 0.5rem;
+  background: var(--cv-glass-2);
+  border: 2px solid var(--cv-border-2);
+  border-radius: var(--cv-radius-lg);
+  color: var(--cv-text-dim);
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all var(--cv-duration-base) var(--cv-ease-smooth);
+}
+
+.gameModeBtn:hover:not(:disabled) {
+  border-color: var(--cv-cyan-border);
+  color: var(--cv-text);
+  background: var(--cv-glass-3);
+}
+
+.gameModeBtn:disabled {
+  cursor: default;
+}
+
+.gameModeActive {
+  background: rgba(0, 242, 255, 0.08);
+  border-color: var(--cv-cyan);
+  color: var(--cv-cyan);
+  box-shadow: 0 0 12px rgba(0, 242, 255, 0.1);
+}
+
+.gameModeActive:disabled {
+  background: rgba(0, 242, 255, 0.08);
+  border-color: var(--cv-cyan);
+  color: var(--cv-cyan);
+}
+
+.gameModeDesc {
+  font-size: 0.7rem;
+  font-weight: 400;
+  opacity: 0.7;
+}
+
 @media (max-width: 1000px) {
   .mainLayout {
     grid-template-columns: 1fr;

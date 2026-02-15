@@ -8,6 +8,8 @@ export interface Question {
   answers: string[]
   correctAnswer: number
   timeLimit: number
+  answerType: 'multiple_choice' | 'free_text'
+  hint?: string
 }
 
 export interface QuestionSetInfo {
@@ -109,6 +111,14 @@ export interface GameState {
   levelUpNotifications: LevelUpNotification[]
   perkUnlockNotifications: PerkUnlockNotification[]
 
+  // Game mode
+  gameMode: 'arcade' | 'practice'
+
+  // Practice mode UI state
+  showingHint: boolean
+  waitingForContinue: boolean
+  practiceCorrectAnswer: string | null
+
   // UI state
   isLoading: boolean
   error: string | null
@@ -139,6 +149,10 @@ export interface GameState {
   addPerkUnlockNotification: (notification: PerkUnlockNotification) => void
   removePerkUnlockNotification: (index: number) => void
   clearPerkUnlockNotifications: () => void
+  setGameMode: (mode: 'arcade' | 'practice') => void
+  setShowingHint: (showing: boolean) => void
+  setWaitingForContinue: (waiting: boolean) => void
+  setPracticeCorrectAnswer: (answer: string | null) => void
   setLoading: (loading: boolean) => void
   setError: (error: string | null) => void
   resetGame: () => void
@@ -162,6 +176,10 @@ const initialState = {
   totalQuestions: 0,
   timeRemaining: 60,
   gameEnded: false,
+  gameMode: 'arcade' as const,
+  showingHint: false,
+  waitingForContinue: false,
+  practiceCorrectAnswer: null,
   gameResults: [],
   levelUpNotifications: [],
   perkUnlockNotifications: [],
@@ -215,6 +233,10 @@ export const useGameStore = create<GameState>()(
         perkUnlockNotifications: state.perkUnlockNotifications.filter((_, i) => i !== index)
       })),
       clearPerkUnlockNotifications: () => set({ perkUnlockNotifications: [] }),
+      setGameMode: (mode) => set({ gameMode: mode }),
+      setShowingHint: (showing) => set({ showingHint: showing }),
+      setWaitingForContinue: (waiting) => set({ waitingForContinue: waiting }),
+      setPracticeCorrectAnswer: (answer) => set({ practiceCorrectAnswer: answer }),
       setLoading: (loading) => set({ isLoading: loading }),
       setError: (error) => set({ error }),
       resetGame: () => set(initialState),

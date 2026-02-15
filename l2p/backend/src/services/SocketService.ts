@@ -203,6 +203,24 @@ export class SocketService {
         this.handleGetQuestionSetInfo(socket, data);
       });
 
+      // Game mode update (host-only, lobby must be waiting)
+      socket.on('update-game-mode', (data: { lobbyCode: string; hostId: string; gameMode: string }) => {
+        if (!this.checkRateLimit(socket.id, 'update-game-mode', 10, 10000)) {
+          socket.emit('update-game-mode-error', { type: 'RATE_LIMITED', message: 'Too many requests, please wait' });
+          return;
+        }
+        this.handleUpdateGameMode(socket, data);
+      });
+
+      // Practice continue (after wrong answer in practice mode)
+      socket.on('practice-continue', (data: { lobbyCode: string; playerId: string }) => {
+        if (!this.checkRateLimit(socket.id, 'practice-continue', 10, 10000)) {
+          socket.emit('practice-continue-error', { type: 'RATE_LIMITED', message: 'Too many requests, please wait' });
+          return;
+        }
+        this.handlePracticeContinue(socket, data);
+      });
+
       // Game events (rate limited)
       socket.on('submit-answer', (data: { lobbyCode: string; playerId: string; answer: string; timeElapsed: number }) => {
         if (!this.checkRateLimit(socket.id, 'submit-answer', 5, 5000)) {
@@ -534,6 +552,58 @@ export class SocketService {
       socket.emit('answer-error', {
         type: 'SERVER_ERROR',
         message: 'Failed to submit answer'
+      });
+    }
+  }
+
+  private async handleUpdateGameMode(socket: Socket, data: { lobbyCode: string; hostId: string; gameMode: string }): Promise<void> {
+    try {
+      const { lobbyCode, hostId, gameMode } = data;
+
+      // Require authentication and verify identity
+      const userId = this.requireAuth(socket, 'update-game-mode');
+      if (!userId) return;
+      if (!this.verifyIdentity(socket, 'update-game-mode', hostId)) return;
+
+      // Validate game mode value
+      if (gameMode !== 'arcade' && gameMode !== 'practice') {
+        socket.emit('update-game-mode-error', { type: 'INVALID_MODE', message: 'Invalid game mode' });
+        return;
+      }
+
+      RequestLogger.logSocketEvent(socket.id, 'update-game-mode', { lobbyCode, hostId, gameMode });
+
+      // Update lobby settings with the new game mode
+      await this.lobbyService.updateLobbySettings(lobbyCode, parseInt(hostId), { gameMode } as any);
+
+      // Broadcast to all players in lobby
+      this.broadcastToLobby(lobbyCode, 'game-mode-updated', { gameMode, updatedBy: hostId });
+    } catch (error) {
+      console.error('Error updating game mode:', error);
+      socket.emit('update-game-mode-error', {
+        type: 'SERVER_ERROR',
+        message: error instanceof Error ? error.message : 'Failed to update game mode'
+      });
+    }
+  }
+
+  private async handlePracticeContinue(socket: Socket, data: { lobbyCode: string; playerId: string }): Promise<void> {
+    try {
+      const { lobbyCode, playerId } = data;
+
+      // Require authentication and verify identity
+      const userId = this.requireAuth(socket, 'practice-continue');
+      if (!userId) return;
+      if (!this.verifyIdentity(socket, 'practice-continue', playerId)) return;
+
+      RequestLogger.logSocketEvent(socket.id, 'practice-continue', { lobbyCode, playerId });
+
+      await this.gameService.handlePracticeContinue(lobbyCode, playerId);
+    } catch (error) {
+      console.error('Error handling practice continue:', error);
+      socket.emit('practice-continue-error', {
+        type: 'SERVER_ERROR',
+        message: 'Failed to continue'
       });
     }
   }

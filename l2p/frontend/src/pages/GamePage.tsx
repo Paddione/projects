@@ -43,6 +43,13 @@ export const GamePage: React.FC = () => {
     resetPlayerAnswerStatus,
     isSyncing,
     syncCountdown,
+    gameMode,
+    showingHint,
+    setShowingHint,
+    waitingForContinue,
+    setWaitingForContinue,
+    practiceCorrectAnswer,
+    setPracticeCorrectAnswer,
   } = useGameStore()
   const { user } = useAuthStore()
 
@@ -53,14 +60,19 @@ export const GamePage: React.FC = () => {
   const [questionExpanded, setQuestionExpanded] = useState(false)
   const [questionOverflowing, setQuestionOverflowing] = useState(false)
   const [focusedAnswerIndex, setFocusedAnswerIndex] = useState<number>(0)
+  const [freeTextInput, setFreeTextInput] = useState('')
   const questionRef = useRef<HTMLHeadingElement | null>(null)
+  const freeTextRef = useRef<HTMLInputElement | null>(null)
 
-  // Derived UI state
+  const isPractice = gameMode === 'practice'
+  const isFreeText = currentQuestion?.answerType === 'free_text'
+
+  // Derived UI state (only relevant in arcade mode)
   const totalTime = Math.max(currentQuestion?.timeLimit || 60, 1)
-  const timePercent = Math.max(0, Math.min(100, (typeof timeRemaining === 'number' ? (timeRemaining / totalTime) * 100 : 100)))
-  const timerSeverity = typeof timeRemaining === 'number'
+  const timePercent = isPractice ? 100 : Math.max(0, Math.min(100, (typeof timeRemaining === 'number' ? (timeRemaining / totalTime) * 100 : 100)))
+  const timerSeverity = isPractice ? 'ok' as const : (typeof timeRemaining === 'number'
     ? (timeRemaining <= 3 ? 'urgent' : timeRemaining <= 10 ? 'warning' : 'ok')
-    : 'ok'
+    : 'ok') as 'ok' | 'warning' | 'urgent'
   const radius = 16
   const circumference = 2 * Math.PI * radius
   const dashOffset = circumference * (1 - timePercent / 100)
@@ -116,8 +128,16 @@ export const GamePage: React.FC = () => {
     setScoreDelta(null)
     setQuestionExpanded(false)
     setFocusedAnswerIndex(0)
+    setFreeTextInput('')
     resetPlayerAnswerStatus()
   }, [questionIndex, resetPlayerAnswerStatus])
+
+  // Auto-focus free-text input on question change
+  useEffect(() => {
+    if (isFreeText && freeTextRef.current && !hasAnswered) {
+      freeTextRef.current.focus()
+    }
+  }, [currentQuestion?.id, isFreeText, hasAnswered])
 
   // Play sound on new question
   useEffect(() => {
@@ -127,8 +147,9 @@ export const GamePage: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentQuestion?.id])
 
-  // Tick/warning sounds based on time remaining
+  // Tick/warning sounds based on time remaining (only in arcade mode)
   useEffect(() => {
+    if (isPractice) return
     if (typeof timeRemaining !== 'number') return
     if (timeRemaining <= 0) return
     if (timeRemaining <= 3) {
@@ -138,7 +159,7 @@ export const GamePage: React.FC = () => {
     } else if (timeRemaining % 10 === 0) {
       handleTick()
     }
-  }, [timeRemaining, handleTick, handleTimerUrgent, handleTimerWarning])
+  }, [timeRemaining, handleTick, handleTimerUrgent, handleTimerWarning, isPractice])
 
   // Detect question text overflow to decide showing toggle
   useEffect(() => {
@@ -154,7 +175,8 @@ export const GamePage: React.FC = () => {
   }, [currentQuestion?.text, questionExpanded])
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (hasAnswered || !currentQuestion || timeRemaining === 0) return
+    if (hasAnswered || !currentQuestion || (!isPractice && timeRemaining === 0)) return
+    if (isFreeText) return // free-text uses its own input handler
 
     const answerCount = currentQuestion.answers.length
 
@@ -205,6 +227,26 @@ export const GamePage: React.FC = () => {
       setSelectedAnswer(null)
       setAnswerFlash(null)
     }
+  }
+
+  const handleFreeTextSubmit = () => {
+    if (hasAnswered || !currentQuestion || !freeTextInput.trim()) return
+
+    try {
+      setHasAnswered(true)
+      socketService.submitFreeTextAnswer(freeTextInput.trim())
+    } catch (error) {
+      console.error('Failed to submit free-text answer:', error)
+      setError('Failed to submit answer')
+      setHasAnswered(false)
+    }
+  }
+
+  const handlePracticeContinue = () => {
+    setWaitingForContinue(false)
+    setShowingHint(false)
+    setPracticeCorrectAnswer(null)
+    socketService.practiceContinue()
   }
 
   const handleLeaveLobby = async () => {
@@ -288,6 +330,8 @@ export const GamePage: React.FC = () => {
     )
   }
 
+  // currentQuestion is guaranteed non-null by early return above
+  const question = currentQuestion!
   const currentPlayer = players.find(p => (user?.id ? String(p.id) === String(user.id) : false)) || players.find(p => p.isHost) || players[0]!
   const { score, multiplier, correctAnswers } = currentPlayer
 
@@ -314,32 +358,35 @@ export const GamePage: React.FC = () => {
         <div className={gameStyles.topBarLeft}>
           <h2 className={gameStyles.compactTitle}>
             Frage <span data-testid="question-number">{questionIndex + 1}</span> / <span data-testid="total-questions">{totalQuestions}</span>
+            {isPractice && <span className={gameStyles.practiceModeBadge}>Practice</span>}
           </h2>
           <div className={gameStyles.metaRow}>
-            {/* Radial countdown indicator (visual only) */}
-            <div
-              className={`${gameStyles.radialTimer} ${timerSeverity === 'warning' ? gameStyles.radialWarn : timerSeverity === 'urgent' ? gameStyles.radialUrgent : gameStyles.radialOk}`}
-              aria-hidden
-              title="Time remaining"
-            >
-              <svg className={gameStyles.radialSvg} viewBox="0 0 40 40">
-                <circle className={gameStyles.radialTrack} cx="20" cy="20" r={radius} />
-                <circle
-                  className={gameStyles.radialProgress}
-                  cx="20"
-                  cy="20"
-                  r={radius}
-                  style={{ strokeDasharray: circumference, strokeDashoffset: dashOffset }}
-                />
-              </svg>
-            </div>
-            {typeof timeRemaining === 'number' && (
+            {/* Radial countdown indicator — hidden in practice mode */}
+            {!isPractice && (
+              <div
+                className={`${gameStyles.radialTimer} ${timerSeverity === 'warning' ? gameStyles.radialWarn : timerSeverity === 'urgent' ? gameStyles.radialUrgent : gameStyles.radialOk}`}
+                aria-hidden
+                title="Time remaining"
+              >
+                <svg className={gameStyles.radialSvg} viewBox="0 0 40 40">
+                  <circle className={gameStyles.radialTrack} cx="20" cy="20" r={radius} />
+                  <circle
+                    className={gameStyles.radialProgress}
+                    cx="20"
+                    cy="20"
+                    r={radius}
+                    style={{ strokeDasharray: circumference, strokeDashoffset: dashOffset }}
+                  />
+                </svg>
+              </div>
+            )}
+            {!isPractice && typeof timeRemaining === 'number' && (
               <span
                 className={`${gameStyles.timer} ${timerSeverity === 'warning' ? gameStyles.timerWarning : ''} ${timerSeverity === 'urgent' ? gameStyles.timerUrgent : ''}`}
                 data-testid="timer"
                 aria-live="polite"
               >
-                ⏱ {timeRemaining}s
+                {timeRemaining}s
               </span>
             )}
             <button
@@ -353,50 +400,54 @@ export const GamePage: React.FC = () => {
         <ConnectionStatus />
       </div>
 
-      {/* Mobile Stats Bar — visible only at ≤768px via CSS */}
-      <div className={gameStyles.mobileStatsBar}>
-        <ScoreDisplay
-          score={score}
-          multiplier={multiplier}
-          correctAnswers={correctAnswers}
-          compact
-        />
-        {scoreDelta !== null && (
-          <span style={{ color: 'var(--cv-success)', fontWeight: 700, fontSize: '0.8rem', fontFamily: 'var(--cv-font-mono)' }}>+{scoreDelta}</span>
-        )}
-        <div className={gameStyles.mobileStatsDivider} />
-        <PlayerGrid
-          players={sortedPlayersForPlates}
-          rankings={rankings}
-          maxPlayers={2}
-          compact
-        />
-      </div>
+      {/* Mobile Stats Bar — visible only at <=768px via CSS */}
+      {!isPractice && (
+        <div className={gameStyles.mobileStatsBar}>
+          <ScoreDisplay
+            score={score}
+            multiplier={multiplier}
+            correctAnswers={correctAnswers}
+            compact
+          />
+          {scoreDelta !== null && (
+            <span style={{ color: 'var(--cv-success)', fontWeight: 700, fontSize: '0.8rem', fontFamily: 'var(--cv-font-mono)' }}>+{scoreDelta}</span>
+          )}
+          <div className={gameStyles.mobileStatsDivider} />
+          <PlayerGrid
+            players={sortedPlayersForPlates}
+            rankings={rankings}
+            maxPlayers={2}
+            compact
+          />
+        </div>
+      )}
 
       {/* Main Layout */}
       <div className={gameStyles.layout}>
         {/* Left Pane: Question + Answers */}
         <section
-          className={`${gameStyles.leftPane} ${currentQuestion ? gameStyles.questionBg : ''}`}
+          className={`${gameStyles.leftPane} ${gameStyles.questionBg}`}
           aria-labelledby="question-heading"
         >
           <div className={`${styles.card} ${gameStyles.questionCard}`} data-testid="question-container">
-            {/* Time progress bar */}
-            <div className={gameStyles.progressContainer} aria-hidden>
-              <div
-                className={`${gameStyles.progressBar} ${timePercent > 50 ? gameStyles.progressOk : timePercent > 20 ? gameStyles.progressWarn : gameStyles.progressUrgent}`}
-                style={{ width: `${timePercent}%` }}
-              />
-            </div>
+            {/* Time progress bar — hidden in practice mode */}
+            {!isPractice && (
+              <div className={gameStyles.progressContainer} aria-hidden>
+                <div
+                  className={`${gameStyles.progressBar} ${timePercent > 50 ? gameStyles.progressOk : timePercent > 20 ? gameStyles.progressWarn : gameStyles.progressUrgent}`}
+                  style={{ width: `${timePercent}%` }}
+                />
+              </div>
+            )}
 
-            <div className={gameStyles.questionInner} key={currentQuestion.id}>
+            <div className={gameStyles.questionInner} key={question.id}>
               <h3
                 id="question-heading"
                 ref={questionRef}
                 className={`${gameStyles.questionText} ${questionExpanded ? gameStyles.questionExpanded : ''}`}
                 data-testid="question-text"
               >
-                {currentQuestion?.text || `Frage ${questionIndex + 1} wird geladen...`}
+                {question.text || `Frage ${questionIndex + 1} wird geladen...`}
               </h3>
               {questionOverflowing && (
                 <div className={gameStyles.showMoreRow}>
@@ -412,47 +463,124 @@ export const GamePage: React.FC = () => {
                   </button>
                 </div>
               )}
-              <div
-                className={gameStyles.answersGrid}
-                onKeyDown={handleKeyDown}
-                tabIndex={0}
-                role="radiogroup"
-                aria-label="Answer options"
-              >
-                {currentQuestion.answers.map((answer, index) => {
-                  const isSelected = selectedAnswer === index
-                  const isFocused = focusedAnswerIndex === index && !hasAnswered
-                  const isCorrectAnswer = typeof currentQuestion.correctAnswer === 'number' && currentQuestion.correctAnswer === index
-                  const showCorrectBlink = !!answerFlash && ((answerFlash === 'correct' && isSelected) || (answerFlash === 'wrong' && isCorrectAnswer))
-                  const showWrongBlink = !!answerFlash && answerFlash === 'wrong' && isSelected
 
-                  return (
-                    <button
-                      key={index}
-                      data-testid={`answer-option-${index}`}
-                      className={`
-                      ${styles.button}
-                      ${gameStyles.answerButton}
-                      ${gameStyles.answerEnter}
-                      ${isSelected && !answerFlash ? gameStyles.answerSelected : ''}
-                      ${isFocused ? gameStyles.answerFocused : ''}
-                      ${showCorrectBlink ? gameStyles.answerCorrectBlink : ''}
-                      ${showWrongBlink ? gameStyles.answerWrongBlink : ''}
-                    `}
-                      onClick={() => handleAnswerClick(index)}
-                      disabled={hasAnswered || timeRemaining === 0}
-                      style={{ animationDelay: `${index * 60}ms` }}
-                      aria-checked={isSelected}
-                      role="radio"
-                    >
-                      <span className={gameStyles.answerLabel}>{String.fromCharCode(65 + index)}.</span>
-                      <span className={gameStyles.answerText}>{answer}</span>
-                    </button>
-                  )
-                })}
-              </div>
+              {/* Hint button (practice mode only, before answering) */}
+              {isPractice && question.hint && !showingHint && !hasAnswered && !waitingForContinue && (
+                <button
+                  className={gameStyles.hintButton}
+                  onClick={() => setShowingHint(true)}
+                  data-testid="hint-button"
+                >
+                  Hinweis anzeigen
+                </button>
+              )}
 
-              {hasAnswered && (
+              {/* Hint display */}
+              {showingHint && question.hint && (
+                <div className={gameStyles.hintBox} data-testid="hint-box">
+                  <span className={gameStyles.hintLabel}>Hinweis</span>
+                  {question.hint}
+                </div>
+              )}
+
+              {/* Multiple choice answers */}
+              {!isFreeText && (
+                <div
+                  className={gameStyles.answersGrid}
+                  onKeyDown={handleKeyDown}
+                  tabIndex={0}
+                  role="radiogroup"
+                  aria-label="Answer options"
+                >
+                  {question.answers.map((answer, index) => {
+                    const isSelected = selectedAnswer === index
+                    const isFocused = focusedAnswerIndex === index && !hasAnswered
+                    const isCorrectAnswer = typeof question.correctAnswer === 'number' && question.correctAnswer === index
+                    const showCorrectBlink = !!answerFlash && ((answerFlash === 'correct' && isSelected) || (answerFlash === 'wrong' && isCorrectAnswer))
+                    const showWrongBlink = !!answerFlash && answerFlash === 'wrong' && isSelected
+
+                    return (
+                      <button
+                        key={index}
+                        data-testid={`answer-option-${index}`}
+                        className={`
+                        ${styles.button}
+                        ${gameStyles.answerButton}
+                        ${gameStyles.answerEnter}
+                        ${isSelected && !answerFlash ? gameStyles.answerSelected : ''}
+                        ${isFocused ? gameStyles.answerFocused : ''}
+                        ${showCorrectBlink ? gameStyles.answerCorrectBlink : ''}
+                        ${showWrongBlink ? gameStyles.answerWrongBlink : ''}
+                      `}
+                        onClick={() => handleAnswerClick(index)}
+                        disabled={hasAnswered || (!isPractice && timeRemaining === 0)}
+                        style={{ animationDelay: `${index * 60}ms` }}
+                        aria-checked={isSelected}
+                        role="radio"
+                      >
+                        <span className={gameStyles.answerLabel}>{String.fromCharCode(65 + index)}.</span>
+                        <span className={gameStyles.answerText}>{answer}</span>
+                      </button>
+                    )
+                  })}
+                </div>
+              )}
+
+              {/* Free-text answer input */}
+              {isFreeText && !waitingForContinue && (
+                <div className={gameStyles.freeTextArea} data-testid="free-text-area">
+                  <input
+                    ref={freeTextRef}
+                    type="text"
+                    className={gameStyles.freeTextInput}
+                    placeholder="Antwort eingeben..."
+                    value={freeTextInput}
+                    onChange={(e) => setFreeTextInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault()
+                        handleFreeTextSubmit()
+                      }
+                    }}
+                    disabled={hasAnswered}
+                    autoFocus
+                    data-testid="free-text-input"
+                  />
+                  <button
+                    className={gameStyles.freeTextSubmit}
+                    onClick={handleFreeTextSubmit}
+                    disabled={hasAnswered || !freeTextInput.trim()}
+                    data-testid="free-text-submit"
+                  >
+                    Antworten
+                  </button>
+                </div>
+              )}
+
+              {/* Practice mode: wrong answer feedback */}
+              {waitingForContinue && (
+                <div className={gameStyles.practiceWrongFeedback} data-testid="practice-feedback">
+                  <div className={gameStyles.practiceCorrectReveal}>
+                    <span className={gameStyles.hintLabel}>Richtige Antwort</span>
+                    {practiceCorrectAnswer}
+                  </div>
+                  {showingHint && question.hint && (
+                    <div className={gameStyles.practiceHint}>
+                      <span className={gameStyles.hintLabel}>Hinweis</span>
+                      {question.hint}
+                    </div>
+                  )}
+                  <button
+                    className={gameStyles.continueButton}
+                    onClick={handlePracticeContinue}
+                    data-testid="practice-continue"
+                  >
+                    Weiter
+                  </button>
+                </div>
+              )}
+
+              {hasAnswered && !waitingForContinue && (
                 <div className={gameStyles.submittedNote} data-testid="answer-feedback">
                   Antwort gesendet! Warten auf andere Spieler...
                 </div>
@@ -461,30 +589,31 @@ export const GamePage: React.FC = () => {
           </div>
         </section>
 
-        {/* Right Pane: Score + Players */}
-        <aside className={gameStyles.rightPane} aria-label="Spielerübersicht">
-          <div className={gameStyles.scoreBlock} data-testid="current-score">
-            <ScoreDisplay
-              score={score}
-              multiplier={multiplier}
-              correctAnswers={correctAnswers}
-            />
-            {scoreDelta !== null && (
-              <div className={`${gameStyles.scoreDelta} ${scoreDelta ? gameStyles.scoreDeltaShow : ''}`}>+{scoreDelta}</div>
-            )}
-          </div>
-          <div className={`${styles.card} ${gameStyles.playersCard}`}>
-            <PlayerGrid
-              players={sortedPlayersForPlates}
-              rankings={rankings}
-              maxPlayers={2}
-              showScores={true}
-              showMultipliers={true}
-            />
-          </div>
-        </aside>
+        {/* Right Pane: Score + Players (hidden in practice mode) */}
+        {!isPractice && (
+          <aside className={gameStyles.rightPane} aria-label="Spielerübersicht">
+            <div className={gameStyles.scoreBlock} data-testid="current-score">
+              <ScoreDisplay
+                score={score}
+                multiplier={multiplier}
+                correctAnswers={correctAnswers}
+              />
+              {scoreDelta !== null && (
+                <div className={`${gameStyles.scoreDelta} ${scoreDelta ? gameStyles.scoreDeltaShow : ''}`}>+{scoreDelta}</div>
+              )}
+            </div>
+            <div className={`${styles.card} ${gameStyles.playersCard}`}>
+              <PlayerGrid
+                players={sortedPlayersForPlates}
+                rankings={rankings}
+                maxPlayers={2}
+                showScores={true}
+                showMultipliers={true}
+              />
+            </div>
+          </aside>
+        )}
       </div>
     </div>
   )
 }
-

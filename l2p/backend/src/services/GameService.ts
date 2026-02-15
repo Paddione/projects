@@ -15,6 +15,7 @@ export interface GameState {
   totalQuestions: number;
   timeRemaining: number;
   isActive: boolean;
+  gameMode: 'arcade' | 'practice';
   players: GamePlayer[];
   currentQuestion?: QuestionData | undefined;
   questionStartTime?: number | undefined;
@@ -50,6 +51,8 @@ export interface QuestionData {
   questionSetId: number;
   language: string;
   explanation?: string | undefined;
+  answerType: 'multiple_choice' | 'free_text';
+  hint?: string | undefined;
 }
 
 export class GameService {
@@ -178,7 +181,7 @@ export class GameService {
 
     // Move to the next question
     gameState.currentQuestionIndex++;
-    gameState.timeRemaining = 60; // Reset timer for new question
+    gameState.timeRemaining = gameState.gameMode === 'practice' ? 0 : 60;
 
     // Get the current question
     const currentQuestion = gameState.questions[gameState.currentQuestionIndex];
@@ -202,11 +205,14 @@ export class GameService {
       question: currentQuestion,
       questionIndex: gameState.currentQuestionIndex,
       totalQuestions: gameState.totalQuestions,
-      timeRemaining: gameState.timeRemaining
+      timeRemaining: gameState.timeRemaining,
+      gameMode: gameState.gameMode,
     });
 
-    // Start the timer for this question
-    this.startQuestionTimer(lobbyCode);
+    // Only start timer in arcade mode
+    if (gameState.gameMode === 'arcade') {
+      this.startQuestionTimer(lobbyCode);
+    }
   }
 
   constructor(io: Server) {
@@ -346,7 +352,9 @@ export class GameService {
           correctAnswer: correctAnswerText || (answerList[0] || ''),
           questionSetId: q.question_set_id || 1,
           language: 'de',
-          explanation: q.explanation
+          explanation: q.explanation,
+          answerType: q.answer_type || 'multiple_choice',
+          hint: q.hint || undefined,
         };
       });
 
@@ -371,6 +379,9 @@ export class GameService {
 
       const gameSession = await this.gameSessionRepository.createGameSession(gameSessionData);
 
+      // Read game mode from lobby settings (defaults to arcade)
+      const gameMode: 'arcade' | 'practice' = (lobby.settings as any)?.gameMode === 'practice' ? 'practice' : 'arcade';
+
       // Initialize game state
       const gameState: GameState = {
         lobbyCode,
@@ -379,6 +390,7 @@ export class GameService {
         totalQuestions,
         timeRemaining: 60,
         isActive: true,
+        gameMode,
         selectedQuestionSetIds,
         questions: localizedQuestions,
         players: lobby.players.map(player => ({
@@ -721,11 +733,16 @@ export class GameService {
     player.answerTime = timeElapsed;
     player.hasAnsweredCurrentQuestion = true;
 
-    // Check if answer is correct
-    const isCorrect = answer === gameState.currentQuestion.correctAnswer;
+    // Check if answer is correct (case-insensitive for free-text)
+    const isCorrect = gameState.currentQuestion.answerType === 'free_text'
+      ? answer.trim().toLowerCase() === gameState.currentQuestion.correctAnswer.trim().toLowerCase()
+      : answer === gameState.currentQuestion.correctAnswer;
+
+    // Practice mode: skip scoring entirely
+    const isPractice = gameState.gameMode === 'practice';
 
     // Build score context for perk effects
-    const scoreContext: ScoreContext | undefined = player.perkModifiers ? {
+    const scoreContext: ScoreContext | undefined = (!isPractice && player.perkModifiers) ? {
       questionIndex: gameState.currentQuestionIndex,
       totalQuestions: gameState.totalQuestions,
       playerAccuracy: player.correctAnswers / Math.max(1, player.correctAnswers + player.wrongAnswers),
@@ -734,38 +751,46 @@ export class GameService {
       isLastWrong: player.lastWrongStreak > 0,
     } : undefined;
 
-    // Calculate score using ScoringService (with optional perk modifiers)
-    const scoreCalculation = this.scoringService.calculateScore(
-      timeElapsed,
-      player.multiplier,
-      isCorrect,
-      player.currentStreak || 0,
-      player.perkModifiers,
-      scoreContext
-    );
+    // Calculate score using ScoringService (skip in practice mode)
+    const scoreCalculation = isPractice
+      ? { pointsEarned: 0, newMultiplier: 1, streakCount: 0, timeElapsed, multiplier: player.multiplier, isCorrect }
+      : this.scoringService.calculateScore(
+          timeElapsed,
+          player.multiplier,
+          isCorrect,
+          player.currentStreak || 0,
+          player.perkModifiers,
+          scoreContext
+        );
 
     // Update player stats
     if (isCorrect) {
       player.correctAnswers++;
-      player.score += scoreCalculation.pointsEarned;
+      if (!isPractice) {
+        player.score += scoreCalculation.pointsEarned;
+      }
       player.lastWrongStreak = 0;
     } else {
       player.wrongAnswers++;
       player.lastWrongStreak++;
-      // Track free wrong answers used
-      if (player.perkModifiers && player.perkModifiers.freeWrongAnswers > 0 &&
-          player.freeWrongsUsed < player.perkModifiers.freeWrongAnswers) {
-        player.freeWrongsUsed++;
-      }
-      // Still add partial credit points if any
-      if (scoreCalculation.pointsEarned > 0) {
-        player.score += scoreCalculation.pointsEarned;
+      if (!isPractice) {
+        // Track free wrong answers used
+        if (player.perkModifiers && player.perkModifiers.freeWrongAnswers > 0 &&
+            player.freeWrongsUsed < player.perkModifiers.freeWrongAnswers) {
+          player.freeWrongsUsed++;
+        }
+        // Still add partial credit points if any
+        if (scoreCalculation.pointsEarned > 0) {
+          player.score += scoreCalculation.pointsEarned;
+        }
       }
     }
 
-    // Update streak and multiplier
-    player.currentStreak = scoreCalculation.streakCount;
-    player.multiplier = scoreCalculation.newMultiplier;
+    // Update streak and multiplier (skip in practice)
+    if (!isPractice) {
+      player.currentStreak = scoreCalculation.streakCount;
+      player.multiplier = scoreCalculation.newMultiplier;
+    }
 
     // Log the answer submission
     RequestLogger.logGameEvent('answer-submitted', lobbyCode, undefined, {
@@ -774,8 +799,8 @@ export class GameService {
       timeElapsed
     });
 
-    // Emit answer received event (include both legacy and explicit fields)
-    this.getIo()?.to(lobbyCode)?.emit('answer-received', {
+    // Build answer-received payload
+    const answerPayload: Record<string, unknown> = {
       playerId: player.id,
       username: player.username,
       hasAnswered: true,
@@ -786,9 +811,26 @@ export class GameService {
       // Explicit fields used by frontend for smoother updates
       newScore: player.score,
       newMultiplier: player.multiplier,
-      scoreDelta: isCorrect ? scoreCalculation.pointsEarned : 0,
-      streak: player.currentStreak
-    });
+      scoreDelta: isPractice ? 0 : (isCorrect ? scoreCalculation.pointsEarned : 0),
+      streak: player.currentStreak,
+    };
+
+    // Practice mode: on wrong answer, include hint + correct answer + waitForContinue
+    if (isPractice && !isCorrect) {
+      answerPayload['waitForContinue'] = true;
+      answerPayload['correctAnswer'] = gameState.currentQuestion.correctAnswer;
+      if (gameState.currentQuestion.hint) {
+        answerPayload['hint'] = gameState.currentQuestion.hint;
+      }
+    }
+
+    // Emit answer received event
+    this.getIo()?.to(lobbyCode)?.emit('answer-received', answerPayload);
+
+    // In practice mode with wrong answer, do NOT auto-advance — wait for practice-continue
+    if (isPractice && !isCorrect) {
+      return;
+    }
 
     // Check if all players have answered
     const allPlayersAnswered = gameState.players.every(p => p.hasAnsweredCurrentQuestion);
@@ -853,11 +895,11 @@ export class GameService {
           }
         }
 
-        // Award experience points if we have a valid userId
+        // Award experience points if we have a valid userId (skip in practice mode)
         // Apply XP modifiers from perks
         let experienceResult = null;
-        let modifiedXP = player.score;
-        if (userId) {
+        let modifiedXP = gameState.gameMode === 'practice' ? 0 : player.score;
+        if (userId && gameState.gameMode !== 'practice') {
           try {
             if (player.perkModifiers) {
               modifiedXP = PerkEffectEngine.calculateModifiedXP(player.score, player.perkModifiers, {
@@ -1125,7 +1167,8 @@ export class GameService {
         correctAnswer: questionData.correctAnswer,
         questionSetId: 1,
         language: 'de',
-        explanation: 'Dies ist eine Ersatzfrage'
+        explanation: 'Dies ist eine Ersatzfrage',
+        answerType: 'multiple_choice',
       });
     }
 
@@ -1240,6 +1283,26 @@ export class GameService {
   }
 
   /**
+   * Handle practice-continue event: mark player as continued and advance when all ready.
+   */
+  async handlePracticeContinue(lobbyCode: string, playerId: string): Promise<void> {
+    const gameState = this.activeGames.get(lobbyCode);
+    if (!gameState || gameState.gameMode !== 'practice') return;
+
+    const player = gameState.players.find(p => p.id === playerId);
+    if (!player) return;
+
+    // Mark the player as having "answered" (continued past the wrong answer)
+    player.hasAnsweredCurrentQuestion = true;
+
+    // Check if all players have now continued
+    const allContinued = gameState.players.every(p => p.hasAnsweredCurrentQuestion);
+    if (allContinued) {
+      await this.endQuestion(lobbyCode);
+    }
+  }
+
+  /**
    * Public wrapper for ending the current question
    */
   async endCurrentQuestion(lobbyCode: string): Promise<void> {
@@ -1263,7 +1326,9 @@ export class GameService {
       answers: q.answers.map(a => a.text),
       correctAnswer: q.answers.find(a => a.correct)?.text || '',
       questionSetId: q.question_set_id,
-      language: 'de'
+      language: 'de',
+      answerType: (q as any).answer_type || 'multiple_choice',
+      hint: (q as any).hint || undefined,
     }));
   }
 } 

@@ -21,7 +21,9 @@ export const LobbyView: React.FC<LobbyViewProps> = ({ className = '' }) => {
     players,
     error,
     questionSetInfo,
-    maxPlayers
+    maxPlayers,
+    gameMode,
+    setGameMode,
   } = useGameStore()
 
   const handleReadyToggle = () => {
@@ -67,6 +69,12 @@ export const LobbyView: React.FC<LobbyViewProps> = ({ className = '' }) => {
         console.error('Copy failed', err)
       }
     }
+  }
+
+  const handleGameModeChange = (mode: 'arcade' | 'practice') => {
+    if (!isHost || mode === gameMode) return
+    setGameMode(mode)
+    socketService.updateGameMode(mode)
   }
 
   const readyPlayers = players.filter(p => p.isReady).length
@@ -151,6 +159,30 @@ export const LobbyView: React.FC<LobbyViewProps> = ({ className = '' }) => {
                 Manage Sets
               </button>
             )}
+          </div>
+
+          <div className={styles.gameModeSelector} data-testid="game-mode-selector">
+            <h3 className={styles.sectionTitle} style={{ fontSize: '1.1rem' }}>Spielmodus</h3>
+            <div className={styles.gameModeButtons}>
+              <button
+                className={`${styles.gameModeBtn} ${gameMode === 'arcade' ? styles.gameModeActive : ''}`}
+                onClick={() => handleGameModeChange('arcade')}
+                disabled={!isHost}
+                data-testid="game-mode-arcade"
+              >
+                <span>Arcade</span>
+                <span className={styles.gameModeDesc}>Timer, Punkte, XP</span>
+              </button>
+              <button
+                className={`${styles.gameModeBtn} ${gameMode === 'practice' ? styles.gameModeActive : ''}`}
+                onClick={() => handleGameModeChange('practice')}
+                disabled={!isHost}
+                data-testid="game-mode-practice"
+              >
+                <span>Practice</span>
+                <span className={styles.gameModeDesc}>Kein Timer, Hinweise, Lernen</span>
+              </button>
+            </div>
           </div>
 
           <QuestionSetSelector />

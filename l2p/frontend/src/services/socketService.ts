@@ -193,6 +193,18 @@ export class SocketService {
     })
 
     // Question set event handlers
+    this.socket.on('game-mode-updated', (data: any) => {
+      try {
+        console.log('Game mode updated:', data)
+        const { setGameMode } = useGameStore.getState()
+        if (data?.gameMode) {
+          setGameMode(data.gameMode)
+        }
+      } catch (err) {
+        console.error('Error in game-mode-updated handler:', err)
+      }
+    })
+
     this.socket.on('question-sets-updated', (data) => {
       try {
         console.log('Question sets updated:', data)
@@ -239,6 +251,7 @@ export class SocketService {
           setTimeRemaining,
           setPlayers,
           setTotalQuestions,
+          setGameMode,
           lobbyCode: currentLobbyCode
         } = useGameStore.getState()
 
@@ -254,6 +267,9 @@ export class SocketService {
           }
           if (typeof data.gameState.timeRemaining === 'number') {
             setTimeRemaining(data.gameState.timeRemaining)
+          }
+          if (data.gameState.gameMode) {
+            setGameMode(data.gameState.gameMode as 'arcade' | 'practice')
           }
         }
 
@@ -307,7 +323,7 @@ export class SocketService {
           allQuestionKeys: data.question ? Object.keys(data.question) : 'no question object'
         })
 
-        const { setCurrentQuestion, setQuestionIndex, setTotalQuestions, setTimeRemaining, resetPlayerAnswerStatus, setPlayers, setIsSyncing } = useGameStore.getState()
+        const { setCurrentQuestion, setQuestionIndex, setTotalQuestions, setTimeRemaining, resetPlayerAnswerStatus, setPlayers, setIsSyncing, setShowingHint, setWaitingForContinue, setPracticeCorrectAnswer, setGameMode } = useGameStore.getState()
 
         // Question has started, so we are no longer syncing
         setIsSyncing(false)
@@ -338,12 +354,15 @@ export class SocketService {
           fullQuestionObject: data.question
         })
 
+        const hintValue = (data.question?.hint as string) || null
         const frontendQuestion = {
           id: data.question?.id || String(Date.now()),
           text: questionText,
           answers: answers,
           correctAnswer: correctAnswerIndex >= 0 ? correctAnswerIndex : 0, // Map answer text to index
-          timeLimit: 60
+          timeLimit: 60,
+          answerType: (data.question?.answerType || data.question?.answer_type || 'multiple_choice') as 'multiple_choice' | 'free_text',
+          ...(hintValue ? { hint: hintValue } : {}),
         }
 
         console.log('Frontend question transformed:', {
@@ -370,6 +389,16 @@ export class SocketService {
         setTotalQuestions(data.totalQuestions)
         setTimeRemaining(data.timeRemaining)
         resetPlayerAnswerStatus()
+
+        // Reset practice mode state on new question
+        setShowingHint(false)
+        setWaitingForContinue(false)
+        setPracticeCorrectAnswer(null)
+
+        // Update game mode if provided
+        if ((data as any).gameMode) {
+          setGameMode((data as any).gameMode)
+        }
 
         // Force immediate store update and verify
         const storeState = useGameStore.getState()
@@ -412,8 +441,19 @@ export class SocketService {
     this.socket.on('answer-received', (data) => {
       try {
         console.log('Answer received:', data)
-        const { setPlayerAnswerStatus, updatePlayer, players } = useGameStore.getState()
+        const { setPlayerAnswerStatus, updatePlayer, players, setWaitingForContinue, setPracticeCorrectAnswer, setShowingHint } = useGameStore.getState()
         const { user } = useAuthStore.getState()
+
+        // Handle practice mode waitForContinue
+        if ((data as any).waitForContinue && String(data.playerId) === String(user?.id)) {
+          setWaitingForContinue(true)
+          if ((data as any).correctAnswer) {
+            setPracticeCorrectAnswer((data as any).correctAnswer)
+          }
+          if ((data as any).hint) {
+            setShowingHint(true)
+          }
+        }
 
         if (data.playerId) {
           // Update answer status if provided
@@ -1054,6 +1094,54 @@ export class SocketService {
 
   perkDump(level: number) {
     this.emit('perk:dump', { level })
+  }
+
+  // Free-text answer submission (sends raw text)
+  submitFreeTextAnswer(text: string) {
+    const { lobbyCode } = useGameStore.getState()
+    const user = apiService.getCurrentUser()
+    if (!lobbyCode || !user?.id) {
+      console.warn('Missing lobby code or user for submit free-text answer')
+      return
+    }
+
+    this.emit('submit-answer', {
+      lobbyCode,
+      playerId: String(user?.id || ''),
+      answer: text,
+      timeElapsed: 0
+    })
+  }
+
+  // Practice mode: continue after wrong answer
+  practiceContinue() {
+    const { lobbyCode } = useGameStore.getState()
+    const user = apiService.getCurrentUser()
+    if (!lobbyCode || !user?.id) {
+      console.warn('Missing lobby code or user for practice continue')
+      return
+    }
+
+    this.emit('practice-continue', {
+      lobbyCode,
+      playerId: String(user?.id || '')
+    })
+  }
+
+  // Update game mode in lobby (host only)
+  updateGameMode(mode: 'arcade' | 'practice') {
+    const { lobbyCode } = useGameStore.getState()
+    const user = apiService.getCurrentUser()
+    if (!lobbyCode || !user?.id) {
+      console.warn('Missing lobby code or user for update game mode')
+      return
+    }
+
+    this.emit('update-game-mode', {
+      lobbyCode,
+      hostId: String(user?.id || ''),
+      gameMode: mode
+    })
   }
 
   // Utility methods

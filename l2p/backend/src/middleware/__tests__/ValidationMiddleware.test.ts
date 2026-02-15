@@ -733,14 +733,12 @@ describe('ValidationMiddleware', () => {
       });
 
       it('should reject question with insufficient answers', () => {
-        // Arrange
+        // Arrange — 0 answers is insufficient (min is 1 to support free-text questions)
         const schema = ValidationMiddleware.schemas.createQuestion;
         mockRequest.body = {
           question_set_id: 1,
           question_text: 'Was ist 2 + 2?',
-          answers: [
-            { text: '4', correct: true }
-          ]
+          answers: []
         };
 
         // Act & Assert

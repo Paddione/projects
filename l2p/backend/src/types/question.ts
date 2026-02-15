@@ -40,6 +40,8 @@ export interface CreateQuestionData {
   answers: Omit<Answer, 'id' | 'question_id' | 'created_at'>[];
   explanation?: string;
   difficulty?: number;
+  answer_type?: 'multiple_choice' | 'free_text';
+  hint?: string;
 }
 
 export interface CreateQuestionSetData {

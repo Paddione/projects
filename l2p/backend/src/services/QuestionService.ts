@@ -249,20 +249,43 @@ export class QuestionService {
       errors.push('Question text must be provided in German');
     }
 
-    // Validate answers
-    if (!data.answers || data.answers.length < 2) {
-      errors.push('At least 2 answers must be provided');
-    } else {
-      const hasCorrectAnswer = data.answers.some(answer => answer.correct);
-      if (!hasCorrectAnswer) {
-        errors.push('At least one answer must be marked as correct');
-      }
+    // Validate answer_type if provided
+    const answerType = (data as any).answer_type || 'multiple_choice';
+    if (answerType !== 'multiple_choice' && answerType !== 'free_text') {
+      errors.push('answer_type must be "multiple_choice" or "free_text"');
+    }
 
-      // Validate answer text
-      for (let i = 0; i < data.answers.length; i++) {
-        const answer = data.answers[i];
-        if (!answer?.text || typeof answer.text !== 'string') {
-          errors.push(`Answer ${i + 1} must have text in German`);
+    // Validate answers (free_text needs exactly 1 correct answer, MC needs at least 2)
+    if (answerType === 'free_text') {
+      if (!data.answers || data.answers.length < 1) {
+        errors.push('Free-text questions must have at least 1 answer (the correct answer)');
+      } else {
+        const hasCorrectAnswer = data.answers.some(answer => answer.correct);
+        if (!hasCorrectAnswer) {
+          errors.push('At least one answer must be marked as correct');
+        }
+        for (let i = 0; i < data.answers.length; i++) {
+          const answer = data.answers[i];
+          if (!answer?.text || typeof answer.text !== 'string') {
+            errors.push(`Answer ${i + 1} must have text`);
+          }
+        }
+      }
+    } else {
+      if (!data.answers || data.answers.length < 2) {
+        errors.push('At least 2 answers must be provided');
+      } else {
+        const hasCorrectAnswer = data.answers.some(answer => answer.correct);
+        if (!hasCorrectAnswer) {
+          errors.push('At least one answer must be marked as correct');
+        }
+
+        // Validate answer text
+        for (let i = 0; i < data.answers.length; i++) {
+          const answer = data.answers[i];
+          if (!answer?.text || typeof answer.text !== 'string') {
+            errors.push(`Answer ${i + 1} must have text in German`);
+          }
         }
       }
     }

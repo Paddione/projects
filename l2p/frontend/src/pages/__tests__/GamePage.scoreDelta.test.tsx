@@ -39,7 +39,7 @@ describe('GamePage scoreDelta animation', () => {
       { id: '1', username: 'me', character: 'student', isHost: true, score: 0, multiplier: 1, correctAnswers: 0 } as any
     ])
     useGameStore.getState().setCurrentQuestion({
-      id: 'q1', text: 'What?', answers: ['A', 'B'], correctAnswer: 0, timeLimit: 60
+      id: 'q1', text: 'What?', answers: ['A', 'B'], correctAnswer: 0, timeLimit: 60, answerType: 'multiple_choice'
     })
     useGameStore.getState().setQuestionIndex(0)
     useGameStore.getState().setTotalQuestions(1)
@@ -61,8 +61,9 @@ describe('GamePage scoreDelta animation', () => {
     // Fire event with positive scoreDelta
     handler({ playerId: '1', hasAnswered: true, scoreDelta: 150 })
 
-    // The +150 badge should appear
-    expect(screen.getByText('+150')).toBeInTheDocument()
+    // The +150 badge should appear (renders in both mobile bar + desktop pane)
+    const badges = screen.getAllByText('+150')
+    expect(badges.length).toBeGreaterThanOrEqual(1)
 
     // Advance timers to clear the badge
     jest.advanceTimersByTime(2000)

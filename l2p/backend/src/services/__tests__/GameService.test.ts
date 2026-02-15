@@ -1015,6 +1015,7 @@ describe('GameService', () => {
         totalQuestions: 2,
         timeRemaining: 60,
         isActive: true,
+        gameMode: 'arcade',
         selectedQuestionSetIds: [1],
         questions: [
           {
@@ -1067,6 +1068,7 @@ describe('GameService', () => {
         totalQuestions: 2,
         timeRemaining: 60,
         isActive: true,
+        gameMode: 'arcade',
         selectedQuestionSetIds: [1],
         questions: [
           {

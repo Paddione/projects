@@ -437,10 +437,12 @@ export class LobbyService {
       throw new Error('Cannot start game for lobby that is not in waiting status');
     }
 
-    // Check minimum players (at least 2 players) before readiness per test expectations
+    // Check minimum players — practice mode allows solo play
     const currentPlayers: Player[] = Array.isArray(lobby.players) ? (lobby.players as Player[]) : [];
-    if (currentPlayers.length < 2) {
-      throw new Error('At least 2 players are required to start the game');
+    const lobbyGameMode = (lobby.settings as any)?.gameMode || 'arcade';
+    const minPlayers = lobbyGameMode === 'practice' ? 1 : 2;
+    if (currentPlayers.length < minPlayers) {
+      throw new Error(`At least ${minPlayers} player${minPlayers > 1 ? 's are' : ' is'} required to start the game`);
     }
     // Then ensure all players are ready
     const allReady = currentPlayers.every((p) => p.isReady);

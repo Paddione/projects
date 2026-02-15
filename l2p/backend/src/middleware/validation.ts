@@ -212,9 +212,11 @@ export class ValidationMiddleware {
             text: Joi.string().min(1).required(),
             correct: Joi.boolean().required()
           })
-        ).min(2).required(),
+        ).min(1).required(),
         explanation: Joi.string().allow(''),
-        difficulty: Joi.number().integer().min(1).max(5).default(1)
+        difficulty: Joi.number().integer().min(1).max(5).default(1),
+        answer_type: Joi.string().valid('multiple_choice', 'free_text').default('multiple_choice'),
+        hint: Joi.string().allow('', null),
       })
     },
 
@@ -228,9 +230,11 @@ export class ValidationMiddleware {
             text: Joi.string().min(1),
             correct: Joi.boolean()
           })
-        ).min(2),
+        ).min(1),
         explanation: Joi.string().allow(''),
-        difficulty: Joi.number().integer().min(1).max(5)
+        difficulty: Joi.number().integer().min(1).max(5),
+        answer_type: Joi.string().valid('multiple_choice', 'free_text'),
+        hint: Joi.string().allow('', null),
       })
     },
 
