@@ -4,7 +4,6 @@ import { CharacterDisplay } from '../components/CharacterDisplay'
 import { ErrorDisplay } from '../components/ErrorBoundary'
 import { ChangePasswordForm } from '../components/ChangePasswordForm'
 import PerksManager from '../components/PerksManager'
-import { SkillTree } from '../components/SkillTree'
 import styles from '../styles/ProfilePage.module.css'
 import appStyles from '../styles/App.module.css'
 import { Link } from 'react-router-dom'
@@ -41,7 +40,6 @@ export const ProfilePage: React.FC = () => {
   const [isUpdating, setIsUpdating] = useState(false)
   const [showChangePassword, setShowChangePassword] = useState(false)
   const [showPerks, setShowPerks] = useState(false)
-  const [showSkillTree, setShowSkillTree] = useState(false)
   const currentUser = apiService.getCurrentUser()
   const isAdmin = !!currentUser?.isAdmin
 
@@ -166,14 +164,6 @@ export const ProfilePage: React.FC = () => {
           >
             {showPerks ? 'Close Perks' : 'Perks'}
           </button>
-          <button
-            type="button"
-            className={styles.changePasswordButton || styles.retryButton}
-            onClick={() => setShowSkillTree(prev => !prev)}
-            data-testid="skill-tree-button"
-          >
-            {showSkillTree ? 'Close Skill Tree' : 'Skill Tree'}
-          </button>
           {isAdmin && (
             <Link
               to="/admin"
@@ -207,24 +197,6 @@ export const ProfilePage: React.FC = () => {
                 </button>
               </div>
               <PerksManager />
-            </div>
-          </div>
-        )}
-        {showSkillTree && (
-          <div style={{ marginBottom: '1.5rem' }}>
-            <div className={styles.perksSection}>
-              <div className={styles.sectionHeader}>
-                <h2>Skill Tree</h2>
-                <button
-                  type="button"
-                  onClick={() => setShowSkillTree(false)}
-                  className={styles.closeButton}
-                  style={{ fontSize: '1.2rem', background: 'none', border: 'none', cursor: 'pointer' }}
-                >
-                  ✕
-                </button>
-              </div>
-              <SkillTree />
             </div>
           </div>
         )}

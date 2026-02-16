@@ -4,6 +4,7 @@ import { apiService } from '../services/apiService'
 import { Icon } from './Icon'
 import styles from '../styles/App.module.css'
 import { useAudio } from '../hooks/useAudio'
+import { useLocalization } from '../hooks/useLocalization'
 
 export const Header: React.FC = () => {
   const currentUser = apiService.getCurrentUser()
@@ -19,6 +20,9 @@ export const Header: React.FC = () => {
     handleMenuCancel,
     handleVolumeChange
   } = useAudio()
+  const { currentLanguage, setLanguage, t, getLanguageFlag } = useLocalization()
+
+  const toggleLanguage = () => setLanguage(currentLanguage === 'en' ? 'de' : 'en')
 
   // Close menu on resize to desktop
   useEffect(() => {
@@ -85,13 +89,13 @@ export const Header: React.FC = () => {
         <div className={`${styles.headerNav} ${mobileMenuOpen ? styles.headerNavOpen : ''}`}>
           <nav className={`${styles.flex} ${styles.gapMd} ${styles.itemsCenter} ${styles.headerNavLinks}`} role="navigation">
             <a href="/" className={`${styles.button} ${styles.buttonOutline}`} data-testid="home-page" onClick={() => { handleMenuSelect(); closeMenu() }}>
-              Home
+              {t('nav.home')}
             </a>
             <a href="/profile" className={`${styles.button} ${styles.buttonOutline}`} data-testid="profile-link" onClick={() => { handleMenuSelect(); closeMenu() }}>
-              Profile
+              {t('nav.profile', 'Profile')}
             </a>
             <a href="/question-sets" className={`${styles.button} ${styles.buttonOutline}`} onClick={() => { handleMenuSelect(); closeMenu() }}>
-              Question Sets
+              {t('nav.questionSets', 'Question Sets')}
             </a>
             {isAdmin && (
               <Link to="/admin" className={`${styles.button} ${styles.buttonOutline}`} data-testid="admin-dashboard-link" onClick={() => { handleMenuSelect(); closeMenu() }}>
@@ -131,6 +135,16 @@ export const Header: React.FC = () => {
                 className={styles.volumeSlider}
               />
             </div>
+
+            {/* Language Toggle */}
+            <button
+              onClick={toggleLanguage}
+              className={`${styles.button} ${styles.buttonOutline}`}
+              title={currentLanguage === 'en' ? 'Deutsch' : 'English'}
+              data-testid="language-toggle"
+            >
+              {getLanguageFlag(currentLanguage === 'en' ? 'de' : 'en')}
+            </button>
 
             {/* Logout Button */}
             <button

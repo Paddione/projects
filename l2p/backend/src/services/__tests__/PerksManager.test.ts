@@ -105,11 +105,10 @@ describe('PerksManager', () => {
   });
 
   describe('activatePerk', () => {
-    it('should activate perk chosen in draft system', async () => {
-      // Mock: perk is chosen in user_perk_drafts
+    it('should activate perk unlocked by level', async () => {
+      // Mock: perk exists and user level meets requirement
       mockDb.query
-        .mockResolvedValueOnce({ rows: [{ id: 1 }] } as any) // Draft unlocked check (user_perk_drafts)
-        .mockResolvedValueOnce({ rows: [{ type: 'avatar' }] } as any) // Perk type query
+        .mockResolvedValueOnce({ rows: [{ id: 2, type: 'avatar', level_required: 1 }] } as any) // Level-based unlock check
         .mockResolvedValueOnce({ rows: [] } as any); // updateUserActiveSettings query
 
       // Mock updateUserActiveSettings
@@ -118,15 +117,15 @@ describe('PerksManager', () => {
       const result = await perksManager.activatePerk(1, 2, { selected_avatar: 'scientist' });
 
       expect(result).toBe(true);
-      // First query should check user_perk_drafts
+      // First query should check perks with level_required
       expect(mockDb.query).toHaveBeenCalledWith(
-        expect.stringContaining('user_perk_drafts'),
-        [1, 2]
+        expect.stringContaining('level_required'),
+        [2, 1]
       );
     });
 
-    it('should not activate perk not chosen in draft', async () => {
-      mockDb.query.mockResolvedValue({ rows: [] } as any); // Not found in drafts
+    it('should not activate perk when user level too low', async () => {
+      mockDb.query.mockResolvedValue({ rows: [] } as any); // Level requirement not met
 
       const result = await perksManager.activatePerk(1, 2);
 
@@ -135,10 +134,9 @@ describe('PerksManager', () => {
   });
 
   describe('deactivatePerk', () => {
-    it('should deactivate perk chosen in draft system', async () => {
+    it('should deactivate an active perk', async () => {
       mockDb.query
-        .mockResolvedValueOnce({ rows: [{ id: 1 }] } as any) // Draft check (user_perk_drafts)
-        .mockResolvedValueOnce({ rows: [{ type: 'avatar' }] } as any) // Perk type query
+        .mockResolvedValueOnce({ rows: [{ type: 'avatar' }] } as any) // Perk exists check
         .mockResolvedValueOnce({ rows: [] } as any); // updateUserActiveSettings query
 
       jest.spyOn(perksManager as any, 'updateUserActiveSettings').mockResolvedValue(undefined);
@@ -146,14 +144,14 @@ describe('PerksManager', () => {
       const result = await perksManager.deactivatePerk(1, 2);
 
       expect(result).toBe(true);
-      // First query should check user_perk_drafts
+      // First query should check perks table
       expect(mockDb.query).toHaveBeenCalledWith(
-        expect.stringContaining('user_perk_drafts'),
-        [1, 2]
+        expect.stringContaining('SELECT type FROM perks'),
+        [2]
       );
     });
 
-    it('should return false when perk not found in drafts', async () => {
+    it('should return false when perk not found', async () => {
       mockDb.query.mockResolvedValue({ rows: [] } as any);
 
       const result = await perksManager.deactivatePerk(1, 2);
@@ -298,9 +296,9 @@ describe('PerksManager', () => {
   });
 
   describe('getUnlockedPerks', () => {
-    it('should return chosen perks from user_perk_drafts', async () => {
+    it('should return perks unlocked by user level', async () => {
       const mockPerks = [
-        { id: 1, name: 'custom_avatars', category: 'cosmetic', type: 'avatar', draft_level: 3, effect_config: {} }
+        { id: 1, name: 'time_cushion', category: 'time', type: 'gameplay', level_required: 1, effect_config: {}, updated_at: new Date(), title: 'Time Cushion', description: 'Extra time' }
       ];
 
       mockDb.query.mockResolvedValue({ rows: mockPerks } as any);
@@ -308,7 +306,7 @@ describe('PerksManager', () => {
       const result = await perksManager.getUnlockedPerks(1);
 
       expect(mockDb.query).toHaveBeenCalledWith(
-        expect.stringContaining('user_perk_drafts'),
+        expect.stringContaining('level_required'),
         [1]
       );
       expect(result).toHaveLength(1);
@@ -316,9 +314,9 @@ describe('PerksManager', () => {
   });
 
   describe('getActivePerks', () => {
-    it('should return chosen perks from user_perk_drafts', async () => {
+    it('should return gameplay perks unlocked by user level', async () => {
       const mockPerks = [
-        { id: 1, name: 'custom_avatars', category: 'cosmetic', type: 'avatar', draft_level: 3, effect_config: {} }
+        { id: 1, name: 'time_cushion', category: 'time', type: 'gameplay', level_required: 1, effect_config: {}, updated_at: new Date(), title: 'Time Cushion', description: 'Extra time' }
       ];
 
       mockDb.query.mockResolvedValue({ rows: mockPerks } as any);
@@ -326,7 +324,7 @@ describe('PerksManager', () => {
       const result = await perksManager.getActivePerks(1);
 
       expect(mockDb.query).toHaveBeenCalledWith(
-        expect.stringContaining('user_perk_drafts'),
+        expect.stringContaining('level_required'),
         [1]
       );
       expect(result).toHaveLength(1);

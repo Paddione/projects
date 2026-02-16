@@ -5,7 +5,7 @@ import { ScoringService } from './ScoringService.js';
 import { RequestLogger } from '../middleware/logging.js';
 import { LobbyService } from './LobbyService.js';
 import { CharacterService } from './CharacterService.js';
-import { PerkDraftService, DraftOffer } from './PerkDraftService.js';
+import { PerkDraftService } from './PerkDraftService.js';
 import { PerkEffectEngine, GameplayModifiers, ScoreContext } from './PerkEffectEngine.js';
 
 export interface GameState {
@@ -931,22 +931,16 @@ export class GameService {
           console.error(`[GameService] Failed to save result for player ${player.id}:`, saveError);
         }
 
-        // Get pending draft levels for this player
-        let pendingDrafts: DraftOffer[] = [];
+        // Get newly unlocked perks for this player (level-based)
+        let newlyUnlockedPerks: any[] = [];
         if (userId && experienceResult?.levelUp) {
           try {
-            const pendingLevels = await this.perkDraftService.getPendingDraftLevels(
-              userId,
+            newlyUnlockedPerks = await this.perkDraftService.getNewlyUnlockedPerks(
+              experienceResult.oldLevel,
               experienceResult.newLevel
             );
-            for (const lvl of pendingLevels) {
-              const offer = await this.perkDraftService.generateDraftOffer(userId, lvl);
-              if (offer.perks.length > 0 && !offer.drafted) {
-                pendingDrafts.push(offer);
-              }
-            }
           } catch (e) {
-            console.warn(`[GameService] Failed to generate draft offers for player ${player.id}:`, e);
+            console.warn(`[GameService] Failed to get unlocked perks for player ${player.id}:`, e);
           }
         }
 
@@ -960,20 +954,8 @@ export class GameService {
           levelUp: experienceResult?.levelUp || false,
           newLevel: experienceResult?.newLevel || player.characterLevel || 1,
           oldLevel: experienceResult?.oldLevel || player.characterLevel || 1,
-          newlyUnlockedPerks: experienceResult?.newlyUnlockedPerks || [],
-          pendingDrafts,
+          newlyUnlockedPerks: newlyUnlockedPerks.length > 0 ? newlyUnlockedPerks : (experienceResult?.newlyUnlockedPerks || []),
         });
-
-        // Emit draft availability notification if any
-        if (pendingDrafts.length > 0) {
-          try {
-            this.getIo()?.to(gameState.lobbyCode)?.emit('perk:draft-available', {
-              playerId: player.id,
-              username: player.username,
-              pendingDrafts,
-            });
-          } catch { }
-        }
       } catch (error) {
         console.error(`[GameService] Error processing player ${player.id} results:`, error);
         // Still push a basic entry so the player appears in final results
@@ -1006,7 +988,6 @@ export class GameService {
           newLevel: experienceResult?.newLevel || player.characterLevel || 1,
           oldLevel: experienceResult?.oldLevel || player.characterLevel || 1,
           newlyUnlockedPerks: experienceResult?.newlyUnlockedPerks || [],
-          pendingDrafts: experienceResult?.pendingDrafts || [],
         };
       })
       .sort((a, b) => b.finalScore - a.finalScore);

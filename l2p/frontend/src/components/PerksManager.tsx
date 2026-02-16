@@ -110,16 +110,10 @@ const PerksManager: React.FC = () => {
   const [retryCount, setRetryCount] = useState(0);
   const [isFetching, setIsFetching] = useState(false);
 
-  console.log('PerksManager: Rendering with user:', !!user, 'token:', !!token, 'user level:', user?.level);
-
   useEffect(() => {
-    console.log('PerksManager: useEffect triggered, user:', !!user, 'token:', !!token);
     // Only fetch if user is present (token may be absent in session-cookie auth)
     if (user) {
-      console.log('PerksManager: Calling fetchUserPerks');
       fetchUserPerks();
-    } else {
-      console.log('PerksManager: Skipping fetchUserPerks - user missing');
     }
   }, [user]);
 
@@ -132,7 +126,6 @@ const PerksManager: React.FC = () => {
   // Don't render if user is not authenticated (must come after all hooks)
   // Note: only check `user` — token may be absent in session-cookie auth
   if (!user) {
-    console.log('PerksManager: User not authenticated, returning empty div');
     return <div></div>;
   }
 
@@ -140,21 +133,17 @@ const PerksManager: React.FC = () => {
   const fetchUserPerks = async () => {
     // Prevent multiple concurrent fetches
     if (isFetching) {
-      console.log('PerksManager: Already fetching, skipping...');
       return;
     }
 
     try {
-      console.log('PerksManager: fetchUserPerks starting');
       setIsFetching(true);
       setLoading(true);
       setError(null); // Clear previous errors
 
       const response = await apiService.getUserPerks();
-      console.log('PerksManager: getUserPerks response:', response);
 
       if (response.success && response.data) {
-        console.log('PerksManager: Setting perks data:', response.data);
         setPerksData(response.data);
         setRetryCount(0); // Reset retry count on success
 
@@ -165,18 +154,15 @@ const PerksManager: React.FC = () => {
           avatarService.initialize(user?.character || 'student', response.data.perks);
         }
       } else {
-        console.error('PerksManager: Failed to load perks:', response.error);
         setError(response.error || 'Failed to load perks');
       }
     } catch (err) {
-      console.error('PerksManager: Error in fetchUserPerks:', err);
       const errorMessage = err instanceof Error ? err.message : 'Failed to load perks';
       setError(errorMessage);
 
       // Auto-retry with exponential backoff (max 3 retries)
       if (retryCount < 3) {
         const backoffDelay = Math.min(1000 * Math.pow(2, retryCount), 8000);
-        console.log(`PerksManager: Retrying in ${backoffDelay}ms (attempt ${retryCount + 1}/3)`);
         setTimeout(() => {
           setRetryCount(prev => prev + 1);
           fetchUserPerks();

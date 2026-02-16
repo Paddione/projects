@@ -1,7 +1,6 @@
 import { Server, Socket } from 'socket.io';
 import { LobbyService } from './LobbyService.js';
 import { GameService } from './GameService.js';
-import { PerkDraftService } from './PerkDraftService.js';
 import { AuthService } from './AuthService.js';
 import { RequestLogger } from '../middleware/logging.js';
 
@@ -24,7 +23,6 @@ export class SocketService {
   private io: Server;
   private lobbyService: LobbyService;
   private gameService: GameService;
-  private perkDraftService: PerkDraftService;
   private connectedUsers: Map<string, SocketUser> = new Map();
   private rateLimiters: Map<string, { count: number; resetAt: number }> = new Map();
 
@@ -32,7 +30,6 @@ export class SocketService {
     this.io = io;
     this.lobbyService = new LobbyService();
     this.gameService = new GameService(io);
-    this.perkDraftService = PerkDraftService.getInstance();
     this.setupAuthenticationMiddleware();
     this.setupEventHandlers();
   }
@@ -228,23 +225,6 @@ export class SocketService {
           return;
         }
         this.handleSubmitAnswer(socket, data);
-      });
-
-      // Perk draft events
-      socket.on('perk:pick', (data: { level: number; perkId: number }) => {
-        if (!this.checkRateLimit(socket.id, 'perk:pick', 10, 10000)) {
-          socket.emit('perk:draft-result', { success: false, error: 'Too many requests, please wait' });
-          return;
-        }
-        this.handlePerkPick(socket, data);
-      });
-
-      socket.on('perk:dump', (data: { level: number }) => {
-        if (!this.checkRateLimit(socket.id, 'perk:dump', 10, 10000)) {
-          socket.emit('perk:draft-result', { success: false, error: 'Too many requests, please wait' });
-          return;
-        }
-        this.handlePerkDump(socket, data);
       });
 
       socket.on('disconnect', () => {
@@ -676,51 +656,6 @@ export class SocketService {
         type: 'FETCH_FAILED',
         message: 'Failed to retrieve question set information'
       });
-    }
-  }
-
-  private async handlePerkPick(socket: Socket, data: { level: number; perkId: number }): Promise<void> {
-    try {
-      const userId = this.requireAuth(socket, 'perk:pick');
-      if (!userId) return;
-
-      const { level, perkId } = data;
-      if (typeof level !== 'number' || typeof perkId !== 'number') {
-        socket.emit('perk:draft-result', { success: false, error: 'level and perkId are required as numbers' });
-        return;
-      }
-
-      const result = await this.perkDraftService.pickPerk(parseInt(userId), level, perkId);
-      socket.emit('perk:draft-result', { success: result.success, action: 'pick', level, perkId, error: result.error });
-    } catch (error) {
-      console.error('Error in perk:pick handler:', error);
-      socket.emit('perk:draft-result', { success: false, error: 'Failed to pick perk' });
-    }
-  }
-
-  private async handlePerkDump(socket: Socket, data: { level: number }): Promise<void> {
-    try {
-      const userId = this.requireAuth(socket, 'perk:dump');
-      if (!userId) return;
-
-      const { level } = data;
-      if (typeof level !== 'number') {
-        socket.emit('perk:draft-result', { success: false, error: 'level is required as a number' });
-        return;
-      }
-
-      const result = await this.perkDraftService.dumpOffer(parseInt(userId), level);
-      if (result.success) {
-        // Check if pool is exhausted
-        const pool = await this.perkDraftService.getAvailablePool(parseInt(userId));
-        if (pool.length === 0) {
-          socket.emit('perk:pool-exhausted', { message: 'All perks have been drafted or dumped' });
-        }
-      }
-      socket.emit('perk:draft-result', { success: result.success, action: 'dump', level, error: result.error });
-    } catch (error) {
-      console.error('Error in perk:dump handler:', error);
-      socket.emit('perk:draft-result', { success: false, error: 'Failed to dump offer' });
     }
   }
 

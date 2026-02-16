@@ -645,23 +645,6 @@ export class SocketService {
           })
         })
 
-        // Process pending perk drafts for current user
-        try {
-          const auth = useAuthStore.getState()
-          const myId = auth.user?.id
-          const myUsername = auth.user?.username
-          const myResult = (normalizedResults as any[]).find((r: any) =>
-            String(r.id) === String(myId) || String(r.username) === String(myUsername)
-          )
-          if (myResult?.pendingDrafts && myResult.pendingDrafts.length > 0) {
-            import('../stores/perkDraftStore').then(({ usePerkDraftStore }) => {
-              usePerkDraftStore.getState().setPendingDrafts(myResult.pendingDrafts)
-            })
-          }
-        } catch (e) {
-          console.warn('Failed to process pending drafts from game results:', e)
-        }
-
         // Navigate to results page — skip validation since the lobby gets
         // deleted after game end and the API check would fail
         // Use dynamic import to avoid circular dependency
@@ -706,37 +689,6 @@ export class SocketService {
         })
       } catch (err) {
         console.error('Error in player-perk-unlocks handler:', err)
-      }
-    })
-
-    // Perk draft events
-    this.socket.on('perk:draft-available' as any, (data: any) => {
-      try {
-        console.log('Perk draft available:', data)
-        const auth = useAuthStore.getState()
-        if (data.userId && String(data.userId) === String(auth.user?.id)) {
-          import('../stores/perkDraftStore').then(({ usePerkDraftStore }) => {
-            usePerkDraftStore.getState().setPendingDrafts(data.pendingDrafts || [])
-          })
-        }
-      } catch (err) {
-        console.error('Error in perk:draft-available handler:', err)
-      }
-    })
-
-    this.socket.on('perk:draft-result' as any, (data: any) => {
-      try {
-        console.log('Perk draft result:', data)
-      } catch (err) {
-        console.error('Error in perk:draft-result handler:', err)
-      }
-    })
-
-    this.socket.on('perk:pool-exhausted' as any, (data: any) => {
-      try {
-        console.log('Perk pool exhausted:', data)
-      } catch (err) {
-        console.error('Error in perk:pool-exhausted handler:', err)
       }
     })
 
@@ -1085,15 +1037,6 @@ export class SocketService {
   // Lobby management methods
   leaveLobby(lobbyCode: string, playerId: string) {
     this.emit('leave-lobby', { lobbyCode, playerId })
-  }
-
-  // Perk draft methods
-  perkPick(level: number, perkId: number) {
-    this.emit('perk:pick', { level, perkId })
-  }
-
-  perkDump(level: number) {
-    this.emit('perk:dump', { level })
   }
 
   // Free-text answer submission (sends raw text)

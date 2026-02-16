@@ -134,11 +134,19 @@ export class PerksManager {
   }
 
   /**
-   * Get all perks for a user (draft-based: shows all gameplay perks with draft status)
+   * Get all perks for a user (level-based: shows all perks with unlock status based on user level)
    */
   async getUserPerks(userId: number): Promise<UserPerk[]> {
-    // After migration: perks are draft-based gameplay perks (no level_required column).
-    // Show all perks with their draft status from user_perk_drafts.
+    // Get user level
+    const userLevelResult = await this.db.query(`
+      SELECT COALESCE(
+        (SELECT character_level FROM user_game_profiles WHERE auth_user_id = $1),
+        (SELECT character_level FROM users WHERE id = $1),
+        0
+      ) AS level
+    `, [userId]);
+    const userLevel = (userLevelResult.rows[0]?.['level'] as number) || 0;
+
     const query = `
       SELECT
         p.id                AS perk_master_id,
@@ -151,27 +159,26 @@ export class PerksManager {
         p.effect_type       AS perk_effect_type,
         p.effect_config     AS perk_effect_config,
         p.asset_data        AS perk_asset_data,
+        p.level_required    AS perk_level_required,
         p.created_at        AS perk_created_at,
-        p.updated_at        AS perk_updated_at,
-        d.chosen_perk_id    AS draft_chosen_perk_id
+        p.updated_at        AS perk_updated_at
       FROM perks p
-      LEFT JOIN user_perk_drafts d
-        ON d.chosen_perk_id = p.id AND d.user_id = $1
       WHERE p.is_active = true
-      ORDER BY p.tier ASC, p.category ASC
+      ORDER BY p.level_required ASC, p.category ASC
     `;
 
-    const result = await this.db.query(query, [userId]);
+    const result = await this.db.query(query);
     return result.rows.map(row => {
       const perkId = row['perk_master_id'] as number;
-      const isChosen = row['draft_chosen_perk_id'] != null;
+      const levelRequired = (row['perk_level_required'] as number) || 0;
+      const isUnlocked = userLevel >= levelRequired;
 
       return {
         id: perkId,
         user_id: userId,
         perk_id: perkId,
-        is_unlocked: isChosen,
-        is_active: isChosen,
+        is_unlocked: isUnlocked,
+        is_active: isUnlocked,
         configuration: row['perk_effect_config'] ?? {},
         updated_at: (row['perk_updated_at'] as Date) ?? new Date(),
         perk: {
@@ -179,7 +186,7 @@ export class PerksManager {
           name: row['perk_name'] as string,
           category: row['perk_category'] as string,
           type: row['perk_type'] as string,
-          level_required: (row['perk_tier'] as number) ?? 0,
+          level_required: levelRequired,
           title: row['perk_title'] as string,
           description: row['perk_description'] as string,
           asset_data: row['perk_asset_data'],
@@ -192,15 +199,21 @@ export class PerksManager {
   }
 
   /**
-   * Get only unlocked/chosen perks for a user (draft-based)
+   * Get only unlocked perks for a user (level-based)
    */
   async getUnlockedPerks(userId: number): Promise<UserPerk[]> {
     const query = `
-      SELECT p.*, d.level AS draft_level, 0 AS level_required
-      FROM user_perk_drafts d
-      JOIN perks p ON d.chosen_perk_id = p.id
-      WHERE d.user_id = $1 AND d.chosen_perk_id IS NOT NULL
-      ORDER BY d.level ASC
+      SELECT p.*
+      FROM perks p
+      WHERE p.is_active = true
+      AND p.level_required <= (
+        SELECT COALESCE(
+          (SELECT character_level FROM user_game_profiles WHERE auth_user_id = $1),
+          (SELECT character_level FROM users WHERE id = $1),
+          0
+        )
+      )
+      ORDER BY p.level_required ASC
     `;
 
     const result = await this.db.query(query, [userId]);
@@ -217,7 +230,7 @@ export class PerksManager {
         name: row.name,
         category: row.category,
         type: row.type,
-        level_required: 0,
+        level_required: row.level_required || 0,
         title: row.title || row.name,
         description: row.description,
         asset_data: row.asset_data,
@@ -229,59 +242,46 @@ export class PerksManager {
   }
 
   /**
-   * Get active perks for a user (draft-based: chosen perks from user_perk_drafts)
+   * Get active perks for a user (level-based: all gameplay perks unlocked by level)
    */
   async getActivePerks(userId: number): Promise<UserPerk[]> {
-    // Try draft-based perks first
-    const draftQuery = `
-      SELECT p.*, d.level AS draft_level
-      FROM user_perk_drafts d
-      JOIN perks p ON d.chosen_perk_id = p.id
-      WHERE d.user_id = $1 AND d.chosen_perk_id IS NOT NULL
-      ORDER BY d.level ASC
-    `;
-
-    try {
-      const draftResult = await this.db.query(draftQuery, [userId]);
-      if (draftResult.rows.length > 0) {
-        return draftResult.rows.map((row: any) => ({
-          id: row.id,
-          user_id: userId,
-          perk_id: row.id,
-          is_unlocked: true,
-          is_active: true,
-          configuration: row.effect_config || {},
-          updated_at: new Date(),
-          perk: {
-            id: row.id,
-            name: row.name,
-            category: row.category,
-            type: row.type,
-            level_required: 0,
-            title: row.title || row.name,
-            description: row.description,
-            asset_data: row.asset_data,
-            is_active: true,
-            created_at: row.created_at,
-            updated_at: row.updated_at,
-          }
-        })) as UserPerk[];
-      }
-    } catch (e) {
-      // Fall through to legacy query if draft table doesn't exist yet
-    }
-
-    // Legacy fallback
     const query = `
-      SELECT up.*, p.name, p.category, p.type, p.title, p.description, p.asset_data
-      FROM user_perks up
-      JOIN perks p ON up.perk_id = p.id
-      WHERE up.user_id = $1 AND up.is_unlocked = true AND up.is_active = true
-      ORDER BY p.category ASC
+      SELECT p.*
+      FROM perks p
+      WHERE p.type = 'gameplay' AND p.is_active = true
+      AND p.level_required <= (
+        SELECT COALESCE(
+          (SELECT character_level FROM user_game_profiles WHERE auth_user_id = $1),
+          (SELECT character_level FROM users WHERE id = $1),
+          0
+        )
+      )
+      ORDER BY p.level_required ASC
     `;
 
     const result = await this.db.query(query, [userId]);
-    return result.rows as UserPerk[];
+    return result.rows.map((row: any) => ({
+      id: row.id,
+      user_id: userId,
+      perk_id: row.id,
+      is_unlocked: true,
+      is_active: true,
+      configuration: row.effect_config || {},
+      updated_at: row.updated_at || new Date(),
+      perk: {
+        id: row.id,
+        name: row.name,
+        category: row.category,
+        type: row.type,
+        level_required: row.level_required || 0,
+        title: row.title || row.name,
+        description: row.description,
+        asset_data: row.asset_data,
+        is_active: true,
+        created_at: row.created_at || new Date(),
+        updated_at: row.updated_at || new Date(),
+      }
+    })) as UserPerk[];
   }
 
   /**
@@ -322,30 +322,26 @@ export class PerksManager {
    * Activate a perk for a user
    */
   async activatePerk(userId: number, perkId: number, configuration: any = {}): Promise<boolean> {
-    // Check if perk is unlocked via draft system (chosen_perk_id in user_perk_drafts)
-    const unlockedQuery = `
-      SELECT d.id FROM user_perk_drafts d
-      WHERE d.user_id = $1 AND d.chosen_perk_id = $2
+    // Check if perk is unlocked via level
+    const unlockQuery = `
+      SELECT p.id, p.type, p.level_required FROM perks p
+      WHERE p.id = $1 AND p.is_active = true
+      AND p.level_required <= (
+        SELECT COALESCE(
+          (SELECT character_level FROM user_game_profiles WHERE auth_user_id = $2),
+          (SELECT character_level FROM users WHERE id = $2),
+          0
+        )
+      )
     `;
-    const unlockedResult = await this.db.query(unlockedQuery, [userId, perkId]);
+    const unlockResult = await this.db.query(unlockQuery, [perkId, userId]);
 
-    if (unlockedResult.rows.length === 0) {
+    if (unlockResult.rows.length === 0) {
       return false;
     }
 
-    // Get perk type for settings update
-    const perkTypeQuery = `SELECT type FROM perks WHERE id = $1`;
-    const perkTypeResult = await this.db.query(perkTypeQuery, [perkId]);
-
-    if (perkTypeResult.rows.length === 0) {
-      return false;
-    }
-
-    const perkType = perkTypeResult.rows[0]!['type'];
-
-    // Update user's active settings based on perk type (avatar, theme, badge)
+    const perkType = unlockResult.rows[0]!['type'];
     await this.updateUserActiveSettings(userId, perkId, perkType, configuration);
-
     return true;
   }
 
@@ -353,27 +349,16 @@ export class PerksManager {
    * Deactivate a perk for a user
    */
   async deactivatePerk(userId: number, perkId: number): Promise<boolean> {
-    // Verify perk was chosen in draft system
-    const unlockedQuery = `
-      SELECT d.id FROM user_perk_drafts d
-      WHERE d.user_id = $1 AND d.chosen_perk_id = $2
-    `;
-    const unlockedResult = await this.db.query(unlockedQuery, [userId, perkId]);
+    const perkQuery = `SELECT type FROM perks WHERE id = $1 AND is_active = true`;
+    const perkResult = await this.db.query(perkQuery, [perkId]);
 
-    if (unlockedResult.rows.length === 0) {
+    if (perkResult.rows.length === 0) {
       return false;
     }
 
-    // Get perk type to reset the corresponding user setting
-    const perkTypeQuery = `SELECT type FROM perks WHERE id = $1`;
-    const perkTypeResult = await this.db.query(perkTypeQuery, [perkId]);
-
-    if (perkTypeResult.rows.length > 0) {
-      const perkType = perkTypeResult.rows[0]!['type'];
-      const defaults = this.getDefaultConfigurationForPerk(perkType);
-      await this.updateUserActiveSettings(userId, perkId, perkType, defaults);
-    }
-
+    const perkType = perkResult.rows[0]!['type'];
+    const defaults = this.getDefaultConfigurationForPerk(perkType);
+    await this.updateUserActiveSettings(userId, perkId, perkType, defaults);
     return true;
   }
 

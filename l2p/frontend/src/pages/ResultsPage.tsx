@@ -4,9 +4,7 @@ import { useGameStore, type GameResult } from '../stores/gameStore'
 import styles from '../styles/App.module.css'
 import { useAuthStore } from '../stores/authStore'
 import { useCharacterStore } from '../stores/characterStore'
-import { usePerkDraftStore } from '../stores/perkDraftStore'
 import { avatarService } from '../services/avatarService'
-import { PerkDraftPanel } from '../components/PerkDraftPanel'
 
 // Component for animated score to experience conversion
 const AnimatedScoreConversion: React.FC<{
@@ -179,16 +177,10 @@ export const ResultsPage: React.FC = () => {
   const { gameResults, totalQuestions } = useGameStore()
   const { user } = useAuthStore()
   const { progress } = useCharacterStore()
-  const { pendingDrafts, currentDraftIndex, draftComplete, pickPerk, dumpOffer, clearDrafts, isLoading: draftLoading } = usePerkDraftStore()
   const [animationDone, setAnimationDone] = useState(false)
-  const hasPendingDrafts = pendingDrafts.length > 0 && !draftComplete
 
   const handleAnimationComplete = useCallback(() => {
     setAnimationDone(true)
-  }, [])
-
-  const handleDraftComplete = useCallback(() => {
-    // Drafts are done, re-enable navigation buttons
   }, [])
 
   // Use actual game results or fallback to mock data
@@ -284,20 +276,6 @@ export const ResultsPage: React.FC = () => {
             newLevel={winner.newLevel}
             character={winner.character}
             onAnimationComplete={handleAnimationComplete}
-          />
-        </div>
-      )}
-
-      {/* Perk Draft Panel — shown after XP animation if there are pending drafts */}
-      {animationDone && hasPendingDrafts && (
-        <div className={styles.card} style={{ marginBottom: 'var(--spacing-xl)' }} data-testid="perk-draft-section">
-          <PerkDraftPanel
-            draftOffers={pendingDrafts}
-            currentIndex={currentDraftIndex}
-            onPick={pickPerk}
-            onDump={dumpOffer}
-            onComplete={handleDraftComplete}
-            isLoading={draftLoading}
           />
         </div>
       )}
@@ -451,18 +429,14 @@ export const ResultsPage: React.FC = () => {
         <button
           className={styles.button}
           onClick={handlePlayAgain}
-          disabled={hasPendingDrafts}
           data-testid="play-again-button"
-          style={hasPendingDrafts ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
         >
           Play Again
         </button>
         <button
           className={`${styles.button} ${styles.buttonSecondary}`}
           onClick={() => navigate('/')}
-          disabled={hasPendingDrafts}
           data-testid="back-to-home-button"
-          style={hasPendingDrafts ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
         >
           Back to Home
         </button>

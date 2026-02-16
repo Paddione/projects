@@ -2,7 +2,7 @@ import { UserRepository, User } from '../repositories/UserRepository.js';
 import { PerksManager, UserPerk } from './PerksManager.js';
 import { GameProfileService, GameProfile } from './GameProfileService.js';
 import { DatabaseService } from './DatabaseService.js';
-import { PerkDraftService, DraftOffer } from './PerkDraftService.js';
+import { PerkDraftService } from './PerkDraftService.js';
 
 export interface Character {
   id: string;
@@ -250,8 +250,8 @@ export class CharacterService {
     newLevel: number;
     oldLevel: number;
     progress: { currentLevel: number; progress: number; expInLevel: number; expForNextLevel: number };
-    newlyUnlockedPerks: UserPerk[];
-    pendingDrafts: DraftOffer[];
+    newlyUnlockedPerks: any[];
+    pendingDrafts: any[];
   }> {
     // Try to update game profile first (OAuth users)
     try {
@@ -297,21 +297,15 @@ export class CharacterService {
 
       const progress = this.calculateLevelProgress(newExperiencePoints);
 
-      // Generate draft offers for newly reached levels (1-30 only)
-      let newlyUnlockedPerks: UserPerk[] = [];
-      let pendingDrafts: DraftOffer[] = [];
+      // Return newly unlocked gameplay perks (level-based, no drafts)
+      let newlyUnlockedPerks: any[] = [];
+      let pendingDrafts: any[] = []; // Keep empty array for backward compat
       if (levelUp) {
         try {
           const perkDraftService = PerkDraftService.getInstance();
-          // Generate draft offers for each new level reached (capped at 30)
-          for (let lvl = oldLevel + 1; lvl <= Math.min(newLevel, 30); lvl++) {
-            const offer = await perkDraftService.generateDraftOffer(userId, lvl);
-            if (offer.perks.length > 0 && !offer.drafted) {
-              pendingDrafts.push(offer);
-            }
-          }
+          newlyUnlockedPerks = await perkDraftService.getNewlyUnlockedPerks(oldLevel, newLevel);
         } catch (error) {
-          console.warn('Failed to generate draft offers for level up:', error);
+          console.warn('Failed to get newly unlocked perks:', error);
         }
       }
 
@@ -348,20 +342,15 @@ export class CharacterService {
 
       const progress = this.calculateLevelProgress(newExperiencePoints);
 
-      // Generate draft offers for newly reached levels (1-30 only)
-      let newlyUnlockedPerks: UserPerk[] = [];
-      let pendingDrafts: DraftOffer[] = [];
+      // Return newly unlocked gameplay perks (level-based, no drafts)
+      let newlyUnlockedPerks: any[] = [];
+      let pendingDrafts: any[] = []; // Keep empty array for backward compat
       if (levelUp) {
         try {
           const perkDraftService = PerkDraftService.getInstance();
-          for (let lvl = oldLevel + 1; lvl <= Math.min(newLevel, 30); lvl++) {
-            const offer = await perkDraftService.generateDraftOffer(userId, lvl);
-            if (offer.perks.length > 0 && !offer.drafted) {
-              pendingDrafts.push(offer);
-            }
-          }
+          newlyUnlockedPerks = await perkDraftService.getNewlyUnlockedPerks(oldLevel, newLevel);
         } catch (error) {
-          console.warn('Failed to generate draft offers for level up:', error);
+          console.warn('Failed to get newly unlocked perks:', error);
         }
       }
 
