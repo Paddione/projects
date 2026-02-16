@@ -408,4 +408,53 @@ router.put('/users/:userId/apps', async (req: Request, res: Response) => {
   }
 });
 
+// Update app settings (is_default, is_active)
+const updateAppSchema = z.object({
+  is_default: z.boolean().optional(),
+  is_active: z.boolean().optional(),
+});
+
+router.patch('/apps/:appId', async (req: Request, res: Response) => {
+  try {
+    const appId = Number(req.params.appId);
+    if (!Number.isInteger(appId)) {
+      res.status(400).json({ error: 'Invalid app ID' });
+      return;
+    }
+
+    const [existingApp] = await db
+      .select({ id: apps.id })
+      .from(apps)
+      .where(eq(apps.id, appId))
+      .limit(1);
+
+    if (!existingApp) {
+      res.status(404).json({ error: 'App not found' });
+      return;
+    }
+
+    const parsed = updateAppSchema.parse(req.body);
+
+    if (Object.keys(parsed).length === 0) {
+      res.status(400).json({ error: 'No fields to update' });
+      return;
+    }
+
+    const updateData: Record<string, unknown> = { updated_at: new Date() };
+    if (parsed.is_default !== undefined) updateData.is_default = parsed.is_default;
+    if (parsed.is_active !== undefined) updateData.is_active = parsed.is_active;
+
+    await db.update(apps).set(updateData).where(eq(apps.id, appId));
+
+    res.status(200).json({ message: 'App updated successfully' });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      res.status(400).json({ error: 'Validation failed', details: error.errors });
+      return;
+    }
+    console.error('Failed to update app:', error);
+    res.status(500).json({ error: 'Failed to update app' });
+  }
+});
+
 export default router;
