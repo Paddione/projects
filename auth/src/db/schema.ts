@@ -193,6 +193,7 @@ export const apps = authSchema.table('apps', {
   url: varchar('url', { length: 500 }).notNull(),
   metadata: jsonb('metadata').default({}),
   is_active: boolean('is_active').default(true).notNull(),
+  is_default: boolean('is_default').default(false).notNull(),
   created_at: timestamp('created_at').defaultNow().notNull(),
   updated_at: timestamp('updated_at').defaultNow().notNull(),
 }, (table) => ({
