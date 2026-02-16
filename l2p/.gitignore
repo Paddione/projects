@@ -8,8 +8,6 @@ data
 .env.local
 .env.production
 .env.development
-# Allow frontend dev env (contains no secrets, only localhost URLs)
-!frontend/.env.development
 .env.dev
 .env.test
 .env.test.backup
