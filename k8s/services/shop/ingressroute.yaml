@@ -17,18 +17,18 @@ metadata:
 spec:
   routes:
     # Route for static assets & public API endpoints (no auth required)
-    - match: Host(`shop.korczewski.de`) && (PathPrefix(`/_next`) || PathPrefix(`/favicon.ico`) || PathPrefix(`/static`) || PathPrefix(`/api/health`) || PathPrefix(`/api/stripe/webhook`))
+    - match: Host(`shop.korczewski.de`) && (PathPrefix(`/_next`) || PathPrefix(`/favicon.ico`) || PathPrefix(`/static`) || PathPrefix(`/images`) || PathPrefix(`/robots.txt`) || PathPrefix(`/api/health`) || PathPrefix(`/api/stripe/webhook`))
       kind: Rule
       services:
         - name: shop
           port: 3000
-    # Route for everything else (requires auth)
+    # Route for everything else (requires auth + shop app access)
     - match: Host(`shop.korczewski.de`)
       kind: Rule
       services:
         - name: shop
           port: 3000
       middlewares:
-        - name: user-auth-chain
+        - name: shop-auth-chain
           namespace: korczewski-infra
   tls: {}
