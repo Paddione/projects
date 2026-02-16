@@ -22,10 +22,12 @@ import hallOfFameRoutes from './routes/hall-of-fame.js';
 import characterRoutes from './routes/characters.js';
 import adminRoutes from './routes/admin.js';
 import perksRoutes from './routes/perks.js';
+import perkDraftRoutes from './routes/perkDraft.js';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
 import { requestLogger } from './middleware/logging.js';
 import { initializeBackendHealthChecks } from './health/index.js';
 import { correlationId } from './middleware/correlationId.js';
+import { rateLimitWarning } from './middleware/rateLimitWarning.js';
 import { metricsMiddleware } from './middleware/metrics.js';
 import metricsRoutes from './routes/metrics.js';
 
@@ -38,6 +40,12 @@ const isRateLimitDisabled = (
   process.env['NODE_ENV'] === 'test' ||
   process.env['NODE_ENV'] === 'development'
 );
+
+// Bypass key for production testing (e.g., OpenClaw browser tests)
+const rateLimitBypassKey = process.env['RATE_LIMIT_BYPASS_KEY'] || '';
+function hasBypassKey(req: Request): boolean {
+  return !!rateLimitBypassKey && req.headers['x-rate-limit-bypass'] === rateLimitBypassKey;
+}
 
 const app = express();
 const server = createServer(app);
@@ -259,6 +267,7 @@ app.use((req, res, next) => {
 const generalLimiter = isRateLimitDisabled ? (req: Request, res: Response, next: NextFunction) => next() : rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 100, // limit each IP to 100 requests per windowMs
+  skip: hasBypassKey,
   message: {
     error: 'Too Many Requests',
     message: 'Too many requests from this IP, please try again later.',
@@ -285,6 +294,7 @@ const generalLimiter = isRateLimitDisabled ? (req: Request, res: Response, next:
 const authLimiter = isRateLimitDisabled ? (req: Request, res: Response, next: NextFunction) => next() : rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 100, // limit each IP to 100 auth requests per windowMs (loosened from 10)
+  skip: hasBypassKey,
   message: {
     error: 'Too Many Authentication Attempts',
     message: 'Too many authentication attempts, please try again later.',
@@ -330,6 +340,9 @@ app.use('/api/health', healthRoutes);
 
 // Apply general rate limiter afterward
 app.use(generalLimiter);
+
+// Rate limit warning headers (reads RateLimit-Remaining set by express-rate-limit)
+app.use(rateLimitWarning);
 
 // Re-apply CORS after parsers (idempotent)
 app.use(cors(corsOptions));
@@ -380,6 +393,7 @@ if (shouldEnableFileUploadRoutes) {
     });
 }
 app.use('/api/admin', adminRoutes);
+app.use('/api/perks/draft', perkDraftRoutes);
 app.use('/api/perks', perksRoutes);
 
 // Basic API routes
