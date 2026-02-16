@@ -2122,6 +2122,32 @@
   color: var(--cv-text-tertiary);
 }
 
+.admin-access-header {
+  margin-bottom: var(--cv-space-4);
+}
+
+.admin-access-header h3 {
+  margin: 0 0 var(--cv-space-3);
+}
+
+.admin-app-toggles {
+  display: flex;
+  gap: var(--cv-space-4);
+  flex-wrap: wrap;
+}
+
+.admin-default-badge {
+  display: inline-block;
+  margin-left: var(--cv-space-2);
+  padding: 1px 6px;
+  font-size: var(--cv-text-xs);
+  font-weight: 600;
+  color: var(--cv-cyan);
+  border: 1px solid var(--cv-cyan-border);
+  border-radius: var(--cv-radius-sm);
+  vertical-align: middle;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .hub-hero {

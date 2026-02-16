@@ -280,6 +280,7 @@ router.get('/apps', async (_req: Request, res: Response) => {
         description: apps.description,
         url: apps.url,
         isActive: apps.is_active,
+        isDefault: apps.is_default,
       })
       .from(apps)
       .orderBy(apps.name);
@@ -317,6 +318,7 @@ router.get('/users/:userId/apps', async (req: Request, res: Response) => {
         description: apps.description,
         url: apps.url,
         isActive: apps.is_active,
+        isDefault: apps.is_default,
         accessId: userAppAccess.id,
       })
       .from(apps)
@@ -338,6 +340,7 @@ router.get('/users/:userId/apps', async (req: Request, res: Response) => {
         description: app.description,
         url: app.url,
         isActive: app.isActive,
+        isDefault: app.isDefault,
         hasAccess: isAdmin ? true : !!app.accessId,
       })),
     });
