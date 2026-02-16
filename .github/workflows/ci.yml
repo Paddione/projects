@@ -1,0 +1,237 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Detect which services changed
+  # ---------------------------------------------------------------------------
+  changes:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+    outputs:
+      l2p: ${{ steps.filter.outputs.l2p }}
+      auth: ${{ steps.filter.outputs.auth }}
+      shop: ${{ steps.filter.outputs.shop }}
+      videovault: ${{ steps.filter.outputs.videovault }}
+      k8s: ${{ steps.filter.outputs.k8s }}
+      any-service: ${{ steps.filter.outputs.l2p == 'true' || steps.filter.outputs.auth == 'true' || steps.filter.outputs.shop == 'true' || steps.filter.outputs.videovault == 'true' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            l2p:
+              - 'l2p/**'
+              - 'shared-infrastructure/shared/design-system/**'
+              - 'shared-infrastructure/shared/l2p/**'
+            auth:
+              - 'auth/**'
+            shop:
+              - 'shop/**'
+            videovault:
+              - 'VideoVault/**'
+              - 'shared-infrastructure/shared/videovault/**'
+            k8s:
+              - 'k8s/**'
+
+  # ---------------------------------------------------------------------------
+  # L2P: Typecheck + Unit Tests
+  # ---------------------------------------------------------------------------
+  l2p:
+    needs: changes
+    if: needs.changes.outputs.l2p == 'true'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: l2p
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: l2p/package-lock.json
+
+      - name: Install dependencies
+        run: npm run install:all
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Unit tests (frontend)
+        run: npm run test:unit:frontend
+
+      - name: Unit tests (backend)
+        run: npm run test:unit:backend
+        env:
+          NODE_OPTIONS: --experimental-vm-modules
+
+  # ---------------------------------------------------------------------------
+  # Auth: Typecheck + Unit Tests
+  # ---------------------------------------------------------------------------
+  auth:
+    needs: changes
+    if: needs.changes.outputs.auth == 'true'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: auth
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: auth/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Unit tests
+        run: npm run test
+
+  # ---------------------------------------------------------------------------
+  # Shop: Unit Tests
+  # ---------------------------------------------------------------------------
+  shop:
+    needs: changes
+    if: needs.changes.outputs.shop == 'true'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: shop
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: npm
+          cache-dependency-path: shop/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Unit tests
+        run: npm run test
+
+  # ---------------------------------------------------------------------------
+  # VideoVault: Typecheck + Unit Tests + Build
+  # ---------------------------------------------------------------------------
+  videovault:
+    needs: changes
+    if: needs.changes.outputs.videovault == 'true'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: VideoVault
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: VideoVault/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run check
+
+      - name: Unit tests
+        run: npm run test:2:unit
+
+      - name: Build validation
+        run: npm run build
+
+  # ---------------------------------------------------------------------------
+  # Docker Build Validation (master only)
+  # ---------------------------------------------------------------------------
+  docker-validate:
+    needs: changes
+    if: github.ref == 'refs/heads/master' && needs.changes.outputs.any-service == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - service: auth
+            dockerfile: auth/Dockerfile
+            changed: ${{ needs.changes.outputs.auth }}
+          - service: l2p-backend
+            dockerfile: l2p/backend/Dockerfile
+            changed: ${{ needs.changes.outputs.l2p }}
+          - service: l2p-frontend
+            dockerfile: l2p/frontend/Dockerfile
+            changed: ${{ needs.changes.outputs.l2p }}
+          - service: shop
+            dockerfile: shop/Dockerfile
+            changed: ${{ needs.changes.outputs.shop }}
+          - service: videovault
+            dockerfile: VideoVault/Dockerfile.prod
+            changed: ${{ needs.changes.outputs.videovault }}
+    steps:
+      - uses: actions/checkout@v4
+        if: matrix.changed == 'true'
+
+      - name: Set up Docker Buildx
+        if: matrix.changed == 'true'
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build (no push)
+        if: matrix.changed == 'true'
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ${{ matrix.dockerfile }}
+          push: false
+          cache-from: type=gha,scope=${{ matrix.service }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.service }}
+
+  # ---------------------------------------------------------------------------
+  # Kubernetes Manifest Validation
+  # ---------------------------------------------------------------------------
+  k8s-validate:
+    needs: changes
+    if: needs.changes.outputs.k8s == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install kustomize
+        uses: imranismail/setup-kustomize@v2
+
+      - name: Validate service manifests
+        run: |
+          for dir in k8s/services/*/; do
+            echo "--- Validating $dir ---"
+            kustomize build "$dir"
+          done
+
+      - name: Validate infrastructure manifests
+        run: |
+          for dir in k8s/infrastructure/*/; do
+            echo "--- Validating $dir ---"
+            kustomize build "$dir"
+          done
+
+      - name: Validate development overlay
+        run: kustomize build k8s/overlays/development
