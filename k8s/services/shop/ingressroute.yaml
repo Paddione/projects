@@ -16,8 +16,8 @@ metadata:
     tier: services
 spec:
   routes:
-    # Route for static assets (no auth required)
-    - match: Host(`shop.korczewski.de`) && (PathPrefix(`/_next`) || PathPrefix(`/favicon.ico`) || PathPrefix(`/static`))
+    # Route for static assets & public API endpoints (no auth required)
+    - match: Host(`shop.korczewski.de`) && (PathPrefix(`/_next`) || PathPrefix(`/favicon.ico`) || PathPrefix(`/static`) || PathPrefix(`/api/health`) || PathPrefix(`/api/stripe/webhook`))
       kind: Rule
       services:
         - name: shop
