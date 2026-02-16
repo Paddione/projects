@@ -10,6 +10,7 @@ import { dirname, join } from 'path';
 import { corsMiddleware } from './middleware/cors.js';
 import { csrfProtection } from './middleware/csrf.js';
 import { errorHandler } from './middleware/errorHandler.js';
+import { correlationId } from './middleware/correlationId.js';
 import authRoutes from './routes/auth.js';
 import userRoutes from './routes/user.js';
 import oauthRoutes from './routes/oauth.js';
@@ -79,6 +80,9 @@ app.use(
 // Initialize Passport
 app.use(passport.initialize());
 app.use(passport.session());
+
+// Attach correlation ID for request tracing
+app.use(correlationId);
 
 const isRateLimitDisabled = (
   process.env.DISABLE_RATE_LIMITING === 'true' ||
