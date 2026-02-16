@@ -59,11 +59,13 @@ if (fs.existsSync(processedPath)) {
 
 app.use('/media', express.static(mediaRoot));
 
-// Serve fixtures directory for test data
-const fixturesPath = path.join(process.cwd(), 'fixtures');
-if (fs.existsSync(fixturesPath)) {
-  app.use('/fixtures', express.static(fixturesPath));
-  logger.info('Fixtures directory mounted', { path: fixturesPath });
+// Serve fixtures directory for test data (development only)
+if (process.env.NODE_ENV !== 'production') {
+  const fixturesPath = path.join(process.cwd(), 'fixtures');
+  if (fs.existsSync(fixturesPath)) {
+    app.use('/fixtures', express.static(fixturesPath));
+    logger.info('Fixtures directory mounted', { path: fixturesPath });
+  }
 }
 
 // Session configuration (Postgres-backed if DB configured)
