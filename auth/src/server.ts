@@ -80,25 +80,72 @@ app.use(
 app.use(passport.initialize());
 app.use(passport.session());
 
-const isProduction = process.env.NODE_ENV === 'production';
+const isRateLimitDisabled = (
+  process.env.DISABLE_RATE_LIMITING === 'true' ||
+  process.env.NODE_ENV === 'test' ||
+  process.env.NODE_ENV === 'development'
+);
 
-// Rate limiting
-const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: process.env.AUTH_RATE_LIMIT_MAX ? parseInt(process.env.AUTH_RATE_LIMIT_MAX) : (isProduction ? 100 : 1000), // much higher limit for dev/test
+// Bypass key for production testing (e.g., OpenClaw browser tests)
+const rateLimitBypassKey = process.env.RATE_LIMIT_BYPASS_KEY || '';
+function hasBypassKey(req: express.Request): boolean {
+  return !!rateLimitBypassKey && req.headers['x-rate-limit-bypass'] === rateLimitBypassKey;
+}
+
+// Rate limiting — fully disabled in test/dev for browser testing throughput
+const noopLimiter = (_req: express.Request, _res: express.Response, next: express.NextFunction) => next();
+
+const authLimiter = isRateLimitDisabled ? noopLimiter : rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: process.env.AUTH_RATE_LIMIT_MAX ? parseInt(process.env.AUTH_RATE_LIMIT_MAX) : 100,
+  skip: hasBypassKey,
   message: { error: 'Too many requests from this IP, please try again later' },
   standardHeaders: true,
   legacyHeaders: false,
+  handler: (_req, res) => {
+    res.setHeader('Retry-After', String(Math.ceil(15 * 60)));
+    res.status(429).json({
+      error: 'Too many requests from this IP, please try again later',
+      retryAfterSeconds: 15 * 60,
+    });
+  },
 });
 
-const strictAuthLimiter = rateLimit({
+const strictAuthLimiter = isRateLimitDisabled ? noopLimiter : rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: process.env.AUTH_STRICT_RATE_LIMIT_MAX ? parseInt(process.env.AUTH_STRICT_RATE_LIMIT_MAX) : (isProduction ? 5 : 100), // Increased for E2E testing in dev
+  max: process.env.AUTH_STRICT_RATE_LIMIT_MAX ? parseInt(process.env.AUTH_STRICT_RATE_LIMIT_MAX) : 5,
+  skip: hasBypassKey,
   message: { error: 'Too many authentication attempts, please try again later' },
   standardHeaders: true,
   legacyHeaders: false,
-  skipSuccessfulRequests: true, // Don't count successful requests
+  skipSuccessfulRequests: true,
+  handler: (_req, res) => {
+    res.setHeader('Retry-After', String(Math.ceil(15 * 60)));
+    res.status(429).json({
+      error: 'Too many authentication attempts, please try again later',
+      retryAfterSeconds: 15 * 60,
+    });
+  },
 });
+
+// Rate limit warning: adds X-RateLimit-Warning header when remaining < 20%
+function rateLimitWarning(_req: express.Request, res: express.Response, next: express.NextFunction) {
+  const originalWriteHead = res.writeHead;
+  res.writeHead = function (this: express.Response, ...args: Parameters<typeof res.writeHead>) {
+    const limit = parseInt(res.getHeader('RateLimit-Limit') as string, 10);
+    const remaining = parseInt(res.getHeader('RateLimit-Remaining') as string, 10);
+    if (!isNaN(limit) && !isNaN(remaining) && limit > 0) {
+      const threshold = Math.ceil(limit * 0.2);
+      if (remaining <= threshold && remaining > 0) {
+        res.setHeader('X-RateLimit-Warning', 'true');
+      }
+    }
+    return originalWriteHead.apply(this, args);
+  } as typeof res.writeHead;
+  next();
+}
+
+app.use(rateLimitWarning);
 
 // ============================================================================
 // ROUTES
