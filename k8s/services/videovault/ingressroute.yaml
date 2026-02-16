@@ -24,6 +24,6 @@ spec:
         - name: videovault
           port: 5000
       middlewares:
-        - name: user-auth-chain
+        - name: videovault-auth-chain
           namespace: korczewski-infra
   tls: {}

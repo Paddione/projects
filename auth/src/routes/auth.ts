@@ -1,8 +1,11 @@
 import express, { type Request, type Response } from 'express';
 import { z } from 'zod';
+import { eq, and } from 'drizzle-orm';
 import { AuthService } from '../services/AuthService.js';
 import { TokenService } from '../services/TokenService.js';
 import { authenticate } from '../middleware/authenticate.js';
+import { db } from '../config/database.js';
+import { apps, userAppAccess } from '../db/schema.js';
 import type { LoginCredentials, RegisterData } from '../types/auth.js';
 
 const router = express.Router();
@@ -217,17 +220,44 @@ router.post('/refresh', async (req: Request, res: Response) => {
  * Verify token validity
  * Query params:
  *   - requireAdmin: if set, requires ADMIN role
+ *   - app: if set, checks user has access to the specified app (by key)
  */
 router.get('/verify', authenticate, async (req: Request, res: Response) => {
   // Check if admin role is required
-  const requireAdmin = req.query.requireAdmin === 'true';
+  const requireAdminRole = req.query.requireAdmin === 'true';
+  const appKey = req.query.app as string | undefined;
 
-  if (requireAdmin && req.user?.role !== 'ADMIN') {
+  if (requireAdminRole && req.user?.role !== 'ADMIN') {
     res.status(403).json({
       error: 'Admin access required',
       valid: false
     });
     return;
+  }
+
+  // Check app-level access if app param is provided
+  if (appKey && req.user?.role !== 'ADMIN') {
+    const [access] = await db
+      .select({ id: userAppAccess.id })
+      .from(userAppAccess)
+      .innerJoin(apps, eq(apps.id, userAppAccess.app_id))
+      .where(
+        and(
+          eq(userAppAccess.user_id, req.user!.userId),
+          eq(apps.key, appKey),
+          eq(apps.is_active, true)
+        )
+      )
+      .limit(1);
+
+    if (!access) {
+      res.status(403).json({
+        error: 'Access denied to this application',
+        valid: false,
+        app: appKey,
+      });
+      return;
+    }
   }
 
   // Set headers for Traefik ForwardAuth

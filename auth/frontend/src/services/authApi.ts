@@ -41,6 +41,7 @@ export interface AppAccess {
   description?: string | null;
   url: string;
   isActive: boolean;
+  isDefault: boolean;
   hasAccess: boolean;
 }
 
@@ -439,5 +440,21 @@ export class AuthApi {
     }
 
     return response.json();
+  }
+
+  static async updateApp(appId: number, data: { is_default?: boolean; is_active?: boolean }): Promise<void> {
+    const response = await fetch(`${API_URL}/api/admin/apps/${appId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', ...XHR_HEADER },
+      credentials: 'include',
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      const err = new Error(error.error || 'Failed to update app') as Error & { status?: number };
+      err.status = response.status;
+      throw err;
+    }
   }
 }

@@ -624,6 +624,7 @@ export default function Admin() {
                         onClick={() => setSelectedAppId(app.id)}
                       >
                         {app.name}
+                        {app.isDefault && <span className="admin-default-badge">Default</span>}
                       </button>
                     ))}
                   </div>
@@ -631,7 +632,53 @@ export default function Admin() {
                 <div className="admin-access-main">
                   {selectedAppId ? (
                     <>
-                      <h3>Users with access to {apps.find((a) => a.id === selectedAppId)?.name}</h3>
+                      <div className="admin-access-header">
+                        <h3>Users with access to {apps.find((a) => a.id === selectedAppId)?.name}</h3>
+                        <div className="admin-app-toggles">
+                          <label className="admin-checkbox-label">
+                            <input
+                              type="checkbox"
+                              checked={apps.find((a) => a.id === selectedAppId)?.isDefault || false}
+                              onChange={async () => {
+                                const app = apps.find((a) => a.id === selectedAppId);
+                                if (!app) return;
+                                try {
+                                  await AuthApi.updateApp(app.id, { is_default: !app.isDefault });
+                                  setApps((prev) =>
+                                    prev.map((a) =>
+                                      a.id === app.id ? { ...a, isDefault: !a.isDefault } : a
+                                    )
+                                  );
+                                } catch (err) {
+                                  setError(err instanceof Error ? err.message : 'Failed to update');
+                                }
+                              }}
+                            />
+                            <span>Grant to new users by default</span>
+                          </label>
+                          <label className="admin-checkbox-label">
+                            <input
+                              type="checkbox"
+                              checked={apps.find((a) => a.id === selectedAppId)?.isActive || false}
+                              onChange={async () => {
+                                const app = apps.find((a) => a.id === selectedAppId);
+                                if (!app) return;
+                                try {
+                                  await AuthApi.updateApp(app.id, { is_active: !app.isActive });
+                                  setApps((prev) =>
+                                    prev.map((a) =>
+                                      a.id === app.id ? { ...a, isActive: !a.isActive } : a
+                                    )
+                                  );
+                                } catch (err) {
+                                  setError(err instanceof Error ? err.message : 'Failed to update');
+                                }
+                              }}
+                            />
+                            <span>Active</span>
+                          </label>
+                        </div>
+                      </div>
                       {appUsers.length === 0 ? (
                         <p className="admin-note">No users have explicit access. Admins always have access.</p>
                       ) : (
