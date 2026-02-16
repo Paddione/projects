@@ -12,10 +12,19 @@ declare global {
   }
 }
 
+const REQUEST_ID_HEADER = 'x-request-id';
+const CORRELATION_ID_HEADER = 'x-correlation-id';
+
 export function requestId(req: Request, res: Response, next: NextFunction) {
-  const id = (req.headers['x-request-id'] as string) || randomUUID();
+  const incomingId = (
+    (req.headers[REQUEST_ID_HEADER] as string) ||
+    (req.headers[CORRELATION_ID_HEADER] as string) ||
+    ''
+  ).trim();
+  const id = incomingId || randomUUID();
   req.id = id;
   res.setHeader('X-Request-ID', id);
+  res.setHeader('X-Correlation-ID', id);
   next();
 }
 
