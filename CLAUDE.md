@@ -159,6 +159,23 @@ The `Obsidian/` directory is an Obsidian knowledge vault serving as the high-lev
 
 The Obsidian vault documents Kubernetes manifest locations, environment variable mappings, deployment procedures, and service dependencies. Use service templates in `.obsidian/templates/` when adding new service documentation.
 
+### Frontend Runtime Config (L2P)
+
+The L2P frontend uses **runtime environment injection** instead of build-time `ARG`s. The same Docker image works across all environments (production, dev):
+- `docker-entrypoint.sh` writes `env-config.js` from K8s env vars at container startup
+- `env-config.js` sets `window.__IMPORT_META_ENV__` before React loads
+- `import-meta.ts` reads the global, providing env values to `apiService`, `socketService`, etc.
+- In local dev (`vite dev`), Vite resolves `import.meta.env` from `.env.development` as usual
+
+### CI/CD Pipeline
+
+Root-level GitHub Actions CI at `.github/workflows/ci.yml`:
+- **Path-based filtering**: Only runs jobs for changed services (via `dorny/paths-filter`)
+- **Per-service jobs**: L2P (typecheck + unit tests), Auth (typecheck + unit tests), Shop (unit tests), VideoVault (typecheck + unit tests + build)
+- **Docker validation**: Builds Dockerfiles without pushing (master only, with GHA layer caching)
+- **K8s validation**: `kustomize build` on all manifests to catch syntax errors
+- **Deployment stays manual**: Private registry not reachable from GitHub runners
+
 ### Network Configuration
 
 - `traefik-public` - External routing network
@@ -184,6 +201,8 @@ Three environments with distinct config sources:
 - **Local dev (npm)**: Uses `.env.development` files per-project (e.g., `l2p/frontend/.env.development`)
 - **Cluster dev (skaffold)**: Uses kustomize overlay patches (`k8s/overlays/development/`)
 - **Production**: Uses K8s secrets + deployment env vars
+
+> **Note**: L2P frontend URLs (`VITE_API_URL`, `VITE_SOCKET_URL`, `VITE_AUTH_SERVICE_URL`) are injected at container startup via `docker-entrypoint.sh`, not baked at build time. The same image works for both production and dev environments.
 
 > **Note**: The `l2p/.env` symlink to root `.env` has been removed. L2P frontend dev vars are now in `l2p/frontend/.env.development`.
 

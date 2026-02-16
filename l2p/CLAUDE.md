@@ -219,6 +219,24 @@ Backend: `SocketService.ts` manages connections. Integration tests must use real
 
 Error events follow the pattern `{action}-error` (e.g., `join-error`, `start-game-error`).
 
+### Frontend Runtime Config
+
+The frontend uses **runtime environment injection** — the same Docker image works across all environments:
+
+| Layer | Mechanism | When |
+|-------|-----------|------|
+| Local dev | Vite reads `.env.development` via `import.meta.env` | `npm run dev:frontend` |
+| Production/Dev cluster | `docker-entrypoint.sh` writes `env-config.js` from K8s env vars | Container startup |
+| Tests | `test-setup.ts` sets `globalThis.__IMPORT_META_ENV__` | Jest test runner |
+
+**Key files**:
+- `docker-entrypoint.sh` — generates `/usr/share/nginx/html/env-config.js` at startup
+- `public/env-config.js` — placeholder (overwritten in production)
+- `vite.config.ts` `define` block — maps `__IMPORT_META_ENV__` to `window.__IMPORT_META_ENV__` in production builds, `import.meta.env` in dev
+- `src/utils/import-meta.ts` — reads the global, consumed by all services
+
+Skaffold build args for frontend URLs (`VITE_API_URL`, `VITE_SOCKET_URL`) have been removed. Environment differences are handled entirely by K8s deployment env vars.
+
 ### Authentication (Dual-Auth Pattern)
 
 L2P has two auth layers that must stay in sync:

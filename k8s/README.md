@@ -310,6 +310,10 @@ kubectl logs -l app=csi-smb-controller -n kube-system
                                           └──────────────┘
 ```
 
+## L2P Frontend Runtime Config
+
+The L2P frontend image is environment-agnostic — URLs are injected at container startup, not at build time. The `docker-entrypoint.sh` script reads K8s deployment env vars (`VITE_API_URL`, `VITE_SOCKET_URL`, `VITE_AUTH_SERVICE_URL`) and writes `/usr/share/nginx/html/env-config.js` before starting nginx. This means the same image works for both production (`l2p.korczewski.de`) and dev (`dev-l2p.korczewski.de`) environments.
+
 ## Services
 
 | Service | Port | Health Endpoint | Domain |
