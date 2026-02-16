@@ -154,7 +154,7 @@ patches:
                     value: "https://dev-videovault.korczewski.de,https://dev-video.korczewski.de"
 
   # ---------------------------------------------------------------------------
-  # L2P Frontend: Dev environment reference (actual values baked at build time)
+  # L2P Frontend: Dev environment (runtime config via docker-entrypoint.sh)
   # ---------------------------------------------------------------------------
   - target:
       kind: Deployment

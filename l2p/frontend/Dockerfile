@@ -59,9 +59,7 @@ RUN npm install --legacy-peer-deps && \
 FROM dependencies AS build
 WORKDIR /app
 
-# Accept build arguments
-ARG VITE_API_URL=https://l2p.korczewski.de/api
-ARG VITE_SOCKET_URL=https://l2p.korczewski.de
+# Accept build arguments (URL config is injected at runtime via docker-entrypoint.sh)
 ARG VITE_NODE_ENV=production
 ARG VITE_APP_ENVIRONMENT=production
 
@@ -80,13 +78,11 @@ COPY --chown=nodejs:nodejs l2p/frontend/nginx.conf ./
 
 # Set production environment variables for Vite build
 ENV NODE_ENV=production
-ENV VITE_API_URL=${VITE_API_URL}
-ENV VITE_SOCKET_URL=${VITE_SOCKET_URL}
 ENV VITE_NODE_ENV=${VITE_NODE_ENV}
 ENV VITE_APP_ENVIRONMENT=${VITE_APP_ENVIRONMENT}
 
 # Build the application with optimizations
-RUN echo "Building with VITE_API_URL=${VITE_API_URL}" && npm run build
+RUN npm run build
 
 # Production stage with Nginx and security hardening
 FROM nginx:alpine AS production
@@ -103,8 +99,12 @@ RUN addgroup -g 1001 -S nginx-app && \
 # Copy built application with proper ownership
 COPY --from=build --chown=nginx-app:nginx-app /app/dist /usr/share/nginx/html
 
-# Copy optimized nginx configuration  
+# Copy optimized nginx configuration
 COPY --from=build --chown=nginx-app:nginx-app /app/nginx.conf /etc/nginx/nginx.conf
+
+# Copy runtime environment entrypoint
+COPY --chown=nginx-app:nginx-app l2p/frontend/docker-entrypoint.sh /docker-entrypoint.sh
+RUN chmod +x /docker-entrypoint.sh
 
 # Create necessary directories and set permissions
 RUN mkdir -p /var/cache/nginx /var/log/nginx /var/run && \
@@ -127,8 +127,8 @@ EXPOSE 80
 HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
     CMD curl -f http://localhost:80/ || exit 1
 
-# Use dumb-init for proper signal handling
-CMD ["dumb-init", "nginx", "-g", "daemon off;"]
+# Use entrypoint to inject runtime env config, then start nginx
+ENTRYPOINT ["/docker-entrypoint.sh"]
 
 # Add labels for monitoring and management
 LABEL maintainer="Learn2Play Team" \

@@ -36,15 +36,11 @@ build:
       docker:
         dockerfile: l2p/backend/Dockerfile
 
-    # L2P Frontend
+    # L2P Frontend (URLs injected at runtime via docker-entrypoint.sh)
     - image: korczewski/l2p-frontend
       context: ..
       docker:
         dockerfile: l2p/frontend/Dockerfile
-        buildArgs:
-          VITE_API_URL: "https://l2p.korczewski.de/api"
-          VITE_SOCKET_URL: "https://l2p.korczewski.de"
-          VITE_AUTH_SERVICE_URL: "https://auth.korczewski.de"
 
     # Shop Service
     - image: korczewski/shop
@@ -224,10 +220,6 @@ profiles:
           context: ..
           docker:
             dockerfile: l2p/frontend/Dockerfile
-            buildArgs:
-              VITE_API_URL: "https://dev-l2p.korczewski.de/api"
-              VITE_SOCKET_URL: "https://dev-l2p.korczewski.de"
-              VITE_AUTH_SERVICE_URL: "https://dev-auth.korczewski.de"
         - image: korczewski/shop
           context: ..
           docker:

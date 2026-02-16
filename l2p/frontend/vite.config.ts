@@ -239,7 +239,9 @@ function mockApiMiddleware() {
 export default defineConfig({
   plugins: [react(), mockApiMiddleware()],
   define: {
-    __IMPORT_META_ENV__: 'import.meta.env',
+    __IMPORT_META_ENV__: process.env.NODE_ENV === 'production'
+      ? 'window.__IMPORT_META_ENV__'  // Runtime: read from env-config.js
+      : 'import.meta.env',            // Dev: use Vite's built-in handling
   },
   resolve: {
     alias: {

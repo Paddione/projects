@@ -53,8 +53,7 @@ spec:
             - name: http
               containerPort: 80
               protocol: TCP
-          # Note: Frontend env vars are baked into the build
-          # These are just for reference/debugging
+          # Runtime environment config (injected by docker-entrypoint.sh at startup)
           env:
             - name: VITE_API_URL
               value: "https://l2p.korczewski.de/api"
