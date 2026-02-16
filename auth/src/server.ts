@@ -17,6 +17,7 @@ import oauthRoutes from './routes/oauth.js';
 import appsRoutes from './routes/apps.js';
 import adminRoutes from './routes/admin.js';
 import accessRequestsRoutes from './routes/access-requests.js';
+import healthRoutes from './routes/health.js';
 import { client } from './config/database.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -155,10 +156,8 @@ app.use(rateLimitWarning);
 // ROUTES
 // ============================================================================
 
-// Health check (minimal info to avoid service fingerprinting)
-app.get('/health', (_req, res) => {
-  res.status(200).json({ status: 'ok' });
-});
+// Health check routes (k8s probes + detailed metrics)
+app.use('/health', healthRoutes);
 
 // API info (moved to /api endpoint)
 app.get('/api', (_req, res) => {
@@ -244,7 +243,7 @@ app.use(express.static(publicPath));
 // Serve React app for all other routes (SPA fallback)
 app.get('*', (req, res, next) => {
   // Skip API routes and health check
-  if (req.path.startsWith('/api') || req.path === '/health') {
+  if (req.path.startsWith('/api') || req.path.startsWith('/health')) {
     return next();
   }
   const indexPath = join(publicPath, 'index.html');
