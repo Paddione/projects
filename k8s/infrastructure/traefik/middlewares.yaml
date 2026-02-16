@@ -252,3 +252,90 @@ spec:
         namespace: korczewski-infra
       - name: compression
         namespace: korczewski-infra
+---
+# Shop App-Level Authentication Middleware (ForwardAuth)
+# Verifies user has access to the shop application
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: shop-auth
+  namespace: korczewski-infra
+  labels:
+    app: traefik
+    app.kubernetes.io/component: ingress-controller
+    app.kubernetes.io/part-of: korczewski
+    tier: infrastructure
+spec:
+  forwardAuth:
+    address: "http://auth.korczewski-services.svc.cluster.local:5500/api/auth/verify?app=shop"
+    trustForwardHeader: true
+    authResponseHeaders:
+      - "X-Auth-User"
+      - "X-Auth-Email"
+      - "X-Auth-Role"
+      - "X-Auth-User-Id"
+---
+# Shop Auth Chain Middleware
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: shop-auth-chain
+  namespace: korczewski-infra
+  labels:
+    app: traefik
+    app.kubernetes.io/component: ingress-controller
+    app.kubernetes.io/part-of: korczewski
+    tier: infrastructure
+spec:
+  chain:
+    middlewares:
+      - name: shop-auth
+        namespace: korczewski-infra
+      - name: rate-limit
+        namespace: korczewski-infra
+      - name: security-headers
+        namespace: korczewski-infra
+      - name: compression
+        namespace: korczewski-infra
+---
+# VideoVault App-Level Authentication Middleware (ForwardAuth)
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: videovault-auth
+  namespace: korczewski-infra
+  labels:
+    app: traefik
+    app.kubernetes.io/component: ingress-controller
+    app.kubernetes.io/part-of: korczewski
+    tier: infrastructure
+spec:
+  forwardAuth:
+    address: "http://auth.korczewski-services.svc.cluster.local:5500/api/auth/verify?app=videovault"
+    trustForwardHeader: true
+    authResponseHeaders:
+      - "X-Auth-User"
+      - "X-Auth-Email"
+      - "X-Auth-Role"
+      - "X-Auth-User-Id"
+---
+# VideoVault Auth Chain Middleware
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: videovault-auth-chain
+  namespace: korczewski-infra
+  labels:
+    app: traefik
+    app.kubernetes.io/component: ingress-controller
+    app.kubernetes.io/part-of: korczewski
+    tier: infrastructure
+spec:
+  chain:
+    middlewares:
+      - name: videovault-auth
+        namespace: korczewski-infra
+      - name: security-headers
+        namespace: korczewski-infra
+      - name: compression
+        namespace: korczewski-infra
