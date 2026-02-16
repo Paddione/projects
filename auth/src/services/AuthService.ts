@@ -1,7 +1,7 @@
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import { db } from '../config/database.js';
-import { users, type User, type NewUser } from '../db/schema.js';
+import { users, apps, userAppAccess, type User, type NewUser } from '../db/schema.js';
 import { eq, or, sql, and } from 'drizzle-orm';
 import { TokenService } from './TokenService.js';
 import { EmailService } from './EmailService.js';
@@ -211,6 +211,25 @@ export class AuthService {
 
     if (!createdUser) {
       throw new Error('Failed to create user');
+    }
+
+    // Auto-grant default apps
+    try {
+      const defaultApps = await db
+        .select({ id: apps.id })
+        .from(apps)
+        .where(and(eq(apps.is_default, true), eq(apps.is_active, true)));
+
+      if (defaultApps.length > 0) {
+        await db.insert(userAppAccess).values(
+          defaultApps.map((app) => ({
+            user_id: createdUser.id,
+            app_id: app.id,
+          }))
+        );
+      }
+    } catch (error) {
+      console.error('Failed to grant default apps (non-fatal):', error);
     }
 
     // Send verification email
