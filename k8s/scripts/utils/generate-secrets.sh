@@ -111,6 +111,7 @@ stringData:
   SMTP_USER: "$(get_env SMTP_USER)"
   SMTP_PASS: "$(get_env SMTP_PASS)"
   SMTP_FROM: "$(get_env SMTP_FROM)"
+  RATE_LIMIT_BYPASS_KEY: "$(get_env RATE_LIMIT_BYPASS_KEY)"
 EOF
 log_info "Created auth-secret.yaml"
 
@@ -136,6 +137,7 @@ stringData:
   SMTP_USER: "$(get_env SMTP_USER)"
   SMTP_PASS: "$(get_env SMTP_PASS)"
   SMTP_FROM: "$(get_env SMTP_FROM)"
+  RATE_LIMIT_BYPASS_KEY: "$(get_env RATE_LIMIT_BYPASS_KEY)"
 EOF
 log_info "Created l2p-backend-secret.yaml"
 
@@ -186,6 +188,7 @@ stringData:
   VIDEO_SESSION_SECRET: "$(get_env VIDEO_SESSION_SECRET)"
   VIDEO_ADMIN_USER: "$(get_env VIDEO_ADMIN_USER admin)"
   VIDEO_ADMIN_PASS: "$(get_env VIDEO_ADMIN_PASS)"
+  RATE_LIMIT_BYPASS_KEY: "$(get_env RATE_LIMIT_BYPASS_KEY)"
 EOF
 log_info "Created videovault-secret.yaml"
 

@@ -246,3 +246,5 @@ debug-*.jpeg
 *-debug.png
 *-debug.jpg
 *.debug.log
+**/.playwright-mcp/
+**/test_output.txt

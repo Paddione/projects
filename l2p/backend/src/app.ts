@@ -12,6 +12,9 @@ import questionManagementRoutes from './routes/question-management.js';
 import scoringRoutes from './routes/scoring.js';
 import perksRoutes from './routes/perks.js';
 import perkDraftRoutes from './routes/perkDraft.js';
+import hallOfFameRoutes from './routes/hall-of-fame.js';
+import characterRoutes from './routes/characters.js';
+import adminRoutes from './routes/admin.js';
 
 export function setupApp(app: Application) {
   // Trust proxy for rate limiting behind Nginx/Traefik
@@ -47,22 +50,34 @@ export function setupApp(app: Application) {
     credentials: true,
   }));
 
-  // Rate limiting — higher limit in test/dev environments for E2E test throughput
-  const isTestEnv = process.env.NODE_ENV === 'test' || process.env.VITE_TEST_MODE === 'true';
-  const apiLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: isTestEnv ? 5000 : 300, // 5000 in test, 300 in production
-    skip: (req) => {
-      // Skip health check endpoints used by Kubernetes probes
-      return req.path === '/api/health' || req.path === '/healthz';
-    },
-    message: 'Too many requests from this IP, please try again later',
-    standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
-    legacyHeaders: false, // Disable the `X-RateLimit-*` headers
-  });
+  // Rate limiting — fully disabled in test/dev environments for E2E and browser test throughput
+  const isRateLimitDisabled = (
+    process.env.DISABLE_RATE_LIMITING === 'true' ||
+    process.env.NODE_ENV === 'test' ||
+    process.env.NODE_ENV === 'development' ||
+    process.env.VITE_TEST_MODE === 'true'
+  );
 
-  // Apply rate limiting to all API routes
-  app.use('/api/', apiLimiter);
+  // Bypass key for production testing (e.g., OpenClaw browser tests)
+  const rateLimitBypassKey = process.env.RATE_LIMIT_BYPASS_KEY || '';
+
+  if (!isRateLimitDisabled) {
+    const apiLimiter = rateLimit({
+      windowMs: 15 * 60 * 1000, // 15 minutes
+      max: 300,
+      skip: (req) => {
+        if (req.path === '/api/health' || req.path === '/healthz') return true;
+        if (rateLimitBypassKey && req.headers['x-rate-limit-bypass'] === rateLimitBypassKey) return true;
+        return false;
+      },
+      message: 'Too many requests from this IP, please try again later',
+      standardHeaders: true,
+      legacyHeaders: false,
+    });
+
+    // Apply rate limiting to all API routes
+    app.use('/api/', apiLimiter);
+  }
 
   // Body parsing middleware
   app.use(express.json({ limit: '10mb' }));
@@ -82,10 +97,13 @@ export function setupApp(app: Application) {
   app.use('/api/health', healthRoutes);
   app.use('/api/lobbies', lobbyRoutes);
   app.use('/api/questions', questionRoutes);
-  app.use('/api/admin/questions', questionManagementRoutes);
+  app.use('/api/question-management', questionManagementRoutes);
   app.use('/api/scoring', scoringRoutes);
+  app.use('/api/hall-of-fame', hallOfFameRoutes);
+  app.use('/api/characters', characterRoutes);
   app.use('/api/perks/draft', perkDraftRoutes);
   app.use('/api/perks', perksRoutes);
+  app.use('/api/admin', adminRoutes);
 
   // Health check endpoint
   app.get('/healthz', (req: Request, res: Response) => {

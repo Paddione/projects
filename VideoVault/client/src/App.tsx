@@ -13,7 +13,33 @@ import DuplicatesPage from '@/pages/duplicates';
 import TagsPage from '@/pages/tags';
 import AnalyticsPage from '@/pages/analytics';
 import FocusModePage from '@/pages/focus-mode';
+import LoginPage from '@/pages/login';
 import NotFound from '@/pages/not-found';
+import { AuthService } from '@/services/auth';
+import { useLocation } from 'wouter';
+import { useEffect, useState } from 'react';
+
+function ProtectedRoute({ component: Component, adminOnly = true, ...props }: any) {
+  const [isAdmin, setIsAdmin] = useState(AuthService.cachedIsAdmin);
+  const [, setLocation] = useLocation();
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    void (async () => {
+      const isA = await AuthService.refresh();
+      setIsAdmin(isA);
+      setLoading(false);
+      if (!isA && adminOnly) {
+        setLocation('/login');
+      }
+    })();
+  }, [setLocation, adminOnly]);
+
+  if (loading) return null;
+  if (adminOnly && !isAdmin) return null;
+
+  return <Component {...props} />;
+}
 
 function Router() {
   return (
@@ -23,7 +49,10 @@ function Router() {
       <Route path="/duplicates" component={DuplicatesPage} />
       <Route path="/tags" component={TagsPage} />
       <Route path="/analytics" component={AnalyticsPage} />
-      <Route path="/admin/errors" component={AdminErrorsPage} />
+      <Route path="/login" component={LoginPage} />
+      <Route path="/admin/errors">
+        {(params) => <ProtectedRoute component={AdminErrorsPage} {...params} />}
+      </Route>
       <Route component={NotFound} />
     </Switch>
   );

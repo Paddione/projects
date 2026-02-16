@@ -804,9 +804,34 @@ export class SocketService {
   }
 
   /**
+   * Check if a socket connection has the rate limit bypass key.
+   */
+  private hasSocketBypassKey(socketId: string): boolean {
+    const bypassKey = process.env['RATE_LIMIT_BYPASS_KEY'];
+    if (!bypassKey) return false;
+    // Check the handshake headers for the bypass key
+    const socket = this.io.sockets.sockets.get(socketId);
+    return socket?.handshake?.headers?.['x-rate-limit-bypass'] === bypassKey;
+  }
+
+  /**
    * Per-socket rate limiting. Returns true if the request is allowed, false if rate-limited.
+   * Disabled in test/development environments, when DISABLE_RATE_LIMITING is set,
+   * or when the socket carries a valid bypass key (for production browser testing).
    */
   private checkRateLimit(socketId: string, event: string, maxRequests: number, windowMs: number): boolean {
+    if (
+      process.env['DISABLE_RATE_LIMITING'] === 'true' ||
+      process.env['NODE_ENV'] === 'test' ||
+      process.env['NODE_ENV'] === 'development'
+    ) {
+      return true;
+    }
+
+    if (this.hasSocketBypassKey(socketId)) {
+      return true;
+    }
+
     const key = `${socketId}:${event}`;
     const now = Date.now();
     const limiter = this.rateLimiters.get(key);

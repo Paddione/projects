@@ -4,6 +4,7 @@ import {
   reportError,
   getErrorStats,
   healthCheck,
+  publicHealthCheck,
   listClientErrors,
   getClientError,
   deleteClientError,
@@ -65,12 +66,13 @@ const AUTH_SERVICE_API_URL = authServiceUrl.endsWith('/api')
   : `${authServiceUrl}/api`;
 
 function extractAccessToken(req: Request): string | null {
-  const authHeader = req.headers.authorization || '';
+  const authHeader = (req.headers.authorization as string) || '';
   if (authHeader.startsWith('Bearer ')) {
     return authHeader.slice(7);
   }
-  const cookieToken = req.cookies?.accessToken;
-  return cookieToken || null;
+  const cookies = (req as any).cookies as Record<string, string> | undefined;
+  const cookieToken = cookies?.accessToken;
+  return (cookieToken as string | undefined) || null;
 }
 
 async function fetchAuthUser(req: Request): Promise<AuthServiceUser | null> {
@@ -84,9 +86,9 @@ async function fetchAuthUser(req: Request): Promise<AuthServiceUser | null> {
     });
 
     if (!response.ok) return null;
-    const data = await response.json().catch(() => null);
+    const data = await (response.json() as Promise<{ user: AuthServiceUser | null } | null>).catch(() => null);
     return data?.user ?? null;
-  } catch (error) {
+  } catch (_error) {
     return null;
   }
 }
@@ -105,7 +107,7 @@ async function requireAdmin(req: Request, res: Response, next: NextFunction) {
     }
     (req as Request & { user?: AuthServiceUser }).user = user;
     next();
-  } catch (error) {
+  } catch (_error) {
     res.status(503).json({ message: 'Authentication service unavailable' });
   }
 }
@@ -127,13 +129,13 @@ const adminLimiter = rateLimit({
 
 export function registerRoutes(app: Express): Server {
   // Public auth status endpoint (no auth required)
-  app.get('/api/auth/status', async (req: Request, res: Response) => {
+  app.get('/api/auth/status', asyncHandler(async (req: Request, res: Response) => {
     const user = await fetchAuthUser(req);
     res.json({ isAdmin: user?.role === 'ADMIN' });
-  });
+  }));
 
   // Auth routes (session-based)
-  app.post('/api/auth/login', async (req: Request, res: Response) => {
+  app.post('/api/auth/login', asyncHandler(async (req: Request, res: Response) => {
     const { username, password } = (req.body || {}) as AuthBody;
     try {
       const response = await fetch(`${AUTH_SERVICE_API_URL}/auth/login`, {
@@ -155,8 +157,8 @@ export function registerRoutes(app: Express): Server {
     } catch (error) {
       return res.status(503).json({ message: 'Authentication service unavailable' });
     }
-  });
-  app.post('/api/auth/logout', async (req: Request, res: Response) => {
+  }));
+  app.post('/api/auth/logout', asyncHandler(async (req: Request, res: Response) => {
     const token = extractAccessToken(req);
     if (token) {
       try {
@@ -167,7 +169,7 @@ export function registerRoutes(app: Express): Server {
       } catch { }
     }
     res.json({ ok: true });
-  });
+  }));
 
   // CSRF token endpoint for SPA
   app.get('/api/csrf', (req: Request, res: Response) => {
@@ -199,6 +201,7 @@ export function registerRoutes(app: Express): Server {
     asyncHandler(bulkDeleteClientErrors),
   );
   app.get('/api/health', asyncHandler(healthCheck));
+  app.get('/api/health/public', asyncHandler(publicHealthCheck));
   app.get('/api/db/health', asyncHandler(dbHealth));
   app.get('/api/settings/:key', asyncHandler(getSetting));
   app.post('/api/settings/:key', asyncHandler(setSetting));

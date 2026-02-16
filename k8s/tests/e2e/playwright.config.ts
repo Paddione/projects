@@ -28,6 +28,10 @@ export default defineConfig({
     screenshot: 'only-on-failure',
     video: 'on-first-retry',
     viewport: { width: 1280, height: 720 },
+    // Bypass rate limiting for automated tests (sent with every request including XHR/fetch)
+    extraHTTPHeaders: {
+      ...(process.env.RATE_LIMIT_BYPASS_KEY ? { 'x-rate-limit-bypass': process.env.RATE_LIMIT_BYPASS_KEY } : {}),
+    },
     launchOptions: {
       args: [
         '--no-sandbox',

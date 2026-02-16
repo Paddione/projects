@@ -23,7 +23,7 @@ spec:
     matchLabels:
       app: videovault
   strategy:
-    type: Recreate  # Single replica with persistent storage
+    type: Recreate # Single replica with persistent storage
   template:
     metadata:
       labels:
@@ -121,7 +121,7 @@ spec:
               mountPath: /app/logs
           livenessProbe:
             httpGet:
-              path: /api/health
+              path: /api/health/public
               port: 5000
             initialDelaySeconds: 30
             periodSeconds: 30
@@ -129,7 +129,7 @@ spec:
             failureThreshold: 3
           readinessProbe:
             httpGet:
-              path: /api/health
+              path: /api/health/public
               port: 5000
             initialDelaySeconds: 10
             periodSeconds: 10
@@ -137,7 +137,7 @@ spec:
             failureThreshold: 3
           startupProbe:
             httpGet:
-              path: /api/health
+              path: /api/health/public
               port: 5000
             initialDelaySeconds: 15
             periodSeconds: 5

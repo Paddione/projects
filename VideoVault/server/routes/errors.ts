@@ -103,8 +103,8 @@ export async function getErrorStats(req: Request, res: Response) {
 export async function listClientErrors(req: Request, res: Response) {
   try {
     if (!db) return res.status(503).json({ error: 'Database not configured' });
-    const limit = Math.min(Math.max(parseInt(String(req.query.limit || '100'), 10) || 100, 1), 500);
-    const offset = Math.max(parseInt(String(req.query.offset || '0'), 10) || 0, 0);
+    const limit = Math.min(Math.max(parseInt(String(req.query.limit ?? '100'), 10) || 100, 1), 500);
+    const offset = Math.max(parseInt(String(req.query.offset ?? '0'), 10) || 0, 0);
     const code = req.query.code ? String(req.query.code) : undefined;
     const severity = req.query.severity ? String(req.query.severity) : undefined;
     const from = req.query.from ? new Date(String(req.query.from)) : undefined;
@@ -217,4 +217,8 @@ export async function healthCheck(req: Request, res: Response) {
       error: (error as Error).message,
     });
   }
+}
+// Minimal public health check for monitoring
+export async function publicHealthCheck(_req: Request, res: Response) {
+  res.json({ status: 'ok' });
 }
