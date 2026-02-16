@@ -164,7 +164,7 @@ app.get('/api', (_req, res) => {
   res.status(200).json({
     name: 'Unified Authentication Service',
     version: '1.0.0',
-    description: 'Centralized authentication for l2p, VideoVault, and payment projects',
+    description: 'Centralized authentication for l2p, VideoVault, and shop projects',
     endpoints: {
       health: 'GET /health',
       auth: {
@@ -193,6 +193,7 @@ app.get('/api', (_req, res) => {
         updateUser: 'PATCH /api/admin/users/:userId',
         deleteUser: 'DELETE /api/admin/users/:userId',
         apps: 'GET /api/admin/apps',
+        updateApp: 'PATCH /api/admin/apps/:id',
         appUsers: 'GET /api/admin/apps/:appId/users',
         userApps: 'GET /api/admin/users/:userId/apps',
         updateUserApps: 'PUT /api/admin/users/:userId/apps',
@@ -273,7 +274,7 @@ async function syncAppCatalog() {
       VALUES
         ('l2p', 'Learn2Play', 'Multiplayer quiz platform', 'https://l2p.korczewski.de'),
         ('videovault', 'VideoVault', 'Video manager', 'https://videovault.korczewski.de'),
-        ('payment', 'Payment', 'Payments and wallet dashboard', 'https://shop.korczewski.de')
+        ('shop', 'GoldCoins Shop', 'Digital currency shop', 'https://shop.korczewski.de')
       ON CONFLICT (key) DO UPDATE SET
         name = EXCLUDED.name,
         description = EXCLUDED.description,
