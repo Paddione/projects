@@ -32,8 +32,10 @@ interface UserLoadout {
   active_avatar: string;
   active_badge?: string;
   active_theme: string;
+  active_title?: string;
   perks_config: any;
   active_perks: UserPerk[];
+  active_cosmetic_perks: Record<string, { perk_id: number; configuration: any }>;
 }
 
 interface PerksData {
@@ -714,19 +716,32 @@ const PerksManager: React.FC = () => {
             <p className="slots-subtitle">Tap a slot to view and change its active perk</p>
             <div className="perk-slots-grid">
               {PERK_SLOTS.map(slot => {
-                const activePerk = perksData.activePerks.find(p => p.perk?.type === slot.type);
-                // For cosmetic slots, check loadout to determine active state
-                let slotActiveName = activePerk?.perk?.title || null;
-                if (!slotActiveName && perksData.loadout) {
-                  if (slot.type === 'avatar' && perksData.loadout.active_avatar && perksData.loadout.active_avatar !== 'student') {
-                    slotActiveName = perksData.loadout.active_avatar;
-                  } else if (slot.type === 'theme' && perksData.loadout.active_theme && perksData.loadout.active_theme !== 'default') {
-                    slotActiveName = perksData.loadout.active_theme;
-                  } else if (slot.type === 'badge' && perksData.loadout.active_badge) {
-                    slotActiveName = perksData.loadout.active_badge;
-                  }
+                // Determine active perk for this slot from loadout data
+                const loadout = perksData.loadout;
+                const cosmeticPerks = loadout?.active_cosmetic_perks || {};
+                let slotActiveName: string | null = null;
+                let slotActivePerkId: number | null = null;
+
+                // Check dedicated columns for avatar/badge/theme
+                if (slot.type === 'avatar' && loadout?.active_avatar && loadout.active_avatar !== 'student') {
+                  slotActiveName = loadout.active_avatar;
+                } else if (slot.type === 'theme' && loadout?.active_theme && loadout.active_theme !== 'default') {
+                  slotActiveName = loadout.active_theme;
+                } else if (slot.type === 'badge' && loadout?.active_badge) {
+                  slotActiveName = loadout.active_badge;
+                } else if (slot.type === 'title' && loadout?.active_title) {
+                  slotActiveName = loadout.active_title;
                 }
-                const hasActive = !!activePerk || !!slotActiveName;
+
+                // Check perks_config for other slot types
+                if (!slotActiveName && cosmeticPerks[slot.type]) {
+                  slotActivePerkId = cosmeticPerks[slot.type].perk_id;
+                  // Find the perk name from the full perks list
+                  const matchingPerk = perksData.perks.find(p => p.perk_id === slotActivePerkId);
+                  slotActiveName = matchingPerk?.perk?.title || `Perk #${slotActivePerkId}`;
+                }
+
+                const hasActive = !!slotActiveName;
                 const isSelected = activeFilter === slot.id;
                 const slotStatus = isSelected ? 'Picked' : hasActive ? 'Active' : 'Empty';
 

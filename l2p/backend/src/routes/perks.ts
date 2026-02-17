@@ -54,7 +54,8 @@ router.get('/user', authenticate, async (req: Request, res: Response): Promise<v
         active_avatar: 'student',
         active_theme: 'default',
         perks_config: {},
-        active_perks: activePerks
+        active_perks: activePerks,
+        active_cosmetic_perks: {},
       };
     }
 

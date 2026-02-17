@@ -34,8 +34,10 @@ export interface UserLoadout {
   active_avatar: string;
   active_badge?: string;
   active_theme: string;
+  active_title?: string;
   perks_config: any;
   active_perks: UserPerk[];
+  active_cosmetic_perks: Record<string, { perk_id: number; configuration: any }>;
 }
 
 export class PerksManager {
@@ -356,7 +358,22 @@ export class PerksManager {
       return false;
     }
 
-    const perkType = perkResult.rows[0]!['type'];
+    const perkType = perkResult.rows[0]!['type'] as string;
+
+    // For types stored in perks_config, clear the slot entirely
+    if (['helper', 'display', 'emote', 'sound', 'multiplier'].includes(perkType)) {
+      await this.clearPerksConfigSlot(userId, perkType);
+      return true;
+    }
+
+    // For title, clear both the column and perks_config
+    if (perkType === 'title') {
+      await this.db.query('UPDATE users SET active_title = NULL WHERE id = $1', [userId]);
+      await this.clearPerksConfigSlot(userId, perkType);
+      return true;
+    }
+
+    // For avatar/badge/theme, reset to defaults
     const defaults = this.getDefaultConfigurationForPerk(perkType);
     await this.updateUserActiveSettings(userId, perkId, perkType, defaults);
     return true;
@@ -367,8 +384,8 @@ export class PerksManager {
    */
   async getUserLoadout(userId: number): Promise<UserLoadout | null> {
     const query = `
-      SELECT active_avatar, active_badge, active_theme, perks_config
-      FROM users 
+      SELECT active_avatar, active_badge, active_theme, active_title, perks_config
+      FROM users
       WHERE id = $1
     `;
 
@@ -380,15 +397,40 @@ export class PerksManager {
 
     const user = result.rows[0]!;
     const activePerks = await this.getActivePerks(userId);
+    const perksConfig = (user['perks_config'] as Record<string, any>) || {};
+
+    // Build active cosmetic perks map from dedicated columns + perks_config
+    const activeCosmeticPerks: Record<string, { perk_id: number; configuration: any }> = {};
+    // Slots stored in perks_config JSONB
+    for (const slotType of ['helper', 'display', 'emote', 'sound', 'multiplier', 'title']) {
+      if (perksConfig[slotType]?.perk_id) {
+        activeCosmeticPerks[slotType] = perksConfig[slotType];
+      }
+    }
 
     return {
       user_id: userId,
       active_avatar: user['active_avatar'],
       active_badge: user['active_badge'],
       active_theme: user['active_theme'],
-      perks_config: user['perks_config'],
-      active_perks: activePerks
+      active_title: user['active_title'] || undefined,
+      perks_config: perksConfig,
+      active_perks: activePerks,
+      active_cosmetic_perks: activeCosmeticPerks,
     };
+  }
+
+  /**
+   * Get active cosmetic multiplier perk IDs for a user (for GameService integration)
+   */
+  async getActiveCosmeticMultiplierPerkIds(userId: number): Promise<number[]> {
+    const result = await this.db.query('SELECT perks_config FROM users WHERE id = $1', [userId]);
+    const config = (result.rows[0]?.['perks_config'] as Record<string, any>) || {};
+    const multiplierSlot = config['multiplier'];
+    if (multiplierSlot?.perk_id) {
+      return [multiplierSlot.perk_id];
+    }
+    return [];
   }
 
   /**
@@ -410,6 +452,20 @@ export class PerksManager {
         return { selected_avatar: 'student' };
       case 'theme':
         return { theme_name: 'default' };
+      case 'badge':
+        return { badge_style: 'classic' };
+      case 'helper':
+        return { highlight_style: 'border' };
+      case 'display':
+        return { position: 'top-right' };
+      case 'emote':
+        return { emote_set: 'classic' };
+      case 'sound':
+        return { pack: 'retro' };
+      case 'multiplier':
+        return { activation: 'automatic' };
+      case 'title':
+        return { display_style: 'glow' };
       default:
         return {};
     }
@@ -478,29 +534,60 @@ export class PerksManager {
    * Update user's active settings when a perk is activated
    */
   private async updateUserActiveSettings(userId: number, perkId: number, perkType: string, configuration: any) {
-    let updateQuery = '';
-    let updateValue = '';
-
     switch (perkType) {
-      case 'avatar':
-        updateQuery = 'UPDATE users SET active_avatar = $2 WHERE id = $1';
-        updateValue = configuration.selected_avatar || 'student';
+      case 'avatar': {
+        const value = configuration.selected_avatar || 'student';
+        await this.db.query('UPDATE users SET active_avatar = $2 WHERE id = $1', [userId, value]);
         break;
-      case 'badge':
-        updateQuery = 'UPDATE users SET active_badge = $2 WHERE id = $1';
-        // Create a badge identifier that includes the perk and style
+      }
+      case 'badge': {
         const badgeStyle = configuration.badge_style || configuration.color || 'classic';
-        updateValue = `perk_${perkId}_${badgeStyle}`;
+        const value = `perk_${perkId}_${badgeStyle}`;
+        await this.db.query('UPDATE users SET active_badge = $2 WHERE id = $1', [userId, value]);
         break;
-      case 'theme':
-        updateQuery = 'UPDATE users SET active_theme = $2 WHERE id = $1';
-        updateValue = configuration.theme_name || 'default';
+      }
+      case 'theme': {
+        const value = configuration.theme_name || 'default';
+        await this.db.query('UPDATE users SET active_theme = $2 WHERE id = $1', [userId, value]);
         break;
+      }
+      case 'title': {
+        const value = configuration.title_text || configuration.display_style || '';
+        await this.db.query('UPDATE users SET active_title = $2 WHERE id = $1', [userId, value]);
+        // Also store in perks_config for perk_id tracking
+        await this.updatePerksConfig(userId, perkType, perkId, configuration);
+        break;
+      }
+      case 'helper':
+      case 'display':
+      case 'emote':
+      case 'sound':
+      case 'multiplier': {
+        await this.updatePerksConfig(userId, perkType, perkId, configuration);
+        break;
+      }
     }
+  }
 
-    if (updateQuery) {
-      await this.db.query(updateQuery, [userId, updateValue]);
-    }
+  /**
+   * Store a cosmetic perk activation in the perks_config JSONB column
+   */
+  private async updatePerksConfig(userId: number, slotType: string, perkId: number, configuration: any) {
+    // Read current perks_config, merge the slot, write back
+    const result = await this.db.query('SELECT perks_config FROM users WHERE id = $1', [userId]);
+    const current = (result.rows[0]?.['perks_config'] as Record<string, any>) || {};
+    current[slotType] = { perk_id: perkId, configuration };
+    await this.db.query('UPDATE users SET perks_config = $2 WHERE id = $1', [userId, JSON.stringify(current)]);
+  }
+
+  /**
+   * Clear a cosmetic perk slot from perks_config
+   */
+  private async clearPerksConfigSlot(userId: number, slotType: string) {
+    const result = await this.db.query('SELECT perks_config FROM users WHERE id = $1', [userId]);
+    const current = (result.rows[0]?.['perks_config'] as Record<string, any>) || {};
+    delete current[slotType];
+    await this.db.query('UPDATE users SET perks_config = $2 WHERE id = $1', [userId, JSON.stringify(current)]);
   }
 
   /**

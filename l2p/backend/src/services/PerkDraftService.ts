@@ -73,4 +73,17 @@ export class PerkDraftService {
     `, [oldLevel, newLevel]);
     return result.rows as DraftPerk[];
   }
+
+  /**
+   * Get perks by their IDs (for loading cosmetic multiplier perks by perk_id)
+   */
+  async getPerksByIds(perkIds: number[]): Promise<DraftPerk[]> {
+    if (perkIds.length === 0) return [];
+    const result = await this.db.query(`
+      SELECT id, name, category, type, effect_type, effect_config, tier, title, description
+      FROM perks
+      WHERE id = ANY($1) AND is_active = true
+    `, [perkIds]);
+    return result.rows as DraftPerk[];
+  }
 }

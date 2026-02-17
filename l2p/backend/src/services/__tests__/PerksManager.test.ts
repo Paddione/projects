@@ -166,7 +166,8 @@ describe('PerksManager', () => {
         active_avatar: 'scientist',
         active_badge: 'perk_1_bronze',
         active_theme: 'dark',
-        perks_config: { test: 'config' }
+        active_title: null,
+        perks_config: { helper: { perk_id: 5, configuration: { highlight_style: 'border' } } }
       };
 
       const mockActivePerks = [
@@ -183,8 +184,12 @@ describe('PerksManager', () => {
         active_avatar: 'scientist',
         active_badge: 'perk_1_bronze',
         active_theme: 'dark',
-        perks_config: { test: 'config' },
-        active_perks: mockActivePerks
+        active_title: undefined,
+        perks_config: mockUser.perks_config,
+        active_perks: mockActivePerks,
+        active_cosmetic_perks: {
+          helper: { perk_id: 5, configuration: { highlight_style: 'border' } }
+        }
       });
     });
 

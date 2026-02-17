@@ -5,8 +5,9 @@ import { ScoringService } from './ScoringService.js';
 import { RequestLogger } from '../middleware/logging.js';
 import { LobbyService } from './LobbyService.js';
 import { CharacterService } from './CharacterService.js';
-import { PerkDraftService } from './PerkDraftService.js';
+import { PerkDraftService, DraftPerk } from './PerkDraftService.js';
 import { PerkEffectEngine, GameplayModifiers, ScoreContext } from './PerkEffectEngine.js';
+import { PerksManager } from './PerksManager.js';
 
 export interface GameState {
   lobbyCode: string;
@@ -28,6 +29,7 @@ export interface GamePlayer {
   username: string;
   character: string;
   characterLevel?: number;
+  title?: string; // Active cosmetic title (e.g., "Master Scholar")
   isHost: boolean;
   score: number;
   multiplier: number;
@@ -414,14 +416,30 @@ export class GameService {
       // Store active game
       this.activeGames.set(lobbyCode, gameState);
 
-      // Load perk modifiers for each player
+      // Load perk modifiers and cosmetic data for each player
+      const perksManager = PerksManager.getInstance();
       for (const player of gameState.players) {
         try {
           const numericId = parseInt(player.id, 10);
           if (!isNaN(numericId)) {
+            // Load gameplay perks
             const activePerks = await this.perkDraftService.getActiveGameplayPerks(numericId);
+
+            // Also load active cosmetic multiplier perks (experience_boost, streak_protector, time_extension)
+            const cosmeticMultiplierIds = await perksManager.getActiveCosmeticMultiplierPerkIds(numericId);
+            if (cosmeticMultiplierIds.length > 0) {
+              const cosmeticPerks = await this.perkDraftService.getPerksByIds(cosmeticMultiplierIds);
+              activePerks.push(...cosmeticPerks);
+            }
+
             if (activePerks.length > 0) {
               player.perkModifiers = PerkEffectEngine.buildModifiers(activePerks);
+            }
+
+            // Load player title from loadout
+            const loadout = await perksManager.getUserLoadout(numericId);
+            if (loadout?.active_title) {
+              player.title = loadout.active_title;
             }
           }
         } catch (e) {
