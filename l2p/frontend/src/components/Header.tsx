@@ -69,9 +69,9 @@ export const Header: React.FC = () => {
   return (
     <header className={styles.header} role="banner">
       <div className={styles.headerContent}>
-        <a href="/" className={styles.logo}>
+        <Link to="/" className={styles.logo}>
           Learn2Play Quiz
-        </a>
+        </Link>
 
         <button
           className={styles.mobileMenuToggle}
@@ -88,15 +88,15 @@ export const Header: React.FC = () => {
 
         <div className={`${styles.headerNav} ${mobileMenuOpen ? styles.headerNavOpen : ''}`}>
           <nav className={`${styles.flex} ${styles.gapMd} ${styles.itemsCenter} ${styles.headerNavLinks}`} role="navigation">
-            <a href="/" className={`${styles.button} ${styles.buttonOutline}`} data-testid="home-page" onClick={() => { handleMenuSelect(); closeMenu() }}>
+            <Link to="/" className={`${styles.button} ${styles.buttonOutline}`} data-testid="home-page" onClick={() => { handleMenuSelect(); closeMenu() }}>
               {t('nav.home')}
-            </a>
-            <a href="/profile" className={`${styles.button} ${styles.buttonOutline}`} data-testid="profile-link" onClick={() => { handleMenuSelect(); closeMenu() }}>
+            </Link>
+            <Link to="/profile" className={`${styles.button} ${styles.buttonOutline}`} data-testid="profile-link" onClick={() => { handleMenuSelect(); closeMenu() }}>
               {t('nav.profile', 'Profile')}
-            </a>
-            <a href="/question-sets" className={`${styles.button} ${styles.buttonOutline}`} onClick={() => { handleMenuSelect(); closeMenu() }}>
+            </Link>
+            <Link to="/question-sets" className={`${styles.button} ${styles.buttonOutline}`} onClick={() => { handleMenuSelect(); closeMenu() }}>
               {t('nav.questionSets', 'Question Sets')}
-            </a>
+            </Link>
             {isAdmin && (
               <Link to="/admin" className={`${styles.button} ${styles.buttonOutline}`} data-testid="admin-dashboard-link" onClick={() => { handleMenuSelect(); closeMenu() }}>
                 Admin
