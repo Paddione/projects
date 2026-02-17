@@ -715,23 +715,35 @@ const PerksManager: React.FC = () => {
             <div className="perk-slots-grid">
               {PERK_SLOTS.map(slot => {
                 const activePerk = perksData.activePerks.find(p => p.perk?.type === slot.type);
+                // For cosmetic slots, check loadout to determine active state
+                let slotActiveName = activePerk?.perk?.title || null;
+                if (!slotActiveName && perksData.loadout) {
+                  if (slot.type === 'avatar' && perksData.loadout.active_avatar && perksData.loadout.active_avatar !== 'student') {
+                    slotActiveName = perksData.loadout.active_avatar;
+                  } else if (slot.type === 'theme' && perksData.loadout.active_theme && perksData.loadout.active_theme !== 'default') {
+                    slotActiveName = perksData.loadout.active_theme;
+                  } else if (slot.type === 'badge' && perksData.loadout.active_badge) {
+                    slotActiveName = perksData.loadout.active_badge;
+                  }
+                }
+                const hasActive = !!activePerk || !!slotActiveName;
                 const isSelected = activeFilter === slot.id;
-                const slotStatus = isSelected ? 'Picked' : activePerk ? 'Active' : 'Empty';
+                const slotStatus = isSelected ? 'Picked' : hasActive ? 'Active' : 'Empty';
 
                 return (
                   <div
                     key={slot.id}
-                    className={`perk-slot-card ${activePerk ? 'occupied' : 'empty'} ${isSelected ? 'selected' : ''}`}
+                    className={`perk-slot-card ${hasActive ? 'occupied' : 'empty'} ${isSelected ? 'selected' : ''}`}
                     onClick={() => setActiveFilter(slot.id)}
                   >
                     <div className="slot-icon">{slot.icon}</div>
                     <div className="slot-info">
                       <div className="slot-label">{slot.label}</div>
-                      <div className="slot-active-name" title={activePerk?.perk?.title || 'None'}>
-                        {activePerk?.perk?.title || 'None selected'}
+                      <div className="slot-active-name" title={slotActiveName || 'None'}>
+                        {slotActiveName || 'None selected'}
                       </div>
                     </div>
-                    <div className={`slot-indicator ${activePerk ? '' : 'empty'} ${isSelected ? 'selected' : ''}`}>
+                    <div className={`slot-indicator ${hasActive ? '' : 'empty'} ${isSelected ? 'selected' : ''}`}>
                       {slotStatus}
                     </div>
                   </div>
