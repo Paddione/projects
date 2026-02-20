@@ -48,7 +48,9 @@ cd k8s && skaffold delete -p dev              # Tear down dev stack
 ./k8s/scripts/utils/generate-secrets.sh      # Generate secrets from root .env
 ./k8s/scripts/deploy/deploy-all.sh           # Deploy all manifests
 ./k8s/scripts/utils/validate-cluster.sh      # Validate cluster health
-./k8s/scripts/deploy/deploy-changed.sh       # Auto-detect and redeploy changed manifests
+./k8s/scripts/deploy/deploy-changed.sh       # Auto-detect and redeploy changed services
+./k8s/scripts/deploy/deploy-changed.sh --committed  # Deploy committed-but-undeployed changes
+./k8s/scripts/utils/deploy-tracker.sh status # Check which services have undeployed commits
 
 # Multi-node cluster (production - 6 bare-metal nodes)
 ./k8s/scripts/cluster/bootstrap-cluster.sh   # Full cluster bootstrap (SSH to all nodes)
@@ -171,10 +173,22 @@ The L2P frontend uses **runtime environment injection** instead of build-time `A
 
 Root-level GitHub Actions CI at `.github/workflows/ci.yml`:
 - **Path-based filtering**: Only runs jobs for changed services (via `dorny/paths-filter`)
-- **Per-service jobs**: L2P (typecheck + unit tests), Auth (typecheck + unit tests), Shop (unit tests), VideoVault (typecheck + unit tests + build)
-- **Docker validation**: Builds Dockerfiles without pushing (master only, with GHA layer caching)
+- **Per-service jobs**: L2P (typecheck + unit + integration tests), Auth (typecheck + unit tests), Shop (unit tests), VideoVault (typecheck + unit tests + build)
+- **Reproducible installs**: All jobs use `npm ci` with committed lockfiles (not `npm install`)
+- **Integration tests**: L2P backend has a dedicated job with PostgreSQL 16 service container
+- **Docker validation**: Builds all Dockerfiles (including auth) without pushing (master only, GHA layer caching)
 - **K8s validation**: `kustomize build` on all manifests to catch syntax errors
+- **CI status badge**: `ci-status` job aggregates all results — use for branch protection
 - **Deployment stays manual**: Private registry not reachable from GitHub runners
+- **Node versions**: L2P (22), Auth (20), Shop (20), VideoVault (20)
+
+### Deployment Tracking
+
+`k8s/scripts/utils/deploy-tracker.sh` records which git SHA is deployed per service in a ConfigMap (`deploy-state` in `korczewski-infra`):
+- `deploy-tracker.sh status` — overview of all services with undeployed commit counts
+- `deploy-tracker.sh diff <service>` — show commits since last deploy
+- `deploy-tracker.sh set <service>` — record current HEAD as deployed (called automatically by `deploy-changed.sh` and `deploy-all.sh`)
+- `deploy-changed.sh --committed` — detect and deploy committed-but-undeployed changes
 
 ### Network Configuration
 
@@ -311,3 +325,6 @@ Dev stack runs in `korczewski-dev` namespace, parallel to production. Deploy wit
 - Update existing docs rather than creating new ones
 - Always deploy changes to k3s after committing (don't leave changes undeployed)
 - **Deploy with Skaffold** (`skaffold run -p <profile>`) for code changes — shell scripts only apply manifests without rebuilding images
+- After deploying, verify with `deploy-tracker.sh status` that the SHA was recorded
+- Use `deploy-changed.sh --committed` to catch any committed-but-undeployed services
+- **Lockfiles are committed** — when adding/updating dependencies, ensure `package-lock.json` changes are included in the commit

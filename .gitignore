@@ -6,6 +6,10 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 package-lock.json
+!l2p/package-lock.json
+!auth/package-lock.json
+!shop/package-lock.json
+!VideoVault/package-lock.json
 yarn.lock
 /home/patrick/projects/Obsidian
 Obsidian/

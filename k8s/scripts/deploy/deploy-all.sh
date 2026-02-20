@@ -12,6 +12,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 K8S_DIR="$(dirname "$(dirname "$SCRIPT_DIR")")"
+TRACKER="$SCRIPT_DIR/../utils/deploy-tracker.sh"
 
 # Colors
 RED='\033[0;31m'
@@ -141,6 +142,19 @@ deploy_services() {
     "$SCRIPT_DIR/deploy-videovault.sh"
 }
 
+# Record deployment SHAs for all services
+record_deploy_shas() {
+    if [ ! -x "$TRACKER" ]; then
+        log_warn "deploy-tracker.sh not found — skipping SHA recording"
+        return 0
+    fi
+
+    log_step "Recording Deployment SHAs"
+    for service in auth l2p shop videovault; do
+        "$TRACKER" set "$service"
+    done
+}
+
 # Print summary
 print_summary() {
     log_step "Deployment Complete!"
@@ -183,6 +197,7 @@ main() {
     deploy_secrets
     deploy_infrastructure
     deploy_services
+    record_deploy_shas
     print_summary
 }
 

@@ -63,7 +63,7 @@ jobs:
           node-version: '22'
 
       - name: Install dependencies
-        run: npm run install:all
+        run: npm ci
 
       - name: Typecheck
         run: npm run typecheck
@@ -75,6 +75,46 @@ jobs:
         run: npm run test:unit:backend
         env:
           NODE_OPTIONS: --experimental-vm-modules
+
+  # ---------------------------------------------------------------------------
+  # L2P: Integration Tests (with PostgreSQL service container)
+  # ---------------------------------------------------------------------------
+  l2p-integration:
+    needs: changes
+    if: needs.changes.outputs.l2p == 'true'
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: l2p_user
+          POSTGRES_PASSWORD: ci_test_password_l2p
+          POSTGRES_DB: l2p_test_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U l2p_user -d l2p_test_db"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    defaults:
+      run:
+        working-directory: l2p
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run integration tests
+        run: cd backend && npm run test:integration:ci
+        env:
+          NODE_OPTIONS: --experimental-vm-modules
+          TEST_DATABASE_URL: postgresql://l2p_user:ci_test_password_l2p@localhost:5432/l2p_test_db
 
   # ---------------------------------------------------------------------------
   # Auth: Typecheck + Unit Tests
@@ -93,9 +133,8 @@ jobs:
         with:
           node-version: '20'
 
-      # npm install (not ci) — package-lock.json is gitignored
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
       - name: Typecheck
         run: npm run typecheck
@@ -118,11 +157,10 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '20'
 
-      # npm install (not ci) — package-lock.json is gitignored
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
       - name: Unit tests
         run: npm run test
@@ -144,9 +182,8 @@ jobs:
         with:
           node-version: '20'
 
-      # npm install (not ci) — package-lock.json is gitignored
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
       - name: Typecheck
         run: npm run check
@@ -159,8 +196,6 @@ jobs:
 
   # ---------------------------------------------------------------------------
   # Docker Build Validation (master only)
-  # Note: auth excluded — its Dockerfile uses npm ci which needs a lockfile
-  # that is gitignored. L2P and VideoVault use npm install so they work.
   # ---------------------------------------------------------------------------
   docker-validate:
     needs: changes
@@ -176,6 +211,9 @@ jobs:
           - service: l2p-frontend
             dockerfile: l2p/frontend/Dockerfile
             changed: ${{ needs.changes.outputs.l2p }}
+          - service: auth
+            dockerfile: auth/Dockerfile
+            changed: ${{ needs.changes.outputs.auth }}
           - service: shop
             dockerfile: shop/Dockerfile
             changed: ${{ needs.changes.outputs.shop }}
@@ -235,3 +273,39 @@ jobs:
 
       - name: Validate development overlay
         run: kustomize build k8s/overlays/development
+
+  # ---------------------------------------------------------------------------
+  # CI Status (single green/red badge for the entire pipeline)
+  # ---------------------------------------------------------------------------
+  ci-status:
+    if: always()
+    needs: [l2p, l2p-integration, auth, shop, videovault, docker-validate, k8s-validate]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check pipeline status
+        env:
+          L2P_RESULT: ${{ needs.l2p.result }}
+          L2P_INT_RESULT: ${{ needs.l2p-integration.result }}
+          AUTH_RESULT: ${{ needs.auth.result }}
+          SHOP_RESULT: ${{ needs.shop.result }}
+          VV_RESULT: ${{ needs.videovault.result }}
+          DOCKER_RESULT: ${{ needs.docker-validate.result }}
+          K8S_RESULT: ${{ needs.k8s-validate.result }}
+        run: |
+          echo "Pipeline results:"
+          echo "  l2p:             $L2P_RESULT"
+          echo "  l2p-integration: $L2P_INT_RESULT"
+          echo "  auth:            $AUTH_RESULT"
+          echo "  shop:            $SHOP_RESULT"
+          echo "  videovault:      $VV_RESULT"
+          echo "  docker-validate: $DOCKER_RESULT"
+          echo "  k8s-validate:    $K8S_RESULT"
+
+          # Fail if any required job failed (skipped is OK — means no changes for that service)
+          for result in "$L2P_RESULT" "$L2P_INT_RESULT" "$AUTH_RESULT" "$SHOP_RESULT" "$VV_RESULT" "$DOCKER_RESULT" "$K8S_RESULT"; do
+            if [[ "$result" == "failure" ]]; then
+              echo "::error::One or more CI jobs failed"
+              exit 1
+            fi
+          done
+          echo "All CI checks passed (or were skipped)."
