@@ -1,5 +1,6 @@
 import React from 'react'
 import { Icon } from './Icon'
+import { useLocalization } from '../hooks/useLocalization'
 import styles from '../styles/ScoreDisplay.module.css'
 
 interface ScoreDisplayProps {
@@ -23,6 +24,7 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
   compact = false,
   className = ''
 }) => {
+  const { t } = useLocalization()
   const getMultiplierColor = (mult: number): string => {
     if (mult >= 5) return `${styles.multiplier5} multiplier5`
     if (mult >= 4) return `${styles.multiplier4} multiplier4`
@@ -41,7 +43,7 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
   return (
     <div className={`${styles.scoreDisplay} ${compact ? styles.scoreDisplayCompact : ''} ${className}`}>
       <div className={styles.scoreSection}>
-        <div className={styles.scoreLabel}>Score</div>
+        <div className={styles.scoreLabel}>{t('game.score')}</div>
         <div className={styles.scoreValue} data-testid="score-value">
           {score.toLocaleString()}
         </div>
@@ -49,7 +51,7 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
 
       {showMultiplier && multiplier > 1 && (
         <div className={styles.multiplierSection}>
-          <div className={styles.multiplierLabel}>Multiplier</div>
+          <div className={styles.multiplierLabel}>{t('game.multiplier')}</div>
           <div
             className={`${styles.multiplierValue} ${getMultiplierColor(multiplier)}`}
             data-testid="multiplier-value"
@@ -61,7 +63,7 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
 
       {showStreak && correctAnswers > 0 && (
         <div className={styles.streakSection}>
-          <div className={styles.streakLabel}>Streak</div>
+          <div className={styles.streakLabel}>{t('multiplier.streak')}</div>
           <div
             className={`${styles.streakValue} ${getStreakColor(correctAnswers)}`}
             data-testid="streak-value"
@@ -74,7 +76,7 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
 
       {totalQuestions && (
         <div className={styles.progressSection}>
-          <div className={styles.progressLabel}>Progress</div>
+          <div className={styles.progressLabel}>{t('game.progressLabel')}</div>
           <div className={styles.progressBar}>
             <div
               className={styles.progressFill}

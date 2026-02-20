@@ -894,29 +894,39 @@ describe('SocketService', () => {
     });
 
     it('should handle concurrent answer submissions efficiently', async () => {
-      mockGameService.submitAnswer.mockResolvedValue(undefined);
+      // Rate limiting is bypassed in test/development NODE_ENV.
+      // Override to production so the rate limiter actually enforces limits.
+      const originalNodeEnv = process.env['NODE_ENV'];
+      process.env['NODE_ENV'] = 'production';
+      delete process.env['DISABLE_RATE_LIMITING'];
 
-      const connectionHandler = mockIo.on.mock.calls[0]![1];
-      connectionHandler(mockSocket);
+      try {
+        mockGameService.submitAnswer.mockResolvedValue(undefined);
 
-      const submitHandler = mockSocket.on.mock.calls.find(call => call[0] === 'submit-answer')?.[1];
+        const connectionHandler = mockIo.on.mock.calls[0]![1];
+        connectionHandler(mockSocket);
 
-      if (submitHandler) {
-        const promises: Promise<unknown>[] = [];
-        for (let i = 0; i < 10; i++) {
-          promises.push(submitHandler({
-            lobbyCode: 'ABC123',
-            playerId: '1',
-            answer: 'A',
-            timeElapsed: 30 + i
-          }));
+        const submitHandler = mockSocket.on.mock.calls.find(call => call[0] === 'submit-answer')?.[1];
+
+        if (submitHandler) {
+          const promises: Promise<unknown>[] = [];
+          for (let i = 0; i < 10; i++) {
+            promises.push(submitHandler({
+              lobbyCode: 'ABC123',
+              playerId: '1',
+              answer: 'A',
+              timeElapsed: 30 + i
+            }));
+          }
+
+          await Promise.all(promises);
+
+          // Rate limiter allows 5 submit-answer events per 5-second window,
+          // so only the first 5 of 10 rapid submissions get through
+          expect(mockGameService.submitAnswer).toHaveBeenCalledTimes(5);
         }
-
-        await Promise.all(promises);
-
-        // Rate limiter allows 5 submit-answer events per 5-second window,
-        // so only the first 5 of 10 rapid submissions get through
-        expect(mockGameService.submitAnswer).toHaveBeenCalledTimes(5);
+      } finally {
+        process.env['NODE_ENV'] = originalNodeEnv;
       }
     });
   });

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useAuthStore } from '../stores/authStore';
+import { useLocalization } from '../hooks/useLocalization';
 import { themeService } from '../services/themeService';
 import { avatarService } from '../services/avatarService';
 import { apiService } from '../services/apiService';
@@ -97,9 +98,112 @@ const BADGE_STYLE_OPTIONS = [
   { id: 'platinum', label: 'Scholar Platinum', className: 'badge-scholar-platinum' },
 ];
 
+// ===== HELPER OPTIONS =====
+const HELPER_OPTIONS: Record<string, Array<{ id: string; label: string; emoji: string; description: string }>> = {
+  answer_previews: [
+    { id: 'border', label: 'Border Highlight', emoji: '🔲', description: 'Colored border around selected answer' },
+    { id: 'background', label: 'Background Fill', emoji: '🎨', description: 'Subtle background color on selection' },
+    { id: 'shadow', label: 'Glow Shadow', emoji: '✨', description: 'Glowing shadow effect on selection' },
+  ],
+  smart_hints: [
+    { id: 'subtle', label: 'Subtle', emoji: '💡', description: 'Brief, minimal hints' },
+    { id: 'moderate', label: 'Moderate', emoji: '📖', description: 'Balanced hint detail' },
+    { id: 'detailed', label: 'Detailed', emoji: '📚', description: 'Full explanations and context' },
+  ],
+};
+
+// ===== DISPLAY OPTIONS =====
+const DISPLAY_OPTIONS: Record<string, Array<{ id: string; label: string; emoji: string; description: string }>> = {
+  quick_stats: [
+    { id: 'top-left', label: 'Top Left', emoji: '↖️', description: 'Stats in top-left corner' },
+    { id: 'top-right', label: 'Top Right', emoji: '↗️', description: 'Stats in top-right corner' },
+    { id: 'bottom-left', label: 'Bottom Left', emoji: '↙️', description: 'Stats in bottom-left corner' },
+    { id: 'bottom-right', label: 'Bottom Right', emoji: '↘️', description: 'Stats in bottom-right corner' },
+  ],
+  enhanced_timers: [
+    { id: 'progress', label: 'Progress Bar', emoji: '📊', description: 'Animated bar countdown' },
+    { id: 'digital', label: 'Digital Clock', emoji: '🔢', description: 'Numeric countdown display' },
+    { id: 'analog', label: 'Analog Dial', emoji: '🕐', description: 'Circular dial countdown' },
+  ],
+  focus_mode: [
+    { id: 'blur', label: 'Blur Background', emoji: '🌫️', description: 'Soft background blur during questions' },
+    { id: 'zen', label: 'Zen Mode', emoji: '🧘', description: 'Minimal UI, maximum focus' },
+    { id: 'both', label: 'Full Focus', emoji: '🎯', description: 'Blur + Zen combined' },
+  ],
+};
+
+// ===== EMOTE OPTIONS =====
+const EMOTE_OPTIONS: Record<string, Array<{ id: string; label: string; emoji: string; description: string }>> = {
+  chat_emotes_basic: [
+    { id: 'classic', label: 'Classic', emoji: '😀', description: 'Standard fun emotes' },
+    { id: 'academic', label: 'Academic', emoji: '🤓', description: 'Study and learning themed' },
+    { id: 'gaming', label: 'Gaming', emoji: '🔥', description: 'Competitive gaming reactions' },
+  ],
+  chat_emotes_premium: [
+    { id: 'small', label: 'Small', emoji: '🚀', description: 'Compact animated emotes' },
+    { id: 'medium', label: 'Medium', emoji: '💫', description: 'Standard animated emotes' },
+    { id: 'large', label: 'Large', emoji: '🌟', description: 'Full-size animated emotes' },
+  ],
+};
+
+// ===== SOUND OPTIONS =====
+const SOUND_OPTIONS: Record<string, Array<{ id: string; label: string; emoji: string; description: string }>> = {
+  sound_packs_basic: [
+    { id: 'retro', label: 'Retro 8-bit', emoji: '🕹️', description: 'Classic arcade sounds' },
+    { id: 'nature', label: 'Nature', emoji: '🌿', description: 'Organic, soothing tones' },
+    { id: 'electronic', label: 'Electronic', emoji: '🎹', description: 'Modern synth sounds' },
+  ],
+  sound_packs_premium: [
+    { id: 'orchestral', label: 'Orchestral', emoji: '🎻', description: 'Classical orchestra themes' },
+    { id: 'synthwave', label: 'Synthwave', emoji: '🌆', description: 'Retro-future vibes' },
+    { id: 'ambient', label: 'Ambient', emoji: '🎧', description: 'Calm, zen soundscapes' },
+  ],
+  audio_reactions: [
+    { id: 'subtle', label: 'Subtle', emoji: '🔈', description: 'Soft feedback sounds' },
+    { id: 'moderate', label: 'Moderate', emoji: '🔉', description: 'Balanced audio feedback' },
+    { id: 'enthusiastic', label: 'Enthusiastic', emoji: '🔊', description: 'Energetic reactions and fanfares' },
+  ],
+};
+
+// ===== MULTIPLIER OPTIONS =====
+const MULTIPLIER_OPTIONS: Record<string, Array<{ id: string; label: string; emoji: string; description: string }>> = {
+  experience_boost: [
+    { id: 'game', label: 'Per Game', emoji: '🎮', description: 'Boost lasts one game' },
+    { id: 'session', label: 'Per Session', emoji: '⏱️', description: 'Boost lasts entire session' },
+    { id: 'unlimited', label: 'Always On', emoji: '♾️', description: 'Permanent XP boost' },
+  ],
+  streak_protector: [
+    { id: 'automatic', label: 'Automatic', emoji: '🛡️', description: 'Activates on first wrong answer' },
+    { id: 'manual', label: 'Manual', emoji: '🎯', description: 'Save it for when you need it' },
+  ],
+  time_extension: [
+    { id: '5', label: '+5 Seconds', emoji: '⏱️', description: 'Small but helpful boost' },
+    { id: '10', label: '+10 Seconds', emoji: '⏰', description: 'Balanced extra time' },
+    { id: '15', label: '+15 Seconds', emoji: '🕐', description: 'Maximum thinking time' },
+  ],
+};
+
+// ===== TITLE OPTIONS =====
+const TITLE_OPTIONS: Record<string, Array<{ id: string; label: string; emoji: string; description: string }>> = {
+  master_scholar: [
+    { id: 'badge', label: 'Badge Display', emoji: '🏅', description: 'Title shown as a badge icon' },
+    { id: 'border', label: 'Name Border', emoji: '📛', description: 'Decorative border around your name' },
+    { id: 'glow', label: 'Golden Glow', emoji: '✨', description: 'Glowing aura around your name' },
+  ],
+  quiz_legend: [
+    { id: 'true', label: 'Aura On', emoji: '🌟', description: 'Legendary aura effect visible' },
+    { id: 'false', label: 'Aura Off', emoji: '👤', description: 'Title without aura effect' },
+  ],
+  knowledge_keeper: [
+    { id: 'true', label: 'VIP Lobby', emoji: '👑', description: 'Access exclusive VIP lobbies' },
+    { id: 'false', label: 'Standard', emoji: '🎓', description: 'Title without VIP access' },
+  ],
+};
+
 const PerksManager: React.FC = () => {
   const user = useAuthStore(state => state.user);
   const token = useAuthStore(state => state.token);
+  const { t } = useLocalization();
   const [perksData, setPerksData] = useState<PerksData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -331,6 +435,65 @@ const PerksManager: React.FC = () => {
       setConfigSelection({
         badgeStyle: config.badge_style || config.color || 'classic',
       });
+    } else if (userPerk.perk.type === 'helper') {
+      const perkName = userPerk.perk.name;
+      if (perkName === 'answer_previews') {
+        setConfigSelection({ highlight_style: config.highlight_style || 'border' });
+      } else if (perkName === 'smart_hints') {
+        setConfigSelection({ hint_level: config.hint_level || 'moderate' });
+      } else {
+        setConfigSelection({});
+      }
+    } else if (userPerk.perk.type === 'display') {
+      const perkName = userPerk.perk.name;
+      if (perkName === 'quick_stats') {
+        setConfigSelection({ position: config.position || 'top-right' });
+      } else if (perkName === 'enhanced_timers') {
+        setConfigSelection({ visual_style: config.visual_style || 'progress' });
+      } else if (perkName === 'focus_mode') {
+        const mode = config.zen_mode && config.blur_background ? 'both' : config.zen_mode ? 'zen' : 'blur';
+        setConfigSelection({ focus_mode: mode });
+      } else {
+        setConfigSelection({});
+      }
+    } else if (userPerk.perk.type === 'emote') {
+      const perkName = userPerk.perk.name;
+      if (perkName === 'chat_emotes_basic') {
+        setConfigSelection({ emote_set: config.emote_set || 'classic' });
+      } else if (perkName === 'chat_emotes_premium') {
+        setConfigSelection({ size: config.size || 'medium' });
+      } else {
+        setConfigSelection({});
+      }
+    } else if (userPerk.perk.type === 'sound') {
+      const perkName = userPerk.perk.name;
+      if (perkName === 'audio_reactions') {
+        setConfigSelection({ reaction_level: config.reaction_level || 'moderate' });
+      } else {
+        setConfigSelection({ pack: config.pack || 'retro' });
+      }
+    } else if (userPerk.perk.type === 'multiplier') {
+      const perkName = userPerk.perk.name;
+      if (perkName === 'experience_boost') {
+        setConfigSelection({ duration: config.duration || 'unlimited' });
+      } else if (perkName === 'streak_protector') {
+        setConfigSelection({ activation: config.activation || 'automatic' });
+      } else if (perkName === 'time_extension') {
+        setConfigSelection({ extra_seconds: String(config.extra_seconds || 10) });
+      } else {
+        setConfigSelection({});
+      }
+    } else if (userPerk.perk.type === 'title') {
+      const perkName = userPerk.perk.name;
+      if (perkName === 'master_scholar') {
+        setConfigSelection({ display_style: config.display_style || 'glow' });
+      } else if (perkName === 'quiz_legend') {
+        setConfigSelection({ aura_effect: String(config.aura_effect ?? true) });
+      } else if (perkName === 'knowledge_keeper') {
+        setConfigSelection({ exclusive_lobby: String(config.exclusive_lobby ?? true) });
+      } else {
+        setConfigSelection({});
+      }
     } else {
       setConfigSelection({});
     }
@@ -345,7 +508,7 @@ const PerksManager: React.FC = () => {
     setActionLoading(false);
   };
 
-  const getConfigPayload = (perkType: string) => {
+  const getConfigPayload = (perkType: string, perkName?: string) => {
     switch (perkType) {
       case 'avatar':
         return { selected_avatar: configSelection['avatar'] || AVATAR_OPTIONS[0]?.id || 'student' };
@@ -353,6 +516,38 @@ const PerksManager: React.FC = () => {
         return { theme_name: configSelection['theme'] || THEME_OPTIONS[0]?.id || 'default' };
       case 'badge':
         return { badge_style: configSelection['badgeStyle'] || 'classic' };
+      case 'helper':
+        if (perkName === 'answer_previews') return { highlight_style: configSelection['highlight_style'] || 'border' };
+        if (perkName === 'smart_hints') return { hint_level: configSelection['hint_level'] || 'moderate' };
+        return {};
+      case 'display':
+        if (perkName === 'quick_stats') return { position: configSelection['position'] || 'top-right' };
+        if (perkName === 'enhanced_timers') return { visual_style: configSelection['visual_style'] || 'progress' };
+        if (perkName === 'focus_mode') {
+          const mode = configSelection['focus_mode'] || 'blur';
+          return {
+            blur_background: mode === 'blur' || mode === 'both',
+            zen_mode: mode === 'zen' || mode === 'both',
+          };
+        }
+        return {};
+      case 'emote':
+        if (perkName === 'chat_emotes_basic') return { emote_set: configSelection['emote_set'] || 'classic' };
+        if (perkName === 'chat_emotes_premium') return { animated: true, size: configSelection['size'] || 'medium' };
+        return {};
+      case 'sound':
+        if (perkName === 'audio_reactions') return { reaction_level: configSelection['reaction_level'] || 'moderate' };
+        return { pack: configSelection['pack'] || 'retro' };
+      case 'multiplier':
+        if (perkName === 'experience_boost') return { duration: configSelection['duration'] || 'unlimited' };
+        if (perkName === 'streak_protector') return { activation: configSelection['activation'] || 'automatic' };
+        if (perkName === 'time_extension') return { extra_seconds: Number(configSelection['extra_seconds'] || 10) };
+        return {};
+      case 'title':
+        if (perkName === 'master_scholar') return { display_style: configSelection['display_style'] || 'glow' };
+        if (perkName === 'quiz_legend') return { aura_effect: configSelection['aura_effect'] === 'true' };
+        if (perkName === 'knowledge_keeper') return { exclusive_lobby: configSelection['exclusive_lobby'] === 'true' };
+        return {};
       default:
         return {};
     }
@@ -362,7 +557,7 @@ const PerksManager: React.FC = () => {
     if (!selectedPerk?.perk) return;
     setActionLoading(true);
     try {
-      await activatePerk(selectedPerk.perk.id, getConfigPayload(selectedPerk.perk.type));
+      await activatePerk(selectedPerk.perk.id, getConfigPayload(selectedPerk.perk.type, selectedPerk.perk.name));
       closeDetails();
     } catch (err) {
       console.error('Failed to activate perk:', err);
@@ -382,13 +577,39 @@ const PerksManager: React.FC = () => {
     }
   };
 
+  const renderOptionGrid = (
+    options: Array<{ id: string; label: string; emoji: string; description: string }>,
+    configKey: string,
+    title: string,
+  ) => (
+    <div className="perk-config">
+      <h4>{title}</h4>
+      <div className="config-option-grid">
+        {options.map(option => (
+          <button
+            type="button"
+            key={option.id}
+            className={`config-option ${configSelection[configKey] === option.id ? 'selected' : ''}`}
+            onClick={() => setConfigSelection(prev => ({ ...prev, [configKey]: option.id }))}
+          >
+            <span className="config-option-emoji">{option.emoji}</span>
+            <span className="config-option-label">{option.label}</span>
+            <span className="config-option-desc">{option.description}</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+
   const renderPerkConfiguration = (userPerk: UserPerk) => {
     if (!userPerk.perk) return null;
+    const perkName = userPerk.perk.name;
+
     switch (userPerk.perk.type) {
       case 'avatar':
         return (
           <div className="perk-config">
-            <h4>Select Avatar:</h4>
+            <h4>{t('perk.selectAvatar')}</h4>
             <div className="avatar-grid">
               {AVATAR_OPTIONS.map(option => (
                 <button
@@ -407,7 +628,7 @@ const PerksManager: React.FC = () => {
       case 'theme':
         return (
           <div className="perk-config">
-            <h4>Select Theme:</h4>
+            <h4>{t('perk.selectTheme')}</h4>
             <div className="theme-grid">
               {THEME_OPTIONS.map(option => (
                 <button
@@ -426,7 +647,7 @@ const PerksManager: React.FC = () => {
       case 'badge':
         return (
           <div className="perk-config">
-            <h4>Select Badge Color:</h4>
+            <h4>{t('perk.selectBadgeColor')}</h4>
             <div className="badge-colors">
               {getBadgeOptionsForPerk(userPerk).map(option => (
                 <button
@@ -441,11 +662,65 @@ const PerksManager: React.FC = () => {
             </div>
           </div>
         );
+      case 'helper': {
+        const options = HELPER_OPTIONS[perkName];
+        if (!options) return null;
+        const configKey = perkName === 'answer_previews' ? 'highlight_style' : 'hint_level';
+        const title = perkName === 'answer_previews' ? t('perk.selectHighlightStyle') : t('perk.selectHintDetail');
+        return renderOptionGrid(options, configKey, title);
+      }
+      case 'display': {
+        const options = DISPLAY_OPTIONS[perkName];
+        if (!options) return null;
+        const configKey = perkName === 'quick_stats' ? 'position'
+          : perkName === 'enhanced_timers' ? 'visual_style'
+          : 'focus_mode';
+        const title = perkName === 'quick_stats' ? t('perk.selectDashboardPosition')
+          : perkName === 'enhanced_timers' ? t('perk.selectTimerStyle')
+          : t('perk.selectFocusMode');
+        return renderOptionGrid(options, configKey, title);
+      }
+      case 'emote': {
+        const options = EMOTE_OPTIONS[perkName];
+        if (!options) return null;
+        const configKey = perkName === 'chat_emotes_basic' ? 'emote_set' : 'size';
+        const title = perkName === 'chat_emotes_basic' ? t('perk.selectEmoteSet') : t('perk.selectEmoteSize');
+        return renderOptionGrid(options, configKey, title);
+      }
+      case 'sound': {
+        const options = SOUND_OPTIONS[perkName];
+        if (!options) return null;
+        const configKey = perkName === 'audio_reactions' ? 'reaction_level' : 'pack';
+        const title = perkName === 'audio_reactions' ? t('perk.selectReactionLevel') : t('perk.selectSoundPack');
+        return renderOptionGrid(options, configKey, title);
+      }
+      case 'multiplier': {
+        const options = MULTIPLIER_OPTIONS[perkName];
+        if (!options) return null;
+        const configKey = perkName === 'experience_boost' ? 'duration'
+          : perkName === 'streak_protector' ? 'activation'
+          : 'extra_seconds';
+        const title = perkName === 'experience_boost' ? t('perk.selectBoostDuration')
+          : perkName === 'streak_protector' ? t('perk.selectActivationMode')
+          : t('perk.selectExtraTime');
+        return renderOptionGrid(options, configKey, title);
+      }
+      case 'title': {
+        const options = TITLE_OPTIONS[perkName];
+        if (!options) return null;
+        const configKey = perkName === 'master_scholar' ? 'display_style'
+          : perkName === 'quiz_legend' ? 'aura_effect'
+          : 'exclusive_lobby';
+        const title = perkName === 'master_scholar' ? t('perk.selectDisplayStyle')
+          : perkName === 'quiz_legend' ? t('perk.auraEffect')
+          : t('perk.vipLobbyAccess');
+        return renderOptionGrid(options, configKey, title);
+      }
       default:
         return (
           <div className="perk-info-note">
-            <p>This perk does not require extra configuration.</p>
-            <p>Activate it to enhance your current loadout.</p>
+            <p>{t('perk.noConfigNeeded')}</p>
+            <p>{t('perk.activateToEnhance')}</p>
           </div>
         );
     }
@@ -477,12 +752,12 @@ const PerksManager: React.FC = () => {
       >
         <div className="perk-header">
           <h3 className="perk-title">{perk.title}</h3>
-          <div className="perk-level">Level {perk.level_required}</div>
+          <div className="perk-level">{t('perk.level')} {perk.level_required}</div>
         </div>
 
         <div className="perk-category">
           <span className="perk-slot-badge">
-            {PERK_SLOTS.find(s => s.type === perk.type)?.icon} {PERK_SLOTS.find(s => s.type === perk.type)?.label}
+            {PERK_SLOTS.find(s => s.type === perk.type)?.icon} {PERK_SLOTS.find(s => s.type === perk.type) ? t(`perk.slot.${perk.type}`) : perk.type}
           </span>
           {' '}• {perk.category}
         </div>
@@ -490,22 +765,22 @@ const PerksManager: React.FC = () => {
 
         <div className="perk-status">
           {isLocked && (
-            <span className="status locked">🔒 Locked</span>
+            <span className="status locked">{'🔒 ' + t('perk.status.locked')}</span>
           )}
           {!isLocked && !userPerk.is_unlocked && (
-            <span className="status unlockable">⚡ Can Unlock</span>
+            <span className="status unlockable">{'⚡ ' + t('perk.status.canUnlock')}</span>
           )}
           {userPerk.is_unlocked && !isActive && perk.type !== 'badge' && canUse && (
-            <span className="status unlocked">✨ Available</span>
+            <span className="status unlocked">{'✨ ' + t('perk.status.available')}</span>
           )}
           {userPerk.is_unlocked && !isActive && perk.type !== 'badge' && !canUse && (
-            <span className="status locked">🔒 Level {perk.level_required} Req.</span>
+            <span className="status locked">{'🔒 ' + t('perk.level') + ' ' + perk.level_required + ' Req.'}</span>
           )}
           {userPerk.is_unlocked && !isActive && perk.type === 'badge' && (
-            <span className="status unlocked">🏆 Available</span>
+            <span className="status unlocked">{'🏆 ' + t('perk.status.available')}</span>
           )}
           {isActive && (
-            <span className="status active">🎯 Active</span>
+            <span className="status active">{'🎯 ' + t('perk.status.active')}</span>
           )}
         </div>
       </div>
@@ -573,7 +848,7 @@ const PerksManager: React.FC = () => {
           <div className="avatar-with-badge">
             <span className="avatar-emoji">{getCurrentAvatarEmoji()}</span>
           </div>
-          <span>No badges unlocked</span>
+          <span>{t('perk.noBadgesUnlocked')}</span>
         </div>
       );
     }
@@ -591,7 +866,7 @@ const PerksManager: React.FC = () => {
           onChange={(e) => handleBadgeSelection(e.target.value)}
           className="badge-selector"
         >
-          <option value="">No Badge</option>
+          <option value="">{t('perk.noBadge')}</option>
           {unlockedBadges.flatMap(badge =>
             badge.options.map(option => (
               <option key={`${badge.perk.id}-${option.value}`} value={`${badge.perk.id}-${option.value}`}>
@@ -657,7 +932,7 @@ const PerksManager: React.FC = () => {
     return (
       <div className="perks-manager loading">
         <div className="loading-spinner"></div>
-        <p>Loading your perks...</p>
+        <p>{t('perk.loading')}</p>
       </div>
     );
   }
@@ -666,31 +941,31 @@ const PerksManager: React.FC = () => {
     return (
       <div className="perks-manager error">
         <div className="error-icon">⚠️</div>
-        <h3>Unable to Load Perks</h3>
+        <h3>{t('perk.unableToLoad')}</h3>
         <p>{error}</p>
         {retryCount > 0 && retryCount < 3 && (
-          <p className="retry-info">Retrying automatically... (Attempt {retryCount + 1}/3)</p>
+          <p className="retry-info">{t('perk.retrying')} ({t('perk.attempt')} {retryCount + 1}/3)</p>
         )}
         {retryCount >= 3 && (
-          <p className="retry-info">Automatic retries exhausted. Please try again manually.</p>
+          <p className="retry-info">{t('perk.retryExhausted')}</p>
         )}
         <button onClick={() => {
           setRetryCount(0);
           setError(null);
           fetchUserPerks();
         }} disabled={isFetching}>
-          {isFetching ? 'Retrying...' : 'Retry Now'}
+          {isFetching ? t('perk.retryingNow') : t('perk.retryNow')}
         </button>
       </div>
     );
   }
 
   if (!perksData) {
-    return <div className="perks-manager">No perks data available</div>;
+    return <div className="perks-manager">{t('perk.noData')}</div>;
   }
 
   const formatLabel = (value?: string) => {
-    if (!value) return 'Not set';
+    if (!value) return t('perk.notSet');
     return value.replace(/_/g, ' ').replace(/\b\w/g, char => char.toUpperCase());
   };
 
@@ -699,21 +974,21 @@ const PerksManager: React.FC = () => {
   const badgeStyle = activeBadge?.configuration?.badge_style || activeBadge?.configuration?.color || '';
   const loadoutAvatar = formatLabel(loadout?.active_avatar || 'student');
   const loadoutTheme = formatLabel(loadout?.active_theme || 'default');
-  const loadoutBadge = activeBadge?.perk ? formatLabel(badgeStyle || activeBadge.perk.title) : 'No badge selected';
+  const loadoutBadge = activeBadge?.perk ? formatLabel(badgeStyle || activeBadge.perk.title) : t('perk.noneSelected');
   const activePerksList = getActivePerksList();
 
   return (
     <div className="perks-manager">
       <div className="perks-header">
-        <h2>🎨 Perks & Customization</h2>
-        <p>Unlock and customize your gaming experience!</p>
+        <h2>{'🎨 ' + t('perk.header')}</h2>
+        <p>{t('perk.headerDesc')}</p>
       </div>
 
       <div className="perks-layout">
         <div className="perks-main">
           <div className="perk-slots-container">
-            <h3>Your Loadout Slots</h3>
-            <p className="slots-subtitle">Tap a slot to view and change its active perk</p>
+            <h3>{t('perk.loadoutSlots')}</h3>
+            <p className="slots-subtitle">{t('perk.slotsSubtitle')}</p>
             <div className="perk-slots-grid">
               {PERK_SLOTS.map(slot => {
                 // Determine active perk for this slot from loadout data
@@ -743,7 +1018,7 @@ const PerksManager: React.FC = () => {
 
                 const hasActive = !!slotActiveName;
                 const isSelected = activeFilter === slot.id;
-                const slotStatus = isSelected ? 'Picked' : hasActive ? 'Active' : 'Empty';
+                const slotStatus = isSelected ? t('perk.slotState.picked') : hasActive ? t('perk.slotState.active') : t('perk.slotState.empty');
 
                 return (
                   <div
@@ -753,9 +1028,9 @@ const PerksManager: React.FC = () => {
                   >
                     <div className="slot-icon">{slot.icon}</div>
                     <div className="slot-info">
-                      <div className="slot-label">{slot.label}</div>
+                      <div className="slot-label">{t(`perk.slot.${slot.type}`)}</div>
                       <div className="slot-active-name" title={slotActiveName || 'None'}>
-                        {slotActiveName || 'None selected'}
+                        {slotActiveName || t('perk.noneSelected')}
                       </div>
                     </div>
                     <div className={`slot-indicator ${hasActive ? '' : 'empty'} ${isSelected ? 'selected' : ''}`}>
@@ -778,7 +1053,7 @@ const PerksManager: React.FC = () => {
                   role="tab"
                   aria-selected={activeFilter === tab.key}
                 >
-                  {tab.label}
+                  {t(`perk.filter.${tab.key}`)}
                   <span className="tab-count">({getFilterCount(tab.key)})</span>
                 </button>
               ))}
@@ -786,8 +1061,8 @@ const PerksManager: React.FC = () => {
 
             {PERK_SLOTS.find(s => s.id === activeFilter) && (
               <div className="active-slot-filter-indicator">
-                Filtering by Slot: <strong>{PERK_SLOTS.find(s => s.id === activeFilter)?.label}</strong>
-                <button className="clear-filter-btn" onClick={() => setActiveFilter('all')}>View All</button>
+                {t('perk.filterBySlot')} <strong>{PERK_SLOTS.find(s => s.id === activeFilter) ? t(`perk.slot.${PERK_SLOTS.find(s => s.id === activeFilter)?.type}`) : ''}</strong>
+                <button className="clear-filter-btn" onClick={() => setActiveFilter('all')}>{t('perk.viewAll')}</button>
               </div>
             )}
           </div>
@@ -797,8 +1072,8 @@ const PerksManager: React.FC = () => {
               filteredPerks.map(renderPerkCard)
             ) : (
               <div className="no-perks">
-                <p>No perks available for this filter.</p>
-                <p>Try selecting a different tab.</p>
+                <p>{t('perk.noPerksForFilter')}</p>
+                <p>{t('perk.tryDifferentTab')}</p>
               </div>
             )}
           </div>
@@ -806,30 +1081,30 @@ const PerksManager: React.FC = () => {
 
         <aside className="perks-overview" aria-label="Loadout overview">
           <div className="overview-card current-loadout">
-            <h3>Current Loadout</h3>
+            <h3>{t('perk.currentLoadout')}</h3>
             <div className="loadout-display">
               <div className="loadout-item">
-                <span>Avatar:</span>
+                <span>{t('perk.slot.avatar')}:</span>
                 <span>{loadoutAvatar}</span>
               </div>
               <div className="loadout-item">
-                <span>Theme:</span>
+                <span>{t('perk.slot.theme')}:</span>
                 <span>{loadoutTheme}</span>
               </div>
               <div className="loadout-item">
-                <span>Badge:</span>
+                <span>{t('perk.slot.badge')}:</span>
                 <span>{loadoutBadge}</span>
               </div>
               <div className="loadout-item">
-                <span>Active:</span>
-                <span>{activePerksList.length} perks</span>
+                <span>{t('perk.status.active')}:</span>
+                <span>{activePerksList.length} {t('perk.perks')}</span>
               </div>
             </div>
           </div>
 
           <div className="overview-card badge-selection-wrapper">
             <div className="badge-selection-section">
-              <h3>🏆 Badge Selection</h3>
+              <h3>{'🏆 ' + t('perk.badgeSelection')}</h3>
               <div className="badge-selection-display">
                 {renderSimpleBadgeSelector()}
               </div>
@@ -837,7 +1112,7 @@ const PerksManager: React.FC = () => {
           </div>
 
           <div className="overview-card active-perks-overview">
-            <h3>Active Perks Overview</h3>
+            <h3>{t('perk.activePerksOverview')}</h3>
             {activePerksList.length > 0 ? (
               <ul className="active-perks-list">
                 {activePerksList.map(activePerk => {
@@ -849,14 +1124,14 @@ const PerksManager: React.FC = () => {
                         {activePerk.perk?.title || 'Unknown Perk'}
                       </div>
                       <div className="active-perk-meta">
-                        {slotInfo ? slotInfo.label : formatLabel(activePerk.perk?.type)} • Level {activePerk.perk?.level_required ?? '?'}
+                        {slotInfo ? t(`perk.slot.${slotInfo.type}`) : formatLabel(activePerk.perk?.type)} • {t('perk.level')} {activePerk.perk?.level_required ?? '?'}
                       </div>
                     </li>
                   );
                 })}
               </ul>
             ) : (
-              <p className="empty-overview">Pick a perk from the slots to see it listed here.</p>
+              <p className="empty-overview">{t('perk.emptyOverview')}</p>
             )}
           </div>
         </aside>
@@ -873,10 +1148,10 @@ const PerksManager: React.FC = () => {
             </div>
             <div className="perk-details-content">
               <div className="perk-info">
-                <p><strong>Type:</strong> {selectedPerk.perk.type}</p>
-                <p><strong>Category:</strong> {selectedPerk.perk.category}</p>
-                <p><strong>Required Level:</strong> {selectedPerk.perk.level_required}</p>
-                <p><strong>Description:</strong> {selectedPerk.perk.description}</p>
+                <p><strong>{t('perk.typeLabel')}</strong> {selectedPerk.perk.type}</p>
+                <p><strong>{t('perk.categoryLabel')}</strong> {selectedPerk.perk.category}</p>
+                <p><strong>{t('perk.requiredLevel')}</strong> {selectedPerk.perk.level_required}</p>
+                <p><strong>{t('perk.descriptionLabel')}</strong> {selectedPerk.perk.description}</p>
               </div>
 
               {renderPerkConfiguration(selectedPerk)}
@@ -889,7 +1164,7 @@ const PerksManager: React.FC = () => {
                     onClick={handleDeactivateSelectedPerk}
                     disabled={actionLoading}
                   >
-                    {actionLoading ? 'Working...' : 'Deactivate'}
+                    {actionLoading ? t('perk.working') : t('perk.deactivate')}
                   </button>
                 )}
                 {!isActivePerk(selectedPerk.perk.id) && canUsePerk(selectedPerk) && (
@@ -899,7 +1174,7 @@ const PerksManager: React.FC = () => {
                     onClick={handleActivateSelectedPerk}
                     disabled={actionLoading}
                   >
-                    {actionLoading ? 'Activating...' : 'Activate Perk'}
+                    {actionLoading ? t('perk.activating') : t('perk.activate')}
                   </button>
                 )}
               </div>

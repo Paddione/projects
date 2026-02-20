@@ -13,6 +13,7 @@ import styles from '../styles/App.module.css'
 import gameStyles from '../styles/GamePage.module.css'
 import { useAudio } from '../hooks/useAudio'
 import { useAuthStore } from '../stores/authStore'
+import { useLocalization } from '../hooks/useLocalization'
 
 export const GamePage: React.FC = () => {
   const { lobbyId } = useParams<{ lobbyId: string }>()
@@ -52,6 +53,7 @@ export const GamePage: React.FC = () => {
     setPracticeCorrectAnswer,
   } = useGameStore()
   const { user } = useAuthStore()
+  const { t } = useLocalization()
 
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null)
   const [hasAnswered, setHasAnswered] = useState(false)
@@ -81,7 +83,7 @@ export const GamePage: React.FC = () => {
   useEffect(() => {
     const initializeGame = async () => {
       if (!lobbyId) {
-        setError('No lobby ID provided')
+        setError(t('game.noLobbyId'))
         navigate('/')
         return
       }
@@ -262,7 +264,7 @@ export const GamePage: React.FC = () => {
     return (
       <div className={styles.container}>
         <LoadingSpinner />
-        <p>Loading game...</p>
+        <p>{t('game.loadingGame')}</p>
       </div>
     )
   }
@@ -272,17 +274,17 @@ export const GamePage: React.FC = () => {
     return (
       <div className={styles.container}>
         <div className={`${styles.card} ${gameStyles.syncCard}`}>
-          <h2 className={gameStyles.syncTitle}>Get Ready!</h2>
+          <h2 className={gameStyles.syncTitle}>{t('game.getReady')}</h2>
           <div className={gameStyles.syncCountdown} data-testid="sync-countdown">
             {syncCountdown}
           </div>
-          <p className={gameStyles.syncMessage}>Das Spiel startet in Kürze...</p>
+          <p className={gameStyles.syncMessage}>{t('game.startingSoon')}</p>
           <LoadingSpinner />
         </div>
 
         <div style={{ marginTop: 'var(--spacing-xl)', width: '100%', maxWidth: '800px' }}>
           <h3 className={gameStyles.syncMessage} style={{ textAlign: 'center', marginBottom: 'var(--spacing-md)' }}>
-            Spieler im Game
+            {t('game.playersInGame')}
           </h3>
           <PlayerGrid players={players} />
         </div>
@@ -297,8 +299,8 @@ export const GamePage: React.FC = () => {
     return (
       <div className={styles.container}>
         <div className={styles.card}>
-          <h2>Game Ended</h2>
-          <p>The game has ended. Redirecting to results...</p>
+          <h2>{t('game.gameOver')}</h2>
+          <p>{t('game.endedRedirecting')}</p>
           <LoadingSpinner />
         </div>
       </div>
@@ -309,10 +311,10 @@ export const GamePage: React.FC = () => {
     return (
       <div className={styles.container}>
         <div className={styles.card}>
-          <h2>Game Not Started</h2>
-          <p>Waiting for game to start...</p>
+          <h2>{t('game.notStarted')}</h2>
+          <p>{t('game.waitingForGameStart')}</p>
           <button onClick={handleLeaveLobby} className={styles.button}>
-            Back to Lobby
+            {t('game.backToLobby')}
           </button>
         </div>
       </div>
@@ -323,7 +325,7 @@ export const GamePage: React.FC = () => {
     return (
       <div className={styles.container}>
         <div className={styles.card}>
-          <h2>Waiting for players...</h2>
+          <h2>{t('game.waiting')}</h2>
           <LoadingSpinner />
         </div>
       </div>
@@ -344,8 +346,48 @@ export const GamePage: React.FC = () => {
   const playersForPlates = players.length <= 2 ? players : players.filter(p => p.id !== currentPlayer.id)
   const sortedPlayersForPlates = [...playersForPlates].sort((a, b) => b.score - a.score)
 
+  // Derive cosmetic effect CSS classes from player's active loadout
+  const cosmeticClasses: string[] = []
+  const effects = currentPlayer.cosmeticEffects
+  if (effects) {
+    // Helper slot: answer_previews
+    if (effects.helper?.perk_name === 'answer_previews') {
+      const style = (effects.helper.configuration as Record<string, string>)?.style
+      if (style === 'border') cosmeticClasses.push(gameStyles.answerPreviewBorder)
+      else if (style === 'background') cosmeticClasses.push(gameStyles.answerPreviewBackground)
+      else if (style === 'shadow') cosmeticClasses.push(gameStyles.answerPreviewShadow)
+    }
+    // Display slot: timer_styles
+    if (effects.display?.perk_name === 'timer_styles') {
+      const style = (effects.display.configuration as Record<string, string>)?.timer_style
+      if (style === 'neon') cosmeticClasses.push(gameStyles.timerNeon)
+      else if (style === 'pulse') cosmeticClasses.push(gameStyles.timerPulse)
+      else if (style === 'minimal') cosmeticClasses.push(gameStyles.timerMinimal)
+    }
+    // Emote slot: celebration_effects
+    if (effects.emote?.perk_name === 'celebration_effects') {
+      const style = (effects.emote.configuration as Record<string, string>)?.celebration_style
+      if (style === 'confetti') cosmeticClasses.push(gameStyles.celebrationConfetti)
+      else if (style === 'fireworks') cosmeticClasses.push(gameStyles.celebrationFireworks)
+      else if (style === 'sparkle') cosmeticClasses.push(gameStyles.celebrationSparkle)
+    }
+    // Multiplier slot: score_multiplier_visual or streak_counter_style
+    if (effects.multiplier?.perk_name === 'score_multiplier_visual') {
+      const style = (effects.multiplier.configuration as Record<string, string>)?.multiplier_style
+      if (style === 'flame') cosmeticClasses.push(gameStyles.multiplierFlame)
+      else if (style === 'electric') cosmeticClasses.push(gameStyles.multiplierElectric)
+      else if (style === 'gold') cosmeticClasses.push(gameStyles.multiplierGold)
+    } else if (effects.multiplier?.perk_name === 'streak_counter_style') {
+      const style = (effects.multiplier.configuration as Record<string, string>)?.streak_style
+      if (style === 'fire') cosmeticClasses.push(gameStyles.streakFire)
+      else if (style === 'ice') cosmeticClasses.push(gameStyles.streakIce)
+      else if (style === 'rainbow') cosmeticClasses.push(gameStyles.streakRainbow)
+    }
+  }
+  const cosmeticClassName = cosmeticClasses.join(' ')
+
   return (
-    <div className={`${styles.container} ${gameStyles.fullHeight}`}>
+    <div className={`${styles.container} ${gameStyles.fullHeight} ${cosmeticClassName}`}>
       {/* Error Display */}
       <ErrorDisplay
         error={error}
@@ -357,8 +399,8 @@ export const GamePage: React.FC = () => {
       <div className={`${gameStyles.topBar}`}>
         <div className={gameStyles.topBarLeft}>
           <h2 className={gameStyles.compactTitle}>
-            Frage <span data-testid="question-number">{questionIndex + 1}</span> / <span data-testid="total-questions">{totalQuestions}</span>
-            {isPractice && <span className={gameStyles.practiceModeBadge}>Practice</span>}
+            {t('game.question')} <span data-testid="question-number">{questionIndex + 1}</span> / <span data-testid="total-questions">{totalQuestions}</span>
+            {isPractice && <span className={gameStyles.practiceModeBadge}>{t('game.practiceMode')}</span>}
           </h2>
           <div className={gameStyles.metaRow}>
             {/* Radial countdown indicator — hidden in practice mode */}
@@ -366,7 +408,7 @@ export const GamePage: React.FC = () => {
               <div
                 className={`${gameStyles.radialTimer} ${timerSeverity === 'warning' ? gameStyles.radialWarn : timerSeverity === 'urgent' ? gameStyles.radialUrgent : gameStyles.radialOk}`}
                 aria-hidden
-                title="Time remaining"
+                title={t('timer.timeLeft')}
               >
                 <svg className={gameStyles.radialSvg} viewBox="0 0 40 40">
                   <circle className={gameStyles.radialTrack} cx="20" cy="20" r={radius} />
@@ -393,7 +435,7 @@ export const GamePage: React.FC = () => {
               onClick={handleLeaveLobby}
               className={`${styles.button} ${styles.buttonOutline} ${gameStyles.leaveBtn}`}
             >
-              Verlassen
+              {t('game.leave')}
             </button>
           </div>
         </div>
@@ -447,7 +489,7 @@ export const GamePage: React.FC = () => {
                 className={`${gameStyles.questionText} ${questionExpanded ? gameStyles.questionExpanded : ''}`}
                 data-testid="question-text"
               >
-                {question.text || `Frage ${questionIndex + 1} wird geladen...`}
+                {question.text || `${t('game.question')} ${questionIndex + 1} — ${t('game.questionLoading')}`}
               </h3>
               {questionOverflowing && (
                 <div className={gameStyles.showMoreRow}>
@@ -459,7 +501,7 @@ export const GamePage: React.FC = () => {
                     onClick={() => setQuestionExpanded(v => !v)}
                     data-testid="question-toggle"
                   >
-                    {questionExpanded ? 'Weniger anzeigen' : 'Mehr anzeigen'}
+                    {questionExpanded ? t('game.showLess') : t('game.showMore')}
                   </button>
                 </div>
               )}
@@ -471,14 +513,14 @@ export const GamePage: React.FC = () => {
                   onClick={() => setShowingHint(true)}
                   data-testid="hint-button"
                 >
-                  Hinweis anzeigen
+                  {t('game.showHint')}
                 </button>
               )}
 
               {/* Hint display */}
               {showingHint && question.hint && (
                 <div className={gameStyles.hintBox} data-testid="hint-box">
-                  <span className={gameStyles.hintLabel}>Hinweis</span>
+                  <span className={gameStyles.hintLabel}>{t('game.hint')}</span>
                   {question.hint}
                 </div>
               )}
@@ -490,7 +532,7 @@ export const GamePage: React.FC = () => {
                   onKeyDown={handleKeyDown}
                   tabIndex={0}
                   role="radiogroup"
-                  aria-label="Answer options"
+                  aria-label={t('game.answerOptions')}
                 >
                   {question.answers.map((answer, index) => {
                     const isSelected = selectedAnswer === index
@@ -533,7 +575,7 @@ export const GamePage: React.FC = () => {
                     ref={freeTextRef}
                     type="text"
                     className={gameStyles.freeTextInput}
-                    placeholder="Antwort eingeben..."
+                    placeholder={t('game.enterAnswer')}
                     value={freeTextInput}
                     onChange={(e) => setFreeTextInput(e.target.value)}
                     onKeyDown={(e) => {
@@ -552,7 +594,7 @@ export const GamePage: React.FC = () => {
                     disabled={hasAnswered || !freeTextInput.trim()}
                     data-testid="free-text-submit"
                   >
-                    Antworten
+                    {t('game.submitFreeText')}
                   </button>
                 </div>
               )}
@@ -561,12 +603,12 @@ export const GamePage: React.FC = () => {
               {waitingForContinue && (
                 <div className={gameStyles.practiceWrongFeedback} data-testid="practice-feedback">
                   <div className={gameStyles.practiceCorrectReveal}>
-                    <span className={gameStyles.hintLabel}>Richtige Antwort</span>
+                    <span className={gameStyles.hintLabel}>{t('game.correctAnswerLabel')}</span>
                     {practiceCorrectAnswer}
                   </div>
                   {showingHint && question.hint && (
                     <div className={gameStyles.practiceHint}>
-                      <span className={gameStyles.hintLabel}>Hinweis</span>
+                      <span className={gameStyles.hintLabel}>{t('game.hint')}</span>
                       {question.hint}
                     </div>
                   )}
@@ -575,14 +617,14 @@ export const GamePage: React.FC = () => {
                     onClick={handlePracticeContinue}
                     data-testid="practice-continue"
                   >
-                    Weiter
+                    {t('button.next')}
                   </button>
                 </div>
               )}
 
               {hasAnswered && !waitingForContinue && (
                 <div className={gameStyles.submittedNote} data-testid="answer-feedback">
-                  Antwort gesendet! Warten auf andere Spieler...
+                  {t('game.answerSent')}
                 </div>
               )}
             </div>
@@ -591,7 +633,7 @@ export const GamePage: React.FC = () => {
 
         {/* Right Pane: Score + Players (hidden in practice mode) */}
         {!isPractice && (
-          <aside className={gameStyles.rightPane} aria-label="Spielerübersicht">
+          <aside className={gameStyles.rightPane} aria-label={t('game.playerOverview')}>
             <div className={gameStyles.scoreBlock} data-testid="current-score">
               <ScoreDisplay
                 score={score}

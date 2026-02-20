@@ -303,6 +303,7 @@ describe('AudioManager', () => {
 
   describe('Initialization', () => {
     it('should initialize successfully with valid audio context', async () => {
+      // DISABLED is false by default, so init proceeds normally
       // Mock the init method to simulate successful initialization
       const mockInit = jest.spyOn(privateManager, 'init').mockImplementation(async function(this: AudioManagerPrivate) {
         privateManager.audioContext = mockAudioContext;
@@ -354,7 +355,9 @@ describe('AudioManager', () => {
     })
 
     it('should handle initialization gracefully when disabled', async () => {
-      // With DISABLED = true, init() returns immediately without error
+      // Set DISABLED = true to test the disabled path
+      (privateManager as unknown as { DISABLED: boolean }).DISABLED = true;
+
       const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
 
       await privateManager.init();
@@ -370,9 +373,10 @@ describe('AudioManager', () => {
 
   describe('Auto-initialization', () => {
     it('should return immediately from playSound when disabled', async () => {
-      // With DISABLED = true, playSound() returns immediately without calling ensureInitialized
+      // Set DISABLED = true to test the disabled path
       const freshAudioManager = new AudioManager();
       const freshPrivate = asPrivate(freshAudioManager);
+      (freshPrivate as unknown as { DISABLED: boolean }).DISABLED = true;
 
       const ensureInitSpy = jest.spyOn(freshPrivate, 'ensureInitialized');
 
@@ -400,9 +404,9 @@ describe('AudioManager', () => {
     })
 
     it('should return early from playSound without warnings when disabled', async () => {
-      // With DISABLED = true, playSound() returns at the very first check
-      // No warnings are logged because it never reaches the initialization or ready checks
-      const freshAudioManager = new AudioManager()
+      // Set DISABLED = true to test the disabled path
+      const freshAudioManager = new AudioManager();
+      (asPrivate(freshAudioManager) as unknown as { DISABLED: boolean }).DISABLED = true;
 
       const consoleSpy = jest.spyOn(console, 'warn')
 
@@ -440,6 +444,9 @@ describe('AudioManager', () => {
     })
 
     it('should return early for any sound when disabled', () => {
+      // Set DISABLED = true to test the disabled path
+      (asPrivate(audioManager) as unknown as { DISABLED: boolean }).DISABLED = true;
+
       const consoleSpy = jest.spyOn(console, 'warn')
 
       audioManager.playSound('unknown-sound')

@@ -656,6 +656,188 @@
   }
 }
 
+/* ─── Cosmetic Perk Effects ─── */
+
+/* Answer Preview: border highlight */
+.answerPreviewBorder .answerButton:hover:not(:disabled) {
+  border-color: var(--cv-purple);
+  box-shadow: 0 0 0 2px var(--cv-purple), var(--cv-glow-purple-md);
+}
+
+.answerPreviewBorder .answerSelected {
+  border-color: var(--cv-purple) !important;
+  box-shadow: 0 0 0 2px var(--cv-purple), var(--cv-glow-purple-md) !important;
+}
+
+/* Answer Preview: background fill */
+.answerPreviewBackground .answerButton:hover:not(:disabled) {
+  background: linear-gradient(135deg, rgba(0, 242, 255, 0.12), rgba(188, 19, 254, 0.08));
+}
+
+.answerPreviewBackground .answerSelected {
+  background: linear-gradient(135deg, rgba(0, 242, 255, 0.18), rgba(188, 19, 254, 0.12)) !important;
+}
+
+/* Answer Preview: glow shadow */
+.answerPreviewShadow .answerButton:hover:not(:disabled) {
+  box-shadow: 0 0 20px rgba(0, 242, 255, 0.3), 0 0 40px rgba(188, 19, 254, 0.15);
+}
+
+.answerPreviewShadow .answerSelected {
+  box-shadow: 0 0 25px rgba(0, 242, 255, 0.4), 0 0 50px rgba(188, 19, 254, 0.2) !important;
+}
+
+/* Timer Style: neon */
+.timerNeon .timer {
+  text-shadow: 0 0 8px currentColor, 0 0 16px currentColor;
+}
+
+.timerNeon .radialProgress {
+  filter: drop-shadow(0 0 4px currentColor);
+}
+
+.timerNeon .progressBar {
+  box-shadow: 0 0 8px currentColor;
+}
+
+/* Timer Style: pulse */
+.timerPulse .timer {
+  animation: timer-cosmetic-pulse 2s ease-in-out infinite;
+}
+
+@keyframes timer-cosmetic-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+}
+
+.timerPulse .radialTimer {
+  animation: timer-ring-pulse 2s ease-in-out infinite;
+}
+
+@keyframes timer-ring-pulse {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(1.3); }
+}
+
+/* Timer Style: minimal */
+.timerMinimal .radialTimer {
+  display: none;
+}
+
+.timerMinimal .progressContainer {
+  height: 2px;
+}
+
+.timerMinimal .timer {
+  font-size: 0.85rem;
+  opacity: 0.7;
+}
+
+/* Celebration: confetti on correct answer */
+.celebrationConfetti .answerCorrectBlink::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(circle, var(--cv-cyan) 1px, transparent 1px),
+    radial-gradient(circle, var(--cv-purple) 1px, transparent 1px),
+    radial-gradient(circle, var(--cv-success) 1px, transparent 1px);
+  background-size: 8px 8px, 12px 12px, 10px 10px;
+  background-position: 0 0, 4px 4px, 2px 6px;
+  opacity: 0;
+  animation: confetti-burst 1.2s ease-out forwards;
+  pointer-events: none;
+}
+
+@keyframes confetti-burst {
+  0% { opacity: 0.6; transform: scale(0.8); }
+  50% { opacity: 0.4; transform: scale(1.2); }
+  100% { opacity: 0; transform: scale(1.5); }
+}
+
+/* Celebration: fireworks on correct answer */
+.celebrationFireworks .answerCorrectBlink {
+  animation: blink-correct 1200ms ease-in-out infinite, firework-flash 600ms ease-out;
+}
+
+@keyframes firework-flash {
+  0% { box-shadow: 0 0 0 transparent; }
+  25% { box-shadow: 0 0 30px var(--cv-cyan), 0 0 60px var(--cv-purple); }
+  50% { box-shadow: 0 0 50px var(--cv-success), 0 0 80px var(--cv-cyan-glow); }
+  100% { box-shadow: 0 0 0 transparent; }
+}
+
+/* Celebration: sparkle on correct answer */
+.celebrationSparkle .answerCorrectBlink {
+  animation: blink-correct 1200ms ease-in-out infinite, sparkle-shimmer 800ms ease-out;
+}
+
+@keyframes sparkle-shimmer {
+  0% { filter: brightness(1); }
+  30% { filter: brightness(1.6) saturate(1.5); }
+  60% { filter: brightness(1.3) saturate(1.2); }
+  100% { filter: brightness(1); }
+}
+
+/* Score Multiplier Visual: flame */
+.multiplierFlame .scoreDeltaShow {
+  background: linear-gradient(135deg, #ff6b35, #ff2d2d);
+  color: #fff;
+  border-color: #ff6b35;
+  text-shadow: 0 0 8px rgba(255, 107, 53, 0.6);
+}
+
+/* Score Multiplier Visual: electric */
+.multiplierElectric .scoreDeltaShow {
+  background: linear-gradient(135deg, var(--cv-cyan), #7b61ff);
+  color: #fff;
+  border-color: var(--cv-cyan);
+  text-shadow: 0 0 8px var(--cv-cyan-glow);
+  animation: scoreDeltaShow 200ms ease, electric-flicker 300ms ease-out;
+}
+
+@keyframes electric-flicker {
+  0%, 100% { opacity: 1; }
+  25% { opacity: 0.7; }
+  50% { opacity: 1; }
+  75% { opacity: 0.8; }
+}
+
+/* Score Multiplier Visual: gold */
+.multiplierGold .scoreDeltaShow {
+  background: linear-gradient(135deg, #ffd700, #ffaa00);
+  color: #1a1a2e;
+  border-color: #ffd700;
+  text-shadow: 0 0 4px rgba(255, 215, 0, 0.4);
+  font-weight: 900;
+}
+
+/* Streak Counter: fire */
+.streakFire .scoreBlock {
+  position: relative;
+}
+
+/* Streak Counter: ice */
+.streakIce .scoreDeltaShow {
+  background: linear-gradient(135deg, #a8edea, #69b7eb);
+  color: #0a1628;
+  border-color: #69b7eb;
+}
+
+/* Streak Counter: rainbow */
+.streakRainbow .scoreDeltaShow {
+  background: linear-gradient(90deg, #ff6b6b, #ffa726, #ffee58, #66bb6a, #42a5f5, #ab47bc);
+  color: #fff;
+  border: none;
+  background-size: 200% 100%;
+  animation: scoreDeltaShow 200ms ease, rainbow-shift 2s linear infinite;
+}
+
+@keyframes rainbow-shift {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
+}
+
 /* Synchronization Phase Styles */
 .syncCard {
   text-align: center;

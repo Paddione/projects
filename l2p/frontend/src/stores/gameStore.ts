@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { devtools } from 'zustand/middleware'
-import { Player } from '../types'
+import { Player, CosmeticEffects } from '../types'
 
 export interface Question {
   id: string

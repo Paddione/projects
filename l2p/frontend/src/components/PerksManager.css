@@ -965,6 +965,54 @@
   background: linear-gradient(90deg, #8b5cf6 50%, #7c3aed 50%);
 }
 
+/* Generic Config Option Grid (used by helper, display, emote, sound, multiplier, title) */
+.config-option-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+}
+
+.config-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 14px 12px;
+  border: 2px solid var(--color-border, #e2e8f0);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: var(--color-background, #030408);
+  text-align: center;
+}
+
+.config-option:hover {
+  border-color: var(--color-primary, #3b82f6);
+  background: var(--color-primary-bg, #eff6ff);
+}
+
+.config-option.selected {
+  border-color: var(--color-primary, #3b82f6);
+  background: var(--color-primary-bg, #eff6ff);
+  box-shadow: 0 0 0 3px rgba(0, 242, 255, 0.15);
+}
+
+.config-option-emoji {
+  font-size: 1.6rem;
+}
+
+.config-option-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-text-primary, #1e293b);
+}
+
+.config-option-desc {
+  font-size: 0.7rem;
+  color: var(--color-text-secondary, #64748b);
+  line-height: 1.3;
+}
+
 /* Actions */
 .perk-actions {
   display: flex;

@@ -54,6 +54,19 @@
   --color-error: var(--cv-danger);
   --color-error-bg: var(--cv-danger-subtle);
   --color-error-border: var(--cv-danger-border);
+  --color-error-dark: var(--cv-danger-dim);
+  --color-success: var(--cv-success);
+  --color-success-bg: var(--cv-success-subtle);
+  --color-success-border: var(--cv-success-border);
+  --color-warning: var(--cv-warning);
+  --color-warning-bg: var(--cv-warning-subtle);
+  --color-warning-border: var(--cv-warning-border);
+  --color-info: var(--cv-info);
+  --color-info-bg: var(--cv-info-subtle);
+  --color-info-light: var(--cv-info-glow);
+  --color-info-dark: var(--cv-cyan-dim);
+  --color-primary-bg: var(--cv-cyan-bg);
+  --color-surface-muted: var(--cv-glass-2);
 
   /* Additional aliases used by AI components */
   --bg-primary: var(--cv-glass-2);

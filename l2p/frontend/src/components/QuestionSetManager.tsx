@@ -3,6 +3,7 @@ import { apiService } from '../services/apiService'
 import { LoadingSpinner } from './LoadingSpinner'
 import { QuestionSet, Answer } from '../types'
 import { useFocusTrap } from '../hooks/useFocusTrap'
+import { useLocalization } from '../hooks/useLocalization'
 import styles from '../styles/QuestionSetManager.module.css'
 
 interface QuestionSetStats {
@@ -13,6 +14,7 @@ interface QuestionSetStats {
 }
 
 export const QuestionSetManager: React.FC = () => {
+  const { t } = useLocalization()
   const [questionSets, setQuestionSets] = useState<QuestionSet[]>([])
   const [selectedSet, setSelectedSet] = useState<QuestionSet | null>(null)
   const [isLoading, setIsLoading] = useState(false)
@@ -210,7 +212,7 @@ export const QuestionSetManager: React.FC = () => {
   }
 
   const handleDeleteQuestionSet = async (id: number) => {
-    if (!confirm('Are you sure you want to delete this question set? This action cannot be undone.')) {
+    if (!confirm(t('questionSets.deleteConfirm'))) {
       return
     }
 
@@ -383,7 +385,7 @@ export const QuestionSetManager: React.FC = () => {
     return (
       <div className={styles.container}>
         <LoadingSpinner />
-        <p>Loading...</p>
+        <p>{t('questionSets.loading')}</p>
       </div>
     )
   }
@@ -391,13 +393,13 @@ export const QuestionSetManager: React.FC = () => {
   return (
     <div className={styles.container}>
       <div className={styles.header}>
-        <h1>Question Set Manager</h1>
+        <h1>{t('questionSets.title')}</h1>
         <div className={styles.actions}>
           <button
             className={`${styles.button} ${styles.buttonSecondary}`}
             onClick={() => setShowImportForm(true)}
           >
-            Import Set
+            {t('questionSets.importSet')}
           </button>
           <button
             className={styles.button}
@@ -405,7 +407,7 @@ export const QuestionSetManager: React.FC = () => {
             onClick={() => setCompactMode(v => !v)}
             title="Toggle compact list mode"
           >
-            {compactMode ? 'Disable Compact' : 'Enable Compact'}
+            {compactMode ? t('questionSets.disableCompact') : t('questionSets.enableCompact')}
           </button>
         </div>
       </div>
@@ -419,11 +421,11 @@ export const QuestionSetManager: React.FC = () => {
 
       <div className={styles.content}>
         <div className={styles.sidebar}>
-          <h2>Question Sets</h2>
+          <h2>{t('questionSets.questionSets')}</h2>
           <div className={styles.questionSetList}>
             {questionSets.length === 0 ? (
               <div className={styles.emptyState}>
-                <p>No question sets found. Create a new one to get started.</p>
+                <p>{t('questionSets.noSetsFound')}</p>
               </div>
             ) : (
               questionSets.map(set => (
@@ -435,14 +437,14 @@ export const QuestionSetManager: React.FC = () => {
                 >
                   <div className={styles.questionSetInfo}>
                     <h3>{set.name || 'Unnamed Set'}</h3>
-                    <p>{set.description || 'No description available'}</p>
+                    <p>{set.description || t('questionSets.noDescription')}</p>
                     <div className={styles.questionSetMeta}>
                       <span className={styles.category}>{set.category || 'General'}</span>
                       <span className={`${styles.difficulty} ${styles[set.difficulty || 'medium']}`}>
                         {set.difficulty || 'medium'}
                       </span>
                       <span className={`${styles.status} ${set.is_active ? styles.active : styles.inactive}`}>
-                        {set.is_active ? 'Active' : 'Inactive'}
+                        {set.is_active ? t('questionSets.active') : t('questionSets.inactive')}
                       </span>
                     </div>
                   </div>
@@ -496,7 +498,7 @@ export const QuestionSetManager: React.FC = () => {
                       {selectedSet.difficulty}
                     </span>
                     <span className={`${styles.status} ${selectedSet.is_active ? styles.active : styles.inactive}`}>
-                      {selectedSet.is_active ? 'Active' : 'Inactive'}
+                      {selectedSet.is_active ? t('questionSets.active') : t('questionSets.inactive')}
                     </span>
                   </div>
                 </div>
@@ -506,22 +508,22 @@ export const QuestionSetManager: React.FC = () => {
                 {stats && (
                   <div className={styles.stats}>
                     <div className={styles.collapseHeader}>
-                      <h3>Statistics</h3>
+                      <h3>{t('questionSets.statistics')}</h3>
                       <button className={styles.collapseBtn} onClick={() => setCollapseStats(v => !v)}>
-                        {collapseStats ? 'Show' : 'Hide'}
+                        {collapseStats ? t('questionSets.show') : t('questionSets.hide')}
                       </button>
                     </div>
                     <div className={`${styles.statsGrid} ${collapseStats ? styles.hidden : ''}`}>
                       <div className={styles.stat}>
-                        <span className={styles.statLabel}>Total Questions</span>
+                        <span className={styles.statLabel}>{t('questionSets.totalQuestions')}</span>
                         <span className={styles.statValue}>{stats.total_questions}</span>
                       </div>
                       <div className={styles.stat}>
-                        <span className={styles.statLabel}>Average Difficulty</span>
+                        <span className={styles.statLabel}>{t('questionSets.avgDifficulty')}</span>
                         <span className={styles.statValue}>{Number.isFinite(Number(stats.avg_difficulty)) ? Number(stats.avg_difficulty).toFixed(1) : '-'}</span>
                       </div>
                       <div className={styles.stat}>
-                        <span className={styles.statLabel}>Difficulty Range</span>
+                        <span className={styles.statLabel}>{t('questionSets.difficultyRange')}</span>
                         <span className={styles.statValue}>{stats.min_difficulty} - {stats.max_difficulty}</span>
                       </div>
                     </div>
@@ -530,23 +532,23 @@ export const QuestionSetManager: React.FC = () => {
 
                 {/* Metadata Section */}
                 <div className={styles.metadata}>
-                  <h3>Question Set Details</h3>
+                  <h3>{t('questionSets.details')}</h3>
                   <div className={styles.metadataGrid}>
                     <div className={styles.metadataItem}>
-                      <span className={styles.metadataLabel}>Public</span>
+                      <span className={styles.metadataLabel}>{t('questionSets.public')}</span>
                       <span className={styles.metadataValue}>
                         {selectedSet.is_public ? '✅ Yes' : '❌ No'}
                       </span>
                     </div>
                     <div className={styles.metadataItem}>
-                      <span className={styles.metadataLabel}>Featured</span>
+                      <span className={styles.metadataLabel}>{t('questionSets.featured')}</span>
                       <span className={styles.metadataValue}>
                         {selectedSet.is_featured ? '⭐ Yes' : '⭐ No'}
                       </span>
                     </div>
                     {selectedSet.tags && selectedSet.tags.length > 0 && (
                       <div className={styles.metadataItem}>
-                        <span className={styles.metadataLabel}>Tags</span>
+                        <span className={styles.metadataLabel}>{t('questionSets.tags')}</span>
                         <span className={styles.metadataValue}>
                           <div className={styles.tags}>
                             {selectedSet.tags.map((tag, index) => (
@@ -558,7 +560,7 @@ export const QuestionSetManager: React.FC = () => {
                     )}
                     {selectedSet.created_at && (
                       <div className={styles.metadataItem}>
-                        <span className={styles.metadataLabel}>Created</span>
+                        <span className={styles.metadataLabel}>{t('questionSets.created')}</span>
                         <span className={styles.metadataValue}>
                           {new Date(selectedSet.created_at).toLocaleDateString()}
                         </span>
@@ -566,7 +568,7 @@ export const QuestionSetManager: React.FC = () => {
                     )}
                     {selectedSet.updated_at && (
                       <div className={styles.metadataItem}>
-                        <span className={styles.metadataLabel}>Last Updated</span>
+                        <span className={styles.metadataLabel}>{t('questionSets.lastUpdated')}</span>
                         <span className={styles.metadataValue}>
                           {new Date(selectedSet.updated_at).toLocaleDateString()}
                         </span>
@@ -574,7 +576,7 @@ export const QuestionSetManager: React.FC = () => {
                     )}
                     {selectedSet.metadata && Object.keys(selectedSet.metadata).length > 0 && (
                       <div className={styles.metadataItem}>
-                        <span className={styles.metadataLabel}>Additional Info</span>
+                        <span className={styles.metadataLabel}>{t('questionSets.additionalInfo')}</span>
                         <span className={styles.metadataValue}>
                           <div className={styles.metadataContent}>
                             {Object.entries(selectedSet.metadata).map(([key, value]) => (
@@ -592,9 +594,9 @@ export const QuestionSetManager: React.FC = () => {
                 {selectedSet.questions && (
                   <div className={styles.questions}>
                     <div className={styles.collapseHeader}>
-                      <h3>Questions ({selectedSet.questions.length})</h3>
+                      <h3>{t('questionSets.questions')} ({selectedSet.questions.length})</h3>
                       <button className={styles.collapseBtn} onClick={() => setCollapseQuestions(v => !v)}>
-                        {collapseQuestions ? 'Show' : 'Hide'}
+                        {collapseQuestions ? t('questionSets.show') : t('questionSets.hide')}
                       </button>
                     </div>
                     <div className={`${styles.questionList} ${collapseQuestions ? styles.hidden : ''}`}>
@@ -627,8 +629,8 @@ export const QuestionSetManager: React.FC = () => {
               </div>
             ) : (
               <div className={styles.emptyState}>
-                <h2>Select a Question Set</h2>
-                <p>Choose a question set from the sidebar to view its details and manage questions.</p>
+                <h2>{t('questionSets.selectSet')}</h2>
+                <p>{t('questionSets.selectSetDesc')}</p>
               </div>
             )}
           </div>
@@ -648,10 +650,10 @@ export const QuestionSetManager: React.FC = () => {
             aria-labelledby="edit-modal-title"
             tabIndex={-1}
           >
-            <h2 id="edit-modal-title">Edit Question Set</h2>
+            <h2 id="edit-modal-title">{t('questionSets.editSet')}</h2>
             <form onSubmit={handleUpdateQuestionSet}>
               <div className={styles.formGroup}>
-                <label htmlFor="edit-name">Name</label>
+                <label htmlFor="edit-name">{t('questionSets.name')}</label>
                 <input
                   type="text"
                   id="edit-name"
@@ -661,7 +663,7 @@ export const QuestionSetManager: React.FC = () => {
                 />
               </div>
               <div className={styles.formGroup}>
-                <label htmlFor="edit-description">Description</label>
+                <label htmlFor="edit-description">{t('questionSets.descriptionLabel')}</label>
                 <textarea
                   id="edit-description"
                   value={formData.description}
@@ -670,7 +672,7 @@ export const QuestionSetManager: React.FC = () => {
                 />
               </div>
               <div className={styles.formGroup}>
-                <label htmlFor="edit-category">Category</label>
+                <label htmlFor="edit-category">{t('questionSets.categoryLabel')}</label>
                 <input
                   type="text"
                   id="edit-category"
@@ -680,27 +682,27 @@ export const QuestionSetManager: React.FC = () => {
                 />
               </div>
               <div className={styles.formGroup}>
-                <label htmlFor="edit-difficulty">Difficulty</label>
+                <label htmlFor="edit-difficulty">{t('questionSets.difficultyLabel')}</label>
                 <select
                   id="edit-difficulty"
                   value={formData.difficulty}
                   onChange={(e) => setFormData({ ...formData, difficulty: e.target.value })}
                 >
-                  <option value="easy">Easy</option>
-                  <option value="medium">Medium</option>
-                  <option value="hard">Hard</option>
+                  <option value="easy">{t('questionSets.easy')}</option>
+                  <option value="medium">{t('questionSets.medium')}</option>
+                  <option value="hard">{t('questionSets.hard')}</option>
                 </select>
               </div>
               <div className={styles.formActions}>
                 <button type="submit" className={styles.buttonPrimary}>
-                  Update
+                  {t('questionSets.update')}
                 </button>
                 <button
                   type="button"
                   className={styles.buttonSecondary}
                   onClick={() => setShowEditForm(false)}
                 >
-                  Cancel
+                  {t('questionSets.cancel')}
                 </button>
               </div>
             </form>
@@ -722,54 +724,208 @@ export const QuestionSetManager: React.FC = () => {
           >
             <h2 id="import-modal-title">Fragen-Set Importieren</h2>
             <div className={styles.importInstructions}>
-              <p>Fügen Sie JSON-Daten ein, um ein neues Fragen-Set zu erstellen. Exportierte Sets können direkt wieder importiert werden.</p>
-              <details>
-                <summary>Standard Format (Export/Import)</summary>
-                <pre>{`{
+              <p>Fügen Sie JSON-Daten ein, um ein neues Fragen-Set zu erstellen. Nutzen Sie die Vorlage unten oder lassen Sie das JSON von einer KI generieren.</p>
+
+              <details open>
+                <summary>Vollständige JSON-Vorlage (alle Felder)</summary>
+                <div className={styles.templateWrapper}>
+                  <button
+                    type="button"
+                    className={styles.copyButton}
+                    onClick={() => {
+                      const template = JSON.stringify({
+                        questionSet: {
+                          name: "Name des Fragen-Sets",
+                          description: "Beschreibung des Themas und Inhalts",
+                          category: "Kategorie (z.B. Geschichte, Naturwissenschaft, Geographie)",
+                          difficulty: "medium",
+                          is_active: true
+                        },
+                        questions: [
+                          {
+                            question_text: "Fragetext hier eingeben?",
+                            answers: [
+                              { text: "Richtige Antwort", correct: true },
+                              { text: "Falsche Antwort A", correct: false },
+                              { text: "Falsche Antwort B", correct: false },
+                              { text: "Falsche Antwort C", correct: false }
+                            ],
+                            explanation: "Erklärung warum die Antwort richtig ist.",
+                            difficulty: 2
+                          },
+                          {
+                            question_text: "Zweite Frage hier?",
+                            answers: [
+                              { text: "Antwort 1", correct: false },
+                              { text: "Antwort 2", correct: true },
+                              { text: "Antwort 3", correct: false },
+                              { text: "Antwort 4", correct: false }
+                            ],
+                            explanation: "Erklärung zur zweiten Frage.",
+                            difficulty: 3
+                          }
+                        ]
+                      }, null, 2)
+                      navigator.clipboard.writeText(template)
+                        .then(() => {
+                          const btn = document.activeElement as HTMLButtonElement
+                          if (btn) { btn.textContent = 'Kopiert!'; setTimeout(() => { btn.textContent = 'Vorlage kopieren' }, 2000) }
+                        })
+                        .catch(() => { /* clipboard not available */ })
+                    }}
+                  >
+                    Vorlage kopieren
+                  </button>
+                  <pre>{`{
   "questionSet": {
-    "name": "Mein Fragen-Set",
-    "description": "Beschreibung",
-    "category": "Allgemein",
+    "name": "Name des Fragen-Sets",
+    "description": "Beschreibung des Themas und Inhalts",
+    "category": "Kategorie (z.B. Geschichte, Naturwissenschaft)",
+    "difficulty": "medium",       // "easy" | "medium" | "hard"
+    "is_active": true             // optional, Standard: true
+  },
+  "questions": [
+    {
+      "question_text": "Fragetext hier eingeben?",
+      "answers": [
+        { "text": "Richtige Antwort", "correct": true },
+        { "text": "Falsche Antwort A", "correct": false },
+        { "text": "Falsche Antwort B", "correct": false },
+        { "text": "Falsche Antwort C", "correct": false }
+      ],
+      "explanation": "Erklärung warum die Antwort richtig ist.",
+      "difficulty": 2             // 1 (leicht) bis 5 (schwer)
+    }
+  ]
+}`}</pre>
+                </div>
+              </details>
+
+              <details>
+                <summary>KI-Prompt zum Generieren (kopieren & an ChatGPT/Claude senden)</summary>
+                <div className={styles.templateWrapper}>
+                  <button
+                    type="button"
+                    className={styles.copyButton}
+                    onClick={() => {
+                      const prompt = `Erstelle ein Quiz-Fragen-Set als JSON im folgenden Format. Ersetze die Platzhalter mit echtem Inhalt zum Thema [DEIN THEMA HIER].
+
+Regeln:
+- Genau 10 Fragen (oder mehr/weniger nach Wunsch)
+- Jede Frage hat genau 4 Antworten
+- Genau 1 Antwort pro Frage ist "correct": true, die anderen "correct": false
+- "difficulty" pro Frage: 1 (leicht) bis 5 (schwer), mische verschiedene Schwierigkeiten
+- "explanation" erklärt kurz warum die Antwort richtig ist
+- Antworte NUR mit dem JSON, kein anderer Text
+
+{
+  "questionSet": {
+    "name": "Quiz: [Thema]",
+    "description": "[Kurze Beschreibung des Quiz-Inhalts]",
+    "category": "[Kategorie z.B. Geschichte, Naturwissenschaft, Geographie, Sport, Kultur]",
     "difficulty": "medium"
   },
   "questions": [
     {
-      "question_text": "Was ist die Hauptstadt von Deutschland?",
+      "question_text": "[Frage 1]?",
       "answers": [
-        { "text": "Berlin", "correct": true },
-        { "text": "München", "correct": false },
-        { "text": "Hamburg", "correct": false },
-        { "text": "Köln", "correct": false }
+        { "text": "[Richtige Antwort]", "correct": true },
+        { "text": "[Falsche Antwort]", "correct": false },
+        { "text": "[Falsche Antwort]", "correct": false },
+        { "text": "[Falsche Antwort]", "correct": false }
       ],
-      "explanation": "Berlin ist seit 1990 die Hauptstadt.",
+      "explanation": "[Erklärung]",
       "difficulty": 2
     }
   ]
-}`}</pre>
+}`
+                      navigator.clipboard.writeText(prompt)
+                        .then(() => {
+                          const btn = document.activeElement as HTMLButtonElement
+                          if (btn) { btn.textContent = 'Kopiert!'; setTimeout(() => { btn.textContent = 'Prompt kopieren' }, 2000) }
+                        })
+                        .catch(() => { /* clipboard not available */ })
+                    }}
+                  >
+                    Prompt kopieren
+                  </button>
+                  <pre className={styles.promptPre}>{`Erstelle ein Quiz-Fragen-Set als JSON im folgenden Format.
+Ersetze die Platzhalter mit echtem Inhalt zum Thema
+[DEIN THEMA HIER].
+
+Regeln:
+- Genau 10 Fragen (oder mehr/weniger nach Wunsch)
+- Jede Frage hat genau 4 Antworten
+- Genau 1 Antwort pro Frage ist "correct": true
+- "difficulty" pro Frage: 1 (leicht) bis 5 (schwer)
+- "explanation" erklärt kurz die richtige Antwort
+- Antworte NUR mit dem JSON, kein anderer Text
+
+[Dann folgt die JSON-Vorlage von oben]`}</pre>
+                </div>
               </details>
+
               <details>
-                <summary>Einfaches Format (Liste)</summary>
-                <pre>{`{
-  "title": "Mein Set",
-  "questions": [
-    {
-      "question": "Frage?",
-      "options": [
-        { "text": "A", "isCorrect": true },
-        { "text": "B", "isCorrect": false }
-      ]
-    }
-  ]
-}`}</pre>
-              </details>
-              <details>
-                <summary>Anforderungen</summary>
-                <ul style={{ fontSize: '0.85em', margin: '0.5em 0', paddingLeft: '1.2em' }}>
-                  <li>Jede Frage braucht ein nicht-leeres <code>question_text</code> Feld</li>
-                  <li>Mindestens <strong>2 Antworten</strong> pro Frage</li>
-                  <li>Mindestens <strong>1 Antwort</strong> muss <code>"correct": true</code> haben</li>
-                  <li>Zusätzliche DB-Felder (id, created_at, ...) werden ignoriert</li>
-                </ul>
+                <summary>Alle akzeptierten Feldnamen</summary>
+                <div className={styles.fieldReference}>
+                  <table className={styles.fieldTable}>
+                    <thead>
+                      <tr><th>Feld</th><th>Alternativen</th><th>Beschreibung</th></tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td><code>questionSet.name</code></td>
+                        <td><code>title</code>, <code>name</code></td>
+                        <td>Name des Sets (Pflicht)</td>
+                      </tr>
+                      <tr>
+                        <td><code>questionSet.description</code></td>
+                        <td><code>description</code></td>
+                        <td>Beschreibung (optional)</td>
+                      </tr>
+                      <tr>
+                        <td><code>questionSet.category</code></td>
+                        <td><code>category</code></td>
+                        <td>Kategorie (Standard: &quot;General&quot;)</td>
+                      </tr>
+                      <tr>
+                        <td><code>questionSet.difficulty</code></td>
+                        <td><code>difficulty</code></td>
+                        <td>&quot;easy&quot; / &quot;medium&quot; / &quot;hard&quot; oder &quot;leicht&quot; / &quot;mittel&quot; / &quot;schwer&quot;</td>
+                      </tr>
+                      <tr>
+                        <td><code>question_text</code></td>
+                        <td><code>questionText</code>, <code>question</code>, <code>text</code></td>
+                        <td>Fragetext (Pflicht). Auch als Objekt: <code>{`{"de": "...", "en": "..."}`}</code></td>
+                      </tr>
+                      <tr>
+                        <td><code>answers</code></td>
+                        <td><code>options</code></td>
+                        <td>Array von Antworten (min. 2)</td>
+                      </tr>
+                      <tr>
+                        <td><code>answers[].correct</code></td>
+                        <td><code>is_correct</code>, <code>isCorrect</code></td>
+                        <td>Boolean: ist diese Antwort richtig?</td>
+                      </tr>
+                      <tr>
+                        <td><code>answers[].text</code></td>
+                        <td><code>answer_text</code>, oder einfach ein String</td>
+                        <td>Antworttext</td>
+                      </tr>
+                      <tr>
+                        <td><code>explanation</code></td>
+                        <td>&mdash;</td>
+                        <td>Erklärung (optional). Auch als Objekt: <code>{`{"de": "...", "en": "..."}`}</code></td>
+                      </tr>
+                      <tr>
+                        <td><code>difficulty</code></td>
+                        <td>&mdash;</td>
+                        <td>Schwierigkeit pro Frage: 1&ndash;5 (Standard: 1)</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
               </details>
             </div>
 
@@ -800,7 +956,7 @@ export const QuestionSetManager: React.FC = () => {
 
               <div className={styles.formActions}>
                 <button type="submit" className={styles.buttonPrimary} disabled={isLoading}>
-                  {isLoading ? 'Importing...' : 'Import'}
+                  {isLoading ? t('questionSets.importing') : t('questionSets.import')}
                 </button>
                 <button
                   type="button"
@@ -811,7 +967,7 @@ export const QuestionSetManager: React.FC = () => {
                     setError(null)
                   }}
                 >
-                  Cancel
+                  {t('questionSets.cancel')}
                 </button>
               </div>
             </form>
@@ -832,7 +988,7 @@ export const QuestionSetManager: React.FC = () => {
               <span className={styles.category}>{selectedSet.category}</span>
               <span className={`${styles.difficulty} ${styles[selectedSet.difficulty]}`}>{selectedSet.difficulty}</span>
               <span className={`${styles.status} ${selectedSet.is_active ? styles.active : styles.inactive}`}>
-                {selectedSet.is_active ? 'Active' : 'Inactive'}
+                {selectedSet.is_active ? t('questionSets.active') : t('questionSets.inactive')}
               </span>
             </div>
 
@@ -843,19 +999,19 @@ export const QuestionSetManager: React.FC = () => {
             {stats && (
               <div className={styles.stats}>
                 <div className={styles.collapseHeader}>
-                  <h3>Statistics</h3>
+                  <h3>{t('questionSets.statistics')}</h3>
                 </div>
                 <div className={styles.statsGrid}>
                   <div className={styles.stat}>
-                    <span className={styles.statLabel}>Total Questions</span>
+                    <span className={styles.statLabel}>{t('questionSets.totalQuestions')}</span>
                     <span className={styles.statValue}>{stats.total_questions}</span>
                   </div>
                   <div className={styles.stat}>
-                    <span className={styles.statLabel}>Average Difficulty</span>
+                    <span className={styles.statLabel}>{t('questionSets.avgDifficulty')}</span>
                     <span className={styles.statValue}>{Number.isFinite(Number(stats.avg_difficulty)) ? Number(stats.avg_difficulty).toFixed(1) : '-'}</span>
                   </div>
                   <div className={styles.stat}>
-                    <span className={styles.statLabel}>Difficulty Range</span>
+                    <span className={styles.statLabel}>{t('questionSets.difficultyRange')}</span>
                     <span className={styles.statValue}>{stats.min_difficulty} - {stats.max_difficulty}</span>
                   </div>
                 </div>
@@ -865,7 +1021,7 @@ export const QuestionSetManager: React.FC = () => {
             {selectedSet.questions && (
               <div className={styles.questions}>
                 <div className={styles.collapseHeader}>
-                  <h3>Questions ({selectedSet.questions.length})</h3>
+                  <h3>{t('questionSets.questions')} ({selectedSet.questions.length})</h3>
                 </div>
                 <div className={styles.questionList}>
                   {selectedSet.questions.map((question, index) => (

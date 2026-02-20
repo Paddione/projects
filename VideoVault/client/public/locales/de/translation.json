@@ -4,67 +4,67 @@
     "description": "Deine persönliche Medienbibliothek für Videos, Hörbücher und E-Books"
   },
   "common": {
-    "scan": "Scan",
-    "import": "Import",
-    "export": "Export",
-    "cancel": "Cancel",
-    "save": "Save",
-    "delete": "Delete",
-    "edit": "Edit",
-    "close": "Close",
-    "search": "Search",
-    "loading": "Loading...",
-    "success": "Success",
-    "error": "Error"
+    "scan": "Scannen",
+    "import": "Importieren",
+    "export": "Exportieren",
+    "cancel": "Abbrechen",
+    "save": "Speichern",
+    "delete": "Löschen",
+    "edit": "Bearbeiten",
+    "close": "Schließen",
+    "search": "Suchen",
+    "loading": "Laden...",
+    "success": "Erfolg",
+    "error": "Fehler"
   },
   "header": {
-    "scanDirectory": "Scan Directory",
-    "importData": "Import Data",
-    "exportLibrary": "Export Library",
-    "exportPlaylist": "Export Playlist",
-    "batchRename": "Batch Rename",
-    "duplicates": "Duplicates",
+    "scanDirectory": "Verzeichnis scannen",
+    "importData": "Daten importieren",
+    "exportLibrary": "Bibliothek exportieren",
+    "exportPlaylist": "Playlist exportieren",
+    "batchRename": "Stapelumbenennung",
+    "duplicates": "Duplikate",
     "tags": "Tags",
-    "analytics": "Analytics",
-    "presets": "Presets",
-    "backup": "Backup",
-    "newFolder": "New Folder",
-    "deleteFolder": "Delete Folder",
-    "filters": "Filters",
-    "adminLogin": "Admin Login",
-    "adminLogout": "Logout admin",
-    "settings": "Settings",
-    "toggleTheme": "Toggle theme"
+    "analytics": "Analysen",
+    "presets": "Voreinstellungen",
+    "backup": "Sicherung",
+    "newFolder": "Neuer Ordner",
+    "deleteFolder": "Ordner löschen",
+    "filters": "Filter",
+    "adminLogin": "Admin-Anmeldung",
+    "adminLogout": "Admin abmelden",
+    "settings": "Einstellungen",
+    "toggleTheme": "Design wechseln"
   },
   "sidebar": {
     "searchPlaceholder": "Medien suchen...",
-    "categories": "Categories",
-    "dateRange": "Date Range",
-    "clearAll": "Clear All",
-    "savePreset": "Save Preset",
-    "loadPreset": "Load Preset",
-    "noCategories": "No categories found",
-    "filters": "Filters",
-    "active": "active",
-    "apply": "Apply",
-    "clear": "Clear"
+    "categories": "Kategorien",
+    "dateRange": "Zeitraum",
+    "clearAll": "Alle zurücksetzen",
+    "savePreset": "Voreinstellung speichern",
+    "loadPreset": "Voreinstellung laden",
+    "noCategories": "Keine Kategorien gefunden",
+    "filters": "Filter",
+    "active": "aktiv",
+    "apply": "Anwenden",
+    "clear": "Zurücksetzen"
   },
   "categories": {
-    "age": "Age",
-    "physical": "Physical",
-    "ethnicity": "Ethnicity",
-    "relationship": "Relationship",
-    "acts": "Acts",
-    "setting": "Setting",
-    "quality": "Quality",
-    "performer": "Performer",
-    "custom": "Custom"
+    "age": "Alter",
+    "physical": "Körperlich",
+    "ethnicity": "Ethnizität",
+    "relationship": "Beziehung",
+    "acts": "Handlungen",
+    "setting": "Umgebung",
+    "quality": "Qualität",
+    "performer": "Darsteller",
+    "custom": "Benutzerdefiniert"
   },
   "actions": {
-    "rename": "Rename",
-    "move": "Move",
-    "split": "Split",
-    "play": "Play"
+    "rename": "Umbenennen",
+    "move": "Verschieben",
+    "split": "Aufteilen",
+    "play": "Abspielen"
   },
   "help": {
     "title": "Hilfe",
@@ -72,7 +72,7 @@
       "gettingStarted": {
         "title": "Erste Schritte",
         "items": [
-          "MediaVault ist deine persoenliche Medienbibliothek fuer Videos, Hoerbuecher und E-Books.",
+          "MediaVault ist deine persönliche Medienbibliothek für Videos, Hörbücher und E-Books.",
           "Starte mit dem Scannen eines Verzeichnisses um deine Mediendateien zu importieren.",
           "Nutze die Seitenleiste zum Filtern und Durchsuchen deiner Bibliothek.",
           "Klicke auf ein Medium um Details anzuzeigen, abzuspielen oder Metadaten zu bearbeiten."
@@ -81,49 +81,49 @@
       "scanning": {
         "title": "Scannen & Importieren",
         "items": [
-          "Klicke auf 'Verzeichnis scannen' in der Kopfleiste um einen Ordner auszuwaehlen.",
+          "Klicke auf 'Verzeichnis scannen' in der Kopfleiste um einen Ordner auszuwählen.",
           "Das Scannen erkennt Video-, Audio- und E-Book-Dateien automatisch.",
-          "Grosse Verzeichnisse werden progressiv gescannt — du kannst waehrend des Scans browsen.",
-          "Scanne jederzeit erneut um neue oder geaenderte Dateien zu erfassen.",
-          "Importiere Daten aus externen Quellen ueber den Import-Button."
+          "Große Verzeichnisse werden progressiv gescannt — du kannst während des Scans browsen.",
+          "Scanne jederzeit erneut um neue oder geänderte Dateien zu erfassen.",
+          "Importiere Daten aus externen Quellen über den Import-Button."
         ]
       },
       "browsing": {
         "title": "Bibliothek durchsuchen",
         "items": [
           "Deine Medien erscheinen in einer Rasteransicht mit Vorschaubildern.",
-          "Klicke auf ein Video um den Player zu oeffnen, oder rechtsklicke fuer mehr Optionen.",
+          "Klicke auf ein Video um den Player zu öffnen, oder rechtsklicke für mehr Optionen.",
           "Nutze die Suchleiste um Medien nach Dateiname oder Metadaten zu finden.",
-          "Sortiere nach Name, Datum, Groesse oder Dauer ueber die Werkzeugleiste.",
-          "Die Bibliothek nutzt virtuelles Scrollen fuer flüssige Performance bei grossen Sammlungen."
+          "Sortiere nach Name, Datum, Größe oder Dauer über die Werkzeugleiste.",
+          "Die Bibliothek nutzt virtuelles Scrollen für flüssige Performance bei großen Sammlungen."
         ]
       },
       "filtering": {
         "title": "Filtern & Suchen",
         "items": [
-          "Oeffne das Filter-Panel in der Seitenleiste fuer erweiterte Filter.",
-          "Filtere nach Dateityp, Dauer, Dateigroesse, Qualitaet und Datum.",
-          "Kombiniere mehrere Filter fuer praezise Ergebnisse.",
-          "Speichere Filterkombinationen als Voreinstellungen fuer schnellen Zugriff.",
+          "Öffne das Filter-Panel in der Seitenleiste für erweiterte Filter.",
+          "Filtere nach Dateityp, Dauer, Dateigröße, Qualität und Datum.",
+          "Kombiniere mehrere Filter für präzise Ergebnisse.",
+          "Speichere Filterkombinationen als Voreinstellungen für schnellen Zugriff.",
           "Nutze den Voreinstellungs-Manager zum Erstellen, Bearbeiten und Anwenden."
         ]
       },
       "tagging": {
         "title": "Tags & Kategorien",
         "items": [
-          "Fuege Tags zu jedem Medium fuer einfache Organisation hinzu.",
-          "Durchsuche alle Tags auf der Tags-Seite (ueber die Kopfleiste erreichbar).",
+          "Füge Tags zu jedem Medium für einfache Organisation hinzu.",
+          "Durchsuche alle Tags auf der Tags-Seite (über die Kopfleiste erreichbar).",
           "Nutze Massenoperationen um mehrere Elemente gleichzeitig zu taggen.",
-          "Kategorien werden aus Dateipfaden extrahiert und koennen angepasst werden.",
-          "Importiere Tags aus externen Quellen ueber den Tag-Importer."
+          "Kategorien werden aus Dateipfaden extrahiert und können angepasst werden.",
+          "Importiere Tags aus externen Quellen über den Tag-Importer."
         ]
       },
       "focusMode": {
         "title": "Fokus-Modus",
         "items": [
-          "Der Fokus-Modus bietet eine dedizierte Oberflaeche zum Organisieren eines einzelnen Videos.",
+          "Der Fokus-Modus bietet eine dedizierte Oberfläche zum Organisieren eines einzelnen Videos.",
           "Vorschau, Kategorien bearbeiten und Stapelumbenennung auf einem Bildschirm.",
-          "Zugang zum Fokus-Modus ueber das Fokus-Symbol auf jeder Videokarte.",
+          "Zugang zum Fokus-Modus über das Fokus-Symbol auf jeder Videokarte.",
           "Nutze den Kategorie-Editor zum Zuweisen und Anpassen von Kategorien.",
           "Benenne Dateien mit musterbasierter Stapelumbenennung um."
         ]
@@ -131,8 +131,8 @@
       "duplicates": {
         "title": "Duplikaterkennung",
         "items": [
-          "Oeffne die Duplikate-Seite ueber die Kopfleiste um doppelte Dateien zu finden.",
-          "Duplikate werden durch Datei-Hash, Namensaehnlichkeit und Dateigroesse erkannt.",
+          "Öffne die Duplikate-Seite über die Kopfleiste um doppelte Dateien zu finden.",
+          "Duplikate werden durch Datei-Hash, Namensähnlichkeit und Dateigröße erkannt.",
           "Vergleiche Duplikate nebeneinander um zu entscheiden welche behalten werden.",
           "Nutze Massenoperationen um mehrere Duplikate gleichzeitig zu bereinigen."
         ]
@@ -140,11 +140,11 @@
       "mediaTypes": {
         "title": "Medientypen",
         "items": [
-          "VideoVault unterstuetzt Videos, Hoerbuecher und E-Books.",
+          "VideoVault unterstützt Videos, Hörbücher und E-Books.",
           "Videos werden in einem integrierten Player mit allen Steuerungen abgespielt.",
-          "Hoerbuecher haben einen dedizierten Player mit Kapitelnavigation.",
-          "E-Books (EPUB/PDF) oeffnen sich in einem integrierten Reader mit Seitennavigation.",
-          "Wechsle zwischen Medientypen ueber die Tabs in der Bibliotheksansicht."
+          "Hörbücher haben einen dedizierten Player mit Kapitelnavigation.",
+          "E-Books (EPUB/PDF) öffnen sich in einem integrierten Reader mit Seitennavigation.",
+          "Wechsle zwischen Medientypen über die Tabs in der Bibliotheksansicht."
         ]
       },
       "analytics": {
@@ -153,15 +153,15 @@
           "Sieh dir Bibliotheksstatistiken auf der Analyse-Seite an.",
           "Zeige Formatverteilung, Speichernutzung und Bibliothekswachstum.",
           "Verfolge deine meistgesehenen Inhalte und Wiedergabezeit.",
-          "Ueberwache Groesse und Zusammensetzung deiner Bibliothek ueber die Zeit."
+          "Überwache Größe und Zusammensetzung deiner Bibliothek über die Zeit."
         ]
       },
       "settings": {
         "title": "Einstellungen",
         "items": [
-          "Zugang zu den Einstellungen ueber das Zahnrad-Symbol in der Kopfleiste.",
-          "Konfiguriere Scan-Einstellungen und Vorschaubild-Qualitaet.",
-          "Setze Anzeige-Praeferenzen und Standard-Sortierung.",
+          "Zugang zu den Einstellungen über das Zahnrad-Symbol in der Kopfleiste.",
+          "Konfiguriere Scan-Einstellungen und Vorschaubild-Qualität.",
+          "Setze Anzeige-Präferenzen und Standard-Sortierung.",
           "Verwalte Bibliothekspfade und automatisches Scannen.",
           "Wechsle zwischen hellem und dunklem Design."
         ]

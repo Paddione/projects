@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import { useGameStore } from '../stores/gameStore'
 import { apiService } from '../services/apiService'
+import { useLocalization } from '../hooks/useLocalization'
 import { QuestionSet } from '../types'
 import styles from '../styles/QuestionSetSelector.module.css'
 
@@ -19,6 +20,7 @@ export const QuestionSetSelector: React.FC<QuestionSetSelectorProps> = ({
   className = ''
 }) => {
   const { lobbyCode, isHost } = useGameStore()
+  const { t } = useLocalization()
 
   const [availableQuestionSets, setAvailableQuestionSets] = useState<QuestionSet[]>([])
   const [questionSetInfo, setQuestionSetInfo] = useState<QuestionSetInfo | null>(null)
@@ -196,7 +198,7 @@ export const QuestionSetSelector: React.FC<QuestionSetSelectorProps> = ({
   if (!isHost) {
     return (
       <div className={`${styles.questionSetSelector} ${className}`}>
-        <h3 className={styles.sectionTitle}>Selected Questions</h3>
+        <h3 className={styles.sectionTitle}>{t('selector.selectedQuestions')}</h3>
         {questionSetInfo && (
           <div className={styles.infoDisplay}>
             <div className={styles.selectedSetsList}>
@@ -208,11 +210,11 @@ export const QuestionSetSelector: React.FC<QuestionSetSelectorProps> = ({
                   </div>
                 ))
               ) : (
-                <p className={styles.noSets}>No question sets selected</p>
+                <p className={styles.noSets}>{t('selector.noSetsSelected')}</p>
               )}
             </div>
             <div className={styles.finalQuestionCount}>
-              <span>Playing with <strong>{questionSetInfo.selectedQuestionCount}</strong> questions</span>
+              <span>{t('selector.playingWith')} <strong>{questionSetInfo.selectedQuestionCount}</strong> {t('selector.questions')}</span>
             </div>
           </div>
         )}
@@ -223,9 +225,9 @@ export const QuestionSetSelector: React.FC<QuestionSetSelectorProps> = ({
   return (
     <div className={`${styles.questionSetSelector} ${className}`}>
       <div className={styles.selectorHeader}>
-        <h3 className={styles.sectionTitle}>Question Set Management</h3>
+        <h3 className={styles.sectionTitle}>{t('selector.management')}</h3>
         <div className={styles.selectionSummary}>
-          {selectedSetIds.length} sets selected ({computedMaxQuestions} total Qs)
+          {selectedSetIds.length} {t('selector.setsSelected')} ({computedMaxQuestions} {t('selector.totalQs')})
         </div>
       </div>
 
@@ -233,7 +235,7 @@ export const QuestionSetSelector: React.FC<QuestionSetSelectorProps> = ({
         <div className={styles.searchWrapper}>
           <input
             type="text"
-            placeholder="Search sets..."
+            placeholder={t('selector.searchSets')}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className={styles.searchInput}
@@ -247,7 +249,7 @@ export const QuestionSetSelector: React.FC<QuestionSetSelectorProps> = ({
             onChange={(e) => setSelectedCategory(e.target.value)}
             className={styles.filterSelect}
           >
-            <option value="all">All Categories</option>
+            <option value="all">{t('selector.allCategories')}</option>
             {categories.map(cat => cat !== 'all' && (
               <option key={cat} value={cat}>{cat}</option>
             ))}
@@ -258,10 +260,10 @@ export const QuestionSetSelector: React.FC<QuestionSetSelectorProps> = ({
             onChange={(e) => setSelectedDifficulty(e.target.value)}
             className={styles.filterSelect}
           >
-            <option value="all">All Difficulties</option>
-            <option value="easy">Easy</option>
-            <option value="medium">Medium</option>
-            <option value="hard">Hard</option>
+            <option value="all">{t('selector.allDifficulties')}</option>
+            <option value="easy">{t('selector.easy')}</option>
+            <option value="medium">{t('selector.medium')}</option>
+            <option value="hard">{t('selector.hard')}</option>
           </select>
         </div>
       </div>
@@ -272,12 +274,12 @@ export const QuestionSetSelector: React.FC<QuestionSetSelectorProps> = ({
         {isLoading ? (
           <div className={styles.loadingState}>
             <div className={styles.spinner}></div>
-            <p>Fetching sets...</p>
+            <p>{t('selector.fetchingSets')}</p>
           </div>
         ) : (
           <div className={styles.setsGrid}>
             {filteredSets.length === 0 ? (
-              <p className={styles.noResults}>No matching question sets found</p>
+              <p className={styles.noResults}>{t('selector.noResults')}</p>
             ) : (
               filteredSets.map(set => (
                 <div
@@ -303,7 +305,7 @@ export const QuestionSetSelector: React.FC<QuestionSetSelectorProps> = ({
                     <div className={styles.cardMeta}>
                       <span className={styles.categoryLabel}>{set.category}</span>
                       <span className={styles.countLabel}>
-                        {set.questions?.length || (set.metadata?.['questionCount'] as number) || 0} questions
+                        {set.questions?.length || (set.metadata?.['questionCount'] as number) || 0} {t('selector.questions')}
                       </span>
                     </div>
 
@@ -324,8 +326,8 @@ export const QuestionSetSelector: React.FC<QuestionSetSelectorProps> = ({
 
       <div className={styles.configSection}>
         <div className={styles.configHeader}>
-          <h4>Game Settings</h4>
-          <span className={styles.configValue}>{questionCount} Questions</span>
+          <h4>{t('selector.gameSettings')}</h4>
+          <span className={styles.configValue}>{questionCount} {t('selector.questionsCount')}</span>
         </div>
 
         <div className={styles.sliderControl}>
@@ -340,13 +342,13 @@ export const QuestionSetSelector: React.FC<QuestionSetSelectorProps> = ({
           />
           <div className={styles.sliderLabels}>
             <span>5</span>
-            <span>{computedMaxQuestions} max</span>
+            <span>{computedMaxQuestions} {t('selector.max')}</span>
           </div>
         </div>
 
         {isSelectionTooSmall && (
           <div className={styles.warningMessage}>
-            ⚠️ Need at least 5 questions total. Add more sets!
+            {'⚠️ ' + t('selector.needMoreQuestions')}
           </div>
         )}
       </div>

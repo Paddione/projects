@@ -24,6 +24,14 @@ export interface GameState {
   questions: QuestionData[];
 }
 
+export interface CosmeticEffects {
+  helper?: { perk_id: number; perk_name?: string; configuration: any };
+  display?: { perk_id: number; perk_name?: string; configuration: any };
+  emote?: { perk_id: number; perk_name?: string; configuration: any };
+  sound?: { perk_id: number; perk_name?: string; configuration: any };
+  multiplier?: { perk_id: number; perk_name?: string; configuration: any };
+}
+
 export interface GamePlayer {
   id: string;
   username: string;
@@ -42,6 +50,7 @@ export interface GamePlayer {
   answerTime?: number | undefined;
   isConnected: boolean;
   perkModifiers?: GameplayModifiers;
+  cosmeticEffects?: CosmeticEffects;
   freeWrongsUsed: number;
 }
 
@@ -425,10 +434,10 @@ export class GameService {
             // Load gameplay perks
             const activePerks = await this.perkDraftService.getActiveGameplayPerks(numericId);
 
-            // Also load active cosmetic multiplier perks (experience_boost, streak_protector, time_extension)
-            const cosmeticMultiplierIds = await perksManager.getActiveCosmeticMultiplierPerkIds(numericId);
-            if (cosmeticMultiplierIds.length > 0) {
-              const cosmeticPerks = await this.perkDraftService.getPerksByIds(cosmeticMultiplierIds);
+            // Also load cosmetic perks with game effects (multiplier + helper slots)
+            const cosmeticGameEffectIds = await perksManager.getActiveCosmeticGameEffectPerkIds(numericId);
+            if (cosmeticGameEffectIds.length > 0) {
+              const cosmeticPerks = await this.perkDraftService.getPerksByIds(cosmeticGameEffectIds);
               activePerks.push(...cosmeticPerks);
             }
 
@@ -440,6 +449,12 @@ export class GameService {
             const loadout = await perksManager.getUserLoadout(numericId);
             if (loadout?.active_title) {
               player.title = loadout.active_title;
+            }
+
+            // Load cosmetic visual effect configs (helper, display, emote, sound)
+            const cosmeticConfigs = await perksManager.getCosmeticEffectConfigs(numericId);
+            if (Object.keys(cosmeticConfigs).length > 0) {
+              player.cosmeticEffects = cosmeticConfigs as CosmeticEffects;
             }
           }
         } catch (e) {

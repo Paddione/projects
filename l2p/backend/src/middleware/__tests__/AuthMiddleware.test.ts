@@ -56,7 +56,15 @@ describe('AuthMiddleware', () => {
       verifyPasswordResetToken: jest.fn(),
       changePassword: jest.fn(),
       verifyEmailToken: jest.fn(),
-      resendVerificationEmail: jest.fn()
+      resendVerificationEmail: jest.fn(),
+      getOrCreateUserFromUnifiedAuth: jest.fn().mockResolvedValue({
+        id: 123,
+        username: 'testuser',
+        email: 'test@example.com',
+        selected_character: 'warrior',
+        character_level: 1,
+        is_admin: false
+      })
     } as unknown as jest.Mocked<AuthService>;
 
     // Create auth middleware instance

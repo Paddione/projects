@@ -214,19 +214,9 @@ const io = new Server(server, {
 const isDevelopment = process.env['NODE_ENV'] === 'development' || !process.env['NODE_ENV'];
 
 app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'"],
-      scriptSrc: ["'self'"],
-      imgSrc: ["'self'", "data:", "https:"],
-      connectSrc: ["'self'", "ws:", "wss:"],
-      fontSrc: ["'self'"],
-      objectSrc: ["'none'"],
-      mediaSrc: ["'self'"],
-      frameSrc: ["'none'"],
-    },
-  },
+  // CSP is handled by the nginx frontend proxy — disable here to avoid
+  // duplicate/conflicting Content-Security-Policy headers on API responses
+  contentSecurityPolicy: false,
   crossOriginEmbedderPolicy: false,
   // Disable Cross-Origin-Opener-Policy in development to prevent browser warnings
   // about untrustworthy origins when accessing via IP addresses (e.g., http://10.0.0.45:3000)

@@ -801,3 +801,71 @@
 .importErrorDetails li {
   margin-bottom: 4px;
 }
+
+/* Template wrapper with copy button */
+.templateWrapper {
+  position: relative;
+}
+
+.copyButton {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 1;
+  padding: 4px 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--cv-text-bright, #fff);
+  background: var(--cv-glass-3, rgba(255, 255, 255, 0.1));
+  border: 1px solid var(--cv-border-3, rgba(255, 255, 255, 0.15));
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.copyButton:hover {
+  background: var(--cv-cyan-bg, rgba(0, 242, 255, 0.15));
+  border-color: var(--cv-cyan, #00f2ff);
+  color: var(--cv-cyan, #00f2ff);
+}
+
+.promptPre {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* Field reference table */
+.fieldReference {
+  overflow-x: auto;
+  margin: 8px 0;
+}
+
+.fieldTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+}
+
+.fieldTable th,
+.fieldTable td {
+  padding: 6px 10px;
+  text-align: left;
+  border-bottom: 1px solid var(--cv-border-2, rgba(255, 255, 255, 0.08));
+}
+
+.fieldTable th {
+  font-weight: 700;
+  color: var(--cv-cyan, #00f2ff);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.fieldTable td code {
+  background: rgba(0, 242, 255, 0.08);
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-size: 0.78rem;
+  color: var(--cv-text-bright, #e0e0e0);
+}

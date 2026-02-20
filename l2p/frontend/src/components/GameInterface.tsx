@@ -7,6 +7,7 @@ import { ErrorDisplay } from './ErrorBoundary'
 import { Icon } from './Icon'
 import styles from '../styles/GameInterface.module.css'
 import { useAudio } from '../hooks/useAudio'
+import { useLocalization } from '../hooks/useLocalization'
 
 interface GameInterfaceProps {
   className?: string
@@ -25,6 +26,7 @@ export const GameInterface: React.FC<GameInterfaceProps> = ({ className = '' }) 
   const questionCountFallbackRef = useRef('5')
   const questionSetFallbackRef = useRef('')
   const { handleMenuSelect, handleMenuConfirm, handleMenuCancel, handleButtonHover } = useAudio()
+  const { t } = useLocalization()
   const isTestMode = (() => {
     try {
       if (typeof window === 'undefined') return false
@@ -58,7 +60,7 @@ export const GameInterface: React.FC<GameInterfaceProps> = ({ className = '' }) 
     if (e) e.stopPropagation()
     // Check authentication via apiService (source of truth for real login state)
     if (!apiService.isAuthenticated()) {
-      setError('You must be logged in to create a lobby')
+      setError(t('home.loginRequired'))
       handleMenuCancel()
       return
     }
@@ -98,15 +100,15 @@ export const GameInterface: React.FC<GameInterfaceProps> = ({ className = '' }) 
   const handleJoinLobby = async (e: React.MouseEvent) => {
     e.stopPropagation()
     if (!lobbyCode.trim() || lobbyCode.length !== 6) {
-      setError('Please enter a valid 6-character lobby code')
-      setJoinCodeError('Lobby code is required')
+      setError(t('home.invalidCode'))
+      setJoinCodeError(t('home.codeRequired'))
       handleMenuCancel()
       return
     }
 
     if (!apiService.isAuthenticated()) {
-      setError('You must be logged in to join a lobby')
-      setJoinCodeError('You must be logged in to join a lobby')
+      setError(t('home.loginRequiredJoin'))
+      setJoinCodeError(t('home.loginRequiredJoin'))
       handleMenuCancel()
       return
     }
@@ -199,7 +201,7 @@ export const GameInterface: React.FC<GameInterfaceProps> = ({ className = '' }) 
     <div className={`${styles.gameInterface} ${className}`.trim()}>
       <div className={styles.header}>
         <h1 className={styles.title}>Learn2Play Quiz</h1>
-        <p className={styles.subtitle}>Battle your friends online or tackle solo challenges</p>
+        <p className={styles.subtitle}>{t('home.subtitle')}</p>
       </div>
 
       <ErrorDisplay
@@ -218,16 +220,16 @@ export const GameInterface: React.FC<GameInterfaceProps> = ({ className = '' }) 
           >
             <div className={styles.cardHeader}>
               <div className={styles.cardIcon}><Icon name="game-ui/lobby" size={32} alt="Create Lobby" /></div>
-              <div className={styles.cardBadge}>Fast Play</div>
+              <div className={styles.cardBadge}>{t('home.fastPlay')}</div>
             </div>
             <div className={styles.cardBody}>
-              <h3>Create Lobby</h3>
-              <p>Host a new game and invite friends with a code. Configure everything inside!</p>
+              <h3>{t('home.createLobby')}</h3>
+              <p>{t('home.createDescription')}</p>
             </div>
 
             <div className={styles.cardFooter}>
               <div className={styles.primaryAction}>
-                {isLoading ? 'Creating...' : 'Launch New Lobby'}
+                {isLoading ? t('home.creating') : t('home.launchNewLobby')}
               </div>
             </div>
 
@@ -303,7 +305,7 @@ export const GameInterface: React.FC<GameInterfaceProps> = ({ className = '' }) 
                     className={styles.textButton}
                     onClick={handleCreatePanelCancel}
                   >
-                    Cancel
+                    {t('button.cancel')}
                   </button>
                 </div>
               </div>
@@ -319,11 +321,11 @@ export const GameInterface: React.FC<GameInterfaceProps> = ({ className = '' }) 
           >
             <div className={styles.cardHeader}>
               <div className={styles.cardIcon}><Icon name="game-ui/multiplayer" size={32} alt="Join Game" /></div>
-              <div className={styles.cardBadge}>Multiplayer</div>
+              <div className={styles.cardBadge}>{t('home.multiplayer')}</div>
             </div>
             <div className={styles.cardBody}>
-              <h3>Join Game</h3>
-              <p>Enter a 6-character code to jump into an existing lobby</p>
+              <h3>{t('home.joinGame')}</h3>
+              <p>{t('home.joinDescription')}</p>
             </div>
 
             {isJoinPanelOpen ? (
@@ -350,20 +352,20 @@ export const GameInterface: React.FC<GameInterfaceProps> = ({ className = '' }) 
                     disabled={isLoading || lobbyCode.length !== 6}
                     data-testid="join-lobby-confirm"
                   >
-                    Join Now
+                    {t('home.joinNow')}
                   </button>
                   <button
                     className={styles.textButton}
                     onClick={handleJoinPanelToggle}
                   >
-                    Cancel
+                    {t('button.cancel')}
                   </button>
                 </div>
               </div>
             ) : (
               <div className={styles.cardFooter}>
                 <div className={styles.secondaryAction}>
-                  Enter Code
+                  {t('home.enterCode')}
                 </div>
               </div>
             )}

@@ -82,7 +82,7 @@ export class AudioManager {
   private isMuted = false
 
   // Global kill switch for the sound module to handle missing assets gracefully
-  private readonly DISABLED = true
+  private readonly DISABLED = false
 
   constructor() {
     // Defer initialization until first use to allow environment/test setup

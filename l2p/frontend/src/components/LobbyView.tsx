@@ -6,6 +6,7 @@ import styles from '../styles/LobbyView.module.css'
 import { socketService } from '../services/socketService'
 import { navigationService } from '../services/navigationService'
 import { apiService } from '../services/apiService'
+import { useLocalization } from '../hooks/useLocalization'
 
 interface LobbyViewProps {
   className?: string
@@ -14,6 +15,7 @@ interface LobbyViewProps {
 export const LobbyView: React.FC<LobbyViewProps> = ({ className = '' }) => {
   const [isReady, setIsReady] = useState(false)
   const [copied, setCopied] = useState(false)
+  const { t } = useLocalization()
 
   const {
     lobbyCode,
@@ -86,9 +88,9 @@ export const LobbyView: React.FC<LobbyViewProps> = ({ className = '' }) => {
     <div className={`${styles.lobbyView} ${className}`.trim()}>
       <div className={styles.topBar}>
         <div className={styles.codeBadge} onClick={handleCopyCode}>
-          <span className={styles.codeLabel}>Lobby Code</span>
+          <span className={styles.codeLabel}>{t('lobby.lobbyCode')}</span>
           <span className={styles.codeValue} data-testid="lobby-code">{lobbyCode}</span>
-          <span className={styles.copyHint}>{copied ? 'Copied!' : 'Click to copy'}</span>
+          <span className={styles.copyHint}>{copied ? t('lobby.copied') : t('lobby.clickToCopy')}</span>
         </div>
 
         <div className={styles.statusBadge}>
@@ -96,16 +98,16 @@ export const LobbyView: React.FC<LobbyViewProps> = ({ className = '' }) => {
             <span className={styles.readyCount}>{readyPlayers}</span>
             <span className={styles.totalCount}>/ {totalPlayers}</span>
           </div>
-          <span className={styles.readyLabel}>Ready</span>
+          <span className={styles.readyLabel}>{t('game.ready')}</span>
         </div>
       </div>
 
       <div className={styles.mainLayout}>
         <div className={styles.gameSection}>
           <div className={styles.sectionHeader}>
-            <h2 className={styles.sectionTitle}>Challengers</h2>
+            <h2 className={styles.sectionTitle}>{t('lobby.challengers')}</h2>
             {isHost && (
-              <div className={styles.hostBadge} data-testid="host-indicator">👑 Master of Ceremony</div>
+              <div className={styles.hostBadge} data-testid="host-indicator">{'👑 ' + t('lobby.masterOfCeremony')}</div>
             )}
           </div>
 
@@ -124,7 +126,7 @@ export const LobbyView: React.FC<LobbyViewProps> = ({ className = '' }) => {
               onClick={handleReadyToggle}
               data-testid="ready-toggle"
             >
-              {isReady ? '✓ I am Ready' : 'Get Ready'}
+              {isReady ? '✓ ' + t('lobby.iAmReady') : t('lobby.getReady')}
             </button>
 
             {isHost && (
@@ -137,11 +139,11 @@ export const LobbyView: React.FC<LobbyViewProps> = ({ className = '' }) => {
                 >
                   <span className={styles.startIcon}>🎮</span>
                   <span className={styles.startText}>
-                    {!allReady ? 'Start Anyway' : 'Launch Game'}
+                    {!allReady ? t('lobby.startAnyway') : t('lobby.launchGame')}
                   </span>
                 </button>
                 {!allReady && (
-                  <p className={styles.waitingNote}>Waiting for everyone to be ready...</p>
+                  <p className={styles.waitingNote}>{t('lobby.waitingForReady')}</p>
                 )}
               </div>
             )}
@@ -150,19 +152,19 @@ export const LobbyView: React.FC<LobbyViewProps> = ({ className = '' }) => {
 
         <div className={styles.settingsSection} data-testid="lobby-settings">
           <div className={styles.sectionHeader}>
-            <h2 className={styles.sectionTitle}>Game Configuration</h2>
+            <h2 className={styles.sectionTitle}>{t('lobby.gameConfiguration')}</h2>
             {isHost && (
               <button
                 className={styles.manageLink}
                 onClick={() => navigationService.navigateToQuestionSets()}
               >
-                Manage Sets
+                {t('lobby.manageSets')}
               </button>
             )}
           </div>
 
           <div className={styles.gameModeSelector} data-testid="game-mode-selector">
-            <h3 className={styles.sectionTitle} style={{ fontSize: '1.1rem' }}>Spielmodus</h3>
+            <h3 className={styles.sectionTitle} style={{ fontSize: '1.1rem' }}>{t('lobby.gameMode')}</h3>
             <div className={styles.gameModeButtons}>
               <button
                 className={`${styles.gameModeBtn} ${gameMode === 'arcade' ? styles.gameModeActive : ''}`}
@@ -170,8 +172,8 @@ export const LobbyView: React.FC<LobbyViewProps> = ({ className = '' }) => {
                 disabled={!isHost}
                 data-testid="game-mode-arcade"
               >
-                <span>Arcade</span>
-                <span className={styles.gameModeDesc}>Timer, Punkte, XP</span>
+                <span>{t('lobby.arcade')}</span>
+                <span className={styles.gameModeDesc}>{t('lobby.arcadeDesc')}</span>
               </button>
               <button
                 className={`${styles.gameModeBtn} ${gameMode === 'practice' ? styles.gameModeActive : ''}`}
@@ -179,8 +181,8 @@ export const LobbyView: React.FC<LobbyViewProps> = ({ className = '' }) => {
                 disabled={!isHost}
                 data-testid="game-mode-practice"
               >
-                <span>Practice</span>
-                <span className={styles.gameModeDesc}>Kein Timer, Hinweise, Lernen</span>
+                <span>{t('lobby.practiceMode')}</span>
+                <span className={styles.gameModeDesc}>{t('lobby.practiceDesc')}</span>
               </button>
             </div>
           </div>

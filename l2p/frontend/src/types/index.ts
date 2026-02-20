@@ -1,5 +1,19 @@
 // Shared TypeScript types and interfaces
 
+export interface CosmeticSlotConfig {
+  perk_id: number;
+  perk_name?: string;
+  configuration: Record<string, unknown>;
+}
+
+export interface CosmeticEffects {
+  helper?: CosmeticSlotConfig;
+  display?: CosmeticSlotConfig;
+  emote?: CosmeticSlotConfig;
+  sound?: CosmeticSlotConfig;
+  multiplier?: CosmeticSlotConfig;
+}
+
 export interface Player {
   id: string;
   username: string;
@@ -12,6 +26,8 @@ export interface Player {
   correctAnswers: number;
   currentStreak: number; // Track consecutive correct answers for streak sounds
   isConnected: boolean;
+  title?: string;
+  cosmeticEffects?: CosmeticEffects;
 }
 
 export interface Lobby {
