@@ -1,0 +1,33 @@
+---
+# =============================================================================
+# Docker Registry IngressRoute
+# =============================================================================
+# Exposes the private registry at registry.korczewski.de with basic auth.
+# Enables `docker login registry.korczewski.de` + `docker push` from any
+# machine. In-cluster pulls via registry.local:5000 (HTTP) stay unchanged.
+# =============================================================================
+
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: registry
+  namespace: korczewski-infra
+  labels:
+    app: registry
+    app.kubernetes.io/name: registry
+    app.kubernetes.io/component: image-registry
+    app.kubernetes.io/part-of: korczewski
+    tier: infrastructure
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`registry.korczewski.de`)
+      kind: Rule
+      services:
+        - name: registry
+          port: 5000
+      middlewares:
+        - name: registry-auth
+          namespace: korczewski-infra
+  tls: {}

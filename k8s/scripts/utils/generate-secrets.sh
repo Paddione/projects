@@ -219,6 +219,33 @@ stringData:
 EOF
 log_info "Created traefik-secret.yaml"
 
+# =============================================================================
+# Registry Auth Secret
+# =============================================================================
+REGISTRY_USER="$(get_env REGISTRY_USER registry)"
+REGISTRY_PASS_HASH="$(get_env REGISTRY_PASSWORD_HASH)"
+
+if [ -z "$REGISTRY_PASS_HASH" ]; then
+    log_warn "REGISTRY_PASSWORD_HASH not set"
+    log_warn "Generate with: htpasswd -Bn registry"
+    REGISTRY_PASS_HASH='$2y$05$placeholder'
+fi
+
+cat > "$SECRETS_DIR/registry-secret.yaml" <<EOF
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: registry-auth
+  namespace: korczewski-infra
+  labels:
+    app: registry
+type: Opaque
+stringData:
+  users: "${REGISTRY_USER}:${REGISTRY_PASS_HASH}"
+EOF
+log_info "Created registry-secret.yaml"
+
 cat > "$SECRETS_DIR/ipv64-secret.yaml" <<EOF
 ---
 apiVersion: v1

@@ -62,6 +62,7 @@ manifests:
     paths:
       - infrastructure/postgres
       - infrastructure/traefik
+      - infrastructure/registry
       - infrastructure/smb-csi
       - infrastructure/cert-renewal
       - services/auth
@@ -195,6 +196,7 @@ profiles:
         paths:
           - infrastructure/postgres
           - infrastructure/traefik
+          - infrastructure/registry
           - infrastructure/smb-csi
           - infrastructure/cert-renewal
       rawYaml:

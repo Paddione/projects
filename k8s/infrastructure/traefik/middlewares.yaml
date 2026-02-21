@@ -165,6 +165,21 @@ spec:
   basicAuth:
     secret: traefik-dashboard-auth
 ---
+# Basic Auth Middleware for Docker Registry
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: registry-auth
+  namespace: korczewski-infra
+  labels:
+    app: registry
+    app.kubernetes.io/component: image-registry
+    app.kubernetes.io/part-of: korczewski
+    tier: infrastructure
+spec:
+  basicAuth:
+    secret: registry-auth
+---
 # Admin Authentication Middleware (ForwardAuth)
 # Forwards authentication to auth service and requires ADMIN role
 apiVersion: traefik.io/v1alpha1

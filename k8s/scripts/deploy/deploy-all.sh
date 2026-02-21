@@ -179,6 +179,7 @@ print_summary() {
     echo "  - https://auth.korczewski.de"
     echo "  - https://shop.korczewski.de"
     echo "  - https://videovault.korczewski.de"
+    echo "  - https://registry.korczewski.de (Docker registry)"
     echo "  - https://traefik.korczewski.de (dashboard)"
     echo ""
     echo "Run validation:"
