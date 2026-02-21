@@ -411,6 +411,14 @@ const enTranslations: Translations = {
   'perk.filterBySlot': 'Filtering by Slot:',
   'perk.viewAll': 'View All',
   'perk.perks': 'perks',
+  'perk.loadoutHeader': 'Your Loadout',
+  'perk.loadoutHeaderDesc': 'Equip and configure perks for each slot.',
+  'perk.slotLocked': 'Unlock at Level {level}',
+  'perk.clearSlot': '— Clear slot —',
+  'perk.choosePerk': '— Choose a perk —',
+  'perk.equipping': 'Equipping...',
+  'perk.equipped': 'Equipped',
+  'perk.slotsActive': '{count}/{total} slots active',
 
   // Question Set Manager
   'questionSets.title': 'Question Set Manager',
@@ -1071,6 +1079,14 @@ const deTranslations: Translations = {
   'perk.filterBySlot': 'Filter nach Slot:',
   'perk.viewAll': 'Alle anzeigen',
   'perk.perks': 'Perks',
+  'perk.loadoutHeader': 'Dein Loadout',
+  'perk.loadoutHeaderDesc': 'Rüste Perks für jeden Slot aus und konfiguriere sie.',
+  'perk.slotLocked': 'Freischaltbar ab Level {level}',
+  'perk.clearSlot': '— Slot leeren —',
+  'perk.choosePerk': '— Perk auswählen —',
+  'perk.equipping': 'Wird ausgerüstet...',
+  'perk.equipped': 'Ausgerüstet',
+  'perk.slotsActive': '{count}/{total} Slots aktiv',
 
   // Question Set Manager
   'questionSets.title': 'Fragenset-Verwaltung',

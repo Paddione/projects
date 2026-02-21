@@ -1,5 +1,5 @@
 import React from 'react'
-import { render, screen } from '@testing-library/react'
+import { render, screen, within } from '@testing-library/react'
 import '@testing-library/jest-dom'
 import PerksManager from '../PerksManager'
 import { useAuthStore } from '../../stores/authStore'
@@ -8,6 +8,8 @@ import { apiService } from '../../services/apiService'
 jest.mock('../../services/apiService', () => ({
   apiService: {
     getUserPerks: jest.fn(),
+    activatePerk: jest.fn(),
+    deactivatePerk: jest.fn(),
   }
 }))
 
@@ -22,8 +24,6 @@ describe('PerksManager', () => {
     level: 12,
     experience: 2400,
   }
-
-  const mockToken = 'test-token'
 
   const mockPerksPayload = {
     perks: [
@@ -54,12 +54,12 @@ describe('PerksManager', () => {
         configuration: { theme_name: 'dark' },
         perk: {
           id: 2,
-          name: 'dark_theme',
+          name: 'ui_themes_basic',
           category: 'cosmetic',
           type: 'theme',
-          level_required: 5,
-          title: 'Night Studies',
-          description: 'Switch to a dark study mode',
+          level_required: 3,
+          title: 'Basic Themes',
+          description: 'Switch themes',
           is_active: true,
         }
       },
@@ -72,15 +72,15 @@ describe('PerksManager', () => {
         configuration: {},
         perk: {
           id: 3,
-          name: 'research_lab',
-          category: 'gameplay',
+          name: 'custom_avatars',
+          category: 'cosmetic',
           type: 'avatar',
           level_required: 20,
-          title: 'Research Lab Assistant',
-          description: 'Unlock a new avatar for lab challenges',
+          title: 'Custom Avatars',
+          description: 'New avatars',
           is_active: true,
         }
-      }
+      },
     ],
     activePerks: [
       {
@@ -89,25 +89,36 @@ describe('PerksManager', () => {
         perk_id: 2,
         is_unlocked: true,
         is_active: true,
-        configuration: { theme_name: 'dark' }
+        configuration: { theme_name: 'dark' },
+        perk: {
+          id: 2,
+          name: 'ui_themes_basic',
+          category: 'cosmetic',
+          type: 'theme',
+          level_required: 3,
+          title: 'Basic Themes',
+          description: 'Switch themes',
+          is_active: true,
+        }
       }
     ],
     loadout: {
       user_id: 1,
-      active_avatar: 'scientist',
+      active_avatar: 'student',
       active_badge: null,
-      active_theme: 'default',
+      active_theme: 'dark',
+      active_title: null,
       perks_config: {},
-      active_perks: []
+      active_perks: [],
+      active_cosmetic_perks: {}
     }
   }
 
   beforeEach(() => {
     jest.clearAllMocks()
-
     const mockStoreState = {
       user: mockUser,
-      token: mockToken,
+      token: 'test-token',
       isAuthenticated: true,
       login: jest.fn(),
       logout: jest.fn(),
@@ -119,43 +130,53 @@ describe('PerksManager', () => {
       setLoading: jest.fn(),
       setError: jest.fn()
     }
-
-    // Mock implementation that properly handles Zustand selectors
     mockUseAuthStore.mockImplementation((selector: any) => {
-      if (typeof selector === 'function') {
-        return selector(mockStoreState)
-      }
+      if (typeof selector === 'function') return selector(mockStoreState)
       return mockStoreState
     })
-
-      ; (apiService.getUserPerks as jest.Mock).mockResolvedValue({ success: true, data: mockPerksPayload })
+    ;(apiService.getUserPerks as jest.Mock).mockResolvedValue({ success: true, data: mockPerksPayload })
   })
 
   it('shows a loading indicator before data resolves', () => {
     render(<PerksManager />)
-
     expect(screen.getByText('Loading your perks...')).toBeInTheDocument()
     expect(document.querySelector('.loading-spinner')).toBeInTheDocument()
   })
 
-  it('renders core sections when perks resolve successfully', async () => {
+  it('renders slot selectors when data loads', async () => {
     render(<PerksManager />)
-
-    expect(await screen.findByText('🎨 Perks & Customization')).toBeInTheDocument()
+    // Wait for data — new header is "Your Loadout"
+    expect(await screen.findByText('Your Loadout')).toBeInTheDocument()
     expect(apiService.getUserPerks).toHaveBeenCalledTimes(1)
+    // All 9 slot labels should appear (each appears twice: slot row + sidebar)
+    expect(screen.getAllByText('Avatar').length).toBeGreaterThanOrEqual(2)
+    expect(screen.getAllByText('Theme').length).toBeGreaterThanOrEqual(2)
+    expect(screen.getAllByText('Badge').length).toBeGreaterThanOrEqual(2)
+    // Sidebar shows current loadout
     expect(screen.getByText('Current Loadout')).toBeInTheDocument()
-    expect(screen.getByRole('tab', { name: /All Perks \(\d+\)/i })).toBeInTheDocument()
-    expect(screen.getByRole('tab', { name: /^Unlocked \(\d+\)$/i })).toBeInTheDocument()
-    expect(screen.getByRole('tab', { name: /^Locked \(\d+\)$/i })).toBeInTheDocument()
+  })
 
-    expect(screen.getAllByText('Starter Badge').length).toBeGreaterThan(0)
-    expect(screen.getAllByText('Night Studies').length).toBeGreaterThan(0)
-    expect(screen.getAllByText('Research Lab Assistant').length).toBeGreaterThan(0)
+  it('shows locked state for slots above user level', async () => {
+    render(<PerksManager />)
+    await screen.findByText('Your Loadout')
+    // Avatar slot is locked (level 20 required, user is level 12)
+    expect(screen.getByText(/Unlock at Level 20/i)).toBeInTheDocument()
+  })
+
+  it('shows dropdown with available perks for unlocked slots', async () => {
+    render(<PerksManager />)
+    await screen.findByText('Your Loadout')
+    // Badge slot should have a select with Starter Badge option
+    const selects = screen.getAllByRole('combobox')
+    const badgeSelect = selects.find(s => {
+      const options = within(s).queryAllByRole('option')
+      return options.some(o => o.textContent === 'Starter Badge')
+    })
+    expect(badgeSelect).toBeTruthy()
   })
 
   it('handles API errors gracefully', async () => {
-    ; (apiService.getUserPerks as jest.Mock).mockResolvedValueOnce({ success: false, error: 'Failed to fetch perks' })
-
+    ;(apiService.getUserPerks as jest.Mock).mockResolvedValueOnce({ success: false, error: 'Failed to fetch perks' })
     render(<PerksManager />)
     expect(await screen.findByText('Unable to Load Perks')).toBeInTheDocument()
     expect(screen.getByText('Failed to fetch perks')).toBeInTheDocument()
@@ -163,15 +184,14 @@ describe('PerksManager', () => {
   })
 
   it('handles network errors gracefully', async () => {
-    ; (apiService.getUserPerks as jest.Mock).mockRejectedValueOnce(new Error('Network error'))
-
+    ;(apiService.getUserPerks as jest.Mock).mockRejectedValueOnce(new Error('Network error'))
     render(<PerksManager />)
     expect(await screen.findByText('Unable to Load Perks')).toBeInTheDocument()
     expect(screen.getByText('Network error')).toBeInTheDocument()
   })
 
   it('renders nothing when the user is not authenticated', () => {
-    const mockStoreState = {
+    const noAuth = {
       user: null,
       token: null,
       isAuthenticated: false,
@@ -186,15 +206,10 @@ describe('PerksManager', () => {
       setLoading: jest.fn(),
       setError: jest.fn()
     }
-
-    // Mock implementation that properly handles Zustand selectors
     mockUseAuthStore.mockImplementation((selector: any) => {
-      if (typeof selector === 'function') {
-        return selector(mockStoreState)
-      }
-      return mockStoreState
+      if (typeof selector === 'function') return selector(noAuth)
+      return noAuth
     })
-
     const { container } = render(<PerksManager />)
     expect(apiService.getUserPerks).not.toHaveBeenCalled()
     expect(container.firstChild).toBeInstanceOf(HTMLDivElement)

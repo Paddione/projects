@@ -1,4 +1,102 @@
-import React, { useState, useEffect } from 'react';
+# Loadout Manager Refinement Implementation Plan
+
+> **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
+
+**Goal:** Replace the broken PerksManager UI (filter cards + perk grid + modal) with inline slot selectors that let users equip/configure perks directly per slot.
+
+**Architecture:** Each of the 9 loadout slots becomes a row with a `<select>` dropdown for perk selection and inline config options that appear below. Selecting a config option auto-activates the perk. No modal, no perk grid, no filter tabs. Two-column layout: slot selectors (left) + compact loadout summary (right).
+
+**Tech Stack:** React 18, existing apiService methods (`getUserPerks`, `activatePerk`, `deactivatePerk`), existing localization via `useLocalization()` hook, existing CSS custom properties.
+
+---
+
+### Task 1: Add new localization keys
+
+**Files:**
+- Modify: `l2p/frontend/src/services/localization.ts` (EN block ~line 413, DE block ~line 1073)
+
+**Step 1: Add English keys after `'perk.perks': 'perks'` (line 413)**
+
+Add these keys inside `enTranslations`:
+```typescript
+  'perk.loadoutHeader': 'Your Loadout',
+  'perk.loadoutHeaderDesc': 'Equip and configure perks for each slot.',
+  'perk.slotLocked': 'Unlock at Level {level}',
+  'perk.clearSlot': '— Clear slot —',
+  'perk.choosePerk': '— Choose a perk —',
+  'perk.equipping': 'Equipping...',
+  'perk.equipped': 'Equipped',
+  'perk.slotsActive': '{count}/{total} slots active',
+```
+
+**Step 2: Add German keys after `'perk.perks': 'Perks'` (line 1073)**
+
+Add these keys inside `deTranslations`:
+```typescript
+  'perk.loadoutHeader': 'Dein Loadout',
+  'perk.loadoutHeaderDesc': 'Rüste Perks für jeden Slot aus und konfiguriere sie.',
+  'perk.slotLocked': 'Freischaltbar ab Level {level}',
+  'perk.clearSlot': '— Slot leeren —',
+  'perk.choosePerk': '— Perk auswählen —',
+  'perk.equipping': 'Wird ausgerüstet...',
+  'perk.equipped': 'Ausgerüstet',
+  'perk.slotsActive': '{count}/{total} Slots aktiv',
+```
+
+**Step 3: Verify no syntax errors**
+
+Run: `cd /home/patrick/projects/l2p/frontend && npx tsc --noEmit --pretty 2>&1 | head -20`
+Expected: No errors related to localization.ts
+
+**Step 4: Commit**
+
+```bash
+git add l2p/frontend/src/services/localization.ts
+git commit -m "feat(l2p): add loadout manager localization keys"
+```
+
+---
+
+### Task 2: Rewrite PerksManager component
+
+This is the core task. Replace the entire render section of PerksManager.tsx while keeping the data-fetching and activation logic.
+
+**Files:**
+- Modify: `l2p/frontend/src/components/PerksManager.tsx` (full rewrite)
+
+**Step 1: Rewrite PerksManager.tsx**
+
+Keep these from the existing file (lines 1-9, 10-67, 77-201, 203-316, 511-554, 882-928, 931-965):
+- All imports
+- All interfaces (`Perk`, `UserPerk`, `UserLoadout`, `PerksData`, `PerkSlot`)
+- `PERK_SLOTS` constant
+- All `*_OPTIONS` constants (AVATAR through TITLE)
+- State: `perksData`, `loading`, `error`, `retryCount`, `isFetching` — keep
+- State: remove `selectedBadge`, `activeFilter`, `selectedPerk`, `isDetailsOpen`, `configSelection`, `actionLoading`
+- State: add `slotSelections` (Record<string, number | ''>), `slotConfigs` (Record<string, Record<string, string>>), `slotLoading` (Record<string, boolean>), `slotErrors` (Record<string, string | null>)
+- `fetchUserPerks()` — keep exactly as-is
+- `activatePerk()` — keep but add per-slot loading/error
+- `deactivatePerk()` — keep but add per-slot loading/error
+- `getConfigPayload()` — keep but read from `slotConfigs[slotType]` instead of `configSelection`
+- `getCurrentAvatarEmoji()` — keep
+- Loading/error/noData early returns — keep
+
+Remove these functions entirely:
+- `initializeBadgeSelection()`
+- `canUsePerk()`, `isActivePerk()`, `getAllPerks()`, `getUnlockedPerks()`, `getLockedPerks()`, `getActivePerksList()`
+- `filteredPerks` useMemo, `getFilterCount()`
+- `getBadgeOptionsForPerk()`
+- `handlePerkCardClick()`, `closeDetails()`, `handleActivateSelectedPerk()`, `handleDeactivateSelectedPerk()`
+- `renderOptionGrid()`, `renderPerkConfiguration()`, `renderPerkCard()`
+- `handleBadgeSelection()`, `renderSimpleBadgeSelector()`, `findCurrentBadgeInfo()`
+- `getDefaultConfiguration()`, `formatLabel()`
+
+Replace the JSX return (lines 980-1186) with the new layout described below.
+
+The complete new component structure:
+
+```tsx
+import React, { useState, useEffect, useMemo } from 'react';
 import { useAuthStore } from '../stores/authStore';
 import { useLocalization } from '../hooks/useLocalization';
 import { themeService } from '../services/themeService';
@@ -6,188 +104,9 @@ import { avatarService } from '../services/avatarService';
 import { apiService } from '../services/apiService';
 import './PerksManager.css';
 
-interface Perk {
-  id: number;
-  name: string;
-  category: string;
-  type: string;
-  level_required: number;
-  title: string;
-  description: string;
-  is_active: boolean;
-}
-
-interface UserPerk {
-  id: number;
-  user_id: number;
-  perk_id: number;
-  is_unlocked: boolean;
-  is_active: boolean;
-  configuration: any;
-  perk?: Perk;
-}
-
-interface UserLoadout {
-  user_id: number;
-  active_avatar: string;
-  active_badge?: string;
-  active_theme: string;
-  active_title?: string;
-  perks_config: any;
-  active_perks: UserPerk[];
-  active_cosmetic_perks: Record<string, { perk_id: number; configuration: any }>;
-}
-
-interface PerksData {
-  perks: UserPerk[];
-  activePerks: UserPerk[];
-  loadout: UserLoadout | null;
-}
-
-interface PerkSlot {
-  id: string;
-  label: string;
-  icon: string;
-  type: string;
-}
-
-const PERK_SLOTS: PerkSlot[] = [
-  { id: 'avatar', label: 'Avatar', icon: '👤', type: 'avatar' },
-  { id: 'theme', label: 'Theme', icon: '🎨', type: 'theme' },
-  { id: 'badge', label: 'Badge', icon: '🏆', type: 'badge' },
-  { id: 'helper', label: 'Helper', icon: '🛠️', type: 'helper' },
-  { id: 'display', label: 'Interface', icon: '📊', type: 'display' },
-  { id: 'emote', label: 'Social', icon: '💬', type: 'emote' },
-  { id: 'sound', label: 'Audio', icon: '🔊', type: 'sound' },
-  { id: 'multiplier', label: 'Booster', icon: '⚡', type: 'multiplier' },
-  { id: 'title', label: 'Title', icon: '🏷️', type: 'title' },
-];
-
-const AVATAR_OPTIONS = [
-  { id: 'student', label: 'Scholarly Student', emoji: '👨‍🎓' },
-  { id: 'professor', label: 'Wise Professor', emoji: '👩‍🏫' },
-  { id: 'librarian', label: 'Master Librarian', emoji: '📚' },
-  { id: 'researcher', label: 'Lab Researcher', emoji: '🧪' },
-];
-
-const THEME_OPTIONS = [
-  { id: 'default', label: 'Default', previewClass: 'theme-default' },
-  { id: 'dark', label: 'Dark Mode', previewClass: 'theme-dark' },
-  { id: 'blue', label: 'Ocean Blue', previewClass: 'theme-blue' },
-  { id: 'green', label: 'Emerald', previewClass: 'theme-green' },
-  { id: 'purple', label: 'Neon Violet', previewClass: 'theme-purple' },
-];
-
-const BADGE_STYLE_OPTIONS = [
-  { id: 'classic', label: 'Bronze Classic', className: 'badge-bronze-classic' },
-  { id: 'modern', label: 'Bronze Modern', className: 'badge-bronze-modern' },
-  { id: 'minimal', label: 'Bronze Minimal', className: 'badge-bronze-minimal' },
-  { id: 'silver', label: 'Scholar Silver', className: 'badge-scholar-silver' },
-  { id: 'gold', label: 'Scholar Gold', className: 'badge-scholar-gold' },
-  { id: 'platinum', label: 'Scholar Platinum', className: 'badge-scholar-platinum' },
-];
-
-// ===== HELPER OPTIONS =====
-const HELPER_OPTIONS: Record<string, Array<{ id: string; label: string; emoji: string; description: string }>> = {
-  answer_previews: [
-    { id: 'border', label: 'Border Highlight', emoji: '🔲', description: 'Colored border around selected answer' },
-    { id: 'background', label: 'Background Fill', emoji: '🎨', description: 'Subtle background color on selection' },
-    { id: 'shadow', label: 'Glow Shadow', emoji: '✨', description: 'Glowing shadow effect on selection' },
-  ],
-  smart_hints: [
-    { id: 'subtle', label: 'Subtle', emoji: '💡', description: 'Brief, minimal hints' },
-    { id: 'moderate', label: 'Moderate', emoji: '📖', description: 'Balanced hint detail' },
-    { id: 'detailed', label: 'Detailed', emoji: '📚', description: 'Full explanations and context' },
-  ],
-};
-
-// ===== DISPLAY OPTIONS =====
-const DISPLAY_OPTIONS: Record<string, Array<{ id: string; label: string; emoji: string; description: string }>> = {
-  quick_stats: [
-    { id: 'top-left', label: 'Top Left', emoji: '↖️', description: 'Stats in top-left corner' },
-    { id: 'top-right', label: 'Top Right', emoji: '↗️', description: 'Stats in top-right corner' },
-    { id: 'bottom-left', label: 'Bottom Left', emoji: '↙️', description: 'Stats in bottom-left corner' },
-    { id: 'bottom-right', label: 'Bottom Right', emoji: '↘️', description: 'Stats in bottom-right corner' },
-  ],
-  enhanced_timers: [
-    { id: 'progress', label: 'Progress Bar', emoji: '📊', description: 'Animated bar countdown' },
-    { id: 'digital', label: 'Digital Clock', emoji: '🔢', description: 'Numeric countdown display' },
-    { id: 'analog', label: 'Analog Dial', emoji: '🕐', description: 'Circular dial countdown' },
-  ],
-  focus_mode: [
-    { id: 'blur', label: 'Blur Background', emoji: '🌫️', description: 'Soft background blur during questions' },
-    { id: 'zen', label: 'Zen Mode', emoji: '🧘', description: 'Minimal UI, maximum focus' },
-    { id: 'both', label: 'Full Focus', emoji: '🎯', description: 'Blur + Zen combined' },
-  ],
-};
-
-// ===== EMOTE OPTIONS =====
-const EMOTE_OPTIONS: Record<string, Array<{ id: string; label: string; emoji: string; description: string }>> = {
-  chat_emotes_basic: [
-    { id: 'classic', label: 'Classic', emoji: '😀', description: 'Standard fun emotes' },
-    { id: 'academic', label: 'Academic', emoji: '🤓', description: 'Study and learning themed' },
-    { id: 'gaming', label: 'Gaming', emoji: '🔥', description: 'Competitive gaming reactions' },
-  ],
-  chat_emotes_premium: [
-    { id: 'small', label: 'Small', emoji: '🚀', description: 'Compact animated emotes' },
-    { id: 'medium', label: 'Medium', emoji: '💫', description: 'Standard animated emotes' },
-    { id: 'large', label: 'Large', emoji: '🌟', description: 'Full-size animated emotes' },
-  ],
-};
-
-// ===== SOUND OPTIONS =====
-const SOUND_OPTIONS: Record<string, Array<{ id: string; label: string; emoji: string; description: string }>> = {
-  sound_packs_basic: [
-    { id: 'retro', label: 'Retro 8-bit', emoji: '🕹️', description: 'Classic arcade sounds' },
-    { id: 'nature', label: 'Nature', emoji: '🌿', description: 'Organic, soothing tones' },
-    { id: 'electronic', label: 'Electronic', emoji: '🎹', description: 'Modern synth sounds' },
-  ],
-  sound_packs_premium: [
-    { id: 'orchestral', label: 'Orchestral', emoji: '🎻', description: 'Classical orchestra themes' },
-    { id: 'synthwave', label: 'Synthwave', emoji: '🌆', description: 'Retro-future vibes' },
-    { id: 'ambient', label: 'Ambient', emoji: '🎧', description: 'Calm, zen soundscapes' },
-  ],
-  audio_reactions: [
-    { id: 'subtle', label: 'Subtle', emoji: '🔈', description: 'Soft feedback sounds' },
-    { id: 'moderate', label: 'Moderate', emoji: '🔉', description: 'Balanced audio feedback' },
-    { id: 'enthusiastic', label: 'Enthusiastic', emoji: '🔊', description: 'Energetic reactions and fanfares' },
-  ],
-};
-
-// ===== MULTIPLIER OPTIONS =====
-const MULTIPLIER_OPTIONS: Record<string, Array<{ id: string; label: string; emoji: string; description: string }>> = {
-  experience_boost: [
-    { id: 'game', label: 'Per Game', emoji: '🎮', description: 'Boost lasts one game' },
-    { id: 'session', label: 'Per Session', emoji: '⏱️', description: 'Boost lasts entire session' },
-    { id: 'unlimited', label: 'Always On', emoji: '♾️', description: 'Permanent XP boost' },
-  ],
-  streak_protector: [
-    { id: 'automatic', label: 'Automatic', emoji: '🛡️', description: 'Activates on first wrong answer' },
-    { id: 'manual', label: 'Manual', emoji: '🎯', description: 'Save it for when you need it' },
-  ],
-  time_extension: [
-    { id: '5', label: '+5 Seconds', emoji: '⏱️', description: 'Small but helpful boost' },
-    { id: '10', label: '+10 Seconds', emoji: '⏰', description: 'Balanced extra time' },
-    { id: '15', label: '+15 Seconds', emoji: '🕐', description: 'Maximum thinking time' },
-  ],
-};
-
-// ===== TITLE OPTIONS =====
-const TITLE_OPTIONS: Record<string, Array<{ id: string; label: string; emoji: string; description: string }>> = {
-  master_scholar: [
-    { id: 'badge', label: 'Badge Display', emoji: '🏅', description: 'Title shown as a badge icon' },
-    { id: 'border', label: 'Name Border', emoji: '📛', description: 'Decorative border around your name' },
-    { id: 'glow', label: 'Golden Glow', emoji: '✨', description: 'Glowing aura around your name' },
-  ],
-  quiz_legend: [
-    { id: 'true', label: 'Aura On', emoji: '🌟', description: 'Legendary aura effect visible' },
-    { id: 'false', label: 'Aura Off', emoji: '👤', description: 'Title without aura effect' },
-  ],
-  knowledge_keeper: [
-    { id: 'true', label: 'VIP Lobby', emoji: '👑', description: 'Access exclusive VIP lobbies' },
-    { id: 'false', label: 'Standard', emoji: '🎓', description: 'Title without VIP access' },
-  ],
-};
+// Keep all existing interfaces: Perk, UserPerk, UserLoadout, PerksData, PerkFilter, PerkSlot
+// Keep PERK_SLOTS constant
+// Keep all *_OPTIONS constants (AVATAR_OPTIONS through TITLE_OPTIONS)
 
 const PerksManager: React.FC = () => {
   const user = useAuthStore(state => state.user);
@@ -226,53 +145,9 @@ const PerksManager: React.FC = () => {
     setSlotConfigs(configs);
   }, [perksData]);
 
-  // Don't render if user is not authenticated (must come after all hooks)
-  if (!user) {
-    return <div></div>;
-  }
+  if (!user) return <div></div>;
 
-  const fetchUserPerks = async () => {
-    // Prevent multiple concurrent fetches
-    if (isFetching) {
-      return;
-    }
-
-    try {
-      setIsFetching(true);
-      setLoading(true);
-      setError(null);
-
-      const response = await apiService.getUserPerks();
-
-      if (response.success && response.data) {
-        setPerksData(response.data);
-        setRetryCount(0);
-
-        // Initialize services with user's perks
-        if (response.data.perks) {
-          themeService.initialize(response.data.perks);
-          avatarService.initialize(user?.character || 'student', response.data.perks);
-        }
-      } else {
-        setError(response.error || 'Failed to load perks');
-      }
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to load perks';
-      setError(errorMessage);
-
-      // Auto-retry with exponential backoff (max 3 retries)
-      if (retryCount < 3) {
-        const backoffDelay = Math.min(1000 * Math.pow(2, retryCount), 8000);
-        setTimeout(() => {
-          setRetryCount(prev => prev + 1);
-          fetchUserPerks();
-        }, backoffDelay);
-      }
-    } finally {
-      setLoading(false);
-      setIsFetching(false);
-    }
-  };
+  // fetchUserPerks — KEEP EXACTLY AS-IS (lines 239-281)
 
   // --- Helpers for the new slot-based UI ---
 
@@ -341,7 +216,7 @@ const PerksManager: React.FC = () => {
     }
   };
 
-  /** Build activation payload from slotConfigs */
+  /** Build activation payload from slotConfigs (reuses existing getConfigPayload logic) */
   const getConfigPayload = (perkType: string, perkName: string, config: Record<string, string>) => {
     switch (perkType) {
       case 'avatar': return { selected_avatar: config['avatar'] || 'student' };
@@ -510,8 +385,8 @@ const PerksManager: React.FC = () => {
       if (response.success) {
         await fetchUserPerks();
         // Side effects
-        if (slotType === 'theme' && (payload as any).theme_name) themeService.setTheme((payload as any).theme_name);
-        if (slotType === 'avatar' && (payload as any).selected_avatar) avatarService.setActiveAvatarOverride((payload as any).selected_avatar);
+        if (slotType === 'theme' && payload.theme_name) themeService.setTheme(payload.theme_name);
+        if (slotType === 'avatar' && payload.selected_avatar) avatarService.setActiveAvatarOverride(payload.selected_avatar);
       } else {
         setSlotErrors(prev => ({ ...prev, [slotType]: response.error || 'Failed to equip' }));
       }
@@ -538,45 +413,13 @@ const PerksManager: React.FC = () => {
     return null;
   };
 
+  const getCurrentAvatarEmoji = () => {
+    // KEEP EXISTING (lines 916-929)
+  };
+
   const activeSlotCount = PERK_SLOTS.filter(s => getSlotEquippedName(s.type)).length;
 
-  // --- Loading / Error / No Data early returns ---
-
-  if (loading) {
-    return (
-      <div className="perks-manager loading">
-        <div className="loading-spinner"></div>
-        <p>{t('perk.loading')}</p>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="perks-manager error">
-        <div className="error-icon">⚠️</div>
-        <h3>{t('perk.unableToLoad')}</h3>
-        <p>{error}</p>
-        {retryCount > 0 && retryCount < 3 && (
-          <p className="retry-info">{t('perk.retrying')} ({t('perk.attempt')} {retryCount + 1}/3)</p>
-        )}
-        {retryCount >= 3 && (
-          <p className="retry-info">{t('perk.retryExhausted')}</p>
-        )}
-        <button onClick={() => {
-          setRetryCount(0);
-          setError(null);
-          fetchUserPerks();
-        }} disabled={isFetching}>
-          {isFetching ? t('perk.retryingNow') : t('perk.retryNow')}
-        </button>
-      </div>
-    );
-  }
-
-  if (!perksData) {
-    return <div className="perks-manager">{t('perk.noData')}</div>;
-  }
+  // --- Loading / Error / No Data early returns (KEEP EXISTING lines 931-965) ---
 
   // --- RENDER ---
   return (
@@ -614,7 +457,7 @@ const PerksManager: React.FC = () => {
 
                   {locked ? (
                     <div className="slot-locked-msg">
-                      {'🔒 ' + t('perk.slotLocked').replace('{level}', String(minLevel || '?'))}
+                      🔒 {t('perk.slotLocked').replace('{level}', String(minLevel || '?'))}
                     </div>
                   ) : (
                     <>
@@ -690,3 +533,514 @@ const PerksManager: React.FC = () => {
 };
 
 export default PerksManager;
+```
+
+**Step 2: Typecheck**
+
+Run: `cd /home/patrick/projects/l2p/frontend && npx tsc --noEmit --pretty 2>&1 | head -30`
+Expected: No errors in PerksManager.tsx
+
+**Step 3: Commit**
+
+```bash
+git add l2p/frontend/src/components/PerksManager.tsx
+git commit -m "feat(l2p): rewrite loadout manager with inline slot selectors"
+```
+
+---
+
+### Task 3: Rewrite PerksManager.css
+
+**Files:**
+- Modify: `l2p/frontend/src/components/PerksManager.css` (full rewrite)
+
+**Step 1: Replace PerksManager.css**
+
+Keep: `.perks-manager`, `.perks-manager.loading`, `.perks-manager.error`, `.loading-spinner`, `@keyframes spin`, `.perks-header`, `.perks-layout`, `.perks-main`, `.perks-overview`, `.overview-card`.
+
+Remove: All filter tab styles, perk card styles, perk details modal styles, badge selector styles, column layout styles, config option grid styles (will be replaced).
+
+Add new styles for:
+
+```css
+/* Slot Selectors */
+.slot-selectors {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.slot-row {
+  background: var(--color-surface, #f8fafc);
+  border: 2px solid var(--color-border, #e2e8f0);
+  border-radius: 12px;
+  padding: 16px;
+  transition: all 0.2s ease;
+}
+
+.slot-row:hover:not(.locked) {
+  border-color: var(--color-primary-light, #93c5fd);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+}
+
+.slot-row.locked {
+  opacity: 0.6;
+}
+
+.slot-row.loading {
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.slot-row-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.slot-row-icon {
+  font-size: 1.5rem;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-background, white);
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+.slot-row-label {
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--color-text-primary, #1e293b);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.slot-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid #e2e8f0;
+  border-top: 2px solid var(--color-primary, #3b82f6);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin-left: auto;
+}
+
+.slot-equipped-badge {
+  margin-left: auto;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  background: var(--color-success, #10b981);
+  color: white;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.slot-locked-msg {
+  color: var(--color-text-secondary, #64748b);
+  font-size: 0.9rem;
+  padding: 4px 0;
+}
+
+.slot-select {
+  width: 100%;
+  padding: 10px 14px;
+  border: 2px solid var(--color-border, #e2e8f0);
+  border-radius: 8px;
+  background: var(--color-background, white);
+  color: var(--color-text-primary, #1e293b);
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: border-color 0.2s;
+  appearance: auto;
+}
+
+.slot-select:hover {
+  border-color: var(--color-primary-light, #93c5fd);
+}
+
+.slot-select:focus {
+  outline: none;
+  border-color: var(--color-primary, #3b82f6);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+.slot-select:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Inline config options */
+.slot-config {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--color-border, #e2e8f0);
+}
+
+.slot-config-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--color-text-secondary, #64748b);
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.slot-config-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.slot-config-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 14px;
+  border: 2px solid var(--color-border, #e2e8f0);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  background: var(--color-background, white);
+  text-align: center;
+  min-width: 80px;
+}
+
+.slot-config-btn:hover {
+  border-color: var(--color-primary, #3b82f6);
+  background: var(--color-primary-bg, #eff6ff);
+}
+
+.slot-config-btn.selected {
+  border-color: var(--color-primary, #3b82f6);
+  background: var(--color-primary-bg, #eff6ff);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
+}
+
+.slot-config-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.cfg-emoji {
+  font-size: 1.3rem;
+}
+
+.cfg-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--color-text-primary, #1e293b);
+}
+
+.cfg-desc {
+  font-size: 0.65rem;
+  color: var(--color-text-secondary, #64748b);
+  line-height: 1.2;
+}
+
+.slot-error {
+  margin-top: 8px;
+  padding: 6px 10px;
+  background: var(--color-error-bg, #fef2f2);
+  color: var(--color-error, #ef4444);
+  border-radius: 6px;
+  font-size: 0.8rem;
+}
+
+/* Loadout summary sidebar */
+.loadout-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.summary-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: var(--color-background, white);
+  border: 1px solid var(--color-border, #e2e8f0);
+}
+
+.summary-row.active {
+  border-left: 3px solid var(--color-primary, #3b82f6);
+}
+
+.summary-row.empty {
+  opacity: 0.5;
+}
+
+.summary-icon {
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.summary-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-text-secondary, #64748b);
+  text-transform: uppercase;
+  min-width: 60px;
+}
+
+.summary-value {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-text-primary, #1e293b);
+  margin-left: auto;
+  text-transform: capitalize;
+}
+
+.summary-footer {
+  text-align: center;
+  margin-top: 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-text-secondary, #64748b);
+  padding: 8px;
+  background: var(--color-surface, #f1f5f9);
+  border-radius: 8px;
+}
+
+/* Responsive */
+@media (max-width: 1200px) {
+  .perks-layout {
+    grid-template-columns: 1fr;
+  }
+  .perks-overview {
+    position: static;
+  }
+}
+
+@media (max-width: 768px) {
+  .perks-manager {
+    padding: 15px;
+  }
+  .slot-config-options {
+    flex-direction: column;
+  }
+  .slot-config-btn {
+    flex-direction: row;
+    min-width: unset;
+    gap: 8px;
+  }
+}
+```
+
+**Step 2: Verify build**
+
+Run: `cd /home/patrick/projects/l2p/frontend && npx vite build 2>&1 | tail -5`
+Expected: Build succeeds
+
+**Step 3: Commit**
+
+```bash
+git add l2p/frontend/src/components/PerksManager.css
+git commit -m "feat(l2p): restyle loadout manager for inline slot selectors"
+```
+
+---
+
+### Task 4: Update PerksManager tests
+
+**Files:**
+- Modify: `l2p/frontend/src/components/__tests__/PerksManager.test.tsx`
+
+**Step 1: Update tests to match new UI structure**
+
+The existing tests check for filter tabs (`role="tab"`), perk card titles in a grid, and "Current Loadout" text. Update to match the new slot-selector layout:
+
+```tsx
+import React from 'react'
+import { render, screen, within } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+import '@testing-library/jest-dom'
+import PerksManager from '../PerksManager'
+import { useAuthStore } from '../../stores/authStore'
+import { apiService } from '../../services/apiService'
+
+jest.mock('../../services/apiService', () => ({
+  apiService: {
+    getUserPerks: jest.fn(),
+    activatePerk: jest.fn(),
+    deactivatePerk: jest.fn(),
+  }
+}))
+
+jest.mock('../../stores/authStore')
+const mockUseAuthStore = useAuthStore as jest.MockedFunction<typeof useAuthStore>
+
+describe('PerksManager', () => {
+  const mockUser = {
+    id: '1',
+    username: 'testuser',
+    email: 'test@example.com',
+    level: 12,
+    experience: 2400,
+  }
+
+  const mockPerksPayload = {
+    perks: [
+      {
+        id: 1, user_id: 1, perk_id: 1, is_unlocked: true, is_active: false, configuration: {},
+        perk: { id: 1, name: 'starter_badge', category: 'cosmetic', type: 'badge', level_required: 1, title: 'Starter Badge', description: 'Celebrate the beginning', is_active: true }
+      },
+      {
+        id: 2, user_id: 1, perk_id: 2, is_unlocked: true, is_active: true, configuration: { theme_name: 'dark' },
+        perk: { id: 2, name: 'ui_themes_basic', category: 'cosmetic', type: 'theme', level_required: 3, title: 'Basic Themes', description: 'Switch themes', is_active: true }
+      },
+      {
+        id: 3, user_id: 1, perk_id: 3, is_unlocked: false, is_active: false, configuration: {},
+        perk: { id: 3, name: 'custom_avatars', category: 'cosmetic', type: 'avatar', level_required: 20, title: 'Custom Avatars', description: 'New avatars', is_active: true }
+      },
+    ],
+    activePerks: [
+      { id: 2, user_id: 1, perk_id: 2, is_unlocked: true, is_active: true, configuration: { theme_name: 'dark' },
+        perk: { id: 2, name: 'ui_themes_basic', category: 'cosmetic', type: 'theme', level_required: 3, title: 'Basic Themes', description: 'Switch themes', is_active: true } }
+    ],
+    loadout: {
+      user_id: 1, active_avatar: 'student', active_badge: null, active_theme: 'dark',
+      active_title: null, perks_config: {}, active_perks: [], active_cosmetic_perks: {}
+    }
+  }
+
+  beforeEach(() => {
+    jest.clearAllMocks()
+    const mockStoreState = {
+      user: mockUser, token: 'test-token', isAuthenticated: true,
+      login: jest.fn(), logout: jest.fn(), register: jest.fn(), refreshToken: jest.fn(),
+      setUser: jest.fn(), setToken: jest.fn(), clearAuth: jest.fn(), setLoading: jest.fn(), setError: jest.fn()
+    }
+    mockUseAuthStore.mockImplementation((selector: any) => {
+      if (typeof selector === 'function') return selector(mockStoreState)
+      return mockStoreState
+    })
+    ;(apiService.getUserPerks as jest.Mock).mockResolvedValue({ success: true, data: mockPerksPayload })
+  })
+
+  it('shows loading indicator before data resolves', () => {
+    render(<PerksManager />)
+    expect(screen.getByText(/loading/i)).toBeInTheDocument()
+  })
+
+  it('renders slot selectors when data loads', async () => {
+    render(<PerksManager />)
+    // Wait for data
+    expect(await screen.findByText('Your Loadout')).toBeInTheDocument()
+    expect(apiService.getUserPerks).toHaveBeenCalledTimes(1)
+    // All 9 slot labels should appear
+    expect(screen.getByText('Avatar')).toBeInTheDocument()
+    expect(screen.getByText('Theme')).toBeInTheDocument()
+    expect(screen.getByText('Badge')).toBeInTheDocument()
+    // Sidebar shows all slots
+    expect(screen.getByText('Current Loadout')).toBeInTheDocument()
+  })
+
+  it('shows locked state for slots above user level', async () => {
+    render(<PerksManager />)
+    await screen.findByText('Your Loadout')
+    // Avatar slot is locked (level 20 required, user is level 12)
+    expect(screen.getByText(/Unlock at Level 20/i)).toBeInTheDocument()
+  })
+
+  it('shows dropdown with available perks for unlocked slots', async () => {
+    render(<PerksManager />)
+    await screen.findByText('Your Loadout')
+    // Badge slot should have a select with Starter Badge
+    const selects = screen.getAllByRole('combobox')
+    const badgeSelect = selects.find(s => {
+      const options = within(s).queryAllByRole('option')
+      return options.some(o => o.textContent === 'Starter Badge')
+    })
+    expect(badgeSelect).toBeTruthy()
+  })
+
+  it('handles API errors gracefully', async () => {
+    ;(apiService.getUserPerks as jest.Mock).mockResolvedValueOnce({ success: false, error: 'Failed to fetch perks' })
+    render(<PerksManager />)
+    expect(await screen.findByText('Unable to Load Perks')).toBeInTheDocument()
+    expect(screen.getByText('Retry Now')).toBeInTheDocument()
+  })
+
+  it('renders nothing when user is not authenticated', () => {
+    const noAuth = {
+      user: null, token: null, isAuthenticated: false, isLoading: false, error: null,
+      login: jest.fn(), logout: jest.fn(), register: jest.fn(),
+      setUser: jest.fn(), setToken: jest.fn(), clearAuth: jest.fn(), setLoading: jest.fn(), setError: jest.fn()
+    }
+    mockUseAuthStore.mockImplementation((selector: any) => {
+      if (typeof selector === 'function') return selector(noAuth)
+      return noAuth
+    })
+    const { container } = render(<PerksManager />)
+    expect(apiService.getUserPerks).not.toHaveBeenCalled()
+    expect(container.firstChild?.textContent).toBe('')
+  })
+})
+```
+
+**Step 2: Run tests**
+
+Run: `cd /home/patrick/projects/l2p/frontend && NODE_ENV=test npx jest src/components/__tests__/PerksManager.test.tsx --verbose 2>&1 | tail -20`
+Expected: All tests pass
+
+**Step 3: Commit**
+
+```bash
+git add l2p/frontend/src/components/__tests__/PerksManager.test.tsx
+git commit -m "test(l2p): update PerksManager tests for inline slot selectors"
+```
+
+---
+
+### Task 5: Remove PixelBadges.css import if unused
+
+**Files:**
+- Check: `l2p/frontend/src/components/PerksManager.tsx` line 8
+
+**Step 1: Check if PixelBadges.css is imported elsewhere**
+
+Run: `grep -r "PixelBadges" l2p/frontend/src/ --include="*.tsx" --include="*.ts"`
+
+If only imported in PerksManager.tsx and no longer used (the old badge card rendering used badge CSS classes), remove the import line. If used elsewhere, keep it.
+
+**Step 2: Commit if changed**
+
+```bash
+git add l2p/frontend/src/components/PerksManager.tsx
+git commit -m "chore(l2p): remove unused PixelBadges.css import"
+```
+
+---
+
+### Task 6: Manual verification
+
+**Step 1: Start dev server**
+
+Run: `cd /home/patrick/projects/l2p && npm run dev:frontend`
+
+**Step 2: Verify in browser**
+
+Open http://localhost:3000, log in, go to Profile, open the Perks Manager. Verify:
+- All 9 slots are visible as rows
+- Unlocked slots have working dropdowns
+- Locked slots show level requirements
+- Selecting a perk shows inline config options
+- Selecting a config option auto-equips the perk
+- Sidebar updates to show equipped perks
+- "Clear slot" option works to deactivate
+
+**Step 3: Final commit (squash if needed)**
+
+```bash
+git add -A
+git commit -m "feat(l2p): complete loadout manager refinement with inline slot selectors"
+```
