@@ -76,7 +76,7 @@ export const Header: React.FC = () => {
         <button
           className={styles.mobileMenuToggle}
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
+          aria-label={mobileMenuOpen ? t('header.closeMenu') : t('header.openMenu')}
           aria-expanded={mobileMenuOpen}
         >
           <span className={`${styles.hamburger} ${mobileMenuOpen ? styles.hamburgerOpen : ''}`}>
@@ -99,7 +99,7 @@ export const Header: React.FC = () => {
             </Link>
             {isAdmin && (
               <Link to="/admin" className={`${styles.button} ${styles.buttonOutline}`} data-testid="admin-dashboard-link" onClick={() => { handleMenuSelect(); closeMenu() }}>
-                Admin
+                {t('header.admin')}
               </Link>
             )}
           </nav>
@@ -117,7 +117,7 @@ export const Header: React.FC = () => {
                   }
                 }}
                 className={`${styles.button} ${styles.buttonOutline}`}
-                title={isMuted ? 'Unmute' : 'Mute'}
+                title={isMuted ? t('header.unmute') : t('header.mute')}
                 data-testid="mute-toggle"
               >
                 {isMuted ? '🔇' : '🔊'}
@@ -131,7 +131,7 @@ export const Header: React.FC = () => {
                 onChange={(e) => { const v = parseFloat(e.target.value); setMasterVolume(v); if (isMuted && v > 0) setIsMuted(false); handleVolumeChange() }}
                 onMouseUp={handleMenuConfirm}
                 onTouchEnd={handleMenuConfirm}
-                aria-label="Master volume"
+                aria-label={t('header.masterVolume')}
                 className={styles.volumeSlider}
               />
             </div>
@@ -150,11 +150,11 @@ export const Header: React.FC = () => {
             <button
               onClick={handleLogout}
               className={`${styles.button} ${styles.buttonOutline}`}
-              title="Logout"
+              title={t('header.logout')}
               data-testid="logout-button"
               onClickCapture={handleMenuCancel}
             >
-              <Icon name="game-ui/lobby" size={20} alt="Logout" />
+              <Icon name="game-ui/lobby" size={20} alt={t('header.logout')} />
             </button>
           </div>
         </div>

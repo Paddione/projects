@@ -34,7 +34,7 @@ describe('useLocalization Hook', () => {
     // Set up default mock implementations
     mockLocalizationService.getCurrentLanguage.mockReturnValue('en')
     mockLocalizationService.setLanguage.mockImplementation(() => {})
-    mockLocalizationService.t.mockImplementation((key: string, fallback?: string) => {
+    mockLocalizationService.t.mockImplementation((key: string, paramsOrFallback?: Record<string, string | number> | string, fallback?: string) => {
       const translations: Record<string, Record<string, string>> = {
         en: {
           'nav.home': 'Home',
@@ -49,7 +49,8 @@ describe('useLocalization Hook', () => {
       }
       
       const currentLang = 'en' // Simplified for testing
-      return translations[currentLang]?.[key] || fallback || key
+      const fb = typeof paramsOrFallback === 'string' ? paramsOrFallback : fallback
+      return translations[currentLang]?.[key] || fb || key
     })
     mockLocalizationService.getSupportedLanguages.mockReturnValue(['en', 'de'])
     mockLocalizationService.getLanguageName.mockImplementation((lang: string) => lang === 'en' ? 'English' : 'Deutsch')
@@ -82,33 +83,33 @@ describe('useLocalization Hook', () => {
     
     const translation = result.current.t('welcome')
     expect(translation).toBe('Welcome')
-    expect(mockLocalizationService.t).toHaveBeenCalledWith('welcome', undefined)
+    expect(mockLocalizationService.t).toHaveBeenCalledWith('welcome', undefined, undefined)
   })
 
   it('handles translation with fallback', () => {
     const { result } = renderHook(() => useLocalization())
-    
+
     const translation = result.current.t('missing.key', 'Default Text')
     expect(translation).toBe('Default Text')
-    expect(mockLocalizationService.t).toHaveBeenCalledWith('missing.key', 'Default Text')
+    expect(mockLocalizationService.t).toHaveBeenCalledWith('missing.key', 'Default Text', undefined)
   })
 
   it('provides language setter', () => {
     const { result } = renderHook(() => useLocalization())
-    
+
     act(() => {
       result.current.setLanguage('de')
     })
-    
+
     expect(mockLocalizationService.setLanguage).toHaveBeenCalledWith('de')
   })
 
   it('returns fallback for missing translations', () => {
     const { result } = renderHook(() => useLocalization())
-    
+
     const translation = result.current.t('missing.key')
     expect(translation).toBe('missing.key')
-    expect(mockLocalizationService.t).toHaveBeenCalledWith('missing.key', undefined)
+    expect(mockLocalizationService.t).toHaveBeenCalledWith('missing.key', undefined, undefined)
   })
 
   it('provides language name helper', () => {

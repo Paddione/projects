@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { PerkUnlockNotification as PerkUnlockNotificationType } from '../stores/gameStore'
 import { avatarService } from '../services/avatarService'
+import { useLocalization } from '../hooks/useLocalization'
 
 interface PerkUnlockNotificationProps {
   notification: PerkUnlockNotificationType
@@ -13,6 +14,7 @@ export const PerkUnlockNotification: React.FC<PerkUnlockNotificationProps> = ({
 }) => {
   const [isVisible, setIsVisible] = useState(false)
   const [showConfetti, setShowConfetti] = useState(false)
+  const { t } = useLocalization()
 
   useEffect(() => {
     // Show notification with animation
@@ -120,7 +122,7 @@ export const PerkUnlockNotification: React.FC<PerkUnlockNotificationProps> = ({
         <div style={{ marginBottom: 'var(--spacing-md, 0.75rem)' }}>
           <span style={{ fontSize: '2rem', display: 'block', marginBottom: 'var(--spacing-sm, 0.5rem)' }}>🎁</span>
           <h3 style={{ margin: '0 0 var(--spacing-sm, 0.5rem) 0', fontSize: '1.2rem' }}>
-            New Perks Unlocked!
+            {t('notification.perksUnlocked')}
           </h3>
         </div>
 
@@ -154,10 +156,10 @@ export const PerkUnlockNotification: React.FC<PerkUnlockNotificationProps> = ({
               </span>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontWeight: 'bold', fontSize: '0.9rem', marginBottom: '2px' }}>
-                  {userPerk.perk?.title || userPerk.perk?.name || 'Unknown Perk'}
+                  {userPerk.perk?.title || userPerk.perk?.name || t('notification.unknownPerk')}
                 </div>
                 <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.8)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  Level {userPerk.perk?.level_required || 0} • {userPerk.perk?.category || 'Cosmetic'}
+                  {t('notification.level', { level: userPerk.perk?.level_required || 0 })} • {userPerk.perk?.category || t('notification.cosmetic')}
                 </div>
               </div>
             </div>
@@ -165,7 +167,7 @@ export const PerkUnlockNotification: React.FC<PerkUnlockNotificationProps> = ({
         </div>
 
         <div style={{ fontSize: '0.9rem', color: 'rgba(255, 255, 255, 0.9)', fontStyle: 'italic' }}>
-          Visit the Perks Manager to activate your new perks!
+          {t('notification.visitPerks')}
         </div>
       </div>
 

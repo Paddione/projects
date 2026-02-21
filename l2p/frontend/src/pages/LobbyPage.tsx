@@ -10,6 +10,7 @@ import { navigationService } from '../services/navigationService'
 import { apiService } from '../services/apiService'
 import styles from '../styles/App.module.css'
 import { useAudio } from '../hooks/useAudio'
+import { useLocalization } from '../hooks/useLocalization'
 
 export const LobbyPage: React.FC = () => {
   const { lobbyId } = useParams<{ lobbyId: string }>()
@@ -28,13 +29,14 @@ export const LobbyPage: React.FC = () => {
     setError,
     setLobbyCode
   } = useGameStore()
+  const { t } = useLocalization()
 
   const hasJoinedRoom = useRef(false)
 
   useEffect(() => {
     const initializeLobby = async () => {
       if (!lobbyId) {
-        setError('No lobby ID provided')
+        setError(t('lobbyPage.noId'))
         navigate('/')
         return
       }
@@ -66,12 +68,12 @@ export const LobbyPage: React.FC = () => {
             setIsHost(!!me?.isHost)
           }
         } else {
-          setError('Lobby not found')
+          setError(t('lobbyPage.notFound'))
           navigate('/')
           return
         }
       } catch {
-        setError('Failed to load lobby')
+        setError(t('lobbyPage.failedToLoad'))
         navigate('/')
         return
       }
@@ -153,7 +155,7 @@ export const LobbyPage: React.FC = () => {
     return (
       <div className={styles.container}>
         <LoadingSpinner />
-        <p>Loading lobby...</p>
+        <p>{t('lobbyPage.loading')}</p>
       </div>
     )
   }
@@ -169,10 +171,10 @@ export const LobbyPage: React.FC = () => {
 
       <div className={`${styles.flex} ${styles.justifyBetween} ${styles.itemsCenter}`}>
         <div>
-          <h1>Game Lobby</h1>
+          <h1>{t('lobbyPage.title')}</h1>
           {lobbyCode && (
             <p style={{ fontSize: '0.875rem', color: 'var(--color-text-secondary)' }}>
-              Code: {lobbyCode}
+              {t('lobbyPage.code')} {lobbyCode}
             </p>
           )}
         </div>
@@ -183,7 +185,7 @@ export const LobbyPage: React.FC = () => {
             style={{ fontSize: '0.875rem' }}
             data-testid="leave-lobby-button"
           >
-            Leave Lobby
+            {t('lobbyPage.leave')}
           </button>
           <ConnectionStatus />
         </div>

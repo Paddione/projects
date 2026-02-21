@@ -3,6 +3,7 @@ import { apiService } from '../services/apiService'
 import { socketService } from '../services/socketService'
 import { useGameStore } from '../stores/gameStore'
 import { navigationService } from '../services/navigationService'
+import { useLocalization } from '../hooks/useLocalization'
 import styles from '../styles/LobbiesList.module.css'
 
 interface Player {
@@ -45,12 +46,13 @@ export const LobbiesList: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   
-  const { 
-    setLobbyCode, 
-    setIsHost, 
-    setLoading, 
-    setError: setGameError 
+  const {
+    setLobbyCode,
+    setIsHost,
+    setLoading,
+    setError: setGameError
   } = useGameStore()
+  const { t } = useLocalization()
 
   const isFreshLobby = (lobby: Lobby): boolean => {
     const created = new Date(lobby.created_at).getTime()
@@ -71,7 +73,7 @@ export const LobbiesList: React.FC = () => {
       }
     } catch (err) {
       console.error('Failed to fetch lobbies:', err)
-      setError('Failed to load lobbies')
+      setError(t('lobbies.failedToLoad'))
     } finally {
       setIsLoading(false)
     }
@@ -88,7 +90,7 @@ export const LobbiesList: React.FC = () => {
 
   const handleJoinLobby = async (lobbyCode: string) => {
     if (!apiService.isAuthenticated()) {
-      setGameError('You must be logged in to join a lobby')
+      setGameError(t('lobbies.loginRequired'))
       return
     }
 
@@ -113,7 +115,7 @@ export const LobbiesList: React.FC = () => {
         await navigationService.navigateToLobby(code)
       }
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to join lobby'
+      const errorMessage = err instanceof Error ? err.message : t('lobbies.failedToJoin')
       setGameError(errorMessage)
     } finally {
       setLoading(false)
@@ -142,9 +144,9 @@ export const LobbiesList: React.FC = () => {
     return (
       <div className={styles.lobbiesList}>
         <div className={styles.header}>
-          <h2>Active Lobbies</h2>
+          <h2>{t('lobbies.title')}</h2>
         </div>
-        <div className={styles.loading}>Loading lobbies...</div>
+        <div className={styles.loading}>{t('lobbies.loading')}</div>
       </div>
     )
   }
@@ -153,9 +155,9 @@ export const LobbiesList: React.FC = () => {
     return (
       <div className={styles.lobbiesList}>
         <div className={styles.header}>
-          <h2>Active Lobbies</h2>
+          <h2>{t('lobbies.title')}</h2>
           <button onClick={fetchLobbies} className={styles.refreshButton}>
-            Refresh
+            {t('lobbies.refresh')}
           </button>
         </div>
         <div className={styles.error}>{error}</div>
@@ -166,16 +168,16 @@ export const LobbiesList: React.FC = () => {
   return (
     <div className={styles.lobbiesList}>
       <div className={styles.header}>
-        <h2>Active Lobbies</h2>
+        <h2>{t('lobbies.title')}</h2>
         <button onClick={fetchLobbies} className={styles.refreshButton}>
-          Refresh
+          {t('lobbies.refresh')}
         </button>
       </div>
       
       {lobbies.length === 0 ? (
         <div className={styles.emptyState}>
-          <p>No active lobbies found</p>
-          <small>Create a new lobby or wait for others to join</small>
+          <p>{t('lobbies.noLobbies')}</p>
+          <small>{t('lobbies.noLobbiesHint')}</small>
         </div>
       ) : (
         <div className={styles.lobbiesContainer}>
@@ -193,25 +195,25 @@ export const LobbiesList: React.FC = () => {
               
               <div className={styles.lobbyInfo}>
                 <div className={styles.players}>
-                  <strong>{lobby.players.length} player{lobby.players.length !== 1 ? 's' : ''}</strong>
+                  <strong>{lobby.players.length === 1 ? t('lobbies.playerCount', { count: 1 }) : t('lobbies.playerCountPlural', { count: lobby.players.length })}</strong>
                   <div className={styles.playersList}>
                     {lobby.players.slice(0, 3).map((player, index) => (
                       <span key={player.id} className={styles.playerName}>
                         {player.username}
-                        {player.isHost && ' (Host)'}
+                        {player.isHost && (' ' + t('lobbies.host'))}
                         {index < Math.min(lobby.players.length, 3) - 1 && ', '}
                       </span>
                     ))}
                     {lobby.players.length > 3 && (
                       <span className={styles.moreUsers}>
-                        {' '}+{lobby.players.length - 3} more
+                        {' ' + t('lobbies.more', { count: lobby.players.length - 3 })}
                       </span>
                     )}
                   </div>
                 </div>
                 
                 <div className={styles.gameInfo}>
-                  <span>{lobby.question_count} questions</span>
+                  <span>{t('lobbies.questionCount', { count: lobby.question_count })}</span>
                   <span className={styles.separator}>•</span>
                   <span>{formatElapsedMinutes(lobby.created_at)}</span>
                 </div>
@@ -222,7 +224,7 @@ export const LobbiesList: React.FC = () => {
                   className={styles.joinButton}
                   onClick={() => handleJoinLobby(lobby.code)}
                 >
-                  Join Lobby
+                  {t('lobbies.joinLobby')}
                 </button>
               )}
             </div>

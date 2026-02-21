@@ -7,6 +7,7 @@ import PerksManager from '../components/PerksManager'
 import styles from '../styles/ProfilePage.module.css'
 import appStyles from '../styles/App.module.css'
 import { Link } from 'react-router-dom'
+import { useLocalization } from '../hooks/useLocalization'
 
 interface ProfileData {
   character: {
@@ -40,6 +41,7 @@ export const ProfilePage: React.FC = () => {
   const [isUpdating, setIsUpdating] = useState(false)
   const [showChangePassword, setShowChangePassword] = useState(false)
   const [showPerks, setShowPerks] = useState(false)
+  const { t } = useLocalization()
   const currentUser = apiService.getCurrentUser()
   const isAdmin = !!currentUser?.isAdmin
 
@@ -56,10 +58,10 @@ export const ProfilePage: React.FC = () => {
         setProfileData(response.data)
       } else {
         console.error('ProfilePage: Failed to load profile:', response.error);
-        setError(response.error || 'Failed to load profile')
+        setError(response.error || t('profile.failedToLoad'))
       }
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to load profile'
+      const errorMessage = err instanceof Error ? err.message : t('profile.failedToLoad')
       setError(errorMessage)
     } finally {
       setIsLoading(false)
@@ -75,10 +77,10 @@ export const ProfilePage: React.FC = () => {
       if (response.success && response.data) {
         setProfileData(response.data.characterInfo)
       } else {
-        setError(response.error || 'Failed to update character')
+        setError(response.error || t('profile.failedToUpdate'))
       }
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to update character'
+      const errorMessage = err instanceof Error ? err.message : t('profile.failedToUpdate')
       setError(errorMessage)
     } finally {
       setIsUpdating(false)
@@ -93,10 +95,10 @@ export const ProfilePage: React.FC = () => {
   }
 
   const getLevelTitle = (level: number): string => {
-    if (level >= 50) return 'Legendary Scholar'
-    if (level >= 25) return 'Distinguished Professor'
-    if (level >= 10) return 'Experienced Student'
-    return 'Novice Learner'
+    if (level >= 50) return t('profile.legendaryScholar')
+    if (level >= 25) return t('profile.distinguishedProfessor')
+    if (level >= 10) return t('profile.experiencedStudent')
+    return t('profile.noviceLearner')
   }
 
   if (isLoading) {
@@ -104,7 +106,7 @@ export const ProfilePage: React.FC = () => {
       <div className={styles.profileContainer}>
         <div className={styles.loadingContainer}>
           <div className={styles.loadingSpinner} />
-          <p>Loading your profile...</p>
+          <p>{t('profile.loadingProfile')}</p>
         </div>
       </div>
     )
@@ -121,7 +123,7 @@ export const ProfilePage: React.FC = () => {
           onClick={loadProfile}
           className={styles.retryButton}
         >
-          Retry
+          {t('profile.retry')}
         </button>
       </div>
     )
@@ -131,12 +133,12 @@ export const ProfilePage: React.FC = () => {
     return (
       <div className={styles.profileContainer}>
         <div className={styles.errorContainer}>
-          <p>No profile data available</p>
+          <p>{t('profile.noData')}</p>
           <button
             onClick={loadProfile}
             className={styles.retryButton}
           >
-            Retry
+            {t('profile.retry')}
           </button>
         </div>
       </div>
@@ -146,15 +148,15 @@ export const ProfilePage: React.FC = () => {
   return (
     <div className={styles.profileContainer}>
       <div className={styles.profileHeader}>
-        <h1>Your Profile</h1>
-        <p>Manage your character and track your progress</p>
+        <h1>{t('profile.title')}</h1>
+        <p>{t('profile.subtitle')}</p>
         <div style={{ marginTop: '0.5rem', display: 'flex', gap: '0.5rem', justifyContent: 'center', flexWrap: 'wrap' }}>
           <button
             type="button"
             className={styles.changePasswordButton || styles.retryButton}
             onClick={() => setShowChangePassword(prev => !prev)}
           >
-            {showChangePassword ? 'Close Change Password' : 'Change Password'}
+            {showChangePassword ? t('profile.closeChangePassword') : t('profile.changePassword')}
           </button>
           <button
             type="button"
@@ -162,7 +164,7 @@ export const ProfilePage: React.FC = () => {
             onClick={() => setShowPerks(prev => !prev)}
             data-testid="perks-button"
           >
-            {showPerks ? 'Close Perks' : 'Perks'}
+            {showPerks ? t('profile.closePerks') : t('profile.perks')}
           </button>
           {isAdmin && (
             <Link
@@ -170,7 +172,7 @@ export const ProfilePage: React.FC = () => {
               className={`${appStyles.button} ${appStyles.buttonOutline}`}
               data-testid="admin-dashboard-link"
             >
-              Admin
+              {t('profile.admin')}
             </Link>
           )}
         </div>
@@ -186,7 +188,7 @@ export const ProfilePage: React.FC = () => {
           <div style={{ marginBottom: '1.5rem' }}>
             <div className={styles.perksSection}>
               <div className={styles.sectionHeader}>
-                <h2>Perks Manager</h2>
+                <h2>{t('profile.perksManager')}</h2>
                 <button
                   type="button"
                   onClick={() => setShowPerks(false)}
@@ -203,9 +205,9 @@ export const ProfilePage: React.FC = () => {
         {/* Current Character Section */}
         <div className={styles.characterSection}>
           <div className={styles.sectionHeader}>
-            <h2>Current Character</h2>
+            <h2>{t('profile.currentCharacter')}</h2>
             {isUpdating && (
-              <span className={styles.updatingLabel}>Updating...</span>
+              <span className={styles.updatingLabel}>{t('profile.updating')}</span>
             )}
           </div>
 
@@ -224,7 +226,7 @@ export const ProfilePage: React.FC = () => {
 
         {/* Level Progress Section */}
         <div className={styles.progressSection}>
-          <h2>Level Progress</h2>
+          <h2>{t('profile.levelProgress')}</h2>
 
           <div className={styles.levelInfo}>
             <div className={styles.levelBadge} style={{ backgroundColor: getLevelColor(profileData.level) }}>
@@ -232,13 +234,13 @@ export const ProfilePage: React.FC = () => {
             </div>
             <div className={styles.levelDetails}>
               <h3>{getLevelTitle(profileData.level)}</h3>
-              <p>{profileData.experience.toLocaleString()} total experience points</p>
+              <p>{profileData.experience.toLocaleString()} {t('profile.totalXp')}</p>
             </div>
           </div>
 
           <div className={styles.progressBar}>
             <div className={styles.progressLabel}>
-              <span>Level {profileData.progress.currentLevel} Progress</span>
+              <span>{t('profile.levelProgressLabel', { level: profileData.progress.currentLevel })}</span>
               <span>{profileData.progress.expInLevel} / {profileData.progress.expForNextLevel} XP</span>
             </div>
             <div className={styles.progressBarContainer}>
@@ -248,7 +250,7 @@ export const ProfilePage: React.FC = () => {
               />
             </div>
             <div className={styles.progressPercentage}>
-              {Math.round(profileData.progress.progress)}% complete
+              {Math.round(profileData.progress.progress)}{t('profile.complete')}
             </div>
           </div>
 
@@ -256,7 +258,7 @@ export const ProfilePage: React.FC = () => {
             <div className={styles.nextLevelInfo}>
               <p>
                 <strong>{profileData.progress.expForNextLevel - profileData.progress.expInLevel} XP</strong>
-                {' '}needed for level {profileData.level + 1}
+                {' '}{t('profile.neededForLevel', { level: profileData.level + 1 })}
               </p>
             </div>
           )}
@@ -264,8 +266,8 @@ export const ProfilePage: React.FC = () => {
 
         {/* Available Characters Section */}
         <div className={styles.availableCharactersSection}>
-          <h2>Available Characters</h2>
-          <p>Unlock new characters by reaching higher levels</p>
+          <h2>{t('profile.availableCharacters')}</h2>
+          <p>{t('profile.unlockByLevel')}</p>
 
           <div className={styles.charactersGrid}>
             {profileData.availableCharacters.map((character) => {
@@ -291,9 +293,9 @@ export const ProfilePage: React.FC = () => {
 
                     {isUnlocked ? (
                       <div className={styles.unlockStatus}>
-                        <span className={styles.unlocked}>✓ Unlocked</span>
+                        <span className={styles.unlocked}>✓ {t('profile.unlocked')}</span>
                         {isCurrent ? (
-                          <span className={styles.currentBadge}>Current</span>
+                          <span className={styles.currentBadge}>{t('profile.current')}</span>
                         ) : (
                           <button
                             type="button"
@@ -304,13 +306,13 @@ export const ProfilePage: React.FC = () => {
                             }}
                             disabled={isUpdating}
                           >
-                            {isUpdating ? 'Selecting...' : 'Select'}
+                            {isUpdating ? t('profile.selecting') : t('profile.select')}
                           </button>
                         )}
                       </div>
                     ) : (
                       <div className={styles.unlockStatus}>
-                        <span className={styles.locked}>🔒 Unlock at level {character.unlockLevel}</span>
+                        <span className={styles.locked}>🔒 {t('profile.unlockAtLevel', { level: character.unlockLevel })}</span>
                       </div>
                     )}
                   </div>

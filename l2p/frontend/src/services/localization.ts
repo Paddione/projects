@@ -472,7 +472,208 @@ const enTranslations: Translations = {
   'selector.gameSettings': 'Game Settings',
   'selector.questionsCount': 'Questions',
   'selector.max': 'max',
-  'selector.needMoreQuestions': 'Need at least 5 questions total. Add more sets!'
+  'selector.needMoreQuestions': 'Need at least 5 questions total. Add more sets!',
+
+  // HomePage
+  'home.welcomeBack': 'Welcome back, {name}!',
+
+  // LobbiesList
+  'lobbies.title': 'Active Lobbies',
+  'lobbies.loading': 'Loading lobbies...',
+  'lobbies.refresh': 'Refresh',
+  'lobbies.noLobbies': 'No active lobbies found',
+  'lobbies.noLobbiesHint': 'Create a new lobby or wait for others to join',
+  'lobbies.playerCount': '{count} player',
+  'lobbies.playerCountPlural': '{count} players',
+  'lobbies.host': '(Host)',
+  'lobbies.more': '+{count} more',
+  'lobbies.questionCount': '{count} questions',
+  'lobbies.joinLobby': 'Join Lobby',
+  'lobbies.failedToLoad': 'Failed to load lobbies',
+  'lobbies.loginRequired': 'You must be logged in to join a lobby',
+  'lobbies.failedToJoin': 'Failed to join lobby',
+
+  // LobbyPage
+  'lobbyPage.noId': 'No lobby ID provided',
+  'lobbyPage.notFound': 'Lobby not found',
+  'lobbyPage.failedToLoad': 'Failed to load lobby',
+  'lobbyPage.loading': 'Loading lobby...',
+  'lobbyPage.title': 'Game Lobby',
+  'lobbyPage.code': 'Code:',
+  'lobbyPage.leave': 'Leave Lobby',
+
+  // Header
+  'header.admin': 'Admin',
+  'header.mute': 'Mute',
+  'header.unmute': 'Unmute',
+  'header.logout': 'Logout',
+  'header.openMenu': 'Open menu',
+  'header.closeMenu': 'Close menu',
+  'header.masterVolume': 'Master volume',
+
+  // ResultsPage
+  'results.title': 'Game Results',
+  'results.subtitle': 'Final scores, rankings, and experience gained',
+  'results.winner': 'Winner: {name}!',
+  'results.levelInfo': 'Level {level} {character}',
+  'results.correctOf': '{correct}/{total} correct',
+  'results.score': 'Score',
+  'results.experience': 'Experience',
+  'results.levelUp': 'LEVEL UP!',
+  'results.levelChange': 'Level {old} → {new}',
+  'results.finalRankings': 'Final Rankings & Experience',
+  'results.pts': 'pts',
+  'results.experienceSummary': 'Experience Summary',
+  'results.accuracy': 'Accuracy',
+  'results.rank': 'Rank',
+  'results.nextLevel': 'Next Level',
+  'results.playAgain': 'Play Again',
+  'results.backToHome': 'Back to Home',
+
+  // ProfilePage
+  'profile.title': 'Your Profile',
+  'profile.subtitle': 'Manage your character and track your progress',
+  'profile.loadingProfile': 'Loading your profile...',
+  'profile.failedToLoad': 'Failed to load profile',
+  'profile.failedToUpdate': 'Failed to update character',
+  'profile.noData': 'No profile data available',
+  'profile.retry': 'Retry',
+  'profile.changePassword': 'Change Password',
+  'profile.closeChangePassword': 'Close Change Password',
+  'profile.perks': 'Perks',
+  'profile.closePerks': 'Close Perks',
+  'profile.admin': 'Admin',
+  'profile.perksManager': 'Perks Manager',
+  'profile.currentCharacter': 'Current Character',
+  'profile.updating': 'Updating...',
+  'profile.levelProgress': 'Level Progress',
+  'profile.totalXp': 'total experience points',
+  'profile.levelProgressLabel': 'Level {level} Progress',
+  'profile.complete': '% complete',
+  'profile.neededForLevel': 'needed for level {level}',
+  'profile.availableCharacters': 'Available Characters',
+  'profile.unlockByLevel': 'Unlock new characters by reaching higher levels',
+  'profile.unlocked': 'Unlocked',
+  'profile.current': 'Current',
+  'profile.selecting': 'Selecting...',
+  'profile.select': 'Select',
+  'profile.unlockAtLevel': 'Unlock at level {level}',
+  'profile.legendaryScholar': 'Legendary Scholar',
+  'profile.distinguishedProfessor': 'Distinguished Professor',
+  'profile.experiencedStudent': 'Experienced Student',
+  'profile.noviceLearner': 'Novice Learner',
+
+  // ConnectionStatus
+  'connection.connected': 'Connected',
+  'connection.connecting': 'Connecting...',
+  'connection.disconnected': 'Disconnected',
+  'connection.unknown': 'Unknown',
+  'connection.failed': 'Connection failed. Retrying...',
+
+  // ErrorBoundary
+  'error.oops': 'Oops! Something went wrong',
+  'error.unexpectedMessage': 'We\'re sorry, but something unexpected happened. Please try refreshing the page or contact support if the problem persists.',
+  'error.detailsSummary': 'Error Details (Development Only)',
+  'error.errorLabel': 'Error:',
+  'error.componentStack': 'Component Stack:',
+  'error.tryAgain': 'Try Again',
+  'error.reloadPage': 'Reload Page',
+  'error.errorId': 'Error ID:',
+  'error.heading': 'Error',
+  'error.retry': 'Retry',
+  'error.dismiss': 'Dismiss',
+
+  // ThemeSelector
+  'theme.lightLabel': 'Light',
+  'theme.darkLabel': 'Dark',
+  'theme.autoLabel': 'Auto',
+  'theme.title': 'Theme / Design',
+  'theme.currentMode': 'Current: {mode} Mode',
+
+  // PlayerGrid
+  'player.unknownCharacter': 'Unknown character',
+  'player.empty': 'Empty',
+
+  // GameInterface (test mode panel)
+  'gameInterface.legacySettings': 'Legacy Lobby Settings',
+  'gameInterface.questionCount': 'Question Count',
+  'gameInterface.questionSet': 'Question Set',
+  'gameInterface.selectSet': 'Select a set',
+  'gameInterface.general': 'General',
+  'gameInterface.science': 'Science',
+  'gameInterface.history': 'History',
+  'gameInterface.privateLobby': 'Private lobby',
+  'gameInterface.createLobby': 'Create Lobby',
+  'gameInterface.questionCountError': 'Question count must be between 1 and 100',
+  'gameInterface.questionSetRequired': 'Question set is required',
+  'gameInterface.failedToCreate': 'Failed to create lobby',
+  'gameInterface.failedToJoin': 'Failed to join lobby',
+
+  // CharacterSelector
+  'character.loading': 'Loading characters...',
+  'character.chooseTitle': 'Choose Your Character',
+  'character.chooseDescription': 'Select a university-themed character to represent you in the game',
+  'character.updating': 'Updating character...',
+
+  // LevelUpNotification
+  'notification.levelUp': 'Level Up!',
+  'notification.level': 'Level {level}',
+  'notification.xpGained': '+{xp} XP gained!',
+
+  // PerkUnlockNotification
+  'notification.perksUnlocked': 'New Perks Unlocked!',
+  'notification.unknownPerk': 'Unknown Perk',
+  'notification.cosmetic': 'Cosmetic',
+  'notification.visitPerks': 'Visit the Perks Manager to activate your new perks!',
+
+  // AudioSettings
+  'audio.settingsTitle': 'Audio Settings',
+  'audio.notSupportedMessage': 'Audio is not supported in this browser',
+  'audio.masterControls': 'Master Controls',
+  'audio.muteAll': 'Mute All Audio',
+  'audio.masterVolumeLabel': 'Master Volume:',
+  'audio.volumeControls': 'Volume Controls',
+  'audio.musicVolumeLabel': 'Music Volume:',
+  'audio.soundVolumeLabel': 'Sound Effects Volume:',
+  'audio.testing': 'Audio Testing',
+  'audio.testButton': 'Test Button Click',
+  'audio.testMusic': 'Test Background Music',
+  'audio.testStreak': 'Test Streak Sounds',
+  'audio.testWrong': 'Test Wrong Answer',
+  'audio.testNotification': 'Test Notification',
+  'audio.testSuccess': 'Test Success',
+  'audio.testError': 'Test Error',
+  'audio.statusTitle': 'Audio Status',
+  'audio.supportedLabel': 'Audio Supported:',
+  'audio.mutedLabel': 'Audio Muted:',
+  'audio.yes': 'Yes',
+  'audio.no': 'No',
+
+  // ChangePasswordForm
+  'password.title': 'Change Password',
+  'password.subtitle': 'Update your password to keep your account secure',
+  'password.currentLabel': 'Current Password',
+  'password.currentPlaceholder': 'Enter your current password',
+  'password.newLabel': 'New Password',
+  'password.newPlaceholder': 'Enter your new password',
+  'password.confirmLabel': 'Confirm New Password',
+  'password.confirmPlaceholder': 'Re-enter your new password',
+  'password.mustContain': 'Password must contain:',
+  'password.minLength': 'At least 8 characters',
+  'password.lowercase': 'At least one lowercase letter',
+  'password.uppercase': 'At least one uppercase letter',
+  'password.number': 'At least one number',
+  'password.special': 'At least one special character (@$!%*?&)',
+  'password.saving': 'Saving...',
+  'password.save': 'Save Password',
+  'password.cancel': 'Cancel',
+  'password.requirementsError': 'Please ensure your new password meets all requirements',
+  'password.mismatchError': 'New password and confirmation do not match',
+  'password.success': 'Password changed successfully',
+  'password.failed': 'Failed to change password',
+
+  // GameStateManager
+  'game.leaveWarning': 'Are you sure you want to leave? This will remove you from the lobby.'
 }
 
 // German translations
@@ -931,7 +1132,208 @@ const deTranslations: Translations = {
   'selector.gameSettings': 'Spieleinstellungen',
   'selector.questionsCount': 'Fragen',
   'selector.max': 'max',
-  'selector.needMoreQuestions': 'Mindestens 5 Fragen nötig. Füge weitere Sets hinzu!'
+  'selector.needMoreQuestions': 'Mindestens 5 Fragen nötig. Füge weitere Sets hinzu!',
+
+  // HomePage
+  'home.welcomeBack': 'Willkommen zurück, {name}!',
+
+  // LobbiesList
+  'lobbies.title': 'Aktive Lobbys',
+  'lobbies.loading': 'Lobbys werden geladen...',
+  'lobbies.refresh': 'Aktualisieren',
+  'lobbies.noLobbies': 'Keine aktiven Lobbys gefunden',
+  'lobbies.noLobbiesHint': 'Erstelle eine neue Lobby oder warte auf andere Spieler',
+  'lobbies.playerCount': '{count} Spieler',
+  'lobbies.playerCountPlural': '{count} Spieler',
+  'lobbies.host': '(Host)',
+  'lobbies.more': '+{count} weitere',
+  'lobbies.questionCount': '{count} Fragen',
+  'lobbies.joinLobby': 'Lobby beitreten',
+  'lobbies.failedToLoad': 'Lobbys konnten nicht geladen werden',
+  'lobbies.loginRequired': 'Du musst angemeldet sein, um einer Lobby beizutreten',
+  'lobbies.failedToJoin': 'Lobby beitreten fehlgeschlagen',
+
+  // LobbyPage
+  'lobbyPage.noId': 'Keine Lobby-ID angegeben',
+  'lobbyPage.notFound': 'Lobby nicht gefunden',
+  'lobbyPage.failedToLoad': 'Lobby konnte nicht geladen werden',
+  'lobbyPage.loading': 'Lobby wird geladen...',
+  'lobbyPage.title': 'Spiel-Lobby',
+  'lobbyPage.code': 'Code:',
+  'lobbyPage.leave': 'Lobby verlassen',
+
+  // Header
+  'header.admin': 'Admin',
+  'header.mute': 'Stummschalten',
+  'header.unmute': 'Stummschaltung aufheben',
+  'header.logout': 'Abmelden',
+  'header.openMenu': 'Menü öffnen',
+  'header.closeMenu': 'Menü schließen',
+  'header.masterVolume': 'Master-Lautstärke',
+
+  // ResultsPage
+  'results.title': 'Spielergebnisse',
+  'results.subtitle': 'Endpunktzahlen, Rangliste und gewonnene Erfahrung',
+  'results.winner': 'Gewinner: {name}!',
+  'results.levelInfo': 'Level {level} {character}',
+  'results.correctOf': '{correct}/{total} richtig',
+  'results.score': 'Punkte',
+  'results.experience': 'Erfahrung',
+  'results.levelUp': 'LEVEL UP!',
+  'results.levelChange': 'Level {old} → {new}',
+  'results.finalRankings': 'Endrangliste & Erfahrung',
+  'results.pts': 'Pkt.',
+  'results.experienceSummary': 'Erfahrungsübersicht',
+  'results.accuracy': 'Genauigkeit',
+  'results.rank': 'Rang',
+  'results.nextLevel': 'Nächstes Level',
+  'results.playAgain': 'Nochmal spielen',
+  'results.backToHome': 'Zurück zur Startseite',
+
+  // ProfilePage
+  'profile.title': 'Dein Profil',
+  'profile.subtitle': 'Verwalte deinen Charakter und verfolge deinen Fortschritt',
+  'profile.loadingProfile': 'Profil wird geladen...',
+  'profile.failedToLoad': 'Profil konnte nicht geladen werden',
+  'profile.failedToUpdate': 'Charakter konnte nicht aktualisiert werden',
+  'profile.noData': 'Keine Profildaten verfügbar',
+  'profile.retry': 'Erneut versuchen',
+  'profile.changePassword': 'Passwort ändern',
+  'profile.closeChangePassword': 'Passwort ändern schließen',
+  'profile.perks': 'Perks',
+  'profile.closePerks': 'Perks schließen',
+  'profile.admin': 'Admin',
+  'profile.perksManager': 'Perks-Verwaltung',
+  'profile.currentCharacter': 'Aktueller Charakter',
+  'profile.updating': 'Aktualisiere...',
+  'profile.levelProgress': 'Level-Fortschritt',
+  'profile.totalXp': 'Erfahrungspunkte gesamt',
+  'profile.levelProgressLabel': 'Level {level} Fortschritt',
+  'profile.complete': '% abgeschlossen',
+  'profile.neededForLevel': 'benötigt für Level {level}',
+  'profile.availableCharacters': 'Verfügbare Charaktere',
+  'profile.unlockByLevel': 'Schalte neue Charaktere frei, indem du höhere Level erreichst',
+  'profile.unlocked': 'Freigeschaltet',
+  'profile.current': 'Aktuell',
+  'profile.selecting': 'Auswählen...',
+  'profile.select': 'Auswählen',
+  'profile.unlockAtLevel': 'Freischaltbar ab Level {level}',
+  'profile.legendaryScholar': 'Legendärer Gelehrter',
+  'profile.distinguishedProfessor': 'Angesehener Professor',
+  'profile.experiencedStudent': 'Erfahrener Student',
+  'profile.noviceLearner': 'Neuling',
+
+  // ConnectionStatus
+  'connection.connected': 'Verbunden',
+  'connection.connecting': 'Verbinde...',
+  'connection.disconnected': 'Getrennt',
+  'connection.unknown': 'Unbekannt',
+  'connection.failed': 'Verbindung fehlgeschlagen. Erneuter Versuch...',
+
+  // ErrorBoundary
+  'error.oops': 'Hoppla! Etwas ist schiefgelaufen',
+  'error.unexpectedMessage': 'Es tut uns leid, aber es ist etwas Unerwartetes passiert. Bitte versuche die Seite neu zu laden oder kontaktiere den Support, wenn das Problem weiterhin besteht.',
+  'error.detailsSummary': 'Fehlerdetails (nur Entwicklung)',
+  'error.errorLabel': 'Fehler:',
+  'error.componentStack': 'Komponentenstapel:',
+  'error.tryAgain': 'Erneut versuchen',
+  'error.reloadPage': 'Seite neu laden',
+  'error.errorId': 'Fehler-ID:',
+  'error.heading': 'Fehler',
+  'error.retry': 'Erneut versuchen',
+  'error.dismiss': 'Schließen',
+
+  // ThemeSelector
+  'theme.lightLabel': 'Hell',
+  'theme.darkLabel': 'Dunkel',
+  'theme.autoLabel': 'Auto',
+  'theme.title': 'Design',
+  'theme.currentMode': 'Aktuell: {mode}-Modus',
+
+  // PlayerGrid
+  'player.unknownCharacter': 'Unbekannter Charakter',
+  'player.empty': 'Leer',
+
+  // GameInterface (test mode panel)
+  'gameInterface.legacySettings': 'Legacy Lobby-Einstellungen',
+  'gameInterface.questionCount': 'Fragenanzahl',
+  'gameInterface.questionSet': 'Fragenset',
+  'gameInterface.selectSet': 'Set auswählen',
+  'gameInterface.general': 'Allgemein',
+  'gameInterface.science': 'Naturwissenschaft',
+  'gameInterface.history': 'Geschichte',
+  'gameInterface.privateLobby': 'Private Lobby',
+  'gameInterface.createLobby': 'Lobby erstellen',
+  'gameInterface.questionCountError': 'Fragenanzahl muss zwischen 1 und 100 liegen',
+  'gameInterface.questionSetRequired': 'Fragenset ist erforderlich',
+  'gameInterface.failedToCreate': 'Lobby konnte nicht erstellt werden',
+  'gameInterface.failedToJoin': 'Lobby beitreten fehlgeschlagen',
+
+  // CharacterSelector
+  'character.loading': 'Charaktere werden geladen...',
+  'character.chooseTitle': 'Wähle deinen Charakter',
+  'character.chooseDescription': 'Wähle einen Uni-Charakter, der dich im Spiel repräsentiert',
+  'character.updating': 'Charakter wird aktualisiert...',
+
+  // LevelUpNotification
+  'notification.levelUp': 'Level Up!',
+  'notification.level': 'Level {level}',
+  'notification.xpGained': '+{xp} XP erhalten!',
+
+  // PerkUnlockNotification
+  'notification.perksUnlocked': 'Neue Perks freigeschaltet!',
+  'notification.unknownPerk': 'Unbekannter Perk',
+  'notification.cosmetic': 'Kosmetisch',
+  'notification.visitPerks': 'Besuche den Perks-Manager, um deine neuen Perks zu aktivieren!',
+
+  // AudioSettings
+  'audio.settingsTitle': 'Audio-Einstellungen',
+  'audio.notSupportedMessage': 'Audio wird in diesem Browser nicht unterstützt',
+  'audio.masterControls': 'Master-Steuerung',
+  'audio.muteAll': 'Alles stummschalten',
+  'audio.masterVolumeLabel': 'Master-Lautstärke:',
+  'audio.volumeControls': 'Lautstärke-Einstellungen',
+  'audio.musicVolumeLabel': 'Musik-Lautstärke:',
+  'audio.soundVolumeLabel': 'Soundeffekt-Lautstärke:',
+  'audio.testing': 'Audio testen',
+  'audio.testButton': 'Button-Klick testen',
+  'audio.testMusic': 'Hintergrundmusik testen',
+  'audio.testStreak': 'Serie-Sounds testen',
+  'audio.testWrong': 'Falsche Antwort testen',
+  'audio.testNotification': 'Benachrichtigung testen',
+  'audio.testSuccess': 'Erfolg testen',
+  'audio.testError': 'Fehler testen',
+  'audio.statusTitle': 'Audio-Status',
+  'audio.supportedLabel': 'Audio unterstützt:',
+  'audio.mutedLabel': 'Audio stumm:',
+  'audio.yes': 'Ja',
+  'audio.no': 'Nein',
+
+  // ChangePasswordForm
+  'password.title': 'Passwort ändern',
+  'password.subtitle': 'Aktualisiere dein Passwort, um dein Konto zu schützen',
+  'password.currentLabel': 'Aktuelles Passwort',
+  'password.currentPlaceholder': 'Aktuelles Passwort eingeben',
+  'password.newLabel': 'Neues Passwort',
+  'password.newPlaceholder': 'Neues Passwort eingeben',
+  'password.confirmLabel': 'Neues Passwort bestätigen',
+  'password.confirmPlaceholder': 'Neues Passwort erneut eingeben',
+  'password.mustContain': 'Passwort muss enthalten:',
+  'password.minLength': 'Mindestens 8 Zeichen',
+  'password.lowercase': 'Mindestens einen Kleinbuchstaben',
+  'password.uppercase': 'Mindestens einen Großbuchstaben',
+  'password.number': 'Mindestens eine Zahl',
+  'password.special': 'Mindestens ein Sonderzeichen (@$!%*?&)',
+  'password.saving': 'Speichern...',
+  'password.save': 'Passwort speichern',
+  'password.cancel': 'Abbrechen',
+  'password.requirementsError': 'Bitte stelle sicher, dass dein neues Passwort alle Anforderungen erfüllt',
+  'password.mismatchError': 'Neues Passwort und Bestätigung stimmen nicht überein',
+  'password.success': 'Passwort erfolgreich geändert',
+  'password.failed': 'Passwort konnte nicht geändert werden',
+
+  // GameStateManager
+  'game.leaveWarning': 'Bist du sicher, dass du gehen willst? Du wirst aus der Lobby entfernt.'
 }
 
 export class LocalizationService {
@@ -982,25 +1384,41 @@ export class LocalizationService {
   public translate(key: string, fallback?: string): string {
     const currentTranslations = this.translations.get(this.currentLanguage)
     const fallbackTranslations = this.translations.get(config.fallbackLanguage)
-    
+
     if (currentTranslations && currentTranslations[key]) {
       return currentTranslations[key]
     }
-    
+
     if (fallbackTranslations && fallbackTranslations[key]) {
       return fallbackTranslations[key]
     }
-    
+
     // If fallback is explicitly provided (even if empty), return it
     if (fallback !== undefined) {
       return fallback
     }
-    
+
     return key
   }
 
-  public t(key: string, fallback?: string): string {
-    return this.translate(key, fallback)
+  /**
+   * Translate a key with optional interpolation params or fallback string.
+   * Usage:
+   *   t('key')                          — simple lookup
+   *   t('key', 'fallback')              — with fallback string (backward-compatible)
+   *   t('key', { name: 'Alice' })       — with interpolation: "Hello, {name}!" → "Hello, Alice!"
+   *   t('key', { name: 'Alice' }, 'fb') — with both params and fallback
+   */
+  public t(key: string, paramsOrFallback?: Record<string, string | number> | string, fallback?: string): string {
+    const params = typeof paramsOrFallback === 'object' ? paramsOrFallback : undefined
+    const fb = typeof paramsOrFallback === 'string' ? paramsOrFallback : fallback
+    let result = this.translate(key, fb)
+    if (params) {
+      for (const [k, v] of Object.entries(params)) {
+        result = result.replace(new RegExp(`\\{${k}\\}`, 'g'), String(v))
+      }
+    }
+    return result
   }
 
   public getSupportedLanguages(): Language[] {

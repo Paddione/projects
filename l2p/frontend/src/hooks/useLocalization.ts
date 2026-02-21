@@ -28,8 +28,8 @@ export const useLocalization = () => {
     window.dispatchEvent(new CustomEvent('languageChanged', { detail: language }))
   }, [])
 
-  const t = useCallback((key: string, fallback?: string) => {
-    return localizationService.t(key, fallback)
+  const t = useCallback((key: string, paramsOrFallback?: Record<string, string | number> | string, fallback?: string) => {
+    return localizationService.t(key, paramsOrFallback, fallback)
   }, [])
 
   const getSupportedLanguages = useCallback(() => {

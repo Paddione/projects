@@ -1,5 +1,6 @@
 import React from 'react'
 import { useAudio } from '../hooks/useAudio'
+import { useLocalization } from '../hooks/useLocalization'
 import styles from '../styles/AudioSettings.module.css'
 
 export const AudioSettings: React.FC = () => {
@@ -20,6 +21,7 @@ export const AudioSettings: React.FC = () => {
     handleError,
     isAudioSupported
   } = useAudio()
+  const { t } = useLocalization()
 
   const handleVolumeSliderChange = (type: 'music' | 'sound' | 'master', value: number) => {
     switch (type) {
@@ -75,9 +77,9 @@ export const AudioSettings: React.FC = () => {
   if (!isAudioSupported()) {
     return (
       <div className={styles.container}>
-        <h3>Audio Settings</h3>
+        <h3>{t('audio.settingsTitle')}</h3>
         <div className={styles.warning}>
-          Audio is not supported in this browser
+          {t('audio.notSupportedMessage')}
         </div>
       </div>
     )
@@ -85,10 +87,10 @@ export const AudioSettings: React.FC = () => {
 
   return (
     <div className={styles.container} data-testid="audio-settings">
-      <h3>Audio Settings</h3>
-      
+      <h3>{t('audio.settingsTitle')}</h3>
+
       <div className={styles.section}>
-        <h4>Master Controls</h4>
+        <h4>{t('audio.masterControls')}</h4>
         <div className={styles.control}>
           <label>
             <input
@@ -96,12 +98,12 @@ export const AudioSettings: React.FC = () => {
               checked={isMuted}
               onChange={toggleMute}
             />
-            Mute All Audio
+            {t('audio.muteAll')}
           </label>
         </div>
         
         <div className={styles.control}>
-          <label>Master Volume: {Math.round(masterVolume * 100)}%</label>
+          <label>{t('audio.masterVolumeLabel')} {Math.round(masterVolume * 100)}%</label>
           <input
             type="range"
             min="0"
@@ -115,10 +117,10 @@ export const AudioSettings: React.FC = () => {
       </div>
 
       <div className={styles.section}>
-        <h4>Volume Controls</h4>
+        <h4>{t('audio.volumeControls')}</h4>
         
         <div className={styles.control}>
-          <label>Music Volume: {Math.round(musicVolume * 100)}%</label>
+          <label>{t('audio.musicVolumeLabel')} {Math.round(musicVolume * 100)}%</label>
           <input
             type="range"
             min="0"
@@ -131,7 +133,7 @@ export const AudioSettings: React.FC = () => {
         </div>
         
         <div className={styles.control}>
-          <label>Sound Effects Volume: {Math.round(soundVolume * 100)}%</label>
+          <label>{t('audio.soundVolumeLabel')} {Math.round(soundVolume * 100)}%</label>
           <input
             type="range"
             min="0"
@@ -145,7 +147,7 @@ export const AudioSettings: React.FC = () => {
       </div>
 
       <div className={styles.section}>
-        <h4>Audio Testing</h4>
+        <h4>{t('audio.testing')}</h4>
         
         <div className={styles.testButtons}>
           <button
@@ -153,7 +155,7 @@ export const AudioSettings: React.FC = () => {
             onMouseEnter={handleButtonHover}
             className={styles.testButton}
           >
-            Test Button Click
+            {t('audio.testButton')}
           </button>
           
           <button
@@ -161,7 +163,7 @@ export const AudioSettings: React.FC = () => {
             onMouseEnter={handleButtonHover}
             className={styles.testButton}
           >
-            Test Background Music
+            {t('audio.testMusic')}
           </button>
           
           <button
@@ -169,7 +171,7 @@ export const AudioSettings: React.FC = () => {
             onMouseEnter={handleButtonHover}
             className={styles.testButton}
           >
-            Test Streak Sounds
+            {t('audio.testStreak')}
           </button>
           
           <button
@@ -177,7 +179,7 @@ export const AudioSettings: React.FC = () => {
             onMouseEnter={handleButtonHover}
             className={styles.testButton}
           >
-            Test Wrong Answer
+            {t('audio.testWrong')}
           </button>
           
           <button
@@ -185,7 +187,7 @@ export const AudioSettings: React.FC = () => {
             onMouseEnter={handleButtonHover}
             className={styles.testButton}
           >
-            Test Notification
+            {t('audio.testNotification')}
           </button>
           
           <button
@@ -193,7 +195,7 @@ export const AudioSettings: React.FC = () => {
             onMouseEnter={handleButtonHover}
             className={styles.testButton}
           >
-            Test Success
+            {t('audio.testSuccess')}
           </button>
           
           <button
@@ -201,19 +203,19 @@ export const AudioSettings: React.FC = () => {
             onMouseEnter={handleButtonHover}
             className={styles.testButton}
           >
-            Test Error
+            {t('audio.testError')}
           </button>
         </div>
       </div>
 
       <div className={styles.section}>
-        <h4>Audio Status</h4>
+        <h4>{t('audio.statusTitle')}</h4>
         <div className={styles.status}>
-          <p>Audio Supported: {isAudioSupported() ? 'Yes' : 'No'}</p>
-          <p>Audio Muted: {isMuted ? 'Yes' : 'No'}</p>
-          <p>Master Volume: {Math.round(masterVolume * 100)}%</p>
-          <p>Music Volume: {Math.round(musicVolume * 100)}%</p>
-          <p>Sound Volume: {Math.round(soundVolume * 100)}%</p>
+          <p>{t('audio.supportedLabel')} {isAudioSupported() ? t('audio.yes') : t('audio.no')}</p>
+          <p>{t('audio.mutedLabel')} {isMuted ? t('audio.yes') : t('audio.no')}</p>
+          <p>{t('audio.masterVolumeLabel')} {Math.round(masterVolume * 100)}%</p>
+          <p>{t('audio.musicVolumeLabel')} {Math.round(musicVolume * 100)}%</p>
+          <p>{t('audio.soundVolumeLabel')} {Math.round(soundVolume * 100)}%</p>
         </div>
       </div>
     </div>

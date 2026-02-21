@@ -4,6 +4,7 @@ import styles from '../styles/PlayerGrid.module.css'
 import { CharacterDisplay } from './CharacterDisplay'
 import { useCharacterStore } from '../stores/characterStore'
 import { useGameStore } from '../stores/gameStore'
+import { useLocalization } from '../hooks/useLocalization'
 
 interface PlayerGridProps {
   players: Player[]
@@ -30,6 +31,7 @@ export const PlayerGrid: React.FC<PlayerGridProps> = ({
 }) => {
   const { characters } = useCharacterStore()
   const { playerAnswerStatus } = useGameStore()
+  const { t } = useLocalization()
   const prevScoresRef = useRef<Record<string, number>>({})
   const prevStreakRef = useRef<Record<string, number | undefined>>({})
 
@@ -55,7 +57,7 @@ export const PlayerGrid: React.FC<PlayerGridProps> = ({
       id: characterId,
       name: characterId,
       emoji: '👤',
-      description: 'Unknown character',
+      description: t('player.unknownCharacter'),
       unlockLevel: 1
     }
   }
@@ -161,7 +163,7 @@ export const PlayerGrid: React.FC<PlayerGridProps> = ({
           ) : (
             <div className={styles.emptySlot}>
               <div className={styles.emptyAvatar}>?</div>
-              <div className={styles.emptyText}>Empty</div>
+              <div className={styles.emptyText}>{t('player.empty')}</div>
             </div>
           )}
         </div>

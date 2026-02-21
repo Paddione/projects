@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { apiService } from '../services/apiService'
+import { useLocalization } from '../hooks/useLocalization'
 import { ErrorDisplay } from './ErrorBoundary'
 import styles from '../styles/AuthForm.module.css'
 
@@ -8,6 +9,7 @@ interface ChangePasswordFormProps {
 }
 
 export const ChangePasswordForm: React.FC<ChangePasswordFormProps> = ({ onClose }) => {
+  const { t } = useLocalization()
   const [formData, setFormData] = useState({
     currentPassword: '',
     newPassword: '',
@@ -59,13 +61,13 @@ export const ChangePasswordForm: React.FC<ChangePasswordFormProps> = ({ onClose 
     const isPasswordValid = Object.values(validationResult).every(Boolean)
 
     if (!isPasswordValid) {
-      setError('Please ensure your new password meets all requirements')
+      setError(t('password.requirementsError'))
       setIsLoading(false)
       return
     }
 
     if (formData.newPassword !== formData.confirmPassword) {
-      setError('New password and confirmation do not match')
+      setError(t('password.mismatchError'))
       setIsLoading(false)
       return
     }
@@ -73,16 +75,16 @@ export const ChangePasswordForm: React.FC<ChangePasswordFormProps> = ({ onClose 
     try {
       const response = await apiService.changePassword(formData.currentPassword, formData.newPassword)
       if (response.success) {
-        setSuccess('Password changed successfully')
+        setSuccess(t('password.success'))
         setFormData({ currentPassword: '', newPassword: '', confirmPassword: '' })
         if (onClose) {
           setTimeout(() => onClose(), 1500)
         }
       } else {
-        setError(response.error || 'Failed to change password')
+        setError(response.error || t('password.failed'))
       }
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to change password'
+      const errorMessage = err instanceof Error ? err.message : t('password.failed')
       setError(errorMessage)
     } finally {
       setIsLoading(false)
@@ -93,8 +95,8 @@ export const ChangePasswordForm: React.FC<ChangePasswordFormProps> = ({ onClose 
     <div className={styles.authContainer}>
       <div className={styles.authCard}>
         <div className={styles.header}>
-          <h2>Change Password</h2>
-          <p>Update your password to keep your account secure</p>
+          <h2>{t('password.title')}</h2>
+          <p>{t('password.subtitle')}</p>
         </div>
 
         <ErrorDisplay error={error} onClear={() => setError(null)} />
@@ -107,53 +109,53 @@ export const ChangePasswordForm: React.FC<ChangePasswordFormProps> = ({ onClose 
 
         <form onSubmit={handleSubmit} className={styles.form}>
           <div className={styles.inputGroup}>
-            <label htmlFor="currentPassword">Current Password</label>
+            <label htmlFor="currentPassword">{t('password.currentLabel')}</label>
             <input
               id="currentPassword"
               name="currentPassword"
               type="password"
               value={formData.currentPassword}
               onChange={handleInputChange}
-              placeholder="Enter your current password"
+              placeholder={t('password.currentPlaceholder')}
               required
               className={styles.input}
             />
           </div>
 
           <div className={styles.inputGroup}>
-            <label htmlFor="newPassword">New Password</label>
+            <label htmlFor="newPassword">{t('password.newLabel')}</label>
             <input
               id="newPassword"
               name="newPassword"
               type="password"
               value={formData.newPassword}
               onChange={handleInputChange}
-              placeholder="Enter your new password"
+              placeholder={t('password.newPlaceholder')}
               required
               minLength={8}
               className={styles.input}
             />
             <div className={styles.passwordRequirements}>
-              <p>Password must contain:</p>
+              <p>{t('password.mustContain')}</p>
               <ul>
-                <li className={passwordValidation.length ? styles.valid : styles.invalid}>At least 8 characters</li>
-                <li className={passwordValidation.lowercase ? styles.valid : styles.invalid}>At least one lowercase letter</li>
-                <li className={passwordValidation.uppercase ? styles.valid : styles.invalid}>At least one uppercase letter</li>
-                <li className={passwordValidation.number ? styles.valid : styles.invalid}>At least one number</li>
-                <li className={passwordValidation.special ? styles.valid : styles.invalid}>At least one special character (@$!%*?&)</li>
+                <li className={passwordValidation.length ? styles.valid : styles.invalid}>{t('password.minLength')}</li>
+                <li className={passwordValidation.lowercase ? styles.valid : styles.invalid}>{t('password.lowercase')}</li>
+                <li className={passwordValidation.uppercase ? styles.valid : styles.invalid}>{t('password.uppercase')}</li>
+                <li className={passwordValidation.number ? styles.valid : styles.invalid}>{t('password.number')}</li>
+                <li className={passwordValidation.special ? styles.valid : styles.invalid}>{t('password.special')}</li>
               </ul>
             </div>
           </div>
 
           <div className={styles.inputGroup}>
-            <label htmlFor="confirmPassword">Confirm New Password</label>
+            <label htmlFor="confirmPassword">{t('password.confirmLabel')}</label>
             <input
               id="confirmPassword"
               name="confirmPassword"
               type="password"
               value={formData.confirmPassword}
               onChange={handleInputChange}
-              placeholder="Re-enter your new password"
+              placeholder={t('password.confirmPlaceholder')}
               required
               minLength={8}
               className={styles.input}
@@ -162,11 +164,11 @@ export const ChangePasswordForm: React.FC<ChangePasswordFormProps> = ({ onClose 
 
           <div style={{ display: 'flex', gap: '0.5rem' }}>
             <button type="submit" className={`${styles.button} ${styles.primary}`} disabled={isLoading}>
-              {isLoading ? 'Saving...' : 'Save Password'}
+              {isLoading ? t('password.saving') : t('password.save')}
             </button>
             {onClose && (
               <button type="button" className={`${styles.button} ${styles.buttonOutline}`} onClick={onClose}>
-                Cancel
+                {t('password.cancel')}
               </button>
             )}
           </div>

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { LevelUpNotification as LevelUpNotificationType } from '../stores/gameStore'
 import { avatarService } from '../services/avatarService'
 import { Icon } from './Icon'
+import { useLocalization } from '../hooks/useLocalization'
 
 interface LevelUpNotificationProps {
   notification: LevelUpNotificationType
@@ -14,6 +15,7 @@ export const LevelUpNotification: React.FC<LevelUpNotificationProps> = ({
 }) => {
   const [isVisible, setIsVisible] = useState(false)
   const [showConfetti, setShowConfetti] = useState(false)
+  const { t } = useLocalization()
 
   useEffect(() => {
     // Show notification with animation
@@ -112,7 +114,7 @@ export const LevelUpNotification: React.FC<LevelUpNotificationProps> = ({
             <Icon name="game-ui/level-up" size={40} alt="Level Up" />
           </span>
           <h3 style={{ margin: '0 0 var(--spacing-sm, 0.5rem) 0', fontSize: '1.2rem' }}>
-            Level Up!
+            {t('notification.levelUp')}
           </h3>
         </div>
 
@@ -130,12 +132,12 @@ export const LevelUpNotification: React.FC<LevelUpNotificationProps> = ({
 
         <div style={{ textAlign: 'center', marginBottom: 'var(--spacing-md, 0.75rem)' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 'var(--spacing-sm, 0.5rem)', marginBottom: 'var(--spacing-sm, 0.5rem)' }}>
-            <span style={{ color: 'rgba(255, 255, 255, 0.8)', fontSize: '0.9rem' }}>Level {notification.oldLevel}</span>
+            <span style={{ color: 'rgba(255, 255, 255, 0.8)', fontSize: '0.9rem' }}>{t('notification.level', { level: notification.oldLevel })}</span>
             <span style={{ fontWeight: 'bold', color: 'rgba(255, 255, 255, 0.9)' }}>→</span>
-            <span style={{ fontWeight: 'bold', fontSize: '1.1rem' }}>Level {notification.newLevel}</span>
+            <span style={{ fontWeight: 'bold', fontSize: '1.1rem' }}>{t('notification.level', { level: notification.newLevel })}</span>
           </div>
           <div style={{ fontSize: '0.9rem', color: 'rgba(255, 255, 255, 0.9)' }}>
-            +{notification.experienceAwarded} XP gained!
+            {t('notification.xpGained', { xp: notification.experienceAwarded })}
           </div>
         </div>
 

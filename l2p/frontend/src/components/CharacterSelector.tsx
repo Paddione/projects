@@ -2,6 +2,7 @@ import React, { useEffect } from 'react'
 import styles from '../styles/CharacterSelector.module.css'
 import { useCharacterStore, useAvailableCharacters, useCharacterLoading, useCharacterUpdating } from '../stores/characterStore'
 import { CharacterDisplay } from './CharacterDisplay'
+import { useLocalization } from '../hooks/useLocalization'
 
 interface CharacterSelectorProps {
   selectedCharacter: string
@@ -22,6 +23,7 @@ export const CharacterSelector: React.FC<CharacterSelectorProps> = ({
   const availableCharacters = useAvailableCharacters()
   const isLoading = useCharacterLoading()
   const isUpdating = useCharacterUpdating()
+  const { t } = useLocalization()
 
   useEffect(() => {
     loadCharacters()
@@ -41,16 +43,16 @@ export const CharacterSelector: React.FC<CharacterSelectorProps> = ({
   if (isLoading) {
     return (
       <div className={`${styles.characterSelector} ${className}`.trim()}>
-        <div className={styles.loading}>Loading characters...</div>
+        <div className={styles.loading}>{t('character.loading')}</div>
       </div>
     )
   }
 
   return (
     <div className={`${styles.characterSelector} ${className}`.trim()}>
-      <label className={styles.label}>Choose Your Character</label>
+      <label className={styles.label}>{t('character.chooseTitle')}</label>
       <p className={styles.description}>
-        Select a university-themed character to represent you in the game
+        {t('character.chooseDescription')}
       </p>
       
       <div className={styles.characterGrid}>
@@ -87,7 +89,7 @@ export const CharacterSelector: React.FC<CharacterSelectorProps> = ({
       </div>
       
       {isUpdating && !skipServerUpdate && (
-        <div className={styles.updating}>Updating character...</div>
+        <div className={styles.updating}>{t('character.updating')}</div>
       )}
     </div>
   )

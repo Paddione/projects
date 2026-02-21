@@ -1,6 +1,7 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import styles from '../styles/App.module.css'
 import { importMetaEnv } from '../utils/import-meta'
+import { localizationService } from '../services/localization'
 
 const runtimeEnv = (() => {
   if (Object.keys(importMetaEnv).length) {
@@ -124,18 +125,17 @@ class ErrorBoundary extends Component<Props, State> {
           data-error-id={this.state.errorId}
         >
           <div className="error-boundary__container">
-            <h2 data-testid="error-title">Oops! Something went wrong</h2>
+            <h2 data-testid="error-title">{localizationService.t('error.oops')}</h2>
             <div className="error-boundary__content">
               <p data-testid="error-message">
-                We're sorry, but something unexpected happened.
-                Please try refreshing the page or contact support if the problem persists.
+                {localizationService.t('error.unexpectedMessage')}
               </p>
 
               {runtimeEnv['MODE'] === 'development' && this.state.error && (
                 <details className="error-boundary__details" data-testid="error-details">
-                  <summary>Error Details (Development Only)</summary>
+                  <summary>{localizationService.t('error.detailsSummary')}</summary>
                   <div className="error-boundary__error">
-                    <h4>Error:</h4>
+                    <h4>{localizationService.t('error.errorLabel')}</h4>
                     <pre data-testid="error-stack">{this.state.error.message}</pre>
                     {this.state.error.stack && (
                       <pre data-testid="error-stack-trace">{this.state.error.stack}</pre>
@@ -143,7 +143,7 @@ class ErrorBoundary extends Component<Props, State> {
                   </div>
                   {this.state.errorInfo && (
                     <div className="error-boundary__component-stack">
-                      <h4>Component Stack:</h4>
+                      <h4>{localizationService.t('error.componentStack')}</h4>
                       <pre data-testid="component-stack">{this.state.errorInfo.componentStack}</pre>
                     </div>
                   )}
@@ -157,20 +157,20 @@ class ErrorBoundary extends Component<Props, State> {
                 className="error-boundary__button error-boundary__button--retry"
                 data-testid="error-retry-button"
               >
-                Try Again
+                {localizationService.t('error.tryAgain')}
               </button>
               <button
                 onClick={this.handleReload}
                 className="error-boundary__button error-boundary__button--reload"
                 data-testid="error-reload-button"
               >
-                Reload Page
+                {localizationService.t('error.reloadPage')}
               </button>
             </div>
 
             {this.state.errorId && (
               <div className="error-boundary__error-id" data-testid="error-id">
-                Error ID: {this.state.errorId}
+                {localizationService.t('error.errorId')} {this.state.errorId}
               </div>
             )}
           </div>
@@ -205,7 +205,7 @@ export const ErrorDisplay: React.FC<{
         <span style={{ color: 'var(--color-error)', fontSize: '1.25rem' }}>⚠️</span>
         <div style={{ flex: 1 }}>
           <h4 style={{ color: 'var(--color-error)', margin: '0 0 0.5rem 0' }}>
-            Error
+            {localizationService.t('error.heading')}
           </h4>
           <p style={{ margin: '0 0 1rem 0' }}>{error}</p>
           <div className={`${styles.flex} ${styles.gapSm}`}>
@@ -215,7 +215,7 @@ export const ErrorDisplay: React.FC<{
                 onClick={onRetry}
                 style={{ fontSize: '0.875rem', padding: '0.5rem 1rem' }}
               >
-                Retry
+                {localizationService.t('error.retry')}
               </button>
             )}
             {onClear && (
@@ -224,7 +224,7 @@ export const ErrorDisplay: React.FC<{
                 onClick={onClear}
                 style={{ fontSize: '0.875rem', padding: '0.5rem 1rem' }}
               >
-                Dismiss
+                {localizationService.t('error.dismiss')}
               </button>
             )}
           </div>

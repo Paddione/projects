@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useCallback } from 'react'
 import { useGameStore } from '../stores/gameStore'
 import { socketService } from '../services/socketService'
 import { navigationService } from '../services/navigationService'
+import { localizationService } from '../services/localization'
 
 export const GameStateManager: React.FC = () => {
   const initialized = useRef(false)
@@ -12,7 +13,7 @@ export const GameStateManager: React.FC = () => {
     
     // Warn user if they're in a game/lobby
     if (currentPath.includes('/game/') || currentPath.includes('/lobby/')) {
-      const message = 'Are you sure you want to leave? This will remove you from the lobby.'
+      const message = localizationService.t('game.leaveWarning')
       event.preventDefault()
       event.returnValue = message
       return message

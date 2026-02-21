@@ -5,6 +5,7 @@ import styles from '../styles/App.module.css'
 import { useAuthStore } from '../stores/authStore'
 import { useCharacterStore } from '../stores/characterStore'
 import { avatarService } from '../services/avatarService'
+import { useLocalization } from '../hooks/useLocalization'
 
 // Component for animated score to experience conversion
 const AnimatedScoreConversion: React.FC<{
@@ -16,6 +17,7 @@ const AnimatedScoreConversion: React.FC<{
   character: string;
   onAnimationComplete?: () => void;
 }> = ({ finalScore, experienceAwarded, levelUp, oldLevel, newLevel, character, onAnimationComplete }) => {
+  const { t } = useLocalization()
   const [currentScore, setCurrentScore] = useState(finalScore)
   const [currentExperience, setCurrentExperience] = useState(0)
   const [showLevelUp, setShowLevelUp] = useState(false)
@@ -98,9 +100,9 @@ const AnimatedScoreConversion: React.FC<{
           fontWeight: 'bold',
           marginBottom: 'var(--spacing-md)'
         }}>
-          🎉 LEVEL UP! 🎉
+          🎉 {t('results.levelUp')} 🎉
           <div style={{ fontSize: '1rem', marginTop: 'var(--spacing-xs)' }}>
-            Level {oldLevel} → {newLevel}
+            {t('results.levelChange', { old: oldLevel, new: newLevel })}
           </div>
         </div>
       )}
@@ -118,7 +120,7 @@ const AnimatedScoreConversion: React.FC<{
             color: 'var(--text-secondary)',
             marginBottom: 'var(--spacing-xs)'
           }}>
-            Score
+            {t('results.score')}
           </div>
           <div style={{
             fontSize: '2rem',
@@ -142,7 +144,7 @@ const AnimatedScoreConversion: React.FC<{
             color: 'var(--color-success)',
             marginBottom: 'var(--spacing-xs)'
           }}>
-            Experience
+            {t('results.experience')}
           </div>
           <div style={{
             fontSize: '2rem',
@@ -177,6 +179,7 @@ export const ResultsPage: React.FC = () => {
   const { gameResults, totalQuestions } = useGameStore()
   const { user } = useAuthStore()
   const { progress } = useCharacterStore()
+  const { t } = useLocalization()
   const [animationDone, setAnimationDone] = useState(false)
 
   const handleAnimationComplete = useCallback(() => {
@@ -256,16 +259,16 @@ export const ResultsPage: React.FC = () => {
   return (
     <div className={styles.container} data-testid="results-page">
       <div className={`${styles.card} ${styles.textCenter}`} style={{ marginBottom: 'var(--spacing-xl)' }} data-testid="final-results">
-        <h1>🏆 Game Results</h1>
-        <p>Final scores, rankings, and experience gained</p>
+        <h1>🏆 {t('results.title')}</h1>
+        <p>{t('results.subtitle')}</p>
       </div>
 
       {/* Winner Announcement with Animation */}
       {winner && (
         <div className={`${styles.card} ${styles.textCenter}`} style={{ marginBottom: 'var(--spacing-xl)' }} data-testid="winner-announcement">
-          <h2>🎉 Winner: {winner.username}!</h2>
+          <h2>🎉 {t('results.winner', { name: winner.username })}</h2>
           <p style={{ marginBottom: 'var(--spacing-lg)' }}>
-            Level {winner.newLevel} {winner.character} • {winner.correctAnswers}/{totalQuestions || 10} correct
+            {t('results.levelInfo', { level: winner.newLevel, character: winner.character })} • {t('results.correctOf', { correct: winner.correctAnswers, total: totalQuestions || 10 })}
           </p>
 
           <AnimatedScoreConversion
@@ -282,7 +285,7 @@ export const ResultsPage: React.FC = () => {
 
       {/* Final Rankings with Experience */}
       <div className={styles.card} style={{ marginBottom: 'var(--spacing-xl)' }} data-testid="player-scores">
-        <h3>Final Rankings & Experience</h3>
+        <h3>{t('results.finalRankings')}</h3>
         <div style={{ gap: 'var(--spacing-md)', display: 'flex', flexDirection: 'column' }}>
           {finalPlayers.map((player, index) => (
             <div key={player.id} data-testid={`result-player-${player.id}`} className={`${styles.flex} ${styles.justifyBetween} ${styles.itemsCenter}`} style={{
@@ -309,24 +312,24 @@ export const ResultsPage: React.FC = () => {
                   <div>
                     <div style={{ fontWeight: 'bold' }}>{player.username}</div>
                     <div style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
-                      Level {player.newLevel} {player.character}
+                      {t('results.levelInfo', { level: player.newLevel, character: player.character })}
                     </div>
                   </div>
                 </div>
               </div>
               <div className={styles.textRight}>
                 <div style={{ fontWeight: 'bold', fontSize: '0.875rem', color: 'var(--text-secondary)' }} data-testid={`final-score-${player.id}`}>
-                  {player.finalScore} pts
+                  {player.finalScore} {t('results.pts')}
                 </div>
                 <div style={{ fontSize: '0.875rem', color: 'var(--color-success)', fontWeight: 'bold' }}>
                   +{player.experienceAwarded || player.finalScore} XP
                 </div>
                 <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
-                  {player.correctAnswers}/{totalQuestions || 10} correct
+                  {t('results.correctOf', { correct: player.correctAnswers, total: totalQuestions || 10 })}
                 </div>
                 {player.levelUp && (
                   <div style={{ fontSize: '0.75rem', color: 'var(--color-success)', fontWeight: 'bold' }}>
-                    🎉 Level {player.oldLevel} → {player.newLevel}
+                    🎉 {t('results.levelChange', { old: player.oldLevel, new: player.newLevel })}
                   </div>
                 )}
               </div>
@@ -337,7 +340,7 @@ export const ResultsPage: React.FC = () => {
 
       {/* Experience Summary & Progress */}
       <div className={styles.card} style={{ marginBottom: 'var(--spacing-xl)' }}>
-        <h3>Experience Summary</h3>
+        <h3>{t('results.experienceSummary')}</h3>
         <div className={styles.grid} style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 'var(--spacing-lg)' }}>
           {finalPlayers.map(player => (
             <div key={player.id} style={{
@@ -354,7 +357,7 @@ export const ResultsPage: React.FC = () => {
                 {player.username}
               </div>
               <div style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: 'var(--spacing-md)' }}>
-                Level {player.newLevel} {player.character}
+                {t('results.levelInfo', { level: player.newLevel, character: player.character })}
               </div>
 
               <div style={{
@@ -367,21 +370,21 @@ export const ResultsPage: React.FC = () => {
                 borderRadius: 'var(--radius-md)'
               }}>
                 <div style={{ textAlign: 'left' }}>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Score</div>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>{t('results.score')}</div>
                   <div style={{ fontSize: '1.1rem', fontWeight: 'bold' }}>{player.finalScore}</div>
                 </div>
                 <div style={{ textAlign: 'right' }}>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Experience</div>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>{t('results.experience')}</div>
                   <div style={{ fontSize: '1.1rem', fontWeight: 'bold', color: 'var(--color-success)' }}>+{player.experienceAwarded || player.finalScore} XP</div>
                 </div>
                 <div style={{ textAlign: 'left' }}>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Accuracy</div>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>{t('results.accuracy')}</div>
                   <div style={{ fontSize: '1.1rem', fontWeight: 'bold' }}>
                     {Math.round((player.correctAnswers / (totalQuestions || 10)) * 100)}%
                   </div>
                 </div>
                 <div style={{ textAlign: 'right' }}>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Rank</div>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>{t('results.rank')}</div>
                   <div style={{ fontSize: '1.1rem', fontWeight: 'bold' }}>#{finalPlayers.indexOf(player) + 1}</div>
                 </div>
               </div>
@@ -390,7 +393,7 @@ export const ResultsPage: React.FC = () => {
               {String(player.id) === String(user?.id) && progress && (
                 <div style={{ marginTop: 'var(--spacing-md)', textAlign: 'left' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', marginBottom: 'var(--spacing-xs)' }}>
-                    <span>Next Level</span>
+                    <span>{t('results.nextLevel')}</span>
                     <span>{Math.round(progress.progress)}%</span>
                   </div>
                   <div style={{
@@ -416,7 +419,7 @@ export const ResultsPage: React.FC = () => {
                   fontWeight: 'bold',
                   marginBottom: 'var(--spacing-sm)'
                 }}>
-                  🎉 LEVEL UP!
+                  🎉 {t('results.levelUp')}
                 </div>
               )}
             </div>
@@ -431,14 +434,14 @@ export const ResultsPage: React.FC = () => {
           onClick={handlePlayAgain}
           data-testid="play-again-button"
         >
-          Play Again
+          {t('results.playAgain')}
         </button>
         <button
           className={`${styles.button} ${styles.buttonSecondary}`}
           onClick={() => navigate('/')}
           data-testid="back-to-home-button"
         >
-          Back to Home
+          {t('results.backToHome')}
         </button>
       </div>
     </div>

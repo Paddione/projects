@@ -89,7 +89,7 @@ export const GameInterface: React.FC<GameInterfaceProps> = ({ className = '' }) 
         handleMenuConfirm()
       }
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to create lobby'
+      const errorMessage = err instanceof Error ? err.message : t('gameInterface.failedToCreate')
       setError(errorMessage)
       handleMenuCancel()
     } finally {
@@ -134,7 +134,7 @@ export const GameInterface: React.FC<GameInterfaceProps> = ({ className = '' }) 
         handleMenuConfirm()
       }
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to join lobby'
+      const errorMessage = err instanceof Error ? err.message : t('gameInterface.failedToJoin')
       setError(errorMessage)
       handleMenuCancel()
     } finally {
@@ -161,13 +161,13 @@ export const GameInterface: React.FC<GameInterfaceProps> = ({ className = '' }) 
     const isValidCount = isInteger && numericCount >= 1 && numericCount <= 100
 
     if (!isValidCount) {
-      setQuestionCountError('Question count must be between 1 and 100')
+      setQuestionCountError(t('gameInterface.questionCountError'))
     } else {
       setQuestionCountError(null)
     }
 
     if (!selectedQuestionSet) {
-      setQuestionSetError('Question set is required')
+      setQuestionSetError(t('gameInterface.questionSetRequired'))
     } else {
       setQuestionSetError(null)
     }
@@ -235,10 +235,10 @@ export const GameInterface: React.FC<GameInterfaceProps> = ({ className = '' }) 
 
             {isTestMode && isCreatePanelOpen && (
               <div className={styles.testPanel} onClick={e => e.stopPropagation()}>
-                <div className={styles.testPanelTitle}>Legacy Lobby Settings</div>
+                <div className={styles.testPanelTitle}>{t('gameInterface.legacySettings')}</div>
                 <div className={styles.fieldRow}>
                   <div className={styles.fieldGroup}>
-                    <label htmlFor="question-count-select">Question Count</label>
+                    <label htmlFor="question-count-select">{t('gameInterface.questionCount')}</label>
                     <select
                       id="question-count-select"
                       ref={questionCountRef}
@@ -261,7 +261,7 @@ export const GameInterface: React.FC<GameInterfaceProps> = ({ className = '' }) 
                   </div>
 
                   <div className={styles.fieldGroup}>
-                    <label htmlFor="question-set-select">Question Set</label>
+                    <label htmlFor="question-set-select">{t('gameInterface.questionSet')}</label>
                     <select
                       id="question-set-select"
                       ref={questionSetRef}
@@ -270,10 +270,10 @@ export const GameInterface: React.FC<GameInterfaceProps> = ({ className = '' }) 
                       onChange={(e) => handleQuestionSetChange(e.target.value)}
                       defaultValue={questionSetFallbackRef.current}
                     >
-                      <option value="">Select a set</option>
-                      <option value="general">General</option>
-                      <option value="science">Science</option>
-                      <option value="history">History</option>
+                      <option value="">{t('gameInterface.selectSet')}</option>
+                      <option value="general">{t('gameInterface.general')}</option>
+                      <option value="science">{t('gameInterface.science')}</option>
+                      <option value="history">{t('gameInterface.history')}</option>
                     </select>
                     {questionSetError && (
                       <div className={styles.validationError} data-testid="question-set-error">
@@ -290,7 +290,7 @@ export const GameInterface: React.FC<GameInterfaceProps> = ({ className = '' }) 
                     onChange={(e) => setIsPrivateLobby(e.target.checked)}
                     data-testid="private-lobby-checkbox"
                   />
-                  Private lobby
+                  {t('gameInterface.privateLobby')}
                 </label>
 
                 <div className={styles.buttonRow}>
@@ -299,7 +299,7 @@ export const GameInterface: React.FC<GameInterfaceProps> = ({ className = '' }) 
                     onClick={handleTestModeCreate}
                     data-testid="confirm-create-lobby"
                   >
-                    Create Lobby
+                    {t('gameInterface.createLobby')}
                   </button>
                   <button
                     className={styles.textButton}

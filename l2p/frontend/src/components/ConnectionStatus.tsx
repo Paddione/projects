@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { socketService } from '../services/socketService'
+import { useLocalization } from '../hooks/useLocalization'
 import styles from '../styles/ConnectionStatus.module.css'
 
 interface ConnectionStatusProps {
@@ -7,6 +8,7 @@ interface ConnectionStatusProps {
 }
 
 export const ConnectionStatus: React.FC<ConnectionStatusProps> = ({ className = '' }) => {
+  const { t } = useLocalization()
   const [status, setStatus] = useState<'connected' | 'connecting' | 'disconnected'>('disconnected')
   const [error, setError] = useState<string | null>(null)
 
@@ -44,7 +46,7 @@ export const ConnectionStatus: React.FC<ConnectionStatusProps> = ({ className = 
 
     const handleConnectError = () => {
       setStatus('connecting')
-      setError('Connection failed. Retrying...')
+      setError(t('connection.failed'))
     }
 
     socketService.on('connect', handleConnect)
@@ -75,13 +77,13 @@ export const ConnectionStatus: React.FC<ConnectionStatusProps> = ({ className = 
   const getStatusText = () => {
     switch (status) {
       case 'connected':
-        return 'Connected'
+        return t('connection.connected')
       case 'connecting':
-        return 'Connecting...'
+        return t('connection.connecting')
       case 'disconnected':
-        return 'Disconnected'
+        return t('connection.disconnected')
       default:
-        return 'Unknown'
+        return t('connection.unknown')
     }
   }
 
