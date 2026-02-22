@@ -14,8 +14,9 @@ build:
     push: true
     useBuildkit: true
     concurrency: 2
-  # All images are pushed to the private registry (registry.local:5000)
-  # Skaffold auto-prefixes image names: korczewski/* → registry.local:5000/korczewski/*
+  defaultRepo: registry.korczewski.de
+  # All images are pushed to the private registry
+  # Skaffold auto-prefixes image names: korczewski/* → registry.korczewski.de/korczewski/*
   tagPolicy:
     sha256: {}
 
