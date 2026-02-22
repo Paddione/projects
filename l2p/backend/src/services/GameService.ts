@@ -279,27 +279,6 @@ export class GameService {
       }
     }
 
-    // Wager: start wager phase instead of question
-    if (gameState.gameMode === 'wager') {
-      gameState.wagerPhaseActive = true;
-      gameState.playerWagers = new Map();
-      this.getIo()?.to(lobbyCode)?.emit('wager-phase-started', {
-        questionIndex: gameState.currentQuestionIndex,
-        totalQuestions: gameState.totalQuestions,
-        players: gameState.players.map(p => ({ id: p.id, username: p.username, score: p.score })),
-        timeLimit: 15,
-      });
-      // Start 15s wager timer
-      const wagerTimeout = setTimeout(() => {
-        this.resolveWagerPhase(lobbyCode);
-      }, 15000);
-      gameState.wagerTimer = wagerTimeout;
-      if (this.isTestEnvironment && wagerTimeout.unref) {
-        wagerTimeout.unref();
-      }
-      return; // Don't emit question yet — wait for wagers
-    }
-
     // Duel: only duelists receive the question
     if (gameState.gameMode === 'duel') {
       // Mark non-duelists as already answered (spectators)
@@ -907,7 +886,7 @@ export class GameService {
     }
   }
 
-  async submitAnswer(lobbyCode: string, playerId: string, answer: string): Promise<void> {
+  async submitAnswer(lobbyCode: string, playerId: string, answer: string, wagerPercent?: number): Promise<void> {
     // Atomic lock to prevent concurrent double-submissions for the same player
     const lockKey = `${lobbyCode}:${playerId}`;
     if (this.answerLocks.has(lockKey)) {
@@ -916,7 +895,7 @@ export class GameService {
     this.answerLocks.add(lockKey);
 
     try {
-      return await this._submitAnswerInner(lobbyCode, playerId, answer);
+      return await this._submitAnswerInner(lobbyCode, playerId, answer, wagerPercent);
     } finally {
       this.answerLocks.delete(lockKey);
     }
@@ -1059,7 +1038,7 @@ export class GameService {
     }
   }
 
-  private async _submitAnswerInner(lobbyCode: string, playerId: string, answer: string): Promise<void> {
+  private async _submitAnswerInner(lobbyCode: string, playerId: string, answer: string, wagerPercent?: number): Promise<void> {
     const gameState = this.activeGames.get(lobbyCode);
     if (!gameState) {
       throw new Error('Game not active');
@@ -1212,7 +1191,8 @@ export class GameService {
 
     // Wager: apply wager to score (replaces normal scoring)
     if (gameState.gameMode === 'wager' && !isPractice) {
-      const wagerAmount = player.currentWager ?? 0;
+      const wagerPct = Math.max(0, Math.min(100, wagerPercent ?? 25));
+      const wagerAmount = Math.floor(player.score * (wagerPct / 100));
       // Undo normal scoring — wager mode replaces it
       player.score -= scoreCalculation.pointsEarned;
       if (isCorrect) {
@@ -1220,6 +1200,8 @@ export class GameService {
       } else {
         player.score = Math.max(0, player.score - wagerAmount);
       }
+      // Store for payload
+      player.currentWager = wagerAmount;
     }
 
     // === END MODE-SPECIFIC HOOKS ===

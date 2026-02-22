@@ -494,7 +494,7 @@ describe('SocketService', () => {
           'submit-answer',
           { lobbyCode: 'ABC123', playerId: '1', answer: 'A', timeElapsed: 30 }
         );
-        expect(mockGameService.submitAnswer).toHaveBeenCalledWith('ABC123', '1', 'A');
+        expect(mockGameService.submitAnswer).toHaveBeenCalledWith('ABC123', '1', 'A', undefined);
       });
 
       it('should handle server errors during answer submission', async () => {

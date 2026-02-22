@@ -13,7 +13,7 @@ import { MatchingAnswer } from '../components/MatchingAnswer'
 import { FillInBlankAnswer } from '../components/FillInBlankAnswer'
 import { FastestFingerBanner } from '../components/FastestFingerBanner'
 import { SurvivalHUD } from '../components/SurvivalHUD'
-import { WagerPanel } from '../components/WagerPanel'
+import { WagerSlider } from '../components/WagerSlider'
 import { DuelView } from '../components/DuelView'
 import { useGameStore } from '../stores/gameStore'
 import { socketService } from '../services/socketService'
@@ -62,7 +62,8 @@ export const GamePage: React.FC = () => {
     setPracticeCorrectAnswer,
     playerLives,
     eliminatedPlayers,
-    wagerPhaseActive,
+    wagerPercent,
+    setWagerPercent,
     currentDuelPair,
     duelQueue,
     duelWins,
@@ -514,11 +515,11 @@ export const GamePage: React.FC = () => {
         />
       )}
 
-      {gameMode === 'wager' && wagerPhaseActive && (
-        <WagerPanel
+      {gameMode === 'wager' && (
+        <WagerSlider
           currentScore={currentPlayer?.score ?? 0}
-          timeLimit={15}
-          onSubmitWager={(pct) => socketService.submitWager(pct)}
+          wagerPercent={wagerPercent}
+          onWagerChange={setWagerPercent}
           disabled={false}
           t={t}
         />

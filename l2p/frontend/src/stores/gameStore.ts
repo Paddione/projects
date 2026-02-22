@@ -156,6 +156,7 @@ export interface GameState {
   playerLives: Record<string, number>
   eliminatedPlayers: string[]
   wagerPhaseActive: boolean
+  wagerPercent: number
   playerWagers: Record<string, number>
   currentDuelPair: [string, string] | null
   duelQueue: string[]
@@ -204,6 +205,7 @@ export interface GameState {
   setEliminatedPlayers: (players: string[]) => void
   addEliminatedPlayer: (playerId: string) => void
   setWagerPhaseActive: (active: boolean) => void
+  setWagerPercent: (pct: number) => void
   setPlayerWagers: (wagers: Record<string, number>) => void
   setCurrentDuelPair: (pair: [string, string] | null) => void
   setDuelQueue: (queue: string[]) => void
@@ -238,6 +240,7 @@ const initialState = {
   playerLives: {} as Record<string, number>,
   eliminatedPlayers: [] as string[],
   wagerPhaseActive: false,
+  wagerPercent: 25,
   playerWagers: {} as Record<string, number>,
   currentDuelPair: null as [string, string] | null,
   duelQueue: [] as string[],
@@ -312,6 +315,7 @@ export const useGameStore = create<GameState>()(
         eliminatedPlayers: [...state.eliminatedPlayers, playerId]
       })),
       setWagerPhaseActive: (active) => set({ wagerPhaseActive: active }),
+      setWagerPercent: (pct) => set({ wagerPercent: pct }),
       setPlayerWagers: (wagers) => set({ playerWagers: wagers }),
       setCurrentDuelPair: (pair) => set({ currentDuelPair: pair }),
       setDuelQueue: (queue) => set({ duelQueue: queue }),

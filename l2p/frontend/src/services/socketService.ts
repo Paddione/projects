@@ -1,5 +1,5 @@
 import { io, Socket } from 'socket.io-client'
-import { useGameStore } from '../stores/gameStore'
+import { useGameStore, GameModeType } from '../stores/gameStore'
 import { performanceOptimizer } from './performanceOptimizer'
 import { audioManager } from './audioManager'
 import { useAuthStore } from '../stores/authStore'
@@ -269,7 +269,7 @@ export class SocketService {
             setTimeRemaining(data.gameState.timeRemaining)
           }
           if (data.gameState.gameMode) {
-            setGameMode(data.gameState.gameMode as 'arcade' | 'practice')
+            setGameMode(data.gameState.gameMode as GameModeType)
           }
         }
 
@@ -1113,7 +1113,7 @@ export class SocketService {
 
   // Game methods
   submitAnswer(answerIndex: number) {
-    const { lobbyCode, currentQuestion } = useGameStore.getState()
+    const { lobbyCode, currentQuestion, gameMode, wagerPercent } = useGameStore.getState()
     const user = apiService.getCurrentUser()
     if (!lobbyCode || !user?.id) {
       console.warn('Missing lobby code or user for submit answer')
@@ -1124,12 +1124,18 @@ export class SocketService {
     const answerText = currentQuestion?.answers?.[answerIndex] || String(answerIndex)
     console.log('Submitting answer:', { answerIndex, answerText, questionAnswers: currentQuestion?.answers })
 
-    this.emit('submit-answer', {
+    const payload: Record<string, unknown> = {
       lobbyCode,
       playerId: String(user?.id || ''),
       answer: answerText,  // Send answer text, not index
       timeElapsed: 0
-    })
+    }
+
+    if (gameMode === 'wager') {
+      payload['wagerPercent'] = wagerPercent
+    }
+
+    this.emit('submit-answer', payload)
   }
 
   // Question set management methods
@@ -1153,19 +1159,25 @@ export class SocketService {
 
   // Free-text answer submission (sends raw text)
   submitFreeTextAnswer(text: string) {
-    const { lobbyCode } = useGameStore.getState()
+    const { lobbyCode, gameMode, wagerPercent } = useGameStore.getState()
     const user = apiService.getCurrentUser()
     if (!lobbyCode || !user?.id) {
       console.warn('Missing lobby code or user for submit free-text answer')
       return
     }
 
-    this.emit('submit-answer', {
+    const payload: Record<string, unknown> = {
       lobbyCode,
       playerId: String(user?.id || ''),
       answer: text,
       timeElapsed: 0
-    })
+    }
+
+    if (gameMode === 'wager') {
+      payload['wagerPercent'] = wagerPercent
+    }
+
+    this.emit('submit-answer', payload)
   }
 
   // Practice mode: continue after wrong answer

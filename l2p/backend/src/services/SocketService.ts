@@ -228,7 +228,7 @@ export class SocketService {
       });
 
       // Game events (rate limited)
-      socket.on('submit-answer', (data: { lobbyCode: string; playerId: string; answer: string; timeElapsed: number }) => {
+      socket.on('submit-answer', (data: { lobbyCode: string; playerId: string; answer: string; timeElapsed: number; wagerPercent?: number }) => {
         if (!this.checkRateLimit(socket.id, 'submit-answer', 5, 5000)) {
           socket.emit('answer-error', { type: 'RATE_LIMITED', message: 'Too many answer submissions, please wait' });
           return;
@@ -520,9 +520,9 @@ export class SocketService {
     }
   }
 
-  private async handleSubmitAnswer(socket: Socket, data: { lobbyCode: string; playerId: string; answer: string; timeElapsed: number }): Promise<void> {
+  private async handleSubmitAnswer(socket: Socket, data: { lobbyCode: string; playerId: string; answer: string; timeElapsed: number; wagerPercent?: number }): Promise<void> {
     try {
-      const { lobbyCode, playerId, answer, timeElapsed } = data;
+      const { lobbyCode, playerId, answer, timeElapsed, wagerPercent } = data;
 
       // Require authentication and verify identity
       const userId = this.requireAuth(socket, 'answer');
@@ -532,7 +532,7 @@ export class SocketService {
       RequestLogger.logSocketEvent(socket.id, 'submit-answer', { lobbyCode, playerId, answer, timeElapsed });
 
       // Submit answer using GameService
-      await this.gameService.submitAnswer(lobbyCode, playerId, answer);
+      await this.gameService.submitAnswer(lobbyCode, playerId, answer, wagerPercent);
 
       // The GameService will handle broadcasting the answer events
 
