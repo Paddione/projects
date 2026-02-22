@@ -8,6 +8,9 @@ import { CharacterService } from './CharacterService.js';
 import { PerkDraftService, DraftPerk } from './PerkDraftService.js';
 import { PerkEffectEngine, GameplayModifiers, ScoreContext } from './PerkEffectEngine.js';
 import { PerksManager } from './PerksManager.js';
+import type { AnswerType, AnswerMetadata, EstimationMetadata, OrderingMetadata, MatchingMetadata, FillInBlankMetadata } from '../types/question.js';
+
+export type GameMode = 'arcade' | 'practice' | 'fastest_finger' | 'survival' | 'wager' | 'duel';
 
 export interface GameState {
   lobbyCode: string;
@@ -16,12 +19,29 @@ export interface GameState {
   totalQuestions: number;
   timeRemaining: number;
   isActive: boolean;
-  gameMode: 'arcade' | 'practice';
+  gameMode: GameMode;
   players: GamePlayer[];
   currentQuestion?: QuestionData | undefined;
   questionStartTime?: number | undefined;
   selectedQuestionSetIds: number[];
   questions: QuestionData[];
+
+  // Fastest Finger mode
+  firstCorrectPlayerId?: string | null;
+
+  // Survival mode
+  playerLives?: Map<string, number>;
+  eliminatedPlayers?: Set<string>;
+
+  // Wager mode
+  wagerPhaseActive?: boolean;
+  playerWagers?: Map<string, number>;
+  wagerTimer?: NodeJS.Timeout | undefined;
+
+  // Duel mode
+  duelQueue?: string[];
+  currentDuelPair?: [string, string];
+  duelWins?: Map<string, number>;
 }
 
 export interface CosmeticEffects {
@@ -52,6 +72,17 @@ export interface GamePlayer {
   perkModifiers?: GameplayModifiers;
   cosmeticEffects?: CosmeticEffects;
   freeWrongsUsed: number;
+
+  // Survival mode
+  lives?: number;
+  isEliminated?: boolean;
+
+  // Wager mode
+  currentWager?: number;
+
+  // Duel mode
+  isDueling?: boolean;
+  isSpectating?: boolean;
 }
 
 export interface QuestionData {
@@ -62,8 +93,9 @@ export interface QuestionData {
   questionSetId: number;
   language: string;
   explanation?: string | undefined;
-  answerType: 'multiple_choice' | 'free_text';
+  answerType: AnswerType;
   hint?: string | undefined;
+  answerMetadata?: AnswerMetadata | undefined;
 }
 
 export class GameService {
@@ -192,7 +224,15 @@ export class GameService {
 
     // Move to the next question
     gameState.currentQuestionIndex++;
-    gameState.timeRemaining = gameState.gameMode === 'practice' ? 0 : 60;
+    const noTimerModes: GameMode[] = ['practice'];
+    const shortTimerModes: GameMode[] = ['duel'];
+    if (noTimerModes.includes(gameState.gameMode)) {
+      gameState.timeRemaining = 0;
+    } else if (shortTimerModes.includes(gameState.gameMode)) {
+      gameState.timeRemaining = 30;
+    } else {
+      gameState.timeRemaining = 60;
+    }
 
     // Get the current question
     const currentQuestion = gameState.questions[gameState.currentQuestionIndex];
@@ -206,22 +246,94 @@ export class GameService {
 
     // Reset player states for the new question
     gameState.players.forEach(player => {
+      // Survival: skip eliminated players (auto-mark as answered)
+      if (gameState.gameMode === 'survival' && player.isEliminated) {
+        player.hasAnsweredCurrentQuestion = true;
+        player.currentAnswer = undefined;
+        player.answerTime = undefined;
+        return;
+      }
       player.hasAnsweredCurrentQuestion = false;
       player.currentAnswer = undefined;
       player.answerTime = undefined;
     });
 
-    // Emit the next question to all players (send full object; use 0-based index)
-    this.getIo()?.to(lobbyCode)?.emit('question-started', {
-      question: currentQuestion,
-      questionIndex: gameState.currentQuestionIndex,
-      totalQuestions: gameState.totalQuestions,
-      timeRemaining: gameState.timeRemaining,
-      gameMode: gameState.gameMode,
-    });
+    // Fastest Finger: reset first correct tracker
+    if (gameState.gameMode === 'fastest_finger') {
+      gameState.firstCorrectPlayerId = null;
+    }
 
-    // Only start timer in arcade mode
-    if (gameState.gameMode === 'arcade') {
+    // Survival: check if game should end (<=1 alive)
+    if (gameState.gameMode === 'survival') {
+      const alivePlayers = gameState.players.filter(p => !p.isEliminated);
+      if (alivePlayers.length <= 1) {
+        const winner = alivePlayers[0];
+        if (winner) {
+          this.getIo()?.to(lobbyCode)?.emit('survival-winner', {
+            winnerId: winner.id,
+            username: winner.username,
+          });
+        }
+        await this.endGameSession(lobbyCode);
+        return;
+      }
+    }
+
+    // Wager: start wager phase instead of question
+    if (gameState.gameMode === 'wager') {
+      gameState.wagerPhaseActive = true;
+      gameState.playerWagers = new Map();
+      this.getIo()?.to(lobbyCode)?.emit('wager-phase-started', {
+        questionIndex: gameState.currentQuestionIndex,
+        totalQuestions: gameState.totalQuestions,
+        players: gameState.players.map(p => ({ id: p.id, username: p.username, score: p.score })),
+        timeLimit: 15,
+      });
+      // Start 15s wager timer
+      const wagerTimeout = setTimeout(() => {
+        this.resolveWagerPhase(lobbyCode);
+      }, 15000);
+      gameState.wagerTimer = wagerTimeout;
+      if (this.isTestEnvironment && wagerTimeout.unref) {
+        wagerTimeout.unref();
+      }
+      return; // Don't emit question yet — wait for wagers
+    }
+
+    // Duel: only duelists receive the question
+    if (gameState.gameMode === 'duel') {
+      // Mark non-duelists as already answered (spectators)
+      const pair = gameState.currentDuelPair;
+      gameState.players.forEach(player => {
+        if (!pair || (player.id !== pair[0] && player.id !== pair[1])) {
+          player.hasAnsweredCurrentQuestion = true;
+          player.isDueling = false;
+          player.isSpectating = true;
+        } else {
+          player.isDueling = true;
+          player.isSpectating = false;
+        }
+      });
+      this.getIo()?.to(lobbyCode)?.emit('duel-question-started', {
+        question: currentQuestion,
+        duelists: pair ? [pair[0], pair[1]] : [],
+        questionIndex: gameState.currentQuestionIndex,
+        totalQuestions: gameState.totalQuestions,
+        timeRemaining: gameState.timeRemaining,
+      });
+    } else {
+      // Emit the next question to all players (send full object; use 0-based index)
+      this.getIo()?.to(lobbyCode)?.emit('question-started', {
+        question: currentQuestion,
+        questionIndex: gameState.currentQuestionIndex,
+        totalQuestions: gameState.totalQuestions,
+        timeRemaining: gameState.timeRemaining,
+        gameMode: gameState.gameMode,
+      });
+    }
+
+    // Start timer for all modes except practice (which has no timer)
+    if (gameState.gameMode !== 'practice') {
       this.startQuestionTimer(lobbyCode);
     }
   }
@@ -366,6 +478,7 @@ export class GameService {
           explanation: q.explanation,
           answerType: q.answer_type || 'multiple_choice',
           hint: q.hint || undefined,
+          answerMetadata: q.answer_metadata || undefined,
         };
       });
 
@@ -391,7 +504,9 @@ export class GameService {
       const gameSession = await this.gameSessionRepository.createGameSession(gameSessionData);
 
       // Read game mode from lobby settings (defaults to arcade)
-      const gameMode: 'arcade' | 'practice' = (lobby.settings as any)?.gameMode === 'practice' ? 'practice' : 'arcade';
+      const validGameModes: GameMode[] = ['arcade', 'practice', 'fastest_finger', 'survival', 'wager', 'duel'];
+      const rawMode = (lobby.settings as any)?.gameMode;
+      const gameMode: GameMode = validGameModes.includes(rawMode) ? rawMode : 'arcade';
 
       // Initialize game state
       const gameState: GameState = {
@@ -421,6 +536,46 @@ export class GameService {
           freeWrongsUsed: 0,
         }))
       };
+
+      // Mode-specific initialization
+      if (gameMode === 'survival') {
+        gameState.playerLives = new Map();
+        gameState.eliminatedPlayers = new Set();
+        for (const player of gameState.players) {
+          gameState.playerLives.set(player.id, 3);
+          player.lives = 3;
+          player.isEliminated = false;
+        }
+      }
+      if (gameMode === 'wager') {
+        gameState.playerWagers = new Map();
+        // Give all players starting score of 100
+        for (const player of gameState.players) {
+          player.score = 100;
+        }
+      }
+      if (gameMode === 'duel') {
+        // Shuffle players into queue
+        const shuffled = [...gameState.players].sort(() => Math.random() - 0.5);
+        gameState.duelQueue = shuffled.map(p => p.id);
+        gameState.duelWins = new Map();
+        for (const player of gameState.players) {
+          gameState.duelWins!.set(player.id, 0);
+          player.isDueling = false;
+          player.isSpectating = true;
+        }
+        // Set first duel pair
+        if (gameState.duelQueue.length >= 2) {
+          gameState.currentDuelPair = [gameState.duelQueue[0]!, gameState.duelQueue[1]!];
+          const p1 = gameState.players.find(p => p.id === gameState.duelQueue![0]);
+          const p2 = gameState.players.find(p => p.id === gameState.duelQueue![1]);
+          if (p1) { p1.isDueling = true; p1.isSpectating = false; }
+          if (p2) { p2.isDueling = true; p2.isSpectating = false; }
+        }
+      }
+      if (gameMode === 'fastest_finger') {
+        gameState.firstCorrectPlayerId = null;
+      }
 
       // Store active game
       this.activeGames.set(lobbyCode, gameState);
@@ -556,11 +711,41 @@ export class GameService {
 
       // Player scores are already updated in calculateQuestionResults
 
+      // Survival: check if only 1 player alive → end game
+      if (gameState.gameMode === 'survival') {
+        const alivePlayers = gameState.players.filter(p => !p.isEliminated);
+        if (alivePlayers.length <= 1) {
+          const winner = alivePlayers[0];
+          if (winner) {
+            this.getIo()?.to(lobbyCode)?.emit('survival-winner', {
+              winnerId: winner.id,
+              username: winner.username,
+            });
+          }
+          await this.endGameSession(lobbyCode);
+          return;
+        }
+      }
+
       // Determine if game should continue or end
       const isLastQuestion = gameState.currentQuestionIndex >= gameState.questions.length - 1 ||
         gameState.currentQuestionIndex >= gameState.totalQuestions - 1;
 
       if (isLastQuestion) {
+        // Duel: emit final result
+        if (gameState.gameMode === 'duel' && gameState.duelWins) {
+          let bestId = '';
+          let bestWins = -1;
+          for (const [id, wins] of gameState.duelWins) {
+            if (wins > bestWins) { bestWins = wins; bestId = id; }
+          }
+          const winner = gameState.players.find(p => p.id === bestId);
+          this.getIo()?.to(lobbyCode)?.emit('duel-ended', {
+            winnerId: bestId,
+            username: winner?.username || '',
+            finalWins: bestWins,
+          });
+        }
         // End the game session
         await this.endGameSession(lobbyCode);
       } else {
@@ -737,6 +922,143 @@ export class GameService {
     }
   }
 
+  /**
+   * Check a player's answer against the correct answer, supporting all answer types.
+   * Returns whether the answer is correct and a partial score (0.0 to 1.0).
+   */
+  private checkAnswer(
+    answer: string,
+    question: QuestionData
+  ): { isCorrect: boolean; partialScore: number } {
+    const answerType = question.answerType || 'multiple_choice';
+
+    switch (answerType) {
+      case 'multiple_choice':
+      case 'true_false':
+        return {
+          isCorrect: answer === question.correctAnswer,
+          partialScore: answer === question.correctAnswer ? 1.0 : 0.0,
+        };
+
+      case 'free_text':
+      case 'fill_in_blank':
+        {
+          const isCorrect =
+            answer.trim().toLowerCase() === question.correctAnswer.trim().toLowerCase();
+          return { isCorrect, partialScore: isCorrect ? 1.0 : 0.0 };
+        }
+
+      case 'estimation':
+        {
+          const meta = question.answerMetadata as EstimationMetadata | undefined;
+          if (!meta || typeof meta.correct_value !== 'number' || typeof meta.tolerance !== 'number' || meta.tolerance <= 0) {
+            // Fallback: exact string match if metadata is missing/invalid
+            const exact = answer.trim() === question.correctAnswer.trim();
+            return { isCorrect: exact, partialScore: exact ? 1.0 : 0.0 };
+          }
+
+          const numericAnswer = parseFloat(answer);
+          if (isNaN(numericAnswer)) {
+            return { isCorrect: false, partialScore: 0.0 };
+          }
+
+          const distance = Math.abs(numericAnswer - meta.correct_value);
+          const effectiveTolerance = meta.tolerance_type === 'percentage'
+            ? Math.abs(meta.correct_value) * (meta.tolerance / 100)
+            : meta.tolerance;
+
+          if (effectiveTolerance <= 0) {
+            const exact = distance === 0;
+            return { isCorrect: exact, partialScore: exact ? 1.0 : 0.0 };
+          }
+
+          const partialScore = Math.max(0, 1 - distance / effectiveTolerance);
+          return { isCorrect: partialScore > 0, partialScore };
+        }
+
+      case 'ordering':
+        {
+          const meta = question.answerMetadata as OrderingMetadata | undefined;
+          if (!meta || !Array.isArray(meta.correct_order) || meta.correct_order.length === 0) {
+            // Fallback: exact string match
+            const exact = answer === question.correctAnswer;
+            return { isCorrect: exact, partialScore: exact ? 1.0 : 0.0 };
+          }
+
+          let playerOrder: number[];
+          try {
+            playerOrder = JSON.parse(answer);
+            if (!Array.isArray(playerOrder)) {
+              return { isCorrect: false, partialScore: 0.0 };
+            }
+          } catch {
+            return { isCorrect: false, partialScore: 0.0 };
+          }
+
+          const total = meta.correct_order.length;
+          if (playerOrder.length !== total) {
+            return { isCorrect: false, partialScore: 0.0 };
+          }
+
+          let correctPositions = 0;
+          for (let i = 0; i < total; i++) {
+            if (playerOrder[i] === meta.correct_order[i]) {
+              correctPositions++;
+            }
+          }
+
+          const partialScore = correctPositions / total;
+          return { isCorrect: partialScore > 0, partialScore };
+        }
+
+      case 'matching':
+        {
+          const meta = question.answerMetadata as MatchingMetadata | undefined;
+          if (!meta || !Array.isArray(meta.pairs) || meta.pairs.length === 0) {
+            // Fallback: exact string match
+            const exact = answer === question.correctAnswer;
+            return { isCorrect: exact, partialScore: exact ? 1.0 : 0.0 };
+          }
+
+          let playerPairs: Array<{ left: string; right: string }>;
+          try {
+            playerPairs = JSON.parse(answer);
+            if (!Array.isArray(playerPairs)) {
+              return { isCorrect: false, partialScore: 0.0 };
+            }
+          } catch {
+            return { isCorrect: false, partialScore: 0.0 };
+          }
+
+          const total = meta.pairs.length;
+          let correctMatches = 0;
+
+          for (const playerPair of playerPairs) {
+            if (!playerPair || typeof playerPair.left !== 'string' || typeof playerPair.right !== 'string') {
+              continue;
+            }
+            const isMatch = meta.pairs.some(
+              correctPair =>
+                correctPair.left === playerPair.left && correctPair.right === playerPair.right
+            );
+            if (isMatch) {
+              correctMatches++;
+            }
+          }
+
+          const partialScore = correctMatches / total;
+          return { isCorrect: partialScore > 0, partialScore };
+        }
+
+      default:
+        // Unknown type: fallback to exact match
+        return {
+          isCorrect: answer === question.correctAnswer,
+          partialScore: answer === question.correctAnswer ? 1.0 : 0.0,
+        };
+    }
+  }
+
   private async _submitAnswerInner(lobbyCode: string, playerId: string, answer: string): Promise<void> {
     const gameState = this.activeGames.get(lobbyCode);
     if (!gameState) {
@@ -757,6 +1079,19 @@ export class GameService {
       throw new Error('Player has already answered this question');
     }
 
+    // Duel: reject answers from non-duelists
+    if (gameState.gameMode === 'duel') {
+      const pair = gameState.currentDuelPair;
+      if (!pair || (playerId !== pair[0] && playerId !== pair[1])) {
+        throw new Error('Only active duelists can answer');
+      }
+    }
+
+    // Survival: reject answers from eliminated players
+    if (gameState.gameMode === 'survival' && player.isEliminated) {
+      throw new Error('Eliminated players cannot answer');
+    }
+
     // Calculate time elapsed
     const timeElapsed = gameState.questionStartTime ?
       Math.floor((Date.now() - gameState.questionStartTime) / 1000) : 0;
@@ -766,10 +1101,8 @@ export class GameService {
     player.answerTime = timeElapsed;
     player.hasAnsweredCurrentQuestion = true;
 
-    // Check if answer is correct (case-insensitive for free-text)
-    const isCorrect = gameState.currentQuestion.answerType === 'free_text'
-      ? answer.trim().toLowerCase() === gameState.currentQuestion.correctAnswer.trim().toLowerCase()
-      : answer === gameState.currentQuestion.correctAnswer;
+    // Check answer correctness using type-aware logic
+    const { isCorrect, partialScore } = this.checkAnswer(answer, gameState.currentQuestion);
 
     // Practice mode: skip scoring entirely
     const isPractice = gameState.gameMode === 'practice';
@@ -785,19 +1118,34 @@ export class GameService {
     } : undefined;
 
     // Calculate score using ScoringService (skip in practice mode)
-    const scoreCalculation = isPractice
-      ? { pointsEarned: 0, newMultiplier: 1, streakCount: 0, timeElapsed, multiplier: player.multiplier, isCorrect }
-      : this.scoringService.calculateScore(
-          timeElapsed,
-          player.multiplier,
-          isCorrect,
-          player.currentStreak || 0,
-          player.perkModifiers,
-          scoreContext
-        );
+    let scoreCalculation;
+    if (isPractice) {
+      scoreCalculation = { pointsEarned: 0, newMultiplier: 1, streakCount: 0, timeElapsed, multiplier: player.multiplier, isCorrect };
+    } else if (partialScore > 0 && partialScore < 1.0) {
+      // Partial score: use calculatePartialScore for estimation, ordering, matching
+      scoreCalculation = this.scoringService.calculatePartialScore(
+        timeElapsed,
+        player.multiplier,
+        partialScore,
+        player.currentStreak || 0,
+        player.perkModifiers,
+        scoreContext
+      );
+    } else {
+      // Full correct or fully wrong: use standard calculateScore
+      scoreCalculation = this.scoringService.calculateScore(
+        timeElapsed,
+        player.multiplier,
+        isCorrect,
+        player.currentStreak || 0,
+        player.perkModifiers,
+        scoreContext
+      );
+    }
 
     // Update player stats
     if (isCorrect) {
+      // For partial scores (0 < partialScore < 1), count as correct answer but with reduced score
       player.correctAnswers++;
       if (!isPractice) {
         player.score += scoreCalculation.pointsEarned;
@@ -825,6 +1173,57 @@ export class GameService {
       player.multiplier = scoreCalculation.newMultiplier;
     }
 
+    // === MODE-SPECIFIC HOOKS ===
+
+    // Fastest Finger: first correct player gets points, rest get 0
+    let isFirstCorrect = false;
+    if (gameState.gameMode === 'fastest_finger' && isCorrect) {
+      if (gameState.firstCorrectPlayerId === null || gameState.firstCorrectPlayerId === undefined) {
+        gameState.firstCorrectPlayerId = playerId;
+        isFirstCorrect = true;
+      } else {
+        // Someone else was first — zero out points for this player
+        player.score -= scoreCalculation.pointsEarned; // Undo the score addition above
+      }
+    }
+
+    // Survival: lose life on wrong answer
+    if (gameState.gameMode === 'survival' && !isCorrect && !isPractice) {
+      const currentLives = gameState.playerLives?.get(playerId) ?? 3;
+      const newLives = currentLives - 1;
+      gameState.playerLives?.set(playerId, newLives);
+      player.lives = newLives;
+
+      this.getIo()?.to(lobbyCode)?.emit('lives-updated', {
+        playerId,
+        livesRemaining: newLives,
+      });
+
+      if (newLives <= 0) {
+        player.isEliminated = true;
+        gameState.eliminatedPlayers?.add(playerId);
+        this.getIo()?.to(lobbyCode)?.emit('player-eliminated', {
+          playerId,
+          username: player.username,
+          eliminatedAtQuestion: gameState.currentQuestionIndex,
+        });
+      }
+    }
+
+    // Wager: apply wager to score (replaces normal scoring)
+    if (gameState.gameMode === 'wager' && !isPractice) {
+      const wagerAmount = player.currentWager ?? 0;
+      // Undo normal scoring — wager mode replaces it
+      player.score -= scoreCalculation.pointsEarned;
+      if (isCorrect) {
+        player.score += wagerAmount;
+      } else {
+        player.score = Math.max(0, player.score - wagerAmount);
+      }
+    }
+
+    // === END MODE-SPECIFIC HOOKS ===
+
     // Log the answer submission
     RequestLogger.logGameEvent('answer-submitted', lobbyCode, undefined, {
       playerId,
@@ -848,6 +1247,18 @@ export class GameService {
       streak: player.currentStreak,
     };
 
+    // Mode-specific payload additions
+    if (gameState.gameMode === 'fastest_finger') {
+      answerPayload['isFirstCorrect'] = isFirstCorrect;
+    }
+    if (gameState.gameMode === 'survival' && player.lives !== undefined) {
+      answerPayload['livesRemaining'] = player.lives;
+    }
+    if (gameState.gameMode === 'wager') {
+      answerPayload['wagerAmount'] = player.currentWager ?? 0;
+      answerPayload['scoreDelta'] = isCorrect ? (player.currentWager ?? 0) : -(player.currentWager ?? 0);
+    }
+
     // Practice mode: on wrong answer, include hint + correct answer + waitForContinue
     if (isPractice && !isCorrect) {
       answerPayload['waitForContinue'] = true;
@@ -868,8 +1279,146 @@ export class GameService {
     // Check if all players have answered
     const allPlayersAnswered = gameState.players.every(p => p.hasAnsweredCurrentQuestion);
     if (allPlayersAnswered) {
+      // Duel: determine round winner
+      if (gameState.gameMode === 'duel' && gameState.currentDuelPair) {
+        this.resolveDuelRound(lobbyCode);
+      }
       await this.endQuestion(lobbyCode);
     }
+  }
+
+  /**
+   * Handle wager submission from a player.
+   */
+  async handleWagerSubmit(lobbyCode: string, playerId: string, wagerPercent: number): Promise<void> {
+    const gameState = this.activeGames.get(lobbyCode);
+    if (!gameState || !gameState.wagerPhaseActive) {
+      throw new Error('No active wager phase');
+    }
+
+    const player = gameState.players.find(p => p.id === playerId);
+    if (!player) throw new Error('Player not found');
+
+    // Clamp wager to 0-100%
+    const clamped = Math.max(0, Math.min(100, wagerPercent));
+    const wagerAmount = Math.floor(player.score * (clamped / 100));
+    player.currentWager = wagerAmount;
+    gameState.playerWagers?.set(playerId, wagerAmount);
+
+    this.getIo()?.to(lobbyCode)?.emit('wager-submitted', {
+      playerId,
+      wagerAmount,
+    });
+
+    // Check if all players have wagered
+    const allWagered = gameState.players.every(p =>
+      gameState.playerWagers?.has(p.id)
+    );
+    if (allWagered) {
+      this.resolveWagerPhase(lobbyCode);
+    }
+  }
+
+  /**
+   * Resolve the wager phase and deliver the question.
+   */
+  private resolveWagerPhase(lobbyCode: string): void {
+    const gameState = this.activeGames.get(lobbyCode);
+    if (!gameState) return;
+
+    // Clear wager timer
+    if (gameState.wagerTimer) {
+      clearTimeout(gameState.wagerTimer);
+      gameState.wagerTimer = undefined;
+    }
+
+    // Default players who didn't wager to 0
+    for (const player of gameState.players) {
+      if (!gameState.playerWagers?.has(player.id)) {
+        player.currentWager = 0;
+        gameState.playerWagers?.set(player.id, 0);
+      }
+    }
+
+    gameState.wagerPhaseActive = false;
+
+    // Now emit the question
+    const currentQuestion = gameState.currentQuestion;
+    if (!currentQuestion) return;
+
+    this.getIo()?.to(lobbyCode)?.emit('question-started', {
+      question: currentQuestion,
+      questionIndex: gameState.currentQuestionIndex,
+      totalQuestions: gameState.totalQuestions,
+      timeRemaining: gameState.timeRemaining,
+      gameMode: gameState.gameMode,
+    });
+
+    // Start the question timer
+    this.startQuestionTimer(lobbyCode);
+  }
+
+  /**
+   * Resolve a duel round: determine winner, rotate queue.
+   */
+  private resolveDuelRound(lobbyCode: string): void {
+    const gameState = this.activeGames.get(lobbyCode);
+    if (!gameState || !gameState.currentDuelPair || !gameState.duelQueue) return;
+
+    const [id1, id2] = gameState.currentDuelPair;
+    const p1 = gameState.players.find(p => p.id === id1);
+    const p2 = gameState.players.find(p => p.id === id2);
+
+    if (!p1 || !p2) return;
+
+    // Determine winner: correct beats wrong, both correct → faster wins, both wrong → draw
+    const p1Correct = p1.currentAnswer !== undefined &&
+      this.checkAnswer(p1.currentAnswer, gameState.currentQuestion!).isCorrect;
+    const p2Correct = p2.currentAnswer !== undefined &&
+      this.checkAnswer(p2.currentAnswer, gameState.currentQuestion!).isCorrect;
+
+    let winnerId: string | null = null;
+    let loserId: string | null = null;
+
+    if (p1Correct && !p2Correct) {
+      winnerId = id1; loserId = id2;
+    } else if (!p1Correct && p2Correct) {
+      winnerId = id2; loserId = id1;
+    } else if (p1Correct && p2Correct) {
+      // Both correct: faster wins
+      const t1 = p1.answerTime ?? Infinity;
+      const t2 = p2.answerTime ?? Infinity;
+      if (t1 < t2) { winnerId = id1; loserId = id2; }
+      else if (t2 < t1) { winnerId = id2; loserId = id1; }
+      // else: exact tie → draw (no rotation)
+    }
+    // Both wrong or tie → draw, no queue change
+
+    if (winnerId && loserId) {
+      // Increment duel wins
+      const currentWins = gameState.duelWins?.get(winnerId) ?? 0;
+      gameState.duelWins?.set(winnerId, currentWins + 1);
+
+      // Rotate queue: loser goes to back, next challenger comes up
+      const loserIdx = gameState.duelQueue.indexOf(loserId);
+      if (loserIdx !== -1) {
+        gameState.duelQueue.splice(loserIdx, 1);
+        gameState.duelQueue.push(loserId);
+      }
+
+      // Set new duel pair: winner stays, next in queue challenges
+      const nextChallenger = gameState.duelQueue.find(id => id !== winnerId);
+      if (nextChallenger) {
+        gameState.currentDuelPair = [winnerId, nextChallenger];
+      }
+
+      this.getIo()?.to(lobbyCode)?.emit('duel-result', {
+        winnerId,
+        loserId,
+        nextDuelPair: gameState.currentDuelPair ? [...gameState.currentDuelPair] : [],
+      });
+    }
+    // Draw: no rotation, pair stays the same
   }
 
   /**

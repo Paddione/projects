@@ -318,6 +318,14 @@ const enTranslations: Translations = {
   'lobby.arcadeDesc': 'Timer, Points, XP',
   'lobby.practiceMode': 'Practice',
   'lobby.practiceDesc': 'No Timer, Hints, Learning',
+  'lobby.fastestFinger': 'Fastest Finger',
+  'lobby.fastestFingerDesc': 'Only first correct answer scores',
+  'lobby.survival': 'Survival',
+  'lobby.survivalDesc': '3 lives, last one standing wins',
+  'lobby.wager': 'Wager',
+  'lobby.wagerDesc': 'Bet your points before each question',
+  'lobby.duel': 'Duel',
+  'lobby.duelDesc': 'King of the hill, 1v1 battles',
 
   // Home / GameInterface
   'home.subtitle': 'Battle your friends online or tackle solo challenges',
@@ -680,6 +688,31 @@ const enTranslations: Translations = {
   'password.success': 'Password changed successfully',
   'password.failed': 'Failed to change password',
 
+  // Answer types
+  'game.true': 'True',
+  'game.false': 'False',
+  'game.enterEstimate': 'Enter your estimate...',
+  'game.estimationClose': 'Very close!',
+  'game.estimationFar': 'Not quite — your answer has been submitted.',
+  'game.moveUp': 'Move up',
+  'game.moveDown': 'Move down',
+  'game.noItems': 'No items available',
+  'game.matchLeft': 'Items',
+  'game.matchRight': 'Matches',
+  'game.pairsMatched': 'pairs matched',
+  'game.blank': 'Blank',
+  'game.fastestFinger.first': 'FIRST!',
+  'game.survival.eliminated': 'Eliminated',
+  'game.survival.livesRemaining': 'lives remaining',
+  'game.wager.title': 'Place Your Wager',
+  'game.wager.noScore': 'You have no points to wager.',
+  'game.wager.currentScore': 'Current Score:',
+  'game.wager.submit': 'Lock In Wager',
+  'game.duel.wins': 'wins',
+  'game.duel.spectating': 'Spectating',
+  'game.duel.waiting': 'Waiting for duel result...',
+  'game.duel.upNext': 'Up Next:',
+
   // GameStateManager
   'game.leaveWarning': 'Are you sure you want to leave? This will remove you from the lobby.'
 }
@@ -986,6 +1019,14 @@ const deTranslations: Translations = {
   'lobby.arcadeDesc': 'Timer, Punkte, XP',
   'lobby.practiceMode': 'Übung',
   'lobby.practiceDesc': 'Kein Timer, Hinweise, Lernen',
+  'lobby.fastestFinger': 'Schnellster Finger',
+  'lobby.fastestFingerDesc': 'Nur erste richtige Antwort zählt',
+  'lobby.survival': 'Überleben',
+  'lobby.survivalDesc': '3 Leben, der Letzte gewinnt',
+  'lobby.wager': 'Wette',
+  'lobby.wagerDesc': 'Setze Punkte vor jeder Frage',
+  'lobby.duel': 'Duell',
+  'lobby.duelDesc': 'König des Hügels, 1v1 Kämpfe',
 
   // Home / GameInterface
   'home.subtitle': 'Fordere deine Freunde heraus oder stelle dich Solo-Aufgaben',
@@ -1347,6 +1388,31 @@ const deTranslations: Translations = {
   'password.mismatchError': 'Neues Passwort und Bestätigung stimmen nicht überein',
   'password.success': 'Passwort erfolgreich geändert',
   'password.failed': 'Passwort konnte nicht geändert werden',
+
+  // Answer types
+  'game.true': 'Wahr',
+  'game.false': 'Falsch',
+  'game.enterEstimate': 'Schätzung eingeben...',
+  'game.estimationClose': 'Sehr nah dran!',
+  'game.estimationFar': 'Nicht ganz — deine Antwort wurde gesendet.',
+  'game.moveUp': 'Nach oben',
+  'game.moveDown': 'Nach unten',
+  'game.noItems': 'Keine Elemente verfügbar',
+  'game.matchLeft': 'Begriffe',
+  'game.matchRight': 'Zuordnungen',
+  'game.pairsMatched': 'Paare zugeordnet',
+  'game.blank': 'Lücke',
+  'game.fastestFinger.first': 'ERSTER!',
+  'game.survival.eliminated': 'Ausgeschieden',
+  'game.survival.livesRemaining': 'Leben übrig',
+  'game.wager.title': 'Einsatz platzieren',
+  'game.wager.noScore': 'Du hast keine Punkte zum Setzen.',
+  'game.wager.currentScore': 'Aktueller Punktestand:',
+  'game.wager.submit': 'Einsatz bestätigen',
+  'game.duel.wins': 'Siege',
+  'game.duel.spectating': 'Zuschauer',
+  'game.duel.waiting': 'Warte auf Duellergebnis...',
+  'game.duel.upNext': 'Als Nächstes:',
 
   // GameStateManager
   'game.leaveWarning': 'Bist du sicher, dass du gehen willst? Du wirst aus der Lobby entfernt.'

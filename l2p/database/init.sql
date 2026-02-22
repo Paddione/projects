@@ -150,6 +150,11 @@ CREATE TABLE IF NOT EXISTS questions (
     answers JSONB NOT NULL, -- [{"text": {"en": "...", "de": "..."}, "correct": boolean}]
     explanation JSONB, -- {"en": "English explanation", "de": "German explanation"}
     difficulty INTEGER DEFAULT 1 CHECK (difficulty BETWEEN 1 AND 5),
+    answer_type VARCHAR(30) DEFAULT 'multiple_choice'
+      CHECK (answer_type IN ('multiple_choice', 'free_text', 'true_false',
+        'estimation', 'ordering', 'matching', 'fill_in_blank')),
+    hint TEXT,
+    answer_metadata JSONB,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -187,7 +192,8 @@ CREATE TABLE IF NOT EXISTS game_sessions (
     started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     ended_at TIMESTAMP,
     total_questions INTEGER NOT NULL,
-    session_data JSONB DEFAULT '{}'::jsonb
+    session_data JSONB DEFAULT '{}'::jsonb,
+    game_mode VARCHAR(30) DEFAULT 'arcade'
 );
 
 -- Player results table
@@ -206,7 +212,8 @@ CREATE TABLE IF NOT EXISTS player_results (
     experience_gained INTEGER DEFAULT 0,
     level_before INTEGER DEFAULT 1,
     level_after INTEGER DEFAULT 1,
-    level_up_occurred BOOLEAN DEFAULT false
+    level_up_occurred BOOLEAN DEFAULT false,
+    mode_data JSONB DEFAULT '{}'::jsonb
 );
 
 -- ============================================================================

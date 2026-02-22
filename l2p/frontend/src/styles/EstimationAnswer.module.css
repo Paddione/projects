@@ -1,0 +1,128 @@
+/* Estimation answer - number input + submit */
+
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  width: 100%;
+  animation: card-pop-in 240ms ease-out;
+}
+
+@keyframes card-pop-in {
+  0% {
+    opacity: 0;
+    transform: translateY(4px) scale(0.995);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.inputRow {
+  display: flex;
+  gap: var(--spacing-sm);
+  align-items: stretch;
+}
+
+.numberInput {
+  flex: 1;
+  padding: var(--spacing-sm) var(--spacing-md);
+  font-size: 1.3rem;
+  font-family: var(--cv-font-mono);
+  color: var(--cv-text-bright);
+  background: var(--cv-void-lighter);
+  border: 2px solid var(--cv-border-3);
+  border-radius: var(--cv-radius-lg);
+  outline: none;
+  transition: all var(--cv-duration-base) var(--cv-ease-smooth);
+  text-align: center;
+}
+
+.numberInput::placeholder {
+  color: var(--cv-text-muted);
+  font-family: inherit;
+}
+
+.numberInput:focus {
+  border-color: var(--cv-cyan);
+  box-shadow: 0 0 12px rgba(0, 242, 255, 0.15);
+}
+
+.numberInput:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Hide spinner arrows */
+.numberInput::-webkit-inner-spin-button,
+.numberInput::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.numberInput[type='number'] {
+  -moz-appearance: textfield;
+}
+
+.submitButton {
+  padding: var(--spacing-sm) var(--spacing-lg);
+  font-size: 1rem;
+  font-weight: 700;
+  color: white;
+  background: linear-gradient(135deg, var(--cv-cyan) 0%, var(--cv-purple) 100%);
+  border: none;
+  border-radius: var(--cv-radius-lg);
+  cursor: pointer;
+  transition: all var(--cv-duration-base) var(--cv-ease-smooth);
+  white-space: nowrap;
+}
+
+.submitButton:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px var(--cv-cyan-glow);
+}
+
+.submitButton:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.proximityFeedback {
+  text-align: center;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--cv-radius-md);
+  font-size: 0.95rem;
+  font-weight: 600;
+  animation: card-pop-in 240ms ease-out;
+}
+
+.proximityClose {
+  background: var(--cv-success-subtle);
+  border: 1px solid var(--cv-success-border);
+  color: var(--cv-success);
+}
+
+.proximityFar {
+  background: var(--cv-warning-subtle);
+  border: 1px solid var(--cv-warning-border);
+  color: var(--cv-warning);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .inputRow {
+    flex-direction: column;
+  }
+
+  .submitButton {
+    padding: var(--spacing-sm);
+  }
+}
+
+@media (max-width: 430px) {
+  .numberInput {
+    font-size: 1.1rem;
+    padding: var(--spacing-xs) var(--spacing-sm);
+  }
+}

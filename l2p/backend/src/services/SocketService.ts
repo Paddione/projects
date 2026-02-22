@@ -218,6 +218,15 @@ export class SocketService {
         this.handlePracticeContinue(socket, data);
       });
 
+      // Wager submission (wager mode only)
+      socket.on('submit-wager', (data: { lobbyCode: string; playerId: string; wagerPercent: number }) => {
+        if (!this.checkRateLimit(socket.id, 'submit-wager', 5, 5000)) {
+          socket.emit('wager-error', { type: 'RATE_LIMITED', message: 'Too many requests, please wait' });
+          return;
+        }
+        this.handleSubmitWager(socket, data);
+      });
+
       // Game events (rate limited)
       socket.on('submit-answer', (data: { lobbyCode: string; playerId: string; answer: string; timeElapsed: number }) => {
         if (!this.checkRateLimit(socket.id, 'submit-answer', 5, 5000)) {
@@ -546,7 +555,8 @@ export class SocketService {
       if (!this.verifyIdentity(socket, 'update-game-mode', hostId)) return;
 
       // Validate game mode value
-      if (gameMode !== 'arcade' && gameMode !== 'practice') {
+      const validModes = ['arcade', 'practice', 'fastest_finger', 'survival', 'wager', 'duel'];
+      if (!validModes.includes(gameMode)) {
         socket.emit('update-game-mode-error', { type: 'INVALID_MODE', message: 'Invalid game mode' });
         return;
       }
@@ -584,6 +594,26 @@ export class SocketService {
       socket.emit('practice-continue-error', {
         type: 'SERVER_ERROR',
         message: 'Failed to continue'
+      });
+    }
+  }
+
+  private async handleSubmitWager(socket: Socket, data: { lobbyCode: string; playerId: string; wagerPercent: number }): Promise<void> {
+    try {
+      const { lobbyCode, playerId, wagerPercent } = data;
+
+      const userId = this.requireAuth(socket, 'submit-wager');
+      if (!userId) return;
+      if (!this.verifyIdentity(socket, 'submit-wager', playerId)) return;
+
+      RequestLogger.logSocketEvent(socket.id, 'submit-wager', { lobbyCode, playerId, wagerPercent });
+
+      await this.gameService.handleWagerSubmit(lobbyCode, playerId, wagerPercent);
+    } catch (error) {
+      console.error('Error handling wager submit:', error);
+      socket.emit('wager-error', {
+        type: 'SERVER_ERROR',
+        message: error instanceof Error ? error.message : 'Failed to submit wager'
       });
     }
   }

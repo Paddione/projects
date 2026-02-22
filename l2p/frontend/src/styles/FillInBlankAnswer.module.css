@@ -1,0 +1,100 @@
+/* Fill in the blank answer - template text with inline input(s) */
+
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  width: 100%;
+  animation: card-pop-in 240ms ease-out;
+}
+
+@keyframes card-pop-in {
+  0% {
+    opacity: 0;
+    transform: translateY(4px) scale(0.995);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.templateText {
+  font-size: 1.15rem;
+  line-height: 2;
+  color: var(--cv-text-bright);
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.blankInput {
+  display: inline-block;
+  width: 150px;
+  padding: 4px var(--spacing-sm);
+  font-size: 1.1rem;
+  font-family: var(--cv-font-mono);
+  color: var(--cv-text-bright);
+  background: var(--cv-void-lighter);
+  border: 2px solid var(--cv-border-3);
+  border-radius: var(--cv-radius-md);
+  outline: none;
+  transition: all var(--cv-duration-base) var(--cv-ease-smooth);
+  vertical-align: middle;
+  margin: 0 4px;
+  text-align: center;
+}
+
+.blankInput::placeholder {
+  color: var(--cv-text-muted);
+  font-size: 0.9rem;
+}
+
+.blankInput:focus {
+  border-color: var(--cv-cyan);
+  box-shadow: 0 0 12px rgba(0, 242, 255, 0.15);
+}
+
+.blankInput:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.submitRow {
+  display: flex;
+  justify-content: center;
+}
+
+.submitButton {
+  padding: var(--spacing-sm) var(--spacing-xl);
+  font-size: 1rem;
+  font-weight: 700;
+  color: white;
+  background: linear-gradient(135deg, var(--cv-cyan) 0%, var(--cv-purple) 100%);
+  border: none;
+  border-radius: var(--cv-radius-lg);
+  cursor: pointer;
+  transition: all var(--cv-duration-base) var(--cv-ease-smooth);
+}
+
+.submitButton:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px var(--cv-cyan-glow);
+}
+
+.submitButton:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Responsive */
+@media (max-width: 430px) {
+  .templateText {
+    font-size: 1rem;
+  }
+
+  .blankInput {
+    width: 120px;
+    font-size: 0.95rem;
+    padding: 3px var(--spacing-xs);
+  }
+}

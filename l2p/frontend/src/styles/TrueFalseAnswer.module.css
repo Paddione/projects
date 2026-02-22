@@ -1,0 +1,93 @@
+/* True/False answer - two large side-by-side buttons */
+
+.container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-lg);
+  width: 100%;
+  animation: card-pop-in 240ms ease-out;
+}
+
+@keyframes card-pop-in {
+  0% {
+    opacity: 0;
+    transform: translateY(4px) scale(0.995);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.choiceButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 80px;
+  padding: var(--spacing-lg);
+  font-size: 1.4rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--cv-text-bright);
+  background: var(--cv-void-lighter);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-radius: var(--cv-radius-lg);
+  cursor: pointer;
+  transition: all var(--cv-duration-base) var(--cv-ease-smooth);
+  position: relative;
+  overflow: hidden;
+}
+
+.choiceButton:hover:not(:disabled) {
+  transform: translateY(-3px);
+  box-shadow: var(--cv-glow-cyan-md);
+}
+
+.choiceButton:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.trueButton:hover:not(:disabled) {
+  border-color: var(--cv-success);
+  color: var(--cv-success);
+  box-shadow: 0 0 20px rgba(62, 255, 139, 0.2);
+}
+
+.falseButton:hover:not(:disabled) {
+  border-color: var(--cv-danger);
+  color: var(--cv-danger);
+  box-shadow: 0 0 20px rgba(255, 62, 62, 0.2);
+}
+
+.selected {
+  transform: translateY(-2px) scale(1.02);
+}
+
+.trueButton.selected {
+  border-color: var(--cv-success) !important;
+  color: var(--cv-success) !important;
+  box-shadow: 0 0 22px rgba(62, 255, 139, 0.3);
+  background: var(--cv-success-subtle);
+}
+
+.falseButton.selected {
+  border-color: var(--cv-danger) !important;
+  color: var(--cv-danger) !important;
+  box-shadow: 0 0 22px rgba(255, 62, 62, 0.3);
+  background: var(--cv-danger-subtle);
+}
+
+.choiceButton:disabled {
+  opacity: 1;
+  cursor: not-allowed;
+}
+
+/* Responsive */
+@media (max-width: 430px) {
+  .choiceButton {
+    min-height: 64px;
+    font-size: 1.1rem;
+    padding: var(--spacing-md);
+  }
+}

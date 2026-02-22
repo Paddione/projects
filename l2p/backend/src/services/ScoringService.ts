@@ -146,6 +146,49 @@ export class ScoringService {
   }
 
   /**
+   * Calculate score for a partial answer (e.g., estimation, ordering, matching).
+   * Calls calculateScore with isCorrect=true to get the full-credit score,
+   * then multiplies pointsEarned by partialScore.
+   * If partialScore < 1.0, streak resets to 0 and multiplier resets to base.
+   */
+  calculatePartialScore(
+    timeElapsed: number,
+    currentMultiplier: number,
+    partialScore: number,
+    currentStreak: number,
+    modifiers?: GameplayModifiers,
+    context?: ScoreContext
+  ): ScoreCalculation {
+    // Get full-credit calculation
+    const fullCredit = this.calculateScore(
+      timeElapsed,
+      currentMultiplier,
+      true, // treat as correct for base calculation
+      currentStreak,
+      modifiers,
+      context
+    );
+
+    // Scale points by partial score
+    const scaledPoints = Math.round(fullCredit.pointsEarned * partialScore);
+
+    if (partialScore >= 1.0) {
+      // Perfect answer: keep streak and multiplier from full calculation
+      return { ...fullCredit, pointsEarned: scaledPoints };
+    }
+
+    // Partial answer: reset streak and multiplier
+    const baseMultiplier = modifiers?.baseMultiplier ?? 1;
+    return {
+      ...fullCredit,
+      pointsEarned: scaledPoints,
+      newMultiplier: baseMultiplier,
+      streakCount: 0,
+      isCorrect: true, // still counts as correct for stat tracking
+    };
+  }
+
+  /**
    * Save player result to database and award experience
    */
   async savePlayerResult(sessionId: number, playerData: {

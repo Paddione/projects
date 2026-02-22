@@ -355,15 +355,26 @@ export class SocketService {
         })
 
         const hintValue = (data.question?.hint as string) || null
+        const rawAnswerType = data.question?.answerType || data.question?.answer_type || 'multiple_choice'
         const frontendQuestion = {
           id: data.question?.id || String(Date.now()),
           text: questionText,
           answers: answers,
           correctAnswer: correctAnswerIndex >= 0 ? correctAnswerIndex : 0, // Map answer text to index
           timeLimit: 60,
-          answerType: (data.question?.answerType || data.question?.answer_type || 'multiple_choice') as 'multiple_choice' | 'free_text',
+          answerType: rawAnswerType as any,
           ...(hintValue ? { hint: hintValue } : {}),
+          ...(data.question?.answerMetadata ? { answerMetadata: data.question.answerMetadata as any } : {}),
         }
+
+        // Clear wager phase when question arrives (wager resolved)
+        const { wagerPhaseActive } = useGameStore.getState()
+        if (wagerPhaseActive) {
+          useGameStore.getState().setWagerPhaseActive(false)
+        }
+
+        // Reset fastest finger tracker
+        useGameStore.getState().setFirstCorrectPlayerId(null)
 
         console.log('Frontend question transformed:', {
           originalBackend: data.question,
@@ -511,6 +522,11 @@ export class SocketService {
 
             console.log('Updating player with server data:', { playerId: data.playerId, updates })
             updatePlayer(target.id, updates)
+
+            // Fastest Finger: track first correct
+            if ((data as any).isFirstCorrect) {
+              useGameStore.getState().setFirstCorrectPlayerId(data.playerId)
+            }
 
             // Play authoritative audio feedback for all players
             // Use the updated streak value from the updates object
@@ -689,6 +705,102 @@ export class SocketService {
         })
       } catch (err) {
         console.error('Error in player-perk-unlocks handler:', err)
+      }
+    })
+
+    // === Mode-specific event handlers ===
+
+    // Fastest Finger: first correct indicator (handled via answer-received isFirstCorrect field)
+
+    // Survival: lives updated
+    this.socket.on('lives-updated', (data: any) => {
+      try {
+        const { updatePlayerLives } = useGameStore.getState()
+        updatePlayerLives(data.playerId, data.livesRemaining)
+      } catch (err) {
+        console.error('Error in lives-updated handler:', err)
+      }
+    })
+
+    // Survival: player eliminated
+    this.socket.on('player-eliminated', (data: any) => {
+      try {
+        const { addEliminatedPlayer } = useGameStore.getState()
+        addEliminatedPlayer(data.playerId)
+      } catch (err) {
+        console.error('Error in player-eliminated handler:', err)
+      }
+    })
+
+    // Survival: winner
+    this.socket.on('survival-winner', (data: any) => {
+      try {
+        console.log('Survival winner:', data)
+      } catch (err) {
+        console.error('Error in survival-winner handler:', err)
+      }
+    })
+
+    // Wager: phase started
+    this.socket.on('wager-phase-started', (data: any) => {
+      try {
+        const { setWagerPhaseActive } = useGameStore.getState()
+        setWagerPhaseActive(true)
+      } catch (err) {
+        console.error('Error in wager-phase-started handler:', err)
+      }
+    })
+
+    // Wager: player submitted wager
+    this.socket.on('wager-submitted', (data: any) => {
+      try {
+        const state = useGameStore.getState()
+        state.setPlayerWagers({ ...state.playerWagers, [data.playerId]: data.wagerAmount })
+      } catch (err) {
+        console.error('Error in wager-submitted handler:', err)
+      }
+    })
+
+    // Duel: question started (also triggers regular question-started handling)
+    this.socket.on('duel-question-started', (data: any) => {
+      try {
+        const state = useGameStore.getState()
+        state.setCurrentDuelPair(data.duelists ? [data.duelists[0], data.duelists[1]] : null)
+
+        // Check if current player is spectating
+        const authState = useAuthStore.getState()
+        const currentUserId = authState.user?.id?.toString()
+        const isSpectating = !data.duelists?.includes(currentUserId)
+        state.setIsSpectating(isSpectating)
+      } catch (err) {
+        console.error('Error in duel-question-started handler:', err)
+      }
+    })
+
+    // Duel: round result
+    this.socket.on('duel-result', (data: any) => {
+      try {
+        const state = useGameStore.getState()
+        if (data.nextDuelPair) {
+          state.setCurrentDuelPair([data.nextDuelPair[0], data.nextDuelPair[1]])
+        }
+        // Update wins
+        const newWins = { ...state.duelWins }
+        if (data.winnerId) {
+          newWins[data.winnerId] = (newWins[data.winnerId] || 0) + 1
+        }
+        state.setDuelWins(newWins)
+      } catch (err) {
+        console.error('Error in duel-result handler:', err)
+      }
+    })
+
+    // Duel: ended
+    this.socket.on('duel-ended', (data: any) => {
+      try {
+        console.log('Duel ended:', data)
+      } catch (err) {
+        console.error('Error in duel-ended handler:', err)
       }
     })
 
@@ -1072,7 +1184,22 @@ export class SocketService {
   }
 
   // Update game mode in lobby (host only)
-  updateGameMode(mode: 'arcade' | 'practice') {
+  submitWager(wagerPercent: number) {
+    const { lobbyCode } = useGameStore.getState()
+    const user = apiService.getCurrentUser()
+    if (!lobbyCode || !user?.id) {
+      console.warn('Missing lobby code or user for wager submit')
+      return
+    }
+
+    this.emit('submit-wager', {
+      lobbyCode,
+      playerId: String(user.id),
+      wagerPercent
+    })
+  }
+
+  updateGameMode(mode: string) {
     const { lobbyCode } = useGameStore.getState()
     const user = apiService.getCurrentUser()
     if (!lobbyCode || !user?.id) {

@@ -2,14 +2,47 @@ import { create } from 'zustand'
 import { devtools } from 'zustand/middleware'
 import { Player, CosmeticEffects } from '../types'
 
+export type AnswerType =
+  | 'multiple_choice'
+  | 'free_text'
+  | 'true_false'
+  | 'estimation'
+  | 'ordering'
+  | 'matching'
+  | 'fill_in_blank'
+
+export type GameModeType =
+  | 'arcade'
+  | 'practice'
+  | 'fastest_finger'
+  | 'survival'
+  | 'wager'
+  | 'duel'
+
+export interface AnswerMetadata {
+  // Estimation
+  correct_value?: number
+  tolerance?: number
+  tolerance_type?: 'absolute' | 'percentage'
+  // Ordering
+  items?: string[]
+  correct_order?: number[]
+  // Matching
+  pairs?: Array<{ left: string; right: string }>
+  // Fill in blank
+  template?: string
+  blanks?: string[]
+}
+
 export interface Question {
   id: string
   text: string
   answers: string[]
   correctAnswer: number
   timeLimit: number
-  answerType: 'multiple_choice' | 'free_text'
+  answerType?: AnswerType
   hint?: string
+  answerMetadata?: AnswerMetadata
 }
 
 export interface QuestionSetInfo {
@@ -112,12 +145,23 @@ export interface GameState {
   perkUnlockNotifications: PerkUnlockNotification[]
 
   // Game mode
-  gameMode: 'arcade' | 'practice'
+  gameMode: GameModeType
 
   // Practice mode UI state
   showingHint: boolean
   waitingForContinue: boolean
   practiceCorrectAnswer: string | null
+
+  // Mode-specific state
+  playerLives: Record<string, number>
+  eliminatedPlayers: string[]
+  wagerPhaseActive: boolean
+  playerWagers: Record<string, number>
+  currentDuelPair: [string, string] | null
+  duelQueue: string[]
+  duelWins: Record<string, number>
+  isSpectating: boolean
+  firstCorrectPlayerId: string | null
 
   // UI state
   isLoading: boolean
@@ -149,12 +193,23 @@ export interface GameState {
   addPerkUnlockNotification: (notification: PerkUnlockNotification) => void
   removePerkUnlockNotification: (index: number) => void
   clearPerkUnlockNotifications: () => void
-  setGameMode: (mode: 'arcade' | 'practice') => void
+  setGameMode: (mode: GameModeType) => void
   setShowingHint: (showing: boolean) => void
   setWaitingForContinue: (waiting: boolean) => void
   setPracticeCorrectAnswer: (answer: string | null) => void
   setLoading: (loading: boolean) => void
   setError: (error: string | null) => void
+  setPlayerLives: (lives: Record<string, number>) => void
+  updatePlayerLives: (playerId: string, lives: number) => void
+  setEliminatedPlayers: (players: string[]) => void
+  addEliminatedPlayer: (playerId: string) => void
+  setWagerPhaseActive: (active: boolean) => void
+  setPlayerWagers: (wagers: Record<string, number>) => void
+  setCurrentDuelPair: (pair: [string, string] | null) => void
+  setDuelQueue: (queue: string[]) => void
+  setDuelWins: (wins: Record<string, number>) => void
+  setIsSpectating: (spectating: boolean) => void
+  setFirstCorrectPlayerId: (playerId: string | null) => void
   resetGame: () => void
 
   // Per-round actions
@@ -176,10 +231,19 @@ const initialState = {
   totalQuestions: 0,
   timeRemaining: 60,
   gameEnded: false,
-  gameMode: 'arcade' as const,
+  gameMode: 'arcade' as GameModeType,
   showingHint: false,
   waitingForContinue: false,
   practiceCorrectAnswer: null,
+  playerLives: {} as Record<string, number>,
+  eliminatedPlayers: [] as string[],
+  wagerPhaseActive: false,
+  playerWagers: {} as Record<string, number>,
+  currentDuelPair: null as [string, string] | null,
+  duelQueue: [] as string[],
+  duelWins: {} as Record<string, number>,
+  isSpectating: false,
+  firstCorrectPlayerId: null as string | null,
   gameResults: [],
   levelUpNotifications: [],
   perkUnlockNotifications: [],
@@ -239,6 +303,21 @@ export const useGameStore = create<GameState>()(
       setPracticeCorrectAnswer: (answer) => set({ practiceCorrectAnswer: answer }),
       setLoading: (loading) => set({ isLoading: loading }),
       setError: (error) => set({ error }),
+      setPlayerLives: (lives) => set({ playerLives: lives }),
+      updatePlayerLives: (playerId, lives) => set((state) => ({
+        playerLives: { ...state.playerLives, [playerId]: lives }
+      })),
+      setEliminatedPlayers: (players) => set({ eliminatedPlayers: players }),
+      addEliminatedPlayer: (playerId) => set((state) => ({
+        eliminatedPlayers: [...state.eliminatedPlayers, playerId]
+      })),
+      setWagerPhaseActive: (active) => set({ wagerPhaseActive: active }),
+      setPlayerWagers: (wagers) => set({ playerWagers: wagers }),
+      setCurrentDuelPair: (pair) => set({ currentDuelPair: pair }),
+      setDuelQueue: (queue) => set({ duelQueue: queue }),
+      setDuelWins: (wins) => set({ duelWins: wins }),
+      setIsSpectating: (spectating) => set({ isSpectating: spectating }),
+      setFirstCorrectPlayerId: (playerId) => set({ firstCorrectPlayerId: playerId }),
       resetGame: () => set(initialState),
 
       setPlayerAnswerStatus: (playerId, status) => set((state) => ({

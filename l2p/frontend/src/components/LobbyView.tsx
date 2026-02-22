@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { PlayerGrid } from './PlayerGrid'
 import { QuestionSetSelector } from './QuestionSetSelector'
-import { useGameStore } from '../stores/gameStore'
+import { useGameStore, type GameModeType } from '../stores/gameStore'
 import styles from '../styles/LobbyView.module.css'
 import { socketService } from '../services/socketService'
 import { navigationService } from '../services/navigationService'
@@ -73,11 +73,20 @@ export const LobbyView: React.FC<LobbyViewProps> = ({ className = '' }) => {
     }
   }
 
-  const handleGameModeChange = (mode: 'arcade' | 'practice') => {
+  const handleGameModeChange = (mode: GameModeType) => {
     if (!isHost || mode === gameMode) return
     setGameMode(mode)
     socketService.updateGameMode(mode)
   }
+
+  const gameModes: Array<{ key: GameModeType; label: string; desc: string; testId: string }> = [
+    { key: 'arcade', label: 'lobby.arcade', desc: 'lobby.arcadeDesc', testId: 'game-mode-arcade' },
+    { key: 'practice', label: 'lobby.practiceMode', desc: 'lobby.practiceDesc', testId: 'game-mode-practice' },
+    { key: 'fastest_finger', label: 'lobby.fastestFinger', desc: 'lobby.fastestFingerDesc', testId: 'game-mode-fastest-finger' },
+    { key: 'survival', label: 'lobby.survival', desc: 'lobby.survivalDesc', testId: 'game-mode-survival' },
+    { key: 'wager', label: 'lobby.wager', desc: 'lobby.wagerDesc', testId: 'game-mode-wager' },
+    { key: 'duel', label: 'lobby.duel', desc: 'lobby.duelDesc', testId: 'game-mode-duel' },
+  ]
 
   const readyPlayers = players.filter(p => p.isReady).length
   const totalPlayers = players.length
@@ -166,24 +175,18 @@ export const LobbyView: React.FC<LobbyViewProps> = ({ className = '' }) => {
           <div className={styles.gameModeSelector} data-testid="game-mode-selector">
             <h3 className={styles.sectionTitle} style={{ fontSize: '1.1rem' }}>{t('lobby.gameMode')}</h3>
             <div className={styles.gameModeButtons}>
-              <button
-                className={`${styles.gameModeBtn} ${gameMode === 'arcade' ? styles.gameModeActive : ''}`}
-                onClick={() => handleGameModeChange('arcade')}
-                disabled={!isHost}
-                data-testid="game-mode-arcade"
-              >
-                <span>{t('lobby.arcade')}</span>
-                <span className={styles.gameModeDesc}>{t('lobby.arcadeDesc')}</span>
-              </button>
-              <button
-                className={`${styles.gameModeBtn} ${gameMode === 'practice' ? styles.gameModeActive : ''}`}
-                onClick={() => handleGameModeChange('practice')}
-                disabled={!isHost}
-                data-testid="game-mode-practice"
-              >
-                <span>{t('lobby.practiceMode')}</span>
-                <span className={styles.gameModeDesc}>{t('lobby.practiceDesc')}</span>
-              </button>
+              {gameModes.map(mode => (
+                <button
+                  key={mode.key}
+                  className={`${styles.gameModeBtn} ${gameMode === mode.key ? styles.gameModeActive : ''}`}
+                  onClick={() => handleGameModeChange(mode.key)}
+                  disabled={!isHost}
+                  data-testid={mode.testId}
+                >
+                  <span>{t(mode.label)}</span>
+                  <span className={styles.gameModeDesc}>{t(mode.desc)}</span>
+                </button>
+              ))}
             </div>
           </div>
 

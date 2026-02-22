@@ -148,11 +148,30 @@ router.post('/question-sets', authMiddleware.authenticate, async (req: Request, 
 router.post('/question-sets/:id/questions', authMiddleware.authenticate, async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { question_text, answers, explanation, difficulty } = req.body;
+    const { question_text, answers, explanation, difficulty, answer_type, answer_metadata, hint } = req.body;
+
+    // Validate using QuestionService
+    const validation = questionService.validateQuestionData({
+      question_set_id: parseInt(id as string, 10),
+      question_text,
+      answers: answers || [],
+      explanation,
+      difficulty,
+      answer_type: answer_type || 'multiple_choice',
+      hint,
+      answer_metadata,
+    });
+
+    if (!validation.isValid) {
+      return res.status(400).json({
+        error: 'Validation failed',
+        details: validation.errors,
+      });
+    }
 
     const result = await pool.query(
-      'INSERT INTO questions (question_set_id, question_text, answers, explanation, difficulty) VALUES ($1, $2, $3, $4, $5) RETURNING *',
-      [id, question_text, JSON.stringify(answers), explanation, difficulty]
+      'INSERT INTO questions (question_set_id, question_text, answers, explanation, difficulty, answer_type, answer_metadata, hint) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *',
+      [id, question_text, JSON.stringify(answers), explanation, difficulty, answer_type || 'multiple_choice', answer_metadata ? JSON.stringify(answer_metadata) : null, hint || null]
     );
 
     return res.status(201).json(result.rows[0]);
@@ -188,11 +207,32 @@ router.put('/question-sets/:id', authMiddleware.authenticate, async (req: Reques
 router.put('/questions/:id', authMiddleware.authenticate, async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { question_text, answers, explanation, difficulty } = req.body;
+    const { question_text, answers, explanation, difficulty, answer_type, answer_metadata, hint } = req.body;
+
+    // If answer_type or answers are provided, validate the full question data
+    if (answer_type || answers) {
+      const validation = questionService.validateQuestionData({
+        question_set_id: 0, // Not relevant for update validation
+        question_text: question_text || '',
+        answers: answers || [],
+        explanation,
+        difficulty,
+        answer_type: answer_type || 'multiple_choice',
+        hint,
+        answer_metadata,
+      });
+
+      if (!validation.isValid) {
+        return res.status(400).json({
+          error: 'Validation failed',
+          details: validation.errors,
+        });
+      }
+    }
 
     const result = await pool.query(
-      'UPDATE questions SET question_text = $1, answers = $2, explanation = $3, difficulty = $4 WHERE id = $5 RETURNING *',
-      [question_text, JSON.stringify(answers), explanation, difficulty, id]
+      'UPDATE questions SET question_text = $1, answers = $2, explanation = $3, difficulty = $4, answer_type = $5, answer_metadata = $6, hint = $7 WHERE id = $8 RETURNING *',
+      [question_text, JSON.stringify(answers), explanation, difficulty, answer_type || 'multiple_choice', answer_metadata ? JSON.stringify(answer_metadata) : null, hint || null, id]
     );
 
     if (result.rows.length === 0) {

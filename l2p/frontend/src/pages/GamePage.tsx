@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { flushSync } from 'react-dom'
 import { useParams, useNavigate } from 'react-router-dom'
 import { PlayerGrid } from '../components/PlayerGrid'
@@ -6,6 +6,15 @@ import { ScoreDisplay } from '../components/ScoreDisplay'
 import { ConnectionStatus } from '../components/ConnectionStatus'
 import { ErrorDisplay } from '../components/ErrorBoundary'
 import { LoadingSpinner } from '../components/LoadingSpinner'
+import { TrueFalseAnswer } from '../components/TrueFalseAnswer'
+import { EstimationAnswer } from '../components/EstimationAnswer'
+import { OrderingAnswer } from '../components/OrderingAnswer'
+import { MatchingAnswer } from '../components/MatchingAnswer'
+import { FillInBlankAnswer } from '../components/FillInBlankAnswer'
+import { FastestFingerBanner } from '../components/FastestFingerBanner'
+import { SurvivalHUD } from '../components/SurvivalHUD'
+import { WagerPanel } from '../components/WagerPanel'
+import { DuelView } from '../components/DuelView'
 import { useGameStore } from '../stores/gameStore'
 import { socketService } from '../services/socketService'
 import { navigationService } from '../services/navigationService'
@@ -51,6 +60,13 @@ export const GamePage: React.FC = () => {
     setWaitingForContinue,
     practiceCorrectAnswer,
     setPracticeCorrectAnswer,
+    playerLives,
+    eliminatedPlayers,
+    wagerPhaseActive,
+    currentDuelPair,
+    duelQueue,
+    duelWins,
+    firstCorrectPlayerId,
   } = useGameStore()
   const { user } = useAuthStore()
   const { t } = useLocalization()
@@ -68,6 +84,7 @@ export const GamePage: React.FC = () => {
 
   const isPractice = gameMode === 'practice'
   const isFreeText = currentQuestion?.answerType === 'free_text'
+  const answerType = currentQuestion?.answerType || 'multiple_choice'
 
   // Derived UI state (only relevant in arcade mode)
   const totalTime = Math.max(currentQuestion?.timeLimit || 60, 1)
@@ -244,6 +261,19 @@ export const GamePage: React.FC = () => {
     }
   }
 
+  const handleTypedSubmit = useCallback((answerText: string) => {
+    if (hasAnswered) return
+
+    try {
+      setHasAnswered(true)
+      socketService.submitFreeTextAnswer(answerText)
+    } catch (error) {
+      console.error('Failed to submit typed answer:', error)
+      setError('Failed to submit answer')
+      setHasAnswered(false)
+    }
+  }, [hasAnswered, setError])
+
   const handlePracticeContinue = () => {
     setWaitingForContinue(false)
     setShowingHint(false)
@@ -335,6 +365,7 @@ export const GamePage: React.FC = () => {
   // currentQuestion is guaranteed non-null by early return above
   const question = currentQuestion!
   const currentPlayer = players.find(p => (user?.id ? String(p.id) === String(user.id) : false)) || players.find(p => p.isHost) || players[0]!
+  const currentPlayerId = String(currentPlayer.id)
   const { score, multiplier, correctAnswers } = currentPlayer
 
   // Build global rankings by score (desc), 0-based rank index
@@ -464,6 +495,46 @@ export const GamePage: React.FC = () => {
         </div>
       )}
 
+      {/* Mode-specific overlays */}
+      {gameMode === 'fastest_finger' && firstCorrectPlayerId && (
+        <FastestFingerBanner
+          isFirstCorrect={firstCorrectPlayerId === currentPlayerId}
+          playerName={players.find(p => p.id === firstCorrectPlayerId)?.username || ''}
+          t={t}
+        />
+      )}
+
+      {gameMode === 'survival' && (
+        <SurvivalHUD
+          players={players.map(p => ({ id: p.id, username: p.username }))}
+          playerLives={playerLives}
+          eliminatedPlayers={eliminatedPlayers}
+          currentPlayerId={currentPlayerId}
+          t={t}
+        />
+      )}
+
+      {gameMode === 'wager' && wagerPhaseActive && (
+        <WagerPanel
+          currentScore={currentPlayer?.score ?? 0}
+          timeLimit={15}
+          onSubmitWager={(pct) => socketService.submitWager(pct)}
+          disabled={false}
+          t={t}
+        />
+      )}
+
+      {gameMode === 'duel' && (
+        <DuelView
+          currentDuelPair={currentDuelPair}
+          players={players.map(p => ({ id: p.id, username: p.username, character: p.character || '' }))}
+          duelQueue={duelQueue}
+          duelWins={duelWins}
+          currentPlayerId={currentPlayerId}
+          t={t}
+        />
+      )}
+
       {/* Main Layout */}
       <div className={gameStyles.layout}>
         {/* Left Pane: Question + Answers */}
@@ -525,8 +596,25 @@ export const GamePage: React.FC = () => {
                 </div>
               )}
 
+              {/* Answer area - branched by answer type */}
+              {answerType === 'true_false' && !waitingForContinue && (
+                <TrueFalseAnswer question={question} onSubmit={handleTypedSubmit} disabled={hasAnswered || (!isPractice && timeRemaining === 0)} t={t} />
+              )}
+              {answerType === 'estimation' && !waitingForContinue && (
+                <EstimationAnswer question={question} onSubmit={handleTypedSubmit} disabled={hasAnswered || (!isPractice && timeRemaining === 0)} t={t} />
+              )}
+              {answerType === 'ordering' && !waitingForContinue && (
+                <OrderingAnswer question={question} onSubmit={handleTypedSubmit} disabled={hasAnswered || (!isPractice && timeRemaining === 0)} t={t} />
+              )}
+              {answerType === 'matching' && !waitingForContinue && (
+                <MatchingAnswer question={question} onSubmit={handleTypedSubmit} disabled={hasAnswered || (!isPractice && timeRemaining === 0)} t={t} />
+              )}
+              {answerType === 'fill_in_blank' && !waitingForContinue && (
+                <FillInBlankAnswer question={question} onSubmit={handleTypedSubmit} disabled={hasAnswered || (!isPractice && timeRemaining === 0)} t={t} />
+              )}
+
               {/* Multiple choice answers */}
-              {!isFreeText && (
+              {(answerType === 'multiple_choice' || !answerType) && (
                 <div
                   className={gameStyles.answersGrid}
                   onKeyDown={handleKeyDown}
@@ -569,7 +657,7 @@ export const GamePage: React.FC = () => {
               )}
 
               {/* Free-text answer input */}
-              {isFreeText && !waitingForContinue && (
+              {answerType === 'free_text' && !waitingForContinue && (
                 <div className={gameStyles.freeTextArea} data-testid="free-text-area">
                   <input
                     ref={freeTextRef}

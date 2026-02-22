@@ -1,5 +1,5 @@
 import { QuestionRepository, Question, QuestionSet, CreateQuestionSetData } from '../repositories/QuestionRepository.js';
-import { CreateQuestionData } from '../types/question.js';
+import { CreateQuestionData, AnswerType, EstimationMetadata, OrderingMetadata, MatchingMetadata, FillInBlankMetadata } from '../types/question.js';
 import { TtlCache } from '../utils/cache.js';
 
 export interface QuestionSelectionOptions {
@@ -250,44 +250,159 @@ export class QuestionService {
     }
 
     // Validate answer_type if provided
-    const answerType = (data as any).answer_type || 'multiple_choice';
-    if (answerType !== 'multiple_choice' && answerType !== 'free_text') {
-      errors.push('answer_type must be "multiple_choice" or "free_text"');
+    const validAnswerTypes: AnswerType[] = [
+      'multiple_choice', 'free_text', 'true_false',
+      'estimation', 'ordering', 'matching', 'fill_in_blank'
+    ];
+    const answerType: AnswerType = data.answer_type || 'multiple_choice';
+    if (!validAnswerTypes.includes(answerType)) {
+      errors.push(`answer_type must be one of: ${validAnswerTypes.join(', ')}`);
     }
 
-    // Validate answers (free_text needs exactly 1 correct answer, MC needs at least 2)
-    if (answerType === 'free_text') {
-      if (!data.answers || data.answers.length < 1) {
-        errors.push('Free-text questions must have at least 1 answer (the correct answer)');
-      } else {
-        const hasCorrectAnswer = data.answers.some(answer => answer.correct);
-        if (!hasCorrectAnswer) {
-          errors.push('At least one answer must be marked as correct');
-        }
-        for (let i = 0; i < data.answers.length; i++) {
-          const answer = data.answers[i];
-          if (!answer?.text || typeof answer.text !== 'string') {
-            errors.push(`Answer ${i + 1} must have text`);
+    // Per-type validation
+    switch (answerType) {
+      case 'true_false':
+        if (!data.answers || data.answers.length !== 2) {
+          errors.push('True/false questions must have exactly 2 answers');
+        } else {
+          const hasCorrectAnswer = data.answers.some(answer => answer.correct);
+          if (!hasCorrectAnswer) {
+            errors.push('At least one answer must be marked as correct');
+          }
+          for (let i = 0; i < data.answers.length; i++) {
+            const answer = data.answers[i];
+            if (!answer?.text || typeof answer.text !== 'string') {
+              errors.push(`Answer ${i + 1} must have text`);
+            }
           }
         }
-      }
-    } else {
-      if (!data.answers || data.answers.length < 2) {
-        errors.push('At least 2 answers must be provided');
-      } else {
-        const hasCorrectAnswer = data.answers.some(answer => answer.correct);
-        if (!hasCorrectAnswer) {
-          errors.push('At least one answer must be marked as correct');
-        }
+        break;
 
-        // Validate answer text
-        for (let i = 0; i < data.answers.length; i++) {
-          const answer = data.answers[i];
-          if (!answer?.text || typeof answer.text !== 'string') {
-            errors.push(`Answer ${i + 1} must have text in German`);
+      case 'estimation':
+        {
+          const meta = data.answer_metadata as EstimationMetadata | undefined;
+          if (!meta) {
+            errors.push('Estimation questions require answer_metadata');
+          } else {
+            if (typeof meta.correct_value !== 'number' || isNaN(meta.correct_value)) {
+              errors.push('answer_metadata.correct_value must be a number');
+            }
+            if (typeof meta.tolerance !== 'number' || isNaN(meta.tolerance) || meta.tolerance <= 0) {
+              errors.push('answer_metadata.tolerance must be a positive number');
+            }
+            if (meta.tolerance_type && meta.tolerance_type !== 'absolute' && meta.tolerance_type !== 'percentage') {
+              errors.push('answer_metadata.tolerance_type must be "absolute" or "percentage"');
+            }
           }
         }
-      }
+        break;
+
+      case 'ordering':
+        {
+          const meta = data.answer_metadata as OrderingMetadata | undefined;
+          if (!meta) {
+            errors.push('Ordering questions require answer_metadata');
+          } else {
+            if (!Array.isArray(meta.items) || meta.items.length < 2) {
+              errors.push('answer_metadata.items must be an array with at least 2 items');
+            }
+            if (!Array.isArray(meta.correct_order) || meta.correct_order.length < 2) {
+              errors.push('answer_metadata.correct_order must be an array with at least 2 entries');
+            }
+            if (Array.isArray(meta.items) && Array.isArray(meta.correct_order) &&
+                meta.items.length !== meta.correct_order.length) {
+              errors.push('answer_metadata.items and answer_metadata.correct_order must have the same length');
+            }
+          }
+        }
+        break;
+
+      case 'matching':
+        {
+          const meta = data.answer_metadata as MatchingMetadata | undefined;
+          if (!meta) {
+            errors.push('Matching questions require answer_metadata');
+          } else {
+            if (!Array.isArray(meta.pairs) || meta.pairs.length < 2) {
+              errors.push('answer_metadata.pairs must be an array with at least 2 pairs');
+            } else {
+              for (let i = 0; i < meta.pairs.length; i++) {
+                const pair = meta.pairs[i];
+                if (!pair || typeof pair.left !== 'string' || typeof pair.right !== 'string') {
+                  errors.push(`answer_metadata.pairs[${i}] must have "left" and "right" string properties`);
+                }
+              }
+            }
+          }
+        }
+        break;
+
+      case 'fill_in_blank':
+        {
+          const meta = data.answer_metadata as FillInBlankMetadata | undefined;
+          if (!meta) {
+            errors.push('Fill-in-the-blank questions require answer_metadata');
+          } else {
+            if (!meta.template || typeof meta.template !== 'string' || !meta.template.includes('___')) {
+              errors.push('answer_metadata.template must be a string containing "___" placeholder(s)');
+            }
+            if (!Array.isArray(meta.blanks) || meta.blanks.length < 1) {
+              errors.push('answer_metadata.blanks must be an array with at least 1 entry');
+            }
+          }
+          // fill_in_blank also needs at least 1 correct answer for the correctAnswer field
+          if (!data.answers || data.answers.length < 1) {
+            errors.push('Fill-in-the-blank questions must have at least 1 answer (the correct answer)');
+          } else {
+            const hasCorrectAnswer = data.answers.some(answer => answer.correct);
+            if (!hasCorrectAnswer) {
+              errors.push('At least one answer must be marked as correct');
+            }
+            for (let i = 0; i < data.answers.length; i++) {
+              const answer = data.answers[i];
+              if (!answer?.text || typeof answer.text !== 'string') {
+                errors.push(`Answer ${i + 1} must have text`);
+              }
+            }
+          }
+        }
+        break;
+
+      case 'free_text':
+        if (!data.answers || data.answers.length < 1) {
+          errors.push('Free-text questions must have at least 1 answer (the correct answer)');
+        } else {
+          const hasCorrectAnswer = data.answers.some(answer => answer.correct);
+          if (!hasCorrectAnswer) {
+            errors.push('At least one answer must be marked as correct');
+          }
+          for (let i = 0; i < data.answers.length; i++) {
+            const answer = data.answers[i];
+            if (!answer?.text || typeof answer.text !== 'string') {
+              errors.push(`Answer ${i + 1} must have text`);
+            }
+          }
+        }
+        break;
+
+      case 'multiple_choice':
+      default:
+        if (!data.answers || data.answers.length < 2) {
+          errors.push('At least 2 answers must be provided');
+        } else {
+          const hasCorrectAnswer = data.answers.some(answer => answer.correct);
+          if (!hasCorrectAnswer) {
+            errors.push('At least one answer must be marked as correct');
+          }
+          // Validate answer text
+          for (let i = 0; i < data.answers.length; i++) {
+            const answer = data.answers[i];
+            if (!answer?.text || typeof answer.text !== 'string') {
+              errors.push(`Answer ${i + 1} must have text in German`);
+            }
+          }
+        }
+        break;
     }
 
     // Validate difficulty

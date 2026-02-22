@@ -1,0 +1,108 @@
+/* SurvivalHUD - player lives heads-up display */
+
+.container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: var(--cv-glass-3);
+  border-radius: var(--cv-radius-lg);
+  border: 1px solid var(--cv-border-2);
+  backdrop-filter: var(--cv-blur-sm);
+}
+
+.playerEntry {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--cv-radius-full);
+  background: var(--cv-glass-2);
+  border: 1px solid var(--cv-border-2);
+  transition: all var(--cv-duration-base) var(--cv-ease-smooth);
+}
+
+.playerEntry.currentPlayer {
+  border-color: var(--cv-cyan-border);
+  box-shadow: 0 0 8px rgba(0, 242, 255, 0.15);
+}
+
+.playerEntry.eliminated {
+  opacity: 0.45;
+  border-color: var(--cv-danger-border);
+  background: var(--cv-danger-subtle);
+}
+
+.playerName {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--cv-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 80px;
+}
+
+.playerEntry.eliminated .playerName {
+  text-decoration: line-through;
+  color: var(--cv-text-muted);
+}
+
+.lives {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.heart {
+  font-size: 0.75rem;
+  line-height: 1;
+  transition: opacity 200ms ease;
+}
+
+.heartFilled {
+  color: var(--cv-danger);
+}
+
+.heartEmpty {
+  color: var(--cv-text-muted);
+  opacity: 0.35;
+}
+
+.skull {
+  font-size: 0.8rem;
+  line-height: 1;
+  color: var(--cv-danger);
+}
+
+/* Responsive */
+@media (max-width: 430px) {
+  .container {
+    gap: 0.375rem;
+    padding: 0.375rem 0.5rem;
+  }
+
+  .playerEntry {
+    padding: 0.125rem 0.375rem;
+    gap: 0.25rem;
+  }
+
+  .playerName {
+    font-size: 0.625rem;
+    max-width: 56px;
+  }
+
+  .heart {
+    font-size: 0.625rem;
+  }
+
+  .skull {
+    font-size: 0.675rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .playerEntry {
+    transition: none !important;
+  }
+}

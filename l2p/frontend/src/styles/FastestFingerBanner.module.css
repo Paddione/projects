@@ -1,0 +1,122 @@
+/* FastestFingerBanner - flash banner for first correct answer */
+
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+  animation: banner-slide-in 400ms ease-out forwards;
+}
+
+.overlay.hiding {
+  animation: banner-slide-out 300ms ease-in forwards;
+}
+
+@keyframes banner-slide-in {
+  0% {
+    opacity: 0;
+    transform: translateY(-100%);
+  }
+  60% {
+    opacity: 1;
+    transform: translateY(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes banner-slide-out {
+  0% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-100%);
+  }
+}
+
+.banner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.75rem 2rem;
+  background: var(--cv-surface);
+  border: 2px solid var(--cv-cyan);
+  border-top: none;
+  border-radius: 0 0 var(--cv-radius-lg) var(--cv-radius-lg);
+  box-shadow:
+    0 0 24px rgba(0, 242, 255, 0.3),
+    0 0 48px rgba(0, 242, 255, 0.15),
+    inset 0 0 12px rgba(0, 242, 255, 0.05);
+  animation: glow-pulse 1s ease-in-out infinite alternate;
+}
+
+@keyframes glow-pulse {
+  0% {
+    box-shadow:
+      0 0 24px rgba(0, 242, 255, 0.3),
+      0 0 48px rgba(0, 242, 255, 0.15),
+      inset 0 0 12px rgba(0, 242, 255, 0.05);
+  }
+  100% {
+    box-shadow:
+      0 0 32px rgba(0, 242, 255, 0.45),
+      0 0 64px rgba(0, 242, 255, 0.2),
+      inset 0 0 16px rgba(0, 242, 255, 0.08);
+  }
+}
+
+.title {
+  font-size: 1.5rem;
+  font-weight: 900;
+  font-family: var(--cv-font-display);
+  text-transform: uppercase;
+  letter-spacing: 4px;
+  color: var(--cv-cyan);
+  text-shadow: 0 0 12px rgba(0, 242, 255, 0.5);
+}
+
+.playerName {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--cv-text);
+  font-family: var(--cv-font-body);
+  letter-spacing: var(--cv-tracking-wider);
+}
+
+/* Responsive */
+@media (max-width: 430px) {
+  .banner {
+    padding: 0.5rem 1.25rem;
+  }
+
+  .title {
+    font-size: 1.125rem;
+    letter-spacing: 3px;
+  }
+
+  .playerName {
+    font-size: 0.75rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .overlay,
+  .overlay.hiding {
+    animation: none !important;
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .banner {
+    animation: none !important;
+  }
+}
