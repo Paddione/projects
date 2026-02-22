@@ -252,3 +252,4 @@ debug-*.jpeg
 *.debug.log
 **/.playwright-mcp/
 **/test_output.txt
+.worktrees
