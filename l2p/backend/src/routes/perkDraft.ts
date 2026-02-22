@@ -21,4 +21,38 @@ router.get('/active', authenticate, async (req: Request, res: Response): Promise
   }
 });
 
+/**
+ * GET /api/perks/draft/all — all gameplay perks (regardless of level)
+ */
+router.get('/all', authenticate, async (req: Request, res: Response): Promise<void> => {
+  try {
+    const allPerks = await perkDraftService.getAllGameplayPerks();
+    res.json({ success: true, data: allPerks });
+  } catch (error) {
+    console.error('Error fetching all gameplay perks:', error);
+    res.status(500).json({ success: false, message: 'Failed to fetch all gameplay perks' });
+  }
+});
+
+/**
+ * GET /api/perks/draft/newly-unlocked?oldLevel=X&newLevel=Y — perks unlocked between two levels
+ */
+router.get('/newly-unlocked', authenticate, async (req: Request, res: Response): Promise<void> => {
+  try {
+    const oldLevel = parseInt(req.query['oldLevel'] as string);
+    const newLevel = parseInt(req.query['newLevel'] as string);
+
+    if (isNaN(oldLevel) || isNaN(newLevel)) {
+      res.status(400).json({ success: false, message: 'oldLevel and newLevel query params are required (integers)' });
+      return;
+    }
+
+    const perks = await perkDraftService.getNewlyUnlockedPerks(oldLevel, newLevel);
+    res.json({ success: true, data: perks });
+  } catch (error) {
+    console.error('Error fetching newly unlocked perks:', error);
+    res.status(500).json({ success: false, message: 'Failed to fetch newly unlocked perks' });
+  }
+});
+
 export default router;
