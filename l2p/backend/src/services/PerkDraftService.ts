@@ -1,3 +1,6 @@
+// TODO: Rename PerkDraftService → PerkQueryService. The draft system was scrapped;
+// this class is now a query helper for level-based perk lookups (getAllGameplayPerks,
+// getActiveGameplayPerks, getNewlyUnlockedPerks, getPerksByIds).
 import { DatabaseService } from './DatabaseService.js';
 
 export interface DraftPerk {

@@ -1,4 +1,5 @@
 import { DatabaseService } from './DatabaseService.js';
+import { PerkDraftService } from './PerkDraftService.js';
 
 export interface Perk {
   id: number;
@@ -60,7 +61,7 @@ export class PerksManager {
 
   /**
    * Get all available perks (with caching)
-   * After migration, perks table uses tier/effect_type instead of level_required
+   * Perks table uses tier/effect_type and level_required (re-added in Feb 2026 migration)
    */
   async getAllPerks(): Promise<Perk[]> {
     // Check cache validity
@@ -122,21 +123,22 @@ export class PerksManager {
   }
 
   /**
-   * Get perks available for a specific level (now returns all gameplay perks since level_required was removed)
+   * Get perks available for a specific level
    */
   async getPerksForLevel(level: number): Promise<Perk[]> {
     const query = `
-      SELECT *, 0 AS level_required FROM perks
-      WHERE is_active = true
+      SELECT * FROM perks
+      WHERE is_active = true AND level_required <= $1
       ORDER BY tier ASC, category ASC
     `;
 
-    const result = await this.db.query(query);
+    const result = await this.db.query(query, [level]);
     return result.rows as Perk[];
   }
 
   /**
-   * Get all perks for a user (level-based: shows all perks with unlock status based on user level)
+   * Get all perks for a user (level-based: shows all perks with unlock status based on user level).
+   * userId is the legacy users.id (auth middleware resolves auth_user_id → users.id via getOrCreateUserFromUnifiedAuth).
    */
   async getUserPerks(userId: number): Promise<UserPerk[]> {
     // Get user level
@@ -244,7 +246,8 @@ export class PerksManager {
   }
 
   /**
-   * Get active perks for a user (level-based: all gameplay perks unlocked by level)
+   * Get active perks for a user (level-based: all gameplay perks unlocked by level).
+   * userId is the legacy users.id (auth middleware resolves auth_user_id → users.id).
    */
   async getActivePerks(userId: number): Promise<UserPerk[]> {
     const query = `
@@ -287,37 +290,35 @@ export class PerksManager {
   }
 
   /**
-   * Check if user can unlock a specific perk (legacy - perks are now draft-based)
+   * Check if user can unlock a specific perk (level-based)
    */
   async canUnlockPerk(userId: number, perkId: number): Promise<boolean> {
-    // In the draft system, perks are chosen through the draft flow, not unlocked by level
-    // Return false - perks should be acquired through the draft panel
-    return false;
+    const perkResult = await this.db.query(
+      'SELECT level_required FROM perks WHERE id = $1 AND is_active = true',
+      [perkId]
+    );
+    if (perkResult.rows.length === 0) return false;
+    const levelRequired = (perkResult.rows[0]!['level_required'] as number) || 0;
+
+    const userLevelResult = await this.db.query(`
+      SELECT COALESCE(
+        (SELECT character_level FROM user_game_profiles WHERE auth_user_id = $1),
+        (SELECT character_level FROM users WHERE id = $1),
+        0
+      ) AS level
+    `, [userId]);
+    const userLevel = (userLevelResult.rows[0]?.['level'] as number) || 0;
+
+    return userLevel >= levelRequired;
   }
 
   /**
-   * Unlock a perk for a user
+   * Unlock a perk for a user (level-based check only).
+   * The user_perks table is not used — unlock status is derived from the user's
+   * level vs perk.level_required. This method just validates eligibility.
    */
   async unlockPerk(userId: number, perkId: number): Promise<boolean> {
-    const canUnlock = await this.canUnlockPerk(userId, perkId);
-
-    if (!canUnlock) {
-      return false;
-    }
-
-    const query = `
-      INSERT INTO user_perks (user_id, perk_id, is_unlocked, unlocked_at, updated_at)
-      VALUES ($1, $2, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-      ON CONFLICT (user_id, perk_id) 
-      DO UPDATE SET 
-        is_unlocked = true, 
-        unlocked_at = CURRENT_TIMESTAMP, 
-        updated_at = CURRENT_TIMESTAMP
-      RETURNING id
-    `;
-
-    const result = await this.db.query(query, [userId, perkId]);
-    return result.rows.length > 0;
+    return this.canUnlockPerk(userId, perkId);
   }
 
   /**
@@ -344,6 +345,7 @@ export class PerksManager {
 
     const perkType = unlockResult.rows[0]!['type'];
     await this.updateUserActiveSettings(userId, perkId, perkType, configuration);
+    this.invalidateCache();
     return true;
   }
 
@@ -363,6 +365,7 @@ export class PerksManager {
     // For types stored in perks_config, clear the slot entirely
     if (['helper', 'display', 'emote', 'sound', 'multiplier'].includes(perkType)) {
       await this.clearPerksConfigSlot(userId, perkType);
+      this.invalidateCache();
       return true;
     }
 
@@ -370,17 +373,27 @@ export class PerksManager {
     if (perkType === 'title') {
       await this.db.query('UPDATE users SET active_title = NULL WHERE id = $1', [userId]);
       await this.clearPerksConfigSlot(userId, perkType);
+      this.invalidateCache();
       return true;
     }
 
-    // For avatar/badge/theme, reset to defaults
+    // For badge, set to NULL (not a new badge value)
+    if (perkType === 'badge') {
+      await this.db.query('UPDATE users SET active_badge = NULL WHERE id = $1', [userId]);
+      this.invalidateCache();
+      return true;
+    }
+
+    // For avatar/theme, reset to defaults
     const defaults = this.getDefaultConfigurationForPerk(perkType);
     await this.updateUserActiveSettings(userId, perkId, perkType, defaults);
+    this.invalidateCache();
     return true;
   }
 
   /**
-   * Get user's current loadout (active settings)
+   * Get user's current loadout (active settings).
+   * userId is the legacy users.id (auth middleware resolves auth_user_id → users.id).
    */
   async getUserLoadout(userId: number): Promise<UserLoadout | null> {
     const query = `
@@ -481,13 +494,35 @@ export class PerksManager {
   }
 
   /**
-   * Legacy: Auto-unlock perks when user levels up.
-   * In the new draft system, perks are acquired through the draft panel.
-   * This method now returns empty — draft offers are generated by PerkDraftService.
+   * Find perks newly unlocked when a user reaches a new level.
+   * Uses PerkDraftService to query perks between oldLevel and newLevel.
    */
   async checkAndUnlockPerksForLevel(userId: number, newLevel: number): Promise<UserPerk[]> {
-    // Perks are now draft-based. Draft offers are generated by PerkDraftService.
-    return [];
+    const oldLevel = Math.max(0, newLevel - 1);
+    const perkDraftService = PerkDraftService.getInstance();
+    const newlyUnlocked = await perkDraftService.getNewlyUnlockedPerks(oldLevel, newLevel);
+
+    return newlyUnlocked.map(perk => ({
+      id: perk.id,
+      user_id: userId,
+      perk_id: perk.id,
+      is_unlocked: true,
+      is_active: true,
+      configuration: perk.effect_config || {},
+      updated_at: new Date(),
+      perk: {
+        id: perk.id,
+        name: perk.name,
+        category: perk.category,
+        type: perk.type,
+        level_required: 0,
+        title: perk.title,
+        description: perk.description,
+        is_active: true,
+        created_at: new Date(),
+        updated_at: new Date(),
+      },
+    } as UserPerk));
   }
 
   /**
