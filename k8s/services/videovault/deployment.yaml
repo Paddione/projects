@@ -42,7 +42,7 @@ spec:
         kubernetes.io/arch: amd64
       containers:
         - name: videovault
-          image: registry.local:5000/korczewski/videovault:latest
+          image: registry.korczewski.de/korczewski/videovault
           imagePullPolicy: Always
           ports:
             - name: http

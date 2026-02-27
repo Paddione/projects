@@ -8,3 +8,6 @@ mirrors:
   "registry.local:5000":
     endpoint:
       - "http://REGISTRY_IP:5000"
+  "registry.korczewski.de":
+    endpoint:
+      - "http://REGISTRY_IP:5000"

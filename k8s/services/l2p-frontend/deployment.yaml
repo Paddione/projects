@@ -47,7 +47,7 @@ spec:
         kubernetes.io/arch: amd64
       containers:
         - name: l2p-frontend
-          image: registry.local:5000/korczewski/l2p-frontend:latest
+          image: registry.korczewski.de/korczewski/l2p-frontend
           imagePullPolicy: Always
           ports:
             - name: http

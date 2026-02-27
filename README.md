@@ -156,7 +156,7 @@ cd payment && npm test
 │   ├── client/
 │   ├── server/
 │   └── e2e/
-├── Obsidian/                  # Architecture docs, runbooks, SVG diagrams (Obsidian vault)
+├── shared-infrastructure/SMB-Share/Obsidian/  # Architecture docs, runbooks, SVG diagrams (Obsidian vault, on SMB share)
 ├── scripts/                   # Root automation scripts
 ├── AGENTS.md                  # Multi-agent coordination guidelines
 ├── CLAUDE.md                  # Claude Code guidance

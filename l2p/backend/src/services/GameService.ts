@@ -240,6 +240,11 @@ export class GameService {
       throw new Error(`Question not found at index ${gameState.currentQuestionIndex}`);
     }
 
+    // Shuffle answer options so correct answer position is randomized
+    if (currentQuestion.answers && currentQuestion.answers.length > 1) {
+      currentQuestion.answers = [...currentQuestion.answers].sort(() => Math.random() - 0.5);
+    }
+
     // Update the game state
     gameState.currentQuestion = currentQuestion;
     gameState.questionStartTime = Date.now();

@@ -14,15 +14,12 @@ build:
     push: true
     useBuildkit: true
     concurrency: 2
-  defaultRepo: registry.korczewski.de
-  # All images are pushed to the private registry
-  # Skaffold auto-prefixes image names: korczewski/* → registry.korczewski.de/korczewski/*
   tagPolicy:
     sha256: {}
 
   artifacts:
     # Auth Service
-    - image: korczewski/auth
+    - image: registry.korczewski.de/korczewski/auth
       context: ..
       docker:
         dockerfile: auth/Dockerfile
@@ -32,25 +29,25 @@ build:
             dest: /app/src
 
     # L2P Backend
-    - image: korczewski/l2p-backend
+    - image: registry.korczewski.de/korczewski/l2p-backend
       context: ..
       docker:
         dockerfile: l2p/backend/Dockerfile
 
     # L2P Frontend (URLs injected at runtime via docker-entrypoint.sh)
-    - image: korczewski/l2p-frontend
+    - image: registry.korczewski.de/korczewski/l2p-frontend
       context: ..
       docker:
         dockerfile: l2p/frontend/Dockerfile
 
     # Shop Service
-    - image: korczewski/shop
+    - image: registry.korczewski.de/korczewski/shop
       context: ..
       docker:
         dockerfile: shop/Dockerfile
 
     # VideoVault
-    - image: korczewski/videovault
+    - image: registry.korczewski.de/korczewski/videovault
       context: ..
       docker:
         dockerfile: VideoVault/Dockerfile.prod
@@ -137,7 +134,7 @@ profiles:
   - name: auth
     build:
       artifacts:
-        - image: korczewski/auth
+        - image: registry.korczewski.de/korczewski/auth
           context: ..
           docker:
             dockerfile: auth/Dockerfile
@@ -150,11 +147,11 @@ profiles:
   - name: l2p
     build:
       artifacts:
-        - image: korczewski/l2p-backend
+        - image: registry.korczewski.de/korczewski/l2p-backend
           context: ..
           docker:
             dockerfile: l2p/backend/Dockerfile
-        - image: korczewski/l2p-frontend
+        - image: registry.korczewski.de/korczewski/l2p-frontend
           context: ..
           docker:
             dockerfile: l2p/frontend/Dockerfile
@@ -168,7 +165,7 @@ profiles:
   - name: shop
     build:
       artifacts:
-        - image: korczewski/shop
+        - image: registry.korczewski.de/korczewski/shop
           context: ..
           docker:
             dockerfile: shop/Dockerfile
@@ -181,7 +178,7 @@ profiles:
   - name: videovault
     build:
       artifacts:
-        - image: korczewski/videovault
+        - image: registry.korczewski.de/korczewski/videovault
           context: ..
           docker:
             dockerfile: VideoVault/Dockerfile.prod
@@ -211,23 +208,23 @@ profiles:
   - name: dev
     build:
       artifacts:
-        - image: korczewski/auth
+        - image: registry.korczewski.de/korczewski/auth
           context: ..
           docker:
             dockerfile: auth/Dockerfile
-        - image: korczewski/l2p-backend
+        - image: registry.korczewski.de/korczewski/l2p-backend
           context: ..
           docker:
             dockerfile: l2p/backend/Dockerfile
-        - image: korczewski/l2p-frontend
+        - image: registry.korczewski.de/korczewski/l2p-frontend
           context: ..
           docker:
             dockerfile: l2p/frontend/Dockerfile
-        - image: korczewski/shop
+        - image: registry.korczewski.de/korczewski/shop
           context: ..
           docker:
             dockerfile: shop/Dockerfile
-        - image: korczewski/videovault
+        - image: registry.korczewski.de/korczewski/videovault
           context: ..
           docker:
             dockerfile: VideoVault/Dockerfile.prod

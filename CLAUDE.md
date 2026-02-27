@@ -14,7 +14,7 @@ Patrick's Projects is a monorepo containing independent full-stack applications 
 | auth | Express, Passport.js, JWT/OAuth | 5500 |
 | shared-infrastructure | PostgreSQL, shared design system | 5432 |
 | openclaw | OpenClaw AI Assistant (Docker) | 18789 |
-| Obsidian | Obsidian vault (Markdown, Dataview, Templater) | — |
+| Obsidian | Obsidian vault (Markdown, Dataview, Templater), on SMB share | — |
 
 ## Common Commands
 
@@ -151,7 +151,7 @@ VideoVault uses the browser as primary data store:
 
 ### Documentation Vault (Obsidian)
 
-The `Obsidian/` directory is an Obsidian knowledge vault serving as the high-level architecture and operations reference:
+The `shared-infrastructure/SMB-Share/Obsidian/` directory is an Obsidian knowledge vault serving as the high-level architecture and operations reference:
 - **Core pages**: `Home.md`, `Architecture.md`, `Services.md`, `Infrastructure.md`, `Operations.md`
 - **Service docs**: `services/{L2P,Auth,Shop,VideoVault}.md`
 - **Infrastructure docs**: `infrastructure/{PostgreSQL,Traefik,SMB-CSI}.md`
@@ -159,7 +159,7 @@ The `Obsidian/` directory is an Obsidian knowledge vault serving as the high-lev
 - **Plugins**: Dataview, Templater, obsidian-git
 - **Theme**: Custom Cybervault CSS (cyan/dark aesthetic)
 
-The Obsidian vault documents Kubernetes manifest locations, environment variable mappings, deployment procedures, and service dependencies. Use service templates in `.obsidian/templates/` when adding new service documentation.
+The Obsidian vault documents Kubernetes manifest locations, environment variable mappings, deployment procedures, and service dependencies. Use service templates in `shared-infrastructure/SMB-Share/Obsidian/.obsidian/templates/` when adding new service documentation.
 
 ### Frontend Runtime Config (L2P)
 
@@ -200,12 +200,13 @@ Root-level GitHub Actions CI at `.github/workflows/ci.yml`:
 
 Production uses 6 bare-metal Ubuntu 24.04 nodes (3 CP + 3 workers) with:
 - **kube-vip**: API VIP at 10.10.0.20, Service LB range 10.10.0.40/28
-- **Private registry**: In-cluster Docker registry at `registry.local:5000`
+- **Private registry**: In-cluster at `registry.local:5000` (HTTP), external at `registry.korczewski.de` (HTTPS + basic auth via Traefik)
 - **Skaffold**: Pushes images to registry (`push: true`, `defaultRepo: registry.local:5000`)
+- **Manual push from WSL2**: `docker login registry.korczewski.de && docker push registry.korczewski.de/korczewski/<service>:latest`
 - **imagePullPolicy: Always** on all service deployments
 - **No hostPort** on Traefik — uses LoadBalancer service via kube-vip
 
-See `Obsidian/infrastructure/Kubernetes.md` for full multi-node setup guide.
+See `shared-infrastructure/SMB-Share/Obsidian/infrastructure/Kubernetes.md` for full multi-node setup guide.
 
 ## Environment Configuration
 
@@ -281,7 +282,7 @@ Each major project has its own CLAUDE.md with detailed guidance:
 - `VideoVault/CLAUDE.md` - Client-first architecture, service patterns, test stubs
 
 Architecture diagrams and operational runbooks live in the Obsidian vault:
-- `Obsidian/` - High-level architecture, service docs, infrastructure docs, deployment procedures
+- `shared-infrastructure/SMB-Share/Obsidian/` - High-level architecture, service docs, infrastructure docs, deployment procedures
 
 Read the relevant project CLAUDE.md before making changes. Consult the Obsidian vault for cross-service architecture and deployment context.
 
@@ -304,6 +305,7 @@ When multiple agents work simultaneously:
 - **L2P**: https://l2p.korczewski.de
 - **Shop**: https://shop.korczewski.de
 - **VideoVault**: https://videovault.korczewski.de (alias: https://video.korczewski.de)
+- **Registry**: https://registry.korczewski.de (Docker registry, basic auth)
 - **Traefik**: https://traefik.korczewski.de
 
 ## Development URLs (Cluster Dev Stack)
