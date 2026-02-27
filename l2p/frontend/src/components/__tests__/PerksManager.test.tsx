@@ -188,9 +188,10 @@ describe('PerksManager', () => {
     render(<PerksManager />)
     await screen.findByText('Your Loadout')
 
-    // Find and click an avatar option button (e.g., "Scholarly Student")
-    const studentBtn = screen.getByRole('button', { name: /Scholarly Student/i })
-    await user.click(studentBtn)
+    // Find and click the first avatar option button (e.g., "Scholarly Student")
+    // Multiple exist because both basic + advanced avatar perks produce the same options
+    const studentBtns = screen.getAllByRole('button', { name: /Scholarly Student/i })
+    await user.click(studentBtns[0])
 
     await waitFor(() => {
       expect(apiService.activatePerk).toHaveBeenCalledWith(

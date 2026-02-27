@@ -686,69 +686,60 @@ const PerksManager: React.FC = () => {
         <div className="perks-main">
           <div className="slot-selectors">
             {PERK_SLOTS.map(slot => {
-              const available = getPerksForSlot(slot.type);
-              const locked = isSlotLocked(slot.type);
+              const flatOptions = getFlatOptionsForSlot(slot.type);
+              const allLocked = flatOptions.length === 0 || flatOptions.every(o => o.locked);
               const minLevel = getMinLevelForSlot(slot.type);
-              const selectedPerkId = slotSelections[slot.type];
-              const selectedUserPerk = selectedPerkId ? perksData?.perks.find(p => p.perk?.id === selectedPerkId) : null;
-              const configInfo = selectedUserPerk ? getConfigOptionsForPerk(selectedUserPerk) : null;
-              const currentConfig = slotConfigs[slot.type] || {};
+              const currentSel = slotSelection[slot.type];
               const isLoading = slotLoading[slot.type] || false;
               const slotError = slotErrors[slot.type] || null;
 
               return (
-                <div key={slot.id} className={`slot-row ${locked ? 'locked' : ''} ${isLoading ? 'loading' : ''}`}>
+                <div key={slot.id} className={`slot-row ${allLocked ? 'locked' : ''} ${isLoading ? 'loading' : ''}`}>
                   <div className="slot-row-header">
                     <span className="slot-row-icon">{slot.icon}</span>
                     <span className="slot-row-label">{t(`perk.slot.${slot.type}`)}</span>
                     {isLoading && <span className="slot-spinner" />}
-                    {!isLoading && selectedPerkId && !locked && (
+                    {!isLoading && currentSel && !allLocked && (
                       <span className="slot-equipped-badge">{t('perk.equipped')}</span>
+                    )}
+                    {!isLoading && currentSel && !allLocked && (
+                      <button
+                        type="button"
+                        className="slot-clear-btn"
+                        onClick={() => handleClearSlot(slot.type)}
+                        aria-label={`Clear ${slot.label}`}
+                      >
+                        {t('perk.clearSlot')}
+                      </button>
                     )}
                   </div>
 
-                  {locked ? (
+                  {allLocked ? (
                     <div className="slot-locked-msg">
                       {'🔒 ' + t('perk.slotLocked').replace('{level}', String(minLevel || '?'))}
                     </div>
                   ) : (
                     <>
-                      <select
-                        className="slot-select"
-                        value={selectedPerkId || ''}
-                        onChange={e => handleSlotPerkChange(slot.type, e.target.value)}
-                        disabled={isLoading}
-                      >
-                        <option value="">{selectedPerkId ? t('perk.clearSlot') : t('perk.choosePerk')}</option>
-                        {available.map(up => (
-                          <option key={up.perk!.id} value={up.perk!.id}>
-                            {up.perk!.title}
-                          </option>
-                        ))}
-                      </select>
-
-                      {/* Inline config options */}
-                      {configInfo && configInfo.options.length > 0 && selectedPerkId && (
-                        <div className="slot-config">
-                          <div className="slot-config-label">{configInfo.title}</div>
-                          <div className="slot-config-options">
-                            {configInfo.options.map(opt => (
-                              <button
-                                type="button"
-                                key={opt.id}
-                                className={`slot-config-btn ${currentConfig[configInfo.configKey] === opt.id ? 'selected' : ''}`}
-                                onClick={() => handleConfigSelect(slot.type, configInfo.configKey, opt.id)}
-                                disabled={isLoading}
-                              >
-                                {opt.emoji && <span className="cfg-emoji">{opt.emoji}</span>}
-                                <span className="cfg-label">{opt.label}</span>
-                                {opt.description && <span className="cfg-desc">{opt.description}</span>}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
+                      <div className="option-grid">
+                        {flatOptions.map(opt => {
+                          const isSelected = currentSel?.perkId === opt.perkId && currentSel?.optionId === opt.optionId;
+                          return (
+                            <button
+                              type="button"
+                              key={`${opt.perkId}-${opt.optionId}`}
+                              className={`option-btn ${isSelected ? 'selected' : ''} ${opt.locked ? 'locked' : ''}`}
+                              onClick={() => handleOptionSelect(slot.type, opt)}
+                              disabled={isLoading || opt.locked}
+                              aria-label={opt.locked ? `${opt.label} (Lv ${opt.levelRequired})` : opt.label}
+                              title={opt.description || opt.label}
+                            >
+                              {opt.emoji && <span className="option-emoji">{opt.emoji}</span>}
+                              <span className="option-label">{opt.label}</span>
+                              {opt.locked && <span className="option-lock">Lv {opt.levelRequired}</span>}
+                            </button>
+                          );
+                        })}
+                      </div>
                       {slotError && <div className="slot-error">{slotError}</div>}
                     </>
                   )}
