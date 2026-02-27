@@ -287,16 +287,7 @@ const PerksManager: React.FC = () => {
     }
   };
 
-  // --- Helpers for the new slot-based UI ---
-
-  /** Get all unlocked perks available for a given slot type */
-  const getPerksForSlot = (slotType: string): UserPerk[] => {
-    if (!perksData) return [];
-    const userLevel = user?.level ?? 0;
-    return perksData.perks.filter(p =>
-      p.perk?.type === slotType && p.is_unlocked && userLevel >= p.perk.level_required
-    );
-  };
+  // --- Helpers ---
 
   /** Get the minimum level needed to unlock any perk in this slot */
   const getMinLevelForSlot = (slotType: string): number | null => {
@@ -304,11 +295,6 @@ const PerksManager: React.FC = () => {
     const slotPerks = perksData.perks.filter(p => p.perk?.type === slotType);
     if (slotPerks.length === 0) return null;
     return Math.min(...slotPerks.map(p => p.perk?.level_required ?? 999));
-  };
-
-  /** Check if a slot is fully locked (no unlocked perks) */
-  const isSlotLocked = (slotType: string): boolean => {
-    return getPerksForSlot(slotType).length === 0;
   };
 
   /** Extract current config values from an active UserPerk into a flat Record */
@@ -444,7 +430,7 @@ const PerksManager: React.FC = () => {
     return options;
   };
 
-  /** Build activation payload from slotConfigs */
+  /** Build activation payload from config values */
   const getConfigPayload =(perkType: string, perkName: string, config: Record<string, string>) => {
     switch (perkType) {
       case 'avatar': return { selected_avatar: config['avatar'] || 'student' };
@@ -480,72 +466,6 @@ const PerksManager: React.FC = () => {
         if (perkName === 'knowledge_keeper') return { exclusive_lobby: config['exclusive_lobby'] === 'true' };
         return {};
       default: return {};
-    }
-  };
-
-  /** Determine which config options to show for a selected perk */
-  const getConfigOptionsForPerk = (userPerk: UserPerk): {
-    options: Array<{ id: string; label: string; emoji: string; description: string }>;
-    configKey: string;
-    title: string;
-  } | null => {
-    if (!userPerk.perk) return null;
-    const perkName = userPerk.perk.name;
-
-    switch (userPerk.perk.type) {
-      case 'avatar':
-        return { options: AVATAR_OPTIONS.map(o => ({ ...o, description: '' })), configKey: 'avatar', title: t('perk.selectAvatar') };
-      case 'theme':
-        return { options: THEME_OPTIONS.map(o => ({ id: o.id, label: o.label, emoji: '', description: '' })), configKey: 'theme', title: t('perk.selectTheme') };
-      case 'badge': {
-        const badgeOpts = userPerk.perk.name === 'scholar_badge'
-          ? BADGE_STYLE_OPTIONS.filter(o => ['silver', 'gold', 'platinum'].includes(o.id))
-          : BADGE_STYLE_OPTIONS.filter(o => ['classic', 'modern', 'minimal'].includes(o.id));
-        return { options: badgeOpts.map(o => ({ id: o.id, label: o.label, emoji: '', description: '' })), configKey: 'badgeStyle', title: t('perk.selectBadgeColor') };
-      }
-      case 'helper': {
-        const opts = HELPER_OPTIONS[perkName];
-        if (!opts) return null;
-        const configKey = perkName === 'answer_previews' ? 'highlight_style' : 'hint_level';
-        const title = perkName === 'answer_previews' ? t('perk.selectHighlightStyle') : t('perk.selectHintDetail');
-        return { options: opts, configKey, title };
-      }
-      case 'display': {
-        const opts = DISPLAY_OPTIONS[perkName];
-        if (!opts) return null;
-        const configKey = perkName === 'quick_stats' ? 'position' : perkName === 'enhanced_timers' ? 'visual_style' : 'focus_mode';
-        const title = perkName === 'quick_stats' ? t('perk.selectDashboardPosition') : perkName === 'enhanced_timers' ? t('perk.selectTimerStyle') : t('perk.selectFocusMode');
-        return { options: opts, configKey, title };
-      }
-      case 'emote': {
-        const opts = EMOTE_OPTIONS[perkName];
-        if (!opts) return null;
-        const configKey = perkName === 'chat_emotes_basic' ? 'emote_set' : 'size';
-        const title = perkName === 'chat_emotes_basic' ? t('perk.selectEmoteSet') : t('perk.selectEmoteSize');
-        return { options: opts, configKey, title };
-      }
-      case 'sound': {
-        const opts = SOUND_OPTIONS[perkName];
-        if (!opts) return null;
-        const configKey = perkName === 'audio_reactions' ? 'reaction_level' : 'pack';
-        const title = perkName === 'audio_reactions' ? t('perk.selectReactionLevel') : t('perk.selectSoundPack');
-        return { options: opts, configKey, title };
-      }
-      case 'multiplier': {
-        const opts = MULTIPLIER_OPTIONS[perkName];
-        if (!opts) return null;
-        const configKey = perkName === 'experience_boost' ? 'duration' : perkName === 'streak_protector' ? 'activation' : 'extra_seconds';
-        const title = perkName === 'experience_boost' ? t('perk.selectBoostDuration') : perkName === 'streak_protector' ? t('perk.selectActivationMode') : t('perk.selectExtraTime');
-        return { options: opts, configKey, title };
-      }
-      case 'title': {
-        const opts = TITLE_OPTIONS[perkName];
-        if (!opts) return null;
-        const configKey = perkName === 'master_scholar' ? 'display_style' : perkName === 'quiz_legend' ? 'aura_effect' : 'exclusive_lobby';
-        const title = perkName === 'master_scholar' ? t('perk.selectDisplayStyle') : perkName === 'quiz_legend' ? t('perk.auraEffect') : t('perk.vipLobbyAccess');
-        return { options: opts, configKey, title };
-      }
-      default: return null;
     }
   };
 
