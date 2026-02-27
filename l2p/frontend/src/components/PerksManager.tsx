@@ -15,6 +15,7 @@ interface Perk {
   title: string;
   description: string;
   is_active: boolean;
+  config_schema?: Record<string, any>;
 }
 
 interface UserPerk {
@@ -75,130 +76,105 @@ interface FlatOption {
   levelRequired: number;
 }
 
-const AVATAR_OPTIONS = [
-  { id: 'student', label: 'Scholarly Student', emoji: '👨‍🎓' },
-  { id: 'professor', label: 'Wise Professor', emoji: '👩‍🏫' },
-  { id: 'librarian', label: 'Master Librarian', emoji: '📚' },
-  { id: 'researcher', label: 'Lab Researcher', emoji: '🧪' },
-];
-
-const THEME_OPTIONS = [
-  { id: 'default', label: 'Default', previewClass: 'theme-default' },
-  { id: 'dark', label: 'Dark Mode', previewClass: 'theme-dark' },
-  { id: 'blue', label: 'Ocean Blue', previewClass: 'theme-blue' },
-  { id: 'green', label: 'Emerald', previewClass: 'theme-green' },
-  { id: 'purple', label: 'Neon Violet', previewClass: 'theme-purple' },
-];
-
-const BADGE_STYLE_OPTIONS = [
-  { id: 'classic', label: 'Bronze Classic', className: 'badge-bronze-classic' },
-  { id: 'modern', label: 'Bronze Modern', className: 'badge-bronze-modern' },
-  { id: 'minimal', label: 'Bronze Minimal', className: 'badge-bronze-minimal' },
-  { id: 'silver', label: 'Scholar Silver', className: 'badge-scholar-silver' },
-  { id: 'gold', label: 'Scholar Gold', className: 'badge-scholar-gold' },
-  { id: 'platinum', label: 'Scholar Platinum', className: 'badge-scholar-platinum' },
-];
-
-// ===== HELPER OPTIONS =====
-const HELPER_OPTIONS: Record<string, Array<{ id: string; label: string; emoji: string; description: string }>> = {
-  answer_previews: [
-    { id: 'border', label: 'Border Highlight', emoji: '🔲', description: 'Colored border around selected answer' },
-    { id: 'background', label: 'Background Fill', emoji: '🎨', description: 'Subtle background color on selection' },
-    { id: 'shadow', label: 'Glow Shadow', emoji: '✨', description: 'Glowing shadow effect on selection' },
-  ],
-  smart_hints: [
-    { id: 'subtle', label: 'Subtle', emoji: '💡', description: 'Brief, minimal hints' },
-    { id: 'moderate', label: 'Moderate', emoji: '📖', description: 'Balanced hint detail' },
-    { id: 'detailed', label: 'Detailed', emoji: '📚', description: 'Full explanations and context' },
-  ],
+// Display labels and emojis for schema-driven option IDs
+const OPTION_LABELS: Record<string, { label: string; emoji: string }> = {
+  // Avatars
+  scientist: { label: 'Scientist', emoji: '🔬' },
+  explorer: { label: 'Explorer', emoji: '🧭' },
+  artist: { label: 'Artist', emoji: '🎨' },
+  detective: { label: 'Detective', emoji: '🔍' },
+  chef: { label: 'Chef', emoji: '👨‍🍳' },
+  astronaut: { label: 'Astronaut', emoji: '🚀' },
+  wizard: { label: 'Wizard', emoji: '🧙' },
+  ninja: { label: 'Ninja', emoji: '🥷' },
+  dragon: { label: 'Dragon', emoji: '🐉' },
+  // Themes
+  ocean: { label: 'Ocean Blue', emoji: '🌊' },
+  forest: { label: 'Forest', emoji: '🌲' },
+  sunset: { label: 'Sunset', emoji: '🌅' },
+  neon: { label: 'Neon', emoji: '💡' },
+  galaxy: { label: 'Galaxy', emoji: '🌌' },
+  vintage: { label: 'Vintage', emoji: '📜' },
+  // Badges
+  bronze: { label: 'Bronze', emoji: '🥉' },
+  silver: { label: 'Silver', emoji: '🥈' },
+  gold: { label: 'Gold', emoji: '🥇' },
+  classic: { label: 'Classic', emoji: '🏛️' },
+  modern: { label: 'Modern', emoji: '✨' },
+  glow: { label: 'Glow', emoji: '✨' },
+  pulse: { label: 'Pulse', emoji: '💫' },
+  sparkle: { label: 'Sparkle', emoji: '⭐' },
+  // Helpers
+  border: { label: 'Border Highlight', emoji: '🔲' },
+  background: { label: 'Background Fill', emoji: '🎨' },
+  shadow: { label: 'Glow Shadow', emoji: '✨' },
+  subtle: { label: 'Subtle', emoji: '💡' },
+  moderate: { label: 'Moderate', emoji: '📖' },
+  detailed: { label: 'Detailed', emoji: '📚' },
+  // Display
+  'top-left': { label: 'Top Left', emoji: '↖️' },
+  'top-right': { label: 'Top Right', emoji: '↗️' },
+  'bottom-left': { label: 'Bottom Left', emoji: '↙️' },
+  'bottom-right': { label: 'Bottom Right', emoji: '↘️' },
+  progress: { label: 'Progress Bar', emoji: '📊' },
+  digital: { label: 'Digital Clock', emoji: '🔢' },
+  analog: { label: 'Analog Dial', emoji: '🕐' },
+  // Emotes
+  academic: { label: 'Academic', emoji: '🤓' },
+  gaming: { label: 'Gaming', emoji: '🔥' },
+  small: { label: 'Small', emoji: '🚀' },
+  medium: { label: 'Medium', emoji: '💫' },
+  large: { label: 'Large', emoji: '🌟' },
+  // Sound
+  retro: { label: 'Retro 8-bit', emoji: '🕹️' },
+  nature: { label: 'Nature', emoji: '🌿' },
+  electronic: { label: 'Electronic', emoji: '🎹' },
+  orchestral: { label: 'Orchestral', emoji: '🎻' },
+  synthwave: { label: 'Synthwave', emoji: '🌆' },
+  ambient: { label: 'Ambient', emoji: '🎧' },
+  enthusiastic: { label: 'Enthusiastic', emoji: '🔊' },
+  // Multiplier
+  game: { label: 'Per Game', emoji: '🎮' },
+  session: { label: 'Per Session', emoji: '⏱️' },
+  unlimited: { label: 'Always On', emoji: '♾️' },
+  automatic: { label: 'Automatic', emoji: '🛡️' },
+  manual: { label: 'Manual', emoji: '🎯' },
+  // Title
+  badge: { label: 'Badge Display', emoji: '🏅' },
 };
 
-// ===== DISPLAY OPTIONS =====
-const DISPLAY_OPTIONS: Record<string, Array<{ id: string; label: string; emoji: string; description: string }>> = {
-  quick_stats: [
-    { id: 'top-left', label: 'Top Left', emoji: '↖️', description: 'Stats in top-left corner' },
-    { id: 'top-right', label: 'Top Right', emoji: '↗️', description: 'Stats in top-right corner' },
-    { id: 'bottom-left', label: 'Bottom Left', emoji: '↙️', description: 'Stats in bottom-left corner' },
-    { id: 'bottom-right', label: 'Bottom Right', emoji: '↘️', description: 'Stats in bottom-right corner' },
-  ],
-  enhanced_timers: [
-    { id: 'progress', label: 'Progress Bar', emoji: '📊', description: 'Animated bar countdown' },
-    { id: 'digital', label: 'Digital Clock', emoji: '🔢', description: 'Numeric countdown display' },
-    { id: 'analog', label: 'Analog Dial', emoji: '🕐', description: 'Circular dial countdown' },
-  ],
-  focus_mode: [
-    { id: 'blur', label: 'Blur Background', emoji: '🌫️', description: 'Soft background blur during questions' },
-    { id: 'zen', label: 'Zen Mode', emoji: '🧘', description: 'Minimal UI, maximum focus' },
-    { id: 'both', label: 'Full Focus', emoji: '🎯', description: 'Blur + Zen combined' },
-  ],
-};
-
-// ===== EMOTE OPTIONS =====
-const EMOTE_OPTIONS: Record<string, Array<{ id: string; label: string; emoji: string; description: string }>> = {
-  chat_emotes_basic: [
-    { id: 'classic', label: 'Classic', emoji: '😀', description: 'Standard fun emotes' },
-    { id: 'academic', label: 'Academic', emoji: '🤓', description: 'Study and learning themed' },
-    { id: 'gaming', label: 'Gaming', emoji: '🔥', description: 'Competitive gaming reactions' },
-  ],
-  chat_emotes_premium: [
-    { id: 'small', label: 'Small', emoji: '🚀', description: 'Compact animated emotes' },
-    { id: 'medium', label: 'Medium', emoji: '💫', description: 'Standard animated emotes' },
-    { id: 'large', label: 'Large', emoji: '🌟', description: 'Full-size animated emotes' },
-  ],
-};
-
-// ===== SOUND OPTIONS =====
-const SOUND_OPTIONS: Record<string, Array<{ id: string; label: string; emoji: string; description: string }>> = {
-  sound_packs_basic: [
-    { id: 'retro', label: 'Retro 8-bit', emoji: '🕹️', description: 'Classic arcade sounds' },
-    { id: 'nature', label: 'Nature', emoji: '🌿', description: 'Organic, soothing tones' },
-    { id: 'electronic', label: 'Electronic', emoji: '🎹', description: 'Modern synth sounds' },
-  ],
-  sound_packs_premium: [
-    { id: 'orchestral', label: 'Orchestral', emoji: '🎻', description: 'Classical orchestra themes' },
-    { id: 'synthwave', label: 'Synthwave', emoji: '🌆', description: 'Retro-future vibes' },
-    { id: 'ambient', label: 'Ambient', emoji: '🎧', description: 'Calm, zen soundscapes' },
-  ],
-  audio_reactions: [
-    { id: 'subtle', label: 'Subtle', emoji: '🔈', description: 'Soft feedback sounds' },
-    { id: 'moderate', label: 'Moderate', emoji: '🔉', description: 'Balanced audio feedback' },
-    { id: 'enthusiastic', label: 'Enthusiastic', emoji: '🔊', description: 'Energetic reactions and fanfares' },
-  ],
-};
-
-// ===== MULTIPLIER OPTIONS =====
-const MULTIPLIER_OPTIONS: Record<string, Array<{ id: string; label: string; emoji: string; description: string }>> = {
-  experience_boost: [
-    { id: 'game', label: 'Per Game', emoji: '🎮', description: 'Boost lasts one game' },
-    { id: 'session', label: 'Per Session', emoji: '⏱️', description: 'Boost lasts entire session' },
-    { id: 'unlimited', label: 'Always On', emoji: '♾️', description: 'Permanent XP boost' },
-  ],
-  streak_protector: [
-    { id: 'automatic', label: 'Automatic', emoji: '🛡️', description: 'Activates on first wrong answer' },
-    { id: 'manual', label: 'Manual', emoji: '🎯', description: 'Save it for when you need it' },
-  ],
-  time_extension: [
-    { id: '5', label: '+5 Seconds', emoji: '⏱️', description: 'Small but helpful boost' },
-    { id: '10', label: '+10 Seconds', emoji: '⏰', description: 'Balanced extra time' },
-    { id: '15', label: '+15 Seconds', emoji: '🕐', description: 'Maximum thinking time' },
-  ],
-};
-
-// ===== TITLE OPTIONS =====
-const TITLE_OPTIONS: Record<string, Array<{ id: string; label: string; emoji: string; description: string }>> = {
-  master_scholar: [
-    { id: 'badge', label: 'Badge Display', emoji: '🏅', description: 'Title shown as a badge icon' },
-    { id: 'border', label: 'Name Border', emoji: '📛', description: 'Decorative border around your name' },
-    { id: 'glow', label: 'Golden Glow', emoji: '✨', description: 'Glowing aura around your name' },
-  ],
-  quiz_legend: [
-    { id: 'true', label: 'Aura On', emoji: '🌟', description: 'Legendary aura effect visible' },
-    { id: 'false', label: 'Aura Off', emoji: '👤', description: 'Title without aura effect' },
-  ],
-  knowledge_keeper: [
-    { id: 'true', label: 'VIP Lobby', emoji: '👑', description: 'Access exclusive VIP lobbies' },
-    { id: 'false', label: 'Standard', emoji: '🎓', description: 'Title without VIP access' },
-  ],
+// Perks with non-standard schemas (boolean/range/composite) that need hardcoded options
+const SPECIAL_PERK_OPTIONS: Record<string, { options: Array<{ id: string; label: string; emoji: string; description: string }>; configKey: string }> = {
+  focus_mode: {
+    options: [
+      { id: 'blur', label: 'Blur Background', emoji: '🌫️', description: 'Soft background blur during questions' },
+      { id: 'zen', label: 'Zen Mode', emoji: '🧘', description: 'Minimal UI, maximum focus' },
+      { id: 'both', label: 'Full Focus', emoji: '🎯', description: 'Blur + Zen combined' },
+    ],
+    configKey: 'focus_mode',
+  },
+  quiz_legend: {
+    options: [
+      { id: 'true', label: 'Aura On', emoji: '🌟', description: 'Legendary aura effect visible' },
+      { id: 'false', label: 'Aura Off', emoji: '👤', description: 'Title without aura effect' },
+    ],
+    configKey: 'aura_effect',
+  },
+  knowledge_keeper: {
+    options: [
+      { id: 'true', label: 'VIP Lobby', emoji: '👑', description: 'Access exclusive VIP lobbies' },
+      { id: 'false', label: 'Standard', emoji: '🎓', description: 'Title without VIP access' },
+    ],
+    configKey: 'exclusive_lobby',
+  },
+  time_extension: {
+    options: [
+      { id: '5', label: '+5 Seconds', emoji: '⏱️', description: 'Small but helpful boost' },
+      { id: '10', label: '+10 Seconds', emoji: '⏰', description: 'Balanced extra time' },
+      { id: '15', label: '+15 Seconds', emoji: '🕐', description: 'Maximum thinking time' },
+    ],
+    configKey: 'extra_seconds',
+  },
 };
 
 const PerksManager: React.FC = () => {
@@ -229,7 +205,7 @@ const PerksManager: React.FC = () => {
       const activePerk = perksData.activePerks.find(p => p.perk?.type === slot.type);
       if (activePerk?.perk) {
         const config = extractConfigForSlot(activePerk);
-        const configResult = getOptionsForPerk(activePerk.perk.type, activePerk.perk.name);
+        const configResult = getOptionsForPerk(activePerk.perk);
         if (configResult) {
           const optionId = config[configResult.configKey] || '';
           selections[slot.type] = { perkId: activePerk.perk.id, optionId, configKey: configResult.configKey };
@@ -301,99 +277,54 @@ const PerksManager: React.FC = () => {
   const extractConfigForSlot = (userPerk: UserPerk): Record<string, string> => {
     const config = userPerk.configuration || {};
     const perkName = userPerk.perk?.name || '';
-    const perkType = userPerk.perk?.type || '';
 
-    switch (perkType) {
-      case 'avatar': return { avatar: config.selected_avatar || 'student' };
-      case 'theme': return { theme: config.theme_name || 'default' };
-      case 'badge': return { badgeStyle: config.badge_style || config.color || 'classic' };
-      case 'helper':
-        if (perkName === 'answer_previews') return { highlight_style: config.highlight_style || 'border' };
-        if (perkName === 'smart_hints') return { hint_level: config.hint_level || 'moderate' };
-        return {};
-      case 'display':
-        if (perkName === 'quick_stats') return { position: config.position || 'top-right' };
-        if (perkName === 'enhanced_timers') return { visual_style: config.visual_style || 'progress' };
-        if (perkName === 'focus_mode') {
-          const mode = config.zen_mode && config.blur_background ? 'both' : config.zen_mode ? 'zen' : 'blur';
-          return { focus_mode: mode };
-        }
-        return {};
-      case 'emote':
-        if (perkName === 'chat_emotes_basic') return { emote_set: config.emote_set || 'classic' };
-        if (perkName === 'chat_emotes_premium') return { size: config.size || 'medium' };
-        return {};
-      case 'sound':
-        if (perkName === 'audio_reactions') return { reaction_level: config.reaction_level || 'moderate' };
-        return { pack: config.pack || 'retro' };
-      case 'multiplier':
-        if (perkName === 'experience_boost') return { duration: config.duration || 'unlimited' };
-        if (perkName === 'streak_protector') return { activation: config.activation || 'automatic' };
-        if (perkName === 'time_extension') return { extra_seconds: String(config.extra_seconds || 10) };
-        return {};
-      case 'title':
-        if (perkName === 'master_scholar') return { display_style: config.display_style || 'glow' };
-        if (perkName === 'quiz_legend') return { aura_effect: String(config.aura_effect ?? true) };
-        if (perkName === 'knowledge_keeper') return { exclusive_lobby: String(config.exclusive_lobby ?? true) };
-        return {};
-      default: return {};
+    // Special-case perks with non-standard schemas
+    if (perkName === 'focus_mode') {
+      const mode = config.zen_mode && config.blur_background ? 'both' : config.zen_mode ? 'zen' : 'blur';
+      return { focus_mode: mode };
     }
+    if (perkName === 'quiz_legend') return { aura_effect: String(config.aura_effect ?? true) };
+    if (perkName === 'knowledge_keeper') return { exclusive_lobby: String(config.exclusive_lobby ?? true) };
+    if (perkName === 'time_extension') return { extra_seconds: String(config.extra_seconds ?? 10) };
+
+    // Standard: find the primary enum key from config_schema
+    const schema = userPerk.perk?.config_schema;
+    if (schema) {
+      const enumEntry = Object.entries(schema).find(([, v]) => (v as any).type === 'enum');
+      if (enumEntry) {
+        const [key, field] = enumEntry;
+        return { [key]: config[key] || (field as any).default || '' };
+      }
+    }
+
+    return {};
   };
 
-  /** Look up config options for a perk by type and name (pure, no UserPerk needed) */
-  const getOptionsForPerk = (perkType: string, perkName: string): {
+  /** Look up config options for a perk — reads from config_schema, falls back to special cases */
+  const getOptionsForPerk = (perk: Perk): {
     options: Array<{ id: string; label: string; emoji: string; description: string }>;
     configKey: string;
   } | null => {
-    switch (perkType) {
-      case 'avatar':
-        return { options: AVATAR_OPTIONS.map(o => ({ ...o, description: '' })), configKey: 'avatar' };
-      case 'theme':
-        return { options: THEME_OPTIONS.map(o => ({ id: o.id, label: o.label, emoji: '', description: '' })), configKey: 'theme' };
-      case 'badge': {
-        const badgeOpts = perkName === 'scholar_badge'
-          ? BADGE_STYLE_OPTIONS.filter(o => ['silver', 'gold', 'platinum'].includes(o.id))
-          : BADGE_STYLE_OPTIONS.filter(o => ['classic', 'modern', 'minimal'].includes(o.id));
-        return { options: badgeOpts.map(o => ({ id: o.id, label: o.label, emoji: '', description: '' })), configKey: 'badgeStyle' };
+    // Check for special-case perks with non-standard schemas (boolean/range/composite)
+    const special = SPECIAL_PERK_OPTIONS[perk.name];
+    if (special) return special;
+
+    // Schema-driven: find the first enum field and generate options from it
+    const schema = perk.config_schema;
+    if (schema) {
+      const enumEntry = Object.entries(schema).find(([, v]) => (v as any).type === 'enum');
+      if (enumEntry) {
+        const [configKey, field] = enumEntry;
+        const schemaOptions: string[] = (field as any).options || [];
+        const options = schemaOptions.map(id => {
+          const meta = OPTION_LABELS[id];
+          return { id, label: meta?.label || id.charAt(0).toUpperCase() + id.slice(1), emoji: meta?.emoji || '', description: '' };
+        });
+        return { options, configKey };
       }
-      case 'helper': {
-        const opts = HELPER_OPTIONS[perkName];
-        if (!opts) return null;
-        const configKey = perkName === 'answer_previews' ? 'highlight_style' : 'hint_level';
-        return { options: opts, configKey };
-      }
-      case 'display': {
-        const opts = DISPLAY_OPTIONS[perkName];
-        if (!opts) return null;
-        const configKey = perkName === 'quick_stats' ? 'position' : perkName === 'enhanced_timers' ? 'visual_style' : 'focus_mode';
-        return { options: opts, configKey };
-      }
-      case 'emote': {
-        const opts = EMOTE_OPTIONS[perkName];
-        if (!opts) return null;
-        const configKey = perkName === 'chat_emotes_basic' ? 'emote_set' : 'size';
-        return { options: opts, configKey };
-      }
-      case 'sound': {
-        const opts = SOUND_OPTIONS[perkName];
-        if (!opts) return null;
-        const configKey = perkName === 'audio_reactions' ? 'reaction_level' : 'pack';
-        return { options: opts, configKey };
-      }
-      case 'multiplier': {
-        const opts = MULTIPLIER_OPTIONS[perkName];
-        if (!opts) return null;
-        const configKey = perkName === 'experience_boost' ? 'duration' : perkName === 'streak_protector' ? 'activation' : 'extra_seconds';
-        return { options: opts, configKey };
-      }
-      case 'title': {
-        const opts = TITLE_OPTIONS[perkName];
-        if (!opts) return null;
-        const configKey = perkName === 'master_scholar' ? 'display_style' : perkName === 'quiz_legend' ? 'aura_effect' : 'exclusive_lobby';
-        return { options: opts, configKey };
-      }
-      default: return null;
     }
+
+    return null;
   };
 
   /** Build a flat list of all options across all perks for a slot type */
@@ -410,7 +341,7 @@ const PerksManager: React.FC = () => {
       const levelRequired = up.perk.level_required;
       const perkId = up.perk.id;
 
-      const configResult = getOptionsForPerk(up.perk.type, perkName);
+      const configResult = getOptionsForPerk(up.perk);
       if (!configResult) continue;
 
       for (const opt of configResult.options) {
@@ -430,43 +361,19 @@ const PerksManager: React.FC = () => {
     return options;
   };
 
-  /** Build activation payload from config values */
-  const getConfigPayload =(perkType: string, perkName: string, config: Record<string, string>) => {
-    switch (perkType) {
-      case 'avatar': return { selected_avatar: config['avatar'] || 'student' };
-      case 'theme': return { theme_name: config['theme'] || 'default' };
-      case 'badge': return { badge_style: config['badgeStyle'] || 'classic' };
-      case 'helper':
-        if (perkName === 'answer_previews') return { highlight_style: config['highlight_style'] || 'border' };
-        if (perkName === 'smart_hints') return { hint_level: config['hint_level'] || 'moderate' };
-        return {};
-      case 'display':
-        if (perkName === 'quick_stats') return { position: config['position'] || 'top-right' };
-        if (perkName === 'enhanced_timers') return { visual_style: config['visual_style'] || 'progress' };
-        if (perkName === 'focus_mode') {
-          const mode = config['focus_mode'] || 'blur';
-          return { blur_background: mode === 'blur' || mode === 'both', zen_mode: mode === 'zen' || mode === 'both' };
-        }
-        return {};
-      case 'emote':
-        if (perkName === 'chat_emotes_basic') return { emote_set: config['emote_set'] || 'classic' };
-        if (perkName === 'chat_emotes_premium') return { animated: true, size: config['size'] || 'medium' };
-        return {};
-      case 'sound':
-        if (perkName === 'audio_reactions') return { reaction_level: config['reaction_level'] || 'moderate' };
-        return { pack: config['pack'] || 'retro' };
-      case 'multiplier':
-        if (perkName === 'experience_boost') return { duration: config['duration'] || 'unlimited' };
-        if (perkName === 'streak_protector') return { activation: config['activation'] || 'automatic' };
-        if (perkName === 'time_extension') return { extra_seconds: Number(config['extra_seconds'] || 10) };
-        return {};
-      case 'title':
-        if (perkName === 'master_scholar') return { display_style: config['display_style'] || 'glow' };
-        if (perkName === 'quiz_legend') return { aura_effect: config['aura_effect'] === 'true' };
-        if (perkName === 'knowledge_keeper') return { exclusive_lobby: config['exclusive_lobby'] === 'true' };
-        return {};
-      default: return {};
+  /** Build activation payload from config key + option ID */
+  const getConfigPayload = (perkName: string, configKey: string, optionId: string) => {
+    // Special cases for non-standard schemas
+    if (perkName === 'focus_mode') {
+      return { blur_background: optionId === 'blur' || optionId === 'both', zen_mode: optionId === 'zen' || optionId === 'both' };
     }
+    if (perkName === 'quiz_legend') return { aura_effect: optionId === 'true' };
+    if (perkName === 'knowledge_keeper') return { exclusive_lobby: optionId === 'true' };
+    if (perkName === 'time_extension') return { extra_seconds: Number(optionId) };
+    if (perkName === 'chat_emotes_premium') return { [configKey]: optionId, animated: true };
+
+    // Standard: schema key maps directly to the option value
+    return { [configKey]: optionId };
   };
 
   // --- Slot interaction handlers ---
@@ -492,7 +399,7 @@ const PerksManager: React.FC = () => {
       [slotType]: { perkId: option.perkId, optionId: option.optionId, configKey: option.configKey }
     }));
 
-    await activateSlotPerk(slotType, option.perkId, option.perkName, { [option.configKey]: option.optionId });
+    await activateSlotPerk(slotType, option.perkId, option.perkName, option.configKey, option.optionId);
   };
 
   const handleClearSlot = async (slotType: string) => {
@@ -516,11 +423,11 @@ const PerksManager: React.FC = () => {
     }
   };
 
-  const activateSlotPerk = async (slotType: string, perkId: number, perkName: string, config: Record<string, string>) => {
+  const activateSlotPerk = async (slotType: string, perkId: number, perkName: string, configKey: string, optionId: string) => {
     setSlotLoading(prev => ({ ...prev, [slotType]: true }));
     setSlotErrors(prev => ({ ...prev, [slotType]: null }));
     try {
-      const payload = getConfigPayload(slotType, perkName, config);
+      const payload = getConfigPayload(perkName, configKey, optionId);
       const response = await apiService.activatePerk(perkId, payload);
       if (response.success) {
         await fetchUserPerks();
@@ -537,14 +444,24 @@ const PerksManager: React.FC = () => {
     }
   };
 
-  // --- Get summary info for sidebar ---
+  // --- Get friendly display name for sidebar ---
+  const getOptionLabel = (optionId: string): string => {
+    const meta = OPTION_LABELS[optionId];
+    return meta?.label || optionId.charAt(0).toUpperCase() + optionId.slice(1);
+  };
+
   const getSlotEquippedName = (slotType: string): string | null => {
+    // First check if there's a current selection in state (most accurate)
+    const sel = slotSelection[slotType];
+    if (sel) return getOptionLabel(sel.optionId);
+
+    // Fall back to loadout data
     const loadout = perksData?.loadout;
     if (!loadout) return null;
-    if (slotType === 'avatar' && loadout.active_avatar && loadout.active_avatar !== 'student') return loadout.active_avatar;
-    if (slotType === 'theme' && loadout.active_theme && loadout.active_theme !== 'default') return loadout.active_theme;
-    if (slotType === 'badge' && loadout.active_badge) return loadout.active_badge;
-    if (slotType === 'title' && loadout.active_title) return loadout.active_title;
+    if (slotType === 'avatar' && loadout.active_avatar && loadout.active_avatar !== 'student') return getOptionLabel(loadout.active_avatar);
+    if (slotType === 'theme' && loadout.active_theme && loadout.active_theme !== 'default') return getOptionLabel(loadout.active_theme);
+    if (slotType === 'badge' && loadout.active_badge) return getOptionLabel(loadout.active_badge);
+    if (slotType === 'title' && loadout.active_title) return getOptionLabel(loadout.active_title);
     const cosmeticPerks = loadout.active_cosmetic_perks || {};
     if (cosmeticPerks[slotType]) {
       const matchingPerk = perksData?.perks.find(p => p.perk_id === cosmeticPerks[slotType].perk_id);

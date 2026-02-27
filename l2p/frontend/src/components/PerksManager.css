@@ -204,7 +204,18 @@
 .option-btn.selected {
   border-color: var(--color-primary, #3b82f6);
   background: var(--color-primary-bg, #eff6ff);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
+  font-weight: 700;
+}
+
+.option-btn.selected::after {
+  content: '✓';
+  position: absolute;
+  top: 2px;
+  right: 4px;
+  font-size: 0.65rem;
+  color: var(--color-primary, #3b82f6);
+  font-weight: 700;
 }
 
 .option-btn.locked {

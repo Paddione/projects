@@ -41,45 +41,52 @@ const mockPerksPayload = {
     // --- Badge (level 2 = unlocked) ---
     {
       id: 1, user_id: 1, perk_id: 1, is_unlocked: true, is_active: false, configuration: {},
-      perk: { id: 1, name: 'starter_badge', category: 'cosmetic', type: 'badge', level_required: 2, title: 'Starter Badge', description: 'Bronze badge', is_active: true }
+      perk: { id: 1, name: 'starter_badge', category: 'cosmetic', type: 'badge', level_required: 2, title: 'Starter Badge', description: 'Bronze badge', is_active: true,
+        config_schema: { color: { type: 'enum', default: 'bronze', options: ['bronze', 'silver', 'gold'] } } }
     },
     // --- Avatar Collection I (level 3 = unlocked) ---
     {
       id: 2, user_id: 1, perk_id: 2, is_unlocked: true, is_active: false, configuration: {},
-      perk: { id: 2, name: 'custom_avatars_basic', category: 'cosmetic', type: 'avatar', level_required: 3, title: 'Avatar Collection I', description: 'Basic avatars', is_active: true }
+      perk: { id: 2, name: 'custom_avatars_basic', category: 'cosmetic', type: 'avatar', level_required: 3, title: 'Avatar Collection I', description: 'Basic avatars', is_active: true,
+        config_schema: { selected_avatar: { type: 'enum', default: 'scientist', options: ['scientist', 'explorer', 'artist'] } } }
     },
     // --- Avatar Collection II (level 12 = unlocked) ---
     {
       id: 3, user_id: 1, perk_id: 3, is_unlocked: true, is_active: false, configuration: {},
-      perk: { id: 3, name: 'custom_avatars_advanced', category: 'cosmetic', type: 'avatar', level_required: 12, title: 'Avatar Collection II', description: 'Advanced avatars', is_active: true }
+      perk: { id: 3, name: 'custom_avatars_advanced', category: 'cosmetic', type: 'avatar', level_required: 12, title: 'Avatar Collection II', description: 'Advanced avatars', is_active: true,
+        config_schema: { selected_avatar: { type: 'enum', default: 'detective', options: ['detective', 'chef', 'astronaut'] } } }
     },
     // --- Legendary Avatars (level 25 = LOCKED) ---
     {
       id: 4, user_id: 1, perk_id: 4, is_unlocked: false, is_active: false, configuration: {},
-      perk: { id: 4, name: 'legendary_avatars', category: 'cosmetic', type: 'avatar', level_required: 25, title: 'Legendary Avatars', description: 'Elite avatars', is_active: true }
+      perk: { id: 4, name: 'legendary_avatars', category: 'cosmetic', type: 'avatar', level_required: 25, title: 'Legendary Avatars', description: 'Elite avatars', is_active: true,
+        config_schema: { selected_avatar: { type: 'enum', default: 'wizard', options: ['wizard', 'ninja', 'dragon'] } } }
     },
     // --- Theme (level 5 = unlocked) ---
     {
-      id: 5, user_id: 1, perk_id: 5, is_unlocked: true, is_active: true, configuration: { theme_name: 'dark' },
-      perk: { id: 5, name: 'ui_themes_basic', category: 'cosmetic', type: 'theme', level_required: 5, title: 'Color Themes I', description: 'Basic themes', is_active: true }
+      id: 5, user_id: 1, perk_id: 5, is_unlocked: true, is_active: true, configuration: { theme_name: 'ocean' },
+      perk: { id: 5, name: 'ui_themes_basic', category: 'cosmetic', type: 'theme', level_required: 5, title: 'Color Themes I', description: 'Basic themes', is_active: true,
+        config_schema: { theme_name: { type: 'enum', default: 'ocean', options: ['ocean', 'forest', 'sunset'] } } }
     },
     // --- Title (level 30 = LOCKED, all options locked -> slot locked) ---
     {
       id: 6, user_id: 1, perk_id: 6, is_unlocked: false, is_active: false, configuration: {},
-      perk: { id: 6, name: 'master_scholar', category: 'cosmetic', type: 'title', level_required: 30, title: 'Master Scholar', description: 'Prestigious title', is_active: true }
+      perk: { id: 6, name: 'master_scholar', category: 'cosmetic', type: 'title', level_required: 30, title: 'Master Scholar', description: 'Prestigious title', is_active: true,
+        config_schema: { display_style: { type: 'enum', default: 'glow', options: ['badge', 'border', 'glow'] } } }
     },
   ],
   activePerks: [
     {
-      id: 5, user_id: 1, perk_id: 5, is_unlocked: true, is_active: true, configuration: { theme_name: 'dark' },
-      perk: { id: 5, name: 'ui_themes_basic', category: 'cosmetic', type: 'theme', level_required: 5, title: 'Color Themes I', description: 'Basic themes', is_active: true }
+      id: 5, user_id: 1, perk_id: 5, is_unlocked: true, is_active: true, configuration: { theme_name: 'ocean' },
+      perk: { id: 5, name: 'ui_themes_basic', category: 'cosmetic', type: 'theme', level_required: 5, title: 'Color Themes I', description: 'Basic themes', is_active: true,
+        config_schema: { theme_name: { type: 'enum', default: 'ocean', options: ['ocean', 'forest', 'sunset'] } } }
     }
   ],
   loadout: {
     user_id: 1,
     active_avatar: null,
     active_badge: null,
-    active_theme: 'dark',
+    active_theme: 'ocean',
     active_title: null,
     perks_config: {},
     active_perks: [],
@@ -155,15 +162,15 @@ describe('PerksManager', () => {
   it('renders flat option buttons for unlocked avatar perks', async () => {
     render(<PerksManager />)
     await screen.findByText('Your Loadout')
-    // Avatar Collection I options (level 3, unlocked): student/professor/librarian/researcher mapped to Scholarly Student etc.
-    // Avatar Collection II options (level 12, unlocked): detective/chef/astronaut mapped to labels
-    // These come from the AVATAR_OPTIONS constant which has: Scholarly Student, Wise Professor, Master Librarian, Lab Researcher
-    // AND the advanced options mapped via config_schema from the perk
+    // Avatar Collection I options from config_schema: scientist, explorer, artist
+    // Avatar Collection II options from config_schema: detective, chef, astronaut
     // The flat grid should show buttons, not a <select> dropdown
     const selects = screen.queryAllByRole('combobox')
-    // No combobox/select elements should exist for slots with options
-    // (the old UI used <select>, new UI uses button grid)
     expect(selects.length).toBe(0)
+    // Verify schema-driven options render with friendly labels
+    expect(screen.getByRole('button', { name: /Scientist/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Explorer/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Detective/i })).toBeInTheDocument()
   })
 
   it('shows locked options with lock indicator and level requirement', async () => {
@@ -188,15 +195,14 @@ describe('PerksManager', () => {
     render(<PerksManager />)
     await screen.findByText('Your Loadout')
 
-    // Find and click the first avatar option button (e.g., "Scholarly Student")
-    // Multiple exist because both basic + advanced avatar perks produce the same options
-    const studentBtns = screen.getAllByRole('button', { name: /Scholarly Student/i })
-    await user.click(studentBtns[0])
+    // Find and click the first avatar option button (schema-driven: "Scientist" from custom_avatars_basic)
+    const scientistBtn = screen.getByRole('button', { name: /Scientist/i })
+    await user.click(scientistBtn)
 
     await waitFor(() => {
       expect(apiService.activatePerk).toHaveBeenCalledWith(
         2, // perk ID for custom_avatars_basic
-        expect.objectContaining({ selected_avatar: 'student' })
+        expect.objectContaining({ selected_avatar: 'scientist' })
       )
     })
   })
@@ -217,10 +223,10 @@ describe('PerksManager', () => {
   it('highlights the currently active option', async () => {
     render(<PerksManager />)
     await screen.findByText('Your Loadout')
-    // Theme "dark" is active in the loadout (active_theme: 'dark')
-    // The Dark Mode button should have the 'selected' class
-    const darkBtn = screen.getByRole('button', { name: /Dark Mode/i })
-    expect(darkBtn.classList.contains('selected')).toBe(true)
+    // Theme "ocean" is active in the loadout (active_theme: 'ocean')
+    // The Ocean Blue button should have the 'selected' class
+    const oceanBtn = screen.getByRole('button', { name: /Ocean Blue/i })
+    expect(oceanBtn.classList.contains('selected')).toBe(true)
   })
 
   // --- Clear Slot ---
@@ -248,7 +254,10 @@ describe('PerksManager', () => {
     render(<PerksManager />)
     await screen.findByText('Your Loadout')
     expect(screen.getByText('Current Loadout')).toBeInTheDocument()
-    // Theme is active with value 'dark'
-    expect(screen.getByText('dark')).toBeInTheDocument()
+    // Theme is active with value 'ocean' → shows 'Ocean Blue' in both option grid and sidebar
+    const sidebarValue = document.querySelector('.summary-value')
+    const activeRows = document.querySelectorAll('.summary-row.active .summary-value')
+    expect(activeRows.length).toBeGreaterThanOrEqual(1)
+    expect(activeRows[0]?.textContent).toBe('Ocean Blue')
   })
 })
