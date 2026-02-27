@@ -63,6 +63,18 @@ const PERK_SLOTS: PerkSlot[] = [
   { id: 'title', label: 'Title', icon: '🏷️', type: 'title' },
 ];
 
+interface FlatOption {
+  perkId: number;
+  perkName: string;
+  configKey: string;
+  optionId: string;
+  label: string;
+  emoji: string;
+  description: string;
+  locked: boolean;
+  levelRequired: number;
+}
+
 const AVATAR_OPTIONS = [
   { id: 'student', label: 'Scholarly Student', emoji: '👨‍🎓' },
   { id: 'professor', label: 'Wise Professor', emoji: '👩‍🏫' },
@@ -200,9 +212,8 @@ const PerksManager: React.FC = () => {
   const [retryCount, setRetryCount] = useState(0);
   const [isFetching, setIsFetching] = useState(false);
 
-  // New: per-slot interaction state
-  const [slotSelections, setSlotSelections] = useState<Record<string, number | ''>>({});
-  const [slotConfigs, setSlotConfigs] = useState<Record<string, Record<string, string>>>({});
+  // Per-slot interaction state (flat model: one selection per slot)
+  const [slotSelection, setSlotSelection] = useState<Record<string, { perkId: number; optionId: string; configKey: string }>>({});
   const [slotLoading, setSlotLoading] = useState<Record<string, boolean>>({});
   const [slotErrors, setSlotErrors] = useState<Record<string, string | null>>({});
 
@@ -213,17 +224,19 @@ const PerksManager: React.FC = () => {
   // Initialize slot selections from loadout when data loads
   useEffect(() => {
     if (!perksData) return;
-    const selections: Record<string, number | ''> = {};
-    const configs: Record<string, Record<string, string>> = {};
+    const selections: Record<string, { perkId: number; optionId: string; configKey: string }> = {};
     for (const slot of PERK_SLOTS) {
       const activePerk = perksData.activePerks.find(p => p.perk?.type === slot.type);
-      if (activePerk && activePerk.perk) {
-        selections[slot.type] = activePerk.perk.id;
-        configs[slot.type] = extractConfigForSlot(activePerk);
+      if (activePerk?.perk) {
+        const config = extractConfigForSlot(activePerk);
+        const configResult = getOptionsForPerk(activePerk.perk.type, activePerk.perk.name);
+        if (configResult) {
+          const optionId = config[configResult.configKey] || '';
+          selections[slot.type] = { perkId: activePerk.perk.id, optionId, configKey: configResult.configKey };
+        }
       }
     }
-    setSlotSelections(selections);
-    setSlotConfigs(configs);
+    setSlotSelection(selections);
   }, [perksData]);
 
   // Don't render if user is not authenticated (must come after all hooks)
@@ -341,8 +354,98 @@ const PerksManager: React.FC = () => {
     }
   };
 
+  /** Look up config options for a perk by type and name (pure, no UserPerk needed) */
+  const getOptionsForPerk = (perkType: string, perkName: string): {
+    options: Array<{ id: string; label: string; emoji: string; description: string }>;
+    configKey: string;
+  } | null => {
+    switch (perkType) {
+      case 'avatar':
+        return { options: AVATAR_OPTIONS.map(o => ({ ...o, description: '' })), configKey: 'avatar' };
+      case 'theme':
+        return { options: THEME_OPTIONS.map(o => ({ id: o.id, label: o.label, emoji: '', description: '' })), configKey: 'theme' };
+      case 'badge': {
+        const badgeOpts = perkName === 'scholar_badge'
+          ? BADGE_STYLE_OPTIONS.filter(o => ['silver', 'gold', 'platinum'].includes(o.id))
+          : BADGE_STYLE_OPTIONS.filter(o => ['classic', 'modern', 'minimal'].includes(o.id));
+        return { options: badgeOpts.map(o => ({ id: o.id, label: o.label, emoji: '', description: '' })), configKey: 'badgeStyle' };
+      }
+      case 'helper': {
+        const opts = HELPER_OPTIONS[perkName];
+        if (!opts) return null;
+        const configKey = perkName === 'answer_previews' ? 'highlight_style' : 'hint_level';
+        return { options: opts, configKey };
+      }
+      case 'display': {
+        const opts = DISPLAY_OPTIONS[perkName];
+        if (!opts) return null;
+        const configKey = perkName === 'quick_stats' ? 'position' : perkName === 'enhanced_timers' ? 'visual_style' : 'focus_mode';
+        return { options: opts, configKey };
+      }
+      case 'emote': {
+        const opts = EMOTE_OPTIONS[perkName];
+        if (!opts) return null;
+        const configKey = perkName === 'chat_emotes_basic' ? 'emote_set' : 'size';
+        return { options: opts, configKey };
+      }
+      case 'sound': {
+        const opts = SOUND_OPTIONS[perkName];
+        if (!opts) return null;
+        const configKey = perkName === 'audio_reactions' ? 'reaction_level' : 'pack';
+        return { options: opts, configKey };
+      }
+      case 'multiplier': {
+        const opts = MULTIPLIER_OPTIONS[perkName];
+        if (!opts) return null;
+        const configKey = perkName === 'experience_boost' ? 'duration' : perkName === 'streak_protector' ? 'activation' : 'extra_seconds';
+        return { options: opts, configKey };
+      }
+      case 'title': {
+        const opts = TITLE_OPTIONS[perkName];
+        if (!opts) return null;
+        const configKey = perkName === 'master_scholar' ? 'display_style' : perkName === 'quiz_legend' ? 'aura_effect' : 'exclusive_lobby';
+        return { options: opts, configKey };
+      }
+      default: return null;
+    }
+  };
+
+  /** Build a flat list of all options across all perks for a slot type */
+  const getFlatOptionsForSlot = (slotType: string): FlatOption[] => {
+    if (!perksData) return [];
+    const userLevel = user?.level ?? 0;
+    const slotPerks = perksData.perks.filter(p => p.perk?.type === slotType);
+    const options: FlatOption[] = [];
+
+    for (const up of slotPerks) {
+      if (!up.perk) continue;
+      const perkName = up.perk.name;
+      const locked = userLevel < up.perk.level_required;
+      const levelRequired = up.perk.level_required;
+      const perkId = up.perk.id;
+
+      const configResult = getOptionsForPerk(up.perk.type, perkName);
+      if (!configResult) continue;
+
+      for (const opt of configResult.options) {
+        options.push({
+          perkId,
+          perkName,
+          configKey: configResult.configKey,
+          optionId: opt.id,
+          label: opt.label,
+          emoji: opt.emoji || '',
+          description: opt.description || '',
+          locked,
+          levelRequired,
+        });
+      }
+    }
+    return options;
+  };
+
   /** Build activation payload from slotConfigs */
-  const getConfigPayload = (perkType: string, perkName: string, config: Record<string, string>) => {
+  const getConfigPayload =(perkType: string, perkName: string, config: Record<string, string>) => {
     switch (perkType) {
       case 'avatar': return { selected_avatar: config['avatar'] || 'student' };
       case 'theme': return { theme_name: config['theme'] || 'default' };
@@ -448,57 +551,49 @@ const PerksManager: React.FC = () => {
 
   // --- Slot interaction handlers ---
 
-  const handleSlotPerkChange = async (slotType: string, perkIdStr: string) => {
-    if (perkIdStr === '') {
-      // Clear slot — deactivate current perk
-      const currentPerkId = slotSelections[slotType];
-      if (currentPerkId) {
-        setSlotLoading(prev => ({ ...prev, [slotType]: true }));
-        setSlotErrors(prev => ({ ...prev, [slotType]: null }));
-        try {
-          const response = await apiService.deactivatePerk(Number(currentPerkId));
-          if (response.success) {
-            await fetchUserPerks();
-          } else {
-            setSlotErrors(prev => ({ ...prev, [slotType]: response.error || 'Failed' }));
-          }
-        } catch {
-          setSlotErrors(prev => ({ ...prev, [slotType]: 'Failed to clear slot' }));
-        } finally {
-          setSlotLoading(prev => ({ ...prev, [slotType]: false }));
-        }
+  const handleOptionSelect = async (slotType: string, option: FlatOption) => {
+    if (option.locked) return;
+
+    // If clicking the already-selected option, do nothing
+    const current = slotSelection[slotType];
+    if (current && current.perkId === option.perkId && current.optionId === option.optionId) return;
+
+    // If switching from a different perk, deactivate the old one first
+    if (current && current.perkId !== option.perkId) {
+      try {
+        await apiService.deactivatePerk(current.perkId);
+      } catch {
+        // Best-effort deactivation of old perk
       }
-      setSlotSelections(prev => ({ ...prev, [slotType]: '' }));
-      setSlotConfigs(prev => { const next = { ...prev }; delete next[slotType]; return next; });
-      return;
     }
 
-    const perkId = Number(perkIdStr);
-    setSlotSelections(prev => ({ ...prev, [slotType]: perkId }));
+    setSlotSelection(prev => ({
+      ...prev,
+      [slotType]: { perkId: option.perkId, optionId: option.optionId, configKey: option.configKey }
+    }));
 
-    // Find the perk to check if it needs configuration
-    const userPerk = perksData?.perks.find(p => p.perk?.id === perkId);
-    if (!userPerk?.perk) return;
-
-    const configInfo = getConfigOptionsForPerk(userPerk);
-    if (!configInfo || configInfo.options.length === 0) {
-      // No config needed — activate immediately
-      await activateSlotPerk(slotType, perkId, userPerk.perk.name, {});
-    }
-    // If config needed, the inline config UI will appear and user picks an option
+    await activateSlotPerk(slotType, option.perkId, option.perkName, { [option.configKey]: option.optionId });
   };
 
-  const handleConfigSelect = async (slotType: string, configKey: string, value: string) => {
-    const newConfig = { ...slotConfigs[slotType], [configKey]: value };
-    setSlotConfigs(prev => ({ ...prev, [slotType]: newConfig }));
+  const handleClearSlot = async (slotType: string) => {
+    const current = slotSelection[slotType];
+    if (!current) return;
 
-    // Auto-activate with selected config
-    const perkId = slotSelections[slotType];
-    if (!perkId) return;
-    const userPerk = perksData?.perks.find(p => p.perk?.id === perkId);
-    if (!userPerk?.perk) return;
-
-    await activateSlotPerk(slotType, Number(perkId), userPerk.perk.name, newConfig);
+    setSlotLoading(prev => ({ ...prev, [slotType]: true }));
+    setSlotErrors(prev => ({ ...prev, [slotType]: null }));
+    try {
+      const response = await apiService.deactivatePerk(current.perkId);
+      if (response.success) {
+        setSlotSelection(prev => { const next = { ...prev }; delete next[slotType]; return next; });
+        await fetchUserPerks();
+      } else {
+        setSlotErrors(prev => ({ ...prev, [slotType]: response.error || 'Failed to clear' }));
+      }
+    } catch {
+      setSlotErrors(prev => ({ ...prev, [slotType]: 'Failed to clear slot' }));
+    } finally {
+      setSlotLoading(prev => ({ ...prev, [slotType]: false }));
+    }
   };
 
   const activateSlotPerk = async (slotType: string, perkId: number, perkName: string, config: Record<string, string>) => {
