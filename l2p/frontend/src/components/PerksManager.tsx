@@ -330,14 +330,13 @@ const PerksManager: React.FC = () => {
   /** Build a flat list of all options across all perks for a slot type */
   const getFlatOptionsForSlot = (slotType: string): FlatOption[] => {
     if (!perksData) return [];
-    const userLevel = user?.level ?? 0;
     const slotPerks = perksData.perks.filter(p => p.perk?.type === slotType);
     const options: FlatOption[] = [];
 
     for (const up of slotPerks) {
       if (!up.perk) continue;
       const perkName = up.perk.name;
-      const locked = userLevel < up.perk.level_required;
+      const locked = !up.is_unlocked;
       const levelRequired = up.perk.level_required;
       const perkId = up.perk.id;
 

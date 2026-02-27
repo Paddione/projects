@@ -752,7 +752,7 @@ export class PerksManager {
    */
   async getPerksByCategory(category: string): Promise<Perk[]> {
     const query = `
-      SELECT *, 0 AS level_required FROM perks
+      SELECT * FROM perks
       WHERE category = $1 AND is_active = true
       ORDER BY tier ASC
     `;
