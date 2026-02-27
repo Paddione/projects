@@ -173,58 +173,14 @@
   padding: 4px 0;
 }
 
-.slot-select {
-  width: 100%;
-  padding: 10px 14px;
-  border: 2px solid var(--color-border, #e2e8f0);
-  border-radius: 8px;
-  background: var(--color-background, white);
-  color: var(--color-text-primary, #1e293b);
-  font-size: 0.95rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: border-color 0.2s;
-  appearance: auto;
-}
-
-.slot-select:hover {
-  border-color: var(--color-primary-light, #93c5fd);
-}
-
-.slot-select:focus {
-  outline: none;
-  border-color: var(--color-primary, #3b82f6);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
-}
-
-.slot-select:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-/* Inline config options */
-.slot-config {
-  margin-top: 12px;
-  padding-top: 12px;
-  border-top: 1px solid var(--color-border, #e2e8f0);
-}
-
-.slot-config-label {
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: var(--color-text-secondary, #64748b);
-  margin-bottom: 8px;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-.slot-config-options {
+/* Flat option grid */
+.option-grid {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
 }
 
-.slot-config-btn {
+.option-btn {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -237,38 +193,61 @@
   background: var(--color-background, white);
   text-align: center;
   min-width: 80px;
+  position: relative;
 }
 
-.slot-config-btn:hover {
+.option-btn:hover:not(.locked):not(:disabled) {
   border-color: var(--color-primary, #3b82f6);
   background: var(--color-primary-bg, #eff6ff);
 }
 
-.slot-config-btn.selected {
+.option-btn.selected {
   border-color: var(--color-primary, #3b82f6);
   background: var(--color-primary-bg, #eff6ff);
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
 }
 
-.slot-config-btn:disabled {
+.option-btn.locked {
   opacity: 0.5;
   cursor: not-allowed;
 }
 
-.cfg-emoji {
+.option-emoji {
   font-size: 1.3rem;
 }
 
-.cfg-label {
+.option-label {
   font-size: 0.8rem;
   font-weight: 600;
   color: var(--color-text-primary, #1e293b);
 }
 
-.cfg-desc {
+.option-lock {
   font-size: 0.65rem;
+  font-weight: 700;
   color: var(--color-text-secondary, #64748b);
-  line-height: 1.2;
+  background: var(--color-surface, #f1f5f9);
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+
+/* Clear button in slot header */
+.slot-clear-btn {
+  margin-left: auto;
+  font-size: 0.7rem;
+  padding: 2px 8px;
+  border: 1px solid var(--color-border, #e2e8f0);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--color-text-secondary, #64748b);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.slot-clear-btn:hover {
+  background: var(--color-error-bg, #fef2f2);
+  color: var(--color-error, #ef4444);
+  border-color: var(--color-error, #ef4444);
 }
 
 .slot-error {
@@ -353,13 +332,12 @@
     padding: 15px;
   }
 
-  .slot-config-options {
-    flex-direction: column;
+  .option-grid {
+    gap: 6px;
   }
 
-  .slot-config-btn {
-    flex-direction: row;
-    min-width: unset;
-    gap: 8px;
+  .option-btn {
+    min-width: 60px;
+    padding: 8px 10px;
   }
 }
