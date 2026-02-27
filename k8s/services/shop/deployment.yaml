@@ -48,7 +48,7 @@ spec:
         kubernetes.io/arch: amd64
       containers:
         - name: shop
-          image: registry.korczewski.de/korczewski/shop
+          image: registry.local:5000/korczewski/shop
           imagePullPolicy: Always
           ports:
             - name: http
