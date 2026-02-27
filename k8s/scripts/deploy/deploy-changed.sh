@@ -2,15 +2,15 @@
 # =============================================================================
 # Deploy Only Changed Services
 # =============================================================================
-# Detects which services have changes and rebuilds only those, leaving
-# everything else running as is.
+# Detects which services have changes, builds and pushes Docker images, then
+# restarts the deployments to pick up the new images.
 #
 # Two detection modes:
 #   Default:     Detects uncommitted changes via git status
 #   --committed: Detects committed-but-undeployed changes via deploy-tracker
 #
 # Usage: ./deploy-changed.sh [--dry-run] [--include-staged] [--committed]
-#                             [--no-health-check]
+#                             [--no-health-check] [--manifests-only]
 # =============================================================================
 
 set -euo pipefail
@@ -19,6 +19,9 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 K8S_DIR="$(dirname "$(dirname "$SCRIPT_DIR")")"
 PROJECT_ROOT="$(dirname "$K8S_DIR")"
 TRACKER="$SCRIPT_DIR/../utils/deploy-tracker.sh"
+
+REGISTRY="registry.korczewski.de/korczewski"
+NAMESPACE="korczewski-services"
 
 # Colors
 RED='\033[0;31m'
@@ -39,6 +42,7 @@ DRY_RUN=false
 INCLUDE_STAGED=false
 COMMITTED_MODE=false
 HEALTH_CHECK=true
+MANIFESTS_ONLY=false
 
 for arg in "$@"; do
     case $arg in
@@ -46,6 +50,7 @@ for arg in "$@"; do
         --include-staged) INCLUDE_STAGED=true ;;
         --committed) COMMITTED_MODE=true ;;
         --no-health-check) HEALTH_CHECK=false ;;
+        --manifests-only) MANIFESTS_ONLY=true ;;
         --help)
             echo "Usage: $0 [OPTIONS]"
             echo ""
@@ -54,6 +59,7 @@ for arg in "$@"; do
             echo "  --include-staged   Include staged changes in detection (default mode)"
             echo "  --committed        Detect committed-but-undeployed changes via deploy-tracker"
             echo "  --no-health-check  Skip post-deploy health checks"
+            echo "  --manifests-only   Only apply k8s manifests (no image build/push)"
             echo "  --help             Show this help message"
             echo ""
             echo "Default mode detects uncommitted changes via git status."
@@ -63,7 +69,7 @@ for arg in "$@"; do
     esac
 done
 
-# Service to directory mapping
+# Service to source directory mapping (for change detection)
 declare -A SERVICE_DIRS=(
     ["auth"]="auth"
     ["l2p"]="l2p"
@@ -71,10 +77,29 @@ declare -A SERVICE_DIRS=(
     ["videovault"]="VideoVault"
 )
 
-# Service to Skaffold profile mapping
-declare -A SERVICE_PROFILES=(
+# Service to Dockerfile mapping (relative to PROJECT_ROOT)
+declare -A SERVICE_DOCKERFILES=(
+    ["auth"]="auth/Dockerfile"
+    ["l2p-backend"]="l2p/backend/Dockerfile"
+    ["l2p-frontend"]="l2p/frontend/Dockerfile"
+    ["shop"]="shop/Dockerfile"
+    ["videovault"]="VideoVault/Dockerfile.prod"
+)
+
+# Service to k8s manifest paths
+declare -A SERVICE_MANIFESTS=(
+    ["auth"]="services/auth"
+    ["l2p-backend"]="services/l2p-backend"
+    ["l2p-frontend"]="services/l2p-frontend"
+    ["shop"]="services/shop"
+    ["videovault"]="services/videovault"
+)
+
+# Service to deployment names (for rollout restart)
+declare -A SERVICE_DEPLOYMENTS=(
     ["auth"]="auth"
-    ["l2p"]="l2p"
+    ["l2p-backend"]="l2p-backend"
+    ["l2p-frontend"]="l2p-frontend"
     ["shop"]="shop"
     ["videovault"]="videovault"
 )
@@ -87,6 +112,16 @@ declare -A SERVICE_HEALTH=(
     ["shop"]="app=shop|3000|/"
     ["videovault"]="app=videovault|5000|/api/health"
 )
+
+# Map a top-level service to its image targets
+# (l2p produces two images; all others produce one)
+get_image_targets() {
+    local service=$1
+    case $service in
+        l2p) echo "l2p-backend l2p-frontend" ;;
+        *)   echo "$service" ;;
+    esac
+}
 
 # Detect changed services via uncommitted changes
 detect_uncommitted_changes() {
@@ -119,6 +154,14 @@ detect_uncommitted_changes() {
             log_service "Detected changes in: $service" >&2
         fi
     done
+
+    # Check shared-infrastructure changes (affects l2p)
+    if echo "$changed_files" | grep -q "^shared-infrastructure/"; then
+        if [[ ! " ${changed_services[*]} " =~ " l2p " ]]; then
+            changed_services+=("l2p")
+            log_service "Detected changes in: l2p (shared-infrastructure)" >&2
+        fi
+    fi
 
     printf '%s\n' "${changed_services[@]}"
 }
@@ -160,129 +203,163 @@ detect_committed_changes() {
     printf '%s\n' "${changed_services[@]}"
 }
 
-# Health check a service after deployment
-health_check_service() {
-    local service=$1
+# Build and push a single image
+build_and_push_image() {
+    local target=$1
+    local dockerfile="${SERVICE_DOCKERFILES[$target]}"
+    local image="${REGISTRY}/${target}:latest"
+
+    log_info "Building $target..."
+    if ! docker build -t "$image" -f "$PROJECT_ROOT/$dockerfile" "$PROJECT_ROOT"; then
+        log_error "Failed to build $target"
+        return 1
+    fi
+
+    log_info "Pushing $target..."
+    if ! docker push "$image"; then
+        log_error "Failed to push $target"
+        return 1
+    fi
+
+    log_info "✓ $target image pushed"
+}
+
+# Apply k8s manifests for a target
+apply_manifests() {
+    local target=$1
+    local manifest_path="${SERVICE_MANIFESTS[$target]}"
+
+    log_info "Applying manifests for $target..."
+    kubectl apply -k "$K8S_DIR/$manifest_path/"
+}
+
+# Restart deployment to pull new image
+restart_deployment() {
+    local target=$1
+    local deployment="${SERVICE_DEPLOYMENTS[$target]}"
+
+    log_info "Restarting deployment/$deployment..."
+    kubectl rollout restart "deployment/$deployment" -n "$NAMESPACE"
+}
+
+# Wait for rollout to complete
+wait_for_rollout() {
+    local target=$1
+    local deployment="${SERVICE_DEPLOYMENTS[$target]}"
+
+    log_info "Waiting for $deployment rollout..."
+    kubectl rollout status "deployment/$deployment" -n "$NAMESPACE" --timeout=180s 2>/dev/null || {
+        log_warn "Timeout waiting for $deployment rollout"
+        return 1
+    }
+}
+
+# Health check a target after deployment
+health_check_target() {
+    local target=$1
 
     if [ "$HEALTH_CHECK" = false ] || [ "$DRY_RUN" = true ]; then
         return 0
     fi
 
-    # Determine which health targets to check
-    local targets=()
-    if [ "$service" = "l2p" ]; then
-        targets=("l2p-backend" "l2p-frontend")
-    else
-        targets=("$service")
+    local health_spec="${SERVICE_HEALTH[$target]:-}"
+    if [ -z "$health_spec" ]; then
+        return 0
     fi
 
-    for target in "${targets[@]}"; do
-        local health_spec="${SERVICE_HEALTH[$target]:-}"
-        if [ -z "$health_spec" ]; then
-            continue
-        fi
+    IFS='|' read -r selector port path <<< "$health_spec"
 
-        IFS='|' read -r selector port path <<< "$health_spec"
+    echo -n "  Health check $target: "
 
-        echo -n "  Health check $target: "
+    local pod
+    pod=$(kubectl get pods -n "$NAMESPACE" -l "$selector" \
+        -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || echo "")
 
-        local pod
-        pod=$(kubectl get pods -n korczewski-services -l "$selector" \
-            -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || echo "")
+    if [ -z "$pod" ]; then
+        echo -e "${YELLOW}no pod found${NC}"
+        return 0
+    fi
 
-        if [ -z "$pod" ]; then
-            echo -e "${YELLOW}no pod found${NC}"
-            continue
-        fi
+    local ready
+    ready=$(kubectl get pod "$pod" -n "$NAMESPACE" \
+        -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}' 2>/dev/null || echo "")
 
-        # Check pod readiness
-        local ready
-        ready=$(kubectl get pod "$pod" -n korczewski-services \
-            -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}' 2>/dev/null || echo "")
+    if [ "$ready" != "True" ]; then
+        echo -e "${YELLOW}pod not ready yet${NC}"
+        return 0
+    fi
 
-        if [ "$ready" != "True" ]; then
-            echo -e "${YELLOW}pod not ready yet${NC}"
-            continue
-        fi
+    local health
+    health=$(kubectl exec "$pod" -n "$NAMESPACE" -- \
+        wget -q -O- "http://localhost:${port}${path}" 2>/dev/null || \
+        kubectl exec "$pod" -n "$NAMESPACE" -- \
+        curl -sf "http://localhost:${port}${path}" 2>/dev/null || echo "")
 
-        # Try health endpoint via exec
-        local health
-        health=$(kubectl exec "$pod" -n korczewski-services -- \
-            wget -q -O- "http://localhost:${port}${path}" 2>/dev/null || \
-            kubectl exec "$pod" -n korczewski-services -- \
-            curl -sf "http://localhost:${port}${path}" 2>/dev/null || echo "")
-
-        if [ -n "$health" ]; then
-            echo -e "${GREEN}healthy${NC}"
-        else
-            echo -e "${YELLOW}health endpoint not responding (may still be starting)${NC}"
-        fi
-    done
+    if [ -n "$health" ]; then
+        echo -e "${GREEN}healthy${NC}"
+    else
+        echo -e "${YELLOW}health endpoint not responding (may still be starting)${NC}"
+    fi
 }
 
-# Deploy a single service using Skaffold
+# Deploy a single service (build + push + manifests + restart + health)
 deploy_service() {
     local service=$1
-    local profile="${SERVICE_PROFILES[$service]}"
+    local targets
+    targets=$(get_image_targets "$service")
 
     log_step "Deploying: $service"
 
-    cd "$K8S_DIR"
-
     if [ "$DRY_RUN" = true ]; then
-        log_info "[DRY RUN] Would run: skaffold run -p $profile"
+        for target in $targets; do
+            log_info "[DRY RUN] Would build and push: ${REGISTRY}/${target}:latest"
+            log_info "[DRY RUN] Would apply manifests: ${SERVICE_MANIFESTS[$target]}"
+            log_info "[DRY RUN] Would restart: deployment/${SERVICE_DEPLOYMENTS[$target]}"
+        done
         return 0
     fi
 
-    log_info "Running: skaffold run -p $profile"
+    # Build and push images (unless manifests-only)
+    if [ "$MANIFESTS_ONLY" = false ]; then
+        for target in $targets; do
+            if ! build_and_push_image "$target"; then
+                return 1
+            fi
+        done
+    fi
 
-    if skaffold run -p "$profile"; then
-        log_info "✓ Successfully deployed $service"
+    # Apply manifests
+    for target in $targets; do
+        apply_manifests "$target"
+    done
 
-        # Record deployment SHA
-        if [ -x "$TRACKER" ]; then
-            "$TRACKER" set "$service"
+    # Restart deployments (unless manifests-only — manifests changes are picked up by apply)
+    if [ "$MANIFESTS_ONLY" = false ]; then
+        for target in $targets; do
+            restart_deployment "$target"
+        done
+    fi
+
+    # Wait for rollouts
+    for target in $targets; do
+        wait_for_rollout "$target"
+    done
+
+    # Health checks
+    for target in $targets; do
+        health_check_target "$target"
+    done
+
+    # Record deployment SHA
+    if [ -x "$TRACKER" ]; then
+        "$TRACKER" set "$service"
+        # Also track l2p-frontend separately for the tracker
+        if [ "$service" = "l2p" ]; then
+            "$TRACKER" set "l2p-frontend"
         fi
-
-        return 0
-    else
-        log_error "✗ Failed to deploy $service"
-        return 1
-    fi
-}
-
-# Wait for service to be ready
-wait_for_service() {
-    local service=$1
-
-    if [ "$DRY_RUN" = true ]; then
-        return 0
     fi
 
-    log_info "Waiting for $service to be ready..."
-
-    local app_label=""
-    case $service in
-        auth)
-            app_label="app=auth"
-            ;;
-        l2p)
-            app_label="app in (l2p-backend, l2p-frontend)"
-            ;;
-        shop)
-            app_label="app=shop"
-            ;;
-        videovault)
-            app_label="app=videovault"
-            ;;
-    esac
-
-    if [ -n "$app_label" ]; then
-        kubectl wait --for=condition=ready pod \
-            -l "$app_label" \
-            -n korczewski-services \
-            --timeout=180s 2>/dev/null || log_warn "Timeout waiting for $service (may still be starting)"
-    fi
+    log_info "✓ Successfully deployed $service"
 }
 
 # Print summary
@@ -304,20 +381,12 @@ print_summary() {
     if [ "$DRY_RUN" = false ]; then
         echo -e "\n${CYAN}Pod status:${NC}"
         for service in "${deployed_services[@]}"; do
-            case $service in
-                auth)
-                    kubectl get pods -l app=auth -n korczewski-services 2>/dev/null || true
-                    ;;
-                l2p)
-                    kubectl get pods -l 'app in (l2p-backend, l2p-frontend)' -n korczewski-services 2>/dev/null || true
-                    ;;
-                shop)
-                    kubectl get pods -l app=shop -n korczewski-services 2>/dev/null || true
-                    ;;
-                videovault)
-                    kubectl get pods -l app=videovault -n korczewski-services 2>/dev/null || true
-                    ;;
-            esac
+            local targets
+            targets=$(get_image_targets "$service")
+            for target in $targets; do
+                local selector="${SERVICE_HEALTH[$target]%%|*}"
+                kubectl get pods -l "$selector" -n "$NAMESPACE" 2>/dev/null || true
+            done
         done
     fi
 }
@@ -338,6 +407,10 @@ main() {
         log_info "Mode: uncommitted changes (via git status)"
     fi
 
+    if [ "$MANIFESTS_ONLY" = true ]; then
+        log_info "Manifests-only mode (no image build/push)"
+    fi
+
     # Detect changed services
     local changed_services
     if [ "$COMMITTED_MODE" = true ]; then
@@ -353,7 +426,9 @@ main() {
 
     echo -e "\n${YELLOW}Services to deploy:${NC}"
     for service in "${changed_services[@]}"; do
-        echo -e "  • $service"
+        local targets
+        targets=$(get_image_targets "$service")
+        echo -e "  • $service → images: $targets"
     done
 
     if [ "$DRY_RUN" = false ]; then
@@ -368,8 +443,6 @@ main() {
     for service in "${changed_services[@]}"; do
         if deploy_service "$service"; then
             deployed_services+=("$service")
-            wait_for_service "$service"
-            health_check_service "$service"
         else
             failed_services+=("$service")
         fi

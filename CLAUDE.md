@@ -33,24 +33,25 @@ npm run test:all             # Run all test suites
 npm run typecheck:all        # Type check all projects
 npm run validate:env         # Validate environment files
 
-# Deployment (k8s) - Skaffold (build + deploy, use for code changes)
-cd k8s && skaffold run                        # Full stack build + deploy (production)
-cd k8s && skaffold run -p l2p                 # L2P only (backend + frontend)
-cd k8s && skaffold run -p auth                # Auth service only
-cd k8s && skaffold run -p shop                # Shop service only
-cd k8s && skaffold run -p videovault          # VideoVault only
-cd k8s && skaffold run -p infra               # Infrastructure only (no builds)
-cd k8s && skaffold dev -p dev                 # Dev stack (korczewski-dev namespace, dev-*.korczewski.de)
-cd k8s && skaffold delete -p dev              # Tear down dev stack
+# Deployment (k8s) - shell scripts (build + push + deploy)
+./k8s/scripts/deploy/deploy-all.sh           # Full stack: build, push, deploy all services
+./k8s/scripts/deploy/deploy-l2p.sh           # L2P: build, push, restart (backend + frontend)
+./k8s/scripts/deploy/deploy-auth.sh          # Auth: build, push, restart
+./k8s/scripts/deploy/deploy-shop.sh          # Shop: build, push, restart
+./k8s/scripts/deploy/deploy-videovault.sh    # VideoVault: build, push, restart
+./k8s/scripts/deploy/deploy-changed.sh       # Auto-detect and redeploy uncommitted changes
+./k8s/scripts/deploy/deploy-changed.sh --committed  # Deploy committed-but-undeployed changes
+./k8s/scripts/deploy/deploy-all.sh --manifests-only  # Apply manifests only (no image rebuild)
 
-# Deployment (k8s) - shell scripts (manifest-only, NO image rebuild)
+# Deployment utilities
 ./k8s/scripts/cluster/k3d-create.sh          # Create local k3d cluster
 ./k8s/scripts/utils/generate-secrets.sh      # Generate secrets from root .env
-./k8s/scripts/deploy/deploy-all.sh           # Deploy all manifests
 ./k8s/scripts/utils/validate-cluster.sh      # Validate cluster health
-./k8s/scripts/deploy/deploy-changed.sh       # Auto-detect and redeploy changed services
-./k8s/scripts/deploy/deploy-changed.sh --committed  # Deploy committed-but-undeployed changes
 ./k8s/scripts/utils/deploy-tracker.sh status # Check which services have undeployed commits
+
+# Skaffold (alternative — requires defaultRepo config, not usable from WSL2)
+cd k8s && skaffold dev -p dev                 # Dev stack (korczewski-dev namespace, dev-*.korczewski.de)
+cd k8s && skaffold delete -p dev              # Tear down dev stack
 
 # Multi-node cluster (production - 6 bare-metal nodes)
 ./k8s/scripts/cluster/bootstrap-cluster.sh   # Full cluster bootstrap (SSH to all nodes)
@@ -326,7 +327,7 @@ Dev stack runs in `korczewski-dev` namespace, parallel to production. Deploy wit
 - Run the smallest relevant test suite for your change
 - Update existing docs rather than creating new ones
 - Always deploy changes to k3s after committing (don't leave changes undeployed)
-- **Deploy with Skaffold** (`skaffold run -p <profile>`) for code changes — shell scripts only apply manifests without rebuilding images
+- **Deploy with shell scripts** (`deploy-l2p.sh`, `deploy-changed.sh --committed`, etc.) — they build, push, and restart automatically
 - After deploying, verify with `deploy-tracker.sh status` that the SHA was recorded
 - Use `deploy-changed.sh --committed` to catch any committed-but-undeployed services
 - **Lockfiles are committed** — when adding/updating dependencies, ensure `package-lock.json` changes are included in the commit

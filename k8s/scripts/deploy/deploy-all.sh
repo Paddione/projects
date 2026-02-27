@@ -5,7 +5,7 @@
 # Orchestrates full deployment in correct dependency order.
 # Run this after cluster is ready and secrets are generated.
 #
-# Usage: ./deploy-all.sh [--skip-secrets]
+# Usage: ./deploy-all.sh [--skip-secrets] [--skip-infra] [--manifests-only]
 # =============================================================================
 
 set -euo pipefail
@@ -29,11 +29,15 @@ log_step() { echo -e "\n${BLUE}========================================${NC}"; e
 # Parse arguments
 SKIP_SECRETS=false
 SKIP_INFRA=false
+MANIFESTS_ONLY=false
+SERVICE_FLAGS=()
 
 for arg in "$@"; do
     case $arg in
         --skip-secrets) SKIP_SECRETS=true ;;
         --skip-infra) SKIP_INFRA=true ;;
+        --manifests-only) MANIFESTS_ONLY=true; SERVICE_FLAGS+=("--manifests-only") ;;
+        --no-health-check) SERVICE_FLAGS+=("--no-health-check") ;;
     esac
 done
 
@@ -130,16 +134,16 @@ deploy_infrastructure() {
 # Deploy services
 deploy_services() {
     log_step "Step 5: Deploying Auth Service"
-    "$SCRIPT_DIR/deploy-auth.sh"
+    "$SCRIPT_DIR/deploy-auth.sh" "${SERVICE_FLAGS[@]}"
 
     log_step "Step 6: Deploying L2P Services"
-    "$SCRIPT_DIR/deploy-l2p.sh"
+    "$SCRIPT_DIR/deploy-l2p.sh" "${SERVICE_FLAGS[@]}"
 
     log_step "Step 7: Deploying Shop Service"
-    "$SCRIPT_DIR/deploy-shop.sh"
+    "$SCRIPT_DIR/deploy-shop.sh" "${SERVICE_FLAGS[@]}"
 
     log_step "Step 8: Deploying VideoVault"
-    "$SCRIPT_DIR/deploy-videovault.sh"
+    "$SCRIPT_DIR/deploy-videovault.sh" "${SERVICE_FLAGS[@]}"
 }
 
 # Record deployment SHAs for all services
