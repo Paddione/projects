@@ -164,6 +164,7 @@ export class PerksManager {
         p.effect_config     AS perk_effect_config,
         p.asset_data        AS perk_asset_data,
         p.level_required    AS perk_level_required,
+        p.config_schema     AS perk_config_schema,
         p.created_at        AS perk_created_at,
         p.updated_at        AS perk_updated_at
       FROM perks p
@@ -193,6 +194,7 @@ export class PerksManager {
           level_required: levelRequired,
           title: row['perk_title'] as string,
           description: row['perk_description'] as string,
+          config_schema: row['perk_config_schema'] ?? undefined,
           asset_data: row['perk_asset_data'],
           is_active: true,
           created_at: (row['perk_created_at'] as Date) ?? new Date(),
