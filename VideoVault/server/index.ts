@@ -108,9 +108,14 @@ app.use(requestLogger);
       // File handles are session-based (lost on reload), so stale DB records
       // would show inaccessible videos. Preserves user config (settings,
       // presets, tags, directory roots, media progress).
+      // KEEP server-indexed videos (hdd-ext, movies) — they have real file paths,
+      // not session-based handles, and survive restarts.
       try {
-        await pool!.query('TRUNCATE videos, thumbnails, scan_state, processing_jobs CASCADE');
-        logger.info('Cleared transient video data on startup');
+        await pool!.query(`
+          DELETE FROM videos WHERE root_key IS NULL OR root_key NOT IN ('hdd-ext', 'movies');
+          TRUNCATE thumbnails, scan_state, processing_jobs CASCADE;
+        `);
+        logger.info('Cleared transient video data on startup (preserved server-indexed videos)');
       } catch (cleanupErr) {
         logger.warn('Failed to clear transient data', { error: (cleanupErr as Error).message });
       }

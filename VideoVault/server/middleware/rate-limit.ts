@@ -20,10 +20,13 @@ export function setupRateLimiting(app: Express) {
     // General API Rate Limit
     const apiLimiter = rateLimit({
         windowMs: 15 * 60 * 1000, // 15 minutes
-        max: 100, // max 100 requests per IP
+        max: 500, // max 500 requests per IP per window
         skip: (req) => {
+            // Health endpoints are always exempt
             const healthPaths = ['/health', '/db/health'];
             if (healthPaths.includes(req.path)) return true;
+            // Read-only GET requests are exempt — only rate-limit mutations
+            if (req.method === 'GET') return true;
             if (rateLimitBypassKey && req.headers['x-rate-limit-bypass'] === rateLimitBypassKey) return true;
             return false;
         },
