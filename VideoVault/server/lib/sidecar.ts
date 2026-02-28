@@ -53,3 +53,35 @@ export async function writeSidecar(dirPath: string, data: SidecarData): Promise<
     logger.warn(`[Sidecar] Failed to write ${filePath}`, { error: err.message });
   }
 }
+
+/**
+ * Write a sidecar for a video. Resolves the directory from MEDIA_ROOT + video path.
+ * Non-fatal: logs warning on failure.
+ */
+export async function syncVideoSidecar(video: {
+  id: string;
+  filename: string;
+  displayName: string;
+  path: string;
+  size: number | bigint;
+  lastModified: Date | string;
+  metadata: any;
+  categories: any;
+  customCategories: any;
+}): Promise<void> {
+  const MEDIA_ROOT = process.env.MEDIA_ROOT || path.join(process.cwd(), 'media');
+  const videoDir = path.dirname(path.join(MEDIA_ROOT, video.path));
+  const existing = await readSidecar(videoDir);
+  await writeSidecar(videoDir, {
+    ...existing,
+    version: 1,
+    id: video.id,
+    filename: video.filename,
+    displayName: video.displayName,
+    size: Number(video.size),
+    lastModified: video.lastModified instanceof Date ? video.lastModified.toISOString() : String(video.lastModified),
+    metadata: video.metadata,
+    categories: video.categories,
+    customCategories: video.customCategories,
+  });
+}

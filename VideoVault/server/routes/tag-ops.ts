@@ -3,6 +3,7 @@ import { db } from '../db';
 import { videos, tags, tagSynonyms } from '@shared/schema';
 import { VideoCategories, CustomCategories } from '@shared/types';
 import { eq } from 'drizzle-orm';
+import { syncVideoSidecar } from '../lib/sidecar';
 
 export async function renameTagRoute(req: Request, res: Response) {
   if (!db) return res.status(503).json({ error: 'Database not configured' });
@@ -23,6 +24,7 @@ export async function renameTagRoute(req: Request, res: Response) {
   // Update videos
   const allVideos = await db.select().from(videos);
   let updatedCount = 0;
+  const changedHddExt: typeof allVideos = [];
 
   for (const video of allVideos) {
     let changed = false;
@@ -50,7 +52,13 @@ export async function renameTagRoute(req: Request, res: Response) {
         })
         .where(eq(videos.id, video.id));
       updatedCount++;
+      if (video.rootKey === 'hdd-ext') changedHddExt.push(video);
     }
+  }
+
+  // Sync sidecars for affected hdd-ext videos
+  for (const video of changedHddExt) {
+    await syncVideoSidecar(video as any);
   }
 
   res.json({ success: true, updatedVideos: updatedCount });
@@ -73,6 +81,7 @@ export async function mergeTagsRoute(req: Request, res: Response) {
 
   const allVideos = await db.select().from(videos);
   let updatedCount = 0;
+  const changedHddExt: typeof allVideos = [];
 
   for (const video of allVideos) {
     let changed = false;
@@ -104,7 +113,13 @@ export async function mergeTagsRoute(req: Request, res: Response) {
         .set({ categories: cats, customCategories: customCats })
         .where(eq(videos.id, video.id));
       updatedCount++;
+      if (video.rootKey === 'hdd-ext') changedHddExt.push(video);
     }
+  }
+
+  // Sync sidecars for affected hdd-ext videos
+  for (const video of changedHddExt) {
+    await syncVideoSidecar(video as any);
   }
 
   // Delete source tag

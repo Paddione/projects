@@ -10,6 +10,7 @@ import { handleAudiobookProcessing, scanAudiobooksDirectory } from '../handlers/
 import { handleEbookProcessing, scanEbooksDirectory } from '../handlers/ebook-handler';
 import { jobQueue } from '../lib/job-queue';
 import { logger } from '../lib/logger';
+import { readSidecar, writeSidecar } from '../lib/sidecar';
 import { db } from '../db';
 
 const router = Router();
@@ -1082,6 +1083,12 @@ router.post('/hdd-ext/index', async (req: Request, res: Response) => {
             logger.warn(`[Processing] ffprobe failed for ${relVideoPath}`, { error: probeErr.message });
           }
 
+          // Read sidecar (disk is source of truth for categories)
+          const sidecar = await readSidecar(dir);
+          const defaultCategories = { age: [] as string[], physical: [] as string[], ethnicity: [] as string[], relationship: [] as string[], acts: [] as string[], setting: [] as string[], quality: [] as string[], performer: [] as string[] };
+          const categories = (sidecar?.categories || defaultCategories) as typeof defaultCategories;
+          const customCategories = sidecar?.customCategories || {};
+
           if (db) {
             await db
               .insert(videos)
@@ -1093,8 +1100,8 @@ router.post('/hdd-ext/index', async (req: Request, res: Response) => {
                 size: stat.size,
                 lastModified: stat.mtime,
                 metadata,
-                categories: { age: [], physical: [], ethnicity: [], relationship: [], acts: [], setting: [], quality: [], performer: [] },
-                customCategories: {},
+                categories,
+                customCategories,
                 thumbnail: { generated: true, dataUrl: thumbUrl, timestamp: new Date().toISOString() },
                 rootKey: 'hdd-ext',
                 processingStatus: 'completed',
@@ -1108,10 +1115,25 @@ router.post('/hdd-ext/index', async (req: Request, res: Response) => {
                   size: stat.size,
                   lastModified: stat.mtime,
                   metadata,
+                  categories,
+                  customCategories,
                   thumbnail: { generated: true, dataUrl: thumbUrl, timestamp: new Date().toISOString() },
                   processingStatus: 'completed',
                 },
               });
+
+            // Write merged metadata back to sidecar
+            await writeSidecar(dir, {
+              version: 1,
+              id,
+              filename: videoFileName,
+              displayName: baseName,
+              size: stat.size,
+              lastModified: stat.mtime.toISOString(),
+              metadata,
+              categories,
+              customCategories,
+            });
 
             indexed++;
           }

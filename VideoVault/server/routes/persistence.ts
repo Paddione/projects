@@ -11,6 +11,7 @@ import {
 import { eq, inArray, isNotNull, and } from 'drizzle-orm';
 import { randomUUID } from 'crypto';
 import { resolveInputPath } from '../lib/path-resolver';
+import { syncVideoSidecar } from '../lib/sidecar';
 
 function requireDb(res: Response) {
   if (!db) {
@@ -87,6 +88,18 @@ export async function bulkUpsertVideos(req: Request, res: Response) {
       },
     });
 
+  // Write sidecars for hdd-ext videos
+  const hddExtRows = rows.filter((r) => r.rootKey === 'hdd-ext');
+  if (hddExtRows.length > 0) {
+    await Promise.all(
+      hddExtRows.map(async (row) => {
+        try {
+          await syncVideoSidecar(row as any);
+        } catch { /* syncVideoSidecar already handles errors internally */ }
+      }),
+    );
+  }
+
   res.json({ upserted: rows.length });
 }
 
@@ -114,6 +127,13 @@ export async function patchVideo(req: Request, res: Response) {
     return res.status(400).json({ error: 'No valid fields to update' });
   const result = await db!.update(videos).set(set).where(eq(videos.id, id)).returning();
   if (!result[0]) return res.status(404).json({ error: 'Not found' });
+
+  // Write sidecar for hdd-ext videos
+  const updated = result[0];
+  if (updated.rootKey === 'hdd-ext') {
+    await syncVideoSidecar(updated as any);
+  }
+
   res.json(result[0]);
 }
 
