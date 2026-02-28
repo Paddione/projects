@@ -177,13 +177,13 @@ export function SettingsModal({ isOpen, onClose, onSettingsChange }: SettingsMod
     }
   };
 
-  const handleProcessHddExt = async () => {
+  const handleIndexHddExt = async () => {
     setIsProcessingHddExt(true);
     try {
-      const result = await ApiClient.post<{ count: number; message: string }>('/api/processing/hdd-ext/process');
-      alert(result.message);
+      const result = await ApiClient.post<{ indexed: number; skipped: number; errors: number; total: number }>('/api/processing/hdd-ext/index');
+      alert(`HDD-ext index complete — ${result.indexed} indexed, ${result.skipped} skipped, ${result.errors} errors (${result.total} total)`);
     } catch (error: any) {
-      alert(`HDD-ext processing failed: ${error.message}`);
+      alert(`HDD-ext indexing failed: ${error.message}`);
     } finally {
       setIsProcessingHddExt(false);
     }
@@ -603,19 +603,19 @@ export function SettingsModal({ isOpen, onClose, onSettingsChange }: SettingsMod
               </div>
 
               <div className="flex flex-col gap-2">
-                <Label>Process HDD-ext</Label>
+                <Label>Index HDD-ext</Label>
                 <p className="text-xs text-muted-foreground">
-                  Process all videos on the external HDD share — generates thumbnails, extracts metadata, and adds them to the library grid.
+                  Index all videos on the external HDD share into the library grid. Uses existing thumbnails — no ffmpeg processing needed.
                 </p>
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={handleProcessHddExt}
+                  onClick={handleIndexHddExt}
                   disabled={isProcessingHddExt}
                   className="w-fit flex items-center gap-2"
                 >
                   {isProcessingHddExt ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
-                  Process HDD-ext
+                  Index HDD-ext
                 </Button>
               </div>
             </div>

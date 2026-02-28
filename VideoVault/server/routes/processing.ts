@@ -977,6 +977,132 @@ router.post('/hdd-ext/rescan', async (req: Request, res: Response) => {
   }
 });
 
+/**
+ * POST /api/processing/hdd-ext/index
+ * Fast index of HDD-ext directories into the videos DB table.
+ * No ffmpeg — just readdir + stat + upsert. Requires existing thumbnails.
+ */
+router.post('/hdd-ext/index', async (req: Request, res: Response) => {
+  try {
+    const { forceReindex = false } = req.body;
+
+    await fs.access(HDD_EXT_DIR);
+
+    let indexed = 0;
+    let skipped = 0;
+    let errors = 0;
+    const errorDetails: Array<{ path: string; error: string }> = [];
+
+    async function scanDir(dir: string): Promise<void> {
+      let entries;
+      try {
+        entries = await fs.readdir(dir, { withFileTypes: true });
+      } catch {
+        return;
+      }
+
+      // Check if this directory contains a video file
+      const videoFile = entries.find(
+        (e) => e.isFile() && MOVIE_EXTENSIONS.includes(path.extname(e.name).toLowerCase()),
+      );
+
+      if (videoFile) {
+        try {
+          const videoPath = path.join(dir, videoFile.name);
+          const relDir = path.relative(MEDIA_ROOT, dir);
+          const relVideoPath = path.join(relDir, videoFile.name);
+          const baseName = path.basename(videoFile.name, path.extname(videoFile.name));
+
+          // Check for thumbnail (sprite optional for hdd-ext)
+          const thumbPath = path.join(dir, 'Thumbnails', `${baseName}_thumb.jpg`);
+          let thumbExists = false;
+          try { await fs.access(thumbPath); thumbExists = true; } catch { }
+
+          if (!thumbExists) {
+            skipped++;
+            return;
+          }
+
+          // Deterministic ID
+          const id = crypto.createHash('sha256').update('hdd-ext:' + relVideoPath).digest('hex').slice(0, 36);
+
+          // Check if already indexed
+          if (!forceReindex && db) {
+            const existing = await db.select({ id: videos.id }).from(videos).where(eq(videos.id, id)).limit(1);
+            if (existing.length > 0) {
+              skipped++;
+              return;
+            }
+          }
+
+          const stat = await fs.stat(videoPath);
+          const thumbUrl = `/media/${relDir}/Thumbnails/${encodeURIComponent(baseName)}_thumb.jpg`;
+
+          if (db) {
+            await db
+              .insert(videos)
+              .values({
+                id,
+                filename: videoFile.name,
+                displayName: baseName,
+                path: relVideoPath,
+                size: stat.size,
+                lastModified: stat.mtime,
+                metadata: { duration: 0, width: 0, height: 0, bitrate: 0, codec: '', fps: 0, aspectRatio: '' },
+                categories: { age: [], physical: [], ethnicity: [], relationship: [], acts: [], setting: [], quality: [], performer: [] },
+                customCategories: {},
+                thumbnail: { generated: true, dataUrl: thumbUrl, timestamp: new Date().toISOString() },
+                rootKey: 'hdd-ext',
+                processingStatus: 'completed',
+              })
+              .onConflictDoUpdate({
+                target: videos.id,
+                set: {
+                  filename: videoFile.name,
+                  displayName: baseName,
+                  path: relVideoPath,
+                  size: stat.size,
+                  lastModified: stat.mtime,
+                  thumbnail: { generated: true, dataUrl: thumbUrl, timestamp: new Date().toISOString() },
+                  processingStatus: 'completed',
+                },
+              });
+
+            indexed++;
+          }
+        } catch (err: any) {
+          errors++;
+          errorDetails.push({ path: path.relative(HDD_EXT_DIR, dir), error: err.message });
+        }
+        return;
+      }
+
+      // Recurse into subdirectories (skip Thumbnails)
+      for (const entry of entries) {
+        if (entry.isDirectory() && entry.name !== 'Thumbnails') {
+          await scanDir(path.join(dir, entry.name));
+        }
+      }
+    }
+
+    await scanDir(HDD_EXT_DIR);
+
+    logger.info(`[Processing] HDD-ext index complete: ${indexed} indexed, ${skipped} skipped, ${errors} errors`);
+
+    res.json({
+      success: true,
+      indexed,
+      skipped,
+      errors,
+      total: indexed + skipped + errors,
+      ...(errorDetails.length > 0 && { errorDetails: errorDetails.slice(0, 20) }),
+    });
+  } catch (error: any) {
+    logger.error('[Processing] HDD-ext index failed', { error: error.message });
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // ============================================================================
 // Combined Processing Routes
 // ============================================================================
