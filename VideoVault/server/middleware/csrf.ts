@@ -2,7 +2,12 @@ import type { NextFunction, Request, Response } from 'express';
 import crypto from 'crypto';
 
 const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
-const CSRF_EXEMPT_PATHS = new Set(['/api/processing/movies/rescan']);
+const CSRF_EXEMPT_PATHS = new Set([
+  '/api/processing/movies/rescan',
+  '/api/processing/hdd-ext/index',
+  '/api/processing/hdd-ext/process',
+  '/api/processing/hdd-ext/rescan',
+]);
 const CSRF_HEADER = 'x-csrf-token';
 
 function ensureCsrfToken(req: Request): string {
