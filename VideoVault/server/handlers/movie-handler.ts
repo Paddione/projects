@@ -105,7 +105,7 @@ function generateOrganizedPath(title: string, year?: number): string {
 /**
  * Extract metadata from a movie file using ffprobe
  */
-async function extractMovieMetadata(filePath: string): Promise<Omit<MovieMetadata, 'title' | 'year'>> {
+export async function extractMovieMetadata(filePath: string): Promise<Omit<MovieMetadata, 'title' | 'year'>> {
   return new Promise((resolve, reject) => {
     const args = [
       '-v', 'quiet',

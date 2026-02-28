@@ -4,7 +4,7 @@ import fs from 'fs/promises';
 import crypto from 'crypto';
 import { eq, like } from 'drizzle-orm';
 import { videos } from '@shared/schema';
-import { handleMovieProcessing, scanMoviesDirectory, batchProcessMovies, generateMovieThumbnail, cleanupEmptyDirectories, cleanupOrphanedThumbnails, MOVIE_EXTENSIONS } from '../handlers/movie-handler';
+import { handleMovieProcessing, scanMoviesDirectory, batchProcessMovies, generateMovieThumbnail, cleanupEmptyDirectories, cleanupOrphanedThumbnails, extractMovieMetadata, MOVIE_EXTENSIONS } from '../handlers/movie-handler';
 import { getMovieWatcherInstance } from '../lib/movie-watcher';
 import { handleAudiobookProcessing, scanAudiobooksDirectory } from '../handlers/audiobook-handler';
 import { handleEbookProcessing, scanEbooksDirectory } from '../handlers/ebook-handler';
@@ -979,8 +979,9 @@ router.post('/hdd-ext/rescan', async (req: Request, res: Response) => {
 
 /**
  * POST /api/processing/hdd-ext/index
- * Fast index of HDD-ext directories into the videos DB table.
- * No ffmpeg — just readdir + stat + upsert. Requires existing thumbnails.
+ * Index HDD-ext directories into the videos DB table.
+ * Uses ffprobe to extract metadata (duration, resolution, codec).
+ * Requires existing thumbnails.
  */
 router.post('/hdd-ext/index', async (req: Request, res: Response) => {
   try {
@@ -992,6 +993,9 @@ router.post('/hdd-ext/index', async (req: Request, res: Response) => {
     let skipped = 0;
     let errors = 0;
     const errorDetails: Array<{ path: string; error: string }> = [];
+
+    // Collect all video entries first, then process with concurrency
+    const pendingEntries: Array<{ videoPath: string; dir: string; videoFileName: string }> = [];
 
     async function scanDir(dir: string): Promise<void> {
       let entries;
@@ -1007,11 +1011,33 @@ router.post('/hdd-ext/index', async (req: Request, res: Response) => {
       );
 
       if (videoFile) {
+        pendingEntries.push({
+          videoPath: path.join(dir, videoFile.name),
+          dir,
+          videoFileName: videoFile.name,
+        });
+        return;
+      }
+
+      // Recurse into subdirectories (skip Thumbnails)
+      for (const entry of entries) {
+        if (entry.isDirectory() && entry.name !== 'Thumbnails') {
+          await scanDir(path.join(dir, entry.name));
+        }
+      }
+    }
+
+    await scanDir(HDD_EXT_DIR);
+
+    // Process entries with concurrency limit for ffprobe
+    const CONCURRENCY = 4;
+    for (let i = 0; i < pendingEntries.length; i += CONCURRENCY) {
+      const batch = pendingEntries.slice(i, i + CONCURRENCY);
+      await Promise.all(batch.map(async ({ videoPath, dir, videoFileName }) => {
         try {
-          const videoPath = path.join(dir, videoFile.name);
           const relDir = path.relative(MEDIA_ROOT, dir);
-          const relVideoPath = path.join(relDir, videoFile.name);
-          const baseName = path.basename(videoFile.name, path.extname(videoFile.name));
+          const relVideoPath = path.join(relDir, videoFileName);
+          const baseName = path.basename(videoFileName, path.extname(videoFileName));
 
           // Check for thumbnail (sprite optional for hdd-ext)
           const thumbPath = path.join(dir, 'Thumbnails', `${baseName}_thumb.jpg`);
@@ -1038,17 +1064,35 @@ router.post('/hdd-ext/index', async (req: Request, res: Response) => {
           const stat = await fs.stat(videoPath);
           const thumbUrl = `/media/${relDir}/Thumbnails/${encodeURIComponent(baseName)}_thumb.jpg`;
 
+          // Extract metadata via ffprobe (duration, resolution, codec, etc.)
+          let metadata = { duration: 0, width: 0, height: 0, bitrate: 0, codec: '', fps: 0, aspectRatio: '' };
+          try {
+            const probed = await extractMovieMetadata(videoPath);
+            metadata = {
+              duration: probed.duration || 0,
+              width: probed.width || 0,
+              height: probed.height || 0,
+              bitrate: probed.bitrate || 0,
+              codec: probed.codec || '',
+              fps: probed.fps || 0,
+              aspectRatio: probed.aspectRatio || '',
+            };
+          } catch (probeErr: any) {
+            // Non-fatal: index without metadata if ffprobe fails
+            logger.warn(`[Processing] ffprobe failed for ${relVideoPath}`, { error: probeErr.message });
+          }
+
           if (db) {
             await db
               .insert(videos)
               .values({
                 id,
-                filename: videoFile.name,
+                filename: videoFileName,
                 displayName: baseName,
                 path: relVideoPath,
                 size: stat.size,
                 lastModified: stat.mtime,
-                metadata: { duration: 0, width: 0, height: 0, bitrate: 0, codec: '', fps: 0, aspectRatio: '' },
+                metadata,
                 categories: { age: [], physical: [], ethnicity: [], relationship: [], acts: [], setting: [], quality: [], performer: [] },
                 customCategories: {},
                 thumbnail: { generated: true, dataUrl: thumbUrl, timestamp: new Date().toISOString() },
@@ -1058,11 +1102,12 @@ router.post('/hdd-ext/index', async (req: Request, res: Response) => {
               .onConflictDoUpdate({
                 target: videos.id,
                 set: {
-                  filename: videoFile.name,
+                  filename: videoFileName,
                   displayName: baseName,
                   path: relVideoPath,
                   size: stat.size,
                   lastModified: stat.mtime,
+                  metadata,
                   thumbnail: { generated: true, dataUrl: thumbUrl, timestamp: new Date().toISOString() },
                   processingStatus: 'completed',
                 },
@@ -1074,18 +1119,8 @@ router.post('/hdd-ext/index', async (req: Request, res: Response) => {
           errors++;
           errorDetails.push({ path: path.relative(HDD_EXT_DIR, dir), error: err.message });
         }
-        return;
-      }
-
-      // Recurse into subdirectories (skip Thumbnails)
-      for (const entry of entries) {
-        if (entry.isDirectory() && entry.name !== 'Thumbnails') {
-          await scanDir(path.join(dir, entry.name));
-        }
-      }
+      }));
     }
-
-    await scanDir(HDD_EXT_DIR);
 
     logger.info(`[Processing] HDD-ext index complete: ${indexed} indexed, ${skipped} skipped, ${errors} errors`);
 
