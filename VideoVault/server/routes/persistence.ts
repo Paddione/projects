@@ -92,11 +92,7 @@ export async function bulkUpsertVideos(req: Request, res: Response) {
   const hddExtRows = rows.filter((r) => r.rootKey === 'hdd-ext');
   if (hddExtRows.length > 0) {
     await Promise.all(
-      hddExtRows.map(async (row) => {
-        try {
-          await syncVideoSidecar(row as any);
-        } catch { /* syncVideoSidecar already handles errors internally */ }
-      }),
+      hddExtRows.map((row) => syncVideoSidecar(row as any)),
     );
   }
 

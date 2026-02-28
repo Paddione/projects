@@ -28,6 +28,8 @@ export async function renameTagRoute(req: Request, res: Response) {
 
   for (const video of allVideos) {
     let changed = false;
+    // Note: cats/customCats are references to video object properties —
+    // in-place mutations are visible to syncVideoSidecar later
     const cats = video.categories;
     const customCats = video.customCategories;
 
@@ -85,6 +87,8 @@ export async function mergeTagsRoute(req: Request, res: Response) {
 
   for (const video of allVideos) {
     let changed = false;
+    // Note: cats/customCats are references to video object properties —
+    // in-place mutations are visible to syncVideoSidecar later
     const cats = video.categories;
     const customCats = video.customCategories;
 
