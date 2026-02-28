@@ -93,6 +93,7 @@ export function SettingsModal({ isOpen, onClose, onSettingsChange }: SettingsMod
   const [isAdmin, setIsAdmin] = useState(AuthService.cachedIsAdmin);
   const [isCleaning, setIsCleaning] = useState(false);
   const [isRescanning, setIsRescanning] = useState(false);
+  const [isProcessingHddExt, setIsProcessingHddExt] = useState(false);
 
   // Load settings from server on mount
   useEffect(() => {
@@ -173,6 +174,18 @@ export function SettingsModal({ isOpen, onClose, onSettingsChange }: SettingsMod
       alert(`Rescan failed: ${error.message}`);
     } finally {
       setIsRescanning(false);
+    }
+  };
+
+  const handleProcessHddExt = async () => {
+    setIsProcessingHddExt(true);
+    try {
+      const result = await ApiClient.post<{ count: number; message: string }>('/api/processing/hdd-ext/process');
+      alert(result.message);
+    } catch (error: any) {
+      alert(`HDD-ext processing failed: ${error.message}`);
+    } finally {
+      setIsProcessingHddExt(false);
     }
   };
 
@@ -586,6 +599,23 @@ export function SettingsModal({ isOpen, onClose, onSettingsChange }: SettingsMod
                 >
                   {isRescanning ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
                   Rescan Movies
+                </Button>
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <Label>Process HDD-ext</Label>
+                <p className="text-xs text-muted-foreground">
+                  Process all videos on the external HDD share — generates thumbnails, extracts metadata, and adds them to the library grid.
+                </p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleProcessHddExt}
+                  disabled={isProcessingHddExt}
+                  className="w-fit flex items-center gap-2"
+                >
+                  {isProcessingHddExt ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+                  Process HDD-ext
                 </Button>
               </div>
             </div>

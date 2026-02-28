@@ -53,7 +53,7 @@ kubectl apply -k "$K8S_DIR/services/videovault/"
 
 # Wait for PVCs
 log_info "Waiting for PVCs to be bound..."
-for pvc in videovault-media videovault-thumbnails videovault-movies videovault-audiobooks videovault-ebooks; do
+for pvc in videovault-media videovault-thumbnails videovault-movies videovault-audiobooks videovault-ebooks videovault-hdd-ext; do
     kubectl wait --for=jsonpath='{.status.phase}'=Bound "pvc/$pvc" \
         -n "$NAMESPACE" --timeout=120s 2>/dev/null || \
         log_warn "PVC $pvc not bound yet (may need SMB-CSI driver)"

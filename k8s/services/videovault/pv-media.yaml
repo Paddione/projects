@@ -103,3 +103,36 @@ spec:
     nodeStageSecretRef:
       name: smbcreds
       namespace: korczewski-infra
+---
+# HDD-ext PV - mounts //10.10.0.4/HDD-ext directly (external 2TB HDD)
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: videovault-hdd-ext-pv
+  labels:
+    app: videovault
+    media-type: hdd-ext
+spec:
+  capacity:
+    storage: 2Ti
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ""
+  mountOptions:
+    - dir_mode=0755
+    - file_mode=0644
+    - uid=1001
+    - gid=1001
+    - noperm
+    - mfsymlinks
+    - cache=none
+    - noserverino
+  csi:
+    driver: smb.csi.k8s.io
+    volumeHandle: videovault-hdd-ext-pv
+    volumeAttributes:
+      source: "//10.10.0.4/HDD-ext"
+    nodeStageSecretRef:
+      name: smbcreds
+      namespace: korczewski-infra

@@ -14,6 +14,7 @@ import TagsPage from '@/pages/tags';
 import AnalyticsPage from '@/pages/analytics';
 import FocusModePage from '@/pages/focus-mode';
 import LoginPage from '@/pages/login';
+import BrowsePage from '@/pages/browse';
 import NotFound from '@/pages/not-found';
 import { AuthService } from '@/services/auth';
 import { useLocation } from 'wouter';
@@ -49,6 +50,7 @@ function Router() {
       <Route path="/duplicates" component={DuplicatesPage} />
       <Route path="/tags" component={TagsPage} />
       <Route path="/analytics" component={AnalyticsPage} />
+      <Route path="/browse" component={BrowsePage} />
       <Route path="/login" component={LoginPage} />
       <Route path="/admin/errors">
         {(params) => <ProtectedRoute component={AdminErrorsPage} {...params} />}

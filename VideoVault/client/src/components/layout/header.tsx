@@ -22,6 +22,7 @@ import {
   Tags,
   MoreHorizontal,
   BarChart3,
+  HardDrive,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link } from 'wouter';
@@ -271,6 +272,18 @@ export function Header({
             </Button>
           </Link>
 
+          <Link href="/browse">
+            <Button
+              variant="outline"
+              size="sm"
+              data-testid="button-browse"
+              className="min-h-[40px]"
+            >
+              <HardDrive className="mr-2 h-4 w-4" />
+              Browse
+            </Button>
+          </Link>
+
           <Button
             variant="outline"
             size="sm"
@@ -392,6 +405,11 @@ export function Header({
               <DropdownMenuItem asChild>
                 <Link href="/analytics" className="w-full cursor-pointer flex items-center">
                   <BarChart3 className="mr-2 h-4 w-4" /> Analytics
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href="/browse" className="w-full cursor-pointer flex items-center">
+                  <HardDrive className="mr-2 h-4 w-4" /> Browse HDD
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem onClick={onManagePresets}>

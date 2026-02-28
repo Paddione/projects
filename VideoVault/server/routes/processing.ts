@@ -865,6 +865,115 @@ router.post('/ebooks/batch', async (req: Request, res: Response) => {
 });
 
 // ============================================================================
+// HDD-ext Processing Routes
+// ============================================================================
+
+const HDD_EXT_DIR = process.env.HDD_EXT_DIR || path.join(process.cwd(), 'media', 'hdd-ext');
+
+/**
+ * POST /api/processing/hdd-ext/process
+ * Process HDD-ext videos: either a single file (via filePath) or batch all.
+ * - filePath: relative path within HDD_EXT_DIR for single-file processing
+ * - Without filePath: batch process all videos found in HDD_EXT_DIR
+ */
+router.post('/hdd-ext/process', async (req: Request, res: Response) => {
+  try {
+    const { filePath } = req.body;
+
+    if (filePath) {
+      // Single file processing
+      const resolved = path.resolve(HDD_EXT_DIR, filePath);
+      if (!resolved.startsWith(path.resolve(HDD_EXT_DIR))) {
+        return res.status(403).json({ error: 'Path traversal not allowed' });
+      }
+
+      const job = jobQueue.add('process-movie', {
+        inputPath: resolved,
+        autoOrganize: false,
+        rootKey: 'hdd-ext',
+      });
+
+      return res.status(202).json({
+        success: true,
+        message: 'HDD-ext file queued for processing',
+        jobId: job.id,
+      });
+    }
+
+    // Batch processing — scan and queue all
+    const files = await scanMoviesDirectory(HDD_EXT_DIR, true, ['Thumbnails']);
+
+    if (files.length === 0) {
+      return res.json({
+        success: true,
+        message: 'No video files found in HDD-ext',
+        count: 0,
+      });
+    }
+
+    const jobs = files.map((filePath) =>
+      jobQueue.add('process-movie', {
+        inputPath: filePath,
+        autoOrganize: false,
+        rootKey: 'hdd-ext',
+      }),
+    );
+
+    res.status(202).json({
+      success: true,
+      message: `Queued ${jobs.length} HDD-ext videos for processing`,
+      count: jobs.length,
+      jobIds: jobs.map((j) => j.id),
+    });
+  } catch (error: any) {
+    logger.error('[Processing] HDD-ext process failed', { error: error.message });
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * POST /api/processing/hdd-ext/rescan
+ * Rescan HDD-ext and queue videos missing thumbnails for processing
+ */
+router.post('/hdd-ext/rescan', async (req: Request, res: Response) => {
+  try {
+    const files = await scanMoviesDirectory(HDD_EXT_DIR, true, ['Thumbnails']);
+    let queued = 0;
+
+    for (const filePath of files) {
+      const baseName = path.basename(filePath, path.extname(filePath));
+      const dir = path.dirname(filePath);
+      const thumbPath = path.join(dir, 'Thumbnails', `${baseName}_thumb.jpg`);
+
+      let hasThumb = false;
+      try {
+        await fs.access(thumbPath);
+        hasThumb = true;
+      } catch { /* no thumbnail */ }
+
+      if (!hasThumb) {
+        jobQueue.add('process-movie', {
+          inputPath: filePath,
+          autoOrganize: false,
+          rootKey: 'hdd-ext',
+        });
+        queued++;
+      }
+    }
+
+    res.json({
+      success: true,
+      message: `Rescan complete — found ${files.length} files, queued ${queued} for processing`,
+      total: files.length,
+      queued,
+    });
+  } catch (error: any) {
+    logger.error('[Processing] HDD-ext rescan failed', { error: error.message });
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ============================================================================
 // Combined Processing Routes
 // ============================================================================
 

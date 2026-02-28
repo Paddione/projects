@@ -61,6 +61,16 @@ export const getVideoSrc = (video: Video): string | undefined => {
     return encodePathSegments(`/media/${video.path}`);
   }
 
+  // HDD-ext directory (indexed from external drive)
+  if (video.path.startsWith('hdd-ext/')) {
+    return encodePathSegments(`/media/${video.path}`);
+  }
+
+  // Browse page: paths already include /media/ prefix
+  if (video.path.startsWith('/media/')) {
+    return video.path;
+  }
+
   // Basic fallback: if path is absolute but we don't recognize root,
   // we can't serve it unless we map another root.
   // For now, return undefined.
@@ -144,6 +154,12 @@ export const getThumbnailSrc = (video: Video): string | undefined => {
     return encodePathSegments(`/media/${dir}/Thumbnails/${baseName}_thumb.jpg`);
   }
 
+  // HDD-ext directory — uses _thumb.jpg (underscore, same as movies)
+  if (video.path.startsWith('hdd-ext/')) {
+    const dir = video.path.substring(0, video.path.lastIndexOf('/'));
+    return encodePathSegments(`/media/${dir}/Thumbnails/${baseName}_thumb.jpg`);
+  }
+
   return undefined;
 };
 
@@ -214,6 +230,12 @@ export const getSpriteSrc = (video: Video): string | undefined => {
 
   // Movies directory (indexed from disk) — uses _sprite.jpg (underscore)
   if (video.path.startsWith('movies/')) {
+    const dir = video.path.substring(0, video.path.lastIndexOf('/'));
+    return encodePathSegments(`/media/${dir}/Thumbnails/${baseName}_sprite.jpg`);
+  }
+
+  // HDD-ext directory — uses _sprite.jpg (underscore, same as movies)
+  if (video.path.startsWith('hdd-ext/')) {
     const dir = video.path.substring(0, video.path.lastIndexOf('/'));
     return encodePathSegments(`/media/${dir}/Thumbnails/${baseName}_sprite.jpg`);
   }

@@ -50,6 +50,7 @@ import thumbnailsV2Routes from './routes/thumbnails-v2';
 import scanStateRoutes from './routes/scan-state';
 import jobsRoutes from './routes/jobs';
 import processingRoutes from './routes/processing';
+import browseRoutes from './routes/browse';
 
 // ... (existing imports)
 
@@ -250,6 +251,7 @@ export function registerRoutes(app: Express): Server {
   app.use('/api/scan-state', scanStateRoutes);
   app.use('/api/jobs', jobsRoutes);
   app.use('/api/processing', processingRoutes);
+  app.use('/api/browse', browseRoutes);
 
   logger.info('API routes registered', {
     routes: [
@@ -269,6 +271,8 @@ export function registerRoutes(app: Express): Server {
       '/api/processing/movies',
       '/api/processing/audiobooks',
       '/api/processing/ebooks',
+      '/api/processing/hdd-ext',
+      '/api/browse',
     ],
   });
 

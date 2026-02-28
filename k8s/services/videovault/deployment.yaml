@@ -73,6 +73,8 @@ spec:
               value: "/app/media/audiobooks"
             - name: EBOOKS_DIR
               value: "/app/media/ebooks"
+            - name: HDD_EXT_DIR
+              value: "/app/media/hdd-ext"
             - name: CORS_ORIGINS
               value: "https://videovault.korczewski.de,https://video.korczewski.de"
             - name: TRUST_PROXY
@@ -117,6 +119,8 @@ spec:
               mountPath: /app/media/audiobooks
             - name: ebooks-storage
               mountPath: /app/media/ebooks
+            - name: hdd-ext-storage
+              mountPath: /app/media/hdd-ext
             - name: logs
               mountPath: /app/logs
           livenessProbe:
@@ -165,5 +169,8 @@ spec:
         - name: ebooks-storage
           persistentVolumeClaim:
             claimName: videovault-ebooks
+        - name: hdd-ext-storage
+          persistentVolumeClaim:
+            claimName: videovault-hdd-ext
         - name: logs
           emptyDir: {}

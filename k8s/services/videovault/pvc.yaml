@@ -106,3 +106,23 @@ spec:
   resources:
     requests:
       storage: 100Gi
+---
+# HDD-ext storage (binds to videovault-hdd-ext-pv)
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: videovault-hdd-ext
+  namespace: korczewski-services
+  labels:
+    app: videovault
+    app.kubernetes.io/name: videovault
+    app.kubernetes.io/component: storage
+    media-type: hdd-ext
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: ""
+  volumeName: videovault-hdd-ext-pv
+  resources:
+    requests:
+      storage: 2Ti
