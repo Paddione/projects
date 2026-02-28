@@ -27,6 +27,7 @@ export interface MovieJobPayload {
   movieId?: string;
   rootKey?: string;
   autoOrganize?: boolean;
+  baseDir?: string; // Override base directory for relative path computation (defaults to MOVIES_DIR)
 }
 
 export interface MovieMetadata {
@@ -284,8 +285,9 @@ export async function handleMovieProcessing(
   context: JobContext,
   db: any,
 ) {
-  const { inputPath, movieId, rootKey, autoOrganize = true } = data;
+  const { inputPath, movieId, rootKey, autoOrganize = true, baseDir } = data;
   const MOVIES_DIR = process.env.MOVIES_DIR || path.join(process.cwd(), 'media', 'movies');
+  const PATH_BASE = baseDir || MOVIES_DIR;
 
   logger.info(`[MovieHandler] Processing movie: ${inputPath}`, { movieId, rootKey });
 
@@ -307,7 +309,7 @@ export async function handleMovieProcessing(
 
     // 5. Organize file if autoOrganize is enabled
     let finalPath = inputPath;
-    let relativePath = path.relative(MOVIES_DIR, inputPath);
+    let relativePath = path.relative(PATH_BASE, inputPath);
 
     if (autoOrganize) {
       const currentDir = path.dirname(inputPath);
@@ -325,7 +327,7 @@ export async function handleMovieProcessing(
         try {
           await fs.rename(inputPath, targetPath);
           finalPath = targetPath;
-          relativePath = path.relative(MOVIES_DIR, targetPath);
+          relativePath = path.relative(PATH_BASE, targetPath);
           logger.info(`[MovieHandler] Organized: ${inputPath} -> ${targetPath}`);
         } catch (moveError: any) {
           // If rename fails (cross-device), try copy + delete
@@ -333,7 +335,7 @@ export async function handleMovieProcessing(
             await fs.copyFile(inputPath, targetPath);
             await fs.unlink(inputPath);
             finalPath = targetPath;
-            relativePath = path.relative(MOVIES_DIR, targetPath);
+            relativePath = path.relative(PATH_BASE, targetPath);
             logger.info(`[MovieHandler] Organized (copy): ${inputPath} -> ${targetPath}`);
           } else {
             throw moveError;
@@ -373,12 +375,13 @@ export async function handleMovieProcessing(
             year: year?.toString() || '',
           },
           customCategories: {},
+          rootKey: rootKey || 'movies',
           metadata: {
             title,
             year,
             ...metadata,
-            thumbnailPath: path.relative(MOVIES_DIR, thumbnails.thumb),
-            spritePath: path.relative(MOVIES_DIR, thumbnails.sprite),
+            thumbnailPath: path.relative(PATH_BASE, thumbnails.thumb),
+            spritePath: path.relative(PATH_BASE, thumbnails.sprite),
           },
           processingStatus: 'completed',
           metadataExtractedAt: new Date(),

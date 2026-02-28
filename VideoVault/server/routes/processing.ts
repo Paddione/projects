@@ -869,6 +869,7 @@ router.post('/ebooks/batch', async (req: Request, res: Response) => {
 // ============================================================================
 
 const HDD_EXT_DIR = process.env.HDD_EXT_DIR || path.join(process.cwd(), 'media', 'hdd-ext');
+const MEDIA_ROOT = process.env.MEDIA_ROOT || path.join(process.cwd(), 'media');
 
 /**
  * POST /api/processing/hdd-ext/process
@@ -891,6 +892,7 @@ router.post('/hdd-ext/process', async (req: Request, res: Response) => {
         inputPath: resolved,
         autoOrganize: false,
         rootKey: 'hdd-ext',
+        baseDir: MEDIA_ROOT,
       });
 
       return res.status(202).json({
@@ -916,6 +918,7 @@ router.post('/hdd-ext/process', async (req: Request, res: Response) => {
         inputPath: filePath,
         autoOrganize: false,
         rootKey: 'hdd-ext',
+        baseDir: MEDIA_ROOT,
       }),
     );
 
@@ -956,6 +959,7 @@ router.post('/hdd-ext/rescan', async (req: Request, res: Response) => {
           inputPath: filePath,
           autoOrganize: false,
           rootKey: 'hdd-ext',
+          baseDir: MEDIA_ROOT,
         });
         queued++;
       }
