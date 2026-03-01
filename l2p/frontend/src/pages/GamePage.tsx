@@ -124,7 +124,7 @@ export const GamePage: React.FC = () => {
     }
 
     // Listen for score updates from server
-    const handleScoreUpdate = (data: { playerId: string; hasAnswered: boolean; isCorrect?: boolean; scoreDelta?: number; newScore?: number; newMultiplier?: number }) => {
+    const handleScoreUpdate = (data: { playerId: string; hasAnswered: boolean; isCorrect?: boolean; scoreDelta?: number; newScore?: number; newMultiplier?: number; currentStreak?: number; streak?: number }) => {
       if (String(data.playerId) === String(user?.id)) {
         const delta = typeof data.scoreDelta === 'number' ? data.scoreDelta : undefined
         if (typeof delta === 'number' && delta > 0) {
@@ -132,6 +132,14 @@ export const GamePage: React.FC = () => {
           flushSync(() => setScoreDelta(delta))
         }
         setTimeout(() => setScoreDelta(null), 2000)
+
+        // Play authoritative audio feedback from server confirmation
+        if (data.isCorrect) {
+          const streak = data.currentStreak ?? data.streak ?? 1
+          handleCorrectAnswer(streak)
+        } else if (data.isCorrect === false) {
+          handleWrongAnswer()
+        }
       }
     }
 
@@ -143,7 +151,7 @@ export const GamePage: React.FC = () => {
       handleStopAllSounds()
       socketService.off('answer-received', handleScoreUpdate)
     }
-  }, [lobbyId, gameStarted, navigate, user?.id, handleStopAllSounds, setError])
+  }, [lobbyId, gameStarted, navigate, user?.id, handleStopAllSounds, handleCorrectAnswer, handleWrongAnswer, setError])
 
   // Reset per-round UI when question changes
   useEffect(() => {
