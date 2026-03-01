@@ -69,6 +69,7 @@ export function useVideoManager(): UseVideoManagerReturn {
     currentVideo: null,
     availableCategories: [],
     knownTags: [],
+    pinnedVideoId: null,
     sort: undefined,
     isProgressiveLoading: false,
   });
@@ -523,6 +524,14 @@ export function useVideoManager(): UseVideoManagerReturn {
 
   const setCurrentVideo = useCallback((video: Video | null) => {
     setState((prev) => ({ ...prev, currentVideo: video }));
+  }, []);
+
+  const pinVideo = useCallback((videoId: string) => {
+    setState((prev) => ({ ...prev, pinnedVideoId: videoId }));
+  }, []);
+
+  const unpinVideo = useCallback(() => {
+    setState((prev) => ({ ...prev, pinnedVideoId: null }));
   }, []);
 
   const updateVideoCategories = useCallback(
@@ -1685,6 +1694,8 @@ export function useVideoManager(): UseVideoManagerReturn {
     cancelScan,
     setSort,
     rescanLastRoot,
+    pinVideo,
+    unpinVideo,
     // Enhanced scanning methods
     startEnhancedScan,
     pauseEnhancedScan,
