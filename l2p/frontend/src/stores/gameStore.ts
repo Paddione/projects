@@ -43,6 +43,8 @@ export interface Question {
   answerType?: AnswerType
   hint?: string
   answerMetadata?: AnswerMetadata
+  difficulty?: number
+  category?: string
 }
 
 export interface QuestionSetInfo {
@@ -171,6 +173,9 @@ export interface GameState {
   // Per-round UI status
   playerAnswerStatus: Record<string, AnswerStatus | undefined>
 
+  // INFO perk effects for current player
+  myPerkEffects: Record<string, boolean> | null
+
   // Actions
   setLobbyCode: (code: string | null) => void
   setIsHost: (isHost: boolean) => void
@@ -212,6 +217,7 @@ export interface GameState {
   setDuelWins: (wins: Record<string, number>) => void
   setIsSpectating: (spectating: boolean) => void
   setFirstCorrectPlayerId: (playerId: string | null) => void
+  setMyPerkEffects: (effects: Record<string, boolean> | null) => void
   resetGame: () => void
 
   // Per-round actions
@@ -253,6 +259,7 @@ const initialState = {
   isLoading: false,
   error: null,
   playerAnswerStatus: {} as Record<string, AnswerStatus | undefined>,
+  myPerkEffects: null as Record<string, boolean> | null,
 }
 
 export const useGameStore = create<GameState>()(
@@ -322,6 +329,7 @@ export const useGameStore = create<GameState>()(
       setDuelWins: (wins) => set({ duelWins: wins }),
       setIsSpectating: (spectating) => set({ isSpectating: spectating }),
       setFirstCorrectPlayerId: (playerId) => set({ firstCorrectPlayerId: playerId }),
+      setMyPerkEffects: (effects) => set({ myPerkEffects: effects }),
       resetGame: () => set(initialState),
 
       setPlayerAnswerStatus: (playerId, status) => set((state) => ({

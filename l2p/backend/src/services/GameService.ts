@@ -96,6 +96,8 @@ export interface QuestionData {
   answerType: AnswerType;
   hint?: string | undefined;
   answerMetadata?: AnswerMetadata | undefined;
+  difficulty?: number | undefined;
+  category?: string | undefined;
 }
 
 export class GameService {
@@ -284,6 +286,20 @@ export class GameService {
       }
     }
 
+    // Build per-player INFO perk effects for the question-started payload
+    const playerPerkEffects: Record<string, Record<string, boolean>> = {};
+    for (const player of gameState.players) {
+      if (player.perkModifiers) {
+        const effects = PerkEffectEngine.extractInfoEffects(player.perkModifiers);
+        if (Object.keys(effects).length > 0) {
+          playerPerkEffects[player.id] = effects;
+        }
+      }
+    }
+    const perkEffectsPayload = Object.keys(playerPerkEffects).length > 0
+      ? { playerPerkEffects }
+      : {};
+
     // Duel: only duelists receive the question
     if (gameState.gameMode === 'duel') {
       // Mark non-duelists as already answered (spectators)
@@ -304,6 +320,7 @@ export class GameService {
         questionIndex: gameState.currentQuestionIndex,
         totalQuestions: gameState.totalQuestions,
         timeRemaining: gameState.timeRemaining,
+        ...perkEffectsPayload,
       });
     } else {
       // Emit the next question to all players (send full object; use 0-based index)
@@ -313,6 +330,7 @@ export class GameService {
         totalQuestions: gameState.totalQuestions,
         timeRemaining: gameState.timeRemaining,
         gameMode: gameState.gameMode,
+        ...perkEffectsPayload,
       });
     }
 
@@ -430,6 +448,20 @@ export class GameService {
         }
       }
 
+      // Build question set ID → category map for INFO perks
+      const questionSetCategoryMap = new Map<number, string>();
+      try {
+        const allQuestionSets = await this.questionService.getAllQuestionSets();
+        for (const qs of allQuestionSets) {
+          if (qs.category) {
+            questionSetCategoryMap.set(qs.id, qs.category);
+          }
+        }
+      } catch (e) {
+        // Non-fatal: category info is a perk bonus, not essential
+        console.warn('Failed to load question set categories for INFO perks:', e);
+      }
+
       // Convert questions to German-only format
       const localizedQuestions: QuestionData[] = questions.map((q: any) => {
         // Get question text (now always a German string)
@@ -463,6 +495,8 @@ export class GameService {
           answerType: q.answer_type || 'multiple_choice',
           hint: q.hint || undefined,
           answerMetadata: q.answer_metadata || undefined,
+          difficulty: q.difficulty || undefined,
+          category: questionSetCategoryMap.get(q.question_set_id) || undefined,
         };
       });
 
@@ -1333,12 +1367,24 @@ export class GameService {
     const currentQuestion = gameState.currentQuestion;
     if (!currentQuestion) return;
 
+    // Build per-player INFO perk effects for wager mode emission
+    const wagerPerkEffects: Record<string, Record<string, boolean>> = {};
+    for (const player of gameState.players) {
+      if (player.perkModifiers) {
+        const effects = PerkEffectEngine.extractInfoEffects(player.perkModifiers);
+        if (Object.keys(effects).length > 0) {
+          wagerPerkEffects[player.id] = effects;
+        }
+      }
+    }
+
     this.getIo()?.to(lobbyCode)?.emit('question-started', {
       question: currentQuestion,
       questionIndex: gameState.currentQuestionIndex,
       totalQuestions: gameState.totalQuestions,
       timeRemaining: gameState.timeRemaining,
       gameMode: gameState.gameMode,
+      ...(Object.keys(wagerPerkEffects).length > 0 && { playerPerkEffects: wagerPerkEffects }),
     });
 
     // Start the question timer

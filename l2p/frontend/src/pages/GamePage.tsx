@@ -68,6 +68,7 @@ export const GamePage: React.FC = () => {
     duelQueue,
     duelWins,
     firstCorrectPlayerId,
+    myPerkEffects,
   } = useGameStore()
   const { user } = useAuthStore()
   const { t } = useLocalization()
@@ -543,6 +544,20 @@ export const GamePage: React.FC = () => {
             )}
 
             <div className={gameStyles.questionInner} key={question.id}>
+              {/* INFO perk badges: category, difficulty (shown only when player has the perk) */}
+              {myPerkEffects && (
+                <div className={gameStyles.perkInfoRow} data-testid="perk-info-row">
+                  {myPerkEffects['showCategory'] && question.category && (
+                    <span className={gameStyles.perkInfoBadge} data-testid="perk-category-badge">{question.category}</span>
+                  )}
+                  {myPerkEffects['showDifficulty'] && question.difficulty != null && (
+                    <span className={gameStyles.perkInfoBadge} data-testid="perk-difficulty-badge">
+                      {'★'.repeat(Math.min(question.difficulty, 5))}
+                    </span>
+                  )}
+                  {/* TODO: showAnswerStats — render answer distribution after all players answer */}
+                </div>
+              )}
               <h3
                 id="question-heading"
                 ref={questionRef}

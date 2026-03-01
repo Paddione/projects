@@ -227,6 +227,18 @@ export class PerkEffectEngine {
   }
 
   /**
+   * Extract INFO perk flags from modifiers for per-player perk effects.
+   * Returns only the active (truthy) info flags, e.g. { showCategory: true }.
+   */
+  static extractInfoEffects(modifiers: GameplayModifiers): Record<string, boolean> {
+    const effects: Record<string, boolean> = {};
+    if (modifiers.showCategory) effects.showCategory = true;
+    if (modifiers.showDifficulty) effects.showDifficulty = true;
+    if (modifiers.showAnswerStats) effects.showAnswerStats = true;
+    return effects;
+  }
+
+  /**
    * Apply end-game score bonuses (e.g. perfectionist perk).
    * Must be called BEFORE XP calculation so the bonus feeds into XP too.
    */

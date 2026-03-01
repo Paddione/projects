@@ -365,6 +365,8 @@ export class SocketService {
           answerType: rawAnswerType as any,
           ...(hintValue ? { hint: hintValue } : {}),
           ...(data.question?.answerMetadata ? { answerMetadata: data.question.answerMetadata as any } : {}),
+          ...(data.question?.difficulty != null ? { difficulty: data.question.difficulty } : {}),
+          ...(data.question?.category ? { category: data.question.category } : {}),
         }
 
         // Clear wager phase when question arrives (wager resolved)
@@ -409,6 +411,15 @@ export class SocketService {
         // Update game mode if provided
         if ((data as any).gameMode) {
           setGameMode((data as any).gameMode)
+        }
+
+        // Extract per-player INFO perk effects (category, difficulty, answer stats)
+        const { setMyPerkEffects } = useGameStore.getState()
+        const myPlayerId = useAuthStore.getState().user?.id?.toString()
+        if (data.playerPerkEffects && myPlayerId && data.playerPerkEffects[myPlayerId]) {
+          setMyPerkEffects(data.playerPerkEffects[myPlayerId])
+        } else {
+          setMyPerkEffects(null)
         }
 
         // Force immediate store update and verify
@@ -772,6 +783,13 @@ export class SocketService {
         const currentUserId = authState.user?.id?.toString()
         const isSpectating = !data.duelists?.includes(currentUserId)
         state.setIsSpectating(isSpectating)
+
+        // Extract per-player INFO perk effects for duel mode
+        if (data.playerPerkEffects && currentUserId && data.playerPerkEffects[currentUserId]) {
+          state.setMyPerkEffects(data.playerPerkEffects[currentUserId])
+        } else {
+          state.setMyPerkEffects(null)
+        }
       } catch (err) {
         console.error('Error in duel-question-started handler:', err)
       }

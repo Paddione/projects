@@ -256,6 +256,24 @@
   }
 }
 
+/* INFO perk badges (category, difficulty) shown above question text */
+.perkInfoRow {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.perkInfoBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.15rem 0.5rem;
+  font-size: 0.7rem;
+  border-radius: 4px;
+  background: rgba(0, 242, 255, 0.1);
+  border: 1px solid rgba(0, 242, 255, 0.25);
+  color: var(--cv-cyan);
+}
+
 .questionText {
   margin: 0;
   font-size: 1.25rem;
