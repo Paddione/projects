@@ -245,6 +245,14 @@ export class SocketService {
         }
       });
 
+      socket.on('perk:use-eliminate', (data: { lobbyCode: string }) => {
+        if (!this.checkRateLimit(socket.id, 'perk:use-eliminate', 5, 10000)) return;
+        const user = this.connectedUsers.get(socket.id);
+        if (user) {
+          this.gameService.handleUseEliminate(data.lobbyCode, user.id, socket);
+        }
+      });
+
       socket.on('disconnect', () => {
         this.handleDisconnect(socket);
       });

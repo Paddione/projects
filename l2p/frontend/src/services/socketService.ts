@@ -64,6 +64,7 @@ export interface SocketEvents {
 
   // Interactive perk events
   'perk:hint-revealed': (data: { hint: string; usesRemaining: number }) => void
+  'perk:answers-eliminated': (data: { eliminatedIndices: number[]; usesRemaining: number }) => void
   'perk:use-error': (data: { message: string }) => void
 
   // Error events
@@ -327,7 +328,7 @@ export class SocketService {
           allQuestionKeys: data.question ? Object.keys(data.question) : 'no question object'
         })
 
-        const { setCurrentQuestion, setQuestionIndex, setTotalQuestions, setTimeRemaining, resetPlayerAnswerStatus, setPlayers, setIsSyncing, setShowingHint, setWaitingForContinue, setPracticeCorrectAnswer, setGameMode, setCurrentHint, setHintUsesRemaining } = useGameStore.getState()
+        const { setCurrentQuestion, setQuestionIndex, setTotalQuestions, setTimeRemaining, resetPlayerAnswerStatus, setPlayers, setIsSyncing, setShowingHint, setWaitingForContinue, setPracticeCorrectAnswer, setGameMode, setCurrentHint, setHintUsesRemaining, setEliminatedAnswerIndices, setEliminateUsesRemaining } = useGameStore.getState()
 
         // Question has started, so we are no longer syncing
         setIsSyncing(false)
@@ -412,8 +413,9 @@ export class SocketService {
         setWaitingForContinue(false)
         setPracticeCorrectAnswer(null)
 
-        // Reset interactive perk hint state for new question
+        // Reset interactive perk state for new question
         setCurrentHint(null)
+        setEliminatedAnswerIndices([])
 
         // Update game mode if provided
         if ((data as any).gameMode) {
@@ -429,6 +431,10 @@ export class SocketService {
           // Initialize hint uses remaining from server perk state
           if (typeof myEffects.hintUsesRemaining === 'number') {
             setHintUsesRemaining(myEffects.hintUsesRemaining)
+          }
+          // Initialize eliminate uses remaining from server perk state
+          if (typeof myEffects.eliminateUsesRemaining === 'number') {
+            setEliminateUsesRemaining(myEffects.eliminateUsesRemaining)
           }
         } else {
           setMyPerkEffects(null)
@@ -841,6 +847,12 @@ export class SocketService {
       setHintUsesRemaining(data.usesRemaining)
     })
 
+    this.socket.on('perk:answers-eliminated', (data: { eliminatedIndices: number[]; usesRemaining: number }) => {
+      const { setEliminatedAnswerIndices, setEliminateUsesRemaining } = useGameStore.getState()
+      setEliminatedAnswerIndices(data.eliminatedIndices)
+      setEliminateUsesRemaining(data.usesRemaining)
+    })
+
     this.socket.on('perk:use-error', (data: { message: string }) => {
       console.warn('Perk use error:', data.message)
     })
@@ -1244,6 +1256,16 @@ export class SocketService {
       return
     }
     this.emit('perk:use-hint', { lobbyCode })
+  }
+
+  // Interactive perk: use eliminate (50:50)
+  useEliminate() {
+    const { lobbyCode } = useGameStore.getState()
+    if (!lobbyCode) {
+      console.warn('Missing lobby code for use eliminate')
+      return
+    }
+    this.emit('perk:use-eliminate', { lobbyCode })
   }
 
   // Update game mode in lobby (host only)

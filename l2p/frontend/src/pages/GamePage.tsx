@@ -71,6 +71,8 @@ export const GamePage: React.FC = () => {
     myPerkEffects,
     hintUsesRemaining,
     currentHint,
+    eliminatedAnswerIndices,
+    eliminateUsesRemaining,
   } = useGameStore()
   const { user } = useAuthStore()
   const { t } = useLocalization()
@@ -621,6 +623,17 @@ export const GamePage: React.FC = () => {
                 </div>
               )}
 
+              {/* Eliminate perk button (50:50, limited uses) */}
+              {!isPractice && eliminateUsesRemaining > 0 && !hasAnswered && (
+                <button
+                  className={gameStyles.eliminateButton}
+                  onClick={() => socketService.useEliminate()}
+                  data-testid="eliminate-perk-button"
+                >
+                  50:50 ({eliminateUsesRemaining})
+                </button>
+              )}
+
               {/* Answer area - branched by answer type */}
               {answerType === 'true_false' && !waitingForContinue && (
                 <TrueFalseAnswer question={question} onSubmit={handleTypedSubmit} disabled={hasAnswered || (!isPractice && timeRemaining === 0)} t={t} />
@@ -653,6 +666,7 @@ export const GamePage: React.FC = () => {
                     const isCorrectAnswer = typeof question.correctAnswer === 'number' && question.correctAnswer === index
                     const showCorrectBlink = !!answerFlash && ((answerFlash === 'correct' && isSelected) || (answerFlash === 'wrong' && isCorrectAnswer))
                     const showWrongBlink = !!answerFlash && answerFlash === 'wrong' && isSelected
+                    const isEliminated = eliminatedAnswerIndices.includes(index)
 
                     return (
                       <button
@@ -666,9 +680,10 @@ export const GamePage: React.FC = () => {
                         ${isFocused ? gameStyles.answerFocused : ''}
                         ${showCorrectBlink ? gameStyles.answerCorrectBlink : ''}
                         ${showWrongBlink ? gameStyles.answerWrongBlink : ''}
+                        ${isEliminated ? gameStyles.answerEliminated : ''}
                       `}
                         onClick={() => handleAnswerClick(index)}
-                        disabled={hasAnswered || (!isPractice && timeRemaining === 0)}
+                        disabled={isEliminated || hasAnswered || (!isPractice && timeRemaining === 0)}
                         style={{ animationDelay: `${index * 60}ms` }}
                         aria-checked={isSelected}
                         role="radio"

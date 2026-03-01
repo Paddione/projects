@@ -943,6 +943,34 @@
   transform: translateY(-1px);
 }
 
+.eliminateButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.4rem 0.8rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 6px;
+  background: rgba(0, 150, 255, 0.12);
+  border: 1px solid rgba(0, 150, 255, 0.35);
+  color: #0096ff;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.eliminateButton:hover {
+  background: rgba(0, 150, 255, 0.2);
+  box-shadow: 0 0 10px rgba(0, 150, 255, 0.15);
+  transform: translateY(-1px);
+}
+
+.answerEliminated {
+  opacity: 0.25 !important;
+  text-decoration: line-through;
+  pointer-events: none;
+  filter: grayscale(0.5);
+}
+
 .hintBox {
   padding: var(--spacing-sm) var(--spacing-md);
   background: var(--cv-warning-subtle);

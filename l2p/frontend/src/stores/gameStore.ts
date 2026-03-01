@@ -179,6 +179,8 @@ export interface GameState {
   // Interactive perk state
   hintUsesRemaining: number
   currentHint: string | null
+  eliminatedAnswerIndices: number[]
+  eliminateUsesRemaining: number
 
   // Actions
   setLobbyCode: (code: string | null) => void
@@ -224,6 +226,8 @@ export interface GameState {
   setMyPerkEffects: (effects: Record<string, boolean> | null) => void
   setHintUsesRemaining: (n: number) => void
   setCurrentHint: (hint: string | null) => void
+  setEliminatedAnswerIndices: (indices: number[]) => void
+  setEliminateUsesRemaining: (n: number) => void
   resetGame: () => void
 
   // Per-round actions
@@ -268,6 +272,8 @@ const initialState = {
   myPerkEffects: null as Record<string, boolean> | null,
   hintUsesRemaining: 0,
   currentHint: null as string | null,
+  eliminatedAnswerIndices: [] as number[],
+  eliminateUsesRemaining: 0,
 }
 
 export const useGameStore = create<GameState>()(
@@ -340,6 +346,8 @@ export const useGameStore = create<GameState>()(
       setMyPerkEffects: (effects) => set({ myPerkEffects: effects }),
       setHintUsesRemaining: (n) => set({ hintUsesRemaining: n }),
       setCurrentHint: (hint) => set({ currentHint: hint }),
+      setEliminatedAnswerIndices: (indices) => set({ eliminatedAnswerIndices: indices }),
+      setEliminateUsesRemaining: (n) => set({ eliminateUsesRemaining: n }),
       resetGame: () => set(initialState),
 
       setPlayerAnswerStatus: (playerId, status) => set((state) => ({

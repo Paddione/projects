@@ -299,6 +299,10 @@ export class GameService {
         if (player.hintUsesRemaining != null) {
           effects.hintUsesRemaining = player.hintUsesRemaining;
         }
+        if (player.eliminateUsesRemaining != null) {
+          effects.eliminateUsesRemaining = player.eliminateUsesRemaining;
+          effects.eliminateCount = player.perkModifiers.eliminateWrongCount;
+        }
         if (Object.keys(effects).length > 0) {
           playerPerkEffects[player.id] = effects;
         }
@@ -1391,6 +1395,10 @@ export class GameService {
         if (player.hintUsesRemaining != null) {
           effects.hintUsesRemaining = player.hintUsesRemaining;
         }
+        if (player.eliminateUsesRemaining != null) {
+          effects.eliminateUsesRemaining = player.eliminateUsesRemaining;
+          effects.eliminateCount = player.perkModifiers.eliminateWrongCount;
+        }
         if (Object.keys(effects).length > 0) {
           wagerPerkEffects[player.id] = effects;
         }
@@ -1950,6 +1958,49 @@ export class GameService {
 
     player.hintUsesRemaining--;
     socket.emit('perk:hint-revealed', { hint, usesRemaining: player.hintUsesRemaining });
+  }
+
+  /**
+   * Handle use-eliminate event: eliminate wrong answers for the current question if uses remain.
+   */
+  handleUseEliminate(lobbyCode: string, playerId: string, socket: import('socket.io').Socket): void {
+    const gameState = this.activeGames.get(lobbyCode);
+    if (!gameState?.isActive) return;
+
+    const player = gameState.players.find(p => p.id === playerId);
+    if (!player || !player.eliminateUsesRemaining || player.eliminateUsesRemaining <= 0) {
+      socket.emit('perk:use-error', { message: 'No eliminate uses remaining' });
+      return;
+    }
+    if (player.hasAnsweredCurrentQuestion) {
+      socket.emit('perk:use-error', { message: 'Already answered' });
+      return;
+    }
+
+    const question = gameState.currentQuestion;
+    if (!question?.answers || !question?.correctAnswer) return;
+
+    const correctIndex = question.answers.indexOf(question.correctAnswer);
+    if (correctIndex === -1) return;
+
+    const wrongIndices = question.answers
+      .map((_, i) => i)
+      .filter(i => i !== correctIndex);
+
+    const count = Math.min(player.perkModifiers?.eliminateWrongCount || 1, wrongIndices.length);
+
+    // Shuffle wrong indices and pick `count` to eliminate
+    for (let i = wrongIndices.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [wrongIndices[i], wrongIndices[j]] = [wrongIndices[j], wrongIndices[i]];
+    }
+    const eliminatedIndices = wrongIndices.slice(0, count);
+
+    player.eliminateUsesRemaining--;
+    socket.emit('perk:answers-eliminated', {
+      eliminatedIndices,
+      usesRemaining: player.eliminateUsesRemaining,
+    });
   }
 
   /**
