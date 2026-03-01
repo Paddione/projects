@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { apiService } from '../services/apiService';
+import { useLocalization } from '../hooks/useLocalization';
 import './FileUpload.css';
 
 interface FileUploadProps {
@@ -30,6 +31,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
   acceptedFileTypes = ['.md', '.pdf', '.docx', '.html'],
   className = ''
 }) => {
+  const { t } = useLocalization();
   const [uploadProgress, setUploadProgress] = useState<UploadProgress[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [dragActive, setDragActive] = useState(false);
@@ -268,7 +270,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
       {/* Upload Progress */}
       {uploadProgress.length > 0 && (
         <div className="file-upload-progress">
-          <h4>Upload Progress</h4>
+          <h4>{t('fileUpload.uploadProgress')}</h4>
           {uploadProgress.map((progress) => (
             <div key={progress.fileId} className="file-upload-item">
               <div className="file-upload-item-header">
@@ -310,7 +312,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
         <div className="file-upload-status">
           <div className="uploading-indicator">
             <div className="spinner"></div>
-            <span>Uploading files...</span>
+            <span>{t('fileUpload.uploading')}</span>
           </div>
         </div>
       )}

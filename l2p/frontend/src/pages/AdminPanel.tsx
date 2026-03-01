@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { apiService } from '@/services/apiService'
+import { useLocalization } from '@/hooks/useLocalization'
 import styles from '@/styles/App.module.css'
 
 type AdminUser = {
@@ -18,6 +19,7 @@ type AdminUser = {
 }
 
 export const AdminPanel: React.FC = () => {
+  const { t } = useLocalization()
   const currentUser = apiService.getCurrentUser()
   const isAdmin = !!currentUser?.isAdmin
 
@@ -67,8 +69,8 @@ export const AdminPanel: React.FC = () => {
   if (!isAdmin) {
     return (
       <div className={styles.card} role="alert" aria-live="polite">
-        <h2>Unauthorized</h2>
-        <p>You need admin privileges to access this page.</p>
+        <h2>{t('admin.unauthorized')}</h2>
+        <p>{t('admin.unauthorizedMessage')}</p>
       </div>
     )
   }
@@ -107,7 +109,7 @@ export const AdminPanel: React.FC = () => {
   }
 
   const handleClearLobbies = async () => {
-    if (!confirm('Clear all lobbies? This cannot be undone.')) return
+    if (!confirm(t('admin.clearLobbiesConfirm'))) return
     setMessage(null)
     setError(null)
     try {
@@ -123,7 +125,7 @@ export const AdminPanel: React.FC = () => {
   }
 
   const handleRebuildService = async () => {
-    if (!confirm('Rebuild the L2P service? This will rebuild and restart all containers. The service may be unavailable for a few minutes.')) return
+    if (!confirm(t('admin.rebuildConfirm'))) return
     setMessage(null)
     setError(null)
     try {
@@ -145,7 +147,7 @@ export const AdminPanel: React.FC = () => {
     setError(null)
     try {
       if (!newUser.username.trim() || !newUser.email.trim() || !newUser.password || newUser.password.length < 8) {
-        setError('Provide username, valid email and password (>= 8 chars)')
+        setError(t('admin.validationError'))
         return
       }
       const res = await apiService.createUser({
@@ -190,18 +192,18 @@ export const AdminPanel: React.FC = () => {
   return (
     <div className={styles.card}>
       <div className={styles.flex} style={{ justifyContent: 'space-between', alignItems: 'center' }}>
-        <h2>Admin Panel</h2>
+        <h2>{t('admin.title')}</h2>
         <div className={styles.flex} style={{ gap: 8 }}>
-          <button className={styles.button} onClick={loadUsers} disabled={loading}>Refresh Users</button>
-          <button className={styles.buttonOutline} onClick={handleClearLobbies}>Clear Lobbies</button>
-          <button className={styles.buttonOutline} onClick={handleRebuildService}>Rebuild Service</button>
+          <button className={styles.button} onClick={loadUsers} disabled={loading}>{t('admin.refreshUsers')}</button>
+          <button className={styles.buttonOutline} onClick={handleClearLobbies}>{t('admin.clearLobbies')}</button>
+          <button className={styles.buttonOutline} onClick={handleRebuildService}>{t('admin.rebuildService')}</button>
         </div>
       </div>
 
       <div className={styles.flex} style={{ gap: 8, margin: '8px 0' }}>
         <input
           type="text"
-          placeholder="Search users by name or email"
+          placeholder={t('admin.searchPlaceholder')}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           style={{ width: '100%', padding: 8 }}
@@ -210,18 +212,18 @@ export const AdminPanel: React.FC = () => {
 
       {/* Create User */}
       <div className={styles.card} style={{ marginBottom: 12 }}>
-        <h3>Create User</h3>
+        <h3>{t('admin.createUser')}</h3>
         <form onSubmit={handleCreateUser} className={styles.flex} style={{ gap: 8, flexWrap: 'wrap' }}>
-          <input placeholder="Username" value={newUser.username} onChange={(e) => setNewUser({ ...newUser, username: e.target.value })} required />
-          <input type="email" placeholder="Email" value={newUser.email} onChange={(e) => setNewUser({ ...newUser, email: e.target.value })} required />
-          <input type="password" placeholder="Password" value={newUser.password} onChange={(e) => setNewUser({ ...newUser, password: e.target.value })} required />
+          <input placeholder={t('admin.usernamePlaceholder')} value={newUser.username} onChange={(e) => setNewUser({ ...newUser, username: e.target.value })} required />
+          <input type="email" placeholder={t('admin.emailPlaceholder')} value={newUser.email} onChange={(e) => setNewUser({ ...newUser, email: e.target.value })} required />
+          <input type="password" placeholder={t('admin.passwordPlaceholder')} value={newUser.password} onChange={(e) => setNewUser({ ...newUser, password: e.target.value })} required />
           <label style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-            <input type="checkbox" checked={newUser.is_admin} onChange={(e) => setNewUser({ ...newUser, is_admin: e.target.checked })} /> Admin
+            <input type="checkbox" checked={newUser.is_admin} onChange={(e) => setNewUser({ ...newUser, is_admin: e.target.checked })} /> {t('admin.isAdmin')}
           </label>
           <label style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-            <input type="checkbox" checked={newUser.is_active} onChange={(e) => setNewUser({ ...newUser, is_active: e.target.checked })} /> Active
+            <input type="checkbox" checked={newUser.is_active} onChange={(e) => setNewUser({ ...newUser, is_active: e.target.checked })} /> {t('admin.isActive')}
           </label>
-          <button className={styles.button} type="submit" disabled={creating}>Create</button>
+          <button className={styles.button} type="submit" disabled={creating}>{t('admin.create')}</button>
         </form>
       </div>
 
@@ -233,16 +235,16 @@ export const AdminPanel: React.FC = () => {
           <thead>
             <tr>
               <th>ID</th>
-              <th>Username</th>
-              <th>Email</th>
-              <th>Admin</th>
-              <th>Active</th>
-              <th>Level</th>
+              <th>{t('admin.username')}</th>
+              <th>{t('admin.email')}</th>
+              <th>{t('admin.isAdmin')}</th>
+              <th>{t('admin.isActive')}</th>
+              <th>{t('admin.level')}</th>
               <th>XP</th>
-              <th>Character</th>
-              <th>Timezone</th>
-              <th>Avatar URL</th>
-              <th>Actions</th>
+              <th>{t('admin.character')}</th>
+              <th>{t('admin.timezone')}</th>
+              <th>{t('admin.avatarUrl')}</th>
+              <th>{t('admin.actions')}</th>
             </tr>
           </thead>
           <tbody>
@@ -278,8 +280,8 @@ export const AdminPanel: React.FC = () => {
                 </td>
                 <td>
                   <div className={styles.flex} style={{ gap: 6 }}>
-                    <button className={styles.button} onClick={() => handleSave(u)} disabled={savingId === u.id}>Save</button>
-                    <button className={styles.buttonOutline} onClick={() => handleDelete(u.id)}>Delete</button>
+                    <button className={styles.button} onClick={() => handleSave(u)} disabled={savingId === u.id}>{t('admin.save')}</button>
+                    <button className={styles.buttonOutline} onClick={() => handleDelete(u.id)}>{t('admin.delete')}</button>
                   </div>
                 </td>
               </tr>

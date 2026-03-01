@@ -111,7 +111,7 @@ export const LevelUpNotification: React.FC<LevelUpNotificationProps> = ({
       <div style={{ textAlign: 'center' }}>
         <div style={{ marginBottom: 'var(--spacing-md, 0.75rem)' }}>
           <span style={{ fontSize: '2rem', display: 'block', marginBottom: 'var(--spacing-sm, 0.5rem)' }}>
-            <Icon name="game-ui/level-up" size={40} alt="Level Up" />
+            <Icon name="game-ui/level-up" size={40} alt={t('notification.levelUp')} />
           </span>
           <h3 style={{ margin: '0 0 var(--spacing-sm, 0.5rem) 0', fontSize: '1.2rem' }}>
             {t('notification.levelUp')}

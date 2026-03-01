@@ -714,7 +714,161 @@ const enTranslations: Translations = {
   'game.duel.upNext': 'Up Next:',
 
   // GameStateManager
-  'game.leaveWarning': 'Are you sure you want to leave? This will remove you from the lobby.'
+  'game.leaveWarning': 'Are you sure you want to leave? This will remove you from the lobby.',
+
+  // Admin Panel
+  'admin.unauthorized': 'Unauthorized',
+  'admin.unauthorizedMessage': 'You need admin privileges to access this page.',
+  'admin.title': 'Admin Panel',
+  'admin.refreshUsers': 'Refresh Users',
+  'admin.clearLobbies': 'Clear Lobbies',
+  'admin.rebuildService': 'Rebuild Service',
+  'admin.searchPlaceholder': 'Search users by name or email',
+  'admin.createUser': 'Create User',
+  'admin.usernamePlaceholder': 'Username',
+  'admin.emailPlaceholder': 'Email',
+  'admin.passwordPlaceholder': 'Password',
+  'admin.create': 'Create',
+  'admin.username': 'Username',
+  'admin.email': 'Email',
+  'admin.isAdmin': 'Admin',
+  'admin.isActive': 'Active',
+  'admin.level': 'Level',
+  'admin.character': 'Character',
+  'admin.timezone': 'Timezone',
+  'admin.avatarUrl': 'Avatar URL',
+  'admin.actions': 'Actions',
+  'admin.save': 'Save',
+  'admin.delete': 'Delete',
+  'admin.logs': 'Admin Logs',
+  'admin.logsContent': 'Admin logs page content',
+  'admin.clearLobbiesConfirm': 'Clear all lobbies? This cannot be undone.',
+  'admin.rebuildConfirm': 'Rebuild the L2P service? This will rebuild and restart all containers. The service may be unavailable for a few minutes.',
+  'admin.validationError': 'Provide username, valid email and password (>= 8 chars)',
+
+  // Question Set Manager — Import Dialog
+  'questionSets.importTitle': 'Import Question Set',
+  'questionSets.importInstructions': 'Paste JSON data to create a new question set. Use the template below or let an AI generate the JSON.',
+  'questionSets.templateFull': 'Full JSON Template (all fields)',
+  'questionSets.templateCopy': 'Copy Template',
+  'questionSets.templateCopied': 'Copied!',
+  'questionSets.aiPromptTitle': 'AI Prompt for Generation (copy & send to ChatGPT/Claude)',
+  'questionSets.aiPromptCopy': 'Copy Prompt',
+  'questionSets.fieldReference': 'All accepted field names',
+  'questionSets.fieldName': 'Field',
+  'questionSets.fieldAlternatives': 'Alternatives',
+  'questionSets.fieldDescription': 'Description',
+  'questionSets.fieldSetName': 'Set name (required)',
+  'questionSets.fieldSetDescription': 'Description (optional)',
+  'questionSets.fieldSetCategory': 'Category (default: "General")',
+  'questionSets.fieldSetDifficulty': '"easy" / "medium" / "hard"',
+  'questionSets.fieldQuestionText': 'Question text (required). Also as object: ',
+  'questionSets.fieldAnswers': 'Array of answers (min. 2)',
+  'questionSets.fieldCorrect': 'Boolean: is this answer correct?',
+  'questionSets.fieldAnswerText': 'Answer text',
+  'questionSets.fieldExplanation': 'Explanation (optional). Also as object: ',
+  'questionSets.fieldDifficulty': 'Difficulty per question: 1–5 (default: 1)',
+  'questionSets.jsonData': 'JSON Data',
+  'questionSets.jsonPlaceholder': 'Paste JSON here...',
+  'questionSets.importErrors': 'Import Errors:',
+  'questionSets.importError.emptyJson': 'Please enter JSON data.',
+  'questionSets.importError.invalidJson': 'Invalid JSON format. Please check your input.',
+  'questionSets.importDefaultDesc': 'Imported on ',
+  'questionSets.toggleCompact': 'Toggle compact list mode',
+  'questionSets.edit': 'Edit',
+  'questionSets.export': 'Export',
+  'questionSets.deleteAction': 'Delete',
+
+  // Question Set Manager — Template content
+  'questionSets.tpl.setName': 'Question Set Name',
+  'questionSets.tpl.setDesc': 'Description of topic and content',
+  'questionSets.tpl.setCategory': 'Category (e.g. History, Science, Geography)',
+  'questionSets.tpl.questionPlaceholder': 'Enter question text here?',
+  'questionSets.tpl.correctAnswer': 'Correct Answer',
+  'questionSets.tpl.wrongAnswerA': 'Wrong Answer A',
+  'questionSets.tpl.wrongAnswerB': 'Wrong Answer B',
+  'questionSets.tpl.wrongAnswerC': 'Wrong Answer C',
+  'questionSets.tpl.explanation': 'Explanation why the answer is correct.',
+  'questionSets.tpl.question2': 'Second question here?',
+  'questionSets.tpl.answer1': 'Answer 1',
+  'questionSets.tpl.answer2': 'Answer 2',
+  'questionSets.tpl.answer3': 'Answer 3',
+  'questionSets.tpl.answer4': 'Answer 4',
+  'questionSets.tpl.explanation2': 'Explanation for the second question.',
+  'questionSets.tpl.optional': 'optional, default: true',
+  'questionSets.tpl.difficultyComment': '1 (easy) to 5 (hard)',
+
+  // Question Set Manager — AI Prompt
+  'questionSets.aiPrompt.intro': 'Create a quiz question set as JSON in the following format. Replace the placeholders with real content about [YOUR TOPIC HERE].',
+  'questionSets.aiPrompt.rules': 'Rules:',
+  'questionSets.aiPrompt.rule1': '- Exactly 10 questions (or more/fewer as desired)',
+  'questionSets.aiPrompt.rule2': '- Each question has exactly 4 answers',
+  'questionSets.aiPrompt.rule3': '- Exactly 1 answer per question is "correct": true, the others "correct": false',
+  'questionSets.aiPrompt.rule4': '- "difficulty" per question: 1 (easy) to 5 (hard), mix different difficulties',
+  'questionSets.aiPrompt.rule5': '- "explanation" briefly explains why the answer is correct',
+  'questionSets.aiPrompt.rule6': '- Reply ONLY with the JSON, no other text',
+  'questionSets.aiPrompt.topic': 'Quiz: [Topic]',
+  'questionSets.aiPrompt.descPlaceholder': '[Short description of quiz content]',
+  'questionSets.aiPrompt.categoryPlaceholder': '[Category e.g. History, Science, Geography, Sports, Culture]',
+  'questionSets.aiPrompt.questionPlaceholder': '[Question 1]?',
+  'questionSets.aiPrompt.correctPlaceholder': '[Correct Answer]',
+  'questionSets.aiPrompt.wrongPlaceholder': '[Wrong Answer]',
+  'questionSets.aiPrompt.explanationPlaceholder': '[Explanation]',
+  'questionSets.aiPrompt.displayIntro': 'Create a quiz question set as JSON in the following format.\nReplace the placeholders with real content about\n[YOUR TOPIC HERE].',
+  'questionSets.aiPrompt.displayRules': 'Rules:\n- Exactly 10 questions (or more/fewer as desired)\n- Each question has exactly 4 answers\n- Exactly 1 answer per question is "correct": true\n- "difficulty" per question: 1 (easy) to 5 (hard)\n- "explanation" briefly explains the correct answer\n- Reply ONLY with the JSON, no other text\n\n[Then follows the JSON template from above]',
+
+  // Question Set Manager Page
+  'questionSets.pageTitle': 'Question Set Management',
+  'questionSets.pageSubtitle': 'Import, edit, and manage question sets for your games',
+
+  // Auth Guard
+  'auth.validating': 'Validating authentication...',
+  'auth.redirecting': 'Redirecting to authentication service...',
+
+  // File Manager
+  'fileManager.loading': 'Loading files...',
+  'fileManager.uploadedFiles': 'Uploaded Files',
+  'fileManager.searchPlaceholder': 'Search files...',
+  'fileManager.newestFirst': 'Newest First',
+  'fileManager.oldestFirst': 'Oldest First',
+  'fileManager.largestFirst': 'Largest First',
+  'fileManager.smallestFirst': 'Smallest First',
+  'fileManager.retry': 'Retry',
+  'fileManager.noFiles': 'No files found',
+  'fileManager.adjustFilters': 'Try adjusting your search or filters',
+  'fileManager.uploadToStart': 'Upload some files to get started',
+  'fileManager.deleteFile': 'Delete file',
+  'fileManager.allTypes': 'All Types',
+
+  // File Upload
+  'fileUpload.uploadProgress': 'Upload Progress',
+  'fileUpload.uploading': 'Uploading files...',
+  'fileUpload.complete': 'Upload complete',
+  'fileUpload.processing': 'Processing...',
+  'fileUpload.uploaded': '{progress}% uploaded',
+  'fileUpload.supportedFormats': 'Supported formats: {formats}',
+  'fileUpload.maxSize': 'Maximum file size: {size}',
+  'fileUpload.maxFiles': 'Maximum files: {count}',
+
+  // Document Processor
+  'docProcessor.loading': 'Loading document processing status...',
+  'docProcessor.processingOptions': 'Processing Options',
+  'docProcessor.metadata': 'Document Metadata',
+  'docProcessor.content': 'Document Content',
+  'docProcessor.failed': 'Processing failed',
+
+  // GameInterface extras
+  'gameInterface.title': 'Learn2Play Quiz',
+
+  // PerksManager extras
+  'perk.loadoutOverview': 'Loadout overview',
+
+  // ScoreDisplay
+  'score.streak': 'Streak',
+
+  // Settings contact
+  'settings.contactEmail': 'Email: support@learn2play.com',
+  'settings.contactGithub': 'GitHub: github.com/learn2play'
 }
 
 // German translations
@@ -1415,7 +1569,161 @@ const deTranslations: Translations = {
   'game.duel.upNext': 'Als Nächstes:',
 
   // GameStateManager
-  'game.leaveWarning': 'Bist du sicher, dass du gehen willst? Du wirst aus der Lobby entfernt.'
+  'game.leaveWarning': 'Bist du sicher, dass du gehen willst? Du wirst aus der Lobby entfernt.',
+
+  // Admin Panel
+  'admin.unauthorized': 'Nicht autorisiert',
+  'admin.unauthorizedMessage': 'Du benötigst Admin-Rechte, um auf diese Seite zuzugreifen.',
+  'admin.title': 'Admin-Bereich',
+  'admin.refreshUsers': 'Benutzer aktualisieren',
+  'admin.clearLobbies': 'Lobbys leeren',
+  'admin.rebuildService': 'Service neu starten',
+  'admin.searchPlaceholder': 'Benutzer nach Name oder E-Mail suchen',
+  'admin.createUser': 'Benutzer erstellen',
+  'admin.usernamePlaceholder': 'Benutzername',
+  'admin.emailPlaceholder': 'E-Mail',
+  'admin.passwordPlaceholder': 'Passwort',
+  'admin.create': 'Erstellen',
+  'admin.username': 'Benutzername',
+  'admin.email': 'E-Mail',
+  'admin.isAdmin': 'Admin',
+  'admin.isActive': 'Aktiv',
+  'admin.level': 'Level',
+  'admin.character': 'Charakter',
+  'admin.timezone': 'Zeitzone',
+  'admin.avatarUrl': 'Avatar-URL',
+  'admin.actions': 'Aktionen',
+  'admin.save': 'Speichern',
+  'admin.delete': 'Löschen',
+  'admin.logs': 'Admin-Protokolle',
+  'admin.logsContent': 'Inhalte der Admin-Protokolle',
+  'admin.clearLobbiesConfirm': 'Alle Lobbys leeren? Dies kann nicht rückgängig gemacht werden.',
+  'admin.rebuildConfirm': 'L2P-Service neu starten? Alle Container werden neu gebaut und gestartet. Der Service kann für einige Minuten nicht erreichbar sein.',
+  'admin.validationError': 'Benutzername, gültige E-Mail und Passwort (mind. 8 Zeichen) angeben',
+
+  // Question Set Manager — Import Dialog
+  'questionSets.importTitle': 'Fragen-Set importieren',
+  'questionSets.importInstructions': 'Füge JSON-Daten ein, um ein neues Fragen-Set zu erstellen. Nutze die Vorlage unten oder lass das JSON von einer KI generieren.',
+  'questionSets.templateFull': 'Vollständige JSON-Vorlage (alle Felder)',
+  'questionSets.templateCopy': 'Vorlage kopieren',
+  'questionSets.templateCopied': 'Kopiert!',
+  'questionSets.aiPromptTitle': 'KI-Prompt zum Generieren (kopieren & an ChatGPT/Claude senden)',
+  'questionSets.aiPromptCopy': 'Prompt kopieren',
+  'questionSets.fieldReference': 'Alle akzeptierten Feldnamen',
+  'questionSets.fieldName': 'Feld',
+  'questionSets.fieldAlternatives': 'Alternativen',
+  'questionSets.fieldDescription': 'Beschreibung',
+  'questionSets.fieldSetName': 'Name des Sets (Pflicht)',
+  'questionSets.fieldSetDescription': 'Beschreibung (optional)',
+  'questionSets.fieldSetCategory': 'Kategorie (Standard: „General")',
+  'questionSets.fieldSetDifficulty': '„easy" / „medium" / „hard" oder „leicht" / „mittel" / „schwer"',
+  'questionSets.fieldQuestionText': 'Fragetext (Pflicht). Auch als Objekt: ',
+  'questionSets.fieldAnswers': 'Array von Antworten (min. 2)',
+  'questionSets.fieldCorrect': 'Boolean: ist diese Antwort richtig?',
+  'questionSets.fieldAnswerText': 'Antworttext',
+  'questionSets.fieldExplanation': 'Erklärung (optional). Auch als Objekt: ',
+  'questionSets.fieldDifficulty': 'Schwierigkeit pro Frage: 1–5 (Standard: 1)',
+  'questionSets.jsonData': 'JSON-Daten',
+  'questionSets.jsonPlaceholder': 'JSON hier einfügen...',
+  'questionSets.importErrors': 'Import-Fehler:',
+  'questionSets.importError.emptyJson': 'Bitte gib JSON-Daten ein.',
+  'questionSets.importError.invalidJson': 'Ungültiges JSON-Format. Bitte überprüfe deine Eingabe.',
+  'questionSets.importDefaultDesc': 'Importiert am ',
+  'questionSets.toggleCompact': 'Kompakte Listenansicht umschalten',
+  'questionSets.edit': 'Bearbeiten',
+  'questionSets.export': 'Exportieren',
+  'questionSets.deleteAction': 'Löschen',
+
+  // Question Set Manager — Template content
+  'questionSets.tpl.setName': 'Name des Fragen-Sets',
+  'questionSets.tpl.setDesc': 'Beschreibung des Themas und Inhalts',
+  'questionSets.tpl.setCategory': 'Kategorie (z.B. Geschichte, Naturwissenschaft, Geographie)',
+  'questionSets.tpl.questionPlaceholder': 'Fragetext hier eingeben?',
+  'questionSets.tpl.correctAnswer': 'Richtige Antwort',
+  'questionSets.tpl.wrongAnswerA': 'Falsche Antwort A',
+  'questionSets.tpl.wrongAnswerB': 'Falsche Antwort B',
+  'questionSets.tpl.wrongAnswerC': 'Falsche Antwort C',
+  'questionSets.tpl.explanation': 'Erklärung warum die Antwort richtig ist.',
+  'questionSets.tpl.question2': 'Zweite Frage hier?',
+  'questionSets.tpl.answer1': 'Antwort 1',
+  'questionSets.tpl.answer2': 'Antwort 2',
+  'questionSets.tpl.answer3': 'Antwort 3',
+  'questionSets.tpl.answer4': 'Antwort 4',
+  'questionSets.tpl.explanation2': 'Erklärung zur zweiten Frage.',
+  'questionSets.tpl.optional': 'optional, Standard: true',
+  'questionSets.tpl.difficultyComment': '1 (leicht) bis 5 (schwer)',
+
+  // Question Set Manager — AI Prompt
+  'questionSets.aiPrompt.intro': 'Erstelle ein Quiz-Fragen-Set als JSON im folgenden Format. Ersetze die Platzhalter mit echtem Inhalt zum Thema [DEIN THEMA HIER].',
+  'questionSets.aiPrompt.rules': 'Regeln:',
+  'questionSets.aiPrompt.rule1': '- Genau 10 Fragen (oder mehr/weniger nach Wunsch)',
+  'questionSets.aiPrompt.rule2': '- Jede Frage hat genau 4 Antworten',
+  'questionSets.aiPrompt.rule3': '- Genau 1 Antwort pro Frage ist "correct": true, die anderen "correct": false',
+  'questionSets.aiPrompt.rule4': '- "difficulty" pro Frage: 1 (leicht) bis 5 (schwer), mische verschiedene Schwierigkeiten',
+  'questionSets.aiPrompt.rule5': '- "explanation" erklärt kurz warum die Antwort richtig ist',
+  'questionSets.aiPrompt.rule6': '- Antworte NUR mit dem JSON, kein anderer Text',
+  'questionSets.aiPrompt.topic': 'Quiz: [Thema]',
+  'questionSets.aiPrompt.descPlaceholder': '[Kurze Beschreibung des Quiz-Inhalts]',
+  'questionSets.aiPrompt.categoryPlaceholder': '[Kategorie z.B. Geschichte, Naturwissenschaft, Geographie, Sport, Kultur]',
+  'questionSets.aiPrompt.questionPlaceholder': '[Frage 1]?',
+  'questionSets.aiPrompt.correctPlaceholder': '[Richtige Antwort]',
+  'questionSets.aiPrompt.wrongPlaceholder': '[Falsche Antwort]',
+  'questionSets.aiPrompt.explanationPlaceholder': '[Erklärung]',
+  'questionSets.aiPrompt.displayIntro': 'Erstelle ein Quiz-Fragen-Set als JSON im folgenden Format.\nErsetze die Platzhalter mit echtem Inhalt zum Thema\n[DEIN THEMA HIER].',
+  'questionSets.aiPrompt.displayRules': 'Regeln:\n- Genau 10 Fragen (oder mehr/weniger nach Wunsch)\n- Jede Frage hat genau 4 Antworten\n- Genau 1 Antwort pro Frage ist "correct": true\n- "difficulty" pro Frage: 1 (leicht) bis 5 (schwer)\n- "explanation" erklärt kurz die richtige Antwort\n- Antworte NUR mit dem JSON, kein anderer Text\n\n[Dann folgt die JSON-Vorlage von oben]',
+
+  // Question Set Manager Page
+  'questionSets.pageTitle': 'Fragen-Set Verwaltung',
+  'questionSets.pageSubtitle': 'Fragen-Sets importieren, bearbeiten und verwalten',
+
+  // Auth Guard
+  'auth.validating': 'Authentifizierung wird überprüft...',
+  'auth.redirecting': 'Weiterleitung zum Authentifizierungsdienst...',
+
+  // File Manager
+  'fileManager.loading': 'Dateien werden geladen...',
+  'fileManager.uploadedFiles': 'Hochgeladene Dateien',
+  'fileManager.searchPlaceholder': 'Dateien suchen...',
+  'fileManager.newestFirst': 'Neueste zuerst',
+  'fileManager.oldestFirst': 'Älteste zuerst',
+  'fileManager.largestFirst': 'Größte zuerst',
+  'fileManager.smallestFirst': 'Kleinste zuerst',
+  'fileManager.retry': 'Erneut versuchen',
+  'fileManager.noFiles': 'Keine Dateien gefunden',
+  'fileManager.adjustFilters': 'Versuche die Suche oder Filter anzupassen',
+  'fileManager.uploadToStart': 'Lade Dateien hoch um loszulegen',
+  'fileManager.deleteFile': 'Datei löschen',
+  'fileManager.allTypes': 'Alle Typen',
+
+  // File Upload
+  'fileUpload.uploadProgress': 'Upload-Fortschritt',
+  'fileUpload.uploading': 'Dateien werden hochgeladen...',
+  'fileUpload.complete': 'Upload abgeschlossen',
+  'fileUpload.processing': 'Wird verarbeitet...',
+  'fileUpload.uploaded': '{progress}% hochgeladen',
+  'fileUpload.supportedFormats': 'Unterstützte Formate: {formats}',
+  'fileUpload.maxSize': 'Maximale Dateigröße: {size}',
+  'fileUpload.maxFiles': 'Maximale Dateien: {count}',
+
+  // Document Processor
+  'docProcessor.loading': 'Dokumentverarbeitungsstatus wird geladen...',
+  'docProcessor.processingOptions': 'Verarbeitungsoptionen',
+  'docProcessor.metadata': 'Dokument-Metadaten',
+  'docProcessor.content': 'Dokumentinhalt',
+  'docProcessor.failed': 'Verarbeitung fehlgeschlagen',
+
+  // GameInterface extras
+  'gameInterface.title': 'Learn2Play Quiz',
+
+  // PerksManager extras
+  'perk.loadoutOverview': 'Loadout-Übersicht',
+
+  // ScoreDisplay
+  'score.streak': 'Serie',
+
+  // Settings contact
+  'settings.contactEmail': 'E-Mail: support@learn2play.com',
+  'settings.contactGithub': 'GitHub: github.com/learn2play'
 }
 
 export class LocalizationService {

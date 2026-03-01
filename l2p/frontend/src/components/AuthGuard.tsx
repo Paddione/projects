@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { apiService } from '../services/apiService'
 import { useAuthStore } from '../stores/authStore'
+import { useLocalization } from '../hooks/useLocalization'
 import { extractOAuthParams, validateState, getOAuthState, clearOAuthState, clearOAuthParamsFromUrl } from '../utils/oauth'
 import { importMetaEnv } from '../utils/import-meta'
 
@@ -9,6 +10,7 @@ interface AuthGuardProps {
 }
 
 export const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
+  const { t } = useLocalization()
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null)
   const [isValidating, setIsValidating] = useState(true)
   const [oauthError, setOauthError] = useState<string | null>(null)
@@ -248,7 +250,7 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
             animation: 'spin 1s linear infinite',
             margin: '0 auto 1rem'
           }} />
-          <p>Validating authentication...</p>
+          <p>{t('auth.validating')}</p>
         </div>
       </div>
     )
@@ -287,7 +289,7 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
                 animation: 'spin 1s linear infinite',
                 margin: '0 auto 1rem'
               }} />
-              <p>Redirecting to authentication service...</p>
+              <p>{t('auth.redirecting')}</p>
             </>
           )}
         </div>

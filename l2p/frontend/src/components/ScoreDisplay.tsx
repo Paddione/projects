@@ -68,7 +68,7 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
             className={`${styles.streakValue} ${getStreakColor(correctAnswers)}`}
             data-testid="streak-value"
           >
-            <Icon name="game-ui/streak" size={20} alt="Streak" /> {correctAnswers}
+            <Icon name="game-ui/streak" size={20} alt={t('score.streak')} /> {correctAnswers}
             {totalQuestions && `/${totalQuestions}`}
           </div>
         </div>

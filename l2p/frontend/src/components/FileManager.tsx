@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { apiService } from '../services/apiService';
+import { useLocalization } from '../hooks/useLocalization';
 import './FileManager.css';
 
 interface FileData {
@@ -31,6 +32,7 @@ const FileManager: React.FC<FileManagerProps> = ({
   onFileDelete,
   className = ''
 }) => {
+  const { t } = useLocalization();
   const [files, setFiles] = useState<FileData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -170,7 +172,7 @@ const FileManager: React.FC<FileManagerProps> = ({
       <div className={`file-manager-container ${className}`}>
         <div className="file-manager-loading">
           <div className="spinner"></div>
-          <p>Loading files...</p>
+          <p>{t('fileManager.loading')}</p>
         </div>
       </div>
     );
@@ -180,7 +182,7 @@ const FileManager: React.FC<FileManagerProps> = ({
     <div className={`file-manager-container ${className}`}>
       {/* Header */}
       <div className="file-manager-header">
-        <h2>Uploaded Files</h2>
+        <h2>{t('fileManager.uploadedFiles')}</h2>
         <button
           className="refresh-btn"
           onClick={loadFiles}
@@ -195,7 +197,7 @@ const FileManager: React.FC<FileManagerProps> = ({
         <div className="search-container">
           <input
             type="text"
-            placeholder="Search files..."
+            placeholder={t('fileManager.searchPlaceholder')}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="search-input"
@@ -224,12 +226,12 @@ const FileManager: React.FC<FileManagerProps> = ({
             }}
             className="sort-select"
           >
-            <option value="date-desc">Newest First</option>
-            <option value="date-asc">Oldest First</option>
+            <option value="date-desc">{t('fileManager.newestFirst')}</option>
+            <option value="date-asc">{t('fileManager.oldestFirst')}</option>
             <option value="name-asc">Name A-Z</option>
             <option value="name-desc">Name Z-A</option>
-            <option value="size-desc">Largest First</option>
-            <option value="size-asc">Smallest First</option>
+            <option value="size-desc">{t('fileManager.largestFirst')}</option>
+            <option value="size-asc">{t('fileManager.smallestFirst')}</option>
             <option value="type-asc">Type A-Z</option>
             <option value="type-desc">Type Z-A</option>
           </select>
@@ -240,7 +242,7 @@ const FileManager: React.FC<FileManagerProps> = ({
       {error && (
         <div className="file-manager-error">
           <p>❌ {error}</p>
-          <button onClick={loadFiles}>Retry</button>
+          <button onClick={loadFiles}>{t('fileManager.retry')}</button>
         </div>
       )}
 
@@ -249,11 +251,11 @@ const FileManager: React.FC<FileManagerProps> = ({
         {filteredFiles.length === 0 ? (
           <div className="file-manager-empty">
             <div className="empty-icon">📁</div>
-            <h3>No files found</h3>
+            <h3>{t('fileManager.noFiles')}</h3>
             <p>
               {searchTerm || fileTypeFilter !== 'all'
-                ? 'Try adjusting your search or filters'
-                : 'Upload some files to get started'
+                ? t('fileManager.adjustFilters')
+                : t('fileManager.uploadToStart')
               }
             </p>
           </div>
@@ -284,7 +286,7 @@ const FileManager: React.FC<FileManagerProps> = ({
                     className="delete-btn"
                     onClick={() => handleFileDelete(file.fileId)}
                     disabled={deletingFiles.has(file.fileId)}
-                    title="Delete file"
+                    title={t('fileManager.deleteFile')}
                   >
                     {deletingFiles.has(file.fileId) ? '🗑️' : '🗑️'}
                   </button>

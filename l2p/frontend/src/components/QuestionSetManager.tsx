@@ -245,14 +245,14 @@ export const QuestionSetManager: React.FC = () => {
 
     try {
       if (!importData.trim()) {
-        throw new Error('Bitte geben Sie JSON-Daten ein.')
+        throw new Error(t('questionSets.importError.emptyJson'))
       }
 
       let parsedData;
       try {
         parsedData = JSON.parse(importData)
       } catch (err) {
-        throw new Error('Ungültiges JSON-Format. Bitte überprüfen Sie Ihre Eingabe.')
+        throw new Error(t('questionSets.importError.invalidJson'))
       }
 
       // Map various difficulty values to standard English keys
@@ -285,7 +285,7 @@ export const QuestionSetManager: React.FC = () => {
         payload = {
           questionSet: {
             name: parsedData.title || parsedData.name || 'Import-Set',
-            description: parsedData.description || 'Importiert am ' + new Date().toLocaleDateString(),
+            description: parsedData.description || t('questionSets.importDefaultDesc') + new Date().toLocaleDateString(),
             category: parsedData.category || 'General',
             difficulty: difficultyMap[String(parsedData.difficulty || 'medium').toLowerCase()] || 'medium'
           },
@@ -405,7 +405,7 @@ export const QuestionSetManager: React.FC = () => {
             className={styles.button}
             aria-pressed={compactMode}
             onClick={() => setCompactMode(v => !v)}
-            title="Toggle compact list mode"
+            title={t('questionSets.toggleCompact')}
           >
             {compactMode ? t('questionSets.disableCompact') : t('questionSets.enableCompact')}
           </button>
@@ -455,7 +455,7 @@ export const QuestionSetManager: React.FC = () => {
                         e.stopPropagation()
                         handleEditClick(set)
                       }}
-                      title="Edit"
+                      title={t('questionSets.edit')}
                     >
                       ✏️
                     </button>
@@ -465,7 +465,7 @@ export const QuestionSetManager: React.FC = () => {
                         e.stopPropagation()
                         handleExportQuestionSet(set.id)
                       }}
-                      title="Export"
+                      title={t('questionSets.export')}
                     >
                       📤
                     </button>
@@ -475,7 +475,7 @@ export const QuestionSetManager: React.FC = () => {
                         e.stopPropagation()
                         handleDeleteQuestionSet(set.id)
                       }}
-                      title="Delete"
+                      title={t('questionSets.deleteAction')}
                     >
                       🗑️
                     </button>
@@ -722,12 +722,12 @@ export const QuestionSetManager: React.FC = () => {
             aria-labelledby="import-modal-title"
             tabIndex={-1}
           >
-            <h2 id="import-modal-title">Fragen-Set Importieren</h2>
+            <h2 id="import-modal-title">{t('questionSets.importTitle')}</h2>
             <div className={styles.importInstructions}>
-              <p>Fügen Sie JSON-Daten ein, um ein neues Fragen-Set zu erstellen. Nutzen Sie die Vorlage unten oder lassen Sie das JSON von einer KI generieren.</p>
+              <p>{t('questionSets.importInstructions')}</p>
 
               <details open>
-                <summary>Vollständige JSON-Vorlage (alle Felder)</summary>
+                <summary>{t('questionSets.templateFull')}</summary>
                 <div className={styles.templateWrapper}>
                   <button
                     type="button"
@@ -735,33 +735,33 @@ export const QuestionSetManager: React.FC = () => {
                     onClick={() => {
                       const template = JSON.stringify({
                         questionSet: {
-                          name: "Name des Fragen-Sets",
-                          description: "Beschreibung des Themas und Inhalts",
-                          category: "Kategorie (z.B. Geschichte, Naturwissenschaft, Geographie)",
+                          name: t('questionSets.tpl.setName'),
+                          description: t('questionSets.tpl.setDesc'),
+                          category: t('questionSets.tpl.setCategory'),
                           difficulty: "medium",
                           is_active: true
                         },
                         questions: [
                           {
-                            question_text: "Fragetext hier eingeben?",
+                            question_text: t('questionSets.tpl.questionPlaceholder'),
                             answers: [
-                              { text: "Richtige Antwort", correct: true },
-                              { text: "Falsche Antwort A", correct: false },
-                              { text: "Falsche Antwort B", correct: false },
-                              { text: "Falsche Antwort C", correct: false }
+                              { text: t('questionSets.tpl.correctAnswer'), correct: true },
+                              { text: t('questionSets.tpl.wrongAnswerA'), correct: false },
+                              { text: t('questionSets.tpl.wrongAnswerB'), correct: false },
+                              { text: t('questionSets.tpl.wrongAnswerC'), correct: false }
                             ],
-                            explanation: "Erklärung warum die Antwort richtig ist.",
+                            explanation: t('questionSets.tpl.explanation'),
                             difficulty: 2
                           },
                           {
-                            question_text: "Zweite Frage hier?",
+                            question_text: t('questionSets.tpl.question2'),
                             answers: [
-                              { text: "Antwort 1", correct: false },
-                              { text: "Antwort 2", correct: true },
-                              { text: "Antwort 3", correct: false },
-                              { text: "Antwort 4", correct: false }
+                              { text: t('questionSets.tpl.answer1'), correct: false },
+                              { text: t('questionSets.tpl.answer2'), correct: true },
+                              { text: t('questionSets.tpl.answer3'), correct: false },
+                              { text: t('questionSets.tpl.answer4'), correct: false }
                             ],
-                            explanation: "Erklärung zur zweiten Frage.",
+                            explanation: t('questionSets.tpl.explanation2'),
                             difficulty: 3
                           }
                         ]
@@ -769,32 +769,32 @@ export const QuestionSetManager: React.FC = () => {
                       navigator.clipboard.writeText(template)
                         .then(() => {
                           const btn = document.activeElement as HTMLButtonElement
-                          if (btn) { btn.textContent = 'Kopiert!'; setTimeout(() => { btn.textContent = 'Vorlage kopieren' }, 2000) }
+                          if (btn) { btn.textContent = t('questionSets.templateCopied'); setTimeout(() => { btn.textContent = t('questionSets.templateCopy') }, 2000) }
                         })
                         .catch(() => { /* clipboard not available */ })
                     }}
                   >
-                    Vorlage kopieren
+                    {t('questionSets.templateCopy')}
                   </button>
                   <pre>{`{
   "questionSet": {
-    "name": "Name des Fragen-Sets",
-    "description": "Beschreibung des Themas und Inhalts",
-    "category": "Kategorie (z.B. Geschichte, Naturwissenschaft)",
+    "name": "${t('questionSets.tpl.setName')}",
+    "description": "${t('questionSets.tpl.setDesc')}",
+    "category": "${t('questionSets.tpl.setCategory')}",
     "difficulty": "medium",       // "easy" | "medium" | "hard"
-    "is_active": true             // optional, Standard: true
+    "is_active": true             // ${t('questionSets.tpl.optional')}
   },
   "questions": [
     {
-      "question_text": "Fragetext hier eingeben?",
+      "question_text": "${t('questionSets.tpl.questionPlaceholder')}",
       "answers": [
-        { "text": "Richtige Antwort", "correct": true },
-        { "text": "Falsche Antwort A", "correct": false },
-        { "text": "Falsche Antwort B", "correct": false },
-        { "text": "Falsche Antwort C", "correct": false }
+        { "text": "${t('questionSets.tpl.correctAnswer')}", "correct": true },
+        { "text": "${t('questionSets.tpl.wrongAnswerA')}", "correct": false },
+        { "text": "${t('questionSets.tpl.wrongAnswerB')}", "correct": false },
+        { "text": "${t('questionSets.tpl.wrongAnswerC')}", "correct": false }
       ],
-      "explanation": "Erklärung warum die Antwort richtig ist.",
-      "difficulty": 2             // 1 (leicht) bis 5 (schwer)
+      "explanation": "${t('questionSets.tpl.explanation')}",
+      "difficulty": 2             // ${t('questionSets.tpl.difficultyComment')}
     }
   ]
 }`}</pre>
@@ -802,39 +802,39 @@ export const QuestionSetManager: React.FC = () => {
               </details>
 
               <details>
-                <summary>KI-Prompt zum Generieren (kopieren & an ChatGPT/Claude senden)</summary>
+                <summary>{t('questionSets.aiPromptTitle')}</summary>
                 <div className={styles.templateWrapper}>
                   <button
                     type="button"
                     className={styles.copyButton}
                     onClick={() => {
-                      const prompt = `Erstelle ein Quiz-Fragen-Set als JSON im folgenden Format. Ersetze die Platzhalter mit echtem Inhalt zum Thema [DEIN THEMA HIER].
+                      const prompt = `${t('questionSets.aiPrompt.intro')}
 
-Regeln:
-- Genau 10 Fragen (oder mehr/weniger nach Wunsch)
-- Jede Frage hat genau 4 Antworten
-- Genau 1 Antwort pro Frage ist "correct": true, die anderen "correct": false
-- "difficulty" pro Frage: 1 (leicht) bis 5 (schwer), mische verschiedene Schwierigkeiten
-- "explanation" erklärt kurz warum die Antwort richtig ist
-- Antworte NUR mit dem JSON, kein anderer Text
+${t('questionSets.aiPrompt.rules')}
+${t('questionSets.aiPrompt.rule1')}
+${t('questionSets.aiPrompt.rule2')}
+${t('questionSets.aiPrompt.rule3')}
+${t('questionSets.aiPrompt.rule4')}
+${t('questionSets.aiPrompt.rule5')}
+${t('questionSets.aiPrompt.rule6')}
 
 {
   "questionSet": {
-    "name": "Quiz: [Thema]",
-    "description": "[Kurze Beschreibung des Quiz-Inhalts]",
-    "category": "[Kategorie z.B. Geschichte, Naturwissenschaft, Geographie, Sport, Kultur]",
+    "name": "${t('questionSets.aiPrompt.topic')}",
+    "description": "${t('questionSets.aiPrompt.descPlaceholder')}",
+    "category": "${t('questionSets.aiPrompt.categoryPlaceholder')}",
     "difficulty": "medium"
   },
   "questions": [
     {
-      "question_text": "[Frage 1]?",
+      "question_text": "${t('questionSets.aiPrompt.questionPlaceholder')}",
       "answers": [
-        { "text": "[Richtige Antwort]", "correct": true },
-        { "text": "[Falsche Antwort]", "correct": false },
-        { "text": "[Falsche Antwort]", "correct": false },
-        { "text": "[Falsche Antwort]", "correct": false }
+        { "text": "${t('questionSets.aiPrompt.correctPlaceholder')}", "correct": true },
+        { "text": "${t('questionSets.aiPrompt.wrongPlaceholder')}", "correct": false },
+        { "text": "${t('questionSets.aiPrompt.wrongPlaceholder')}", "correct": false },
+        { "text": "${t('questionSets.aiPrompt.wrongPlaceholder')}", "correct": false }
       ],
-      "explanation": "[Erklärung]",
+      "explanation": "${t('questionSets.aiPrompt.explanationPlaceholder')}",
       "difficulty": 2
     }
   ]
@@ -842,86 +842,74 @@ Regeln:
                       navigator.clipboard.writeText(prompt)
                         .then(() => {
                           const btn = document.activeElement as HTMLButtonElement
-                          if (btn) { btn.textContent = 'Kopiert!'; setTimeout(() => { btn.textContent = 'Prompt kopieren' }, 2000) }
+                          if (btn) { btn.textContent = t('questionSets.templateCopied'); setTimeout(() => { btn.textContent = t('questionSets.aiPromptCopy') }, 2000) }
                         })
                         .catch(() => { /* clipboard not available */ })
                     }}
                   >
-                    Prompt kopieren
+                    {t('questionSets.aiPromptCopy')}
                   </button>
-                  <pre className={styles.promptPre}>{`Erstelle ein Quiz-Fragen-Set als JSON im folgenden Format.
-Ersetze die Platzhalter mit echtem Inhalt zum Thema
-[DEIN THEMA HIER].
-
-Regeln:
-- Genau 10 Fragen (oder mehr/weniger nach Wunsch)
-- Jede Frage hat genau 4 Antworten
-- Genau 1 Antwort pro Frage ist "correct": true
-- "difficulty" pro Frage: 1 (leicht) bis 5 (schwer)
-- "explanation" erklärt kurz die richtige Antwort
-- Antworte NUR mit dem JSON, kein anderer Text
-
-[Dann folgt die JSON-Vorlage von oben]`}</pre>
+                  <pre className={styles.promptPre}>{t('questionSets.aiPrompt.displayIntro') + '\n\n' + t('questionSets.aiPrompt.displayRules')}</pre>
                 </div>
               </details>
 
               <details>
-                <summary>Alle akzeptierten Feldnamen</summary>
+                <summary>{t('questionSets.fieldReference')}</summary>
                 <div className={styles.fieldReference}>
                   <table className={styles.fieldTable}>
                     <thead>
-                      <tr><th>Feld</th><th>Alternativen</th><th>Beschreibung</th></tr>
+                      <tr><th>{t('questionSets.fieldName')}</th><th>{t('questionSets.fieldAlternatives')}</th><th>{t('questionSets.fieldDescription')}</th></tr>
                     </thead>
                     <tbody>
                       <tr>
                         <td><code>questionSet.name</code></td>
                         <td><code>title</code>, <code>name</code></td>
-                        <td>Name des Sets (Pflicht)</td>
+                        <td>{t('questionSets.fieldSetName')}</td>
                       </tr>
                       <tr>
                         <td><code>questionSet.description</code></td>
                         <td><code>description</code></td>
-                        <td>Beschreibung (optional)</td>
+                        <td>{t('questionSets.fieldSetDescription')}</td>
                       </tr>
                       <tr>
                         <td><code>questionSet.category</code></td>
                         <td><code>category</code></td>
-                        <td>Kategorie (Standard: &quot;General&quot;)</td>
+                        <td>{t('questionSets.fieldSetCategory')}</td>
                       </tr>
                       <tr>
                         <td><code>questionSet.difficulty</code></td>
                         <td><code>difficulty</code></td>
-                        <td>&quot;easy&quot; / &quot;medium&quot; / &quot;hard&quot; oder &quot;leicht&quot; / &quot;mittel&quot; / &quot;schwer&quot;</td>
+                        <td>{t('questionSets.fieldSetDifficulty')}</td>
                       </tr>
                       <tr>
                         <td><code>question_text</code></td>
                         <td><code>questionText</code>, <code>question</code>, <code>text</code></td>
-                        <td>Fragetext (Pflicht). Auch als Objekt: <code>{`{"de": "...", "en": "..."}`}</code></td>
+                        <td>{t('questionSets.fieldQuestionText')}<code>{`{"de": "...", "en": "..."}`}</code></td>
                       </tr>
                       <tr>
                         <td><code>answers</code></td>
                         <td><code>options</code></td>
-                        <td>Array von Antworten (min. 2)</td>
+                        <td>{t('questionSets.fieldAnswers')}</td>
                       </tr>
                       <tr>
                         <td><code>answers[].correct</code></td>
                         <td><code>is_correct</code>, <code>isCorrect</code></td>
-                        <td>Boolean: ist diese Antwort richtig?</td>
+                        <td>{t('questionSets.fieldCorrect')}</td>
                       </tr>
                       <tr>
                         <td><code>answers[].text</code></td>
-                        <td><code>answer_text</code>, oder einfach ein String</td>
-                        <td>Antworttext</td>
+                        <td><code>answer_text</code></td>
+                        <td>{t('questionSets.fieldAnswerText')}</td>
                       </tr>
                       <tr>
                         <td><code>explanation</code></td>
                         <td>&mdash;</td>
-                        <td>Erklärung (optional). Auch als Objekt: <code>{`{"de": "...", "en": "..."}`}</code></td>
+                        <td>{t('questionSets.fieldExplanation')}<code>{`{"de": "...", "en": "..."}`}</code></td>
                       </tr>
                       <tr>
                         <td><code>difficulty</code></td>
                         <td>&mdash;</td>
-                        <td>Schwierigkeit pro Frage: 1&ndash;5 (Standard: 1)</td>
+                        <td>{t('questionSets.fieldDifficulty')}</td>
                       </tr>
                     </tbody>
                   </table>
@@ -931,12 +919,12 @@ Regeln:
 
             <form onSubmit={handleImportQuestionSet}>
               <div className={styles.formGroup}>
-                <label htmlFor="import-data">JSON Data</label>
+                <label htmlFor="import-data">{t('questionSets.jsonData')}</label>
                 <textarea
                   id="import-data"
                   value={importData}
                   onChange={(e) => setImportData(e.target.value)}
-                  placeholder="JSON hier einfügen..."
+                  placeholder={t('questionSets.jsonPlaceholder')}
                   rows={15}
                   className={styles.jsonTextarea}
                   required
@@ -945,7 +933,7 @@ Regeln:
 
               {importErrorDetails && (
                 <div className={styles.importErrorDetails}>
-                  <h4>Import-Fehler:</h4>
+                  <h4>{t('questionSets.importErrors')}</h4>
                   <ul>
                     {importErrorDetails.map((err, i) => (
                       <li key={i}>{err}</li>

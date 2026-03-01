@@ -577,7 +577,7 @@ const PerksManager: React.FC = () => {
         </div>
 
         {/* RIGHT: Loadout summary sidebar */}
-        <aside className="perks-overview" aria-label="Loadout overview">
+        <aside className="perks-overview" aria-label={t('perk.loadoutOverview')}>
           <div className="overview-card">
             <h3>{t('perk.currentLoadout')}</h3>
             <div className="loadout-summary">

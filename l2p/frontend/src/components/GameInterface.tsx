@@ -200,7 +200,7 @@ export const GameInterface: React.FC<GameInterfaceProps> = ({ className = '' }) 
   return (
     <div className={`${styles.gameInterface} ${className}`.trim()}>
       <div className={styles.header}>
-        <h1 className={styles.title}>Learn2Play Quiz</h1>
+        <h1 className={styles.title}>{t('gameInterface.title')}</h1>
         <p className={styles.subtitle}>{t('home.subtitle')}</p>
       </div>
 
@@ -219,7 +219,7 @@ export const GameInterface: React.FC<GameInterfaceProps> = ({ className = '' }) 
             data-testid="create-lobby-button"
           >
             <div className={styles.cardHeader}>
-              <div className={styles.cardIcon}><Icon name="game-ui/lobby" size={32} alt="Create Lobby" /></div>
+              <div className={styles.cardIcon}><Icon name="game-ui/lobby" size={32} alt={t('home.createLobby')} /></div>
               <div className={styles.cardBadge}>{t('home.fastPlay')}</div>
             </div>
             <div className={styles.cardBody}>
@@ -320,7 +320,7 @@ export const GameInterface: React.FC<GameInterfaceProps> = ({ className = '' }) 
             data-testid="join-lobby-button"
           >
             <div className={styles.cardHeader}>
-              <div className={styles.cardIcon}><Icon name="game-ui/multiplayer" size={32} alt="Join Game" /></div>
+              <div className={styles.cardIcon}><Icon name="game-ui/multiplayer" size={32} alt={t('home.joinGame')} /></div>
               <div className={styles.cardBadge}>{t('home.multiplayer')}</div>
             </div>
             <div className={styles.cardBody}>

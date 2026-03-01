@@ -234,8 +234,8 @@ const HelpContent: React.FC = () => {
       <section className={styles.helpSection}>
         <h3>{t('help.contact')}</h3>
         <div className={styles.helpText}>
-          <p>Email: support@learn2play.com</p>
-          <p>GitHub: github.com/learn2play</p>
+          <p>{t('settings.contactEmail')}</p>
+          <p>{t('settings.contactGithub')}</p>
         </div>
       </section>
     </div>

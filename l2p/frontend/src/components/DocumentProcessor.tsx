@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { apiService } from '../services/apiService';
+import { useLocalization } from '../hooks/useLocalization';
 import { LoadingSpinner } from './LoadingSpinner';
 import styles from '../styles/DocumentProcessor.module.css';
 
@@ -40,6 +41,7 @@ export const DocumentProcessor: React.FC<DocumentProcessorProps> = ({
   onProcessingComplete,
   onProcessingError
 }) => {
+  const { t } = useLocalization();
   const [processingStatus, setProcessingStatus] = useState<DocumentProcessingStatus | null>(null);
   const [processingOptions, setProcessingOptions] = useState<ProcessingOptions>({
     chunkSize: 1000,
@@ -160,7 +162,7 @@ export const DocumentProcessor: React.FC<DocumentProcessorProps> = ({
       <div className={styles.container}>
         <div className={styles.loading}>
           <LoadingSpinner />
-          <p>Loading document processing status...</p>
+          <p>{t('docProcessor.loading')}</p>
         </div>
       </div>
     );
@@ -205,7 +207,7 @@ export const DocumentProcessor: React.FC<DocumentProcessorProps> = ({
       {/* Processing Options */}
       {processingStatus.status === 'uploading' && (
         <div className={styles.optionsSection}>
-          <h4>Processing Options</h4>
+          <h4>{t('docProcessor.processingOptions')}</h4>
           <div className={styles.optionsGrid}>
             <div className={styles.option}>
               <label>Chunk Size:</label>
@@ -280,7 +282,7 @@ export const DocumentProcessor: React.FC<DocumentProcessorProps> = ({
       {processingStatus.metadata && (
         <div className={styles.metadataSection}>
           <div className={styles.metadataHeader}>
-            <h4>Document Metadata</h4>
+            <h4>{t('docProcessor.metadata')}</h4>
             <button
               className={styles.editButton}
               onClick={() => setIsEditingMetadata(!isEditingMetadata)}
@@ -374,7 +376,7 @@ export const DocumentProcessor: React.FC<DocumentProcessorProps> = ({
       {processingStatus.content && (
         <div className={styles.contentSection}>
           <div className={styles.contentHeader}>
-            <h4>Document Content</h4>
+            <h4>{t('docProcessor.content')}</h4>
             <button
               className={styles.toggleButton}
               onClick={() => setShowContentPreview(!showContentPreview)}
