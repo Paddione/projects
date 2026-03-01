@@ -5,85 +5,46 @@ const CORRUPT_PERFORMERS_SET = new Set(CORRUPT_PERFORMERS.map((p) => p.toLowerCa
 
 export class CategoryExtractor {
   static readonly CATEGORY_PATTERNS = {
-    age: ['teen', '18yo', '19yo', 'young', 'mature', 'milf', 'cougar', 'older'],
+    age: [
+      'teen', '18yo', '19yo', 'young', 'mature', 'milf', 'cougar', 'older',
+      'granny', 'college', 'middle aged',
+    ],
     physical: [
-      'blonde',
-      'brunette',
-      'redhead',
-      'petite',
-      'busty',
-      'big_tits',
-      'small_tits',
-      'skinny',
-      'curvy',
-      'thick',
-      'slim',
-      'tall',
-      'short',
-      'athletic',
-      'chubby',
+      'blonde', 'brunette', 'redhead', 'petite', 'busty', 'big tits',
+      'small tits', 'skinny', 'curvy', 'thick', 'slim', 'tall', 'short',
+      'athletic', 'chubby', 'natural', 'fake', 'pierced', 'tattooed',
+      'hairy', 'shaved', 'bald', 'muscular', 'fit', 'big ass', 'small ass',
+      'long hair', 'short hair',
     ],
     ethnicity: [
-      'asian',
-      'russian',
-      'italian',
-      'british',
-      'japanese',
-      'chinese',
-      'korean',
-      'indian',
-      'latina',
-      'ebony',
-      'white',
-      'european',
-      'american',
+      'asian', 'russian', 'italian', 'british', 'japanese', 'chinese',
+      'korean', 'indian', 'latina', 'ebony', 'white', 'european', 'american',
+      'thai', 'vietnamese', 'filipina', 'brazilian', 'colombian', 'mexican',
+      'german', 'french', 'spanish', 'czech', 'hungarian', 'african',
+      'middle eastern', 'mixed',
     ],
     relationship: [
-      'step',
-      'stepsis',
-      'stepmom',
-      'stepdad',
-      'stepson',
-      'stepdaughter',
-      'mom',
-      'dad',
-      'sister',
-      'brother',
-      'gf',
-      'girlfriend',
-      'wife',
-      'husband',
+      'step', 'stepsis', 'stepmom', 'stepdad', 'stepson', 'stepdaughter',
+      'mom', 'dad', 'sister', 'brother', 'gf', 'girlfriend', 'wife',
+      'husband', 'stranger', 'neighbor', 'boss', 'teacher', 'student',
+      'babysitter', 'roommate', 'ex', 'friend', 'coworker', 'landlord',
     ],
     acts: [
-      'anal',
-      'oral',
-      'creampie',
-      'facial',
-      'dp',
-      'gangbang',
-      'threesome',
-      'solo',
-      'masturbation',
-      'fingering',
-      'squirting',
-      'orgasm',
+      'anal', 'oral', 'creampie', 'facial', 'dp', 'gangbang', 'threesome',
+      'solo', 'masturbation', 'fingering', 'squirting', 'orgasm',
+      'blowjob', 'handjob', 'footjob', 'deepthroat', 'rimming', 'bdsm',
+      'bondage', 'roleplay', 'pov', 'missionary', 'doggy', 'cowgirl',
+      'reverse cowgirl', 'rough', 'gentle', 'romantic', 'massage',
+      'casting', 'interview',
     ],
     setting: [
-      'hotel',
-      'bedroom',
-      'bathroom',
-      'kitchen',
-      'office',
-      'outdoor',
-      'car',
-      'public',
-      'beach',
-      'pool',
-      'shower',
-      'amateur',
-      'homemade',
+      'hotel', 'bedroom', 'bathroom', 'kitchen', 'office', 'outdoor',
+      'car', 'public', 'beach', 'pool', 'shower', 'amateur', 'homemade',
+      'studio', 'gym', 'garden', 'balcony', 'sauna', 'jacuzzi',
+      'classroom', 'hospital', 'dungeon', 'yacht', 'camping', 'van',
+      'dressing room',
     ],
-    quality: ['4k', 'hd', '1080p', '720p', '480p', 'uhd', 'fhd'],
+    quality: ['4k', 'hd', '1080p', '720p', '480p', 'uhd', 'fhd', '8k', '2k', '60fps', 'vr', 'hdr'],
     performer: [], // Will be populated dynamically from performer names
   };
 
@@ -138,27 +99,104 @@ export class CategoryExtractor {
     return categories;
   }
 
+  /**
+   * Extract categories from a video's directory path.
+   * Splits path into segments and matches each against CATEGORY_PATTERNS.
+   * Also detects performer names from capitalized multi-word segments.
+   */
+  static extractFromPath(filePath: string): VideoCategories {
+    const categories: VideoCategories = {
+      age: [],
+      physical: [],
+      ethnicity: [],
+      relationship: [],
+      acts: [],
+      setting: [],
+      quality: [],
+      performer: [],
+    };
+
+    // Get directory segments (exclude filename)
+    const segments = filePath
+      .replace(/\\/g, '/')
+      .split('/')
+      .slice(0, -1) // Remove filename
+      .filter((s) => s.length > 0);
+
+    for (const segment of segments) {
+      const normalized = segment
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+
+      // Match patterns in segment
+      Object.entries(this.CATEGORY_PATTERNS).forEach(([type, patterns]) => {
+        patterns.forEach((pattern) => {
+          if (normalized.includes(pattern)) {
+            const categoryArray = categories[type as keyof VideoCategories];
+            if (categoryArray && !categoryArray.includes(pattern)) {
+              categoryArray.push(pattern);
+            }
+          }
+        });
+      });
+
+      // Detect performer names: multi-word segments with capitalized words
+      // e.g., "Jane Doe" → "jane doe"
+      const words = segment.split(/\s+/).filter((w) => w.length >= 2);
+      if (
+        words.length >= 2 &&
+        words.every((w) => /^[A-Z]/.test(w)) &&
+        !this.isCommonWord(words[0].toLowerCase())
+      ) {
+        const performerName = segment.trim().toLowerCase();
+        if (
+          !categories.performer.includes(performerName) &&
+          !CORRUPT_PERFORMERS_SET.has(performerName)
+        ) {
+          categories.performer.push(performerName);
+        }
+      }
+    }
+
+    return categories;
+  }
+
+  /**
+   * Combine filename and path extraction, deduplicating results.
+   */
+  static getSuggestions(
+    filename: string,
+    dirPath: string,
+  ): VideoCategories {
+    const fromFilename = this.extractCategories(filename);
+    const fromPath = this.extractFromPath(dirPath);
+
+    const merged: VideoCategories = {
+      age: [],
+      physical: [],
+      ethnicity: [],
+      relationship: [],
+      acts: [],
+      setting: [],
+      quality: [],
+      performer: [],
+    };
+
+    for (const type of Object.keys(merged) as (keyof VideoCategories)[]) {
+      const combined = [...(fromFilename[type] || []), ...(fromPath[type] || [])];
+      merged[type] = [...new Set(combined)];
+    }
+
+    return merged;
+  }
+
   private static isCommonWord(word: string): boolean {
     const commonWords = [
-      'the',
-      'and',
-      'for',
-      'with',
-      'her',
-      'his',
-      'she',
-      'him',
-      'best',
-      'hot',
-      'sex',
-      'fuck',
-      'porn',
-      'xxx',
-      'video',
-      'clip',
-      'scene',
-      'new',
-      'old',
+      'the', 'and', 'for', 'with', 'her', 'his', 'she', 'him',
+      'best', 'hot', 'sex', 'fuck', 'porn', 'xxx', 'video', 'clip',
+      'scene', 'new', 'old', 'performers', 'videos', 'clips',
     ];
     return commonWords.includes(word);
   }
