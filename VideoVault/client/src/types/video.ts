@@ -101,6 +101,7 @@ export interface VideoManagerState {
   currentVideo: Video | null;
   availableCategories: Category[];
   knownTags: Category[];
+  pinnedVideoId: string | null;
 }
 
 export type SortField = 'displayName' | 'lastModified' | 'size' | 'path' | 'categoryCount';

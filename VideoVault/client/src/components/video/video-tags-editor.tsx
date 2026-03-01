@@ -12,7 +12,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Video, VideoCategories, CustomCategories, Category } from '@/types/video';
 import { getCategoryColorClasses } from '@/lib/category-colors';
-import { X, Plus } from 'lucide-react';
+import { X, Plus, Sparkles } from 'lucide-react';
 import { CategoryNormalizer } from '@/services/category-normalizer';
 import { CategorySearch } from '@/components/ui/category-search';
 
@@ -24,6 +24,7 @@ interface VideoTagsEditorProps {
     categories: Partial<{ categories: VideoCategories; customCategories: CustomCategories }>,
   ) => void;
   onRemoveCategory: (videoId: string, categoryType: string, categoryValue: string) => void;
+  suggestions?: Record<string, string[]>;
   className?: string;
   onCancel?: () => void;
 }
@@ -33,6 +34,7 @@ export function VideoTagsEditor({
   availableCategories,
   onSave,
   onRemoveCategory,
+  suggestions,
   className,
   onCancel,
 }: VideoTagsEditorProps) {
@@ -223,6 +225,35 @@ export function VideoTagsEditor({
       setCustomCategories({ ...video.customCategories });
     }
     onCancel?.();
+  };
+
+  const smartSuggestions = useMemo(() => {
+    if (!suggestions) return [];
+    const items: Array<{ type: string; value: string }> = [];
+    for (const [type, values] of Object.entries(suggestions)) {
+      const currentValues = categories[type as keyof VideoCategories] || [];
+      for (const v of values) {
+        const normalized = CategoryNormalizer.normalizeValue(v);
+        if (!CategoryNormalizer.isDuplicateIgnoreCase(currentValues, normalized)) {
+          items.push({ type, value: normalized });
+        }
+      }
+    }
+    return items;
+  }, [suggestions, categories]);
+
+  const handleAddSuggestion = (type: string, value: string) => {
+    const updatedCategories = { ...categories };
+    const categoryArray = updatedCategories[type as keyof VideoCategories];
+    if (Array.isArray(categoryArray)) {
+      const candidate = CategoryNormalizer.normalizeValue(value);
+      if (!CategoryNormalizer.isDuplicateIgnoreCase(categoryArray, candidate)) {
+        categoryArray.push(candidate);
+        (updatedCategories as unknown as Record<string, string[]>)[type] =
+          CategoryNormalizer.normalizeArray(categoryArray);
+        setCategories(updatedCategories);
+      }
+    }
   };
 
   const suggestedCategories = useMemo(() => {
@@ -436,6 +467,32 @@ export function VideoTagsEditor({
             </Button>
           </div>
         </div>
+
+        {/* Smart Suggestions (from filename/path) */}
+        {smartSuggestions.length > 0 && (
+          <div>
+            <Label className="text-sm font-medium mb-2 block">
+              <Sparkles className="h-3 w-3 inline mr-1" />
+              Smart Suggestions
+            </Label>
+            <div className="flex flex-wrap gap-2">
+              {smartSuggestions.map((s, index) => {
+                const colorClasses = getCategoryColorClasses(s.type);
+                return (
+                  <Badge
+                    key={`smart-${s.type}-${s.value}-${index}`}
+                    variant="outline"
+                    className={`cursor-pointer opacity-60 hover:opacity-100 border-dashed ${colorClasses}`}
+                    onClick={() => handleAddSuggestion(s.type, s.value)}
+                    data-testid={`smart-suggestion-${s.type}-${s.value}`}
+                  >
+                    + {s.type}: {s.value}
+                  </Badge>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {/* Suggested Categories */}
         {suggestedCategories.length > 0 && (

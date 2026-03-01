@@ -17,6 +17,7 @@ import compression from 'compression';
 
 import path from 'path';
 import fs from 'fs';
+import { RootsRegistry } from './lib/roots-registry';
 
 const app = express();
 
@@ -97,6 +98,9 @@ app.use(requestId);
 app.use(metricsMiddleware);
 app.use(requestLogger);
 
+// Initialize roots registry from environment variables
+RootsRegistry.init();
+
 (async () => {
   // Initialize DB connection if configured
   if (process.env.DATABASE_URL && dbInstance) {
@@ -108,20 +112,41 @@ app.use(requestLogger);
       // File handles are session-based (lost on reload), so stale DB records
       // would show inaccessible videos. Preserves user config (settings,
       // presets, tags, directory roots, media progress).
-      // KEEP server-indexed videos (hdd-ext, movies) — they have real file paths,
-      // not session-based handles, and survive restarts.
+      // KEEP server-indexed videos (any registered rootKey) — they have real
+      // file paths, not session-based handles, and survive restarts.
       try {
-        await pool!.query(`
-          DELETE FROM videos WHERE root_key IS NULL OR root_key NOT IN ('hdd-ext', 'movies');
-          TRUNCATE thumbnails, scan_state, processing_jobs CASCADE;
-        `);
-        logger.info('Cleared transient video data on startup (preserved server-indexed videos)');
+        const { directoryRoots } = await import('@shared/schema');
+        const knownRoots = await dbInstance.select({ rootKey: directoryRoots.rootKey }).from(directoryRoots);
+        const rootKeys = knownRoots.map(r => r.rootKey);
+
+        if (rootKeys.length > 0) {
+          // Parameterized query: preserve videos with any known rootKey
+          const placeholders = rootKeys.map((_, i) => `$${i + 1}`).join(', ');
+          await pool!.query(
+            `DELETE FROM videos WHERE root_key IS NULL OR root_key NOT IN (${placeholders})`,
+            rootKeys,
+          );
+        } else {
+          // No roots configured — purge all videos (all are transient)
+          await pool!.query(`DELETE FROM videos WHERE root_key IS NULL`);
+        }
+        await pool!.query(`TRUNCATE thumbnails, scan_state, processing_jobs CASCADE`);
+        logger.info('Cleared transient video data on startup (preserved server-indexed videos)', { rootKeys });
       } catch (cleanupErr) {
         logger.warn('Failed to clear transient data', { error: (cleanupErr as Error).message });
       }
 
       app.locals.db = dbInstance;
       logger.info('Database connection verified');
+
+      // Hydrate roots registry from DB directory_roots table
+      try {
+        const { directoryRoots } = await import('@shared/schema');
+        const dbRoots = await dbInstance.select().from(directoryRoots);
+        RootsRegistry.registerFromDb(dbRoots);
+      } catch (registryErr) {
+        logger.warn('Failed to hydrate RootsRegistry from DB', { error: (registryErr as Error).message });
+      }
     } catch (err) {
       logger.error('Failed to connect to database', { error: (err as Error).message });
       // Continue to boot so app remains accessible (may use in-memory fallbacks)

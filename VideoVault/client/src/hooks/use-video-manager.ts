@@ -69,6 +69,7 @@ export function useVideoManager(): UseVideoManagerReturn {
     currentVideo: null,
     availableCategories: [],
     knownTags: [],
+    pinnedVideoId: null,
     sort: undefined,
     isProgressiveLoading: false,
   });
@@ -524,6 +525,61 @@ export function useVideoManager(): UseVideoManagerReturn {
   const setCurrentVideo = useCallback((video: Video | null) => {
     setState((prev) => ({ ...prev, currentVideo: video }));
   }, []);
+
+  const pinVideo = useCallback((videoId: string) => {
+    setState((prev) => ({ ...prev, pinnedVideoId: videoId }));
+  }, []);
+
+  const unpinVideo = useCallback(() => {
+    setState((prev) => ({ ...prev, pinnedVideoId: null }));
+  }, []);
+
+  const applyToVisible = useCallback(
+    (categoryType: string, categoryValue: string, mode: 'add' | 'remove') => {
+      const targetVideos = state.filteredVideos;
+      if (targetVideos.length === 0) return;
+
+      const normalizedValue = categoryValue.trim().toLowerCase();
+      const targetIds = new Set(targetVideos.map((v) => v.id));
+
+      const updatedVideos = state.videos.map((video) => {
+        if (!targetIds.has(video.id)) return video;
+
+        const updatedVideo = { ...video };
+        const currentValues = [...(updatedVideo.categories[categoryType as keyof typeof updatedVideo.categories] || [])];
+
+        if (mode === 'add') {
+          if (!currentValues.includes(normalizedValue)) {
+            currentValues.push(normalizedValue);
+          }
+        } else {
+          const idx = currentValues.indexOf(normalizedValue);
+          if (idx >= 0) currentValues.splice(idx, 1);
+        }
+
+        updatedVideo.categories = {
+          ...updatedVideo.categories,
+          [categoryType]: currentValues,
+        };
+        return updatedVideo;
+      });
+
+      // Update search index for affected videos
+      for (const id of targetIds) {
+        const updated = updatedVideos.find((v) => v.id === id);
+        if (updated) EnhancedFilterEngine.updateVideoInSearchIndex(updated);
+      }
+
+      // Persist: save locally + sync affected videos to server via updateVideoCategories
+      // We save locally in one shot, then sync all affected videos
+      VideoDatabase.saveToStorage(updatedVideos);
+      // Trigger server sync by re-saving the affected subset
+      const affectedVideos = updatedVideos.filter((v) => targetIds.has(v.id));
+      void VideoDatabase.syncAllToServer(affectedVideos);
+      setState((prev) => ({ ...prev, videos: updatedVideos }));
+    },
+    [state.videos, state.filteredVideos],
+  );
 
   const updateVideoCategories = useCallback(
     (videoId: string, categories: Partial<{ categories: any; customCategories: any }>) => {
@@ -1685,6 +1741,9 @@ export function useVideoManager(): UseVideoManagerReturn {
     cancelScan,
     setSort,
     rescanLastRoot,
+    pinVideo,
+    unpinVideo,
+    applyToVisible,
     // Enhanced scanning methods
     startEnhancedScan,
     pauseEnhancedScan,

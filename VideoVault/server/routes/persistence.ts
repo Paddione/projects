@@ -88,11 +88,11 @@ export async function bulkUpsertVideos(req: Request, res: Response) {
       },
     });
 
-  // Write sidecars for hdd-ext videos
-  const hddExtRows = rows.filter((r) => r.rootKey === 'hdd-ext');
-  if (hddExtRows.length > 0) {
+  // Write sidecars for all server-indexed videos (any rootKey)
+  const sidecarRows = rows.filter((r) => r.rootKey);
+  if (sidecarRows.length > 0) {
     await Promise.all(
-      hddExtRows.map((row) => syncVideoSidecar(row as any)),
+      sidecarRows.map((row) => syncVideoSidecar(row as any)),
     );
   }
 
@@ -124,9 +124,9 @@ export async function patchVideo(req: Request, res: Response) {
   const result = await db!.update(videos).set(set).where(eq(videos.id, id)).returning();
   if (!result[0]) return res.status(404).json({ error: 'Not found' });
 
-  // Write sidecar for hdd-ext videos
+  // Write sidecar for server-indexed videos (any rootKey)
   const updated = result[0];
-  if (updated.rootKey === 'hdd-ext') {
+  if (updated.rootKey) {
     await syncVideoSidecar(updated as any);
   }
 

@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Video } from '@/types/video';
 import { getCategoryColorClasses } from '@/lib/category-colors';
-import { Play, Clock, FileVideo, Tags, Edit, FolderPlus, Trash2, Scissors } from 'lucide-react';
+import { Play, Clock, FileVideo, Tags, Edit, FolderPlus, Trash2, Scissors, Pin } from 'lucide-react';
 import { ThumbnailGenerator } from '@/services/thumbnail-generator';
 import { VideoThumbnailService } from '@/services/video-thumbnail';
 import { BulkOperationsService } from '@/services/bulk-operations';
@@ -23,6 +23,7 @@ interface VideoCardProps {
   onMove?: (video: Video) => void;
   onDelete?: (video: Video) => void;
   onFocusMode?: (video: Video) => void;
+  onPin?: (video: Video) => void;
   onRemoveCategory?: (videoId: string, categoryType: string, categoryValue: string) => void;
   'data-video-index'?: number;
   onClick?: () => void;
@@ -41,6 +42,7 @@ export function VideoCard({
   onMove,
   onDelete,
   onFocusMode,
+  onPin,
   onRemoveCategory,
   onClick,
   isSelected = false,
@@ -696,6 +698,22 @@ export function VideoCard({
             >
               <Tags className="h-4 w-4 sm:h-3 sm:w-3 text-accentEmerald" />
             </Button>
+            {onPin && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onPin(video);
+                }}
+                className="h-10 w-10 sm:h-8 sm:w-8 focus:outline-none focus:ring-2 focus:ring-primary"
+                data-testid={`button-pin-${video.id}`}
+                aria-label={`Pin ${video.displayName} to editor`}
+                title="Pin to editor (P)"
+              >
+                <Pin className="h-4 w-4 sm:h-3 sm:w-3 text-muted-foreground" />
+              </Button>
+            )}
             {onSplit && (
               <Button
                 variant="ghost"

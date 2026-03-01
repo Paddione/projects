@@ -25,6 +25,8 @@ import { SettingsModal } from '@/components/settings-modal';
 import { DirectoryDatabase } from '@/services/directory-database';
 import { AppSettingsService } from '@/services/app-settings';
 import { SplitVideoModal, type SplitVideoFormValues } from '@/components/video/split-video-modal';
+import { SplitPaneEditor } from '@/components/video/split-pane-editor';
+import { ApplyToVisible } from '@/components/bulk/apply-to-visible';
 import type { SplitVideoResult } from '@/services/video-splitter';
 import {
   Sheet,
@@ -520,6 +522,16 @@ export default function Home() {
         isFiltersOpen={isFiltersOpen}
       />
 
+      {state.filteredVideos.length > 0 && (
+        <div className="flex items-center gap-2 px-4 py-1 border-b bg-card/50">
+          <ApplyToVisible
+            filteredCount={state.filteredVideos.length}
+            onApply={(type, value, mode) => actions.applyToVisible(type, value, mode)}
+            availableCategories={state.availableCategories}
+          />
+        </div>
+      )}
+
       <div className="flex flex-1 min-h-0">
         <Sidebar
           searchQuery={state.searchQuery}
@@ -546,6 +558,7 @@ export default function Home() {
           onVideoRename={handleVideoRename}
           onVideoSplit={handleVideoSplit}
           onFocusMode={handleFocusMode}
+          onPin={(video) => actions.pinVideo(video.id)}
           onSelectDirectory={() => void handleScanDirectory()}
           onFileDrop={(files) => void handleFileDrop(files)}
           onDeleteFile={(video) =>
@@ -599,6 +612,21 @@ export default function Home() {
           searchQuery={state.searchQuery}
           isFiltersOpen={isFiltersOpen}
         />
+
+        {state.pinnedVideoId && (
+          <SplitPaneEditor
+            videos={state.videos}
+            filteredVideos={state.filteredVideos}
+            pinnedVideoId={state.pinnedVideoId}
+            availableCategories={state.availableCategories}
+            onUpdateCategories={actions.updateVideoCategories}
+            onRemoveCategory={(videoId, type, value) =>
+              actions.removeVideoCategory(videoId, type, value) as void
+            }
+            onClose={() => actions.unpinVideo()}
+            onPinVideo={(id) => actions.pinVideo(id)}
+          />
+        )}
       </div>
 
       <Sheet open={isFiltersOpen} onOpenChange={setIsFiltersOpen}>

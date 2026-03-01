@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -7,6 +8,7 @@ import {
 } from '@/components/ui/dialog';
 import { Video, VideoCategories, CustomCategories, Category } from '@/types/video';
 import { VideoTagsEditor } from './video-tags-editor';
+import { CategoryExtractor } from '@/services/category-extractor';
 
 interface EditTagsModalProps {
   video: Video | null;
@@ -28,6 +30,11 @@ export function EditTagsModal({
   onRemoveCategory,
   availableCategories,
 }: EditTagsModalProps) {
+  const suggestions = useMemo(
+    () => (video ? CategoryExtractor.getSuggestions(video.filename, video.path) : undefined),
+    [video?.filename, video?.path],
+  );
+
   if (!video) return null;
 
   return (
@@ -49,6 +56,7 @@ export function EditTagsModal({
               onClose();
             }}
             onRemoveCategory={onRemoveCategory}
+            suggestions={suggestions}
             onCancel={onClose}
           />
         </div>
