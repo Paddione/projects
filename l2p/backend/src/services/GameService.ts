@@ -1464,6 +1464,14 @@ export class GameService {
           }
         }
 
+        // Apply end-game score bonuses (perfectionist perk)
+        if (player.perkModifiers) {
+          player.score = PerkEffectEngine.applyEndGameBonuses(player.score, player.perkModifiers, {
+            correctAnswers: player.correctAnswers,
+            totalQuestions: gameState.totalQuestions,
+          });
+        }
+
         // Award experience points if we have a valid userId (skip in practice mode)
         // Apply XP modifiers from perks
         let experienceResult = null;

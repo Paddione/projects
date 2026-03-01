@@ -227,6 +227,22 @@ export class PerkEffectEngine {
   }
 
   /**
+   * Apply end-game score bonuses (e.g. perfectionist perk).
+   * Must be called BEFORE XP calculation so the bonus feeds into XP too.
+   */
+  static applyEndGameBonuses(
+    baseScore: number,
+    modifiers: GameplayModifiers,
+    context: { correctAnswers: number; totalQuestions: number }
+  ): number {
+    let score = baseScore;
+    if (modifiers.perfectGameBonus > 0 && context.correctAnswers === context.totalQuestions) {
+      score += modifiers.perfectGameBonus;
+    }
+    return score;
+  }
+
+  /**
    * Calculate modified XP at game end
    */
   static calculateModifiedXP(
