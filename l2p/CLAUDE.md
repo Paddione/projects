@@ -174,7 +174,7 @@ Shared utilities: `../shared-infrastructure/shared/l2p/` (error-handling, test-c
 | ScoringService | Score calculation with perk modifiers, XP awards |
 | HallOfFameService | Leaderboard management |
 | CharacterService | Character selection, level/XP tracking, perk unlock progression |
-| PerkDraftService | Draft-based perk selection, skill tree management |
+| PerkQueryService | Level-based perk queries (all perks, active perks, newly unlocked) |
 | PerkEffectEngine | Perk effect calculation and application to gameplay |
 | PerksManager | Perk activation/deactivation, user active settings |
 | EmailService | SMTP for verification and password reset |
@@ -199,23 +199,23 @@ Shared utilities: `../shared-infrastructure/shared/l2p/` (error-handling, test-c
 | Store | State Managed |
 |-------|---------------|
 | authStore | User authentication (user, token, login/logout) |
-| gameStore | Active game state (question, players, scores, timers, perk drafts) |
+| gameStore | Active game state (question, players, scores, timers, interactive perks) |
 | settingsStore | User preferences (theme, language, animations) |
 | themeStore | Theme management (light/dark/auto, system detection) |
 | audioStore | Audio settings (volume, mute, sound effects) |
 | characterStore | Character selection, level/XP progress |
 | fileUploadStore | File upload progress (question generation) |
-| perkDraftStore | Perk draft state (pending drafts, history, active perks, skill tree) |
+| perkDraftStore | Perk unlock state (active perks, skill tree) |
 
 ### Real-Time (Socket.io)
 
 Backend: `SocketService.ts` manages connections. Integration tests must use real socket connections (no mocks).
 
 **Client → Server events:**
-`join-lobby`, `leave-lobby`, `player-ready`, `start-game`, `submit-answer`, `update-question-sets`, `get-question-set-info`, `perk:pick`, `perk:dump`, `ping`
+`join-lobby`, `leave-lobby`, `player-ready`, `start-game`, `submit-answer`, `update-question-sets`, `get-question-set-info`, `perk:use-hint`, `perk:use-eliminate`, `ping`
 
 **Server → Client events:**
-`connected`, `join-success`, `join-error`, `lobby-updated`, `lobby-deleted`, `leave-success`, `leave-error`, `ready-error`, `game-started`, `start-game-error`, `question-started`, `answer-error`, `question-sets-updated`, `question-sets-update-success`, `question-sets-update-error`, `question-set-info`, `question-set-info-error`, `perk:draft-result`, `perk:pool-exhausted`, `pong`
+`connected`, `join-success`, `join-error`, `lobby-updated`, `lobby-deleted`, `leave-success`, `leave-error`, `ready-error`, `game-started`, `start-game-error`, `question-started`, `answer-error`, `question-sets-updated`, `question-sets-update-success`, `question-sets-update-error`, `question-set-info`, `question-set-info-error`, `perk:hint-revealed`, `perk:answers-eliminated`, `perk:use-error`, `pong`
 
 Error events follow the pattern `{action}-error` (e.g., `join-error`, `start-game-error`).
 
@@ -259,7 +259,7 @@ Without phase 1, player list is empty on page load. Without phase 2, no real-tim
 
 Perks use a draft system where players pick perks from random pools at level-up:
 - 40 gameplay perks across 5 categories: Time, Information, Scoring, Recovery, XP
-- `PerkDraftService` manages draft pools and choices
+- `PerkQueryService` queries level-based perk unlocks
 - `PerkEffectEngine` applies perk effects during gameplay
 - `PerksManager` handles activation/deactivation (cosmetic config: avatar, theme, badge)
 - A perk is "unlocked" when `chosen_perk_id IS NOT NULL` in `user_perk_drafts`

@@ -57,11 +57,6 @@ export interface SocketEvents {
   'player-level-up': (data: { playerId: string; username: string; character: string; oldLevel: number; newLevel: number; experienceAwarded: number }) => void
   'player-perk-unlocks': (data: { playerId: string; username: string; character: string; unlockedPerks: any[] }) => void
 
-  // Perk draft events
-  'perk:draft-available': (data: { userId: number; pendingDrafts: any[] }) => void
-  'perk:draft-result': (data: { success: boolean; action: string; level: number; perkId?: number; error?: string }) => void
-  'perk:pool-exhausted': (data: { message: string }) => void
-
   // Interactive perk events
   'perk:hint-revealed': (data: { hint: string; usesRemaining: number }) => void
   'perk:answers-eliminated': (data: { eliminatedIndices: number[]; usesRemaining: number }) => void

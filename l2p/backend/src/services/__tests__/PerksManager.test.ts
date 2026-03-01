@@ -204,7 +204,7 @@ describe('PerksManager', () => {
 
   describe('checkAndUnlockPerksForLevel', () => {
     it('should return empty array (perks are now draft-based)', async () => {
-      // In the draft system, perks are acquired through PerkDraftService, not level-based unlocking
+      // Perks are acquired through PerkQueryService level-based lookups
       const result = await perksManager.checkAndUnlockPerksForLevel(1, 5);
       expect(result).toEqual([]);
     });

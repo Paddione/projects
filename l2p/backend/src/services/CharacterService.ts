@@ -2,7 +2,7 @@ import { UserRepository, User } from '../repositories/UserRepository.js';
 import { PerksManager, UserPerk } from './PerksManager.js';
 import { GameProfileService, GameProfile } from './GameProfileService.js';
 import { DatabaseService } from './DatabaseService.js';
-import { PerkDraftService } from './PerkDraftService.js';
+import { PerkQueryService } from './PerkQueryService.js';
 
 export interface Character {
   id: string;
@@ -302,8 +302,8 @@ export class CharacterService {
       let pendingDrafts: any[] = []; // Keep empty array for backward compat
       if (levelUp) {
         try {
-          const perkDraftService = PerkDraftService.getInstance();
-          newlyUnlockedPerks = await perkDraftService.getNewlyUnlockedPerks(oldLevel, newLevel);
+          const perkQueryService = PerkQueryService.getInstance();
+          newlyUnlockedPerks = await perkQueryService.getNewlyUnlockedPerks(oldLevel, newLevel);
         } catch (error) {
           console.warn('Failed to get newly unlocked perks:', error);
         }
@@ -347,8 +347,8 @@ export class CharacterService {
       let pendingDrafts: any[] = []; // Keep empty array for backward compat
       if (levelUp) {
         try {
-          const perkDraftService = PerkDraftService.getInstance();
-          newlyUnlockedPerks = await perkDraftService.getNewlyUnlockedPerks(oldLevel, newLevel);
+          const perkQueryService = PerkQueryService.getInstance();
+          newlyUnlockedPerks = await perkQueryService.getNewlyUnlockedPerks(oldLevel, newLevel);
         } catch (error) {
           console.warn('Failed to get newly unlocked perks:', error);
         }

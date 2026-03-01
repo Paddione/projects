@@ -1,5 +1,5 @@
 import { DatabaseService } from './DatabaseService.js';
-import { PerkDraftService } from './PerkDraftService.js';
+import { PerkQueryService } from './PerkQueryService.js';
 
 export interface Perk {
   id: number;
@@ -497,12 +497,12 @@ export class PerksManager {
 
   /**
    * Find perks newly unlocked when a user reaches a new level.
-   * Uses PerkDraftService to query perks between oldLevel and newLevel.
+   * Uses PerkQueryService to query perks between oldLevel and newLevel.
    */
   async checkAndUnlockPerksForLevel(userId: number, newLevel: number): Promise<UserPerk[]> {
     const oldLevel = Math.max(0, newLevel - 1);
-    const perkDraftService = PerkDraftService.getInstance();
-    const newlyUnlocked = await perkDraftService.getNewlyUnlockedPerks(oldLevel, newLevel);
+    const perkQueryService = PerkQueryService.getInstance();
+    const newlyUnlocked = await perkQueryService.getNewlyUnlockedPerks(oldLevel, newLevel);
 
     return newlyUnlocked.map(perk => ({
       id: perk.id,

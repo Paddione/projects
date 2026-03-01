@@ -5,7 +5,7 @@ import { ScoringService } from './ScoringService.js';
 import { RequestLogger } from '../middleware/logging.js';
 import { LobbyService } from './LobbyService.js';
 import { CharacterService } from './CharacterService.js';
-import { PerkDraftService, DraftPerk } from './PerkDraftService.js';
+import { PerkQueryService, DraftPerk } from './PerkQueryService.js';
 import { PerkEffectEngine, GameplayModifiers, ScoreContext } from './PerkEffectEngine.js';
 import { PerksManager } from './PerksManager.js';
 import type { AnswerType, AnswerMetadata, EstimationMetadata, OrderingMetadata, MatchingMetadata, FillInBlankMetadata } from '../types/question.js';
@@ -111,7 +111,7 @@ export class GameService {
   private questionService: QuestionService;
   private scoringService: ScoringService;
   private characterService: CharacterService;
-  private perkDraftService: PerkDraftService;
+  private perkQueryService: PerkQueryService;
   private gameSessionRepository: GameSessionRepository;
   private activeGames: Map<string, GameState> = new Map();
   private gameTimers: Map<string, NodeJS.Timeout> = new Map();
@@ -359,7 +359,7 @@ export class GameService {
     this.questionService = new QuestionService();
     this.scoringService = new ScoringService();
     this.characterService = new CharacterService();
-    this.perkDraftService = PerkDraftService.getInstance();
+    this.perkQueryService = PerkQueryService.getInstance();
     this.gameSessionRepository = new GameSessionRepository();
     this.isTestEnvironment = process.env['NODE_ENV'] === 'test' || process.env['TEST_ENVIRONMENT'] === 'local';
   }
@@ -618,12 +618,12 @@ export class GameService {
           const numericId = parseInt(player.id, 10);
           if (!isNaN(numericId)) {
             // Load gameplay perks
-            const activePerks = await this.perkDraftService.getActiveGameplayPerks(numericId);
+            const activePerks = await this.perkQueryService.getActiveGameplayPerks(numericId);
 
             // Also load cosmetic perks with game effects (multiplier + helper slots)
             const cosmeticGameEffectIds = await perksManager.getActiveCosmeticGameEffectPerkIds(numericId);
             if (cosmeticGameEffectIds.length > 0) {
-              const cosmeticPerks = await this.perkDraftService.getPerksByIds(cosmeticGameEffectIds);
+              const cosmeticPerks = await this.perkQueryService.getPerksByIds(cosmeticGameEffectIds);
               activePerks.push(...cosmeticPerks);
             }
 
@@ -1589,7 +1589,7 @@ export class GameService {
         let newlyUnlockedPerks: any[] = [];
         if (userId && experienceResult?.levelUp) {
           try {
-            newlyUnlockedPerks = await this.perkDraftService.getNewlyUnlockedPerks(
+            newlyUnlockedPerks = await this.perkQueryService.getNewlyUnlockedPerks(
               experienceResult.oldLevel,
               experienceResult.newLevel
             );

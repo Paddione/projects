@@ -1,9 +1,9 @@
 import express from 'express';
 import { Request, Response } from 'express';
 import { authenticate } from '../middleware/auth.js';
-import { PerkDraftService } from '../services/PerkDraftService.js';
+import { PerkQueryService } from '../services/PerkQueryService.js';
 
-const perkDraftService = PerkDraftService.getInstance();
+const perkQueryService = PerkQueryService.getInstance();
 
 const router = express.Router();
 
@@ -13,7 +13,7 @@ const router = express.Router();
 router.get('/active', authenticate, async (req: Request, res: Response): Promise<void> => {
   try {
     const userId = (req as any).user!.userId as number;
-    const activePerks = await perkDraftService.getActiveGameplayPerks(userId);
+    const activePerks = await perkQueryService.getActiveGameplayPerks(userId);
     res.json({ success: true, data: activePerks });
   } catch (error) {
     console.error('Error fetching active perks:', error);
@@ -26,7 +26,7 @@ router.get('/active', authenticate, async (req: Request, res: Response): Promise
  */
 router.get('/all', authenticate, async (req: Request, res: Response): Promise<void> => {
   try {
-    const allPerks = await perkDraftService.getAllGameplayPerks();
+    const allPerks = await perkQueryService.getAllGameplayPerks();
     res.json({ success: true, data: allPerks });
   } catch (error) {
     console.error('Error fetching all gameplay perks:', error);
@@ -47,7 +47,7 @@ router.get('/newly-unlocked', authenticate, async (req: Request, res: Response):
       return;
     }
 
-    const perks = await perkDraftService.getNewlyUnlockedPerks(oldLevel, newLevel);
+    const perks = await perkQueryService.getNewlyUnlockedPerks(oldLevel, newLevel);
     res.json({ success: true, data: perks });
   } catch (error) {
     console.error('Error fetching newly unlocked perks:', error);

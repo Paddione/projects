@@ -1,13 +1,13 @@
 import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
 import { CharacterService } from '../CharacterService.js';
 import { PerksManager, Perk } from '../PerksManager.js';
-import { PerkDraftService, DraftPerk } from '../PerkDraftService.js';
+import { PerkQueryService, DraftPerk } from '../PerkQueryService.js';
 import { DatabaseService } from '../DatabaseService.js';
 
 // Mock dependencies
 jest.mock('../DatabaseService.js');
 jest.mock('../PerksManager.js');
-jest.mock('../PerkDraftService.js');
+jest.mock('../PerkQueryService.js');
 
 const buildMockPerk = (overrides: Partial<Perk> & { id?: number } = {}): Perk => ({
   id: overrides.id ?? 1,
@@ -28,7 +28,7 @@ describe('CharacterService - Perk Integration', () => {
   let characterService: CharacterService;
   let mockDb: jest.Mocked<DatabaseService>;
   let mockPerksManager: jest.Mocked<PerksManager>;
-  let mockPerkDraftService: jest.Mocked<PerkDraftService>;
+  let mockPerkQueryService: jest.Mocked<PerkQueryService>;
   const buildProfile = (userId: number, level: number, experiencePoints: number) => ({
     authUserId: userId,
     selectedCharacter: 'student',
@@ -61,12 +61,12 @@ describe('CharacterService - Perk Integration', () => {
     (PerksManager.getInstance as jest.Mock).mockReturnValue(mockPerksManager);
 
     // Mock perk draft service
-    mockPerkDraftService = {
+    mockPerkQueryService = {
       getNewlyUnlockedPerks: jest.fn(),
       getInstance: jest.fn()
     } as any;
 
-    (PerkDraftService.getInstance as jest.Mock).mockReturnValue(mockPerkDraftService);
+    (PerkQueryService.getInstance as jest.Mock).mockReturnValue(mockPerkQueryService);
 
     characterService = new CharacterService();
   });
@@ -122,7 +122,7 @@ describe('CharacterService - Perk Integration', () => {
       mockDb.query.mockResolvedValueOnce({ rows: [] } as any);
 
       // Mock newly unlocked perks
-      mockPerkDraftService.getNewlyUnlockedPerks.mockResolvedValue([unlockedPerk]);
+      mockPerkQueryService.getNewlyUnlockedPerks.mockResolvedValue([unlockedPerk]);
 
       const result = await characterService.awardExperience(userId, experienceGained);
 
@@ -138,7 +138,7 @@ describe('CharacterService - Perk Integration', () => {
 
       // Verify newly unlocked perks were fetched for the level range
       expect(result.newlyUnlockedPerks).toEqual([unlockedPerk]);
-      expect(mockPerkDraftService.getNewlyUnlockedPerks).toHaveBeenCalledWith(oldLevel, newLevel);
+      expect(mockPerkQueryService.getNewlyUnlockedPerks).toHaveBeenCalledWith(oldLevel, newLevel);
 
       // pendingDrafts should always be empty (backward compat)
       expect(result.pendingDrafts).toEqual([]);
@@ -186,7 +186,7 @@ describe('CharacterService - Perk Integration', () => {
       });
 
       // Should not fetch perks when no level-up
-      expect(mockPerkDraftService.getNewlyUnlockedPerks).not.toHaveBeenCalled();
+      expect(mockPerkQueryService.getNewlyUnlockedPerks).not.toHaveBeenCalled();
     });
 
     it('should return all newly unlocked perks on multiple level ups', async () => {
@@ -225,7 +225,7 @@ describe('CharacterService - Perk Integration', () => {
       mockDb.query.mockResolvedValueOnce({ rows: [] } as any);
 
       // Mock single call to getNewlyUnlockedPerks with the full level range
-      mockPerkDraftService.getNewlyUnlockedPerks.mockResolvedValue(unlockedPerks);
+      mockPerkQueryService.getNewlyUnlockedPerks.mockResolvedValue(unlockedPerks);
 
       const result = await characterService.awardExperience(userId, experienceGained);
 
@@ -234,8 +234,8 @@ describe('CharacterService - Perk Integration', () => {
 
       // All perks unlocked between old and new level returned in a single call
       expect(result.newlyUnlockedPerks).toEqual(unlockedPerks);
-      expect(mockPerkDraftService.getNewlyUnlockedPerks).toHaveBeenCalledWith(startingLevel, newLevel);
-      expect(mockPerkDraftService.getNewlyUnlockedPerks).toHaveBeenCalledTimes(1);
+      expect(mockPerkQueryService.getNewlyUnlockedPerks).toHaveBeenCalledWith(startingLevel, newLevel);
+      expect(mockPerkQueryService.getNewlyUnlockedPerks).toHaveBeenCalledTimes(1);
 
       // pendingDrafts always empty
       expect(result.pendingDrafts).toEqual([]);
@@ -271,7 +271,7 @@ describe('CharacterService - Perk Integration', () => {
       mockDb.query.mockResolvedValueOnce({ rows: [] } as any);
 
       // Mock perk service error
-      mockPerkDraftService.getNewlyUnlockedPerks.mockRejectedValue(
+      mockPerkQueryService.getNewlyUnlockedPerks.mockRejectedValue(
         new Error('Database error')
       );
 
@@ -290,7 +290,7 @@ describe('CharacterService - Perk Integration', () => {
         })
       });
 
-      expect(mockPerkDraftService.getNewlyUnlockedPerks).toHaveBeenCalledWith(oldLevel, newLevel);
+      expect(mockPerkQueryService.getNewlyUnlockedPerks).toHaveBeenCalledWith(oldLevel, newLevel);
     });
 
     it('should handle edge case where user level is already at max', async () => {
@@ -332,7 +332,7 @@ describe('CharacterService - Perk Integration', () => {
       });
 
       // Should not fetch perks since level didn't change
-      expect(mockPerkDraftService.getNewlyUnlockedPerks).not.toHaveBeenCalled();
+      expect(mockPerkQueryService.getNewlyUnlockedPerks).not.toHaveBeenCalled();
     });
 
     it('should handle user not found scenario', async () => {
@@ -350,7 +350,7 @@ describe('CharacterService - Perk Integration', () => {
         .rejects.toThrow('User not found');
 
       // Should not fetch perks when user doesn't exist
-      expect(mockPerkDraftService.getNewlyUnlockedPerks).not.toHaveBeenCalled();
+      expect(mockPerkQueryService.getNewlyUnlockedPerks).not.toHaveBeenCalled();
     });
   });
 

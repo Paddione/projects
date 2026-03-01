@@ -1,4 +1,4 @@
-import { DraftPerk } from './PerkDraftService.js';
+import { DraftPerk } from './PerkQueryService.js';
 
 export interface GameplayModifiers {
   // Time perks
