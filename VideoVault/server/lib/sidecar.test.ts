@@ -10,6 +10,8 @@ describe('sidecar', () => {
 
   beforeEach(async () => {
     tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'sidecar-test-'));
+    RootsRegistry.reset();
+    delete process.env.MEDIA_ROOT;
   });
 
   afterEach(async () => {
@@ -90,7 +92,8 @@ describe('sidecar', () => {
         expect(content.categories.age).toEqual(['teen']);
         expect(content.customCategories.custom).toEqual(['tag1']);
       } finally {
-        process.env.MEDIA_ROOT = origMediaRoot;
+        if (origMediaRoot === undefined) delete process.env.MEDIA_ROOT;
+        else process.env.MEDIA_ROOT = origMediaRoot;
       }
     });
 
@@ -122,7 +125,8 @@ describe('sidecar', () => {
         expect(content.id).toBe('new-id');
         expect(content.categories.age).toEqual(['teen']);
       } finally {
-        process.env.MEDIA_ROOT = origMediaRoot;
+        if (origMediaRoot === undefined) delete process.env.MEDIA_ROOT;
+        else process.env.MEDIA_ROOT = origMediaRoot;
       }
     });
 
@@ -215,7 +219,8 @@ describe('sidecar', () => {
         expect(content.id).toBe('legacy-1');
         expect(content.displayName).toBe('Legacy Video');
       } finally {
-        process.env.MEDIA_ROOT = origMediaRoot;
+        if (origMediaRoot === undefined) delete process.env.MEDIA_ROOT;
+        else process.env.MEDIA_ROOT = origMediaRoot;
         RootsRegistry.reset();
       }
     });
@@ -249,7 +254,8 @@ describe('sidecar', () => {
         expect(content.id).toBe('fallback-1');
         expect(content.categories.age).toEqual(['mature']);
       } finally {
-        process.env.MEDIA_ROOT = origMediaRoot;
+        if (origMediaRoot === undefined) delete process.env.MEDIA_ROOT;
+        else process.env.MEDIA_ROOT = origMediaRoot;
         RootsRegistry.reset();
       }
     });
