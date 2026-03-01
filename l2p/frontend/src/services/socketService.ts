@@ -62,6 +62,10 @@ export interface SocketEvents {
   'perk:draft-result': (data: { success: boolean; action: string; level: number; perkId?: number; error?: string }) => void
   'perk:pool-exhausted': (data: { message: string }) => void
 
+  // Interactive perk events
+  'perk:hint-revealed': (data: { hint: string; usesRemaining: number }) => void
+  'perk:use-error': (data: { message: string }) => void
+
   // Error events
   'start-game-error': (data: { type: string; message: string }) => void
   'ready-error': (data: { type: string; message: string }) => void
@@ -323,7 +327,7 @@ export class SocketService {
           allQuestionKeys: data.question ? Object.keys(data.question) : 'no question object'
         })
 
-        const { setCurrentQuestion, setQuestionIndex, setTotalQuestions, setTimeRemaining, resetPlayerAnswerStatus, setPlayers, setIsSyncing, setShowingHint, setWaitingForContinue, setPracticeCorrectAnswer, setGameMode } = useGameStore.getState()
+        const { setCurrentQuestion, setQuestionIndex, setTotalQuestions, setTimeRemaining, resetPlayerAnswerStatus, setPlayers, setIsSyncing, setShowingHint, setWaitingForContinue, setPracticeCorrectAnswer, setGameMode, setCurrentHint, setHintUsesRemaining } = useGameStore.getState()
 
         // Question has started, so we are no longer syncing
         setIsSyncing(false)
@@ -408,16 +412,24 @@ export class SocketService {
         setWaitingForContinue(false)
         setPracticeCorrectAnswer(null)
 
+        // Reset interactive perk hint state for new question
+        setCurrentHint(null)
+
         // Update game mode if provided
         if ((data as any).gameMode) {
           setGameMode((data as any).gameMode)
         }
 
-        // Extract per-player INFO perk effects (category, difficulty, answer stats)
+        // Extract per-player INFO perk effects (category, difficulty, answer stats, hint)
         const { setMyPerkEffects } = useGameStore.getState()
         const myPlayerId = useAuthStore.getState().user?.id?.toString()
         if (data.playerPerkEffects && myPlayerId && data.playerPerkEffects[myPlayerId]) {
-          setMyPerkEffects(data.playerPerkEffects[myPlayerId])
+          const myEffects = data.playerPerkEffects[myPlayerId]
+          setMyPerkEffects(myEffects)
+          // Initialize hint uses remaining from server perk state
+          if (typeof myEffects.hintUsesRemaining === 'number') {
+            setHintUsesRemaining(myEffects.hintUsesRemaining)
+          }
         } else {
           setMyPerkEffects(null)
         }
@@ -822,6 +834,17 @@ export class SocketService {
       }
     })
 
+    // Interactive perk events
+    this.socket.on('perk:hint-revealed', (data: { hint: string; usesRemaining: number }) => {
+      const { setCurrentHint, setHintUsesRemaining } = useGameStore.getState()
+      setCurrentHint(data.hint)
+      setHintUsesRemaining(data.usesRemaining)
+    })
+
+    this.socket.on('perk:use-error', (data: { message: string }) => {
+      console.warn('Perk use error:', data.message)
+    })
+
     // Error event handler
     this.socket.on('error', (data) => {
       console.error('Server error:', data)
@@ -1211,6 +1234,16 @@ export class SocketService {
       lobbyCode,
       playerId: String(user?.id || '')
     })
+  }
+
+  // Interactive perk: use hint
+  useHint() {
+    const { lobbyCode } = useGameStore.getState()
+    if (!lobbyCode) {
+      console.warn('Missing lobby code for use hint')
+      return
+    }
+    this.emit('perk:use-hint', { lobbyCode })
   }
 
   // Update game mode in lobby (host only)

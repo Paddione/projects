@@ -964,6 +964,29 @@
   color: var(--cv-warning);
 }
 
+/* ─── Hint Perk Button (limited uses, all game modes) ─── */
+.hintPerkButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  align-self: flex-start;
+  padding: 0.4rem 0.8rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: var(--cv-radius-md);
+  background: rgba(255, 193, 7, 0.15);
+  border: 1px solid rgba(255, 193, 7, 0.4);
+  color: #ffc107;
+  cursor: pointer;
+  transition: all var(--cv-duration-base) var(--cv-ease-smooth);
+}
+
+.hintPerkButton:hover {
+  background: rgba(255, 193, 7, 0.25);
+  border-color: rgba(255, 193, 7, 0.6);
+  transform: translateY(-1px);
+}
+
 /* ─── Free-Text Input Area ─── */
 .freeTextArea {
   display: flex;

@@ -236,6 +236,15 @@ export class SocketService {
         this.handleSubmitAnswer(socket, data);
       });
 
+      // Interactive perk events
+      socket.on('perk:use-hint', (data: { lobbyCode: string }) => {
+        if (!this.checkRateLimit(socket.id, 'perk:use-hint', 5, 10000)) return;
+        const user = this.connectedUsers.get(socket.id);
+        if (user) {
+          this.gameService.handleUseHint(data.lobbyCode, user.id, socket);
+        }
+      });
+
       socket.on('disconnect', () => {
         this.handleDisconnect(socket);
       });

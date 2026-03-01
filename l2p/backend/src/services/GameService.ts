@@ -73,6 +73,10 @@ export interface GamePlayer {
   cosmeticEffects?: CosmeticEffects;
   freeWrongsUsed: number;
 
+  // Interactive perk uses
+  hintUsesRemaining?: number;
+  eliminateUsesRemaining?: number;
+
   // Survival mode
   lives?: number;
   isEliminated?: boolean;
@@ -287,10 +291,14 @@ export class GameService {
     }
 
     // Build per-player INFO perk effects for the question-started payload
-    const playerPerkEffects: Record<string, Record<string, boolean>> = {};
+    const playerPerkEffects: Record<string, Record<string, boolean | number>> = {};
     for (const player of gameState.players) {
       if (player.perkModifiers) {
-        const effects = PerkEffectEngine.extractInfoEffects(player.perkModifiers);
+        const effects: Record<string, boolean | number> = PerkEffectEngine.extractInfoEffects(player.perkModifiers);
+        // Include interactive perk use counts
+        if (player.hintUsesRemaining != null) {
+          effects.hintUsesRemaining = player.hintUsesRemaining;
+        }
         if (Object.keys(effects).length > 0) {
           playerPerkEffects[player.id] = effects;
         }
@@ -616,6 +624,14 @@ export class GameService {
 
             if (activePerks.length > 0) {
               player.perkModifiers = PerkEffectEngine.buildModifiers(activePerks);
+
+              // Initialize interactive perk use counts
+              if (player.perkModifiers.showHint && player.perkModifiers.hintUsesPerGame > 0) {
+                player.hintUsesRemaining = player.perkModifiers.hintUsesPerGame;
+              }
+              if (player.perkModifiers.eliminateWrongUses > 0) {
+                player.eliminateUsesRemaining = player.perkModifiers.eliminateWrongUses;
+              }
             }
 
             // Load player title from loadout
@@ -1368,10 +1384,13 @@ export class GameService {
     if (!currentQuestion) return;
 
     // Build per-player INFO perk effects for wager mode emission
-    const wagerPerkEffects: Record<string, Record<string, boolean>> = {};
+    const wagerPerkEffects: Record<string, Record<string, boolean | number>> = {};
     for (const player of gameState.players) {
       if (player.perkModifiers) {
-        const effects = PerkEffectEngine.extractInfoEffects(player.perkModifiers);
+        const effects: Record<string, boolean | number> = PerkEffectEngine.extractInfoEffects(player.perkModifiers);
+        if (player.hintUsesRemaining != null) {
+          effects.hintUsesRemaining = player.hintUsesRemaining;
+        }
         if (Object.keys(effects).length > 0) {
           wagerPerkEffects[player.id] = effects;
         }
@@ -1904,6 +1923,33 @@ export class GameService {
     if (allContinued) {
       await this.endQuestion(lobbyCode);
     }
+  }
+
+  /**
+   * Handle use-hint event: reveal the hint for the current question if uses remain.
+   */
+  handleUseHint(lobbyCode: string, playerId: string, socket: import('socket.io').Socket): void {
+    const gameState = this.activeGames.get(lobbyCode);
+    if (!gameState?.isActive) return;
+
+    const player = gameState.players.find(p => p.id === playerId);
+    if (!player || !player.hintUsesRemaining || player.hintUsesRemaining <= 0) {
+      socket.emit('perk:use-error', { message: 'No hint uses remaining' });
+      return;
+    }
+    if (player.hasAnsweredCurrentQuestion) {
+      socket.emit('perk:use-error', { message: 'Already answered' });
+      return;
+    }
+
+    const hint = gameState.currentQuestion?.hint;
+    if (!hint) {
+      socket.emit('perk:use-error', { message: 'No hint available for this question' });
+      return;
+    }
+
+    player.hintUsesRemaining--;
+    socket.emit('perk:hint-revealed', { hint, usesRemaining: player.hintUsesRemaining });
   }
 
   /**

@@ -69,6 +69,8 @@ export const GamePage: React.FC = () => {
     duelWins,
     firstCorrectPlayerId,
     myPerkEffects,
+    hintUsesRemaining,
+    currentHint,
   } = useGameStore()
   const { user } = useAuthStore()
   const { t } = useLocalization()
@@ -592,11 +594,30 @@ export const GamePage: React.FC = () => {
                 </button>
               )}
 
-              {/* Hint display */}
+              {/* Hint display (practice mode) */}
               {showingHint && question.hint && (
                 <div className={gameStyles.hintBox} data-testid="hint-box">
                   <span className={gameStyles.hintLabel}>{t('game.hint')}</span>
                   {question.hint}
+                </div>
+              )}
+
+              {/* Hint perk button (all modes except practice, limited uses) */}
+              {!isPractice && myPerkEffects?.['showHint'] && hintUsesRemaining > 0 && !hasAnswered && !currentHint && (
+                <button
+                  className={gameStyles.hintPerkButton}
+                  onClick={() => socketService.useHint()}
+                  data-testid="hint-perk-button"
+                >
+                  {t('game.showHint')} ({hintUsesRemaining})
+                </button>
+              )}
+
+              {/* Hint perk display (revealed by server) */}
+              {currentHint && (
+                <div className={gameStyles.hintBox} data-testid="hint-perk-box">
+                  <span className={gameStyles.hintLabel}>{t('game.hint')}</span>
+                  {currentHint}
                 </div>
               )}
 

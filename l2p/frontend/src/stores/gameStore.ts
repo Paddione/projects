@@ -176,6 +176,10 @@ export interface GameState {
   // INFO perk effects for current player
   myPerkEffects: Record<string, boolean> | null
 
+  // Interactive perk state
+  hintUsesRemaining: number
+  currentHint: string | null
+
   // Actions
   setLobbyCode: (code: string | null) => void
   setIsHost: (isHost: boolean) => void
@@ -218,6 +222,8 @@ export interface GameState {
   setIsSpectating: (spectating: boolean) => void
   setFirstCorrectPlayerId: (playerId: string | null) => void
   setMyPerkEffects: (effects: Record<string, boolean> | null) => void
+  setHintUsesRemaining: (n: number) => void
+  setCurrentHint: (hint: string | null) => void
   resetGame: () => void
 
   // Per-round actions
@@ -260,6 +266,8 @@ const initialState = {
   error: null,
   playerAnswerStatus: {} as Record<string, AnswerStatus | undefined>,
   myPerkEffects: null as Record<string, boolean> | null,
+  hintUsesRemaining: 0,
+  currentHint: null as string | null,
 }
 
 export const useGameStore = create<GameState>()(
@@ -330,6 +338,8 @@ export const useGameStore = create<GameState>()(
       setIsSpectating: (spectating) => set({ isSpectating: spectating }),
       setFirstCorrectPlayerId: (playerId) => set({ firstCorrectPlayerId: playerId }),
       setMyPerkEffects: (effects) => set({ myPerkEffects: effects }),
+      setHintUsesRemaining: (n) => set({ hintUsesRemaining: n }),
+      setCurrentHint: (hint) => set({ currentHint: hint }),
       resetGame: () => set(initialState),
 
       setPlayerAnswerStatus: (playerId, status) => set((state) => ({
