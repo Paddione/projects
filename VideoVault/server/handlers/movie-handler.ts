@@ -174,6 +174,27 @@ export async function extractMovieMetadata(filePath: string): Promise<Omit<Movie
 }
 
 /**
+ * Detect quality categories from ffprobe metadata.
+ * Maps resolution and framerate to human-readable quality labels.
+ */
+export function detectQualityCategories(metadata: { width: number; height: number; fps: number }): string[] {
+  const qualities: string[] = [];
+  const { width, height, fps } = metadata;
+  const maxDim = Math.max(width, height);
+
+  if (maxDim >= 7680) qualities.push('8k');
+  else if (maxDim >= 3840) qualities.push('4k');
+  else if (maxDim >= 2560) qualities.push('2k');
+  else if (maxDim >= 1920) qualities.push('1080p');
+  else if (maxDim >= 1280) qualities.push('720p');
+  else if (maxDim > 0) qualities.push('480p');
+
+  if (fps >= 50) qualities.push('60fps');
+
+  return qualities;
+}
+
+/**
  * Calculate file hash (first 64KB + size)
  */
 async function calculateFileHash(filePath: string): Promise<string> {

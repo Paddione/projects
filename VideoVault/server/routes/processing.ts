@@ -4,7 +4,7 @@ import fs from 'fs/promises';
 import crypto from 'crypto';
 import { eq, like } from 'drizzle-orm';
 import { videos } from '@shared/schema';
-import { handleMovieProcessing, scanMoviesDirectory, batchProcessMovies, generateMovieThumbnail, cleanupEmptyDirectories, cleanupOrphanedThumbnails, extractMovieMetadata, MOVIE_EXTENSIONS } from '../handlers/movie-handler';
+import { handleMovieProcessing, scanMoviesDirectory, batchProcessMovies, generateMovieThumbnail, cleanupEmptyDirectories, cleanupOrphanedThumbnails, extractMovieMetadata, detectQualityCategories, MOVIE_EXTENSIONS } from '../handlers/movie-handler';
 import { getMovieWatcherInstance } from '../lib/movie-watcher';
 import { handleAudiobookProcessing, scanAudiobooksDirectory } from '../handlers/audiobook-handler';
 import { handleEbookProcessing, scanEbooksDirectory } from '../handlers/ebook-handler';
@@ -1088,6 +1088,12 @@ router.post('/hdd-ext/index', async (req: Request, res: Response) => {
           const defaultCategories = { age: [] as string[], physical: [] as string[], ethnicity: [] as string[], relationship: [] as string[], acts: [] as string[], setting: [] as string[], quality: [] as string[], performer: [] as string[] };
           const categories = (sidecar?.categories || defaultCategories) as typeof defaultCategories;
           const customCategories = sidecar?.customCategories || {};
+
+          // Auto-detect quality from ffprobe metadata and merge with existing
+          const autoQualities = detectQualityCategories(metadata);
+          if (autoQualities.length > 0) {
+            categories.quality = [...new Set([...categories.quality, ...autoQualities])];
+          }
 
           if (db) {
             await db
