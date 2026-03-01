@@ -1,11 +1,11 @@
 import { useMemo } from 'react';
 import { Video, VideoCategories, CustomCategories, Category } from '@/types/video';
 import { VideoTagsEditor } from './video-tags-editor';
+import { CategoryExtractor } from '@/services/category-extractor';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { getThumbnailSrc } from '@/lib/video-urls';
-import { cn } from '@/lib/utils';
 
 interface SplitPaneEditorProps {
   videos: Video[];
@@ -50,6 +50,11 @@ export function SplitPaneEditor({
   const goToNext = () => {
     if (canGoNext) onPinVideo(filteredVideos[filteredIndex + 1].id);
   };
+
+  const suggestions = useMemo(
+    () => (video ? CategoryExtractor.getSuggestions(video.filename, video.path) : undefined),
+    [video?.filename, video?.path],
+  );
 
   if (!video) return null;
 
@@ -125,6 +130,7 @@ export function SplitPaneEditor({
           availableCategories={availableCategories}
           onSave={onUpdateCategories}
           onRemoveCategory={onRemoveCategory}
+          suggestions={suggestions}
           onCancel={onClose}
         />
       </div>
