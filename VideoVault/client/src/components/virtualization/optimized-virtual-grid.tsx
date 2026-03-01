@@ -16,6 +16,7 @@ interface OptimizedVirtualGridProps {
   onVideoRename: (video: Video) => void;
   onVideoSplit?: (video: Video) => void;
   onFocusMode?: (video: Video) => void;
+  onPin?: (video: Video) => void;
   onMove?: (video: Video) => void;
   onDelete?: (video: Video) => void;
   onRemoveCategory?: (videoId: string, categoryType: string, categoryValue: string) => void;
@@ -49,6 +50,7 @@ export function OptimizedVirtualGrid({
   onVideoRename,
   onVideoSplit,
   onFocusMode,
+  onPin,
   onMove,
   onDelete,
   onRemoveCategory,
@@ -105,6 +107,7 @@ export function OptimizedVirtualGrid({
       onVideoRename,
       onVideoSplit,
       onFocusMode,
+      onPin,
       onMove,
       onDelete,
       onRemoveCategory,
@@ -125,6 +128,7 @@ export function OptimizedVirtualGrid({
       onVideoRename,
       onVideoSplit,
       onFocusMode,
+      onPin,
       onMove,
       onDelete,
       onRemoveCategory,
@@ -177,6 +181,7 @@ export function OptimizedVirtualGrid({
               onRename={data.onVideoRename}
               onSplit={data.onVideoSplit}
               onFocusMode={data.onFocusMode}
+              onPin={data.onPin}
               onMove={data.onMove}
               onDelete={data.onDelete}
               onRemoveCategory={data.onRemoveCategory}
