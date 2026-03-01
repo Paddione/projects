@@ -4,6 +4,7 @@ import { spawn } from 'child_process';
 import { eq, and } from 'drizzle-orm';
 import { videos, scanState } from '@shared/schema';
 import { logger } from '../lib/logger';
+import { readSidecar, writeSidecar } from '../lib/sidecar';
 import type { JobContext } from '../lib/enhanced-job-queue';
 import { v4 as uuidv4 } from 'uuid';
 import crypto from 'crypto';
@@ -354,8 +355,28 @@ export async function handleMovieProcessing(
 
     // 7. Store in database
     const id = movieId || uuidv4();
+    const isHddExt = rootKey === 'hdd-ext';
+
+    // For hdd-ext: read sidecar categories (disk is source of truth)
+    let categories: any = { title, year: year?.toString() || '' };
+    let customCategories: any = {};
+    if (isHddExt) {
+      const sidecar = await readSidecar(movieDir);
+      const defaultCategories = { age: [] as string[], physical: [] as string[], ethnicity: [] as string[], relationship: [] as string[], acts: [] as string[], setting: [] as string[], quality: [] as string[], performer: [] as string[] };
+      categories = sidecar?.categories || defaultCategories;
+      customCategories = sidecar?.customCategories || {};
+    }
+
     if (db) {
       const baseName = path.basename(finalPath);
+      const metadataObj = {
+        title,
+        year,
+        ...metadata,
+        thumbnailPath: path.relative(PATH_BASE, thumbnails.thumb),
+        spritePath: path.relative(PATH_BASE, thumbnails.sprite),
+      };
+
       await db
         .insert(videos)
         .values({
@@ -370,19 +391,10 @@ export async function handleMovieProcessing(
           codec: metadata.codec,
           fps: metadata.fps,
           aspectRatio: metadata.aspectRatio,
-          categories: {
-            title,
-            year: year?.toString() || '',
-          },
-          customCategories: {},
+          categories,
+          customCategories,
           rootKey: rootKey || 'movies',
-          metadata: {
-            title,
-            year,
-            ...metadata,
-            thumbnailPath: path.relative(PATH_BASE, thumbnails.thumb),
-            spritePath: path.relative(PATH_BASE, thumbnails.sprite),
-          },
+          metadata: metadataObj,
           processingStatus: 'completed',
           metadataExtractedAt: new Date(),
         })
@@ -392,9 +404,34 @@ export async function handleMovieProcessing(
             filename: baseName,
             displayName: title + (year ? ` (${year})` : ''),
             path: relativePath,
+            categories,
+            customCategories,
             processingStatus: 'completed',
           },
         });
+
+      // Write sidecar for hdd-ext videos
+      if (isHddExt) {
+        await writeSidecar(movieDir, {
+          version: 1,
+          id,
+          filename: path.basename(finalPath),
+          displayName: title + (year ? ` (${year})` : ''),
+          size: stats.size,
+          lastModified: stats.mtime.toISOString(),
+          metadata: {
+            duration: metadata.duration,
+            width: metadata.width,
+            height: metadata.height,
+            bitrate: metadata.bitrate,
+            codec: metadata.codec,
+            fps: metadata.fps,
+            aspectRatio: metadata.aspectRatio,
+          },
+          categories,
+          customCategories,
+        });
+      }
 
       // Update scan state if rootKey provided
       if (rootKey) {
