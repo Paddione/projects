@@ -126,7 +126,14 @@ export const PlayerGrid: React.FC<PlayerGridProps> = ({
               </div>
 
               <div className={styles.playerInfo}>
-                <div className={styles.username}>{player.username}</div>
+                <div className={styles.username}>
+                  {player.username}
+                  {player.badge && (
+                    <span className={styles.playerBadge} title={player.badge.replace(/_/g, ' ')}>
+                      {player.badge === 'quiz_master_badge' ? '🥇' : player.badge === 'scholar_badge' ? '🥈' : '🥉'}
+                    </span>
+                  )}
+                </div>
 
                 {showScores && (
                   <div className={styles.scoreContainer}>

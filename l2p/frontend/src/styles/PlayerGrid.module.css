@@ -167,6 +167,12 @@
   white-space: nowrap;
 }
 
+.playerBadge {
+  margin-left: 0.2rem;
+  font-size: 0.7rem;
+  vertical-align: middle;
+}
+
 .scoreContainer {
   display: flex;
   align-items: center;

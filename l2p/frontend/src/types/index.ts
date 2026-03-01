@@ -27,6 +27,7 @@ export interface Player {
   currentStreak: number; // Track consecutive correct answers for streak sounds
   isConnected: boolean;
   title?: string;
+  badge?: string;
   cosmeticEffects?: CosmeticEffects;
 }
 

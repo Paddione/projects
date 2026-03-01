@@ -310,7 +310,14 @@ export const ResultsPage: React.FC = () => {
                 <div className={styles.flex} style={{ alignItems: 'center', gap: 'var(--spacing-sm)' }}>
                   <span style={{ fontSize: '1.5rem' }}>{renderCharacterAvatar(player.character, 24)}</span>
                   <div>
-                    <div style={{ fontWeight: 'bold' }}>{player.username}</div>
+                    <div style={{ fontWeight: 'bold' }}>
+                      {player.username}
+                      {player.badge && (
+                        <span style={{ marginLeft: '0.3rem', fontSize: '0.8rem' }} title={player.badge.replace(/_/g, ' ')}>
+                          {player.badge === 'quiz_master_badge' ? '🥇' : player.badge === 'scholar_badge' ? '🥈' : '🥉'}
+                        </span>
+                      )}
+                    </div>
                     <div style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
                       {t('results.levelInfo', { level: player.newLevel, character: player.character })}
                     </div>
@@ -355,6 +362,11 @@ export const ResultsPage: React.FC = () => {
               </div>
               <div style={{ fontSize: '1.2rem', fontWeight: 'bold', marginBottom: 'var(--spacing-xs)' }}>
                 {player.username}
+                {player.badge && (
+                  <span style={{ marginLeft: '0.3rem', fontSize: '0.85rem' }} title={player.badge.replace(/_/g, ' ')}>
+                    {player.badge === 'quiz_master_badge' ? '🥇' : player.badge === 'scholar_badge' ? '🥈' : '🥉'}
+                  </span>
+                )}
               </div>
               <div style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: 'var(--spacing-md)' }}>
                 {t('results.levelInfo', { level: player.newLevel, character: player.character })}

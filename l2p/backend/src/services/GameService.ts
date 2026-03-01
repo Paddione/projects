@@ -58,6 +58,7 @@ export interface GamePlayer {
   character: string;
   characterLevel?: number;
   title?: string; // Active cosmetic title (e.g., "Master Scholar")
+  badge?: string; // Active cosmetic badge (e.g., "starter_badge")
   isHost: boolean;
   score: number;
   multiplier: number;
@@ -642,6 +643,9 @@ export class GameService {
             const loadout = await perksManager.getUserLoadout(numericId);
             if (loadout?.active_title) {
               player.title = loadout.active_title;
+            }
+            if (loadout?.active_badge) {
+              player.badge = loadout.active_badge;
             }
 
             // Load cosmetic visual effect configs (helper, display, emote, sound)
@@ -1630,6 +1634,7 @@ export class GameService {
           username: player.username,
           character: player.character,
           characterLevel: player.characterLevel,
+          badge: player.badge,
           finalScore: player.score,
           correctAnswers: player.correctAnswers,
           multiplier: player.multiplier,

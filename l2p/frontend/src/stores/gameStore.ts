@@ -94,6 +94,7 @@ export interface GameResult {
   username: string
   character: string
   characterLevel?: number
+  badge?: string
   finalScore: number
   correctAnswers: number
   multiplier: number
