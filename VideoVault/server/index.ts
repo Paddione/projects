@@ -17,6 +17,7 @@ import compression from 'compression';
 
 import path from 'path';
 import fs from 'fs';
+import { RootsRegistry } from './lib/roots-registry';
 
 const app = express();
 
@@ -97,6 +98,9 @@ app.use(requestId);
 app.use(metricsMiddleware);
 app.use(requestLogger);
 
+// Initialize roots registry from environment variables
+RootsRegistry.init();
+
 (async () => {
   // Initialize DB connection if configured
   if (process.env.DATABASE_URL && dbInstance) {
@@ -122,6 +126,15 @@ app.use(requestLogger);
 
       app.locals.db = dbInstance;
       logger.info('Database connection verified');
+
+      // Hydrate roots registry from DB directory_roots table
+      try {
+        const { directoryRoots } = await import('@shared/schema');
+        const dbRoots = await dbInstance.select().from(directoryRoots);
+        RootsRegistry.registerFromDb(dbRoots);
+      } catch (registryErr) {
+        logger.warn('Failed to hydrate RootsRegistry from DB', { error: (registryErr as Error).message });
+      }
     } catch (err) {
       logger.error('Failed to connect to database', { error: (err as Error).message });
       // Continue to boot so app remains accessible (may use in-memory fallbacks)

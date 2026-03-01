@@ -3,6 +3,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import os from 'os';
 import { readSidecar, writeSidecar, syncVideoSidecar, SIDECAR_FILENAME } from './sidecar';
+import { RootsRegistry } from './roots-registry';
 
 describe('sidecar', () => {
   let tmpDir: string;
@@ -122,6 +123,134 @@ describe('sidecar', () => {
         expect(content.categories.age).toEqual(['teen']);
       } finally {
         process.env.MEDIA_ROOT = origMediaRoot;
+      }
+    });
+
+    it('writes sidecar using RootsRegistry when rootKey is provided', async () => {
+      const moviesRoot = path.join(tmpDir, 'movies-mount');
+      const videoDir = path.join(moviesRoot, 'action', 'Cool Film');
+      await fs.mkdir(videoDir, { recursive: true });
+
+      RootsRegistry.reset();
+      RootsRegistry.registerRoot('movies', moviesRoot);
+
+      try {
+        await syncVideoSidecar({
+          id: 'movie-1',
+          filename: 'Cool Film.mp4',
+          displayName: 'Cool Film',
+          path: 'action/Cool Film/Cool Film.mp4',
+          rootKey: 'movies',
+          size: 2000000,
+          lastModified: new Date('2026-02-20T12:00:00Z'),
+          metadata: { duration: 90, width: 1920, height: 1080, bitrate: 8000000, codec: 'h265', fps: 24, aspectRatio: '16:9' },
+          categories: { genre: ['action'] },
+          customCategories: {},
+        });
+
+        const content = JSON.parse(await fs.readFile(path.join(videoDir, 'metadata.json'), 'utf-8'));
+        expect(content.version).toBe(1);
+        expect(content.id).toBe('movie-1');
+        expect(content.filename).toBe('Cool Film.mp4');
+        expect(content.size).toBe(2000000);
+        expect(content.categories.genre).toEqual(['action']);
+      } finally {
+        RootsRegistry.reset();
+      }
+    });
+
+    it('silently skips when rootKey is provided but unresolvable', async () => {
+      RootsRegistry.reset();
+      // Do not register 'nas-share' — it should be unresolvable
+
+      const videoDir = path.join(tmpDir, 'should-not-exist');
+
+      try {
+        await syncVideoSidecar({
+          id: 'orphan-1',
+          filename: 'Orphan.mp4',
+          displayName: 'Orphan',
+          path: 'some/dir/Orphan.mp4',
+          rootKey: 'nas-share',
+          size: 500,
+          lastModified: '2026-01-01T00:00:00Z',
+          metadata: {},
+          categories: {},
+          customCategories: {},
+        });
+
+        // No file should have been written anywhere — function should return silently
+        const files = await fs.readdir(tmpDir);
+        expect(files).not.toContain('metadata.json');
+      } finally {
+        RootsRegistry.reset();
+      }
+    });
+
+    it('falls back to MEDIA_ROOT when no rootKey is provided (backwards compat)', async () => {
+      RootsRegistry.reset();
+      // Registry has no fallback set — but MEDIA_ROOT env is available
+
+      const videoDir = path.join(tmpDir, 'legacy', 'Video');
+      await fs.mkdir(videoDir, { recursive: true });
+
+      const origMediaRoot = process.env.MEDIA_ROOT;
+      process.env.MEDIA_ROOT = tmpDir;
+
+      try {
+        await syncVideoSidecar({
+          id: 'legacy-1',
+          filename: 'Video.mp4',
+          displayName: 'Legacy Video',
+          path: 'legacy/Video/Video.mp4',
+          // no rootKey
+          size: 1234,
+          lastModified: '2026-03-01T00:00:00Z',
+          metadata: { duration: 30, width: 640, height: 480, bitrate: 1000000, codec: 'h264', fps: 30, aspectRatio: '4:3' },
+          categories: {},
+          customCategories: {},
+        });
+
+        const content = JSON.parse(await fs.readFile(path.join(videoDir, 'metadata.json'), 'utf-8'));
+        expect(content.id).toBe('legacy-1');
+        expect(content.displayName).toBe('Legacy Video');
+      } finally {
+        process.env.MEDIA_ROOT = origMediaRoot;
+        RootsRegistry.reset();
+      }
+    });
+
+    it('uses registry fallbackRoot for rootKey-less videos when available', async () => {
+      const fallbackDir = path.join(tmpDir, 'fallback-media');
+      const videoDir = path.join(fallbackDir, 'sub', 'MyVid');
+      await fs.mkdir(videoDir, { recursive: true });
+
+      // Set up registry with a fallback root (simulating MEDIA_ROOT in env during init)
+      RootsRegistry.reset();
+      const origMediaRoot = process.env.MEDIA_ROOT;
+      process.env.MEDIA_ROOT = fallbackDir;
+      RootsRegistry.init();
+
+      try {
+        await syncVideoSidecar({
+          id: 'fallback-1',
+          filename: 'MyVid.mp4',
+          displayName: 'My Vid',
+          path: 'sub/MyVid/MyVid.mp4',
+          // no rootKey — should use registry's fallbackRoot
+          size: 999,
+          lastModified: '2026-02-15T00:00:00Z',
+          metadata: {},
+          categories: { age: ['mature'] },
+          customCategories: {},
+        });
+
+        const content = JSON.parse(await fs.readFile(path.join(videoDir, 'metadata.json'), 'utf-8'));
+        expect(content.id).toBe('fallback-1');
+        expect(content.categories.age).toEqual(['mature']);
+      } finally {
+        process.env.MEDIA_ROOT = origMediaRoot;
+        RootsRegistry.reset();
       }
     });
   });

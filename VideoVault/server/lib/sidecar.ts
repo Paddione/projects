@@ -1,6 +1,7 @@
 import fs from 'fs/promises';
 import path from 'path';
 import { logger } from './logger';
+import { RootsRegistry } from './roots-registry';
 
 export const SIDECAR_FILENAME = 'metadata.json';
 
@@ -55,22 +56,36 @@ export async function writeSidecar(dirPath: string, data: SidecarData): Promise<
 }
 
 /**
- * Write a sidecar for a video. Resolves the directory from MEDIA_ROOT + video path.
- * Non-fatal: logs warning on failure.
+ * Write a sidecar for a video. Resolves the directory via RootsRegistry,
+ * falling back to MEDIA_ROOT for rootKey-less videos (backwards compat).
+ * Non-fatal: logs warning on failure, skips silently for unresolvable roots.
  */
 export async function syncVideoSidecar(video: {
   id: string;
   filename: string;
   displayName: string;
   path: string;
+  rootKey?: string | null;
   size: number | bigint;
   lastModified: Date | string;
   metadata: any;
   categories: any;
   customCategories: any;
 }): Promise<void> {
-  const MEDIA_ROOT = process.env.MEDIA_ROOT || path.join(process.cwd(), 'media');
-  const videoDir = path.dirname(path.join(MEDIA_ROOT, video.path));
+  let videoDir = RootsRegistry.resolveVideoDir({ rootKey: video.rootKey, path: video.path });
+
+  if (!videoDir && !video.rootKey) {
+    // Legacy fallback: no rootKey, registry has no fallback → use MEDIA_ROOT env
+    const MEDIA_ROOT = process.env.MEDIA_ROOT || path.join(process.cwd(), 'media');
+    videoDir = path.dirname(path.join(MEDIA_ROOT, video.path));
+  }
+
+  if (!videoDir) {
+    // Unresolvable root — skip silently
+    logger.debug(`[Sidecar] Skipping unresolvable root for video ${video.id}`, { rootKey: video.rootKey });
+    return;
+  }
+
   const existing = await readSidecar(videoDir);
   await writeSidecar(videoDir, {
     ...existing,
