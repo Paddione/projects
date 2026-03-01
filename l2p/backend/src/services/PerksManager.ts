@@ -365,7 +365,7 @@ export class PerksManager {
     const perkType = perkResult.rows[0]!['type'] as string;
 
     // For types stored in perks_config, clear the slot entirely
-    if (['helper', 'display', 'emote', 'sound', 'multiplier'].includes(perkType)) {
+    if (['helper', 'display', 'emote', 'multiplier'].includes(perkType)) {
       await this.clearPerksConfigSlot(userId, perkType);
       this.invalidateCache();
       return true;
@@ -417,7 +417,7 @@ export class PerksManager {
     // Build active cosmetic perks map from dedicated columns + perks_config
     const activeCosmeticPerks: Record<string, { perk_id: number; configuration: any }> = {};
     // Slots stored in perks_config JSONB
-    for (const slotType of ['helper', 'display', 'emote', 'sound', 'multiplier', 'title']) {
+    for (const slotType of ['helper', 'display', 'emote', 'multiplier', 'title']) {
       if (perksConfig[slotType]?.perk_id) {
         activeCosmeticPerks[slotType] = perksConfig[slotType];
       }
@@ -486,7 +486,7 @@ export class PerksManager {
     const configs: Record<string, { perk_id: number; perk_name?: string; configuration: any }> = {};
 
     // Read visual effect slots (including multiplier for score/streak visual config)
-    for (const slotType of ['helper', 'display', 'emote', 'sound', 'multiplier']) {
+    for (const slotType of ['helper', 'display', 'emote', 'multiplier']) {
       if (perksConfig[slotType]?.perk_id) {
         configs[slotType] = perksConfig[slotType];
       }
@@ -544,8 +544,6 @@ export class PerksManager {
         return { position: 'top-right' };
       case 'emote':
         return { emote_set: 'classic' };
-      case 'sound':
-        return { pack: 'retro' };
       case 'multiplier':
         return { activation: 'automatic' };
       case 'title':
@@ -645,7 +643,6 @@ export class PerksManager {
       case 'helper':
       case 'display':
       case 'emote':
-      case 'sound':
       case 'multiplier': {
         await this.updatePerksConfig(userId, perkType, perkId, configuration);
         break;

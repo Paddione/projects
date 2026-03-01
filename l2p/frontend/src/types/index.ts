@@ -10,7 +10,6 @@ export interface CosmeticEffects {
   helper?: CosmeticSlotConfig;
   display?: CosmeticSlotConfig;
   emote?: CosmeticSlotConfig;
-  sound?: CosmeticSlotConfig;
   multiplier?: CosmeticSlotConfig;
 }
 

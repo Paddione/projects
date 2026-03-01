@@ -59,7 +59,6 @@ const PERK_SLOTS: PerkSlot[] = [
   { id: 'helper', label: 'Helper', icon: '🛠️', type: 'helper' },
   { id: 'display', label: 'Interface', icon: '📊', type: 'display' },
   { id: 'emote', label: 'Social', icon: '💬', type: 'emote' },
-  { id: 'sound', label: 'Audio', icon: '🔊', type: 'sound' },
   { id: 'multiplier', label: 'Booster', icon: '⚡', type: 'multiplier' },
   { id: 'title', label: 'Title', icon: '🏷️', type: 'title' },
 ];
@@ -125,14 +124,6 @@ const OPTION_LABELS: Record<string, { label: string; emoji: string }> = {
   small: { label: 'Small', emoji: '🚀' },
   medium: { label: 'Medium', emoji: '💫' },
   large: { label: 'Large', emoji: '🌟' },
-  // Sound
-  retro: { label: 'Retro 8-bit', emoji: '🕹️' },
-  nature: { label: 'Nature', emoji: '🌿' },
-  electronic: { label: 'Electronic', emoji: '🎹' },
-  orchestral: { label: 'Orchestral', emoji: '🎻' },
-  synthwave: { label: 'Synthwave', emoji: '🌆' },
-  ambient: { label: 'Ambient', emoji: '🎧' },
-  enthusiastic: { label: 'Enthusiastic', emoji: '🔊' },
   // Multiplier
   game: { label: 'Per Game', emoji: '🎮' },
   session: { label: 'Per Session', emoji: '⏱️' },
