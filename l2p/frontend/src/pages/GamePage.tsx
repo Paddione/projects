@@ -389,31 +389,19 @@ export const GamePage: React.FC = () => {
       else if (style === 'background') cosmeticClasses.push(gameStyles.answerPreviewBackground)
       else if (style === 'shadow') cosmeticClasses.push(gameStyles.answerPreviewShadow)
     }
-    // Display slot: timer_styles
-    if (effects.display?.perk_name === 'timer_styles') {
+    // Display slot: enhanced_timers
+    if (effects.display?.perk_name === 'enhanced_timers') {
       const style = (effects.display.configuration as Record<string, string>)?.timer_style
       if (style === 'neon') cosmeticClasses.push(gameStyles.timerNeon)
       else if (style === 'pulse') cosmeticClasses.push(gameStyles.timerPulse)
       else if (style === 'minimal') cosmeticClasses.push(gameStyles.timerMinimal)
     }
-    // Emote slot: celebration_effects
-    if (effects.emote?.perk_name === 'celebration_effects') {
+    // Emote slot: chat_emotes_basic / chat_emotes_premium
+    if (effects.emote?.perk_name === 'chat_emotes_basic' || effects.emote?.perk_name === 'chat_emotes_premium') {
       const style = (effects.emote.configuration as Record<string, string>)?.celebration_style
       if (style === 'confetti') cosmeticClasses.push(gameStyles.celebrationConfetti)
       else if (style === 'fireworks') cosmeticClasses.push(gameStyles.celebrationFireworks)
       else if (style === 'sparkle') cosmeticClasses.push(gameStyles.celebrationSparkle)
-    }
-    // Multiplier slot: score_multiplier_visual or streak_counter_style
-    if (effects.multiplier?.perk_name === 'score_multiplier_visual') {
-      const style = (effects.multiplier.configuration as Record<string, string>)?.multiplier_style
-      if (style === 'flame') cosmeticClasses.push(gameStyles.multiplierFlame)
-      else if (style === 'electric') cosmeticClasses.push(gameStyles.multiplierElectric)
-      else if (style === 'gold') cosmeticClasses.push(gameStyles.multiplierGold)
-    } else if (effects.multiplier?.perk_name === 'streak_counter_style') {
-      const style = (effects.multiplier.configuration as Record<string, string>)?.streak_style
-      if (style === 'fire') cosmeticClasses.push(gameStyles.streakFire)
-      else if (style === 'ice') cosmeticClasses.push(gameStyles.streakIce)
-      else if (style === 'rainbow') cosmeticClasses.push(gameStyles.streakRainbow)
     }
   }
   const cosmeticClassName = cosmeticClasses.join(' ')
