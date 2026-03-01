@@ -1997,7 +1997,7 @@ export class GameService {
     // Shuffle wrong indices and pick `count` to eliminate
     for (let i = wrongIndices.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
-      [wrongIndices[i], wrongIndices[j]] = [wrongIndices[j], wrongIndices[i]];
+      [wrongIndices[i], wrongIndices[j]] = [wrongIndices[j]!, wrongIndices[i]!];
     }
     const eliminatedIndices = wrongIndices.slice(0, count);
 
