@@ -202,10 +202,9 @@ export class ValidationMiddleware {
       })
     },
 
-    // Create question validation (single-language format after migration)
+    // Create question validation (M:N — question_set_id no longer required)
     createQuestion: {
       body: Joi.object({
-        question_set_id: Joi.number().integer().positive().required(),
         question_text: Joi.string().min(1).required(),
         answers: Joi.array().items(
           Joi.object({
@@ -217,13 +216,14 @@ export class ValidationMiddleware {
         difficulty: Joi.number().integer().min(1).max(5).default(1),
         answer_type: Joi.string().valid('multiple_choice', 'free_text').default('multiple_choice'),
         hint: Joi.string().allow('', null),
+        category: Joi.string().max(50).allow('', null),
+        language: Joi.string().max(10).allow('', null),
       })
     },
 
-    // Update question validation (single-language format after migration)
+    // Update question validation
     updateQuestion: {
       body: Joi.object({
-        question_set_id: Joi.number().integer().positive(),
         question_text: Joi.string().min(1),
         answers: Joi.array().items(
           Joi.object({
@@ -235,6 +235,8 @@ export class ValidationMiddleware {
         difficulty: Joi.number().integer().min(1).max(5),
         answer_type: Joi.string().valid('multiple_choice', 'free_text'),
         hint: Joi.string().allow('', null),
+        category: Joi.string().max(50).allow('', null),
+        language: Joi.string().max(10).allow('', null),
       })
     },
 

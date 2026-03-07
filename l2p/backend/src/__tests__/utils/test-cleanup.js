@@ -59,18 +59,23 @@ export async function cleanupTestData() {
       )
     `, [`${TEST_DATA_PREFIX}%`]);
 
-        // Clean up test question sets
+        // Clean up test junction table entries + question sets
         await client.query(`
-      DELETE FROM question_sets 
-      WHERE name LIKE $1
-    `, [`${TEST_DATA_PREFIX}%`]);
-
-        // Clean up test questions
-        await client.query(`
-      DELETE FROM questions 
+      DELETE FROM question_set_questions
       WHERE question_set_id IN (
         SELECT id FROM question_sets WHERE name LIKE $1
       )
+    `, [`${TEST_DATA_PREFIX}%`]);
+
+        await client.query(`
+      DELETE FROM question_sets
+      WHERE name LIKE $1
+    `, [`${TEST_DATA_PREFIX}%`]);
+
+        // Clean up test questions (questions are now independent entities)
+        await client.query(`
+      DELETE FROM questions
+      WHERE question_text LIKE $1
     `, [`${TEST_DATA_PREFIX}%`]);
 
         console.log('✅ Test data cleanup completed');

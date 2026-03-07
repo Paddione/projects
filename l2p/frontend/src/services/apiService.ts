@@ -1494,7 +1494,6 @@ class ApiService {
     difficulty: number
   }): Promise<ApiResponse<{
     id: number
-    question_set_id: number
     question_text: any
     answers: any
     explanation: any
@@ -1502,7 +1501,6 @@ class ApiService {
   }>> {
     return this.request<{
       id: number
-      question_set_id: number
       question_text: any
       answers: any
       explanation: any
@@ -1520,7 +1518,6 @@ class ApiService {
     difficulty: number
   }): Promise<ApiResponse<{
     id: number
-    question_set_id: number
     question_text: any
     answers: any
     explanation: any
@@ -1528,7 +1525,6 @@ class ApiService {
   }>> {
     return this.request<{
       id: number
-      question_set_id: number
       question_text: any
       answers: any
       explanation: any
@@ -1536,6 +1532,63 @@ class ApiService {
     }>(`/question-management/questions/${id}`, {
       method: 'PUT',
       body: JSON.stringify(data)
+    })
+  }
+
+  // Question Database (M:N) methods
+  async browseQuestions(filters: {
+    category?: string
+    difficulty?: number
+    answer_type?: string
+    search?: string
+    page?: number
+    pageSize?: number
+    sortBy?: string
+    sortDir?: 'ASC' | 'DESC'
+  } = {}): Promise<ApiResponse<{
+    items: Array<{
+      id: number
+      question_text: string
+      answers: any
+      explanation?: string
+      difficulty: number
+      category?: string
+      language?: string
+      answer_type?: string
+      created_at?: string
+    }>
+    total: number
+    page: number
+    pageSize: number
+  }>> {
+    const params = new URLSearchParams()
+    if (filters.category) params.set('category', filters.category)
+    if (filters.difficulty) params.set('difficulty', String(filters.difficulty))
+    if (filters.answer_type) params.set('answer_type', filters.answer_type)
+    if (filters.search) params.set('q', filters.search)
+    if (filters.page) params.set('page', String(filters.page))
+    if (filters.pageSize) params.set('pageSize', String(filters.pageSize))
+    if (filters.sortBy) params.set('sortBy', filters.sortBy)
+    if (filters.sortDir) params.set('sortDir', filters.sortDir)
+    const qs = params.toString()
+    return this.request(`/questions/browse${qs ? `?${qs}` : ''}`)
+  }
+
+  async getQuestionCategories(): Promise<ApiResponse<string[]>> {
+    return this.request<string[]>('/questions/categories')
+  }
+
+  async linkQuestionsToSet(setId: number, questionIds: number[]): Promise<ApiResponse<{ message: string }>> {
+    return this.request<{ message: string }>(`/questions/sets/${setId}/link`, {
+      method: 'POST',
+      body: JSON.stringify({ questionIds })
+    })
+  }
+
+  async unlinkQuestionsFromSet(setId: number, questionIds: number[]): Promise<ApiResponse<{ message: string }>> {
+    return this.request<{ message: string }>(`/questions/sets/${setId}/unlink`, {
+      method: 'DELETE',
+      body: JSON.stringify({ questionIds })
     })
   }
 

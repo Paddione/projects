@@ -15,16 +15,16 @@ jest.mock('../../services/DatabaseService');
 // Mock data
 export const mockQuestion: Question = {
   id: 1,
-  question_set_id: 1,
   question_text: 'What is the capital of France?',
-  question_type: 'multiple_choice',
-  difficulty_level: 'easy',
-  points: 10,
-  time_limit: 30,
+  answers: [
+    { text: 'Paris', correct: true },
+    { text: 'London', correct: false },
+    { text: 'Berlin', correct: false }
+  ],
+  difficulty: 2,
   explanation: 'Paris is the capital and largest city of France.',
-  metadata: { category: 'geography' },
-  created_at: new Date('2024-01-01T00:00:00Z'),
-  updated_at: new Date('2024-01-01T00:00:00Z')
+  category: 'geography',
+  created_at: new Date('2024-01-01T00:00:00Z')
 };
 
 export const mockQuestionSet: QuestionSet = {
@@ -40,14 +40,15 @@ export const mockQuestionSet: QuestionSet = {
 };
 
 export const mockCreateQuestionData: CreateQuestionData = {
-  question_set_id: 1,
   question_text: 'What is the capital of France?',
-  question_type: 'multiple_choice',
-  difficulty_level: 'easy',
-  points: 10,
-  time_limit: 30,
+  answers: [
+    { text: 'Paris', correct: true },
+    { text: 'London', correct: false },
+    { text: 'Berlin', correct: false }
+  ],
+  difficulty: 2,
   explanation: 'Paris is the capital and largest city of France.',
-  metadata: { category: 'geography' }
+  category: 'geography'
 };
 
 export const mockCreateQuestionSetData: CreateQuestionSetData = {
@@ -252,14 +253,8 @@ describe('QuestionRepository', () => {
         expect(mockDb.query).toHaveBeenCalledWith(
           expect.stringContaining('INSERT INTO questions'),
           expect.arrayContaining([
-            1,
             'What is the capital of France?',
-            'multiple_choice',
-            'easy',
-            10,
-            30,
             'Paris is the capital and largest city of France.',
-            { category: 'geography' }
           ])
         );
       });
@@ -273,7 +268,7 @@ describe('QuestionRepository', () => {
 
         expect(result).toEqual([mockQuestion]);
         expect(mockDb.query).toHaveBeenCalledWith(
-          expect.stringContaining('SELECT * FROM questions WHERE question_set_id = $1'),
+          expect.stringContaining('question_set_questions'),
           [1]
         );
       });
@@ -287,7 +282,7 @@ describe('QuestionRepository', () => {
 
         expect(result).toBe(5);
         expect(mockDb.query).toHaveBeenCalledWith(
-          expect.stringContaining('SELECT COUNT(*) FROM questions WHERE question_set_id = $1'),
+          expect.stringContaining('question_set_questions'),
           [1]
         );
       });

@@ -333,15 +333,11 @@ describe('GeminiService', () => {
 
   describe('convertToQuestionData', () => {
     it('should convert generated questions to database format', () => {
-      // Arrange
-      const questionSetId = 1;
-
       // Act
-      const result = geminiService.convertToQuestionData(mockGeneratedQuestions, questionSetId);
+      const result = geminiService.convertToQuestionData(mockGeneratedQuestions);
 
       // Assert
       expect(result).toHaveLength(1);
-      expect(result[0].question_set_id).toBe(questionSetId);
       expect(result[0].question_text).toEqual(mockGeneratedQuestions[0].questionText);
       expect(result[0].answers).toEqual(mockGeneratedQuestions[0].answers);
       expect(result[0].explanation).toEqual(mockGeneratedQuestions[0].explanation);

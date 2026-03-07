@@ -1,5 +1,6 @@
 import { BaseRepository } from './BaseRepository.js';
 import { buildOrderBy } from '../utils/pagination.js';
+import { QuestionFilterOptions } from '../types/question.js';
 
 export interface Answer {
   text: string;
@@ -8,12 +9,13 @@ export interface Answer {
 
 export interface Question {
   id: number;
-  question_set_id: number;
   question_text: string;
   answers: Answer[];
   explanation?: string;
   difficulty: number;
   created_at: Date;
+  category?: string;
+  language?: string;
 }
 
 export interface QuestionSet {
@@ -28,11 +30,12 @@ export interface QuestionSet {
 }
 
 export interface CreateQuestionData {
-  question_set_id: number;
   question_text: string;
   answers: Answer[];
   explanation?: string;
   difficulty?: number;
+  category?: string;
+  language?: string;
 }
 
 export interface CreateQuestionSetData {
@@ -46,6 +49,7 @@ export interface CreateQuestionSetData {
 export class QuestionRepository extends BaseRepository {
   private readonly questionsTable = 'questions';
   private readonly questionSetsTable = 'question_sets';
+  private readonly junctionTable = 'question_set_questions';
   // Note: BaseRepository is jest-mocked in tests to return an object with mocked methods.
   // To ensure mocks are captured, delegate to instance methods on `this` instead of `super.*`.
 
@@ -136,6 +140,7 @@ export class QuestionRepository extends BaseRepository {
   }
 
   async deleteQuestionSet(id: number): Promise<boolean> {
+    // Junction table entries cascade-delete automatically
     return this.delete(this.questionSetsTable, id);
   }
 
@@ -154,7 +159,10 @@ export class QuestionRepository extends BaseRepository {
 
   async findQuestionsBySetId(questionSetId: number): Promise<Question[]> {
     const result = await this.getDb().query<Question>(
-      'SELECT * FROM questions WHERE question_set_id = $1 ORDER BY id',
+      `SELECT q.* FROM questions q
+       INNER JOIN question_set_questions qsq ON q.id = qsq.question_id
+       WHERE qsq.question_set_id = $1
+       ORDER BY qsq.position, q.id`,
       [questionSetId]
     );
     return result.rows;
@@ -174,11 +182,17 @@ export class QuestionRepository extends BaseRepository {
     const sortBy = this.sanitizeSort(options.sortBy || 'id', ['id', 'difficulty', 'created_at'], 'id');
     const sortDir = this.sanitizeDir(options.sortDir);
 
-    const total = await this.count(this.questionsTable, 'question_set_id = $1', [questionSetId]);
-    const orderBy = buildOrderBy(sortBy, sortDir, 'id');
+    const countResult = await this.getDb().query<{ count: string }>(
+      `SELECT COUNT(*) as count FROM ${this.junctionTable} WHERE question_set_id = $1`,
+      [questionSetId]
+    );
+    const total = parseInt(countResult.rows[0]?.count || '0', 10);
+
+    const orderBy = buildOrderBy(`q.${sortBy}`, sortDir, 'q.id');
     const result = await this.getDb().query<Question>(
-      `SELECT * FROM ${this.questionsTable}
-       WHERE question_set_id = $1
+      `SELECT q.* FROM ${this.questionsTable} q
+       INNER JOIN ${this.junctionTable} qsq ON q.id = qsq.question_id
+       WHERE qsq.question_set_id = $1
        ORDER BY ${orderBy}
        LIMIT $2 OFFSET $3`,
       [questionSetId, pageSize, (page - 1) * pageSize]
@@ -187,10 +201,14 @@ export class QuestionRepository extends BaseRepository {
   }
 
   async createQuestion(data: CreateQuestionData): Promise<Question> {
-    const questionData = {
-      ...data,
-      difficulty: data.difficulty || 1
+    const questionData: Record<string, unknown> = {
+      question_text: data.question_text,
+      answers: data.answers,
+      explanation: data.explanation,
+      difficulty: data.difficulty || 1,
     };
+    if (data.category !== undefined) questionData['category'] = data.category;
+    if (data.language !== undefined) questionData['language'] = data.language;
 
     return this.create<Question>(this.questionsTable, questionData);
   }
@@ -200,6 +218,7 @@ export class QuestionRepository extends BaseRepository {
   }
 
   async deleteQuestion(id: number): Promise<boolean> {
+    // Junction table entries cascade-delete automatically
     return this.delete(this.questionsTable, id);
   }
 
@@ -207,25 +226,26 @@ export class QuestionRepository extends BaseRepository {
     const placeholders = questionSetIds.map((_, index) => `$${index + 2}`).join(', ');
 
     const result = await this.getDb().query<Question>(
-      `SELECT * FROM questions 
-       WHERE question_set_id IN (${placeholders})
-       AND question_text IS NOT NULL 
-       AND question_text::text != ''
-       AND question_text::text != '{}'
-       AND question_text::text != '""'
-       AND question_text::text != 'null'
-       AND answers IS NOT NULL 
-       AND answers::text != ''
-       AND answers::text != '[]'
-       AND answers::text != 'null'
-       AND length(question_text::text) > 5
+      `SELECT q.* FROM questions q
+       INNER JOIN question_set_questions qsq ON q.id = qsq.question_id
+       WHERE qsq.question_set_id IN (${placeholders})
+       AND q.question_text IS NOT NULL
+       AND q.question_text::text != ''
+       AND q.question_text::text != '{}'
+       AND q.question_text::text != '""'
+       AND q.question_text::text != 'null'
+       AND q.answers IS NOT NULL
+       AND q.answers::text != ''
+       AND q.answers::text != '[]'
+       AND q.answers::text != 'null'
+       AND length(q.question_text::text) > 5
        AND (
-         CASE 
-           WHEN jsonb_typeof(answers) = 'array' THEN jsonb_array_length(answers) > 0
+         CASE
+           WHEN jsonb_typeof(q.answers) = 'array' THEN jsonb_array_length(q.answers) > 0
            ELSE false
          END
        )
-       ORDER BY RANDOM() 
+       ORDER BY RANDOM()
        LIMIT $1`,
       [count, ...questionSetIds]
     );
@@ -234,7 +254,10 @@ export class QuestionRepository extends BaseRepository {
 
   async getQuestionsByDifficulty(questionSetId: number, difficulty: number): Promise<Question[]> {
     const result = await this.getDb().query<Question>(
-      'SELECT * FROM questions WHERE question_set_id = $1 AND difficulty = $2 ORDER BY id',
+      `SELECT q.* FROM questions q
+       INNER JOIN question_set_questions qsq ON q.id = qsq.question_id
+       WHERE qsq.question_set_id = $1 AND q.difficulty = $2
+       ORDER BY q.id`,
       [questionSetId, difficulty]
     );
     return result.rows;
@@ -242,7 +265,11 @@ export class QuestionRepository extends BaseRepository {
 
   async getQuestionCount(questionSetId?: number): Promise<number> {
     if (questionSetId) {
-      return this.count(this.questionsTable, 'question_set_id = $1', [questionSetId]);
+      const result = await this.getDb().query<{ count: string }>(
+        `SELECT COUNT(*) as count FROM ${this.junctionTable} WHERE question_set_id = $1`,
+        [questionSetId]
+      );
+      return parseInt(result.rows[0]?.count || '0', 10);
     }
     return this.count(this.questionsTable);
   }
@@ -255,18 +282,24 @@ export class QuestionRepository extends BaseRepository {
   }
 
   async searchQuestions(searchTerm: string, questionSetId?: number): Promise<Question[]> {
-    let query = `
-      SELECT * FROM questions
-      WHERE question_text ILIKE $1
-    `;
+    let query: string;
     const params: unknown[] = [`%${searchTerm}%`];
 
     if (questionSetId) {
-      query += ' AND question_set_id = $2';
+      query = `
+        SELECT q.* FROM questions q
+        INNER JOIN question_set_questions qsq ON q.id = qsq.question_id
+        WHERE q.question_text ILIKE $1 AND qsq.question_set_id = $2
+        ORDER BY q.id LIMIT 50
+      `;
       params.push(questionSetId);
+    } else {
+      query = `
+        SELECT * FROM questions
+        WHERE question_text ILIKE $1
+        ORDER BY id LIMIT 50
+      `;
     }
-
-    query += ' ORDER BY id LIMIT 50';
 
     const result = await this.getDb().query<Question>(query, params);
     return result.rows;
@@ -287,32 +320,47 @@ export class QuestionRepository extends BaseRepository {
     const sortBy = this.sanitizeSort(options.sortBy || 'id', ['id', 'difficulty', 'created_at'], 'id');
     const sortDir = this.sanitizeDir(options.sortDir);
 
-    const params: unknown[] = [`%${searchTerm}%`];
-    let where = `question_text ILIKE $1`;
-    let idx = 2;
     if (options.questionSetId) {
-      where += ` AND question_set_id = $${idx}`;
-      params.push(options.questionSetId);
-      idx++;
+      const countResult = await this.getDb().query<{ count: string }>(
+        `SELECT COUNT(*) as count FROM questions q
+         INNER JOIN question_set_questions qsq ON q.id = qsq.question_id
+         WHERE q.question_text ILIKE $1 AND qsq.question_set_id = $2`,
+        [`%${searchTerm}%`, options.questionSetId]
+      );
+      const total = parseInt(countResult.rows[0]?.count || '0', 10);
+
+      const orderBy = buildOrderBy(`q.${sortBy}`, sortDir, 'q.id');
+      const result = await this.getDb().query<Question>(
+        `SELECT q.* FROM questions q
+         INNER JOIN question_set_questions qsq ON q.id = qsq.question_id
+         WHERE q.question_text ILIKE $1 AND qsq.question_set_id = $2
+         ORDER BY ${orderBy}
+         LIMIT $3 OFFSET $4`,
+        [`%${searchTerm}%`, options.questionSetId, pageSize, (page - 1) * pageSize]
+      );
+      return { items: result.rows, total };
     }
-    const total = await this.count(this.questionsTable, where, params);
+
+    // No set filter — search all questions
+    const params: unknown[] = [`%${searchTerm}%`];
+    const total = await this.count(this.questionsTable, 'question_text ILIKE $1', params);
     const orderBy = buildOrderBy(sortBy, sortDir, 'id');
     const result = await this.getDb().query<Question>(
       `SELECT * FROM ${this.questionsTable}
-       WHERE ${where}
+       WHERE question_text ILIKE $1
        ORDER BY ${orderBy}
-       LIMIT $${idx} OFFSET $${idx + 1}`,
-      [...params, pageSize, (page - 1) * pageSize]
+       LIMIT $2 OFFSET $3`,
+      [`%${searchTerm}%`, pageSize, (page - 1) * pageSize]
     );
     return { items: result.rows, total };
   }
 
   async getQuestionsWithAnswerCount(): Promise<Array<Question & { answer_count: number }>> {
     const result = await this.getDb().query<Question & { answer_count: number }>(
-      `SELECT *, 
-       jsonb_array_length(answers) as answer_count 
-       FROM questions 
-       ORDER BY question_set_id, id`
+      `SELECT *,
+       jsonb_array_length(answers) as answer_count
+       FROM questions
+       ORDER BY id`
     );
     return result.rows;
   }
@@ -358,15 +406,122 @@ export class QuestionRepository extends BaseRepository {
 
   async searchQuestionSets(searchTerm: string): Promise<QuestionSet[]> {
     const query = `
-      SELECT * FROM question_sets 
+      SELECT * FROM question_sets
       WHERE (name ILIKE $1 OR description ILIKE $1 OR category ILIKE $1)
-        AND is_active = true 
-      ORDER BY name 
+        AND is_active = true
+      ORDER BY name
       LIMIT 50
     `;
     const params = [`%${searchTerm}%`];
 
     const result = await this.getDb().query<QuestionSet>(query, params);
     return result.rows;
+  }
+
+  // --- New M:N junction table methods ---
+
+  async findAllQuestionsPaginated(options: QuestionFilterOptions): Promise<{ items: Question[]; total: number; }> {
+    const page = Math.max(1, options.page || 1);
+    const pageSize = Math.min(100, Math.max(1, options.pageSize || 20));
+    const sortBy = this.sanitizeSort(
+      options.sortBy || 'id',
+      ['id', 'difficulty', 'created_at', 'category'],
+      'id'
+    );
+    const sortDir = this.sanitizeDir(options.sortDir);
+
+    const filters: string[] = [];
+    const params: unknown[] = [];
+    let idx = 1;
+
+    if (options.category) {
+      filters.push(`category = $${idx++}`);
+      params.push(options.category);
+    }
+    if (options.difficulty) {
+      filters.push(`difficulty = $${idx++}`);
+      params.push(options.difficulty);
+    }
+    if (options.answer_type) {
+      filters.push(`answer_type = $${idx++}`);
+      params.push(options.answer_type);
+    }
+    if (options.search) {
+      filters.push(`question_text ILIKE $${idx++}`);
+      params.push(`%${options.search}%`);
+    }
+
+    const where = filters.length ? `WHERE ${filters.join(' AND ')}` : '';
+
+    const countResult = await this.getDb().query<{ count: string }>(
+      `SELECT COUNT(*) as count FROM ${this.questionsTable} ${where}`,
+      params
+    );
+    const total = parseInt(countResult.rows[0]?.count || '0', 10);
+
+    const orderBy = buildOrderBy(sortBy, sortDir, 'id');
+    const result = await this.getDb().query<Question>(
+      `SELECT * FROM ${this.questionsTable}
+       ${where}
+       ORDER BY ${orderBy}
+       LIMIT $${idx} OFFSET $${idx + 1}`,
+      [...params, pageSize, (page - 1) * pageSize]
+    );
+
+    return { items: result.rows, total };
+  }
+
+  async addQuestionsToSet(questionSetId: number, questionIds: number[]): Promise<void> {
+    if (questionIds.length === 0) return;
+
+    // Get current max position
+    const posResult = await this.getDb().query<{ max_pos: number | null }>(
+      `SELECT MAX(position) as max_pos FROM ${this.junctionTable} WHERE question_set_id = $1`,
+      [questionSetId]
+    );
+    let nextPos = (posResult.rows[0]?.max_pos ?? 0) + 1;
+
+    const values: string[] = [];
+    const params: unknown[] = [];
+    let idx = 1;
+
+    for (const qId of questionIds) {
+      values.push(`($${idx}, $${idx + 1}, $${idx + 2})`);
+      params.push(questionSetId, qId, nextPos++);
+      idx += 3;
+    }
+
+    await this.getDb().query(
+      `INSERT INTO ${this.junctionTable} (question_set_id, question_id, position)
+       VALUES ${values.join(', ')}
+       ON CONFLICT (question_set_id, question_id) DO NOTHING`,
+      params
+    );
+  }
+
+  async removeQuestionsFromSet(questionSetId: number, questionIds: number[]): Promise<void> {
+    if (questionIds.length === 0) return;
+
+    const placeholders = questionIds.map((_, i) => `$${i + 2}`).join(', ');
+    await this.getDb().query(
+      `DELETE FROM ${this.junctionTable}
+       WHERE question_set_id = $1 AND question_id IN (${placeholders})`,
+      [questionSetId, ...questionIds]
+    );
+  }
+
+  async getQuestionSetIdsForQuestion(questionId: number): Promise<number[]> {
+    const result = await this.getDb().query<{ question_set_id: number }>(
+      `SELECT question_set_id FROM ${this.junctionTable} WHERE question_id = $1 ORDER BY question_set_id`,
+      [questionId]
+    );
+    return result.rows.map(r => r.question_set_id);
+  }
+
+  async getDistinctQuestionCategories(): Promise<string[]> {
+    const result = await this.getDb().query<{ category: string }>(
+      `SELECT DISTINCT category FROM ${this.questionsTable} WHERE category IS NOT NULL AND category != '' ORDER BY category`
+    );
+    return result.rows.map(r => r.category);
   }
 }

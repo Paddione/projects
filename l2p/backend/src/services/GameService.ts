@@ -441,7 +441,6 @@ export class GameService {
           const hardcodedFallbackQuestions = this.createFallbackQuestions(totalQuestions);
           questions = hardcodedFallbackQuestions.map((q: QuestionData) => ({
             id: q.id,
-            question_set_id: q.questionSetId,
             question_text: q.question,
             answers: q.answers.map((answer, index) => ({
               id: index,
@@ -502,14 +501,14 @@ export class GameService {
           question: questionText,
           answers: answerList,
           correctAnswer: correctAnswerText || (answerList[0] || ''),
-          questionSetId: q.question_set_id || 1,
+          questionSetId: selectedQuestionSetIds[0] || 1,
           language: 'de',
           explanation: q.explanation,
           answerType: q.answer_type || 'multiple_choice',
           hint: q.hint || undefined,
           answerMetadata: q.answer_metadata || undefined,
           difficulty: q.difficulty || undefined,
-          category: questionSetCategoryMap.get(q.question_set_id) || undefined,
+          category: q.category || questionSetCategoryMap.get(selectedQuestionSetIds[0] || 0) || undefined,
         };
       });
 
@@ -2031,7 +2030,7 @@ export class GameService {
       question: typeof q.question_text === 'string' ? q.question_text : (q.question_text as any).de || (q.question_text as any).en || 'Question',
       answers: q.answers.map(a => a.text),
       correctAnswer: q.answers.find(a => a.correct)?.text || '',
-      questionSetId: q.question_set_id,
+      questionSetId: 1, // fallback question set
       language: 'de',
       answerType: (q as any).answer_type || 'multiple_choice',
       hint: (q as any).hint || undefined,

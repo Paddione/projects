@@ -90,7 +90,6 @@ describe('Game Routes Integration Tests', () => {
     // Create test questions
     for (let i = 0; i < 5; i++) {
       const questionData = {
-        question_set_id: testQuestionSetId,
         question_text: {
           en: `Test question ${i + 1}?`,
           de: `Testfrage ${i + 1}?`

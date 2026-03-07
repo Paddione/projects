@@ -26,6 +26,7 @@ describe('Question Routes Integration Tests', () => {
   afterAll(async () => {
     // Clean up test data before closing
     try {
+      await dbService.query('DELETE FROM question_set_questions');
       await dbService.query('DELETE FROM questions');
       await dbService.query('DELETE FROM question_sets');
       await dbService.query('DELETE FROM users');
@@ -37,6 +38,7 @@ describe('Question Routes Integration Tests', () => {
 
   beforeEach(async () => {
     // Clean up test data
+    await dbService.query('DELETE FROM question_set_questions');
     await dbService.query('DELETE FROM questions');
     await dbService.query('DELETE FROM question_sets');
     await dbService.query('DELETE FROM users');
@@ -98,7 +100,6 @@ describe('Question Routes Integration Tests', () => {
 
     // Create test question (single-language format after migration)
     const questionData = {
-      question_set_id: testQuestionSetId,
       question_text: 'Was ist 2 + 2?',
       answers: [
         { text: '3', correct: false },
@@ -564,7 +565,6 @@ describe('Question Routes Integration Tests', () => {
   describe('POST /api/questions', () => {
     it('should create question successfully', async () => {
       const questionData = {
-        question_set_id: testQuestionSetId,
         question_text: 'Was ist die Hauptstadt von Frankreich?',
         answers: [
           { text: 'London', correct: false },
@@ -584,7 +584,6 @@ describe('Question Routes Integration Tests', () => {
       expect(response.body).toHaveProperty('success', true);
       expect(response.body).toHaveProperty('data');
       expect(response.body.data).toHaveProperty('id');
-      expect(response.body.data).toHaveProperty('question_set_id', testQuestionSetId);
       expect(response.body.data).toHaveProperty('question_text');
       expect(response.body.data).toHaveProperty('answers');
       expect(response.body.data).toHaveProperty('explanation');
@@ -596,12 +595,10 @@ describe('Question Routes Integration Tests', () => {
         [response.body.data.id]
       );
       expect(question.rows[0]).toBeDefined();
-      expect(question.rows[0].question_set_id).toBe(testQuestionSetId);
     });
 
     it('should return 400 for invalid question data', async () => {
       const invalidData = {
-        question_set_id: testQuestionSetId,
         question_text: '', // empty question
         answers: [
           { text: 'Paris', correct: true }
@@ -620,7 +617,6 @@ describe('Question Routes Integration Tests', () => {
 
     it('should validate answer structure', async () => {
       const invalidData = {
-        question_set_id: testQuestionSetId,
         question_text: 'Was ist die Hauptstadt von Frankreich?',
         answers: [
           { text: '', correct: true }, // empty answer text
@@ -750,7 +746,6 @@ describe('Question Routes Integration Tests', () => {
 
     it('should validate question text is required', async () => {
       const incompleteData = {
-        question_set_id: testQuestionSetId,
         question_text: '', // empty
         answers: [
           { text: 'Paris', correct: true },
@@ -771,7 +766,6 @@ describe('Question Routes Integration Tests', () => {
   describe('AI Question Generation Integration', () => {
     it('should support AI-generated question validation', async () => {
       const aiGeneratedData = {
-        question_set_id: testQuestionSetId,
         question_text: 'KI-generiert: Was ist die Quadratwurzel von 16?',
         answers: [
           { text: '3', correct: false },
@@ -896,7 +890,7 @@ describe('Question Routes Integration Tests', () => {
       expect(setResult.rows[0]).toHaveProperty('name', 'Imported Question Set');
 
       const questionsResult = await dbService.query(
-        'SELECT * FROM questions WHERE question_set_id = $1',
+        'SELECT q.* FROM questions q INNER JOIN question_set_questions qsq ON q.id = qsq.question_id WHERE qsq.question_set_id = $1',
         [importedSetId]
       );
       expect(questionsResult.rows.length).toBe(2);
@@ -986,7 +980,7 @@ describe('Question Routes Integration Tests', () => {
 
       // Verify all questions were imported
       const questionsResult = await dbService.query(
-        'SELECT COUNT(*) as count FROM questions WHERE question_set_id = $1',
+        'SELECT COUNT(*) as count FROM question_set_questions WHERE question_set_id = $1',
         [response.body.questionSetId]
       );
       expect(parseInt(questionsResult.rows[0].count)).toBe(50);
@@ -1028,7 +1022,6 @@ describe('Question Routes Integration Tests', () => {
       additionalQuestionIds = [];
       for (let i = 0; i < 5; i++) {
         const questionData = {
-          question_set_id: testQuestionSetId,
           question_text: `Testfrage ${i + 1}`,
           answers: [
             { text: 'Antwort A', correct: false },
@@ -1132,7 +1125,6 @@ describe('Question Routes Integration Tests', () => {
             .post('/api/questions')
             .set('Authorization', `Bearer ${authToken}`)
             .send({
-              question_set_id: setId,
               question_text: `Std F ${s}-${i}`,
               answers: [
                 { text: 'A', correct: i % 2 === 0 },
@@ -1149,7 +1141,7 @@ describe('Question Routes Integration Tests', () => {
       // Clean up pagination test data
       for (const setId of paginationTestSetIds) {
         try {
-          await dbService.query('DELETE FROM questions WHERE question_set_id = $1', [setId]);
+          await dbService.query('DELETE FROM question_set_questions WHERE question_set_id = $1', [setId]);
           await dbService.query('DELETE FROM question_sets WHERE id = $1', [setId]);
         } catch (error) {
           console.warn(`Failed to clean up pagination test set ${setId}:`, error);

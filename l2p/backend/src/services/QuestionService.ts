@@ -1,5 +1,5 @@
 import { QuestionRepository, Question, QuestionSet, CreateQuestionSetData } from '../repositories/QuestionRepository.js';
-import { CreateQuestionData, AnswerType, EstimationMetadata, OrderingMetadata, MatchingMetadata, FillInBlankMetadata } from '../types/question.js';
+import { CreateQuestionData, AnswerType, EstimationMetadata, OrderingMetadata, MatchingMetadata, FillInBlankMetadata, QuestionFilterOptions } from '../types/question.js';
 import { TtlCache } from '../utils/cache.js';
 
 export interface QuestionSelectionOptions {
@@ -106,18 +106,14 @@ export class QuestionService {
   }
 
   async createQuestion(data: CreateQuestionData): Promise<Question> {
-    // Data is already in the correct format (simple strings)
     const created = await this.questionRepository.createQuestion(data as any);
-    this.invalidateQuestionSetCaches(data.question_set_id);
+    this.invalidateQuestionSetCaches();
     return created;
   }
 
   async updateQuestion(id: number, data: Partial<CreateQuestionData>): Promise<Question | null> {
-    // Data is already in the correct format (simple strings)
     const updated = await this.questionRepository.updateQuestion(id, data as any);
-    if (data.question_set_id) {
-      this.invalidateQuestionSetCaches(data.question_set_id);
-    }
+    this.invalidateQuestionSetCaches();
     return updated;
   }
 
@@ -437,13 +433,64 @@ export class QuestionService {
     };
   }
 
+  // New M:N methods
+
+  async getAllQuestionsPaginated(options: QuestionFilterOptions): Promise<{ items: Question[]; total: number; page: number; pageSize: number; }> {
+    const page = Math.max(1, options.page || 1);
+    const pageSize = Math.min(100, Math.max(1, options.pageSize || 20));
+    const { items, total } = await this.questionRepository.findAllQuestionsPaginated(options);
+    return { items, total, page, pageSize };
+  }
+
+  async addQuestionsToSet(setId: number, questionIds: number[]): Promise<void> {
+    const set = await this.questionRepository.findQuestionSetById(setId);
+    if (!set) throw new Error('Question set not found');
+    await this.questionRepository.addQuestionsToSet(setId, questionIds);
+    this.invalidateQuestionSetCaches(setId);
+  }
+
+  async removeQuestionsFromSet(setId: number, questionIds: number[]): Promise<void> {
+    await this.questionRepository.removeQuestionsFromSet(setId, questionIds);
+    this.invalidateQuestionSetCaches(setId);
+  }
+
+  async createSetWithQuestions(setData: CreateQuestionSetData, questionDataList: CreateQuestionData[]): Promise<{ questionSet: QuestionSet; questions: Question[] }> {
+    const questionSet = await this.questionRepository.createQuestionSet(setData);
+    const createdQuestions: Question[] = [];
+
+    for (const qData of questionDataList) {
+      const question = await this.questionRepository.createQuestion(qData as any);
+      createdQuestions.push(question);
+    }
+
+    if (createdQuestions.length > 0) {
+      await this.questionRepository.addQuestionsToSet(
+        questionSet.id,
+        createdQuestions.map(q => q.id)
+      );
+    }
+
+    this.invalidateQuestionSetCaches();
+    return { questionSet, questions: createdQuestions };
+  }
+
+  async getQuestionSetIdsForQuestion(questionId: number): Promise<number[]> {
+    return this.questionRepository.getQuestionSetIdsForQuestion(questionId);
+  }
+
+  async getDistinctQuestionCategories(): Promise<string[]> {
+    return this.questionRepository.getDistinctQuestionCategories();
+  }
+
   // Utility methods
   async getAvailableCategories(): Promise<string[]> {
     return this.categoriesCache.getOrRefresh(
       'categories',
       { ttlMs: 300_000, staleWhileRevalidateMs: 300_000 },
       async () => {
+        // Combine categories from both question sets and individual questions
         const questionSets = await this.getAllQuestionSets(true);
+        const questionCategories = await this.getDistinctQuestionCategories();
         const categories = new Set<string>();
 
         questionSets.forEach(qs => {
@@ -451,6 +498,8 @@ export class QuestionService {
             categories.add(qs.category);
           }
         });
+        questionCategories.forEach(c => categories.add(c));
+
         return Array.from(categories).sort();
       }
     );
@@ -493,4 +542,4 @@ export class QuestionService {
       this.setStatsCache.clear();
     }
   }
-} 
+}

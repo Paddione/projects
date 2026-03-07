@@ -111,15 +111,21 @@ describe('WebSocket Server', () => {
     const setId = qs.rows[0].id
 
     // A couple of questions
-    await db.query(
-      `INSERT INTO questions (question_set_id, question_text, answers, explanation, difficulty)
-       VALUES ($1,$2,$3,$4,$5), ($1,$6,$7,$8,$9)`,
+    const qResult = await db.query(
+      `INSERT INTO questions (question_text, answers, explanation, difficulty)
+       VALUES ($1,$2,$3,$4), ($5,$6,$7,$8) RETURNING id`,
       [
-        setId,
         'First?', JSON.stringify([{ text: 'A', correct: true }, { text: 'B', correct: false }]), 'exp1', 1,
         'Second?', JSON.stringify([{ text: 'A', correct: false }, { text: 'B', correct: true }]), 'exp2', 1
       ]
     )
+    // Link questions to the set via junction table
+    for (const row of qResult.rows) {
+      await db.query(
+        `INSERT INTO question_set_questions (question_set_id, question_id) VALUES ($1, $2)`,
+        [setId, row.id]
+      )
+    }
 
     const codes = ['ABC123','DEF456','GHI789','JKL012','MNO345']
     for (const code of codes) {

@@ -57,6 +57,20 @@ export interface Question {
   answers: Answer[];
   explanation?: string;
   difficulty: number;
+  category?: string;
+  language?: string;
+  answer_type?: string;
+}
+
+export interface QuestionFilterParams {
+  category?: string;
+  difficulty?: number;
+  answer_type?: string;
+  search?: string;
+  page?: number;
+  pageSize?: number;
+  sortBy?: string;
+  sortDir?: 'ASC' | 'DESC';
 }
 
 export interface QuestionSet {

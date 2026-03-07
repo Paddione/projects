@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { apiService } from '../services/apiService'
 import { LoadingSpinner } from './LoadingSpinner'
+import { QuestionBrowser } from './QuestionBrowser'
 import { QuestionSet, Answer } from '../types'
 import { useFocusTrap } from '../hooks/useFocusTrap'
 import { useLocalization } from '../hooks/useLocalization'
@@ -24,6 +25,11 @@ export const QuestionSetManager: React.FC = () => {
   const [showEditForm, setShowEditForm] = useState(false)
   // AI generator removed
   const [stats, setStats] = useState<QuestionSetStats | null>(null)
+
+  // Tab state: 'sets' or 'database'
+  const [activeTab, setActiveTab] = useState<'sets' | 'database'>('sets')
+  // Question picker modal (for adding existing questions to a set)
+  const [showQuestionPicker, setShowQuestionPicker] = useState(false)
 
   // Focus traps for modals
   const editModalRef = useFocusTrap(showEditForm, () => setShowEditForm(false))
@@ -381,6 +387,35 @@ export const QuestionSetManager: React.FC = () => {
     }
   }
 
+  const handleLinkQuestions = async (questionIds: number[]) => {
+    if (!selectedSet) return
+    try {
+      const response = await apiService.linkQuestionsToSet(selectedSet.id, questionIds)
+      if (response.success) {
+        setShowQuestionPicker(false)
+        loadQuestionSetDetails(selectedSet.id)
+      } else {
+        setError(response.error || 'Failed to link questions')
+      }
+    } catch {
+      setError('Failed to link questions')
+    }
+  }
+
+  const handleUnlinkQuestion = async (questionId: number) => {
+    if (!selectedSet) return
+    try {
+      const response = await apiService.unlinkQuestionsFromSet(selectedSet.id, [questionId])
+      if (response.success) {
+        loadQuestionSetDetails(selectedSet.id)
+      } else {
+        setError(response.error || 'Failed to unlink question')
+      }
+    } catch {
+      setError('Failed to unlink question')
+    }
+  }
+
   if (isLoading) {
     return (
       <div className={styles.container}>
@@ -395,20 +430,40 @@ export const QuestionSetManager: React.FC = () => {
       <div className={styles.header}>
         <h1>{t('questionSets.title')}</h1>
         <div className={styles.actions}>
-          <button
-            className={`${styles.button} ${styles.buttonSecondary}`}
-            onClick={() => setShowImportForm(true)}
-          >
-            {t('questionSets.importSet')}
-          </button>
-          <button
-            className={styles.button}
-            aria-pressed={compactMode}
-            onClick={() => setCompactMode(v => !v)}
-            title={t('questionSets.toggleCompact')}
-          >
-            {compactMode ? t('questionSets.disableCompact') : t('questionSets.enableCompact')}
-          </button>
+          <div className={styles.tabBar}>
+            <button
+              className={`${styles.tabButton} ${activeTab === 'sets' ? styles.tabActive : ''}`}
+              onClick={() => setActiveTab('sets')}
+              type="button"
+            >
+              {t('questionSets.setsTab', 'Question Sets')}
+            </button>
+            <button
+              className={`${styles.tabButton} ${activeTab === 'database' ? styles.tabActive : ''}`}
+              onClick={() => setActiveTab('database')}
+              type="button"
+            >
+              {t('questionSets.databaseTab', 'Question Database')}
+            </button>
+          </div>
+          {activeTab === 'sets' && (
+            <>
+              <button
+                className={`${styles.button} ${styles.buttonSecondary}`}
+                onClick={() => setShowImportForm(true)}
+              >
+                {t('questionSets.importSet')}
+              </button>
+              <button
+                className={styles.button}
+                aria-pressed={compactMode}
+                onClick={() => setCompactMode(v => !v)}
+                title={t('questionSets.toggleCompact')}
+              >
+                {compactMode ? t('questionSets.disableCompact') : t('questionSets.enableCompact')}
+              </button>
+            </>
+          )}
         </div>
       </div>
 
@@ -419,7 +474,15 @@ export const QuestionSetManager: React.FC = () => {
         </div>
       )}
 
-      <div className={styles.content}>
+      {activeTab === 'database' && (
+        <div className={styles.content} style={{ gridTemplateColumns: '1fr' }}>
+          <div className={styles.mainContent} style={{ height: 'calc(100vh - 200px)' }}>
+            <QuestionBrowser mode="standalone" />
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'sets' && <div className={styles.content}>
         <div className={styles.sidebar}>
           <h2>{t('questionSets.questionSets')}</h2>
           <div className={styles.questionSetList}>
@@ -595,18 +658,37 @@ export const QuestionSetManager: React.FC = () => {
                   <div className={styles.questions}>
                     <div className={styles.collapseHeader}>
                       <h3>{t('questionSets.questions')} ({selectedSet.questions.length})</h3>
-                      <button className={styles.collapseBtn} onClick={() => setCollapseQuestions(v => !v)}>
-                        {collapseQuestions ? t('questionSets.show') : t('questionSets.hide')}
-                      </button>
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        <button
+                          className={`${styles.button} ${styles.buttonAccent}`}
+                          onClick={() => setShowQuestionPicker(true)}
+                          style={{ padding: '6px 14px', fontSize: '13px' }}
+                        >
+                          {t('questionSets.addFromDatabase', 'Add from Database')}
+                        </button>
+                        <button className={styles.collapseBtn} onClick={() => setCollapseQuestions(v => !v)}>
+                          {collapseQuestions ? t('questionSets.show') : t('questionSets.hide')}
+                        </button>
+                      </div>
                     </div>
                     <div className={`${styles.questionList} ${collapseQuestions ? styles.hidden : ''}`}>
                       {selectedSet.questions.map((question, index) => (
                         <div key={question.id} className={styles.questionItem}>
                           <div className={styles.questionHeader}>
                             <span className={styles.questionNumber}>Q{index + 1}</span>
-                            <span className={`${styles.difficulty} ${styles[`level${question.difficulty}`]}`}>
-                              Level {question.difficulty}
-                            </span>
+                            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                              <span className={`${styles.difficulty} ${styles[`level${question.difficulty}`]}`}>
+                                Level {question.difficulty}
+                              </span>
+                              <button
+                                className={styles.actionButton}
+                                onClick={() => handleUnlinkQuestion(question.id)}
+                                title={t('questionSets.removeFromSet', 'Remove from set')}
+                                style={{ color: '#ef4444', fontSize: '14px' }}
+                              >
+                                ✕
+                              </button>
+                            </div>
                           </div>
                           <div className={styles.questionText}>
                             {question.questionText || '—'}
@@ -635,7 +717,26 @@ export const QuestionSetManager: React.FC = () => {
             )}
           </div>
         )}
-      </div>
+      </div>}
+
+      {/* Question Picker Modal */}
+      {showQuestionPicker && selectedSet && (
+        <div className={styles.modal}>
+          <div className={styles.modalContent} style={{ maxWidth: '900px', maxHeight: '85vh' }}>
+            <div className={styles.modalHeader}>
+              <h2>{t('questionSets.addFromDatabase', 'Add Questions from Database')}</h2>
+              <button className={styles.closeButton} onClick={() => setShowQuestionPicker(false)}>×</button>
+            </div>
+            <div style={{ height: '60vh' }}>
+              <QuestionBrowser
+                mode="picker"
+                excludeQuestionIds={selectedSet.questions?.map(q => q.id) || []}
+                onSelect={handleLinkQuestions}
+              />
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Create Question Set Modal removed */}
 

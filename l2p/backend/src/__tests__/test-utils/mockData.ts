@@ -20,7 +20,6 @@ export const createAnswer = (overrides: Partial<Answer> = {}): Answer => ({
 
 export const createQuestion = (overrides: Partial<Question> = {}): Question => ({
   id: 1,
-  question_set_id: 1,
   question_text: createText('Test Question'),
   answers: [createAnswer()],
   difficulty: 1,

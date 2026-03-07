@@ -2,7 +2,6 @@ import express, { Request, Response } from 'express';
 import { AuthMiddleware } from '../middleware/auth.js';
 import { GeminiService, QuestionGenerationRequest } from '../services/GeminiService.js';
 import { QuestionService } from '../services/QuestionService.js';
-import { DatabaseService } from '../services/DatabaseService.js';
 
 const router = express.Router();
 const authMiddleware = new AuthMiddleware();
@@ -11,20 +10,13 @@ const authMiddleware = new AuthMiddleware();
 const geminiService = new GeminiService();
 const questionService = new QuestionService();
 
-// Use DatabaseService for consistent connection handling (including test environment)
-const pool = {
-  query: (...args: Parameters<DatabaseService['query']>) => DatabaseService.getInstance().query(...args),
-};
-
 // Get all question sets
 router.get('/question-sets', async (req: Request, res: Response) => {
   try {
-    const result = await pool.query(
-      'SELECT * FROM question_sets ORDER BY name'
-    );
+    const sets = await questionService.getAllQuestionSets(false);
     return res.json({
       success: true,
-      data: result.rows
+      data: sets
     });
   } catch (error) {
     console.error('Error fetching question sets:', error);
@@ -38,29 +30,31 @@ router.get('/question-sets', async (req: Request, res: Response) => {
 // Get question set details with questions
 router.get('/question-sets/:id', async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = parseInt(req.params['id'] as string, 10);
+    if (isNaN(id)) {
+      return res.status(400).json({ success: false, error: 'Invalid question set ID' });
+    }
 
-    // Get question set
-    const setResult = await pool.query('SELECT * FROM question_sets WHERE id = $1', [id]);
-    if (setResult.rows.length === 0) {
+    const questionSet = await questionService.getQuestionSetById(id);
+    if (!questionSet) {
       return res.status(404).json({
         success: false,
         error: 'Question set not found'
       });
     }
 
-    // Get questions
-    const questionsResult = await pool.query('SELECT * FROM questions WHERE question_set_id = $1 ORDER BY id', [id]);
-
-    const questionSet = setResult.rows[0]!;
-    questionSet.questions = questionsResult.rows.map(q => ({
-      ...q,
-      answers: typeof q.answers === 'string' ? JSON.parse(q.answers) : q.answers
-    }));
+    const questions = await questionService.getQuestionsBySetId(id);
+    const data = {
+      ...questionSet,
+      questions: questions.map(q => ({
+        ...q,
+        answers: typeof q.answers === 'string' ? JSON.parse(q.answers as any) : q.answers
+      }))
+    };
 
     return res.json({
       success: true,
-      data: questionSet
+      data
     });
   } catch (error) {
     console.error('Error fetching question set details:', error);
@@ -74,33 +68,26 @@ router.get('/question-sets/:id', async (req: Request, res: Response) => {
 // Get question set statistics
 router.get('/question-sets/:id/stats', async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = parseInt(req.params['id'] as string, 10);
+    if (isNaN(id)) {
+      return res.status(400).json({ success: false, error: 'Invalid question set ID' });
+    }
 
-    const statsResult = await pool.query(`
-      SELECT 
-        COUNT(*) as total_questions,
-        COALESCE(AVG(difficulty), 0) as avg_difficulty,
-        COALESCE(MIN(difficulty), 0) as min_difficulty,
-        COALESCE(MAX(difficulty), 0) as max_difficulty
-      FROM questions 
-      WHERE question_set_id = $1
-    `, [id]);
-
-    if (statsResult.rows.length === 0) {
+    const stats = await questionService.getQuestionSetWithStats(id);
+    if (!stats) {
       return res.status(404).json({
         success: false,
         error: 'Question set not found'
       });
     }
 
-    const stats = statsResult.rows[0]!;
     return res.json({
       success: true,
       data: {
-        total_questions: parseInt(stats.total_questions) || 0,
-        avg_difficulty: parseFloat(stats.avg_difficulty) || 0,
-        min_difficulty: parseInt(stats.min_difficulty) || 0,
-        max_difficulty: parseInt(stats.max_difficulty) || 0
+        total_questions: stats.questionCount,
+        avg_difficulty: stats.averageDifficulty,
+        min_difficulty: 0,
+        max_difficulty: 0
       }
     });
   } catch (error) {
@@ -115,12 +102,13 @@ router.get('/question-sets/:id/stats', async (req: Request, res: Response) => {
 // Get questions by set ID
 router.get('/question-sets/:id/questions', async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
-    const result = await pool.query(
-      'SELECT * FROM questions WHERE question_set_id = $1 ORDER BY id',
-      [id]
-    );
-    return res.json(result.rows);
+    const id = parseInt(req.params['id'] as string, 10);
+    if (isNaN(id)) {
+      return res.status(400).json({ error: 'Invalid question set ID' });
+    }
+
+    const questions = await questionService.getQuestionsBySetId(id);
+    return res.json(questions);
   } catch (error) {
     console.error('Error fetching questions:', error);
     return res.status(500).json({ error: 'Failed to fetch questions' });
@@ -131,28 +119,31 @@ router.get('/question-sets/:id/questions', async (req: Request, res: Response) =
 router.post('/question-sets', authMiddleware.authenticate, async (req: Request, res: Response) => {
   try {
     const { name, description, category, difficulty } = req.body;
+    const validation = questionService.validateQuestionSetData({ name, description, category, difficulty });
+    if (!validation.isValid) {
+      return res.status(400).json({ error: 'Validation failed', details: validation.errors });
+    }
 
-    const result = await pool.query(
-      'INSERT INTO question_sets (name, description, category, difficulty) VALUES ($1, $2, $3, $4) RETURNING *',
-      [name, description, category, difficulty]
-    );
-
-    return res.status(201).json(result.rows[0]);
+    const questionSet = await questionService.createQuestionSet({ name, description, category, difficulty });
+    return res.status(201).json(questionSet);
   } catch (error) {
     console.error('Error creating question set:', error);
     return res.status(500).json({ error: 'Failed to create question set' });
   }
 });
 
-// Add question to set
+// Add question to set (creates question + links it)
 router.post('/question-sets/:id/questions', authMiddleware.authenticate, async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const setId = parseInt(req.params['id'] as string, 10);
+    if (isNaN(setId)) {
+      return res.status(400).json({ error: 'Invalid question set ID' });
+    }
+
     const { question_text, answers, explanation, difficulty, answer_type, answer_metadata, hint } = req.body;
 
     // Validate using QuestionService
     const validation = questionService.validateQuestionData({
-      question_set_id: parseInt(id as string, 10),
       question_text,
       answers: answers || [],
       explanation,
@@ -169,12 +160,21 @@ router.post('/question-sets/:id/questions', authMiddleware.authenticate, async (
       });
     }
 
-    const result = await pool.query(
-      'INSERT INTO questions (question_set_id, question_text, answers, explanation, difficulty, answer_type, answer_metadata, hint) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *',
-      [id, question_text, JSON.stringify(answers), explanation, difficulty, answer_type || 'multiple_choice', answer_metadata ? JSON.stringify(answer_metadata) : null, hint || null]
-    );
+    // Create the question
+    const question = await questionService.createQuestion({
+      question_text,
+      answers,
+      explanation,
+      difficulty,
+      answer_type: answer_type || 'multiple_choice',
+      answer_metadata,
+      hint,
+    });
 
-    return res.status(201).json(result.rows[0]);
+    // Link it to the set
+    await questionService.addQuestionsToSet(setId, [question.id]);
+
+    return res.status(201).json(question);
   } catch (error) {
     console.error('Error adding question:', error);
     return res.status(500).json({ error: 'Failed to add question' });
@@ -184,19 +184,19 @@ router.post('/question-sets/:id/questions', authMiddleware.authenticate, async (
 // Update question set
 router.put('/question-sets/:id', authMiddleware.authenticate, async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = parseInt(req.params['id'] as string, 10);
+    if (isNaN(id)) {
+      return res.status(400).json({ error: 'Invalid question set ID' });
+    }
+
     const { name, description, category, difficulty, is_active } = req.body;
+    const updated = await questionService.updateQuestionSet(id, { name, description, category, difficulty, is_active });
 
-    const result = await pool.query(
-      'UPDATE question_sets SET name = $1, description = $2, category = $3, difficulty = $4, is_active = $5 WHERE id = $6 RETURNING *',
-      [name, description, category, difficulty, is_active, id]
-    );
-
-    if (result.rows.length === 0) {
+    if (!updated) {
       return res.status(404).json({ error: 'Question set not found' });
     }
 
-    return res.json(result.rows[0]);
+    return res.json(updated);
   } catch (error) {
     console.error('Error updating question set:', error);
     return res.status(500).json({ error: 'Failed to update question set' });
@@ -206,13 +206,16 @@ router.put('/question-sets/:id', authMiddleware.authenticate, async (req: Reques
 // Update question
 router.put('/questions/:id', authMiddleware.authenticate, async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = parseInt(req.params['id'] as string, 10);
+    if (isNaN(id)) {
+      return res.status(400).json({ error: 'Invalid question ID' });
+    }
+
     const { question_text, answers, explanation, difficulty, answer_type, answer_metadata, hint } = req.body;
 
     // If answer_type or answers are provided, validate the full question data
     if (answer_type || answers) {
       const validation = questionService.validateQuestionData({
-        question_set_id: 0, // Not relevant for update validation
         question_text: question_text || '',
         answers: answers || [],
         explanation,
@@ -230,33 +233,37 @@ router.put('/questions/:id', authMiddleware.authenticate, async (req: Request, r
       }
     }
 
-    const result = await pool.query(
-      'UPDATE questions SET question_text = $1, answers = $2, explanation = $3, difficulty = $4, answer_type = $5, answer_metadata = $6, hint = $7 WHERE id = $8 RETURNING *',
-      [question_text, JSON.stringify(answers), explanation, difficulty, answer_type || 'multiple_choice', answer_metadata ? JSON.stringify(answer_metadata) : null, hint || null, id]
-    );
+    const updated = await questionService.updateQuestion(id, {
+      question_text,
+      answers,
+      explanation,
+      difficulty,
+      answer_type: answer_type || 'multiple_choice',
+      answer_metadata,
+      hint,
+    });
 
-    if (result.rows.length === 0) {
+    if (!updated) {
       return res.status(404).json({ error: 'Question not found' });
     }
 
-    return res.json(result.rows[0]);
+    return res.json(updated);
   } catch (error) {
     console.error('Error updating question:', error);
     return res.status(500).json({ error: 'Failed to update question' });
   }
 });
 
-// Delete question set
+// Delete question set (junction cascades automatically, questions preserved)
 router.delete('/question-sets/:id', authMiddleware.authenticate, async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = parseInt(req.params['id'] as string, 10);
+    if (isNaN(id)) {
+      return res.status(400).json({ error: 'Invalid question set ID' });
+    }
 
-    // Delete questions first (due to foreign key constraint)
-    await pool.query('DELETE FROM questions WHERE question_set_id = $1', [id]);
-
-    const result = await pool.query('DELETE FROM question_sets WHERE id = $1 RETURNING *', [id]);
-
-    if (result.rows.length === 0) {
+    const deleted = await questionService.deleteQuestionSet(id);
+    if (!deleted) {
       return res.status(404).json({ error: 'Question set not found' });
     }
 
@@ -270,11 +277,13 @@ router.delete('/question-sets/:id', authMiddleware.authenticate, async (req: Req
 // Delete question
 router.delete('/questions/:id', authMiddleware.authenticate, async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = parseInt(req.params['id'] as string, 10);
+    if (isNaN(id)) {
+      return res.status(400).json({ error: 'Invalid question ID' });
+    }
 
-    const result = await pool.query('DELETE FROM questions WHERE id = $1 RETURNING *', [id]);
-
-    if (result.rows.length === 0) {
+    const deleted = await questionService.deleteQuestion(id);
+    if (!deleted) {
       return res.status(404).json({ error: 'Question not found' });
     }
 
@@ -288,22 +297,23 @@ router.delete('/questions/:id', authMiddleware.authenticate, async (req: Request
 // Export question set
 router.get('/question-sets/:id/export', async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = parseInt(req.params['id'] as string, 10);
+    if (isNaN(id)) {
+      return res.status(400).json({ error: 'Invalid question set ID' });
+    }
 
-    // Get question set
-    const setResult = await pool.query('SELECT * FROM question_sets WHERE id = $1', [id]);
-    if (setResult.rows.length === 0) {
+    const questionSet = await questionService.getQuestionSetById(id);
+    if (!questionSet) {
       return res.status(404).json({ error: 'Question set not found' });
     }
 
-    // Get questions
-    const questionsResult = await pool.query('SELECT * FROM questions WHERE question_set_id = $1 ORDER BY id', [id]);
+    const questions = await questionService.getQuestionsBySetId(id);
 
     const exportData = {
-      questionSet: setResult.rows[0],
-      questions: questionsResult.rows.map(q => ({
+      questionSet,
+      questions: questions.map(q => ({
         ...q,
-        answers: typeof q.answers === 'string' ? JSON.parse(q.answers) : q.answers
+        answers: typeof q.answers === 'string' ? JSON.parse(q.answers as any) : q.answers
       }))
     };
 
@@ -319,10 +329,10 @@ router.get('/question-sets/:id/export', async (req: Request, res: Response) => {
 // Import question set
 router.post('/question-sets/import', authMiddleware.authenticate, async (req: Request, res: Response) => {
   try {
-    const { questionSet, questions } = req.body;
+    const { questionSet: qsInput, questions } = req.body;
 
     // Basic structure validation
-    if (!questionSet) {
+    if (!qsInput) {
       return res.status(400).json({ error: 'Missing questionSet object in payload' });
     }
     if (!questions || !Array.isArray(questions)) {
@@ -330,7 +340,7 @@ router.post('/question-sets/import', authMiddleware.authenticate, async (req: Re
     }
 
     // Validate questionSet fields
-    if (!questionSet.name) {
+    if (!qsInput.name) {
       return res.status(400).json({ error: 'Question set name is required' });
     }
 
@@ -340,28 +350,16 @@ router.post('/question-sets/import', authMiddleware.authenticate, async (req: Re
       description = '',
       category = 'General',
       difficulty = 'medium',
-      is_active = true
-    } = questionSet;
+    } = qsInput;
 
-    // Create question set
-    const setResult = await pool.query(
-      `INSERT INTO question_sets 
-       (name, description, category, difficulty, is_active) 
-       VALUES ($1, $2, $3, $4, $5) 
-       RETURNING *`,
-      [name, description, category, difficulty, is_active]
-    );
-
-    const setId = setResult.rows[0]!.id;
-
-    // Import questions with robust handling
-    let importedCount = 0;
+    // Prepare question data list
+    const questionDataList: any[] = [];
     const errors: string[] = [];
 
     for (let i = 0; i < questions.length; i++) {
       const question = questions[i];
       try {
-        // Handle question_text - handle both string and object formats
+        // Handle question_text
         let questionText = question.question_text || question.questionText || '';
         if (typeof questionText === 'object' && questionText !== null) {
           questionText = questionText.de || questionText.en || Object.values(questionText)[0] || '';
@@ -373,16 +371,26 @@ router.post('/question-sets/import', authMiddleware.authenticate, async (req: Re
         }
 
         // Handle answers
-        let answersData = question.answers || question.options || [];
-        if (!Array.isArray(answersData) || answersData.length < 2) {
+        const questionAnswerType = question.answer_type || question.answerType || 'multiple_choice';
+        const metadataBasedTypes = ['matching', 'ordering'];
+        let answersData: any[] = question.answers || question.options || [];
+        if (!Array.isArray(answersData)) answersData = [];
+
+        if (metadataBasedTypes.includes(questionAnswerType)) {
+          const metadata = question.answer_metadata || question.answerMetadata;
+          if (!metadata) {
+            errors.push(`Question ${i + 1}: ${questionAnswerType} type requires answer_metadata`);
+            continue;
+          }
+        } else if (answersData.length < 2) {
           errors.push(`Question ${i + 1}: Must have at least 2 answers`);
           continue;
         }
 
         // Normalize answers format
-        const normalizedAnswers = answersData.map((answer, animIdx) => {
+        const normalizedAnswers = answersData.map((answer: any, animIdx: number) => {
           if (typeof answer === 'string') {
-            return { text: answer, correct: animIdx === 0 }; // Assume first is correct if simple string array
+            return { text: answer, correct: animIdx === 0 };
           }
           return {
             text: answer.text || answer.answer_text || '',
@@ -390,7 +398,7 @@ router.post('/question-sets/import', authMiddleware.authenticate, async (req: Re
           };
         });
 
-        if (!normalizedAnswers.some(a => a.correct)) {
+        if (!metadataBasedTypes.includes(questionAnswerType) && !normalizedAnswers.some((a: any) => a.correct)) {
           errors.push(`Question ${i + 1}: No correct answer specified`);
           continue;
         }
@@ -401,43 +409,48 @@ router.post('/question-sets/import', authMiddleware.authenticate, async (req: Re
           explanation = explanation.de || explanation.en || Object.values(explanation)[0] || '';
         }
 
-        // Handle difficulty
         const difficultyNum = Number(question.difficulty) || 1;
+        const answerType = question.answer_type || question.answerType || 'multiple_choice';
+        const answerMetadata = question.answer_metadata || question.answerMetadata || null;
+        const hint = question.hint || null;
 
-        await pool.query(
-          'INSERT INTO questions (question_set_id, question_text, answers, explanation, difficulty) VALUES ($1, $2, $3, $4, $5)',
-          [
-            setId,
-            questionText,
-            JSON.stringify(normalizedAnswers),
-            explanation,
-            difficultyNum
-          ]
-        );
-        importedCount++;
+        questionDataList.push({
+          question_text: questionText,
+          answers: normalizedAnswers,
+          explanation,
+          difficulty: difficultyNum,
+          answer_type: answerType,
+          answer_metadata: answerMetadata,
+          hint,
+          category: category,
+        });
       } catch (err) {
-        console.error(`Error importing individual question ${i + 1}:`, err);
-        errors.push(`Question ${i + 1}: Database error during insertion`);
+        console.error(`Error preparing question ${i + 1}:`, err);
+        errors.push(`Question ${i + 1}: Error during preparation`);
       }
     }
 
-    if (importedCount === 0 && questions.length > 0) {
-      // Clean up the empty question set since no questions were imported
-      await pool.query('DELETE FROM question_sets WHERE id = $1', [setId]);
+    if (questionDataList.length === 0 && questions.length > 0) {
       return res.status(400).json({
         error: 'No questions could be imported',
         details: errors
       });
     }
 
+    // Use createSetWithQuestions to create set + questions + links atomically
+    const result = await questionService.createSetWithQuestions(
+      { name, description, category, difficulty },
+      questionDataList
+    );
+
     return res.status(201).json({
       message: errors.length > 0
         ? `Imported with ${errors.length} errors`
         : 'Question set imported successfully',
-      questionSetId: setId,
-      questionsImported: importedCount,
+      questionSetId: result.questionSet.id,
+      questionsImported: result.questions.length,
       errors: errors.length > 0 ? errors : undefined,
-      questionSet: setResult.rows[0]
+      questionSet: result.questionSet
     });
   } catch (error) {
     console.error('Error importing question set:', error);
@@ -445,28 +458,6 @@ router.post('/question-sets/import', authMiddleware.authenticate, async (req: Re
       error: 'Failed to import question set',
       message: error instanceof Error ? error.message : 'Unknown server error'
     });
-  }
-});
-
-// Get question statistics
-router.get('/question-sets/:id/stats', async (req: Request, res: Response) => {
-  try {
-    const { id } = req.params;
-
-    const statsResult = await pool.query(`
-      SELECT 
-        COUNT(*) as total_questions,
-        AVG(difficulty) as avg_difficulty,
-        MIN(difficulty) as min_difficulty,
-        MAX(difficulty) as max_difficulty
-      FROM questions 
-      WHERE question_set_id = $1
-    `, [id]);
-
-    return res.json(statsResult.rows[0]);
-  } catch (error) {
-    console.error('Error fetching question statistics:', error);
-    return res.status(500).json({ error: 'Failed to fetch question statistics' });
   }
 });
 
@@ -487,34 +478,26 @@ router.post('/question-sets/generate', authMiddleware.authenticate, async (req: 
     }
 
     // Generate questions
-    const result = await geminiService.generateQuestions(request);
+    const genResult = await geminiService.generateQuestions(request);
 
-    if (!result.success) {
+    if (!genResult.success) {
       return res.status(500).json({
         error: 'Failed to generate questions',
-        details: result.error
+        details: genResult.error
       });
     }
 
-    // Create question set
-    const questionSetData = geminiService.createQuestionSetData(request, result.questions);
-    const questionSet = await questionService.createQuestionSet(questionSetData);
-
-    // Add questions to the set
-    const questionData = geminiService.convertToQuestionData(result.questions, questionSet.id);
-    const createdQuestions = [];
-
-    for (const qData of questionData) {
-      const question = await questionService.createQuestion(qData);
-      createdQuestions.push(question);
-    }
+    // Use createSetWithQuestions for atomic creation + linking
+    const setData = geminiService.createQuestionSetData(request, genResult.questions);
+    const questionData = geminiService.convertToQuestionData(genResult.questions);
+    const result = await questionService.createSetWithQuestions(setData, questionData);
 
     return res.status(201).json({
       success: true,
-      questionSet,
-      questions: createdQuestions,
-      metadata: result.metadata,
-      message: `Successfully generated ${createdQuestions.length} questions`
+      questionSet: result.questionSet,
+      questions: result.questions,
+      metadata: genResult.metadata,
+      message: `Successfully generated ${result.questions.length} questions`
     });
   } catch (error) {
     console.error('Error generating questions:', error);
@@ -537,21 +520,18 @@ router.post('/question-sets/generate-from-text', authMiddleware.authenticate, as
       });
     }
 
-    // Validate difficulty
     if (!['easy', 'medium', 'hard'].includes(difficulty)) {
       return res.status(400).json({
         error: 'Invalid difficulty level. Must be one of: easy, medium, hard'
       });
     }
 
-    // Validate question count
     if (questionCount < 1 || questionCount > 50) {
       return res.status(400).json({
         error: 'Question count must be between 1 and 50'
       });
     }
 
-    // Create request object for Gemini service
     const request: QuestionGenerationRequest = {
       topic,
       category,
@@ -562,38 +542,29 @@ router.post('/question-sets/generate-from-text', authMiddleware.authenticate, as
       manualContext: content
     };
 
-    // Generate questions
-    const result = await geminiService.generateQuestions(request);
+    const genResult = await geminiService.generateQuestions(request);
 
-    if (!result.success) {
+    if (!genResult.success) {
       return res.status(500).json({
         error: 'Failed to generate questions',
-        details: result.error
+        details: genResult.error
       });
     }
 
-    // Create question set
-    const questionSetData = geminiService.createQuestionSetData(request, result.questions);
-    const questionSet = await questionService.createQuestionSet(questionSetData);
-
-    // Add questions to the set
-    const questionData = geminiService.convertToQuestionData(result.questions, questionSet.id);
-    const createdQuestions = [];
-
-    for (const qData of questionData) {
-      const question = await questionService.createQuestion(qData);
-      createdQuestions.push(question);
-    }
+    // Use createSetWithQuestions for atomic creation + linking
+    const setData = geminiService.createQuestionSetData(request, genResult.questions);
+    const questionData = geminiService.convertToQuestionData(genResult.questions);
+    const result = await questionService.createSetWithQuestions(setData, questionData);
 
     return res.status(201).json({
       success: true,
-      questionSet,
-      questions: createdQuestions,
+      questionSet: result.questionSet,
+      questions: result.questions,
       metadata: {
-        ...result.metadata,
+        ...genResult.metadata,
         sourceContent: content.substring(0, 100) + (content.length > 100 ? '...' : '')
       },
-      message: `Successfully generated ${createdQuestions.length} questions from text content`
+      message: `Successfully generated ${result.questions.length} questions from text content`
     });
   } catch (error) {
     console.error('Error generating questions from text:', error);
@@ -617,6 +588,4 @@ router.get('/ai/test-gemini', authMiddleware.authenticate, async (req: Request, 
   }
 });
 
-// ChromaDB endpoints removed - no longer needed
-
-export default router; 
+export default router;

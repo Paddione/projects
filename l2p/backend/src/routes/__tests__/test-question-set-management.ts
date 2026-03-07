@@ -54,7 +54,7 @@ describe('Question Set Management - Complete Integration', () => {
 
   beforeEach(async () => {
     // Clean up test data
-    await dbService.query('DELETE FROM questions WHERE question_set_id IN (SELECT id FROM question_sets WHERE owner_id = (SELECT id FROM users WHERE username = $1))', ['testuser']);
+    await dbService.query('DELETE FROM question_set_questions WHERE question_set_id IN (SELECT id FROM question_sets WHERE owner_id = (SELECT id FROM users WHERE username = $1))', ['testuser']);
     await dbService.query('DELETE FROM question_sets WHERE owner_id = (SELECT id FROM users WHERE username = $1)', ['testuser']);
   });
 

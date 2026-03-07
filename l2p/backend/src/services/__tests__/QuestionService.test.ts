@@ -23,7 +23,6 @@ describe('QuestionService', () => {
 
   const mockQuestion: Question = {
     id: 1,
-    question_set_id: 1,
     question_text: 'Was ist die Hauptstadt von Frankreich?',
     answers: [
       {
@@ -50,7 +49,6 @@ describe('QuestionService', () => {
 
   const mockQuestion2: Question = {
     id: 2,
-    question_set_id: 1,
     question_text: 'What is 2 + 2?',
     answers: [
       {
@@ -111,6 +109,11 @@ describe('QuestionService', () => {
       getQuestionsByDifficulty: jest.fn(),
       searchQuestions: jest.fn(),
       validateQuestionStructure: jest.fn(),
+      getDistinctQuestionCategories: jest.fn(),
+      findAllQuestionsPaginated: jest.fn(),
+      addQuestionsToSet: jest.fn(),
+      removeQuestionsFromSet: jest.fn(),
+      getQuestionSetIdsForQuestion: jest.fn(),
 
       // Any other methods that might be needed
       findById: jest.fn(),
@@ -325,7 +328,6 @@ describe('QuestionService', () => {
     describe('createQuestion', () => {
       it('should create a new question', async () => {
         const createData: CreateQuestionData = {
-          question_set_id: 1,
           question_text: 'What is the largest planet?',
           answers: [
             {
@@ -552,7 +554,6 @@ describe('QuestionService', () => {
     describe('validateQuestionData', () => {
       it('should validate valid question data', () => {
         const validData: CreateQuestionData = {
-          question_set_id: 1,
           question_text: 'Was ist die Hauptstadt von Frankreich?',
           answers: [
             {
@@ -575,7 +576,6 @@ describe('QuestionService', () => {
 
       it('should reject question data without German text', () => {
         const invalidData: CreateQuestionData = {
-          question_set_id: 1,
           question_text: '' as any,
           answers: [
             {
@@ -597,7 +597,6 @@ describe('QuestionService', () => {
 
       it('should reject question data with insufficient answers', () => {
         const invalidData: CreateQuestionData = {
-          question_set_id: 1,
           question_text: 'Was ist die Hauptstadt von Frankreich?',
           answers: [
             {
@@ -615,7 +614,6 @@ describe('QuestionService', () => {
 
       it('should reject question data without correct answer', () => {
         const invalidData: CreateQuestionData = {
-          question_set_id: 1,
           question_text: 'Was ist die Hauptstadt von Frankreich?',
           answers: [
             {
@@ -637,7 +635,6 @@ describe('QuestionService', () => {
 
       it('should reject question data with invalid difficulty', () => {
         const invalidData: CreateQuestionData = {
-          question_set_id: 1,
           question_text: 'Was ist die Hauptstadt von Frankreich?',
           answers: [
             {
@@ -660,7 +657,6 @@ describe('QuestionService', () => {
 
       it('should reject question data with missing answer text', () => {
         const invalidData: CreateQuestionData = {
-          question_set_id: 1,
           question_text: 'Was ist die Hauptstadt von Frankreich?',
           answers: [
             {
@@ -941,6 +937,7 @@ describe('QuestionService', () => {
         ];
 
         mockQuestionRepository.findAllQuestionSets.mockResolvedValue(questionSets);
+        mockQuestionRepository.getDistinctQuestionCategories.mockResolvedValue([]);
 
         const result = await questionService.getAvailableCategories();
 
@@ -954,6 +951,7 @@ describe('QuestionService', () => {
          ];
 
          mockQuestionRepository.findAllQuestionSets.mockResolvedValue(questionSets);
+         mockQuestionRepository.getDistinctQuestionCategories.mockResolvedValue([]);
 
          const result = await questionService.getAvailableCategories();
 
@@ -962,6 +960,7 @@ describe('QuestionService', () => {
 
       it('should return empty array when no question sets exist', async () => {
         mockQuestionRepository.findAllQuestionSets.mockResolvedValue([]);
+        mockQuestionRepository.getDistinctQuestionCategories.mockResolvedValue([]);
 
         const result = await questionService.getAvailableCategories();
 
@@ -977,6 +976,7 @@ describe('QuestionService', () => {
           .mockResolvedValueOnce(2); // activeSets
         mockQuestionRepository.getQuestionCount.mockResolvedValue(10);
         mockQuestionRepository.findAllQuestionSets.mockResolvedValue(questionSets);
+        mockQuestionRepository.getDistinctQuestionCategories.mockResolvedValue([]);
 
         const result = await questionService.getQuestionSetStats();
 
@@ -995,6 +995,7 @@ describe('QuestionService', () => {
           .mockResolvedValueOnce(0);
         mockQuestionRepository.getQuestionCount.mockResolvedValue(0);
         mockQuestionRepository.findAllQuestionSets.mockResolvedValue([]);
+        mockQuestionRepository.getDistinctQuestionCategories.mockResolvedValue([]);
 
         const result = await questionService.getQuestionSetStats();
 
@@ -1019,7 +1020,6 @@ describe('QuestionService', () => {
 
     it('should handle validation errors', () => {
       const invalidData: CreateQuestionData = {
-        question_set_id: 1,
         question_text: {} as any,
         answers: []
       };

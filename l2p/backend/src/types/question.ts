@@ -43,7 +43,6 @@ export interface Answer {
 
 export interface Question {
   id: number;
-  question_set_id: number;
   question_text: string;
   answers: Answer[];
   explanation?: string;
@@ -53,6 +52,8 @@ export interface Question {
   answer_type?: AnswerType;
   hint?: string;
   answer_metadata?: AnswerMetadata;
+  category?: string;
+  language?: string;
 }
 
 export interface QuestionSet {
@@ -73,7 +74,6 @@ export interface QuestionSetWithQuestions extends QuestionSet {
 
 
 export interface CreateQuestionData {
-  question_set_id: number;
   question_text: string;
   answers: Omit<Answer, 'id' | 'question_id' | 'created_at'>[];
   explanation?: string;
@@ -81,6 +81,8 @@ export interface CreateQuestionData {
   answer_type?: AnswerType;
   hint?: string;
   answer_metadata?: AnswerMetadata;
+  category?: string;
+  language?: string;
 }
 
 export interface CreateQuestionSetData {
@@ -88,5 +90,16 @@ export interface CreateQuestionSetData {
   description?: string;
   category?: string;
   difficulty: 'easy' | 'medium' | 'hard';
-  questions?: Omit<CreateQuestionData, 'question_set_id'>[];
+  questions?: CreateQuestionData[];
+}
+
+export interface QuestionFilterOptions {
+  category?: string;
+  difficulty?: number;
+  answer_type?: AnswerType;
+  search?: string;
+  page?: number;
+  pageSize?: number;
+  sortBy?: 'id' | 'difficulty' | 'created_at' | 'category';
+  sortDir?: 'ASC' | 'DESC';
 }

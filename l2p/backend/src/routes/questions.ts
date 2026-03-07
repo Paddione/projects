@@ -377,6 +377,78 @@ router.get('/search', asyncHandler(async (req: express.Request, res: express.Res
   return res.json({ success: true, data: localizedQuestions });
 }));
 
+// Browse all questions with filters (question database)
+router.get('/browse', asyncHandler(async (req: express.Request, res: express.Response) => {
+  const q = req.query as Record<string, unknown>;
+  const options = {
+    category: (q['category'] as string) || undefined,
+    difficulty: q['difficulty'] ? parseInt(q['difficulty'] as string, 10) : undefined,
+    answer_type: (q['answer_type'] as any) || undefined,
+    search: (q['q'] as string) || undefined,
+    page: q['page'] ? parseInt(q['page'] as string, 10) : 1,
+    pageSize: q['pageSize'] ? parseInt(q['pageSize'] as string, 10) : 20,
+    sortBy: (q['sortBy'] as 'id' | 'difficulty' | 'created_at' | 'category') || 'id',
+    sortDir: (q['sortDir'] as 'ASC' | 'DESC') || 'DESC',
+  };
+
+  const result = await questionService.getAllQuestionsPaginated(options);
+  setShortCache(res, 30);
+  res.json({
+    success: true,
+    items: result.items,
+    total: result.total,
+    page: result.page,
+    pageSize: result.pageSize,
+  });
+}));
+
+// Link existing questions to a set
+router.post('/sets/:id/link', asyncHandler(async (req: express.Request, res: express.Response) => {
+  const id = parseInt(req.params['id'] || '');
+  if (isNaN(id)) {
+    throw new ValidationError('Invalid question set ID');
+  }
+
+  const { questionIds } = req.body;
+  if (!Array.isArray(questionIds) || questionIds.length === 0) {
+    throw new ValidationError('questionIds must be a non-empty array');
+  }
+
+  await questionService.addQuestionsToSet(id, questionIds);
+  res.json({ success: true, message: `Linked ${questionIds.length} questions to set ${id}` });
+}));
+
+// Unlink questions from a set
+router.delete('/sets/:id/unlink', asyncHandler(async (req: express.Request, res: express.Response) => {
+  const id = parseInt(req.params['id'] || '');
+  if (isNaN(id)) {
+    throw new ValidationError('Invalid question set ID');
+  }
+
+  const { questionIds } = req.body;
+  if (!Array.isArray(questionIds) || questionIds.length === 0) {
+    throw new ValidationError('questionIds must be a non-empty array');
+  }
+
+  await questionService.removeQuestionsFromSet(id, questionIds);
+  res.json({ success: true, message: `Unlinked ${questionIds.length} questions from set ${id}` });
+}));
+
+// Get which sets contain a question
+router.get('/:id/sets', asyncHandler(async (req: express.Request, res: express.Response) => {
+  const id = parseInt(req.params['id'] || '');
+  if (isNaN(id)) {
+    throw new ValidationError('Invalid question ID');
+  }
+
+  const setIds = await questionService.getQuestionSetIdsForQuestion(id);
+  setShortCache(res, 30);
+  res.json({
+    success: true,
+    data: setIds
+  });
+}));
+
 // Get question by ID
 router.get('/:id', asyncHandler(async (req: express.Request, res: express.Response) => {
   const id = parseInt(req.params['id'] || '');

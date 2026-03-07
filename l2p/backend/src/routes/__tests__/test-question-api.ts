@@ -60,7 +60,6 @@ async function testQuestionAPI() {
     // Test 6: Create a test question
     console.log('\n6. Testing create question...');
     const createQuestionData = {
-      question_set_id: questionSetId,
       question_text: {
         en: 'What is the capital of France?',
         de: 'Was ist die Hauptstadt von Frankreich?'

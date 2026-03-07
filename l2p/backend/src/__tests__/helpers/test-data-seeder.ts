@@ -55,6 +55,7 @@ export class TestDataSeeder {
     await this.db.query('DELETE FROM user_perks');
     await this.db.query('DELETE FROM perks');
     await this.db.query('DELETE FROM user_experience');
+    await this.db.query('DELETE FROM question_set_questions');
     await this.db.query('DELETE FROM questions');
     await this.db.query('DELETE FROM question_sets');
     await this.db.query('DELETE FROM users WHERE username NOT LIKE \'%_seed%\'');
@@ -167,21 +168,32 @@ export class TestDataSeeder {
     };
 
     const result = await this.db.query(
-      `INSERT INTO questions (question_text, answer, difficulty, category, question_set_id, created_at)
-       VALUES ($1, $2, $3, $4, $5, NOW())
+      `INSERT INTO questions (question_text, answer, difficulty, category, created_at)
+       VALUES ($1, $2, $3, $4, NOW())
        RETURNING *`,
       [
         defaultQuestion.questionText,
         defaultQuestion.answer,
         defaultQuestion.difficulty,
-        defaultQuestion.category,
-        defaultQuestion.questionSetId || null
+        defaultQuestion.category
       ]
     );
 
+    const questionId = result.rows[0].id;
+
+    // Link to question set via junction table if questionSetId provided
+    if (defaultQuestion.questionSetId) {
+      await this.db.query(
+        `INSERT INTO question_set_questions (question_set_id, question_id, position)
+         VALUES ($1, $2, (SELECT COALESCE(MAX(position), 0) + 1 FROM question_set_questions WHERE question_set_id = $1))
+         ON CONFLICT DO NOTHING`,
+        [defaultQuestion.questionSetId, questionId]
+      );
+    }
+
     return {
       ...defaultQuestion,
-      id: result.rows[0].id
+      id: questionId
     };
   }
 

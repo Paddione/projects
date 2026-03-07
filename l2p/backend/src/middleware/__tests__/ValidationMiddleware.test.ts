@@ -715,7 +715,6 @@ describe('ValidationMiddleware', () => {
         // Arrange
         const schema = ValidationMiddleware.schemas.createQuestion;
         mockRequest.body = {
-          question_set_id: 1,
           question_text: 'Was ist 2 + 2?',
           answers: [
             { text: '3', correct: false },
@@ -736,7 +735,6 @@ describe('ValidationMiddleware', () => {
         // Arrange — 0 answers is insufficient (min is 1 to support free-text questions)
         const schema = ValidationMiddleware.schemas.createQuestion;
         mockRequest.body = {
-          question_set_id: 1,
           question_text: 'Was ist 2 + 2?',
           answers: []
         };

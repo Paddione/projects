@@ -287,10 +287,9 @@ Generate exactly ${request.questionCount} questions. Ensure the JSON is valid an
   /**
    * Convert generated questions to database format
    */
-  convertToQuestionData(generatedQuestions: GeneratedQuestion[], questionSetId: number): CreateQuestionData[] {
+  convertToQuestionData(generatedQuestions: GeneratedQuestion[], _questionSetId?: number): CreateQuestionData[] {
     return generatedQuestions.map(q => {
       return {
-        question_set_id: questionSetId,
         question_text: q.questionText,
         answers: q.answers,
         ...(q.explanation && { explanation: q.explanation }),

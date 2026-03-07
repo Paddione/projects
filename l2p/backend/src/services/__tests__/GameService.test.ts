@@ -132,7 +132,6 @@ describe('GameService', () => {
         { text: '5', correct: false },
         { text: '6', correct: false }
       ],
-      question_set_id: 1,
       explanation: 'Grundlegende Addition',
       difficulty: 1,
       created_at: new Date()
@@ -146,7 +145,6 @@ describe('GameService', () => {
         { text: 'Paris', correct: true },
         { text: 'Madrid', correct: false }
       ],
-      question_set_id: 1,
       explanation: 'Paris ist die Hauptstadt von Frankreich',
       difficulty: 1,
       created_at: new Date()

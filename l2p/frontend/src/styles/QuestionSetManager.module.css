@@ -76,6 +76,38 @@
   transform: translateY(-1px);
 }
 
+/* Tab Bar */
+.tabBar {
+  display: flex;
+  gap: 4px;
+  background: var(--cv-glass-3, rgba(255, 255, 255, 0.04));
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 3px;
+}
+
+.tabButton {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tabButton:hover {
+  color: var(--color-text);
+  background: var(--cv-glass-4, rgba(255, 255, 255, 0.05));
+}
+
+.tabActive {
+  background: var(--color-primary) !important;
+  color: white !important;
+}
+
 .error {
   background: var(--color-error);
   color: white;
