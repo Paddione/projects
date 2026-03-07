@@ -66,7 +66,7 @@ if [ "$HEALTH_CHECK" = true ]; then
         -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || echo "")
     if [ -n "$SOS_POD" ]; then
         HEALTH=$(kubectl exec "$SOS_POD" -n "$NAMESPACE" -- \
-            wget -q -O- http://localhost:3005/health 2>/dev/null || echo "")
+            node -e "fetch('http://localhost:3005/health').then(r=>r.json()).then(d=>console.log(JSON.stringify(d)))" 2>/dev/null || echo "")
         if [ -n "$HEALTH" ]; then
             log_info "SOS health: OK"
         else

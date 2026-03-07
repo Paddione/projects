@@ -38,6 +38,6 @@ USER 1001:1001
 EXPOSE 3005
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-  CMD wget -q -O- http://localhost:3005/health/live || exit 1
+  CMD node -e "fetch('http://localhost:3005/health/live').then(r=>{if(!r.ok)throw 1})" || exit 1
 
 CMD ["node", "dist/server.js"]
