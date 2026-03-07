@@ -253,3 +253,4 @@ debug-*.jpeg
 **/.playwright-mcp/
 **/test_output.txt
 .worktrees
+shared-infrastructure/SMB-Share

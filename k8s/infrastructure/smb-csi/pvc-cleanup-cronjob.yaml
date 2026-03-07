@@ -1,0 +1,223 @@
+---
+# Static PV + PVC to mount the SMB share root for cleanup access.
+# Named "smb-root-*" (not "pvc-*") so the cleanup script won't target it.
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: smb-root-pv
+spec:
+  capacity:
+    storage: 1Ti
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  mountOptions:
+    - dir_mode=0755
+    - file_mode=0644
+    - noperm
+    - mfsymlinks
+    - cache=none
+    - noserverino
+  csi:
+    driver: smb.csi.k8s.io
+    volumeHandle: smb-root-pv
+    volumeAttributes:
+      source: "//10.10.0.3/SMB-Share"
+    nodeStageSecretRef:
+      name: smbcreds
+      namespace: korczewski-infra
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: smb-root
+  namespace: korczewski-infra
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: ""
+  volumeName: smb-root-pv
+  resources:
+    requests:
+      storage: 1Ti
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: cluster-cleanup
+  namespace: korczewski-infra
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: cluster-cleanup
+rules:
+  # PVs are cluster-scoped
+  - apiGroups: [""]
+    resources: ["persistentvolumes"]
+    verbs: ["list", "delete"]
+  # Namespaced resources
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["list", "delete"]
+  - apiGroups: ["batch"]
+    resources: ["jobs"]
+    verbs: ["list", "delete"]
+  - apiGroups: ["apps"]
+    resources: ["replicasets"]
+    verbs: ["list", "delete"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: cluster-cleanup
+subjects:
+  - kind: ServiceAccount
+    name: cluster-cleanup
+    namespace: korczewski-infra
+roleRef:
+  kind: ClusterRole
+  name: cluster-cleanup
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: cluster-cleanup
+  namespace: korczewski-infra
+spec:
+  schedule: "0 4 * * 0"  # Weekly, Sunday 4 AM
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 1
+      ttlSecondsAfterFinished: 604800
+      template:
+        spec:
+          serviceAccountName: cluster-cleanup
+          restartPolicy: Never
+          nodeSelector:
+            kubernetes.io/arch: amd64
+          containers:
+            - name: cleanup
+              image: alpine:3.20
+              command: ["/bin/sh", "-c"]
+              args:
+                - |
+                  set -eu
+
+                  GRACE_DAYS=7
+                  NAMESPACES="korczewski-infra korczewski-services"
+                  SMB_ROOT="/mnt/smb"
+                  APISERVER="https://kubernetes.default.svc"
+                  TOKEN=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
+                  CACERT="/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
+
+                  apk add --no-cache -q curl jq > /dev/null 2>&1
+
+                  kube() {
+                    curl -s --cacert "$CACERT" -H "Authorization: Bearer $TOKEN" "$@"
+                  }
+
+                  # Epoch-based cutoff (BusyBox compatible)
+                  NOW=$(date +%s)
+                  CUTOFF=$((NOW - GRACE_DAYS * 86400))
+
+                  is_older() {
+                    # Convert K8s ISO timestamp (2026-02-09T17:11:41Z) to epoch
+                    ts=$(echo "$1" | sed 's/T/ /;s/Z//')
+                    epoch=$(date -u -d "$ts" +%s 2>/dev/null) || return 1
+                    [ "$epoch" -lt "$CUTOFF" ]
+                  }
+
+                  # delete_resources: fetch JSON, filter with jq, delete matches older than CUTOFF
+                  # Usage: delete_resources <label> <url> <jq_filter> <delete_url_template>
+                  # jq_filter must output "name timestamp" lines
+                  # delete_url_template uses {name} as placeholder
+                  delete_resources() {
+                    label="$1"; url="$2"; filter="$3"; delete_tpl="$4"
+                    count=0
+                    kube "$url" | jq -r "$filter" > /tmp/items.txt
+                    while read -r name created; do
+                      [ -n "$name" ] || continue
+                      if is_older "$created"; then
+                        echo "  DELETING: $name (created $created)"
+                        delete_url=$(echo "$delete_tpl" | sed "s|{name}|$name|")
+                        kube -X DELETE "$delete_url" > /dev/null
+                        count=$((count + 1))
+                      else
+                        echo "  GRACE: $name"
+                      fi
+                    done < /tmp/items.txt
+                    echo "  $label removed: $count"
+                  }
+
+                  # ─── 1. Orphaned PVC directories on SMB share ─────────────
+                  echo "=== 1/5 Orphaned PVC directories ==="
+                  PV_JSON=$(kube "$APISERVER/api/v1/persistentvolumes")
+                  ACTIVE_PVS=$(echo "$PV_JSON" | jq -r '.items[].metadata.name')
+                  count=0
+                  for dir in "$SMB_ROOT"/pvc-*; do
+                    [ -d "$dir" ] || continue
+                    dirname=$(basename "$dir")
+                    if echo "$ACTIVE_PVS" | grep -qx "$dirname"; then
+                      echo "  ACTIVE: $dirname"
+                      continue
+                    fi
+                    if find "$dir" -maxdepth 0 -mtime +${GRACE_DAYS} | grep -q .; then
+                      size=$(du -sh "$dir" 2>/dev/null | cut -f1)
+                      echo "  REMOVING: $dirname ($size)"
+                      rm -rf "$dir"
+                      count=$((count + 1))
+                    else
+                      echo "  GRACE: $dirname (modified within ${GRACE_DAYS}d)"
+                    fi
+                  done
+                  echo "  Directories removed: $count"
+
+                  # ─── 2. Released/Failed PersistentVolumes ──────────────────
+                  echo "=== 2/5 Released/Failed PersistentVolumes ==="
+                  delete_resources "PVs" \
+                    "$APISERVER/api/v1/persistentvolumes" \
+                    '.items[] | select(.status.phase != "Bound") | "\(.metadata.name) \(.metadata.creationTimestamp)"' \
+                    "$APISERVER/api/v1/persistentvolumes/{name}"
+
+                  # ─── 3. Failed/Evicted/Succeeded Pods ──────────────────────
+                  echo "=== 3/5 Terminated Pods ==="
+                  for ns in $NAMESPACES; do
+                    echo "  namespace: $ns"
+                    delete_resources "Pods" \
+                      "$APISERVER/api/v1/namespaces/$ns/pods" \
+                      '.items[] | select(.status.phase != "Running" and .status.phase != "Pending") | "\(.metadata.name) \(.metadata.creationTimestamp)"' \
+                      "$APISERVER/api/v1/namespaces/$ns/pods/{name}"
+                  done
+
+                  # ─── 4. Completed/Failed Jobs ──────────────────────────────
+                  echo "=== 4/5 Completed/Failed Jobs ==="
+                  for ns in $NAMESPACES; do
+                    echo "  namespace: $ns"
+                    delete_resources "Jobs" \
+                      "$APISERVER/apis/batch/v1/namespaces/$ns/jobs" \
+                      '.items[] | select(.status.completionTime != null or .status.failed != null) | "\(.metadata.name) \(.metadata.creationTimestamp)"' \
+                      "$APISERVER/apis/batch/v1/namespaces/$ns/jobs/{name}?propagationPolicy=Background"
+                  done
+
+                  # ─── 5. Old ReplicaSets (0 replicas) ───────────────────────
+                  echo "=== 5/5 Stale ReplicaSets ==="
+                  for ns in $NAMESPACES; do
+                    echo "  namespace: $ns"
+                    delete_resources "ReplicaSets" \
+                      "$APISERVER/apis/apps/v1/namespaces/$ns/replicasets" \
+                      '.items[] | select(.spec.replicas == 0) | "\(.metadata.name) \(.metadata.creationTimestamp)"' \
+                      "$APISERVER/apis/apps/v1/namespaces/$ns/replicasets/{name}"
+                  done
+
+                  echo "=== Cluster cleanup complete ==="
+              volumeMounts:
+                - name: smb-root
+                  mountPath: /mnt/smb
+          volumes:
+            - name: smb-root
+              persistentVolumeClaim:
+                claimName: smb-root

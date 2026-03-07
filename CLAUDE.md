@@ -10,10 +10,9 @@ Patrick's Projects is a monorepo containing independent full-stack applications 
 |---------|-------|-------|
 | l2p | React, Express, Socket.io, Drizzle ORM | 3000, 3001 |
 | VideoVault | React, Vite, File System Access API, Express | 5100/5000 |
-| shop | Next.js 16, Prisma, NextAuth v5 | 3004 |
+| shop | Next.js 16, Prisma, Stripe | 3004 |
 | auth | Express, Passport.js, JWT/OAuth | 5500 |
 | shared-infrastructure | PostgreSQL, shared design system | 5432 |
-| openclaw | OpenClaw AI Assistant (Docker) | 18789 |
 | Obsidian | Obsidian vault (Markdown, Dataview, Templater), on SMB share | — |
 
 ## Common Commands

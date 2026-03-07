@@ -4,3 +4,4 @@ kind: Kustomization
 resources:
   - storageclass.yaml
   - storageclass-media.yaml
+  - pvc-cleanup-cronjob.yaml
