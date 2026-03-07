@@ -1058,9 +1058,11 @@
 
 
 
+    <!-- Screens container (right column) -->
+    <div class="screens-container">
+
     <!-- SCREEN 1: SOS -->
-    <div>
-      <div id="screen-sos" class="screen-datas">
+      <div id="screen-sos" class="screen">
         <h2>Hilfe - SOS – Notfall</h2>
         <div class="content-area">
 
@@ -1336,25 +1338,19 @@
           </div>
         </div>
       </div>
-    </div>
 
 
     <!-- SCREEN 2: KINDERBEREICH -->
-    <div id="screen-Kinder" class="screen">
-      <h1>Kinderbereich</h1>
-      <div class="content-area">
+      <div id="screen-kinder" class="screen">
+        <h2>Kinderbereich</h2>
+        <div class="content-area">
 
-        <div class="container">
-          <header class="header">
-            <h2>Wilkommen</h2>
-            <p>Hallo und herzlich Wilkommen schön das es dich gibt und schön das du da bist</p>
-          </header>
-          <div>
-            <div id="screen-kinder" class="screen">
-              <h2>Kinderbereich</h2>
-              <div class="content-area">
-                <p>Platzhalter</p>
-                <div class="container">
+          <div class="container">
+            <header class="header">
+              <h2>Wilkommen</h2>
+              <p>Hallo und herzlich Wilkommen schön das es dich gibt und schön das du da bist</p>
+            </header>
+            <div class="container">
                   <!-- HEADER MIT LEITFIGUR -->
                   <header class="header">
                     <img id="leitfigur" class="leitfigur"
@@ -1466,13 +1462,13 @@
                     </div>
                   </div>
                 </div>
-              </div>
-            </div>
           </div>
+        </div>
+      </div>
 
 
-          <!-- SCREEN 3: KURSPROGRAMM -->
-          <div id="screen-kursprogramm" class="screen active">
+      <!-- SCREEN 3: KURSPROGRAMM -->
+      <div id="screen-kursprogramm" class="screen active">
             <h2>12‑Wochen-Kursprogramm</h2>
             <p>Wähle deine Kurswoche:</p>
 
@@ -1740,29 +1736,29 @@
 
 
 
-              <!-- <div id="screen-meditation" class="screen">
-      <h2>Meditation</h2>
-      <p>Stelle dir deine Meditationssitzung zusammen:</p>
+              <!-- SCREEN 4: MEDITATION -->
+              <div id="screen-meditation" class="screen">
+                <h2>Meditation</h2>
+                <p>Stelle dir deine Meditationssitzung zusammen:</p>
 
-      <div class="sub-list">
-        <button class="sub-btn" data-target="meditation-content" onclick="selectSub(event, 'med-neurobits')">Element 1 –
-          Neurobits / Binaurale Töne</button>
-        <button class="sub-btn" data-target="meditation-content" onclick="selectSub(event, 'med-natur')">Element 2 –
-          Naturgeräusche</button>
-        <button class="sub-btn" data-target="meditation-content" onclick="selectSub(event, 'med-meditation')">Element 3
-          –
-          Geführte Meditation</button>
-        <button class="sub-btn" data-target="meditation-content" onclick="selectSub(event, 'med-bild')">Element 4 –
-          Hintergrundbild</button>
-        <button class="sub-btn" data-target="meditation-content" onclick="selectSub(event, 'med-text')">Element 5 –
-          Textbaustein</button>
-      </div>
+                <div class="sub-list">
+                  <button class="sub-btn" data-target="meditation-content" onclick="selectSub(event, 'med-neurobits')">Element 1 –
+                    Neurobits / Binaurale Töne</button>
+                  <button class="sub-btn" data-target="meditation-content" onclick="selectSub(event, 'med-natur')">Element 2 –
+                    Naturgeräusche</button>
+                  <button class="sub-btn" data-target="meditation-content" onclick="selectSub(event, 'med-meditation')">Element 3
+                    – Geführte Meditation</button>
+                  <button class="sub-btn" data-target="meditation-content" onclick="selectSub(event, 'med-bild')">Element 4 –
+                    Hintergrundbild</button>
+                  <button class="sub-btn" data-target="meditation-content" onclick="selectSub(event, 'med-text')">Element 5 –
+                    Textbaustein</button>
+                </div>
 
-      <div id="meditation-content" class="content-area">
-        <h3>Element 1 – Neurobits</h3>
-        <p>Platzhalter: Timer, Audioplayer, Untertitel und Hintergrundbild.</p>
-      </div>
-    </div> -->
+                <div id="meditation-content" class="content-area">
+                  <h3>Element 1 – Neurobits</h3>
+                  <p>Platzhalter: Timer, Audioplayer, Untertitel und Hintergrundbild.</p>
+                </div>
+              </div>
 
               <!-- SCREEN 5: KALENDER -->
               <div id="screen-kalender" class="screen">
@@ -2105,12 +2101,24 @@
           </div>
 
           <script>
+            // All top-level screen IDs (must match data-screen attributes on menu buttons)
+            const SCREEN_IDS = [
+              'sos', 'kinder', 'kursprogramm', 'meditation', 'kalender',
+              'strategien', 'gehirntraining', 'bewegung', 'frageboegen',
+              'wissen', 'vorlagen', 'sperren', 'zertifikate', 'kontoeinstellungen', 'quellen'
+            ];
+
             // Hauptscreen wechseln
             function showScreen(evt) {
               const screenName = evt.currentTarget.getAttribute('data-screen');
-              document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+              // Hide all top-level screens by ID (avoids nesting issues with querySelectorAll)
+              SCREEN_IDS.forEach(id => {
+                const el = document.getElementById('screen-' + id);
+                if (el) el.style.display = 'none';
+              });
               document.querySelectorAll('.main-btn').forEach(b => b.classList.remove('active'));
-              document.getElementById('screen-' + screenName).classList.add('active');
+              const target = document.getElementById('screen-' + screenName);
+              if (target) target.style.display = 'block';
               evt.currentTarget.classList.add('active');
             }
 
@@ -2218,6 +2226,14 @@
               document.querySelectorAll('.device-card').forEach(c => c.classList.remove('active'));
               card.classList.add('active');
             }
+
+            // Initialize: show default screen (kursprogramm), hide all others
+            (function initScreens() {
+              SCREEN_IDS.forEach(id => {
+                const el = document.getElementById('screen-' + id);
+                if (el) el.style.display = (id === 'kursprogramm') ? 'block' : 'none';
+              });
+            })();
 
           </script>
 </body>
