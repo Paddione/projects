@@ -12,7 +12,9 @@ export interface AudioState {
   isMuted: boolean
   isPlaying: boolean
   currentTrack: string | null
-  
+  ttsEnabled: boolean
+  ttsSpeaking: boolean
+
   // Actions
   setMusicVolume: (volume: number) => void
   setSoundVolume: (volume: number) => void
@@ -23,7 +25,9 @@ export interface AudioState {
   toggleMute: () => void
   playSound: (soundName: string) => void
   stopSound: () => void
-  
+  setTtsEnabled: (enabled: boolean) => void
+  setTtsSpeaking: (speaking: boolean) => void
+
   // Audio Manager integration
   playCorrectAnswer: (streak: number) => void
   playWrongAnswer: () => void
@@ -69,6 +73,8 @@ const initialState = {
   isMuted: false,
   isPlaying: false,
   currentTrack: null,
+  ttsEnabled: false,
+  ttsSpeaking: false,
 }
 
 export const useAudioStore = create<AudioState>()(
@@ -113,7 +119,9 @@ export const useAudioStore = create<AudioState>()(
         stopSound: () => {
           audioManager.stopAllSounds()
         },
-        
+        setTtsEnabled: (enabled) => set({ ttsEnabled: enabled }),
+        setTtsSpeaking: (speaking) => set({ ttsSpeaking: speaking }),
+
         // Audio Manager integration methods
         playCorrectAnswer: (streak) => audioManager.playCorrectAnswer(streak),
         playWrongAnswer: () => audioManager.playWrongAnswer(),
@@ -158,6 +166,7 @@ export const useAudioStore = create<AudioState>()(
           soundVolume: state.soundVolume,
           masterVolume: state.masterVolume,
           isMuted: state.isMuted,
+          ttsEnabled: state.ttsEnabled,
         }),
         onRehydrateStorage: () => (state) => {
           try {

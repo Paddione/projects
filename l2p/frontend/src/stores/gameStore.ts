@@ -123,6 +123,7 @@ export interface GameState {
   questionIndex: number
   totalQuestions: number
   timeRemaining: number
+  questionLanguage: string
   gameEnded: boolean
 
   // Game results and experience
@@ -181,6 +182,7 @@ export interface GameState {
   setQuestionIndex: (index: number) => void
   setTotalQuestions: (total: number) => void
   setTimeRemaining: (time: number) => void
+  setQuestionLanguage: (language: string) => void
   setGameEnded: (ended: boolean) => void
   setGameResults: (results: GameResult[]) => void
   addLevelUpNotification: (notification: LevelUpNotification) => void
@@ -232,6 +234,7 @@ const initialState = {
   questionIndex: 0,
   totalQuestions: 0,
   timeRemaining: 60,
+  questionLanguage: 'de',
   gameEnded: false,
   gameMode: 'arcade' as GameModeType,
   showingHint: false,
@@ -289,6 +292,7 @@ export const useGameStore = create<GameState>()(
       setTimeRemaining: (time) => {
         set({ timeRemaining: time })
       },
+      setQuestionLanguage: (language) => set({ questionLanguage: language }),
       setGameEnded: (ended) => set({ gameEnded: ended }),
       setGameResults: (results) => set({ gameResults: results }),
       addLevelUpNotification: (notification) => set((state) => ({

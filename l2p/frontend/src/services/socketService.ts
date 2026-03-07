@@ -323,7 +323,7 @@ export class SocketService {
           allQuestionKeys: data.question ? Object.keys(data.question) : 'no question object'
         })
 
-        const { setCurrentQuestion, setQuestionIndex, setTotalQuestions, setTimeRemaining, resetPlayerAnswerStatus, setPlayers, setIsSyncing, setShowingHint, setWaitingForContinue, setPracticeCorrectAnswer, setGameMode, setCurrentHint, setHintUsesRemaining, setEliminatedAnswerIndices, setEliminateUsesRemaining } = useGameStore.getState()
+        const { setCurrentQuestion, setQuestionIndex, setTotalQuestions, setTimeRemaining, setQuestionLanguage, resetPlayerAnswerStatus, setPlayers, setIsSyncing, setShowingHint, setWaitingForContinue, setPracticeCorrectAnswer, setGameMode, setCurrentHint, setHintUsesRemaining, setEliminatedAnswerIndices, setEliminateUsesRemaining } = useGameStore.getState()
 
         // Question has started, so we are no longer syncing
         setIsSyncing(false)
@@ -401,6 +401,11 @@ export class SocketService {
         setQuestionIndex(data.questionIndex)
         setTotalQuestions(data.totalQuestions)
         setTimeRemaining(data.timeRemaining)
+
+        // Store question language for TTS pronunciation
+        const questionLanguage = data.question?.language || 'de'
+        useGameStore.getState().setQuestionLanguage(questionLanguage)
+
         resetPlayerAnswerStatus()
 
         // Reset practice mode state on new question
