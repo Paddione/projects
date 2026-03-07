@@ -45,6 +45,12 @@
   font-size: 0.9rem;
 }
 
+.ttsDescription {
+  margin: 4px 0 0 0;
+  font-size: 0.8rem;
+  color: var(--text-tertiary);
+}
+
 .slider {
   width: 100%;
   height: 6px;

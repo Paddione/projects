@@ -23,6 +23,8 @@ import gameStyles from '../styles/GamePage.module.css'
 import { useAudio } from '../hooks/useAudio'
 import { useAuthStore } from '../stores/authStore'
 import { useLocalization } from '../hooks/useLocalization'
+import { ttsService } from '../services/ttsService'
+import { useAudioStore } from '../stores/audioStore'
 
 export const GamePage: React.FC = () => {
   const { lobbyId } = useParams<{ lobbyId: string }>()
@@ -36,6 +38,7 @@ export const GamePage: React.FC = () => {
     handleWrongAnswer,
     handleGameEnd,
     handleStopAllSounds,
+    isMuted,
   } = useAudio()
 
   const {
@@ -73,9 +76,11 @@ export const GamePage: React.FC = () => {
     currentHint,
     eliminatedAnswerIndices,
     eliminateUsesRemaining,
+    questionLanguage,
   } = useGameStore()
   const { user } = useAuthStore()
   const { t } = useLocalization()
+  const { ttsEnabled, ttsSpeaking, setTtsEnabled, setTtsSpeaking } = useAudioStore()
 
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null)
   const [hasAnswered, setHasAnswered] = useState(false)
@@ -179,6 +184,26 @@ export const GamePage: React.FC = () => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentQuestion?.id])
+
+  // TTS: Read question aloud on new question
+  useEffect(() => {
+    if (currentQuestion && ttsEnabled && !isMuted) {
+      ttsService.speak(
+        currentQuestion.text,
+        questionLanguage,
+        () => setTtsSpeaking(true),
+        () => setTtsSpeaking(false)
+      )
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentQuestion?.id])
+
+  // Stop TTS on unmount
+  useEffect(() => {
+    return () => {
+      ttsService.stop()
+    }
+  }, [])
 
   // Tick/warning sounds based on time remaining (only in arcade mode)
   useEffect(() => {
@@ -570,14 +595,41 @@ export const GamePage: React.FC = () => {
                   {/* TODO: showAnswerStats — render answer distribution after all players answer */}
                 </div>
               )}
-              <h3
-                id="question-heading"
-                ref={questionRef}
-                className={`${gameStyles.questionText} ${questionExpanded ? gameStyles.questionExpanded : ''}`}
-                data-testid="question-text"
-              >
-                {question.text || `${t('game.question')} ${questionIndex + 1} — ${t('game.questionLoading')}`}
-              </h3>
+              <div className={gameStyles.questionRow}>
+                <h3
+                  id="question-heading"
+                  ref={questionRef}
+                  className={`${gameStyles.questionText} ${questionExpanded ? gameStyles.questionExpanded : ''}`}
+                  data-testid="question-text"
+                >
+                  {question.text || `${t('game.question')} ${questionIndex + 1} — ${t('game.questionLoading')}`}
+                </h3>
+                {ttsService.isSupported() && (
+                  <button
+                    type="button"
+                    className={`${gameStyles.ttsButton} ${ttsSpeaking ? gameStyles.ttsSpeaking : ''}`}
+                    onClick={() => {
+                      if (ttsService.isSpeaking()) {
+                        ttsService.stop()
+                        setTtsSpeaking(false)
+                      } else if (question.text) {
+                        if (!ttsEnabled) setTtsEnabled(true)
+                        ttsService.speak(
+                          question.text,
+                          questionLanguage,
+                          () => setTtsSpeaking(true),
+                          () => setTtsSpeaking(false)
+                        )
+                      }
+                    }}
+                    aria-label={ttsSpeaking ? t('audio.ttsStop') : t('audio.ttsPlay')}
+                    data-testid="tts-button"
+                    title={ttsSpeaking ? t('audio.ttsStop') : t('audio.ttsPlay')}
+                  >
+                    {ttsSpeaking ? '🔊' : '🔈'}
+                  </button>
+                )}
+              </div>
               {questionOverflowing && (
                 <div className={gameStyles.showMoreRow}>
                   <button

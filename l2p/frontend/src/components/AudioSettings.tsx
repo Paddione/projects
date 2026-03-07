@@ -1,6 +1,8 @@
 import React from 'react'
 import { useAudio } from '../hooks/useAudio'
 import { useLocalization } from '../hooks/useLocalization'
+import { useAudioStore } from '../stores/audioStore'
+import { ttsService } from '../services/ttsService'
 import styles from '../styles/AudioSettings.module.css'
 
 export const AudioSettings: React.FC = () => {
@@ -22,6 +24,7 @@ export const AudioSettings: React.FC = () => {
     isAudioSupported
   } = useAudio()
   const { t } = useLocalization()
+  const { ttsEnabled, setTtsEnabled } = useAudioStore()
 
   const handleVolumeSliderChange = (type: 'music' | 'sound' | 'master', value: number) => {
     switch (type) {
@@ -145,6 +148,24 @@ export const AudioSettings: React.FC = () => {
           />
         </div>
       </div>
+
+      {ttsService.isSupported() && (
+        <div className={styles.section}>
+          <h4>{t('audio.ttsTitle')}</h4>
+          <div className={styles.control}>
+            <label>
+              <input
+                type="checkbox"
+                checked={ttsEnabled}
+                onChange={() => setTtsEnabled(!ttsEnabled)}
+                data-testid="tts-toggle"
+              />
+              {t('audio.ttsLabel')}
+            </label>
+            <p className={styles.ttsDescription}>{t('audio.ttsDescription')}</p>
+          </div>
+        </div>
+      )}
 
       <div className={styles.section}>
         <h4>{t('audio.testing')}</h4>

@@ -664,6 +664,11 @@ const enTranslations: Translations = {
   'audio.mutedLabel': 'Audio Muted:',
   'audio.yes': 'Yes',
   'audio.no': 'No',
+  'audio.ttsTitle': 'Text-to-Speech',
+  'audio.ttsLabel': 'Read questions aloud',
+  'audio.ttsDescription': 'Automatically reads the question text when a new question appears',
+  'audio.ttsPlay': 'Read question aloud',
+  'audio.ttsStop': 'Stop reading',
 
   // ChangePasswordForm
   'password.title': 'Change Password',
@@ -1519,6 +1524,11 @@ const deTranslations: Translations = {
   'audio.mutedLabel': 'Audio stumm:',
   'audio.yes': 'Ja',
   'audio.no': 'Nein',
+  'audio.ttsTitle': 'Sprachausgabe',
+  'audio.ttsLabel': 'Fragen vorlesen',
+  'audio.ttsDescription': 'Liest den Fragetext automatisch vor, wenn eine neue Frage erscheint',
+  'audio.ttsPlay': 'Frage vorlesen',
+  'audio.ttsStop': 'Vorlesen stoppen',
 
   // ChangePasswordForm
   'password.title': 'Passwort ändern',

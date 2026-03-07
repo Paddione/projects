@@ -288,6 +288,48 @@
   color: var(--text-primary);
 }
 
+.questionRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.questionRow .questionText {
+  flex: 1;
+  min-width: 0;
+}
+
+.ttsButton {
+  flex-shrink: 0;
+  background: none;
+  border: 1px solid rgba(0, 242, 255, 0.2);
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 1.1rem;
+  cursor: pointer;
+  color: var(--text-secondary);
+  transition: all 0.2s ease;
+  line-height: 1;
+  margin-top: 0.25rem;
+}
+
+.ttsButton:hover {
+  border-color: var(--cv-cyan);
+  color: var(--cv-cyan);
+  background: rgba(0, 242, 255, 0.05);
+}
+
+.ttsSpeaking {
+  color: var(--cv-cyan);
+  border-color: var(--cv-cyan);
+  animation: ttsPulse 1s ease-in-out infinite;
+}
+
+@keyframes ttsPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
 .answersGrid {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
