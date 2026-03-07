@@ -144,6 +144,9 @@ deploy_services() {
 
     log_step "Step 8: Deploying VideoVault"
     "$SCRIPT_DIR/deploy-videovault.sh" "${SERVICE_FLAGS[@]}"
+
+    log_step "Step 9: Deploying SOS (Taschentherapeut)"
+    "$SCRIPT_DIR/deploy-sos.sh" "${SERVICE_FLAGS[@]}"
 }
 
 # Record deployment SHAs for all services
@@ -154,7 +157,7 @@ record_deploy_shas() {
     fi
 
     log_step "Recording Deployment SHAs"
-    for service in auth l2p shop videovault; do
+    for service in auth l2p shop videovault sos; do
         "$TRACKER" set "$service"
     done
 }
@@ -183,6 +186,7 @@ print_summary() {
     echo "  - https://auth.korczewski.de"
     echo "  - https://shop.korczewski.de"
     echo "  - https://videovault.korczewski.de"
+    echo "  - https://sos.korczewski.de"
     echo "  - https://registry.korczewski.de (Docker registry)"
     echo "  - https://traefik.korczewski.de (dashboard)"
     echo ""

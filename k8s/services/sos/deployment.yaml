@@ -1,0 +1,97 @@
+---
+# =============================================================================
+# SOS (Taschentherapeut) Deployment
+# =============================================================================
+# Lightweight static HTML app with Express server.
+# No database, no auth — minimal resource requirements.
+# =============================================================================
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sos
+  namespace: korczewski-services
+  labels:
+    app: sos
+    app.kubernetes.io/component: sos
+    app.kubernetes.io/name: sos
+    app.kubernetes.io/part-of: korczewski
+    tier: services
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sos
+      app.kubernetes.io/component: sos
+      app.kubernetes.io/part-of: korczewski
+      tier: services
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: sos
+        app.kubernetes.io/component: sos
+        app.kubernetes.io/name: sos
+        app.kubernetes.io/part-of: korczewski
+        tier: services
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+        runAsGroup: 1001
+        fsGroup: 1001
+      nodeSelector:
+        kubernetes.io/arch: amd64
+      containers:
+        - name: sos
+          image: registry.local:5000/korczewski/sos
+          imagePullPolicy: Always
+          ports:
+            - name: http
+              containerPort: 3005
+              protocol: TCP
+          env:
+            - name: NODE_ENV
+              value: "production"
+            - name: PORT
+              value: "3005"
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "50m"
+            limits:
+              memory: "128Mi"
+              cpu: "200m"
+          livenessProbe:
+            httpGet:
+              path: /health/live
+              port: 3005
+            initialDelaySeconds: 10
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: 3005
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          startupProbe:
+            httpGet:
+              path: /health/live
+              port: 3005
+            initialDelaySeconds: 5
+            periodSeconds: 3
+            timeoutSeconds: 5
+            failureThreshold: 10
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL

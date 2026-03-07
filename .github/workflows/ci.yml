@@ -23,8 +23,9 @@ jobs:
       auth: ${{ steps.filter.outputs.auth }}
       shop: ${{ steps.filter.outputs.shop }}
       videovault: ${{ steps.filter.outputs.videovault }}
+      sos: ${{ steps.filter.outputs.sos }}
       k8s: ${{ steps.filter.outputs.k8s }}
-      any-service: ${{ steps.filter.outputs.l2p == 'true' || steps.filter.outputs.auth == 'true' || steps.filter.outputs.shop == 'true' || steps.filter.outputs.videovault == 'true' }}
+      any-service: ${{ steps.filter.outputs.l2p == 'true' || steps.filter.outputs.auth == 'true' || steps.filter.outputs.shop == 'true' || steps.filter.outputs.videovault == 'true' || steps.filter.outputs.sos == 'true' }}
     steps:
       - uses: actions/checkout@v4
       - uses: dorny/paths-filter@v3
@@ -42,6 +43,8 @@ jobs:
             videovault:
               - 'VideoVault/**'
               - 'shared-infrastructure/shared/videovault/**'
+            sos:
+              - 'SOS/**'
             k8s:
               - 'k8s/**'
 
@@ -195,6 +198,32 @@ jobs:
         run: npm run build
 
   # ---------------------------------------------------------------------------
+  # SOS: Typecheck + Unit Tests
+  # ---------------------------------------------------------------------------
+  sos:
+    needs: changes
+    if: needs.changes.outputs.sos == 'true'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: SOS
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Unit tests
+        run: npm run test:unit
+
+  # ---------------------------------------------------------------------------
   # Docker Build Validation (master only)
   # ---------------------------------------------------------------------------
   docker-validate:
@@ -220,6 +249,9 @@ jobs:
           - service: videovault
             dockerfile: VideoVault/Dockerfile.prod
             changed: ${{ needs.changes.outputs.videovault }}
+          - service: sos
+            dockerfile: SOS/Dockerfile
+            changed: ${{ needs.changes.outputs.sos }}
     steps:
       - uses: actions/checkout@v4
         if: matrix.changed == 'true'
@@ -279,7 +311,7 @@ jobs:
   # ---------------------------------------------------------------------------
   ci-status:
     if: always()
-    needs: [l2p, l2p-integration, auth, shop, videovault, docker-validate, k8s-validate]
+    needs: [l2p, l2p-integration, auth, shop, videovault, sos, docker-validate, k8s-validate]
     runs-on: ubuntu-latest
     steps:
       - name: Check pipeline status
@@ -289,6 +321,7 @@ jobs:
           AUTH_RESULT: ${{ needs.auth.result }}
           SHOP_RESULT: ${{ needs.shop.result }}
           VV_RESULT: ${{ needs.videovault.result }}
+          SOS_RESULT: ${{ needs.sos.result }}
           DOCKER_RESULT: ${{ needs.docker-validate.result }}
           K8S_RESULT: ${{ needs.k8s-validate.result }}
         run: |
@@ -298,11 +331,12 @@ jobs:
           echo "  auth:            $AUTH_RESULT"
           echo "  shop:            $SHOP_RESULT"
           echo "  videovault:      $VV_RESULT"
+          echo "  sos:             $SOS_RESULT"
           echo "  docker-validate: $DOCKER_RESULT"
           echo "  k8s-validate:    $K8S_RESULT"
 
           # Fail if any required job failed (skipped is OK — means no changes for that service)
-          for result in "$L2P_RESULT" "$L2P_INT_RESULT" "$AUTH_RESULT" "$SHOP_RESULT" "$VV_RESULT" "$DOCKER_RESULT" "$K8S_RESULT"; do
+          for result in "$L2P_RESULT" "$L2P_INT_RESULT" "$AUTH_RESULT" "$SHOP_RESULT" "$VV_RESULT" "$SOS_RESULT" "$DOCKER_RESULT" "$K8S_RESULT"; do
             if [[ "$result" == "failure" ]]; then
               echo "::error::One or more CI jobs failed"
               exit 1

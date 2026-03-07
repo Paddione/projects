@@ -10,6 +10,7 @@ Patrick's Projects is a monorepo containing independent full-stack applications 
 |---------|-------|-------|
 | l2p | React, Express, Socket.io, Drizzle ORM | 3000, 3001 |
 | VideoVault | React, Vite, File System Access API, Express | 5100/5000 |
+| SOS | Express, Static HTML | 3005 |
 | shop | Next.js 16, Prisma, Stripe | 3004 |
 | auth | Express, Passport.js, JWT/OAuth | 5500 |
 | shared-infrastructure | PostgreSQL, shared design system | 5432 |
@@ -25,6 +26,7 @@ npm run dev:all              # Start all services concurrently
 npm run dev:l2p              # L2P frontend + backend
 npm run dev:videovault       # VideoVault dev server
 npm run dev:shop             # Shop dev server
+npm run dev:sos              # SOS dev server
 
 # Build & Test
 npm run build:all            # Build all services
@@ -38,6 +40,7 @@ npm run validate:env         # Validate environment files
 ./k8s/scripts/deploy/deploy-auth.sh          # Auth: build, push, restart
 ./k8s/scripts/deploy/deploy-shop.sh          # Shop: build, push, restart
 ./k8s/scripts/deploy/deploy-videovault.sh    # VideoVault: build, push, restart
+./k8s/scripts/deploy/deploy-sos.sh          # SOS: build, push, restart
 ./k8s/scripts/deploy/deploy-changed.sh       # Auto-detect and redeploy uncommitted changes
 ./k8s/scripts/deploy/deploy-changed.sh --committed  # Deploy committed-but-undeployed changes
 ./k8s/scripts/deploy/deploy-all.sh --manifests-only  # Apply manifests only (no image rebuild)
@@ -280,6 +283,7 @@ import { ErrorCodes } from '@shared/errors';
 Each major project has its own CLAUDE.md with detailed guidance:
 - `l2p/CLAUDE.md` - Backend/frontend architecture, Socket.io patterns, test setup
 - `VideoVault/CLAUDE.md` - Client-first architecture, service patterns, test stubs
+- `SOS/CLAUDE.md` - Static HTML wrapper, health endpoints, minimal Express server
 
 Architecture diagrams and operational runbooks live in the Obsidian vault:
 - `shared-infrastructure/SMB-Share/Obsidian/` - High-level architecture, service docs, infrastructure docs, deployment procedures
@@ -305,6 +309,7 @@ When multiple agents work simultaneously:
 - **L2P**: https://l2p.korczewski.de
 - **Shop**: https://shop.korczewski.de
 - **VideoVault**: https://videovault.korczewski.de (alias: https://video.korczewski.de)
+- **SOS**: https://sos.korczewski.de
 - **Registry**: https://registry.korczewski.de (Docker registry, basic auth)
 - **Traefik**: https://traefik.korczewski.de
 
@@ -314,6 +319,7 @@ When multiple agents work simultaneously:
 - **L2P**: https://dev-l2p.korczewski.de
 - **Shop**: https://dev-shop.korczewski.de
 - **VideoVault**: https://dev-videovault.korczewski.de
+- **SOS**: https://dev-sos.korczewski.de
 
 Dev stack runs in `korczewski-dev` namespace, parallel to production. Deploy with `cd k8s && skaffold dev -p dev`.
 

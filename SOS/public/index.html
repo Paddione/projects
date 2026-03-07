@@ -1,0 +1,2225 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Taschentherapeut – Prototyp</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      background: linear-gradient(135deg, #66b5ea 0%, #4b83a2 100%);
+      margin: 0;
+      padding: 20px;
+      min-height: 100vh;
+      color: #1a202c;
+      display: flex;
+      justify-content: center;
+    }
+
+    .app {
+      max-width: 1100px;
+      width: 100%;
+      background: #ffffff;
+      border-radius: 20px;
+      padding: 25px;
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+      display: grid;
+      grid-template-columns: 290px 1fr;
+      gap: 25px;
+    }
+
+    .main-menu {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 90vh;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+
+    .main-btn {
+      background: #e3f5ec;
+      border-radius: 12px;
+      padding: 10px 12px;
+      cursor: pointer;
+      border: none;
+      text-align: left;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transition: all 0.2s;
+    }
+
+    .main-btn span.icon {
+      font-size: 14px;
+    }
+
+    .main-btn.active {
+      background: linear-gradient(135deg, #48bb78, #38a169);
+      color: #f7fafc;
+    }
+
+    .main-btn:hover {
+      background: #e2e8f0;
+    }
+
+    .screen {
+      display: none;
+    }
+
+    .screen.active {
+      display: block;
+    }
+
+    h2 {
+      margin-top: 0;
+      color: #2d3748;
+    }
+
+    .sub-list {
+      margin-top: 15px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .sub-btn {
+      background: #f7fafc;
+      border-radius: 10px;
+      padding: 10px 12px;
+      border: 1px solid #e2e8f0;
+      cursor: pointer;
+      text-align: left;
+      font-size: 14px;
+      transition: background 0.2s;
+    }
+
+    .sub-btn:hover,
+    .sub-btn.active {
+      background: #c6f6d5;
+      border-color: #9ae6b4;
+    }
+
+    .content-area {
+      border: 1px dashed #cbd5e0;
+      border-radius: 12px;
+      padding: 16px;
+      min-height: 260px;
+      background: #f8fafc;
+      margin-top: 15px;
+      font-size: 14px;
+      line-height: 1.4;
+    }
+
+    .content-area h3 {
+      margin-top: 0;
+    }
+
+    @media (max-width: 850px) {
+      .app {
+        grid-template-columns: 1fr;
+      }
+
+      .main-menu {
+        max-height: none;
+        flex-wrap: wrap;
+        flex-direction: row;
+      }
+
+      .main-btn {
+        flex: 1 0 45%;
+      }
+    }
+
+    /* Atemfenster fixed oben links*/
+    .atem-fenster {
+      position: flex;
+      top: 8px;
+      left: 8px;
+      width: 250px;
+      z-index: 100;
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 20px;
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.25);
+      padding: 12px;
+      pointer-events: auto;
+    }
+
+    .atem-headline {
+      font-size: 12px;
+      font-weight: 600;
+      text-align: center;
+    }
+
+    .atem-orb {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: radial-gradient(circle, #ff8a80, #ffb74d, #fff176, #aed581, #81d4fa, #ba68c8, #ff8a80);
+      background-size: 200% 200%;
+      animation: atem-breathe 8s ease-in-out infinite, orb-colors 20s linear infinite;
+      margin: 8px auto;
+      box-shadow: 10 10 10px rgba(255, 184, 140, 0.35);
+    }
+
+    @keyframes atem-breathe {
+
+      0%,
+      100% {
+        transform: scale(0.8);
+      }
+
+      50% {
+        transform: scale(1.1);
+      }
+    }
+
+    @keyframes orb-colors {
+      0% {
+        background-position: 0% 50%;
+      }
+
+      50% {
+        background-position: 100% 50%;
+      }
+
+      100% {
+        background-position: 0% 50%;
+      }
+    }
+
+
+    /* Hilfe-SOS-Notfall *\
+
+    /* SOS Cards */
+    .sos-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+      gap: 25px;
+    }
+
+    .sos-card {
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 16px;
+      padding: 25px;
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+      transition: all 0.3s ease;
+      border-top: 6px solid #dc2626;
+      position: relative;
+    }
+
+    .sos-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+    }
+
+    .sos-title {
+      font-size: 1.6em;
+      font-weight: 700;
+      color: #dc2626;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    /* Krisenplan */
+    .crisis-plan {
+      background: linear-gradient(135deg, #fef3c7, #fde68a);
+      border: 2px dashed #f59e0b;
+    }
+
+    .plan-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 15px;
+      margin-bottom: 20px;
+      align-items: end;
+    }
+
+    .plan-label {
+      font-weight: 700;
+      color: #b45309;
+      padding: 12px;
+      background: rgba(254, 243, 199, 0.7);
+      border-radius: 8px;
+    }
+
+    .plan-input {
+      padding: 15px;
+      border: 2px solid #f59e0b;
+      border-radius: 12px;
+      font-size: 1.1em;
+      font-family: inherit;
+      width: 100%;
+      transition: all 0.2s;
+    }
+
+    .plan-input:focus {
+      outline: none;
+      border-color: #dc2626;
+      box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+    }
+
+    .print-btn {
+      background: linear-gradient(45deg, #f59e0b, #d97706);
+      color: white;
+      border: none;
+      padding: 15px 25px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 1.1em;
+    }
+
+    /* SOS Box */
+    .sos-box {
+      background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+      border: 2px solid #3b82f6;
+    }
+
+    .box-item {
+      display: flex;
+      gap: 15px;
+      padding: 15px;
+      margin-bottom: 15px;
+      background: rgba(219, 234, 254, 0.7);
+      border-radius: 12px;
+      border-left: 5px solid #3b82f6;
+    }
+
+    /* Meditationen */
+    .meditations {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin-top: 20px;
+    }
+
+    .med-btn {
+      height: 80px;
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 1.1em;
+      transition: all 0.3s;
+    }
+
+    .med-btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 10px 25px rgba(16, 185, 129, 0.4);
+    }
+
+    /* Gefühle */
+    .emotions-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 15px;
+      margin-top: 20px;
+    }
+
+    .emotion {
+      text-align: center;
+      padding: 15px;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .emotion:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+    }
+
+    /* Broschüre */
+    .brochure {
+      background: linear-gradient(135deg, #f3f4f6, #e5e7eb);
+      border: 3px dashed #6b7280;
+      padding: 25px;
+      position: relative;
+    }
+
+    .brochure::after {
+      content: '🧵 NAHMUSTER';
+      position: absolute;
+      top: 15px;
+      right: 20px;
+      background: #f3f4f6;
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 0.8em;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .modal-content {
+      background: white;
+      padding: 30px;
+      width: 90%;
+      max-width: 600px;
+      max-height: 90vh;
+      overflow-y: auto;
+      border-radius: 20px;
+      box-shadow: 0 25px 50px rgba(0, 0, 0, 0.4);
+    }
+
+    .header h1 {
+      font-size: 2.8em;
+      background: linear-gradient(45deg, #6b46c1, #ed64a6, #f56565);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 15px;
+    }
+
+    .warning {
+      background: linear-gradient(135deg, #fed7d7, #feb2b2);
+      border: 3px solid #f56565;
+      border-radius: 20px;
+      padding: 25px;
+      margin-bottom: 30px;
+      text-align: center;
+    }
+
+    .warning h3 {
+      color: #c53030;
+      font-size: 1.4em;
+      margin-bottom: 15px;
+    }
+
+    /* Hilfen Grid */
+    .help-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+      gap: 30px;
+    }
+
+    .help-card {
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 20px;
+      padding: 30px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s ease;
+      border-top: 6px solid #6b46c1;
+      position: relative;
+    }
+
+    .help-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 30px 60px rgba(0, 0, 0, 0.2);
+    }
+
+    .help-card.suicide {
+      border-top-color: #f56565;
+    }
+
+    .help-card.selfharm {
+      border-top-color: #ed8936;
+    }
+
+    .help-card.grief {
+      border-top-color: #805ad5;
+    }
+
+    .help-card.aggression {
+      border-top-color: #f6ad55;
+    }
+
+    .help-card.depression {
+      border-top-color: #4a5568;
+    }
+
+    .help-title {
+      font-size: 1.9em;
+      font-weight: 700;
+      margin-bottom: 25px;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    /* Hotline Cards */
+    .hotline-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+      margin-top: 25px;
+    }
+
+    .hotline-card {
+      background: linear-gradient(135deg, #f7fafc, #edf2f7);
+      border: 3px solid;
+      border-radius: 16px;
+      padding: 25px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-weight: 600;
+      font-size: 1.1em;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    }
+
+    .hotline-card:hover {
+      transform: translateY(-5px) scale(1.02);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+    }
+
+    .hotline-suicide {
+      border-color: #f56565;
+      color: #c53030;
+    }
+
+    .hotline-selfharm {
+      border-color: #ed8936;
+      color: #c05621;
+    }
+
+    .hotline-grief {
+      border-color: #805ad5;
+      color: #5a67d8;
+    }
+
+    .hotline-aggression {
+      border-color: #f6ad55;
+      color: #dd6b20;
+    }
+
+    .hotline-depression {
+      border-color: #4a5568;
+      color: #2d3748;
+    }
+
+    .phone-number {
+      font-size: 2.2em;
+      font-weight: 800;
+      margin: 10px 0;
+    }
+
+    .hotline-name {
+      font-size: 1.3em;
+      margin-bottom: 10px;
+    }
+
+    /* Soforthilfe */
+    .quick-help {
+      background: linear-gradient(135deg, #c6f6d5, #9ae6b4);
+      border: 3px solid #38a169;
+      border-radius: 20px;
+      padding: 25px;
+      margin: 25px 0;
+      text-align: center;
+    }
+
+    /* Anzeichen Liste */
+    .warning-list {
+      list-style: none;
+    }
+
+    .warning-item {
+      padding: 15px;
+      margin-bottom: 12px;
+      background: linear-gradient(90deg, #fef5e7, #fed7aa);
+      border-radius: 12px;
+      border-left: 5px solid #ed8936;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .emergency-btn {
+      background: linear-gradient(45deg, #f56565, #c53030);
+      color: white;
+      border: none;
+      padding: 20px 40px;
+      border-radius: 16px;
+      font-size: 1.4em;
+      font-weight: 800;
+      cursor: pointer;
+      display: block;
+      margin: 25px auto 0;
+      box-shadow: 0 15px 35px rgba(245, 101, 101, 0.4);
+    }
+
+    .emergency-btn:hover {
+      transform: translateY(-3px);
+    }
+
+    @media (max-width: 768px) {
+      .hotline-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .phone-number {
+        font-size: 1.8em;
+      }
+    }
+
+
+
+    /* Kalender Grid */
+    .calendar-container {
+      display: grid;
+      grid-template-columns: 300px 1fr;
+      gap: 25px;
+    }
+
+    .sidebar {
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 16px;
+      padding: 25px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+      height: fit-content;
+    }
+
+    .calendar-main {
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 16px;
+      padding: 25px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Kalender Header */
+    .cal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 25px;
+      padding-bottom: 20px;
+      border-bottom: 2px solid #06b6d4;
+    }
+
+    .cal-nav {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .cal-nav-btn {
+      background: linear-gradient(45deg, #10b981, #059669);
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    .cal-nav-btn:hover {
+      transform: scale(1.05);
+    }
+
+    .current-month {
+      font-size: 1.5em;
+      font-weight: 700;
+      color: #0ea5e9;
+    }
+
+    /* Kalender Grid */
+    .cal-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 5px;
+      margin-bottom: 25px;
+    }
+
+    .cal-day-header {
+      text-align: center;
+      font-weight: 600;
+      color: #0ea5e9;
+      padding: 12px 5px;
+      background: #e0f2fe;
+      border-radius: 8px;
+    }
+
+    .cal-day {
+      aspect-ratio: 1;
+      border: 2px solid #e0f2fe;
+      border-radius: 12px;
+      padding: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+      background: white;
+    }
+
+    .cal-day:hover {
+      border-color: #10b981;
+      transform: scale(1.02);
+      box-shadow: 0 5px 15px rgba(16, 185, 129, 0.3);
+    }
+
+    .cal-day.today {
+      background: linear-gradient(45deg, #10b981, #34d399);
+      color: white;
+      border-color: #059669;
+    }
+
+    .cal-day.has-event {
+      background: linear-gradient(135deg, #ecfdf5, #d1fae5);
+      border-color: #10b981;
+    }
+
+    .day-number {
+      font-weight: 700;
+      font-size: 1.1em;
+      margin-bottom: 4px;
+    }
+
+    .day-events {
+      font-size: 0.8em;
+      color: #64748b;
+    }
+
+    /* Sidebar - Kategorien */
+    .category-section {
+      margin-bottom: 25px;
+    }
+
+    .category-title {
+      font-size: 1.3em;
+      color: #0ea5e9;
+      margin-bottom: 15px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid #06b6d4;
+    }
+
+    .event-type {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px;
+      margin-bottom: 10px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: 2px solid transparent;
+    }
+
+    .event-type:hover {
+      border-color: #10b981;
+      transform: translateX(5px);
+    }
+
+    .event-type.active {
+      background: linear-gradient(135deg, #10b981, #34d399);
+      color: white;
+      border-color: #059669;
+    }
+
+    .event-icon {
+      font-size: 1.4em;
+    }
+
+    /* Reflexion */
+    .reflection-area {
+      background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+      border: 2px dashed #0ea5e9;
+      border-radius: 12px;
+      padding: 20px;
+      margin-top: 20px;
+      min-height: 200px;
+      transition: all 0.3s;
+    }
+
+    .reflection-area:focus {
+      border-color: #10b981;
+      background: white;
+      box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+    }
+
+    .reflection-prompts {
+      background: rgba(255, 255, 255, 0.8);
+      padding: 15px;
+      border-radius: 10px;
+      margin-bottom: 15px;
+    }
+
+    /* Event Modal */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .modal-content {
+      background: white;
+      padding: 30px;
+      width: 90%;
+      max-width: 500px;
+      max-height: 90vh;
+      overflow-y: auto;
+      border-radius: 20px;
+      box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+    }
+
+    .close {
+      position: absolute;
+      top: 15px;
+      right: 25px;
+      font-size: 30px;
+      cursor: pointer;
+      color: #94a3b8;
+    }
+
+    .close:hover {
+      color: #f56565;
+    }
+
+    @media (max-width: 768px) {
+      .calendar-container {
+        grid-template-columns: 1fr;
+      }
+
+      .cal-header {
+        flex-direction: column;
+        gap: 15px;
+      }
+    }
+
+    /*14  Kontoeinstellungen *\
+    /* Kündigung - ROT & PROMINENT */
+    .cancel-section {
+      background: linear-gradient(135deg, #fee2e2, #fecaca);
+      border: 4px solid #dc2626;
+      border-radius: 20px;
+      padding: 30px;
+      margin-bottom: 40px;
+      text-align: center;
+    }
+
+    .cancel-btn {
+      background: linear-gradient(45deg, #dc2626, #b91c1c);
+      color: white;
+      border: none;
+      padding: 20px 40px;
+      font-size: 1.3em;
+      border-radius: 16px;
+      cursor: pointer;
+      font-weight: 700;
+      margin: 15px;
+      box-shadow: 0 10px 25px rgba(220, 38, 38, 0.4);
+    }
+
+    .cancel-btn:hover {
+      transform: translateY(-3px);
+    }
+
+    /* Abo Karten */
+    .abo-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+      gap: 30px;
+      margin-bottom: 40px;
+    }
+
+    .abo-card {
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 24px;
+      padding: 35px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+      transition: all 0.4s ease;
+      border-top: 6px solid #3b82f6;
+      position: relative;
+    }
+
+    .abo-card:hover {
+      transform: translateY(-10px);
+      box-shadow: 0 30px 60px rgba(0, 0, 0, 0.2);
+    }
+
+    .abo-card.vip {
+      border-top-color: #f59e0b;
+    }
+
+    .abo-card.plus {
+      border-top-color: #10b981;
+    }
+
+    .abo-tier {
+      font-size: 1.5em;
+      font-weight: 700;
+      color: #1e2937;
+      margin-bottom: 20px;
+      text-align: center;
+      padding: 15px;
+      border-radius: 12px;
+    }
+
+    .abo-tier.basic {
+      background: linear-gradient(135deg, #f3f4f6, #e5e7eb);
+    }
+
+    .abo-tier.plus {
+      background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+    }
+
+    .abo-tier.vip {
+      background: linear-gradient(135deg, #fef3c7, #fde68a);
+    }
+
+    .price-box {
+      text-align: center;
+      margin: 25px 0;
+      background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+      color: white;
+      padding: 25px;
+      border-radius: 20px;
+    }
+
+    .price-big {
+      font-size: 3em;
+      font-weight: 800;
+    }
+
+    .price-period {
+      font-size: 1.2em;
+      opacity: 0.9;
+    }
+
+    .feature-list {
+      list-style: none;
+      margin: 25px 0;
+    }
+
+    .feature {
+      padding: 12px 0;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 1.1em;
+      border-bottom: 1px solid #f3f4f6;
+    }
+
+    .feature:last-child {
+      border-bottom: none;
+    }
+
+    .feature-check {
+      color: #10b981;
+      font-size: 1.4em;
+    }
+
+    .buy-btn {
+      width: 100%;
+      background: linear-gradient(45deg, #3b82f6, #1d4ed8);
+      color: white;
+      border: none;
+      padding: 20px;
+      border-radius: 16px;
+      font-size: 1.3em;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 25px;
+    }
+
+    .buy-btn:hover {
+      transform: scale(1.02);
+    }
+
+    .vip-btn-month {
+      background: linear-gradient(45deg, #f59e0b, #d97706);
+    }
+
+    .vip-btn-year {
+      background: linear-gradient(45deg, #10b981, #059669);
+    }
+
+    /* Geräte & Umzug */
+    .devices-section {
+      background: rgba(255, 255, 255, 0.9);
+      border-radius: 20px;
+      padding: 30px;
+      margin: 40px 0;
+      border: 3px solid #6b7280;
+    }
+
+    .device-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+      margin-top: 20px;
+    }
+
+    .device-card {
+      text-align: center;
+      padding: 20px;
+      border: 2px solid #d1d5db;
+      border-radius: 16px;
+      cursor: pointer;
+    }
+
+    .device-card.active {
+      border-color: #3b82f6;
+      background: #eff6ff;
+    }
+
+    /* Legal */
+    .legal-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 25px;
+      margin-top: 50px;
+    }
+
+    .legal-card {
+      background: rgba(255, 255, 255, 0.8);
+      padding: 25px;
+      border-radius: 16px;
+      border-top: 4px solid #6b7280;
+    }
+  </style>
+</head>
+
+<body>
+
+
+
+  <div class="app">
+
+    <!-- HAUPTMENÜ linke Seite (15 Punkte + Atemfenster) -->
+    <div class="main-menu">
+      <!-- Atemfenster -->
+      <div>
+        <div class="atem-fenster">
+          <h1 class="atem-headline">Einatmen. Ausatmen.<br>Loslassen. Neu starten.</h1>
+          <div class="atem-orb"></div>
+          <h1 class="atem-headline">Groß werden -> Einatmen<br>klein werden -> Ausatmen.</h1>
+        </div>
+        <!-- Hauptmenü-->
+      </div>
+      <button class="main-btn" data-screen="sos" onclick="showScreen(event)">
+        <span class="icon">&#9889;</span> Hilfe - SOS – Notfall
+      </button>
+      <button class="main-btn" data-screen="kinder" onclick="showScreen(event)">
+        <span class="icon">&#127880;</span> Kinderbereich
+      </button>
+      <button class="main-btn active" data-screen="kursprogramm" onclick="showScreen(event)">
+        <span class="icon">📆</span> Kursprogramm
+      </button>
+      <button class="main-btn" data-screen="meditation" onclick="showScreen(event)">
+        <span class="icon">🧘</span> Meditation
+      </button>
+      <button class="main-btn" data-screen="kalender" onclick="showScreen(event)">
+        <span class="icon">&#9200;</span> Kalender
+      </button>
+      <button class="main-btn" data-screen="strategien" onclick="showScreen(event)">
+        <span class="icon">&#129513;</span> Strategie & Skill
+      </button>
+      <button class="main-btn" data-screen="gehirntraining" onclick="showScreen(event)">
+        <span class="icon">&#129504;</span> Training
+      </button>
+      <button class="main-btn" data-screen="bewegung" onclick="showScreen(event)">
+        <span class="icon">&#127939;</span> Bewegungsübung
+      </button>
+      <button class="main-btn" data-screen="frageboegen" onclick="showScreen(event)">
+        <span class="icon">&#128200;</span> Fragebogen
+      </button>
+      <button class="main-btn" data-screen="wissen" onclick="showScreen(event)">
+        <span class="icon">&#127979;</span> Wissensbereich
+      </button>
+      <button class="main-btn" data-screen="vorlagen" onclick="showScreen(event)">
+        <span class="icon">&#128195;</span> Druck - Vorlage
+      </button>
+      <button class="main-btn" data-screen="sperren" onclick="showScreen(event)">
+        <span class="icon">&#9940;</span> Sperrfunktion
+      </button>
+      <button class="main-btn" data-screen="zertifikate" onclick="showScreen(event)">
+        <span class="icon">📜</span> Zertifikat
+      </button>
+      <button class="main-btn" data-screen="kontoeinstellungen" onclick="showScreen(event)">
+        <span class="icon">&#128130;</span> Kontoeinstellung
+      </button>
+      <button class="main-btn" data-screen="quellen" onclick="showScreen(event)">
+        <span class="icon">&#128214;</span> Quelle
+      </button>
+    </div>
+
+
+
+    <!-- SCREEN 1: SOS -->
+    <div>
+      <div id="screen-sos" class="screen-datas">
+        <h2>Hilfe - SOS – Notfall</h2>
+        <div class="content-area">
+
+          <div class="container">
+            <!-- WARNUNG OBEN -->
+            <header class="header">
+              <h2>🚨 Externe Hilfen</h2>
+              <p>Professionelle Unterstützung • Anonym • Rund um die Uhr</p>
+            </header>
+
+            <div class="warning">
+              <h3>⚠️ WICHTIG</h3>
+              <p style="font-size: 1.1em; line-height: 1.6;">
+                Dies sind <strong>keine medizinischen Ratschläge</strong>, sondern Kontaktdaten zu Fachstellen.<br>
+                Bei akuten Notfällen: <strong>112</strong> wählen. Jederzeit erreichbar.
+              </p>
+            </div>
+            <header class="header">
+              <h2>🚨 SOS / Notfall</h>
+                <p>Krisenplan • Notfallübungen • Soforthilfe</p>
+            </header>
+
+            <div class="sos-grid">
+              <!-- 1. Ausfüllbarer Krisenplan -->
+              <div class="sos-card crisis-plan">
+                <h2 class="sos-title">📋 MEIN KRISENPLAN <span style="font-size: 0.7em;">(Ausfüllbar & druckbar)</span>
+                </h2>
+                <div class="plan-row">
+                  <div class="plan-label">1. WARN-SIGNAL (Körper/Geist)</div>
+                  <input type="text" class="plan-input" placeholder="z.B. Herzrasen, Panik, Schlafstörung..."
+                    id="signal1">
+                </div>
+                <div class="plan-row">
+                  <div class="plan-label">2. ERSTE HILFE (3min)</div>
+                  <input type="text" class="plan-input" placeholder="z.B. 4-7-8 Atmung, STOPP-Skill..." id="help1">
+                </div>
+                <div class="plan-row">
+                  <div class="plan-label">3. SOS KONTAKTE</div>
+                  <input type="text" class="plan-input" placeholder="Name: Telefon (z.B. Mama: 0151...)" id="contact">
+                </div>
+                <div class="plan-row">
+                  <div class="plan-label">4. SOS BOX öffnen</div>
+                  <input type="text" class="plan-input" placeholder="Inhalt erinnern: Duftöl, Stein, Foto..."
+                    id="sosbox">
+                </div>
+                <div class="plan-row">
+                  <div class="plan-label">5. NOTFALL (112 wann?)</div>
+                  <textarea class="plan-input" rows="3" placeholder="z.B. Suizidgedanken, Halluzinationen..."
+                    id="emergency"></textarea>
+                </div>
+                <div style="text-align: center; margin-top: 25px;">
+                  <button class="print-btn" onclick="printPlan()">🖨️ KRISENPLAN DRUCKEN</button>
+                  <button class="print-btn" onclick="savePlan()"
+                    style="background: linear-gradient(45deg, #10b981, #059669); margin-left: 15px;">💾
+                    SPEICHERN</button>
+                </div>
+              </div>
+
+              <!-- 2. SOS Box / Skill Tasche -->
+              <div class="sos-card sos-box">
+                <h2 class="sos-title">📦 SOS BOX / Skill Tasche</h2>
+                <div class="box-item">
+                  <span style="font-size: 2em; margin-top: 5px;">🧴</span>
+                  <div>
+                    <strong>Duftöl/Lavendel</strong><br>
+                    3x einatmen – beruhigt das Nervensystem
+                  </div>
+                </div>
+                <div class="box-item">
+                  <span style="font-size: 2em; margin-top: 5px;">🪨</span>
+                  <div>
+                    <strong>Beruhigungsstein</strong><br>
+                    Rosenquarz oder Amethyst in der Hand halten
+                  </div>
+                </div>
+                <div class="box-item">
+                  <span style="font-size: 2em; margin-top: 5px;">📸</span>
+                  <div>
+                    <strong>Liebesfoto</strong><br>
+                    Sicherer Mensch/Ort anschauen
+                  </div>
+                </div>
+                <div class="box-item">
+                  <span style="font-size: 2em; margin-top: 5px;">🍬</span>
+                  <div>
+                    <strong>Traubenzucker</strong><br>
+                    Bei Panik Blutzucker stabilisieren
+                  </div>
+                </div>
+                <div class="box-item" style="background: #fef3c7; border-left-color: #f59e0b;">
+                  <strong>🧵 SELBST NÄHEN</strong><br>
+                  <a href="#" onclick="showBrochure()" style="color: #b45309; font-weight: 700;">Broschüre &
+                    Schnittmuster</a>
+                </div>
+              </div>
+            </div>
+
+            <div class="sos-grid">
+              <!-- 3. Sofort-Meditationen -->
+              <div class="sos-card" style="grid-column: span 2;">
+                <h2 class="sos-title">🧘 SOS MEDITATIONEN (Klick = Audio startet)</h2>
+                <div class="meditations">
+                  <button class="med-btn" onclick="playMeditation(3)">3 min<br>NOTFALL</button>
+                  <button class="med-btn" onclick="playMeditation(5)">5 min<br>SCHNELL</button>
+                  <button class="med-btn" onclick="playMeditation(15)">15 min<br>BERUHIGUNG</button>
+                  <button class="med-btn" onclick="playMeditation(20)">20 min<br>REGENERATION</button>
+                  <button class="med-btn" onclick="playMeditation(30)">30 min<br>TIFF</button>
+                </div>
+                <p style="text-align: center; margin-top: 20px; color: #64748b;">
+                  [DEINE AUDIO-PLAYER FUNKTION HIER einfügen]
+                </p>
+              </div>
+
+              <!-- 4. Gefühle erklärt -->
+              <div class="sos-card">
+                <h2 class="sos-title">😰 GEFÜHLE VERSTEHEN</h2>
+                <div class="emotions-grid">
+                  <div class="emotion" style="background: #fee2e2; border: 2px solid #f87171;"
+                    onclick="explainEmotion('Angst')">
+                    <strong>😱 Angst</strong><br><small>Gefahr • Herzrasen • Flucht</small>
+                  </div>
+                  <div class="emotion" style="background: #fed7aa; border: 2px solid #f97316;"
+                    onclick="explainEmotion('Wut')">
+                    <strong>😣 Wut</strong><br><small>Ungerechtigkeit • Hitze • Kampf</small>
+                  </div>
+                  <div class="emotion" style="background: #dbeafe; border: 2px solid #3b82f6;"
+                    onclick="explainEmotion('Traurigkeit')">
+                    <strong>😢 Traurigkeit</strong><br><small>Verlust • Tränen • Rückzug</small>
+                  </div>
+                  <div class="emotion" style="background: #ecfdf5; border: 2px solid #10b981;"
+                    onclick="explainEmotion('Freude')">
+                    <strong>😊 Freude</strong><br><small>Erfolg • Wärme • Nähe</small>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Modal für Broschüre & Gefühle -->
+          <div id="sosModal" class="modal">
+            <div class="modal-content">
+              <span class="close" onclick="closeModal()" style="color: #dc2626;">&times;</span>
+              <div id="modalContent"></div>
+            </div>
+          </div>
+
+          <!-- NOTFALL KONTAKTE -->
+          <div style="background: #f7fafc; padding: 30px; border-radius: 20px; margin-top: 40px; text-align: center;">
+            <h3 style="color: #2d3748; margin-bottom: 25px; font-size: 2em;">📞 Alle wichtigen Nummern</h3>
+            <div style="font-size: 1.5em; line-height: 2;">
+              🚨 <strong>112</strong> Notruf<br>
+              🚨 <strong>110</strong> Polizei<br>
+              🩺 <strong>116 117</strong> Medizinischer Notdienst<br>
+              💙 <strong>0800 111 0 111</strong> Telefonseelsorge 24/7<br>
+              👶 <strong>116 111</strong> Kindertelefon
+            </div>
+
+
+            <!-- 1. AGGRESSION -->
+            <div class="help-card aggression">
+              <h2 class="help-title">😣 Aggression & Wut</h2>
+              <div class="quick-help">
+                <strong>3 Sofort-Schritte:</strong><br>
+                1️⃣ Atmen • 2️⃣ Distanz • 3️⃣ Hilfe holen
+              </div>
+              <div class="hotline-grid">
+                <div class="hotline-card hotline-aggression" onclick="callHotline('0800 111 0550')">
+                  <div class="hotline-name">Gewalt gegen Frauen</div>
+                  <div class="phone-number">116 016</div>
+                  <small>24/7 und in vielen Sprachen</small>
+                </div>
+                <div class="hotline-card hotline-aggression" onclick="callHotline('116 123')">
+                  <div class="hotline-name">Gewalt gegen Männer</div>
+                  <div class="phone-number">0800 123 9900</div>
+                  <small>24/7 und in vielen Sprachen</small>
+                </div>
+              </div>
+            </div>
+
+            <!-- 2. DEPRESSION -->
+            <div class="help-card depression">
+              <h2 class="help-title">😔 Depression</h2>
+              <p style="margin-bottom: 20px;">
+                Hoffnungslosigkeit • Antriebslosigkeit • Isolation
+              </p>
+              <div class="hotline-grid">
+                <div class="hotline-card hotline-depression" onclick="callHotline('0800 33 44 5 33')">
+                  <div class="hotline-name">Depression-Hilfe</div>
+                  <div class="phone-number">0800 33 44 5 33</div>
+                  <small>Kostenfrei: Mo, Di & Do 13-17 Uhr, Mi & Fr 08:30-12:30 Uhr</small>
+                </div>
+                <div class="hotline-card hotline-depression" onclick="callHotline('116 123')">
+                  <div class="hotline-name">Telefonseelsorge</div>
+                  <div class="phone-number">116 123</div>
+                  <small>24/7 Kostenfrei</small>
+                  <button class="emergency-btn" onclick="showContacts()">📋 Alle Kontakte anzeigen</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="help-grid">
+            <!-- 3. Kummernummer -->
+            <div class="help-card grief">
+              <h2 class="help-title">😢 Kummernummer</h2>
+              <p style="margin-bottom: 20px;">
+                Tränen erlauben • Unterstützung finden
+              </p>
+              <div class="hotline-grid">
+                <div class="hotline-card hotline-grief" onclick="callHotline('030 84109590')">
+                  <div class="hotline-name">Nummer gegen Kummer Kinder und Jugendliche</div>
+                  <div class="phone-number">116 111</div>
+                  <small>24/7 anonym und unterstüzend</small>
+                </div>
+                <div class="hotline-card hotline-grief" onclick="callHotline('+49 800 111 0 111')">
+                  <div class="hotline-name">Nummer gegen Kummer Eltern und zugehörige</div>
+                  <div class="phone-number">0800 111 0550/div>
+                    <small>24/7 anonym und unterstützend</small>
+                  </div>
+                </div>
+              </div>
+
+
+              <!-- 4. SELBSTVERLETZUNG -->
+              <div class="help-card selfharm">
+                <h2 class="help-title">🩸 Selbstverletzung</h2>
+                <p style="margin-bottom: 20px;">
+                  Verletzungen versorgen • Gespräch suchen • Alternativen finden
+                </p>
+                <div class="hotline-grid">
+                  <div class="hotline-card hotline-selfharm" onclick="callHotline('01805 313031')">
+                    <div class="hotline-name">Drogen und Sucht</div>
+                    <div class="phone-number">01805 313031</div>
+                    <small>24/7, Kostenpflichtig</small>
+                  </div>
+                  <div class="hotline-card hotline-selfharm" onclick="callHotline('116 123')">
+                    <div class="hotline-name">schwere Trauer</div>
+                    <div class="phone-number">0800 111 0 111 oder 0800 111 0 222</div>
+                    <small>24/7 • Kostenfrei</small>
+                  </div>
+                </div>
+                <ul class="warning-list">
+                  <li><span style="font-size: 1.5em;">⚠️</span> Sofort verbinden lassen</li>
+                  <li><span style="font-size: 1.5em;">⚠️</span> Wunde versorgen (Desinfektion)</li>
+                  <li><span style="font-size: 1.5em;">⚠️</span> Sichern (jmd. in Nähe haben)</li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="help-grid">
+              <!-- 5. SUIZIDPREVENTION -->
+              <div class="help-card suicide">
+                <h2 class="help-title">💔 Suizidgedanken</h2>
+                <div class="quick-help">
+                  <div style="font-size: 2.5em; margin-bottom: 10px;">🚨</div>
+                  <strong>ACHTUNG:</strong> Du bist nicht allein! Sofort Hilfe holen!
+                </div>
+                <div class="hotline-grid">
+                  <div class="hotline-card hotline-suicide" onclick="callHotline('0800 111 0 111')">
+                    <div class="hotline-name">Telefonseelsorge</div>
+                    <div class="phone-number">0800 111 0 111</div>
+                    <small>Jederzeit • Kostenfrei • Anonym</small>
+                  </div>
+                  <div class="hotline-card hotline-suicide" onclick="callHotline('0800 111 0 222')">
+                    <div class="hotline-name">Telefonseelsorge</div>
+                    <div class="phone-number">0800 111 0 222</div>
+                    <small>Jederzeit • Kostenfrei • Anonym</small>
+                  </div>
+                  <button class="emergency-btn" onclick="emergencyCall()">📞 JETZT ANRUFEN (112)</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- SCREEN 2: KINDERBEREICH -->
+    <div id="screen-Kinder" class="screen">
+      <h1>Kinderbereich</h1>
+      <div class="content-area">
+
+        <div class="container">
+          <header class="header">
+            <h2>Wilkommen</h2>
+            <p>Hallo und herzlich Wilkommen schön das es dich gibt und schön das du da bist</p>
+          </header>
+          <div>
+            <div id="screen-kinder" class="screen">
+              <h2>Kinderbereich</h2>
+              <div class="content-area">
+                <p>Platzhalter</p>
+                <div class="container">
+                  <!-- HEADER MIT LEITFIGUR -->
+                  <header class="header">
+                    <img id="leitfigur" class="leitfigur"
+                      src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIwIiBoZWlnaHQ9IjEyMCIgdmlld0JveD0iMCAwIDEyMCAxMjAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMjAiIGhlaWdodD0iMTIwIiBmaWxsPSIjRkY2QjlEIi8+CjxjaXJjbGUgY3g9IjYwIiBjeT0iMzUiIHI9IjI1IiBmaWxsPSIjRkZEN0FBIi8+CjxjaXJjbGUgY3g9IjQ1IiBjeT0iMjgiIHI9IjQiIGZpbGw9IiNGRkYiLz4KPGNpcmNsZSBjeD0iNzUiIGN5PSIyOCIgcj0iNCIgZmlsbD0iI0ZGRiIvPgo8cGF0aCBkPSJNMzUgNTBDMzUgNTEgNDUgNjAgNTUgNjBDNjUgNjAgNzUgNTEgNzUgNTBDNzUgNDkgNzAgNDggNjUgNDdDNjAgNDYgNTUgNDcgNDUgNDdDNSAgNDggMzUgNDkgMzUgNTBaIiBmaWxsPSIjRkY2QjlEIi8+CjxwYXRoIGQ9Ik0zMCA2NEMzMCA2OCAzMiA3MCAzNiA3MEM0MCA3MiA4MCA3MiA4NCA3MEM4OCA3MCA5MCA2OCA5MCA2NEM5MCA2MCA4NSA1NSA4MCA1NUM3NSA1MyA2NSA1NCA2MCA1NUM1NSA1NCA0NSA1NSA0MCA1M0MzNSA1NSA0NSAyNCA0NSA3MEgzMFY2NFoiIGZpbGw9IiNGRkQ3QUEiLz4KPC9zdmc+"
+                      alt="Leitfigur">
+                    <h1>Hallo <span id="kidName">Sternenkind</span>! 🌟</h1>
+                    <p>Deine Leitfigur ist immer bei dir! 💕</p>
+                    <button onclick="changeLeitfigur()"
+                      style="background: #ff6b9d; color: white; border: none; padding: 12px 25px; border-radius: 25px; cursor: pointer; font-size: 1.1em;">
+                      ✨ Leitfigur wechseln
+                    </button>
+                  </header>
+
+                  <!-- KINDER HAUPTMENÜ (PRIORITÄT 1) -->
+                  <div class="main-menu">
+                    <div class="kid-card" onclick="showSorgenfresser()">
+                      <div class="kid-icon">😢</div>
+                      <div class="kid-title">Sorgenfresser</div>
+                      <p style="font-size: 0.95em; color: #666;">Sag deine Sorgen</p>
+                    </div>
+                    <div class="kid-card" onclick="showEmotions()">
+                      <div class="kid-icon">😊</div>
+                      <div class="kid-title">Gefühle</div>
+                      <p style="font-size: 0.95em; color: #666;">Wie fühlst du dich?</p>
+                    </div>
+                    <div class="kid-card" onclick="showAchtsamkeit()">
+                      <div class="kid-icon">🧘</div>
+                      <div class="kid-title">Achtsamkeit</div>
+                      <p style="font-size: 0.95em; color: #666;">Atme & entspanne</p>
+                    </div>
+                    <div class="kid-card" onclick="showSchlaf()">
+                      <div class="kid-icon">🌙</div>
+                      <div class="kid-title">Schlafgeschichten</div>
+                      <p style="font-size: 0.95em; color: #666;">Süße Träume</p>
+                    </div>
+                  </div>
+
+                  <!-- SORGENFRESSER (PRIORITÄT 2) -->
+                  <div id="sorgenfresserSection" class="sorgenfresser" style="display: none;">
+                    <h2 style="text-align: center; font-size: 2.5em; color: #dd6b20; margin-bottom: 20px;">😢
+                      Sorgenfresser</h2>
+                    <p style="text-align: center; font-size: 1.2em; margin-bottom: 25px;">Ich fresse deine Sorgen!
+                      Schreib sie hier rein:</p>
+                    <textarea class="sorgen-input" id="sorgenText"
+                      placeholder="Heute war ich traurig weil..."></textarea>
+                    <div style="text-align: center;">
+                      <button onclick="fressSorge()"
+                        style="background: #ffed4a; color: #dd6b20; border: none; padding: 20px 40px; border-radius: 30px; font-size: 1.5em; cursor: pointer; font-weight: bold;">
+                        🥞 SORGE FRESSEN!
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- GEFÜHLSKARTEN (PRIORITÄT 3) -->
+                  <div id="emotionsSection" class="emotions-grid" style="display: none;"></div>
+
+                  <!-- ELTERN PIN (PRIORITÄT 4) -->
+                  <div id="parentPin" class="parent-lock">
+                    <div class="parent-pin">
+                      <h3 style="color: #fed7aa; margin-bottom: 20px;">🔐 Elternbereich</h3>
+                      <input type="password" id="parentPinInput" placeholder="Eltern PIN"
+                        style="padding: 15px; font-size: 1.5em; border-radius: 12px; width: 200px; text-align: center;">
+                      <button onclick="checkParentPin()"
+                        style="background: #fed7aa; color: #dd6b20; border: none; padding: 15px 30px; border-radius: 12px; margin-left: 15px; font-size: 1.1em;">Öffnen</button>
+                    </div>
+                  </div>
+
+                  <!-- ELTERN DASHBOARD (PRIORITÄT 5) -->
+                  <div id="parentDashboard" class="parent-dashboard">
+                    <div
+                      style="background: rgba(255,255,255,0.95); padding: 30px; border-radius: 25px; margin: 20px 0;">
+                      <h2 style="color: #4a5568; text-align: center;">👩‍👧 Eltern Dashboard</h2>
+                      <div id="parentSorgen" style="margin-top: 25px;"></div>
+                      <h3 style="color: #2d3748; margin: 25px 0 15px 0;">📋 Krisenplan & Skills</h3>
+                      <div
+                        style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
+                        <div style="background: #fed7aa; padding: 20px; border-radius: 15px;">
+                          <strong>Krisenplan:</strong> [Eltern bearbeiten]
+                        </div>
+                        <div style="background: #bee3f8; padding: 20px; border-radius: 15px;">
+                          <strong>Skills:</strong> STOPP, Atmung, 5-4-3-2-1
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- WEITERE BEREICHE (PRIORITÄT 6+) -->
+                  <div class="games-grid"
+                    style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 20px; margin-top: 40px;">
+                    <div class="game-card"
+                      style="background: linear-gradient(135deg, #ffed4a, #fbbf24); border-radius: 20px; padding: 25px; text-align: center; box-shadow: 0 10px 30px rgba(251,191,36,0.3);">
+                      <div style="font-size: 3em;">🎵</div>
+                      <h3>Lieblingslieder</h3>
+                    </div>
+                    <div class="game-card"
+                      style="background: linear-gradient(135deg, #a0aec0, #718096); border-radius: 20px; padding: 25px; text-align: center; color: white; box-shadow: 0 10px 30px rgba(113,128,150,0.3);">
+                      <div style="font-size: 3em;">🎬</div>
+                      <h3>Filme</h3>
+                    </div>
+                    <div class="game-card"
+                      style="background: linear-gradient(135deg, #48bb78, #38a169); border-radius: 20px; padding: 25px; text-align: center; color: white; box-shadow: 0 10px 30px rgba(72,187,120,0.3);">
+                      <div style="font-size: 3em;">🏃‍♂️</div>
+                      <h3>Bewegungsspiele</h3>
+                    </div>
+                    <div class="game-card"
+                      style="background: linear-gradient(135deg, #ed8936, #dd6b20); border-radius: 20px; padding: 25px; text-align: center; color: white; box-shadow: 0 10px 30px rgba(237,137,54,0.3);">
+                      <div style="font-size: 3em;">🧩</div>
+                      <h3>Memory drucken</h3>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+
+          <!-- SCREEN 3: KURSPROGRAMM -->
+          <div id="screen-kursprogramm" class="screen active">
+            <h2>12‑Wochen-Kursprogramm</h2>
+            <p>Wähle deine Kurswoche:</p>
+
+            <div class="sub-list">
+              <button class="sub-btn" data-target="kurs-content" onclick="selectSub(event, 'kurs-w1')">Woche 1 –
+                Einstieg</button>
+              <button class="sub-btn" data-target="kurs-content" onclick="selectSub(event, 'kurs-w2')">Woche 2 –
+                Körperwahrnehmung</button>
+              <button class="sub-btn" data-target="kurs-content" onclick="selectSub(event, 'kurs-w3')">Woche 3 –
+                Stressmanagement</button>
+              <button class="sub-btn" data-target="kurs-content" onclick="selectSub(event, 'kurs-w4')">Woche 4 –
+                Gedanken</button>
+              <button class="sub-btn" data-target="kurs-content" onclick="selectSub(event, 'kurs-w5')">Woche 5 –
+                Gefühle</button>
+              <button class="sub-btn" data-target="kurs-content" onclick="selectSub(event, 'kurs-w6')">Woche 6 –
+                Schlaf & Erholung</button>
+              <button class="sub-btn" data-target="kurs-content" onclick="selectSub(event, 'kurs-w7')">Woche 7 –
+                Gewohnheiten</button>
+              <button class="sub-btn" data-target="kurs-content" onclick="selectSub(event, 'kurs-w8')">Woche 8 –
+                Genuss & Ressourcen</button>
+              <button class="sub-btn" data-target="kurs-content" onclick="selectSub(event, 'kurs-w9')">Woche 9 –
+                Achtsame Kommunikation</button>
+              <button class="sub-btn" data-target="kurs-content" onclick="selectSub(event, 'kurs-w10')">Woche 10 –
+                Rückfallprophylaxe</button>
+              <button class="sub-btn" data-target="kurs-content" onclick="selectSub(event, 'kurs-w11')">Woche 11 –
+                Alltag</button>
+              <button class="sub-btn" data-target="kurs-content" onclick="selectSub(event, 'kurs-w12')">Woche 12 –
+                Abschluss</button>
+            </div>
+
+            <div id="kurs-content" class="content-area">
+              <h3>Woche 1 – Einstieg</h3>
+              <p>Platzhalter: Stress‑Test, erste Meditation, eine Gewohnheit, insgesamt ca. 45 Minuten.</p>
+            </div>
+          </div>
+
+
+          <!-- SCREEN 4: MEDITATION -->
+
+          <div class="container">
+            <div class="header">
+              <h1>🧘‍♀️ Taschentherapeuten</h1>
+              <p>Achtsamkeit & Entspannung</p>
+              <button class="main-button" onclick="startAchtsamkeit()">
+                Achtsamkeit starten
+              </button>
+            </div>
+
+            <div class="levels-container" id="levelsContainer">
+              <!-- Level 1: NeoBits -->
+              <div class="level" id="level1">
+                <div class="tier-info" id="tierInfo">
+                  <strong id="currentTier">Plus-Nutzer</strong><br>
+                  <small>Du kannst alle Inhalte auswählen oder eigene hochladen</small>
+                </div>
+
+                <div class="level-header">
+                  <div class="level-number">1</div>
+                  <div class="level-title">🎵 NeoBits auswählen</div>
+                </div>
+                <p style="margin-bottom: 25px; color: #7f8c8d;">
+                  Wähle eine Frequenzkombination für deine Entspannung:
+                </p>
+
+                <div class="category-grid">
+                  <div class="category-card" onclick="selectNeobit(this, 'Herzfrequenz')" data-type="neobit">
+                    <span class="category-icon">❤️</span>
+                    <div class="category-title">Herzfrequenz</div>
+                    <div class="category-desc">432Hz + 528Hz<br>Koherenz & Heilung</div>
+                  </div>
+
+                  <div class="category-card" onclick="selectNeobit(this, 'Tiefe Entspannung')" data-type="neobit">
+                    <span class="category-icon">🌀</span>
+                    <div class="category-title">Tiefe Entspannung</div>
+                    <div class="category-desc">174Hz + 285Hz<br>Schmerzlinderung</div>
+                  </div>
+
+                  <div class="category-card" onclick="selectNeobit(this, 'Angst lösen')" data-type="neobit">
+                    <span class="category-icon">🕊️</span>
+                    <div class="category-title">Angst lösen</div>
+                    <div class="category-desc">396Hz + 417Hz<br>Blockaden auflösen</div>
+                  </div>
+
+                  <div class="category-card locked" data-type="neobit">
+                    <div class="lock-icon">🔒</div>
+                    <span class="category-icon">⭐</span>
+                    <div class="category-title">VIP Spezial</div>
+                    <div class="category-desc">Personalisierte Frequenz<br>(nur VIP)</div>
+                  </div>
+                </div>
+
+                <div style="text-align: center; margin-top: 30px;">
+                  <button class="next-btn" onclick="nextLevel(1)">Weiter zu Naturgeräuschen →</button>
+                </div>
+              </div>
+
+              <!-- Level 2: Naturgeräusche -->
+              <div class="level" id="level2">
+                <div class="level-header">
+                  <div class="level-number">2</div>
+                  <div class="level-title">🌿 Naturgeräusche</div>
+                </div>
+                <p style="margin-bottom: 25px; color: #7f8c8d;">
+                  Wähle ein Naturgeräusch als Hintergrund:
+                </p>
+
+                <div class="category-grid">
+                  <div class="category-card" onclick="selectNature(this, 'Regen')" data-type="nature">
+                    <span class="category-icon">🌧️</span>
+                    <div class="category-title">Sanfter Regen</div>
+                    <div class="category-desc">Ruhe & Reinigung</div>
+                  </div>
+
+                  <div class="category-card" onclick="selectNature(this, 'Wald')" data-type="nature">
+                    <span class="category-icon">🌲</span>
+                    <div class="category-title">Waldrauschen</div>
+                    <div class="category-desc">Bodenung & Frieden</div>
+                  </div>
+
+                  <div class="category-card" onclick="selectNature(this, 'Ozean')" data-type="nature">
+                    <span class="category-icon">🌊</span>
+                    <div class="category-title">Ozeanwellen</div>
+                    <div class="category-desc">Tiefe Entspannung</div>
+                  </div>
+
+                  <div class="category-card" onclick="selectNature(this, 'Vögel')" data-type="nature">
+                    <span class="category-icon">🐦</span>
+                    <div class="category-title">Morgenkonzert</div>
+                    <div class="category-desc">Frische & Leichtigkeit</div>
+                  </div>
+                </div>
+
+                <div style="text-align: center; margin-top: 30px;">
+                  <button class="prev-btn" onclick="prevLevel(2)">← Zurück</button>
+                  <button class="next-btn" onclick="nextLevel(2)">Weiter zu Meditation →</button>
+                </div>
+              </div>
+
+              <!-- Level 3: Meditation -->
+              <div class="level" id="level3">
+                <div class="level-header">
+                  <div class="level-number">3</div>
+                  <div class="level-title">🧘‍♀️ Geführte Meditation</div>
+                </div>
+                <p style="margin-bottom: 25px; color: #7f8c8d;">
+                  Wähle eine geführte Meditation:
+                </p>
+
+                <div class="category-grid">
+                  <div class="category-card" onclick="selectMeditation(this, 'Körper-Scan')" data-type="meditation">
+                    <span class="category-icon">🧍‍♀️</span>
+                    <div class="category-title">Körper-Scan</div>
+                    <div class="category-desc">15 Min • Spannung lösen</div>
+                  </div>
+
+                  <div class="category-card" onclick="selectMeditation(this, 'Herzensöffnung')" data-type="meditation">
+                    <span class="category-icon">💖</span>
+                    <div class="category-title">Herzensöffnung</div>
+                    <div class="category-desc">12 Min • Liebe & Mitgefühl</div>
+                  </div>
+
+                  <div class="category-card locked" onclick="selectMeditation(this, 'Gebärdensprache')"
+                    data-type="meditation">
+                    <div class="lock-icon">🔒</div>
+                    <span class="category-icon">🤟</span>
+                    <div class="category-title">Mit Gebärdensprache</div>
+                    <div class="category-desc">VIP • Barrierefrei</div>
+                  </div>
+
+                  <div class="category-card" onclick="selectMeditation(this, 'Tiefer Schlaf')" data-type="meditation">
+                    <span class="category-icon">😴</span>
+                    <div class="category-title">Tiefer Schlaf</div>
+                    <div class="category-desc">20 Min • Einschlafhilfe</div>
+                  </div>
+                </div>
+
+                <div style="text-align: center; margin-top: 30px;">
+                  <button class="prev-btn" onclick="prevLevel(3)">← Zurück</button>
+                  <button class="next-btn" onclick="nextLevel(3)">Weiter zu Bild →</button>
+                </div>
+              </div>
+
+              <!-- Level 4: Bild -->
+              <div class="level" id="level4">
+                <div class="level-header">
+                  <div class="level-number">4</div>
+                  <div class="level-title">🖼️ Visualisierung</div>
+                </div>
+                <p style="margin-bottom: 25px; color: #7f8c8d;">
+                  Wähle ein Bild für deine Visualisierung:
+                </p>
+
+                <div class="category-grid">
+                  <div class="category-card" onclick="selectImage(this, 'Sonnenaufgang')" data-type="image">
+                    <span class="category-icon">🌅</span>
+                    <div class="category-title">Sonnenaufgang</div>
+                    <div class="category-desc">Neuanfang & Hoffnung</div>
+                  </div>
+
+                  <div class="category-card" onclick="selectImage(this, 'Bergsee')" data-type="image">
+                    <span class="category-icon">🏔️</span>
+                    <div class="category-title">Bergsee</div>
+                    <div class="category-desc">Ruhe & Klarheit</div>
+                  </div>
+
+                  <div class="category-card locked" data-type="image">
+                    <div class="lock-icon">🔒</div>
+                    <span class="category-icon">📸</span>
+                    <div class="category-title">Eigenes Bild</div>
+                    <div class="category-desc">Plus/VIP: Hochladen</div>
+                  </div>
+
+                  <div class="category-card" onclick="selectImage(this, 'Sternenhimmel')" data-type="image">
+                    <span class="category-icon">🌌</span>
+                    <div class="category-title">Sternenhimmel</div>
+                    <div class="category-desc">Unendlichkeit & Frieden</div>
+                  </div>
+                </div>
+
+                <div style="text-align: center; margin-top: 30px;">
+                  <button class="prev-btn" onclick="prevLevel(4)">← Zurück</button>
+                  <button class="next-btn" onclick="nextLevel(4)">Eigene Meditation erstellen →</button>
+                </div>
+              </div>
+
+              <!-- Level 5: Eigene Meditation (Plus/VIP) -->
+              <div class="level" id="level5">
+                <div class="level-header">
+                  <div class="level-number">5</div>
+                  <div class="level-title">✨ Eigene Meditation erstellen</div>
+                </div>
+                <p style="margin-bottom: 25px; color: #7f8c8d;">
+                  <strong>Plus/VIP Exklusiv:</strong> Erstelle deine persönliche Meditation aus Textbausteinen!
+                </p>
+
+                <div class="summary">
+                  <h3>Deine Auswahl:</h3>
+                  <div id="sessionSummary">
+                    <p><strong>NeoBits:</strong> <span id="selectedNeobit">-</span></p>
+                    <p><strong>Natur:</strong> <span id="selectedNature">-</span></p>
+                    <p><strong>Meditation:</strong> <span id="selectedMeditation">-</span></p>
+                    <p><strong>Bild:</strong> <span id="selectedImage">-</span></p>
+                  </div>
+
+                  <div style="margin-top: 20px;">
+                    <label>Füge Textbausteine hinzu:</label><br>
+                    <select id="textBlocks" multiple style="width: 100%; height: 100px; margin-top: 10px;">
+                      <option>Einleitung: Ruhe willkommen heißen</option>
+                      <option>Atemtechnik: 4-7-8</option>
+                      <option>Körperentspannung: Progressive Muskelentspannung</option>
+                      <option>Visualisierung: Sicherer Ort</option>
+                      <option>Abschluss: Dankbarkeit</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div style="text-align: center; margin-top: 30px;">
+                  <button class="prev-btn" onclick="prevLevel(5)">← Zurück</button>
+                  <button class="play-btn" onclick="startSession()">
+                    ▶️ Session starten (20 Min)
+                  </button>
+                </div>
+              </div>
+
+
+
+
+              <!-- <div id="screen-meditation" class="screen">
+      <h2>Meditation</h2>
+      <p>Stelle dir deine Meditationssitzung zusammen:</p>
+
+      <div class="sub-list">
+        <button class="sub-btn" data-target="meditation-content" onclick="selectSub(event, 'med-neurobits')">Element 1 –
+          Neurobits / Binaurale Töne</button>
+        <button class="sub-btn" data-target="meditation-content" onclick="selectSub(event, 'med-natur')">Element 2 –
+          Naturgeräusche</button>
+        <button class="sub-btn" data-target="meditation-content" onclick="selectSub(event, 'med-meditation')">Element 3
+          –
+          Geführte Meditation</button>
+        <button class="sub-btn" data-target="meditation-content" onclick="selectSub(event, 'med-bild')">Element 4 –
+          Hintergrundbild</button>
+        <button class="sub-btn" data-target="meditation-content" onclick="selectSub(event, 'med-text')">Element 5 –
+          Textbaustein</button>
+      </div>
+
+      <div id="meditation-content" class="content-area">
+        <h3>Element 1 – Neurobits</h3>
+        <p>Platzhalter: Timer, Audioplayer, Untertitel und Hintergrundbild.</p>
+      </div>
+    </div> -->
+
+              <!-- SCREEN 5: KALENDER -->
+              <div id="screen-kalender" class="screen">
+                <h2>Kalender</h2>
+                <div class="content-area">
+                  <p>Platzhalter: Tagebuch.</p>
+                  <div class="container">
+                    <header class="header">
+                      <h1>📅 Kalender & Reflexion</h1>
+                      <p>Termine • Gewohnheiten • Achtsamkeit • Tagebuch</p>
+                    </header>
+
+                    <div class="calendar-container">
+                      <!-- Sidebar -->
+                      <div class="sidebar">
+                        <div class="category-section">
+                          <h3 class="category-title">➕ Neue Aktivität</h3>
+                          <div class="event-type active" data-type="habit" onclick="selectEventType('habit')">
+                            <span class="event-icon">📈</span>
+                            <span>Gewohnheit</span>
+                          </div>
+                          <div class="event-type" data-type="mindfulness" onclick="selectEventType('mindfulness')">
+                            <span class="event-icon">🧘</span>
+                            <span>Achtsamkeit</span>
+                          </div>
+                          <div class="event-type" data-type="appointment" onclick="selectEventType('appointment')">
+                            <span class="event-icon">🩺</span>
+                            <span>Termin</span>
+                          </div>
+                          <div class="event-type" data-type="reflection" onclick="selectEventType('reflection')">
+                            <span class="event-icon">📝</span>
+                            <span>Reflexion</span>
+                          </div>
+                          <div class="event-type" data-type="alarm" onclick="selectEventType('alarm')">
+                            <span class="event-icon">⏰</span>
+                            <span>Wecker Lücke [DEINE WECHKER]</span>
+                          </div>
+                        </div>
+
+                        <!-- Tagesreflexion -->
+                        <div class="category-section">
+                          <h3 class="category-title">📓 Heutige Reflexion</h3>
+                          <div class="reflection-area" contenteditable="true" id="dailyReflection"
+                            placeholder="Was war heute besonders? Wie fühlst du dich? Welche Gedanken kreisen? ...">
+                          </div>
+                          <div class="reflection-prompts">
+                            <strong>Fragen:</strong> Was lief gut? Was war herausfordernd? Was nimmst du morgen
+                            mit?
+                          </div>
+                          <button class="cal-nav-btn" onclick="saveReflection()"
+                            style="width: 100%; margin-top: 10px;">💾
+                            Speichern</button>
+                        </div>
+                      </div>
+
+                      <!-- Haupt Kalender -->
+                      <div class="calendar-main">
+                        <div class="cal-header">
+                          <div class="cal-nav">
+                            <button class="cal-nav-btn" onclick="prevMonth()">◀️</button>
+                            <span class="current-month" id="currentMonth"></span>
+                            <button class="cal-nav-btn" onclick="nextMonth()">▶️</button>
+                          </div>
+                          <button class="cal-nav-btn" onclick="addEvent()"
+                            style="background: linear-gradient(45deg, #10b981, #059669);">➕ Neuer Eintrag</button>
+                        </div>
+
+                        <div class="cal-grid" id="calendarGrid">
+                          <!-- Dynamisch generiert -->
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Event Modal -->
+                  <div id="eventModal" class="modal">
+                    <div class="modal-content">
+                      <span class="close" onclick="closeModal()">&times;</span>
+                      <div id="modalBody">
+                        <!-- Dynamischer Inhalt -->
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- SCREEN 6: STRATEGIE UND SKILL -->
+              <div id="screen-strategien" class="screen">
+                <h2>Strategie & Skills</h2>
+                <div class="content-area">
+                  <p>Platzhalter: Emotionsregulation, Problemlösen, Selbstfürsorge.</p>
+                </div>
+              </div>
+
+
+              <!-- SCREEN 7: TRAINING -->
+              <div id="screen-gehirntraining" class="screen">
+                <h2>Training</h2>
+                <p>Trainiere dein Arbeitsgedächtnis, Aufmerksamkeit und Konzentration:</p>
+
+                <div class="sub-list">
+                  <button class="sub-btn" onclick="selectHlmt(event, 'arbeitsgedaechtnis')">Arbeitsgedächtnis
+                    (N‑Back)</button>
+                  <button class="sub-btn" onclick="selectHlmt(event, 'merkspanne')">Merkfähigkeit
+                    (Merkspanne)</button>
+                  <button class="sub-btn" onclick="selectHlmt(event, 'konzentration')">Konzentration
+                    (Go/No‑Go)</button>
+                  <button class="sub-btn" onclick="selectHlmt(event, 'individuell')">Individuelle Übungen</button>
+                </div>
+
+                <div id="training-content" class="content-area">
+                  <h3>Arbeitsgedächtnis (N‑Back)</h3>
+                  <p>Platzhalter: N‑Back‑Aufgabe mit Stimuli, Reaktionsbuttons und Auswertung.</p>
+                </div>
+              </div>
+
+
+              <!-- SCREEN 8: BEWEGUNGSÜBUNG -->
+              <div id="screen-bewegung" class="screen">
+                <h2>Bewegungsübung</h2>
+                <div class="content-area">
+                  <p>Platzhalter: Kurze Aktivpausen, Yoga, venöse Gymnastik.</p>
+                </div>
+              </div>
+
+
+              <!-- SCREEN 9: FRAGEBOGEN -->
+              <div id="screen-frageboegen" class="screen">
+                <h2>Fragebogen</h2>
+                <p>Finde heraus...</p>
+
+                <div class="sub-list">
+                  <button class="sub-btn" data-target="frageboegen-content"
+                    onclick="selectSub(event, 'test-gesundheit')">
+                    Gesundheitsfragebogen</button>
+                  <button class="sub-btn" data-target="frageboegen-content"
+                    onclick="selectSub(event, 'test-persoenlich')">
+                    Persönlichkeitsfragebogen</button>
+                  <button class="sub-btn" data-target="frageboegen-content" onclick="selectSub(event, 'test-schlaf')">
+                    Schlaffragebogen</button>
+                  <button class="sub-btn" data-target="frageboegen-content"
+                    onclick="selectSub(event, 'test-beziehung')">
+                    Beziehungsfragebogen</button>
+                  <button class="sub-btn" data-target="frageboegen-content" onclick="selectSub(event, 'test-diagnose')">
+                    Diagnosefragebogen</button>
+                  <button class="sub-btn" data-target="frageboegen-content" onclick="selectSub(event, 'test-kinder')">
+                    Kinderfragebogen</button>
+                  <button class="sub-btn" data-target="frageboegen-content"
+                    onclick="selectSub(event, 'test-sonstiges')">
+                    anderer Fragebogen</button>
+                </div>
+
+                <div id="frageboegen-content" class="content-area">
+                  <h3>Gesundheitsfragebogen</h3>
+                  <p>Platzhalter: Items, Skala 0–4, Auswertung und Rückmeldung.</p>
+                </div>
+              </div>
+
+
+              <!-- SCREEN 10: WISSENSBEREICH -->
+              <div id="screen-wissen" class="screen">
+                <h2>Wissensbereich</h2>
+                <div class="content-area">
+                  <p>Platzhalter: Psychoedukation, Artikel, Infografiken.</p>
+                </div>
+              </div>
+
+
+              <!-- SCREEN 11: DRUCK - VORLAGE -->
+              <div id="screen-vorlagen" class="screen">
+                <h2>Druck - Vorlage</h2>
+                <div class="content-area">
+                  <p>Platzhalter: Kurspläne, Arbeitsblätter, PDF‑Downloads.</p>
+                </div>
+              </div>
+
+              <!-- SCREEN 12: SPERRFUNKTION -->
+              <div id="screen-sperren" class="screen">
+                <h2>Sperrfunktion</h2>
+                <div class="content-area">
+                  <p>Platzhalter: Zugriffsbeschränkungen, Code, Zeitlimits.</p>
+                </div>
+              </div>
+
+
+              <!-- SCREEN 13: ZERTIFIKATE -->
+              <div id="screen-zertifikate" class="screen">
+                <h2>Zertifikat</h2>
+                <div class="sub-list">
+                  <button class="sub-btn" data-target="zertifikate-content"
+                    onclick="selectSub(event, 'cert-kurs')">12‑Wochen‑Kursabschluss</button>
+                  <button class="sub-btn" data-target="zertifikate-content"
+                    onclick="selectSub(event, 'cert-gehirn')">Trainings‑Status</button>
+                  <button class="sub-btn" data-target="zertifikate-content"
+                    onclick="selectSub(event, 'cert-tests')">Fragebogen‑Ergebnisse</button>
+                </div>
+                <div id="zertifikate-content" class="content-area">
+                  <h3>12‑Wochen‑Kursabschluss</h3>
+                  <p>Platzhalter: Zertifikat mit Name, Zeitraum und Fortschritt. Button „PDF erstellen“.</p>
+                </div>
+              </div>
+
+              <!-- SCREEN 14: KONTOEINSTELLUNG -->
+              <div id="screen-kontoeinstellungen" class="screen">
+                <h2>Kontoeinstellung</h2>
+                <div class="content-area">
+                  <!-- KÜNDIGUNG OBEN -->
+                  <div class="cancel-section">
+                    <h2 style="color: #dc2626; font-size: 2em; margin-bottom: 20px;">❌ Abo kündigen</h2>
+                    <p style="font-size: 1.2em; margin-bottom: 25px;">Dein Abo läuft bis zum <strong
+                        id="cancelDate">31.12.2026</strong></p>
+                    <button class="cancel-btn" onclick="cancelSubscription()">
+                      🚨 SOFORT KÜNDIGEN
+                    </button>
+                    <p style="font-size: 0.95em; color: #991b1b; margin-top: 15px;">
+                      Nach Kündigung: Basis-Features bis Ende Laufzeit verfügbar
+                    </p>
+                  </div>
+
+                  <!-- ABO PLÄNE -->
+                  <div class="abo-grid">
+                    <!-- BASIS -->
+                    <div class="abo-card">
+                      <div class="abo-tier basic">🆓 BASIS</div>
+                      <div class="price-box">
+                        <div class="price-big">0 €</div>
+                        <div class="price-period">für immer</div>
+                      </div>
+                      <ul class="feature-list">
+                        <li class="feature"><span class="feature-check">✅</span>Screen Time Limits</li>
+                        <li class="feature"><span class="feature-check">✅</span>Focus Timer (25/50min)</li>
+                        <li class="feature"><span class="feature-check">✅</span>Krisenplan Basis</li>
+                        <li class="feature"><span class="feature-check">⏳</span>1 Gerät</li>
+                        <li class="feature"><span class="feature-check">👶</span>Kinder bis 18</li>
+                      </ul>
+                      <button class="buy-btn" onclick="selectPlan('basic')">Aktiv 🔓</button>
+                    </div>
+
+                    <!-- PLUS -->
+                    <div class="abo-card plus">
+                      <div class="abo-tier plus">⭐ PLUS</div>
+                      <div class="price-box">
+                        <div class="price-big">74,99 €</div>
+                        <div class="price-period">/ Monat</div>
+                      </div>
+                      <ul class="feature-list">
+                        <li class="feature"><span class="feature-check">✅</span>Alle Basis Features</li>
+                        <li class="feature"><span class="feature-check">✅</span>Kalender & Gewohnheiten</li>
+                        <li class="feature"><span class="feature-check">✅</span>SOS Box Premium</li>
+                        <li class="feature"><span class="feature-check">✅</span>3 Geräte</li>
+                        <li class="feature"><span class="feature-check">✅</span>Familie (2 Profile)</li>
+                        <li class="feature"><span class="feature-check">✅</span>Geräte-Umzug</li>
+                      </ul>
+                      <button class="buy-btn" onclick="selectPlan('plus')">⭐ PLUS wählen</button>
+                    </div>
+
+                    <!-- VIP -->
+                    <div class="abo-card vip">
+                      <div class="abo-tier vip">👑 VIP</div>
+                      <div class="price-box">
+                        <div class="price-big">99,99 €</div>
+                        <div class="price-period" style="font-size: 1.5em;">/ Monat</div><br>
+                        <div class="price-big" style="font-size: 2em;">49,99 €</div>
+                        <div class="price-period">/ Jahr (16% sparen)</div>
+                      </div>
+                      <ul class="feature-list">
+                        <li class="feature"><span class="feature-check">✅</span>Alle PLUS Features</li>
+                        <li class="feature"><span class="feature-check">✅</span>Unbegrenzte Geräte</li>
+                        <li class="feature"><span class="feature-check">✅</span>Unbegrenzte Profile</li>
+                        <li class="feature"><span class="feature-check">✅</span>Priority Support</li>
+                        <li class="feature"><span class="feature-check">✅</span>Neue Features zuerst</li>
+                        <li class="feature"><span class="feature-check">✅</span>Personalisierte Empfehlungen</li>
+                      </ul>
+                      <div style="display: grid; gap: 15px;">
+                        <button class="buy-btn vip-btn-month" onclick="selectPlan('vip-monthly')">👑
+                          MONATSLICH</button>
+                        <button class="buy-btn vip-btn-year" onclick="selectPlan('vip-yearly')">👑
+                          JÄHRLICH</button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- GERAETE & UMZUG -->
+                  <div class="devices-section">
+                    <h2 style="text-align: center; font-size: 2em; margin-bottom: 25px; color: #1e2937;">
+                      📱 Deine Geräte & Umzug bei Verlust
+                    </h2>
+                    <div class="device-grid">
+                      <div class="device-card active" onclick="toggleDevice(this)">
+                        <strong>Gerät 1</strong><br>
+                        iPhone 15 • 01.02.2026
+                      </div>
+                      <div class="device-card" onclick="toggleDevice(this)">
+                        <strong>Gerät 2</strong><br>
+                        iPad Air • Inaktiv
+                      </div>
+                      <div class="device-card" onclick="toggleDevice(this)">
+                        <strong>Gerät 3</strong><br>
+                        PC Windows • Inaktiv
+                      </div>
+                    </div>
+                    <div style="text-align: center; margin-top: 30px;">
+                      <button class="buy-btn"
+                        style="background: linear-gradient(45deg, #ef4444, #dc2626); width: auto; padding: 15px 40px;">
+                        🔄 GERÄT UMZIEHEN (Neu registrieren)
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- LEGAL -->
+                  <div class="legal-grid">
+                    <div class="legal-card">
+                      <h3 style="color: #3b82f6; margin-bottom: 15px;">📜 AGBs</h3>
+                      <p><strong>Taschentherapeut Abo</strong><br>
+                        Kündbar jederzeit. Autom. Verlängerung. App Store/Google Play Zahlung.<br>
+                        Kinder bis 18: elterliche Zustimmung erforderlich.</p>
+                      <a href="#" style="color: #3b82f6;">Vollständige AGBs →</a>
+                    </div>
+                    <div class="legal-card">
+                      <h3 style="color: #10b981; margin-bottom: 15px;">🏢 Impressum</h3>
+                      <p><strong>Taschentherapeut</strong><br>
+                        Dein Name<br>
+                        Berlin, Deutschland<br>
+                        USt-ID: DE123456789<br>
+                        support@taschentherapeut.de</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- SCREEN 15: QUELLE UND IMPRESSUM-->
+            <div id="screen-quellen" class="screen">
+              <h2>Quelle / Impressum</h2>
+              <div class="content-area">
+                <p>Platzhalter: Studien, Bücher, Links.</p>
+              </div>
+            </div>
+
+          </div>
+
+          <script>
+            // Hauptscreen wechseln
+            function showScreen(evt) {
+              const screenName = evt.currentTarget.getAttribute('data-screen');
+              document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+              document.querySelectorAll('.main-btn').forEach(b => b.classList.remove('active'));
+              document.getElementById('screen-' + screenName).classList.add('active');
+              evt.currentTarget.classList.add('active');
+            }
+
+
+            // Inhalte in Screens mit Untermenü wechseln
+            function selectSub(evt, key) {
+              const targetId = evt.currentTarget.getAttribute('data-target');
+              const container = document.getElementById(targetId);
+
+              const map = {
+                // 1 Exterme Hilfen
+
+
+                // 2 Kinderbereich
+
+
+                // 3 Kurswochen
+                'kurs-w1': '<h3>Woche 1 – Einstieg</h3><p>Stress‑Test, erste Meditation, eine Gewohnheit, ca. 45 Minuten.</p>',
+                'kurs-w2': '<h3>Woche 2 – Körperwahrnehmung</h3><p>Bewegungsübung, Körperscan, Meditation.</p>',
+                'kurs-w3': '<h3>Woche 3 – Stressmanagement</h3><p>Stress‑Test, Skills, Meditation.</p>',
+                'kurs-w4': '<h3>Woche 4 – Gedanken</h3><p>Kognitives Modell, Übungen, Meditation.</p>',
+                'kurs-w5': '<h3>Woche 5 – Gefühle</h3><p>Gefühlsrad, Achtsamkeit, Meditation.</p>',
+                'kurs-w6': '<h3>Woche 6 – Schlaf & Erholung</h3><p>Schlaftagebuch, Schlafhygiene, Abendroutine.</p>',
+                'kurs-w7': '<h3>Woche 7 – Gewohnheiten</h3><p>Trigger, Routine, Belohnung – neue Gewohnheit aufbauen.</p>',
+                'kurs-w8': '<h3>Woche 8 – Genuss & Ressourcen</h3><p>Ressourcenliste, Genussübungen, Meditation.</p>',
+                'kurs-w9': '<h3>Woche 9 – Achtsame Kommunikation</h3><p>Ich‑Botschaften, aktives Zuhören, Übungsaufgaben.</p>',
+                'kurs-w10': '<h3>Woche 10 – Rückfallprophylaxe</h3><p>Frühwarnzeichen, Notfallplan, SOS‑Strategien.</p>',
+                'kurs-w11': '<h3>Woche 11 – Alltag</h3><p>Transfer in Alltag, Routinen stabilisieren.</p>',
+                'kurs-w12': '<h3>Woche 12 – Abschluss</h3><p>Rückblick, Zielüberprüfung, Ausblick.</p>',
+
+
+                //  5 Kalender 
+
+
+                // 4 Meditation
+                'med-neurobits': '<h3>Neurobits / Binaurale Töne</h3><p>Frequenzauswahl als Grundberuhigung</p>',
+                'med-natur': '<h3>Naturgeräusche</h3><p>Naturgeräusch als Hintergrund.</p>',
+                'med-meditaion': '<h3>Geführte Meditation</h3><p>Audio / Text nach deinem Thema.</p>',
+                'med-bild': '<h3>Hintergrundbild</h3><p>passendes beruhigendes Bild</p>',
+                'med-text': '<h3>Textbaustein</h3><p>eigene Affirmationen</p>',
+
+                //  
+
+                // 9 Fragebogen
+                'test-gesundheit': '<h3>Gesundheitsfragebogen</h3><p>Wie fühlst du dich?.</p>',
+                'test-persoenlich': '<h3>Persönlichkeitsfragebogen</h3><p>Wer bist du? Finde es heraus!</p>',
+                'test-schlaf': '<h3>Schlaffragebogen</h3><p>Wie gut schläfst du?</p>',
+                'test-beziehung': '<h3>Beziehungsfragebogen</h3><p>Wie gut ist deine Verbindung?</p>',
+                'test-diagnose': '<h3>Diagnosefragebogen</h3><p>Was sollte ich vielleicht professionell abklären lassen und weiter auf den Grund gehen, damit es mir besser geht?</p>',
+                'test-kinder': '<h3>Kinderfragebogen</h3><p>Was möchtest du über dich wissen?</p>',
+                'test-sonstiges': '<h3>anderer Fragebogen</h3><p>Hilfreiche Dinge.</p>',
+
+
+                // 13 Zertifikat
+                'cert-kurs': '<h3>12‑Wochen‑Kursabschluss</h3><p>Alle Wochen absolviert. <button>PDF erstellen</button></p>',
+                'cert-gehirn': '<h3>Gehirntraining‑Status</h3><p>Übersicht über absolvierte Sessions und Fortschritt.</p>',
+                'cert-tests': '<h3>Fragebogen‑Ergebnisse</h3><p>Verlaufsgrafik und Export‑Option.</p>'
+              };
+
+              container.innerHTML = map[key] || '<p>Inhalt folgt.</p>';
+
+              // aktive Sub‑Buttons im aktuellen Screen markieren
+              const currentScreen = evt.currentTarget.closest('.screen');
+              currentScreen.querySelectorAll('.sub-btn').forEach(b => b.classList.remove('active'));
+              evt.currentTarget.classList.add('active');
+            }
+
+            // Trainingsinhalte
+            function selectHlmt(evt, key) {
+              const map = {
+                'arbeitsgedaechtnis': '<h3>Arbeitsgedächtnis (N‑Back)</h3><p>2‑Back‑Aufgabe mit visuellen oder auditiven Stimuli.</p>',
+                'merkspanne': '<h3>Merkfähigkeit (Merkspanne)</h3><p>Ziffern / Wörter vorwärts und rückwärts nachsprechen.</p>',
+                'konzentration': '<h3>Konzentration (Go/No‑Go)</h3><p>Reagiere auf Zielreize, inhibiere Nicht‑Zielreize.</p>',
+                'individuell': '<h3>Individuelle Übungen</h3><p>Eigene Trainingspläne und Schwierigkeitsgrade.</p>'
+              };
+              document.getElementById('gehirntraining-content').innerHTML = map[key] || '<p>Übung folgt.</p>';
+
+              const currentScreen = evt.currentTarget.closest('.screen');
+              currentScreen.querySelectorAll('.sub-btn').forEach(b => b.classList.remove('active'));
+              evt.currentTarget.classList.add('active');
+            }
+
+            // Kontoeinstellungen
+            let currentPlan = 'basic';
+
+            function cancelSubscription() {
+              if (confirm('🚨 Abo wirklich kündigen?\n\nAlle Premium-Features gehen verloren.\nBasis bleibt erhalten.')) {
+                alert('✅ Abonnement gekündigt!\nStatus: Basis\nGültig bis: 31.12.2026');
+                document.querySelector('.abo-card:nth-child(1) .buy-btn').textContent = 'Aktiv 🔓';
+              }
+            }
+
+            function selectPlan(plan) {
+              const payments = {
+                'basic': 'Kostenlos',
+                'plus': '4,99€/Monat über App Store/Google Play',
+                'vip-monthly': '9,99€/Monat',
+                'vip-yearly': '49,99€/Jahr (16% Ersparnis)'
+              };
+
+              alert(`👑 ${plan.toUpperCase()} ausgewählt!\n\n💳 Zahlung: ${payments[plan]}\n\n[DEINE ZAHLLUNGS-IMPLEMENTIERUNG HIER]\n\nStripe/PayPal/App Store/Google Play empfohlen:\n• App Store/Google Play: Null Aufwand\n• Stripe: 2,9% + 0,30€ pro Transaktion\n• PayPal: 3,4% + 0,35€ pro Transaktion`);
+            }
+
+            function toggleDevice(card) {
+              document.querySelectorAll('.device-card').forEach(c => c.classList.remove('active'));
+              card.classList.add('active');
+            }
+
+          </script>
+</body>
+
+</html>

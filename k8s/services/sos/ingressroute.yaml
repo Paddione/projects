@@ -1,0 +1,26 @@
+---
+# =============================================================================
+# SOS IngressRoute
+# =============================================================================
+# No authentication middleware — public mental health resource.
+# =============================================================================
+
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: sos
+  namespace: korczewski-services
+  labels:
+    app: sos
+    app.kubernetes.io/name: sos
+    app.kubernetes.io/component: sos
+    app.kubernetes.io/part-of: korczewski
+    tier: services
+spec:
+  routes:
+    - match: Host(`sos.korczewski.de`)
+      kind: Rule
+      services:
+        - name: sos
+          port: 3005
+  tls: {}

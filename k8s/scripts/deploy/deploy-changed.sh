@@ -75,6 +75,7 @@ declare -A SERVICE_DIRS=(
     ["l2p"]="l2p"
     ["shop"]="shop"
     ["videovault"]="VideoVault"
+    ["sos"]="SOS"
 )
 
 # Service to Dockerfile mapping (relative to PROJECT_ROOT)
@@ -84,6 +85,7 @@ declare -A SERVICE_DOCKERFILES=(
     ["l2p-frontend"]="l2p/frontend/Dockerfile"
     ["shop"]="shop/Dockerfile"
     ["videovault"]="VideoVault/Dockerfile.prod"
+    ["sos"]="SOS/Dockerfile"
 )
 
 # Service to k8s manifest paths
@@ -93,6 +95,7 @@ declare -A SERVICE_MANIFESTS=(
     ["l2p-frontend"]="services/l2p-frontend"
     ["shop"]="services/shop"
     ["videovault"]="services/videovault"
+    ["sos"]="services/sos"
 )
 
 # Service to deployment names (for rollout restart)
@@ -102,6 +105,7 @@ declare -A SERVICE_DEPLOYMENTS=(
     ["l2p-frontend"]="l2p-frontend"
     ["shop"]="shop"
     ["videovault"]="videovault"
+    ["sos"]="sos"
 )
 
 # Health check endpoints (selector|port|path)
@@ -111,6 +115,7 @@ declare -A SERVICE_HEALTH=(
     ["l2p-frontend"]="app=l2p-frontend|80|/"
     ["shop"]="app=shop|3000|/"
     ["videovault"]="app=videovault|5000|/api/health"
+    ["sos"]="app=sos|3005|/health"
 )
 
 # Map a top-level service to its image targets

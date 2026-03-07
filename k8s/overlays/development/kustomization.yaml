@@ -25,6 +25,7 @@ resources:
   - ../../services/l2p-frontend
   - ../../services/shop
   - ../../services/videovault
+  - ../../services/sos
 
 labels:
   - pairs:
@@ -234,3 +235,32 @@ patches:
       - op: replace
         path: /spec/routes/0/match
         value: "Host(`dev-videovault.korczewski.de`) || Host(`dev-video.korczewski.de`)"
+
+  # ---------------------------------------------------------------------------
+  # SOS: Dev environment overrides
+  # ---------------------------------------------------------------------------
+  - target:
+      kind: Deployment
+      name: sos
+    patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: sos
+      spec:
+        template:
+          spec:
+            containers:
+              - name: sos
+                env:
+                  - name: NODE_ENV
+                    value: "development"
+
+  # SOS IngressRoute
+  - target:
+      kind: IngressRoute
+      name: sos
+    patch: |-
+      - op: replace
+        path: /spec/routes/0/match
+        value: "Host(`dev-sos.korczewski.de`)"

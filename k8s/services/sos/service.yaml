@@ -1,0 +1,25 @@
+---
+# =============================================================================
+# SOS Service
+# =============================================================================
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: sos
+  namespace: korczewski-services
+  labels:
+    app: sos
+    app.kubernetes.io/name: sos
+    app.kubernetes.io/component: sos
+    app.kubernetes.io/part-of: korczewski
+    tier: services
+spec:
+  type: ClusterIP
+  ports:
+    - port: 3005
+      targetPort: 3005
+      protocol: TCP
+      name: http
+  selector:
+    app: sos

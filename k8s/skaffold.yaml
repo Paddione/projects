@@ -52,6 +52,12 @@ build:
       docker:
         dockerfile: VideoVault/Dockerfile.prod
 
+    # SOS (Taschentherapeut)
+    - image: registry.korczewski.de/korczewski/sos
+      context: ..
+      docker:
+        dockerfile: SOS/Dockerfile
+
 # =============================================================================
 # Manifest Configuration
 # =============================================================================
@@ -68,6 +74,7 @@ manifests:
       - services/l2p-frontend
       - services/shop
       - services/videovault
+      - services/sos
   rawYaml:
     - base/namespaces.yaml
 
@@ -125,6 +132,11 @@ portForward:
     namespace: korczewski-services
     port: 5000
     localPort: 5100
+  - resourceType: service
+    resourceName: sos
+    namespace: korczewski-services
+    port: 3005
+    localPort: 3005
 
 # =============================================================================
 # Profiles
@@ -187,6 +199,19 @@ profiles:
         paths:
           - services/videovault
 
+  # SOS only
+  - name: sos
+    build:
+      artifacts:
+        - image: registry.korczewski.de/korczewski/sos
+          context: ..
+          docker:
+            dockerfile: SOS/Dockerfile
+    manifests:
+      kustomize:
+        paths:
+          - services/sos
+
   # Infrastructure only (no builds)
   - name: infra
     manifests:
@@ -228,6 +253,10 @@ profiles:
           context: ..
           docker:
             dockerfile: VideoVault/Dockerfile.prod
+        - image: registry.korczewski.de/korczewski/sos
+          context: ..
+          docker:
+            dockerfile: SOS/Dockerfile
     manifests:
       kustomize:
         paths:
@@ -269,3 +298,8 @@ profiles:
         namespace: korczewski-dev
         port: 5000
         localPort: 5101
+      - resourceType: service
+        resourceName: sos
+        namespace: korczewski-dev
+        port: 3005
+        localPort: 3105
