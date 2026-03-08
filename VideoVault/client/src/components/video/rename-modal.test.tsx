@@ -33,7 +33,7 @@ describe('RenameModal', () => {
     // Empty name shows validation error
     fireEvent.change(input, { target: { value: '   ' } });
     fireEvent.click(screen.getAllByTestId('button-rename-submit')[0]);
-    expect(screen.getByText('Name cannot be empty')).toBeTruthy();
+    expect(screen.getByText('rename.emptyError')).toBeTruthy();
     expect(onSubmit).not.toHaveBeenCalled();
 
     // Generate from categories

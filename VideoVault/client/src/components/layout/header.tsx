@@ -130,7 +130,7 @@ export function Header({
               onClick={onOpenSettings}
               data-testid="button-settings"
               className="p-2 min-h-[40px]"
-              title="Settings"
+              title={t('header.settings')}
               aria-label="Open settings"
             >
               <Settings className="h-4 w-4" />
@@ -165,8 +165,8 @@ export function Header({
             onClick={toggleTheme}
             data-testid="button-theme-toggle"
             className="p-2 min-h-[40px]"
-            title="Toggle theme"
-            aria-label="Toggle theme"
+            title={t('header.toggleTheme')}
+            aria-label={t('header.toggleTheme')}
             aria-pressed={theme === 'dark'}
           >
             {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
@@ -280,7 +280,7 @@ export function Header({
               className="min-h-[40px]"
             >
               <HardDrive className="mr-2 h-4 w-4" />
-              Browse
+              {t('header.browse')}
             </Button>
           </Link>
 
@@ -367,7 +367,7 @@ export function Header({
             className="flex-1 min-h-[40px]"
           >
             <FolderOpen className="mr-2 h-4 w-4" />
-            Scan
+            {t('common.scan')}
           </Button>
 
           <DropdownMenu>
@@ -378,55 +378,55 @@ export function Header({
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
               <DropdownMenuItem onClick={onImportData}>
-                <Download className="mr-2 h-4 w-4" /> Import Data
+                <Download className="mr-2 h-4 w-4" /> {t('header.importData')}
               </DropdownMenuItem>
               <DropdownMenuItem onClick={onExportData}>
-                <Upload className="mr-2 h-4 w-4" /> Export Library
+                <Upload className="mr-2 h-4 w-4" /> {t('header.exportLibrary')}
               </DropdownMenuItem>
               {onExportPlaylist && (
                 <DropdownMenuItem onClick={onExportPlaylist}>
-                  <Upload className="mr-2 h-4 w-4" /> Export Playlist
+                  <Upload className="mr-2 h-4 w-4" /> {t('header.exportPlaylist')}
                 </DropdownMenuItem>
               )}
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={onBatchRename}>
-                <Edit className="mr-2 h-4 w-4" /> Batch Rename
+                <Edit className="mr-2 h-4 w-4" /> {t('header.batchRename')}
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <Link href="/duplicates" className="w-full cursor-pointer flex items-center">
-                  <Copy className="mr-2 h-4 w-4" /> Duplicates
+                  <Copy className="mr-2 h-4 w-4" /> {t('header.duplicates')}
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <Link href="/tags" className="w-full cursor-pointer flex items-center">
-                  <Tags className="mr-2 h-4 w-4" /> Tags
+                  <Tags className="mr-2 h-4 w-4" /> {t('header.tags')}
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <Link href="/analytics" className="w-full cursor-pointer flex items-center">
-                  <BarChart3 className="mr-2 h-4 w-4" /> Analytics
+                  <BarChart3 className="mr-2 h-4 w-4" /> {t('header.analytics')}
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <Link href="/browse" className="w-full cursor-pointer flex items-center">
-                  <HardDrive className="mr-2 h-4 w-4" /> Browse HDD
+                  <HardDrive className="mr-2 h-4 w-4" /> {t('header.browseHdd')}
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem onClick={onManagePresets}>
-                <ClipboardList className="mr-2 h-4 w-4" /> Presets
+                <ClipboardList className="mr-2 h-4 w-4" /> {t('header.presets')}
               </DropdownMenuItem>
               <DropdownMenuItem onClick={onCreateBackup}>
-                <Shield className="mr-2 h-4 w-4" /> Backup
+                <Shield className="mr-2 h-4 w-4" /> {t('header.backup')}
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               {onCreateDirectory && (
                 <DropdownMenuItem onClick={onCreateDirectory}>
-                  <FolderPlus className="mr-2 h-4 w-4" /> New Folder
+                  <FolderPlus className="mr-2 h-4 w-4" /> {t('header.newFolder')}
                 </DropdownMenuItem>
               )}
               {onDeleteDirectory && (
                 <DropdownMenuItem onClick={onDeleteDirectory} className="text-destructive">
-                  <FolderMinus className="mr-2 h-4 w-4" /> Delete Folder
+                  <FolderMinus className="mr-2 h-4 w-4" /> {t('header.deleteFolder')}
                 </DropdownMenuItem>
               )}
             </DropdownMenuContent>
@@ -438,7 +438,7 @@ export function Header({
       {isScanning && (
         <div className="flex items-center justify-center mt-4 pt-4 border-t border-border">
           <div className="flex items-center space-x-3" data-testid="scan-progress">
-            <span className="text-sm text-muted-foreground">Scanning files...</span>
+            <span className="text-sm text-muted-foreground">{t('header.scanningFiles')}</span>
             <div className="w-48">
               <Progress
                 value={
@@ -459,7 +459,7 @@ export function Header({
                 className="min-h-[38px]"
               >
                 <XCircle className="mr-2 h-4 w-4" />
-                Cancel
+                {t('common.cancel')}
               </Button>
             )}
           </div>

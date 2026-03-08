@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useLocation } from 'wouter';
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,6 +9,7 @@ import { AuthService } from '@/services/auth';
 import { ShieldAlert, LogIn, Loader2 } from 'lucide-react';
 
 export default function LoginPage() {
+    const { t } = useTranslation();
     const [, setLocation] = useLocation();
     const [username, setUsername] = useState('admin');
     const [password, setPassword] = useState('');
@@ -24,10 +26,10 @@ export default function LoginPage() {
             if (res.ok) {
                 setLocation('/');
             } else {
-                setError(res.message || 'Login failed. Please check your credentials.');
+                setError(res.message || t('login.failed'));
             }
         } catch (_err: unknown) {
-            setError('An unexpected error occurred. Please try again.');
+            setError(t('login.unexpectedError'));
         } finally {
             setIsLoading(false);
         }
@@ -41,10 +43,10 @@ export default function LoginPage() {
                         <div className="p-2 bg-primary/10 rounded-lg">
                             <ShieldAlert className="h-6 w-6 text-primary" />
                         </div>
-                        <CardTitle className="text-2xl font-bold">VideoVault Admin</CardTitle>
+                        <CardTitle className="text-2xl font-bold">{t('login.title')}</CardTitle>
                     </div>
                     <CardDescription>
-                        Enter your credentials to access administrative features.
+                        {t('login.description')}
                     </CardDescription>
                 </CardHeader>
                 <form onSubmit={handleLogin}>
@@ -55,7 +57,7 @@ export default function LoginPage() {
                             </div>
                         )}
                         <div className="space-y-2">
-                            <Label htmlFor="username">Username</Label>
+                            <Label htmlFor="username">{t('login.username')}</Label>
                             <Input
                                 id="username"
                                 type="text"
@@ -66,7 +68,7 @@ export default function LoginPage() {
                             />
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="password">Password</Label>
+                            <Label htmlFor="password">{t('login.password')}</Label>
                             <Input
                                 id="password"
                                 type="password"
@@ -87,7 +89,7 @@ export default function LoginPage() {
                             ) : (
                                 <LogIn className="h-4 w-4 mr-2" />
                             )}
-                            {isLoading ? 'Logging in...' : 'Sign In'}
+                            {isLoading ? t('login.loggingIn') : t('login.signIn')}
                         </Button>
                     </CardFooter>
                 </form>

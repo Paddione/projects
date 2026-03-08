@@ -13,6 +13,7 @@ import {
     Cell,
 } from 'recharts';
 import { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { formatFileSize, formatDuration } from '@/lib/utils';
 import { DirectoryDatabase } from '@/services/directory-database';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -21,6 +22,7 @@ import { Input } from '@/components/ui/input';
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d', '#ffc658', '#8dd1e1', '#a4de6c', '#d0ed57'];
 
 export default function AnalyticsPage() {
+    const { t } = useTranslation();
     const { state } = useVideoManager();
     const { videos } = state;
     const [selectedRoot, setSelectedRoot] = useState<string>('all');
@@ -133,7 +135,7 @@ export default function AnalyticsPage() {
     return (
         <div className="p-6 space-y-6 overflow-y-auto h-full bg-background">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <h1 className="text-3xl font-bold text-foreground">Library Analytics</h1>
+                <h1 className="text-3xl font-bold text-foreground">{t('analytics.title')}</h1>
                 <div className="flex items-center gap-2 flex-wrap">
                     <Input
                         type="date"
@@ -152,10 +154,10 @@ export default function AnalyticsPage() {
                     />
                     <Select value={selectedRoot} onValueChange={setSelectedRoot}>
                         <SelectTrigger className="w-[200px]">
-                            <SelectValue placeholder="Filter by Root" />
+                            <SelectValue placeholder={t('analytics.filterByRoot')} />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="all">All Roots</SelectItem>
+                            <SelectItem value="all">{t('analytics.allRoots')}</SelectItem>
                             {roots.map((r) => (
                                 <SelectItem key={r.rootKey} value={r.rootKey}>
                                     {r.name}
@@ -170,7 +172,7 @@ export default function AnalyticsPage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <Card>
                     <CardHeader className="pb-2">
-                        <CardTitle className="text-sm font-medium text-muted-foreground">Total Videos</CardTitle>
+                        <CardTitle className="text-sm font-medium text-muted-foreground">{t('analytics.totalVideos')}</CardTitle>
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold">{stats.totalVideos}</div>
@@ -178,7 +180,7 @@ export default function AnalyticsPage() {
                 </Card>
                 <Card>
                     <CardHeader className="pb-2">
-                        <CardTitle className="text-sm font-medium text-muted-foreground">Total Size</CardTitle>
+                        <CardTitle className="text-sm font-medium text-muted-foreground">{t('analytics.totalSize')}</CardTitle>
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold">{formatFileSize(stats.totalSize)}</div>
@@ -186,7 +188,7 @@ export default function AnalyticsPage() {
                 </Card>
                 <Card>
                     <CardHeader className="pb-2">
-                        <CardTitle className="text-sm font-medium text-muted-foreground">Total Duration</CardTitle>
+                        <CardTitle className="text-sm font-medium text-muted-foreground">{t('analytics.totalDuration')}</CardTitle>
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold">{formatDuration(stats.totalDuration)}</div>
@@ -198,8 +200,8 @@ export default function AnalyticsPage() {
                 {/* Top Categories */}
                 <Card>
                     <CardHeader>
-                        <CardTitle>Top Categories</CardTitle>
-                        <CardDescription>Most frequently used tags and categories</CardDescription>
+                        <CardTitle>{t('analytics.topCategories')}</CardTitle>
+                        <CardDescription>{t('analytics.topCategoriesDesc')}</CardDescription>
                     </CardHeader>
                     <CardContent className="h-[300px]">
                         <ResponsiveContainer width="100%" height="100%">
@@ -227,8 +229,8 @@ export default function AnalyticsPage() {
                 {/* File Size Distribution */}
                 <Card>
                     <CardHeader>
-                        <CardTitle>File Size Distribution</CardTitle>
-                        <CardDescription>Count of videos by file size</CardDescription>
+                        <CardTitle>{t('analytics.fileSizeDistribution')}</CardTitle>
+                        <CardDescription>{t('analytics.fileSizeDistributionDesc')}</CardDescription>
                     </CardHeader>
                     <CardContent className="h-[300px]">
                         <ResponsiveContainer width="100%" height="100%">
@@ -248,8 +250,8 @@ export default function AnalyticsPage() {
                 {/* Duration Distribution */}
                 <Card>
                     <CardHeader>
-                        <CardTitle>Duration Distribution</CardTitle>
-                        <CardDescription>Count of videos by duration</CardDescription>
+                        <CardTitle>{t('analytics.durationDistribution')}</CardTitle>
+                        <CardDescription>{t('analytics.durationDistributionDesc')}</CardDescription>
                     </CardHeader>
                     <CardContent className="h-[300px]">
                         <ResponsiveContainer width="100%" height="100%">

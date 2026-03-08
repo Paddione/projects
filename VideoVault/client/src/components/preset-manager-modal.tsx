@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -20,6 +21,7 @@ interface PresetManagerModalProps {
 }
 
 export function PresetManagerModal({ isOpen, onClose, onLoadPreset }: PresetManagerModalProps) {
+  const { t } = useTranslation();
   const [presets, setPresets] = useState<FilterPreset[]>([]);
   const [newPresetName, setNewPresetName] = useState('');
 
@@ -81,9 +83,9 @@ export function PresetManagerModal({ isOpen, onClose, onLoadPreset }: PresetMana
         const data = e.target?.result as string;
         const count = FilterPresetsService.importPresets(data);
         setPresets(FilterPresetsService.loadAllPresets());
-        alert(`Imported ${count} presets successfully!`);
+        alert(t('presets.importSuccess', { count }));
       } catch (error) {
-        alert('Failed to import presets: ' + (error as Error).message);
+        alert(t('presets.importFailed', { error: (error as Error).message }));
       }
     };
     reader.readAsText(file);
@@ -98,10 +100,9 @@ export function PresetManagerModal({ isOpen, onClose, onLoadPreset }: PresetMana
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle>Filter Preset Manager</DialogTitle>
+          <DialogTitle>{t('presets.title')}</DialogTitle>
           <DialogDescription>
-            Save, load, and manage your filter presets for quick access to common filter
-            combinations.
+            {t('presets.description')}
           </DialogDescription>
         </DialogHeader>
 
@@ -109,14 +110,14 @@ export function PresetManagerModal({ isOpen, onClose, onLoadPreset }: PresetMana
           {/* Create New Preset */}
           <div className="flex items-center space-x-2">
             <Input
-              placeholder="New preset name"
+              placeholder={t('presets.newPresetPlaceholder')}
               value={newPresetName}
               onChange={(e) => setNewPresetName(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && handleSavePreset()}
             />
             <Button onClick={handleSavePreset} disabled={!newPresetName.trim()}>
               <Plus className="h-4 w-4 mr-2" />
-              Save
+              {t('common.save')}
             </Button>
           </div>
 
@@ -124,7 +125,7 @@ export function PresetManagerModal({ isOpen, onClose, onLoadPreset }: PresetMana
           <div className="max-h-64 overflow-y-auto space-y-2">
             {presets.length === 0 ? (
               <p className="text-center text-muted-foreground py-4">
-                No presets saved yet. Create your first preset above.
+                {t('presets.noPresets')}
               </p>
             ) : (
               presets.map((preset) => (
@@ -135,13 +136,13 @@ export function PresetManagerModal({ isOpen, onClose, onLoadPreset }: PresetMana
                   <div className="flex-1">
                     <h4 className="font-medium">{preset.name}</h4>
                     <p className="text-sm text-muted-foreground">
-                      {preset.categories.length > 0 && `${preset.categories.length} categories`}
+                      {preset.categories.length > 0 && `${preset.categories.length} ${t('presets.categories')}`}
                       {preset.searchQuery && ` • "${preset.searchQuery}"`}
-                      {preset.dateRange.startDate && preset.dateRange.endDate && ' • Date range'}
+                      {preset.dateRange.startDate && preset.dateRange.endDate && ` • ${t('presets.dateRange')}`}
                       {preset.fileSizeRange.min > 0 ||
-                        (preset.fileSizeRange.max > 0 && ' • File size')}
+                        (preset.fileSizeRange.max > 0 && ` • ${t('presets.fileSize')}`)}
                       {preset.durationRange.min > 0 ||
-                        (preset.durationRange.max > 0 && ' • Duration')}
+                        (preset.durationRange.max > 0 && ` • ${t('presets.duration')}`)}
                     </p>
                   </div>
                   <div className="flex items-center space-x-2">
@@ -151,7 +152,7 @@ export function PresetManagerModal({ isOpen, onClose, onLoadPreset }: PresetMana
                       data-testid={`button-load-${preset.name}`}
                       onClick={() => handleLoadPreset(preset)}
                     >
-                      Load
+                      {t('presets.load')}
                     </Button>
                     <Button
                       variant="outline"
@@ -172,7 +173,7 @@ export function PresetManagerModal({ isOpen, onClose, onLoadPreset }: PresetMana
             <div className="flex items-center space-x-2">
               <Button variant="outline" size="sm" onClick={handleExportPresets}>
                 <Download className="h-4 w-4 mr-2" />
-                Export
+                {t('common.export')}
               </Button>
               <div className="relative">
                 <input
@@ -183,7 +184,7 @@ export function PresetManagerModal({ isOpen, onClose, onLoadPreset }: PresetMana
                 />
                 <Button variant="outline" size="sm">
                   <Upload className="h-4 w-4 mr-2" />
-                  Import
+                  {t('common.import')}
                 </Button>
               </div>
             </div>
@@ -191,7 +192,7 @@ export function PresetManagerModal({ isOpen, onClose, onLoadPreset }: PresetMana
         </div>
 
         <DialogFooter>
-          <Button onClick={onClose}>Close</Button>
+          <Button onClick={onClose}>{t('common.close')}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

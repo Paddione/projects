@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -14,6 +15,7 @@ interface PlaylistExportModalProps {
 }
 
 export function PlaylistExportModal({ isOpen, onClose, onExport, count }: PlaylistExportModalProps) {
+    const { t } = useTranslation();
     const [format, setFormat] = useState<'m3u' | 'json'>('m3u');
     const [pathType, setPathType] = useState<'absolute' | 'relative'>('absolute');
     const [filename, setFilename] = useState('playlist');
@@ -27,15 +29,15 @@ export function PlaylistExportModal({ isOpen, onClose, onExport, count }: Playli
         <Dialog open={isOpen} onOpenChange={onClose}>
             <DialogContent className="sm:max-w-[425px]">
                 <DialogHeader>
-                    <DialogTitle>Export Playlist</DialogTitle>
+                    <DialogTitle>{t('playlistExport.title')}</DialogTitle>
                     <DialogDescription>
-                        Create a playlist from the current {count} filtered videos.
+                        {t('playlistExport.description', { count })}
                     </DialogDescription>
                 </DialogHeader>
 
                 <div className="grid gap-4 py-4">
                     <div className="grid gap-2">
-                        <Label htmlFor="filename">Filename</Label>
+                        <Label htmlFor="filename">{t('playlistExport.filename')}</Label>
                         <Input
                             id="filename"
                             value={filename}
@@ -45,37 +47,37 @@ export function PlaylistExportModal({ isOpen, onClose, onExport, count }: Playli
                     </div>
 
                     <div className="grid gap-2">
-                        <Label>Format</Label>
+                        <Label>{t('playlistExport.format')}</Label>
                         <RadioGroup value={format} onValueChange={(v) => setFormat(v as 'm3u' | 'json')}>
                             <div className="flex items-center space-x-2">
                                 <RadioGroupItem value="m3u" id="m3u" />
-                                <Label htmlFor="m3u">M3U (Standard Playlist)</Label>
+                                <Label htmlFor="m3u">{t('playlistExport.m3u')}</Label>
                             </div>
                             <div className="flex items-center space-x-2">
                                 <RadioGroupItem value="json" id="json" />
-                                <Label htmlFor="json">JSON (Metadata)</Label>
+                                <Label htmlFor="json">{t('playlistExport.json')}</Label>
                             </div>
                         </RadioGroup>
                     </div>
 
                     <div className="grid gap-2">
-                        <Label>Path Type</Label>
+                        <Label>{t('playlistExport.pathType')}</Label>
                         <RadioGroup value={pathType} onValueChange={(v) => setPathType(v as 'absolute' | 'relative')}>
                             <div className="flex items-center space-x-2">
                                 <RadioGroupItem value="absolute" id="absolute" />
-                                <Label htmlFor="absolute">Absolute Paths</Label>
+                                <Label htmlFor="absolute">{t('playlistExport.absolutePaths')}</Label>
                             </div>
                             <div className="flex items-center space-x-2">
                                 <RadioGroupItem value="relative" id="relative" />
-                                <Label htmlFor="relative">Relative Paths (Experimental)</Label>
+                                <Label htmlFor="relative">{t('playlistExport.relativePaths')}</Label>
                             </div>
                         </RadioGroup>
                     </div>
                 </div>
 
                 <DialogFooter>
-                    <Button variant="outline" onClick={onClose}>Cancel</Button>
-                    <Button onClick={handleExport}>Export</Button>
+                    <Button variant="outline" onClick={onClose}>{t('common.cancel')}</Button>
+                    <Button onClick={handleExport}>{t('common.export')}</Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>

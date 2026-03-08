@@ -150,16 +150,16 @@ export function SettingsModal({ isOpen, onClose, onSettingsChange }: SettingsMod
   };
 
   const handleCleanupMissing = async () => {
-    if (!confirm('This will remove all database entries that do not have a corresponding file on disk. Continue?')) {
+    if (!confirm(t('settings.confirmCleanup'))) {
       return;
     }
 
     setIsCleaning(true);
     try {
       const result = await VideoDatabase.cleanupMissingVideos();
-      alert(`Cleanup complete! Removed ${result.deletedCount} missing entries.`);
+      alert(t('settings.cleanupComplete', { count: result.deletedCount }));
     } catch (error: any) {
-      alert(`Cleanup failed: ${error.message}`);
+      alert(t('settings.cleanupFailed', { error: error.message }));
     } finally {
       setIsCleaning(false);
     }
@@ -171,7 +171,7 @@ export function SettingsModal({ isOpen, onClose, onSettingsChange }: SettingsMod
       const result = await ApiClient.post<{ queued: number; message: string }>('/api/processing/movies/rescan');
       alert(result.message);
     } catch (error: any) {
-      alert(`Rescan failed: ${error.message}`);
+      alert(t('settings.rescanFailed', { error: error.message }));
     } finally {
       setIsRescanning(false);
     }
@@ -181,9 +181,9 @@ export function SettingsModal({ isOpen, onClose, onSettingsChange }: SettingsMod
     setIsProcessingHddExt(true);
     try {
       const result = await ApiClient.post<{ indexed: number; skipped: number; errors: number; total: number }>('/api/processing/hdd-ext/index');
-      alert(`HDD-ext index complete — ${result.indexed} indexed, ${result.skipped} skipped, ${result.errors} errors (${result.total} total)`);
+      alert(t('settings.indexComplete', { indexed: result.indexed, skipped: result.skipped, errors: result.errors, total: result.total }));
     } catch (error: any) {
-      alert(`HDD-ext indexing failed: ${error.message}`);
+      alert(t('settings.indexFailed', { error: error.message }));
     } finally {
       setIsProcessingHddExt(false);
     }
@@ -191,7 +191,7 @@ export function SettingsModal({ isOpen, onClose, onSettingsChange }: SettingsMod
 
   const handleClose = () => {
     if (hasChanges) {
-      if (confirm('You have unsaved changes. Are you sure you want to close?')) {
+      if (confirm(t('settings.unsavedChanges'))) {
         onClose();
       }
     } else {
@@ -205,9 +205,9 @@ export function SettingsModal({ isOpen, onClose, onSettingsChange }: SettingsMod
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Settings className="h-5 w-5" />
-            Settings
+            {t('settings.title')}
           </DialogTitle>
-          <DialogDescription>Configure VideoVault preferences and behavior</DialogDescription>
+          <DialogDescription>{t('settings.description')}</DialogDescription>
         </DialogHeader>
 
         {/* Auth status */}
@@ -217,7 +217,7 @@ export function SettingsModal({ isOpen, onClose, onSettingsChange }: SettingsMod
               className={isAdmin ? 'text-green-600 h-4 w-4' : 'text-amber-600 h-4 w-4'}
             />
             <span className="text-foreground">
-              {isAdmin ? 'Logged in as admin' : 'Admin features locked. Login required.'}
+              {isAdmin ? t('settings.loggedInAsAdmin') : t('settings.adminLocked')}
             </span>
           </div>
           <div className="flex items-center gap-2">
@@ -229,7 +229,7 @@ export function SettingsModal({ isOpen, onClose, onSettingsChange }: SettingsMod
                 className="text-primary text-sm inline-flex items-center gap-1"
                 data-testid="button-admin-login-inline"
               >
-                <LogIn className="h-4 w-4" /> Login
+                <LogIn className="h-4 w-4" /> {t('common.login')}
               </button>
             ) : (
               <button
@@ -239,7 +239,7 @@ export function SettingsModal({ isOpen, onClose, onSettingsChange }: SettingsMod
                 className="text-muted-foreground text-sm inline-flex items-center gap-1"
                 data-testid="button-admin-logout-inline"
               >
-                <LogOut className="h-4 w-4" /> Logout
+                <LogOut className="h-4 w-4" /> {t('common.logout')}
               </button>
             )}
           </div>
@@ -250,26 +250,26 @@ export function SettingsModal({ isOpen, onClose, onSettingsChange }: SettingsMod
           <div className="space-y-4">
             <div className="flex items-center gap-2">
               <FileVideo className="h-4 w-4 text-primary" />
-              <h3 className="font-medium">File Scanning</h3>
+              <h3 className="font-medium">{t('settings.fileScanning')}</h3>
             </div>
 
             <div className="space-y-3">
               <div>
-                <Label htmlFor="extensions">Supported File Extensions</Label>
+                <Label htmlFor="extensions">{t('settings.supportedExtensions')}</Label>
                 <Input
                   id="extensions"
                   value={settings.supportedExtensions.join(', ')}
                   onChange={(e) => handleExtensionsChange(e.target.value)}
-                  placeholder="mp4, avi, mkv, mov, wmv, webm, m4v"
+                  placeholder={t('settings.extensionsPlaceholder')}
                   className="mt-1"
                 />
                 <p className="text-xs text-muted-foreground mt-1">
-                  Comma-separated list of video file extensions (without dots)
+                  {t('settings.extensionsHelp')}
                 </p>
               </div>
 
               <div>
-                <Label htmlFor="concurrency">Max Scan Concurrency</Label>
+                <Label htmlFor="concurrency">{t('settings.maxConcurrency')}</Label>
                 <Select
                   value={settings.maxScanConcurrency.toString()}
                   onValueChange={(value) =>
@@ -280,14 +280,14 @@ export function SettingsModal({ isOpen, onClose, onSettingsChange }: SettingsMod
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="2">2 files at once</SelectItem>
-                    <SelectItem value="4">4 files at once</SelectItem>
-                    <SelectItem value="8">8 files at once</SelectItem>
-                    <SelectItem value="16">16 files at once</SelectItem>
+                    <SelectItem value="2">{t('settings.concurrencyFiles', { count: 2 })}</SelectItem>
+                    <SelectItem value="4">{t('settings.concurrencyFiles', { count: 4 })}</SelectItem>
+                    <SelectItem value="8">{t('settings.concurrencyFiles', { count: 8 })}</SelectItem>
+                    <SelectItem value="16">{t('settings.concurrencyFiles', { count: 16 })}</SelectItem>
                   </SelectContent>
                 </Select>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Higher values scan faster but may impact system performance
+                  {t('settings.concurrencyHelp')}
                 </p>
               </div>
             </div>
@@ -299,11 +299,11 @@ export function SettingsModal({ isOpen, onClose, onSettingsChange }: SettingsMod
           <div className="space-y-4">
             <div className="flex items-center gap-2">
               <Languages className="h-4 w-4 text-primary" />
-              <h3 className="font-medium">Language</h3>
+              <h3 className="font-medium">{t('settings.language')}</h3>
             </div>
             <div className="space-y-3">
               <div>
-                <Label htmlFor="language">Display Language</Label>
+                <Label htmlFor="language">{t('settings.displayLanguage')}</Label>
                 <Select
                   value={i18n.language}
                   onValueChange={(value) => i18n.changeLanguage(value)}
@@ -312,8 +312,8 @@ export function SettingsModal({ isOpen, onClose, onSettingsChange }: SettingsMod
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="en">English</SelectItem>
-                    <SelectItem value="de">Deutsch</SelectItem>
+                    <SelectItem value="en">{t('settings.langEnglish')}</SelectItem>
+                    <SelectItem value="de">{t('settings.langGerman')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -326,13 +326,13 @@ export function SettingsModal({ isOpen, onClose, onSettingsChange }: SettingsMod
           <div className="space-y-4">
             <div className="flex items-center gap-2">
               <Monitor className="h-4 w-4 text-primary" />
-              <h3 className="font-medium">Interface</h3>
+              <h3 className="font-medium">{t('settings.interface')}</h3>
             </div>
 
             <div className="space-y-3">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="defaultSort">Default Sort</Label>
+                  <Label htmlFor="defaultSort">{t('settings.defaultSort')}</Label>
                   <Select
                     value={settings.defaultSortField}
                     onValueChange={(value: Settings['defaultSortField']) =>
@@ -343,17 +343,17 @@ export function SettingsModal({ isOpen, onClose, onSettingsChange }: SettingsMod
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="displayName">Name</SelectItem>
-                      <SelectItem value="lastModified">Date Modified</SelectItem>
-                      <SelectItem value="size">File Size</SelectItem>
-                      <SelectItem value="path">Path</SelectItem>
-                      <SelectItem value="categoryCount">Category Count</SelectItem>
+                      <SelectItem value="displayName">{t('settings.sortName')}</SelectItem>
+                      <SelectItem value="lastModified">{t('settings.sortDateModified')}</SelectItem>
+                      <SelectItem value="size">{t('settings.sortFileSize')}</SelectItem>
+                      <SelectItem value="path">{t('settings.sortPath')}</SelectItem>
+                      <SelectItem value="categoryCount">{t('settings.sortCategoryCount')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
                 <div>
-                  <Label htmlFor="sortDirection">Sort Direction</Label>
+                  <Label htmlFor="sortDirection">{t('settings.sortDirection')}</Label>
                   <Select
                     value={settings.defaultSortDirection}
                     onValueChange={(value: Settings['defaultSortDirection']) =>
@@ -364,15 +364,15 @@ export function SettingsModal({ isOpen, onClose, onSettingsChange }: SettingsMod
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="asc">Ascending</SelectItem>
-                      <SelectItem value="desc">Descending</SelectItem>
+                      <SelectItem value="asc">{t('settings.sortAscending')}</SelectItem>
+                      <SelectItem value="desc">{t('settings.sortDescending')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
               </div>
 
               <div>
-                <Label htmlFor="uiDensity">UI Density</Label>
+                <Label htmlFor="uiDensity">{t('settings.uiDensity')}</Label>
                 <Select
                   value={settings.uiDensity}
                   onValueChange={(value: Settings['uiDensity']) =>
@@ -383,16 +383,16 @@ export function SettingsModal({ isOpen, onClose, onSettingsChange }: SettingsMod
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="compact">Compact</SelectItem>
-                    <SelectItem value="comfortable">Comfortable</SelectItem>
-                    <SelectItem value="spacious">Spacious</SelectItem>
+                    <SelectItem value="compact">{t('settings.densityCompact')}</SelectItem>
+                    <SelectItem value="comfortable">{t('settings.densityComfortable')}</SelectItem>
+                    <SelectItem value="spacious">{t('settings.densitySpacious')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="showThumbnails">Show Thumbnails</Label>
+                  <Label htmlFor="showThumbnails">{t('settings.showThumbnails')}</Label>
                   <Switch
                     id="showThumbnails"
                     checked={settings.showThumbnails}
@@ -401,7 +401,7 @@ export function SettingsModal({ isOpen, onClose, onSettingsChange }: SettingsMod
                 </div>
 
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="showHoverPreviews">Show Hover Previews</Label>
+                  <Label htmlFor="showHoverPreviews">{t('settings.showHoverPreviews')}</Label>
                   <Switch
                     id="showHoverPreviews"
                     checked={settings.showHoverPreviews}
@@ -418,12 +418,12 @@ export function SettingsModal({ isOpen, onClose, onSettingsChange }: SettingsMod
           <div className="space-y-4">
             <div className="flex items-center gap-2">
               <Keyboard className="h-4 w-4 text-primary" />
-              <h3 className="font-medium">Keyboard Navigation</h3>
+              <h3 className="font-medium">{t('settings.keyboardNavigation')}</h3>
             </div>
 
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <Label htmlFor="enableKeyboardNav">Enable Arrow Key Navigation</Label>
+                <Label htmlFor="enableKeyboardNav">{t('settings.enableArrowKeys')}</Label>
                 <Switch
                   id="enableKeyboardNav"
                   checked={settings.enableKeyboardNavigation}
@@ -434,7 +434,7 @@ export function SettingsModal({ isOpen, onClose, onSettingsChange }: SettingsMod
               </div>
 
               <div className="flex items-center justify-between">
-                <Label htmlFor="enableShortcuts">Enable Keyboard Shortcuts</Label>
+                <Label htmlFor="enableShortcuts">{t('settings.enableShortcuts')}</Label>
                 <Switch
                   id="enableShortcuts"
                   checked={settings.enableKeyboardShortcuts}
@@ -446,25 +446,25 @@ export function SettingsModal({ isOpen, onClose, onSettingsChange }: SettingsMod
 
               {settings.enableKeyboardShortcuts && (
                 <div className="bg-muted p-3 rounded-md text-sm">
-                  <h4 className="font-medium mb-2">Available Shortcuts:</h4>
+                  <h4 className="font-medium mb-2">{t('settings.availableShortcuts')}</h4>
                   <div className="grid grid-cols-2 gap-2 text-xs">
                     <div>
-                      <kbd className="bg-background px-1 py-0.5 rounded">E</kbd> Edit tags
+                      <kbd className="bg-background px-1 py-0.5 rounded">E</kbd> {t('settings.shortcutEditTags')}
                     </div>
                     <div>
-                      <kbd className="bg-background px-1 py-0.5 rounded">R</kbd> Rename
+                      <kbd className="bg-background px-1 py-0.5 rounded">R</kbd> {t('settings.shortcutRename')}
                     </div>
                     <div>
-                      <kbd className="bg-background px-1 py-0.5 rounded">M</kbd> Move
+                      <kbd className="bg-background px-1 py-0.5 rounded">M</kbd> {t('settings.shortcutMove')}
                     </div>
                     <div>
-                      <kbd className="bg-background px-1 py-0.5 rounded">Delete</kbd> Delete
+                      <kbd className="bg-background px-1 py-0.5 rounded">Delete</kbd> {t('settings.shortcutDelete')}
                     </div>
                     <div>
-                      <kbd className="bg-background px-1 py-0.5 rounded">Space</kbd> Play
+                      <kbd className="bg-background px-1 py-0.5 rounded">Space</kbd> {t('settings.shortcutPlay')}
                     </div>
                     <div>
-                      <kbd className="bg-background px-1 py-0.5 rounded">Esc</kbd> Clear focus
+                      <kbd className="bg-background px-1 py-0.5 rounded">Esc</kbd> {t('settings.shortcutClearFocus')}
                     </div>
                   </div>
                 </div>
@@ -478,12 +478,12 @@ export function SettingsModal({ isOpen, onClose, onSettingsChange }: SettingsMod
           <div className="space-y-4">
             <div className="flex items-center gap-2">
               <Palette className="h-4 w-4 text-primary" />
-              <h3 className="font-medium">Performance</h3>
+              <h3 className="font-medium">{t('settings.performance')}</h3>
             </div>
 
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <Label htmlFor="enableVirtualization">Enable Virtualization</Label>
+                <Label htmlFor="enableVirtualization">{t('settings.enableVirtualization')}</Label>
                 <Switch
                   id="enableVirtualization"
                   checked={settings.enableVirtualization}
@@ -495,7 +495,7 @@ export function SettingsModal({ isOpen, onClose, onSettingsChange }: SettingsMod
 
               {settings.enableVirtualization && (
                 <div>
-                  <Label htmlFor="virtualizationThreshold">Virtualization Threshold</Label>
+                  <Label htmlFor="virtualizationThreshold">{t('settings.virtualizationThreshold')}</Label>
                   <Select
                     value={settings.virtualizationThreshold.toString()}
                     onValueChange={(value) =>
@@ -506,20 +506,20 @@ export function SettingsModal({ isOpen, onClose, onSettingsChange }: SettingsMod
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="30">30 videos</SelectItem>
-                      <SelectItem value="60">60 videos</SelectItem>
-                      <SelectItem value="100">100 videos</SelectItem>
-                      <SelectItem value="200">200 videos</SelectItem>
+                      <SelectItem value="30">{t('settings.videosThreshold', { count: 30 })}</SelectItem>
+                      <SelectItem value="60">{t('settings.videosThreshold', { count: 60 })}</SelectItem>
+                      <SelectItem value="100">{t('settings.videosThreshold', { count: 100 })}</SelectItem>
+                      <SelectItem value="200">{t('settings.videosThreshold', { count: 200 })}</SelectItem>
                     </SelectContent>
                   </Select>
                   <p className="text-xs text-muted-foreground mt-1">
-                    Enable virtualization when library exceeds this number
+                    {t('settings.virtualizationHelp')}
                   </p>
                 </div>
               )}
 
               <div>
-                <Label htmlFor="thumbnailQuality">Thumbnail Quality</Label>
+                <Label htmlFor="thumbnailQuality">{t('settings.thumbnailQuality')}</Label>
                 <Select
                   value={settings.thumbnailQuality}
                   onValueChange={(value: Settings['thumbnailQuality']) =>
@@ -530,15 +530,15 @@ export function SettingsModal({ isOpen, onClose, onSettingsChange }: SettingsMod
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="low">Low (faster generation)</SelectItem>
-                    <SelectItem value="medium">Medium (balanced)</SelectItem>
-                    <SelectItem value="high">High (slower generation)</SelectItem>
+                    <SelectItem value="low">{t('settings.qualityLow')}</SelectItem>
+                    <SelectItem value="medium">{t('settings.qualityMedium')}</SelectItem>
+                    <SelectItem value="high">{t('settings.qualityHigh')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <div className="flex items-center justify-between">
-                <Label htmlFor="enableSpriteThumbs">Enable Sprite Thumbnails (hover preview)</Label>
+                <Label htmlFor="enableSpriteThumbs">{t('settings.enableSpriteThumbnails')}</Label>
                 <Switch
                   id="enableSpriteThumbs"
                   checked={settings.enableSpriteThumbnails}
@@ -548,7 +548,7 @@ export function SettingsModal({ isOpen, onClose, onSettingsChange }: SettingsMod
                 />
               </div>
               <p className="text-xs text-muted-foreground">
-                Disable on low-power devices to reduce CPU/memory during hover previews.
+                {t('settings.spriteThumbnailsHelp')}
               </p>
             </div>
           </div>
@@ -559,14 +559,14 @@ export function SettingsModal({ isOpen, onClose, onSettingsChange }: SettingsMod
           <div className="space-y-4">
             <div className="flex items-center gap-2">
               <Trash2 className="h-4 w-4 text-primary" />
-              <h3 className="font-medium">Maintenance</h3>
+              <h3 className="font-medium">{t('settings.maintenance')}</h3>
             </div>
 
             <div className="space-y-3">
               <div className="flex flex-col gap-2">
-                <Label>Database Cleanup</Label>
+                <Label>{t('settings.databaseCleanup')}</Label>
                 <p className="text-xs text-muted-foreground">
-                  Remove entries for files that no longer exist on disk. Use this if you have moved or deleted files outside of VideoVault.
+                  {t('settings.cleanupHelp')}
                 </p>
                 <Button
                   variant="destructive"
@@ -576,19 +576,19 @@ export function SettingsModal({ isOpen, onClose, onSettingsChange }: SettingsMod
                   className="w-fit flex items-center gap-2"
                 >
                   {isCleaning ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
-                  Clear Missing Entries
+                  {t('settings.clearMissingEntries')}
                 </Button>
                 {!isAdmin && (
                   <p className="text-xs text-amber-600 flex items-center gap-1">
-                    <ShieldAlert className="h-3 w-3" /> Admin login required for cleanup
+                    <ShieldAlert className="h-3 w-3" /> {t('settings.adminRequiredCleanup')}
                   </p>
                 )}
               </div>
 
               <div className="flex flex-col gap-2">
-                <Label>Rescan Movies</Label>
+                <Label>{t('settings.rescanMovies')}</Label>
                 <p className="text-xs text-muted-foreground">
-                  Force a fresh scan of the movies directory. Queues any files missing thumbnails for processing.
+                  {t('settings.rescanMoviesHelp')}
                 </p>
                 <Button
                   variant="outline"
@@ -598,14 +598,14 @@ export function SettingsModal({ isOpen, onClose, onSettingsChange }: SettingsMod
                   className="w-fit flex items-center gap-2"
                 >
                   {isRescanning ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
-                  Rescan Movies
+                  {t('settings.rescanMovies')}
                 </Button>
               </div>
 
               <div className="flex flex-col gap-2">
-                <Label>Index HDD-ext</Label>
+                <Label>{t('settings.indexHddExt')}</Label>
                 <p className="text-xs text-muted-foreground">
-                  Index all videos on the external HDD share into the library grid. Uses existing thumbnails — no ffmpeg processing needed.
+                  {t('settings.indexHddExtHelp')}
                 </p>
                 <Button
                   variant="outline"
@@ -615,7 +615,7 @@ export function SettingsModal({ isOpen, onClose, onSettingsChange }: SettingsMod
                   className="w-fit flex items-center gap-2"
                 >
                   {isProcessingHddExt ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
-                  Index HDD-ext
+                  {t('settings.indexHddExt')}
                 </Button>
               </div>
             </div>
@@ -625,12 +625,12 @@ export function SettingsModal({ isOpen, onClose, onSettingsChange }: SettingsMod
         <DialogFooter className="flex justify-between">
           <Button variant="outline" onClick={handleReset} className="flex items-center gap-2">
             <RotateCcw className="h-4 w-4" />
-            Reset to Defaults
+            {t('settings.resetToDefaults')}
           </Button>
 
           <div className="flex gap-2">
             <Button variant="outline" onClick={handleClose}>
-              Cancel
+              {t('common.cancel')}
             </Button>
             <Button
               onClick={() => {
@@ -640,7 +640,7 @@ export function SettingsModal({ isOpen, onClose, onSettingsChange }: SettingsMod
               className="flex items-center gap-2"
             >
               <Save className="h-4 w-4" />
-              Save Changes
+              {t('settings.saveChanges')}
             </Button>
           </div>
         </DialogFooter>

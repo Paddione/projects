@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Dialog,
   DialogContent,
@@ -31,6 +32,7 @@ export function RenameModal({
   onClose,
   onSubmit,
 }: RenameModalProps) {
+  const { t } = useTranslation();
   const [name, setName] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | undefined>(undefined);
@@ -46,7 +48,7 @@ export function RenameModal({
 
   const handleSubmit = async () => {
     if (!name.trim()) {
-      setError('Name cannot be empty');
+      setError(t('rename.emptyError'));
       return;
     }
     setIsSubmitting(true);
@@ -63,16 +65,16 @@ export function RenameModal({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Rename Video</DialogTitle>
+          <DialogTitle>{t('rename.title')}</DialogTitle>
           <DialogDescription>
-            Update the display name and optionally the file name on disk.
+            {t('rename.description')}
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-3">
           <Input
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="New name"
+            placeholder={t('rename.placeholder')}
             data-testid="input-rename"
           />
           {error && <p className="text-sm text-red-600">{error}</p>}
@@ -84,13 +86,13 @@ export function RenameModal({
               onClick={() => setName(buildNameFromCategories(video))}
               data-testid="button-name-from-categories"
             >
-              From Categories
+              {t('rename.fromCategories')}
             </Button>
           </div>
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={onClose} disabled={isSubmitting}>
-            Cancel
+            {t('common.cancel')}
           </Button>
           <Button
             onClick={() => {
@@ -99,7 +101,7 @@ export function RenameModal({
             disabled={isSubmitting}
             data-testid="button-rename-submit"
           >
-            Save
+            {t('common.save')}
           </Button>
         </DialogFooter>
       </DialogContent>

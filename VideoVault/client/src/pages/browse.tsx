@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -49,6 +50,7 @@ function formatDate(iso?: string): string {
 }
 
 export default function BrowsePage() {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const [currentPath, setCurrentPath] = useState('');
   const [entries, setEntries] = useState<BrowseEntry[]>([]);
@@ -130,12 +132,12 @@ export default function BrowsePage() {
       const filePath = currentPath ? `${currentPath}/${entry.name}` : entry.name;
       await ApiClient.post('/api/processing/hdd-ext/process', { filePath });
       toast({
-        title: 'Processing queued',
-        description: `${entry.name} has been queued for processing`,
+        title: t('browse.processingQueued'),
+        description: t('browse.processingQueuedDesc', { name: entry.name }),
       });
     } catch (err: any) {
       toast({
-        title: 'Import failed',
+        title: t('browse.importFailed'),
         description: err.message,
         variant: 'destructive',
       });
@@ -169,12 +171,12 @@ export default function BrowsePage() {
             <Link href="/">
               <Button variant="ghost" size="sm" className="min-h-[40px]">
                 <ArrowLeft className="mr-2 h-4 w-4" />
-                Back
+                {t('common.back')}
               </Button>
             </Link>
             <div className="flex items-center gap-2">
               <HardDrive className="h-6 w-6 text-primary" />
-              <h1 className="text-xl font-bold">HDD-ext Browser</h1>
+              <h1 className="text-xl font-bold">{t('browse.title')}</h1>
             </div>
           </div>
         </div>
@@ -185,7 +187,7 @@ export default function BrowsePage() {
             onClick={() => { setCurrentPath(''); void fetchDirectory(''); }}
             className="text-primary hover:underline font-medium"
           >
-            HDD-ext
+            {t('browse.root')}
           </button>
           {pathParts.map((part, i) => (
             <span key={i} className="flex items-center gap-1">
@@ -215,14 +217,14 @@ export default function BrowsePage() {
         {error && (
           <div className="text-center py-20">
             <p className="text-destructive mb-4">{error}</p>
-            <Button onClick={() => void fetchDirectory(currentPath)}>Retry</Button>
+            <Button onClick={() => void fetchDirectory(currentPath)}>{t('common.retry')}</Button>
           </div>
         )}
 
         {!loading && !error && entries.length === 0 && (
           <div className="text-center py-20 text-muted-foreground">
             <Folder className="h-16 w-16 mx-auto mb-4 opacity-30" />
-            <p>This directory is empty</p>
+            <p>{t('browse.directoryEmpty')}</p>
           </div>
         )}
 
@@ -230,9 +232,9 @@ export default function BrowsePage() {
           <>
             {/* Stats bar */}
             <div className="mb-4 flex items-center gap-3 text-sm text-muted-foreground">
-              <span>{entries.filter((e) => e.type === 'directory').length} folders</span>
-              <span>{videoEntries.length} videos</span>
-              <span>{entries.filter((e) => e.type === 'file' && !e.isVideo).length} other files</span>
+              <span>{entries.filter((e) => e.type === 'directory').length} {t('browse.folders')}</span>
+              <span>{videoEntries.length} {t('browse.videos')}</span>
+              <span>{entries.filter((e) => e.type === 'file' && !e.isVideo).length} {t('browse.otherFiles')}</span>
             </div>
 
             {/* Back button when in subdirectory */}
@@ -301,7 +303,7 @@ export default function BrowsePage() {
                             variant="ghost"
                             size="sm"
                             className="h-8 w-8 p-0"
-                            title="Play"
+                            title={t('actions.play')}
                             onClick={() => playVideo(entry)}
                           >
                             <Play className="h-4 w-4" />
@@ -310,7 +312,7 @@ export default function BrowsePage() {
                             variant="ghost"
                             size="sm"
                             className="h-8 w-8 p-0"
-                            title="Import to Library"
+                            title={t('browse.importToLibrary')}
                             disabled={processingFile === entry.name}
                             onClick={() => void handleImportToLibrary(entry)}
                           >

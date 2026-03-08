@@ -121,6 +121,36 @@ vi.mock('@/components/ui/popover', async () => {
   };
 });
 
+// Mock react-i18next so t() returns the key (with interpolation values appended)
+vi.mock('react-i18next', () => ({
+  useTranslation: () => ({
+    t: (key: string, opts?: Record<string, unknown>) => {
+      if (opts && typeof opts === 'object') {
+        const vars = Object.entries(opts)
+          .filter(([k]) => k !== 'defaultValue')
+          .map(([, v]) => v)
+          .join(', ');
+        return vars ? `${key} ${vars}` : key;
+      }
+      return key;
+    },
+    i18n: {
+      language: 'en',
+      changeLanguage: vi.fn(),
+    },
+  }),
+  withTranslation: () => (Component: any) => {
+    Component.defaultProps = {
+      ...Component.defaultProps,
+      t: (key: string) => key,
+      i18n: { language: 'en', changeLanguage: vi.fn() },
+    };
+    return Component;
+  },
+  Trans: ({ children }: any) => children,
+  initReactI18next: { type: '3rdParty', init: vi.fn() },
+}));
+
 // Avoid pulling in heavy instant-search stack; delegate to basic FilterEngine
 vi.mock('@/services/enhanced-filter-engine', () => {
   function videoHasCategory(video: any, categoryKey: string): boolean {

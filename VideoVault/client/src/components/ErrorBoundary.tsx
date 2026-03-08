@@ -3,8 +3,9 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { AlertTriangle, RefreshCw, Home, Bug, Copy } from 'lucide-react';
 import { handleError } from '@/lib/error-handler';
+import { withTranslation, WithTranslation } from 'react-i18next';
 
-interface Props {
+interface Props extends WithTranslation {
   children: ReactNode;
   fallback?: ReactNode;
 }
@@ -95,12 +96,12 @@ export class ErrorBoundary extends Component<Props, State> {
               <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10">
                 <AlertTriangle className="h-6 w-6 text-destructive" />
               </div>
-              <CardTitle className="text-xl">Something went wrong</CardTitle>
+              <CardTitle className="text-xl">{this.props.t('errorBoundary.title')}</CardTitle>
               <CardDescription>
-                An unexpected error occurred. Don't worry, your data is safe.
+                {this.props.t('errorBoundary.description')}
                 {this.state.errorId && (
                   <div className="mt-2 text-xs text-muted-foreground">
-                    Error ID:{' '}
+                    {this.props.t('errorBoundary.errorId')}{' '}
                     <code className="px-1 py-0.5 bg-muted rounded select-all">
                       {this.state.errorId}
                     </code>
@@ -112,7 +113,7 @@ export class ErrorBoundary extends Component<Props, State> {
               {process.env.NODE_ENV === 'development' && this.state.error && (
                 <details className="rounded-md bg-muted p-3 text-sm">
                   <summary className="cursor-pointer font-medium text-muted-foreground">
-                    Error details (development only)
+                    {this.props.t('errorBoundary.devDetails')}
                   </summary>
                   <div className="mt-2 font-mono text-xs">
                     <p className="text-destructive">{this.state.error.message}</p>
@@ -129,17 +130,17 @@ export class ErrorBoundary extends Component<Props, State> {
                 <div className="flex flex-col gap-2 sm:flex-row">
                   <Button onClick={this.handleRetry} className="flex-1">
                     <RefreshCw className="mr-2 h-4 w-4" />
-                    Try Again
+                    {this.props.t('errorBoundary.tryAgain')}
                   </Button>
                   <Button onClick={this.handleGoHome} variant="outline" className="flex-1">
                     <Home className="mr-2 h-4 w-4" />
-                    Go Home
+                    {this.props.t('errorBoundary.goHome')}
                   </Button>
                 </div>
 
                 {this.state.retryCount > 2 && (
                   <div className="text-center text-sm text-muted-foreground">
-                    <p>Still having issues? Try refreshing the page or clearing browser data.</p>
+                    <p>{this.props.t('errorBoundary.stillHavingIssues')}</p>
                   </div>
                 )}
 
@@ -151,11 +152,11 @@ export class ErrorBoundary extends Component<Props, State> {
                     disabled={!this.state.errorId}
                   >
                     <Copy className="mr-2 h-4 w-4" />
-                    Copy Error Details
+                    {this.props.t('errorBoundary.copyError')}
                   </Button>
                   <Button onClick={this.handleReportIssue} variant="ghost" size="sm">
                     <Bug className="mr-2 h-4 w-4" />
-                    Report Issue
+                    {this.props.t('errorBoundary.reportIssue')}
                   </Button>
                 </div>
               </div>
@@ -169,4 +170,4 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 }
 
-export default ErrorBoundary;
+export default withTranslation()(ErrorBoundary);

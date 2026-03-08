@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ApiClient, HttpError } from '@/services/api-client';
 import { serverHealth } from '@/services/server-health';
 import { AuthService } from '@/services/auth';
@@ -19,6 +20,7 @@ type ClientError = {
 };
 
 export default function AdminErrorsPage() {
+  const { t } = useTranslation();
   const [items, setItems] = useState<ClientError[]>([]);
   const [total, setTotal] = useState(0);
   const [limit, setLimit] = useState(50);
@@ -82,7 +84,7 @@ export default function AdminErrorsPage() {
   }
 
   async function deleteOne(id: string) {
-    if (!confirm('Delete this error log?')) return;
+    if (!confirm(t('adminErrors.confirmDelete'))) return;
     try {
       await ApiClient.delete(`/api/errors/${encodeURIComponent(id)}`);
       setSelected(null);
@@ -93,7 +95,7 @@ export default function AdminErrorsPage() {
   }
 
   async function bulkDelete() {
-    if (!confirm('Bulk delete matching logs? This cannot be undone.')) return;
+    if (!confirm(t('adminErrors.confirmBulkDelete'))) return;
     try {
       await ApiClient.post('/api/errors/bulk_delete', {
         before: to || undefined,
@@ -121,14 +123,14 @@ export default function AdminErrorsPage() {
 
   return (
     <div className="p-4 space-y-4">
-      <h1 className="text-xl font-semibold">Client Error Logs</h1>
+      <h1 className="text-xl font-semibold">{t('adminErrors.title')}</h1>
       {authRequired && (
         <form
           onSubmit={(e) => void doLogin(e)}
           className="border rounded p-3 flex gap-2 items-end max-w-md"
         >
           <div className="flex-1">
-            <label className="block text-sm font-medium">Username</label>
+            <label className="block text-sm font-medium">{t('login.username')}</label>
             <input
               className="border px-2 py-1 rounded w-full"
               value={username}
@@ -136,7 +138,7 @@ export default function AdminErrorsPage() {
             />
           </div>
           <div className="flex-1">
-            <label className="block text-sm font-medium">Password</label>
+            <label className="block text-sm font-medium">{t('login.password')}</label>
             <input
               type="password"
               className="border px-2 py-1 rounded w-full"
@@ -148,29 +150,29 @@ export default function AdminErrorsPage() {
             type="submit"
             className="border px-3 py-1 rounded bg-primary text-primary-foreground"
           >
-            Login
+            {t('common.login')}
           </button>
-          {authError && <div className="text-destructive text-sm ml-2">{authError}</div>}
+          {authError && <div className="text-destructive text-sm ml-2">{t('login.invalidCredentials')}</div>}
         </form>
       )}
       <div className="flex gap-2 items-end flex-wrap">
         <div>
-          <label className="block text-sm font-medium">Code</label>
+          <label className="block text-sm font-medium">{t('adminErrors.code')}</label>
           <input
             value={code}
             onChange={(e) => setCode(e.target.value)}
             className="border px-2 py-1 rounded w-48"
-            placeholder="e.g. NETWORK_ERROR"
+            placeholder={t('adminErrors.codePlaceholder')}
           />
         </div>
         <div>
-          <label className="block text-sm font-medium">Severity</label>
+          <label className="block text-sm font-medium">{t('adminErrors.severity')}</label>
           <select
             value={severity}
             onChange={(e) => setSeverity(e.target.value)}
             className="border px-2 py-1 rounded w-40"
           >
-            <option value="">(any)</option>
+            <option value="">{t('adminErrors.severityAny')}</option>
             <option value="low">low</option>
             <option value="medium">medium</option>
             <option value="high">high</option>
@@ -178,7 +180,7 @@ export default function AdminErrorsPage() {
           </select>
         </div>
         <div>
-          <label className="block text-sm font-medium">From</label>
+          <label className="block text-sm font-medium">{t('adminErrors.from')}</label>
           <input
             type="date"
             value={from}
@@ -187,7 +189,7 @@ export default function AdminErrorsPage() {
           />
         </div>
         <div>
-          <label className="block text-sm font-medium">To</label>
+          <label className="block text-sm font-medium">{t('adminErrors.to')}</label>
           <input
             type="date"
             value={to}
@@ -196,7 +198,7 @@ export default function AdminErrorsPage() {
           />
         </div>
         <div>
-          <label className="block text-sm font-medium">Limit</label>
+          <label className="block text-sm font-medium">{t('adminErrors.limit')}</label>
           <select
             value={limit}
             onChange={(e) => setLimit(parseInt(e.target.value))}
@@ -213,16 +215,16 @@ export default function AdminErrorsPage() {
           onClick={() => void load()}
           className="border px-3 py-1 rounded bg-primary text-primary-foreground"
         >
-          Apply
+          {t('common.apply')}
         </button>
         <button
           onClick={() => void bulkDelete()}
           className="border px-3 py-1 rounded bg-destructive text-destructive-foreground"
         >
-          Bulk Delete
+          {t('adminErrors.bulkDelete')}
         </button>
         <div className="ml-auto text-sm text-muted-foreground">
-          Showing {items.length} of ~{total}
+          {t('adminErrors.showing', { count: items.length, total })}
         </div>
       </div>
 
@@ -230,11 +232,11 @@ export default function AdminErrorsPage() {
         <table className="min-w-full text-sm">
           <thead>
             <tr className="bg-muted text-left">
-              <th className="p-2">Time</th>
-              <th className="p-2">Code</th>
-              <th className="p-2">Severity</th>
-              <th className="p-2">Message</th>
-              <th className="p-2">ID</th>
+              <th className="p-2">{t('adminErrors.time')}</th>
+              <th className="p-2">{t('adminErrors.code')}</th>
+              <th className="p-2">{t('adminErrors.severity')}</th>
+              <th className="p-2">{t('adminErrors.message')}</th>
+              <th className="p-2">{t('adminErrors.id')}</th>
             </tr>
           </thead>
           <tbody>
@@ -247,7 +249,7 @@ export default function AdminErrorsPage() {
             ) : items.length === 0 ? (
               <tr>
                 <td className="p-3" colSpan={5}>
-                  No results
+                  {t('adminErrors.noResults')}
                 </td>
               </tr>
             ) : (
@@ -293,16 +295,16 @@ export default function AdminErrorsPage() {
       {selected && (
         <div className="border rounded p-3 space-y-2">
           <div className="flex items-center justify-between">
-            <h2 className="font-medium">Error Details</h2>
+            <h2 className="font-medium">{t('adminErrors.errorDetails')}</h2>
             <div className="flex gap-2">
               <button
                 onClick={() => void deleteOne(selected.id)}
                 className="border px-3 py-1 rounded bg-destructive text-destructive-foreground"
               >
-                Delete
+                {t('common.delete')}
               </button>
               <button onClick={() => setSelected(null)} className="border px-3 py-1 rounded">
-                Close
+                {t('common.close')}
               </button>
             </div>
           </div>

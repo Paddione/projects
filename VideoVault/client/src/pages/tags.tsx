@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -31,6 +32,7 @@ interface Synonym {
 }
 
 export default function TagsPage() {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
@@ -69,8 +71,8 @@ export default function TagsPage() {
     },
     onSuccess: (data) => {
       toast({
-        title: 'Tag Renamed',
-        description: `Updated ${data.updatedVideos} videos.`,
+        title: t('tags.tagRenamed'),
+        description: t('tags.updatedVideos', { count: data.updatedVideos }),
       });
       void queryClient.invalidateQueries({ queryKey: ['tags'] });
       setRenameTag(null);
@@ -90,8 +92,8 @@ export default function TagsPage() {
     },
     onSuccess: (data) => {
       toast({
-        title: 'Tags Merged',
-        description: `Updated ${data.updatedVideos} videos.`,
+        title: t('tags.tagsMerged'),
+        description: t('tags.updatedVideos', { count: data.updatedVideos }),
       });
       void queryClient.invalidateQueries({ queryKey: ['tags'] });
       setMergeSource(null);
@@ -110,7 +112,7 @@ export default function TagsPage() {
       return res.json() as Promise<unknown>;
     },
     onSuccess: () => {
-      toast({ title: 'Synonym Added' });
+      toast({ title: t('tags.synonymAdded') });
       void queryClient.invalidateQueries({ queryKey: ['synonyms'] });
       setNewSynonymSource('');
       setNewSynonymTarget('');
@@ -124,7 +126,7 @@ export default function TagsPage() {
       return res.json() as Promise<unknown>;
     },
     onSuccess: () => {
-      toast({ title: 'Synonym Deleted' });
+      toast({ title: t('tags.synonymDeleted') });
       void queryClient.invalidateQueries({ queryKey: ['synonyms'] });
     },
   });
@@ -144,23 +146,23 @@ export default function TagsPage() {
       <div className="flex items-center space-x-4">
         <Link href="/">
           <Button variant="ghost">
-            <ArrowLeft className="mr-2 h-4 w-4" /> Back
+            <ArrowLeft className="mr-2 h-4 w-4" /> {t('common.back')}
           </Button>
         </Link>
-        <h1 className="text-2xl font-bold">Tag Taxonomy</h1>
+        <h1 className="text-2xl font-bold">{t('tags.title')}</h1>
       </div>
 
       <Tabs defaultValue="tags">
         <TabsList>
-          <TabsTrigger value="tags">Tags</TabsTrigger>
-          <TabsTrigger value="synonyms">Synonyms</TabsTrigger>
-          <TabsTrigger value="import">Import</TabsTrigger>
+          <TabsTrigger value="tags">{t('tags.tabTags')}</TabsTrigger>
+          <TabsTrigger value="synonyms">{t('tags.tabSynonyms')}</TabsTrigger>
+          <TabsTrigger value="import">{t('tags.tabImport')}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="tags" className="space-y-4">
           <div className="flex items-center space-x-2">
             <Input
-              placeholder="Search tags..."
+              placeholder={t('tags.searchPlaceholder')}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="max-w-sm"
@@ -174,7 +176,7 @@ export default function TagsPage() {
                   <div>
                     <div className="font-medium">{tag.name}</div>
                     <div className="text-xs text-muted-foreground">
-                      {tag.type} • {tag.count} videos
+                      {tag.type} • {tag.count} {t('tags.videos')}
                     </div>
                   </div>
                   <div className="flex space-x-1">
@@ -207,18 +209,18 @@ export default function TagsPage() {
         <TabsContent value="synonyms" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Add Synonym</CardTitle>
+              <CardTitle>{t('tags.addSynonym')}</CardTitle>
             </CardHeader>
             <CardContent className="flex items-end space-x-2">
               <div className="grid w-full gap-1.5">
-                <Label>Source (e.g. "sci-fi")</Label>
+                <Label>{t('tags.sourceLabel')}</Label>
                 <Input
                   value={newSynonymSource}
                   onChange={(e) => setNewSynonymSource(e.target.value)}
                 />
               </div>
               <div className="grid w-full gap-1.5">
-                <Label>Target (e.g. "Science Fiction")</Label>
+                <Label>{t('tags.targetLabel')}</Label>
                 <Input
                   value={newSynonymTarget}
                   onChange={(e) => setNewSynonymTarget(e.target.value)}
@@ -269,17 +271,17 @@ export default function TagsPage() {
       <Dialog open={!!renameTag} onOpenChange={(open) => !open && setRenameTag(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Rename Tag</DialogTitle>
+            <DialogTitle>{t('tags.renameTag')}</DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label>New Name</Label>
+              <Label>{t('tags.newName')}</Label>
               <Input value={newName} onChange={(e) => setNewName(e.target.value)} />
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setRenameTag(null)}>
-              Cancel
+              {t('common.cancel')}
             </Button>
             <Button
               onClick={() =>
@@ -287,7 +289,7 @@ export default function TagsPage() {
               }
               disabled={!newName || newName === renameTag?.name}
             >
-              Rename
+              {t('common.rename')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -297,7 +299,7 @@ export default function TagsPage() {
       <Dialog open={!!mergeSource} onOpenChange={(open) => !open && setMergeSource(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Merge Tag</DialogTitle>
+            <DialogTitle>{t('tags.mergeTag')}</DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <p>
@@ -308,7 +310,7 @@ export default function TagsPage() {
               value={mergeTargetId}
               onChange={(e) => setMergeTargetId(e.target.value)}
             >
-              <option value="">Select target tag...</option>
+              <option value="">{t('tags.selectTarget')}</option>
               {tags
                 ?.filter((t) => t.id !== mergeSource?.id && t.type === mergeSource?.type)
                 .map((t) => (
@@ -318,13 +320,12 @@ export default function TagsPage() {
                 ))}
             </select>
             <p className="text-sm text-muted-foreground">
-              This will update all videos using "{mergeSource?.name}" to use the selected tag, and
-              delete "{mergeSource?.name}".
+              {t('tags.mergeDescription', { name: mergeSource?.name })}
             </p>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setMergeSource(null)}>
-              Cancel
+              {t('common.cancel')}
             </Button>
             <Button
               variant="destructive"
@@ -334,7 +335,7 @@ export default function TagsPage() {
               }
               disabled={!mergeTargetId}
             >
-              Merge
+              {t('common.merge')}
             </Button>
           </DialogFooter>
         </DialogContent>

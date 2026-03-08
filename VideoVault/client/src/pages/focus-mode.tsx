@@ -1,5 +1,6 @@
 import { useEffect, useCallback } from 'react';
 import { useParams, useLocation } from 'wouter';
+import { useTranslation } from 'react-i18next';
 import { useVideoManager } from '@/hooks/use-video-manager';
 import { useFocusMode } from '@/hooks/use-focus-mode';
 import { useToast } from '@/hooks/use-toast';
@@ -9,6 +10,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { useState } from 'react';
 
 export default function FocusModePage() {
+  const { t } = useTranslation();
   const params = useParams<{ videoId: string }>();
   const [, setLocation] = useLocation();
   const { state, actions } = useVideoManager();
@@ -69,8 +71,8 @@ export default function FocusModePage() {
       setPendingNavigation(null);
     } else {
       toast({
-        title: 'Save failed',
-        description: result.message || 'Could not save changes',
+        title: t('focusMode.saveFailed'),
+        description: result.message || t('focusMode.couldNotSave'),
         variant: 'destructive',
       });
     }
@@ -93,13 +95,13 @@ export default function FocusModePage() {
     const result = await focusMode.save();
     if (result.success) {
       toast({
-        title: 'Saved',
-        description: 'Changes saved successfully',
+        title: t('focusMode.saved'),
+        description: t('focusMode.savedDesc'),
       });
     } else {
       toast({
-        title: 'Save failed',
-        description: result.message || 'Could not save changes',
+        title: t('focusMode.saveFailed'),
+        description: result.message || t('focusMode.couldNotSave'),
         variant: 'destructive',
       });
     }
@@ -152,8 +154,8 @@ export default function FocusModePage() {
   useEffect(() => {
     if (params.videoId && state.videos.length > 0 && !focusMode.state.video) {
       toast({
-        title: 'Video not found',
-        description: 'The requested video could not be found',
+        title: t('focusMode.videoNotFound'),
+        description: t('focusMode.videoNotFoundDesc'),
         variant: 'destructive',
       });
       setLocation('/');
@@ -163,7 +165,7 @@ export default function FocusModePage() {
   if (!focusMode.state.video) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-muted-foreground">Loading...</div>
+        <div className="text-muted-foreground">{t('common.loading')}</div>
       </div>
     );
   }
@@ -206,9 +208,9 @@ export default function FocusModePage() {
       <AlertDialog open={showDirtyDialog} onOpenChange={setShowDirtyDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Unsaved changes</AlertDialogTitle>
+            <AlertDialogTitle>{t('focusMode.unsavedChanges')}</AlertDialogTitle>
             <AlertDialogDescription>
-              You have unsaved changes. What would you like to do?
+              {t('focusMode.unsavedChangesDesc')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -216,16 +218,16 @@ export default function FocusModePage() {
               setShowDirtyDialog(false);
               setPendingNavigation(null);
             }}>
-              Cancel
+              {t('common.cancel')}
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDirtyDialogDiscard}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              Discard
+              {t('common.discard')}
             </AlertDialogAction>
             <AlertDialogAction onClick={() => void handleDirtyDialogSave()}>
-              Save
+              {t('common.save')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -53,6 +54,7 @@ function buildTree(directories: string[]): TreeNode {
 }
 
 export function DirectoryPickerModal({ isOpen, onClose, onSelect }: DirectoryPickerModalProps) {
+  const { t } = useTranslation();
   const [expanded, setExpanded] = useState<Set<string>>(new Set(['']));
   const [selectedPath, setSelectedPath] = useState<string>('');
   const [filter, setFilter] = useState('');
@@ -124,7 +126,7 @@ export function DirectoryPickerModal({ isOpen, onClose, onSelect }: DirectoryPic
               type="button"
               className="p-0.5 rounded hover:bg-muted"
               onClick={(e) => { e.stopPropagation(); toggle(node.path); }}
-              aria-label={isExpanded ? 'Collapse' : 'Expand'}
+              aria-label={isExpanded ? t('directoryPicker.collapse') : t('directoryPicker.expand')}
             >
               {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
             </button>
@@ -156,21 +158,21 @@ export function DirectoryPickerModal({ isOpen, onClose, onSelect }: DirectoryPic
     <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
       <DialogContent className="max-w-xl">
         <DialogHeader>
-          <DialogTitle>Select Target Directory</DialogTitle>
-          <DialogDescription className="sr-only">Pick a destination folder from the scanned root</DialogDescription>
+          <DialogTitle>{t('directoryPicker.title')}</DialogTitle>
+          <DialogDescription className="sr-only">{t('directoryPicker.description')}</DialogDescription>
         </DialogHeader>
         <div className="space-y-3">
           <div className="text-sm text-muted-foreground">
-            {lastRootKey ? `Root: ${rootName}` : 'No scanned root in this session. Scan a directory first.'}
+            {lastRootKey ? t('directoryPicker.root', { name: rootName }) : t('directoryPicker.noRoot')}
           </div>
           <Input
-            placeholder="Filter directories..."
+            placeholder={t('directoryPicker.filterPlaceholder')}
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
           />
           <div className="border rounded max-h-80 overflow-auto">
             {directories.length === 0 ? (
-              <div className="p-4 text-sm text-muted-foreground">No directories found.</div>
+              <div className="p-4 text-sm text-muted-foreground">{t('directoryPicker.noDirectories')}</div>
             ) : (
               <div className="py-1">
                 {renderNode(tree, 0)}
@@ -179,8 +181,8 @@ export function DirectoryPickerModal({ isOpen, onClose, onSelect }: DirectoryPic
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>Cancel</Button>
-          <Button onClick={handleSelect} disabled={disabled}>Select</Button>
+          <Button variant="outline" onClick={onClose}>{t('common.cancel')}</Button>
+          <Button onClick={handleSelect} disabled={disabled}>{t('common.select')}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

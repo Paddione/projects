@@ -151,7 +151,7 @@ export function Sidebar({
             className="text-xs"
             data-testid="input-start-date"
             placeholder="tt.mm.jjjj"
-            aria-label="Start date"
+            aria-label={t('sidebar.startDate')}
           />
           <Input
             type="date"
@@ -160,7 +160,7 @@ export function Sidebar({
             className="text-xs"
             data-testid="input-end-date"
             placeholder="tt.mm.jjjj"
-            aria-label="End date"
+            aria-label={t('sidebar.endDate')}
           />
           <div className="flex space-x-2">
             <Button
@@ -203,7 +203,7 @@ export function Sidebar({
                   className="ml-auto p-0 h-auto text-primary hover:text-primary/80"
                   data-testid={`button-toggle-${sectionName}`}
                   aria-expanded={!isCollapsed}
-                  aria-label={isCollapsed ? `Expand ${label} section` : `Collapse ${label} section`}
+                  aria-label={isCollapsed ? t('sidebar.expandSection', { label }) : t('sidebar.collapseSection', { label })}
                 >
                   <ChevronDown
                     className={`h-3 w-3 transition-transform ${isCollapsed ? '-rotate-90' : ''}`}

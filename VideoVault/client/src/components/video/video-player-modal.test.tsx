@@ -55,11 +55,11 @@ describe('VideoPlayerModal (missing source)', () => {
       <VideoPlayerModal video={makeVideo()} isOpen={true} onClose={() => {}} onRescan={onRescan} />,
     );
 
-    expect(screen.getByText(/Video source unavailable/i)).toBeTruthy();
-    expect(screen.getByText('Path: sub/clip.mp4')).toBeTruthy();
+    expect(screen.getByText(/player\.videoUnavailable/i)).toBeTruthy();
+    expect(screen.getByText(/player\.path/i)).toBeTruthy();
 
     const btn = screen.getByTestId('button-rescan-root');
-    expect(btn.textContent).toMatch(/Rescan root to restore playback/i);
+    expect(btn.textContent).toMatch(/player\.rescanRoot/i);
     fireEvent.click(btn);
     expect(onRescan).toHaveBeenCalled();
   });

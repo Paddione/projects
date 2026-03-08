@@ -1,4 +1,5 @@
 import { useQuery, useMutation } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { VideoCard } from '@/components/video/video-card';
@@ -20,6 +21,7 @@ interface DuplicatesResponse {
 }
 
 export default function DuplicatesPage() {
+    const { t } = useTranslation();
     const { toast } = useToast();
     const { actions } = useVideoManager();
 
@@ -40,14 +42,14 @@ export default function DuplicatesPage() {
         },
         onSuccess: (data) => {
             toast({
-                title: 'Computation Complete',
-                description: `Processed ${data.processed} videos. Remaining: ${data.remaining}`,
+                title: t('duplicates.computationComplete'),
+                description: t('duplicates.processed', { processed: data.processed, remaining: data.remaining }),
             });
             refetch();
         },
         onError: () => {
             toast({
-                title: 'Computation Failed',
+                title: t('duplicates.computationFailed'),
                 variant: 'destructive',
             });
         }
@@ -64,13 +66,13 @@ export default function DuplicatesPage() {
             return res.json();
         },
         onSuccess: () => {
-            toast({ title: 'Duplicate Ignored' });
+            toast({ title: t('duplicates.duplicateIgnored') });
             refetch();
         },
     });
 
     const handleDelete = async (video: Video) => {
-        if (confirm(`Delete ${video.displayName}?`)) {
+        if (confirm(t('duplicates.confirmDelete', { name: video.displayName }))) {
             await actions.deleteFile(video.id);
             refetch();
         }
@@ -83,24 +85,24 @@ export default function DuplicatesPage() {
             <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-4">
                     <Link href="/">
-                        <Button variant="ghost"><ArrowLeft className="mr-2 h-4 w-4" /> Back</Button>
+                        <Button variant="ghost"><ArrowLeft className="mr-2 h-4 w-4" /> {t('common.back')}</Button>
                     </Link>
-                    <h1 className="text-2xl font-bold">Duplicate Detection</h1>
+                    <h1 className="text-2xl font-bold">{t('duplicates.title')}</h1>
                 </div>
                 <Button
                     onClick={() => computeMutation.mutate()}
                     disabled={computeMutation.isPending}
                 >
                     {computeMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4" />}
-                    Compute Hashes
+                    {t('duplicates.computeHashes')}
                 </Button>
             </div>
 
             <div className="space-y-8">
                 <section>
-                    <h2 className="text-xl font-semibold mb-4">Exact Duplicates (Fast Hash)</h2>
+                    <h2 className="text-xl font-semibold mb-4">{t('duplicates.exactDuplicates')}</h2>
                     {data?.fast.length === 0 ? (
-                        <p className="text-muted-foreground">No exact duplicates found.</p>
+                        <p className="text-muted-foreground">{t('duplicates.noExactDuplicates')}</p>
                     ) : (
                         <div className="space-y-6">
                             {data?.fast.map((group) => (
@@ -113,7 +115,7 @@ export default function DuplicatesPage() {
                                                 size="sm"
                                                 onClick={() => ignoreMutation.mutate({ video1: group.videos[0].id, video2: group.videos[1].id })}
                                             >
-                                                Ignore Pair
+                                                {t('duplicates.ignorePair')}
                                             </Button>
                                         )}
                                     </CardHeader>
@@ -139,9 +141,9 @@ export default function DuplicatesPage() {
                 </section>
 
                 <section>
-                    <h2 className="text-xl font-semibold mb-4">Potential Duplicates (Perceptual Hash)</h2>
+                    <h2 className="text-xl font-semibold mb-4">{t('duplicates.perceptualDuplicates')}</h2>
                     {data?.perceptual.length === 0 ? (
-                        <p className="text-muted-foreground">No perceptual duplicates found.</p>
+                        <p className="text-muted-foreground">{t('duplicates.noPerceptualDuplicates')}</p>
                     ) : (
                         <div className="space-y-6">
                             {data?.perceptual.map((group) => (
@@ -154,7 +156,7 @@ export default function DuplicatesPage() {
                                                 size="sm"
                                                 onClick={() => ignoreMutation.mutate({ video1: group.videos[0].id, video2: group.videos[1].id })}
                                             >
-                                                Ignore Pair
+                                                {t('duplicates.ignorePair')}
                                             </Button>
                                         )}
                                     </CardHeader>

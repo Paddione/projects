@@ -44,10 +44,10 @@ describe('ErrorBoundary', () => {
       </ErrorBoundary>
     );
 
-    expect(screen.getByText('Something went wrong')).toBeInTheDocument();
-    expect(screen.getByText('An unexpected error occurred. Don\'t worry, your data is safe.')).toBeInTheDocument();
-    expect(screen.getByText('Try Again')).toBeInTheDocument();
-    expect(screen.getByText('Go Home')).toBeInTheDocument();
+    expect(screen.getByText('errorBoundary.title')).toBeInTheDocument();
+    expect(screen.getByText('errorBoundary.description')).toBeInTheDocument();
+    expect(screen.getByText('errorBoundary.tryAgain')).toBeInTheDocument();
+    expect(screen.getByText('errorBoundary.goHome')).toBeInTheDocument();
   });
 
   it('shows error details in development mode', () => {
@@ -61,12 +61,12 @@ describe('ErrorBoundary', () => {
       </ErrorBoundary>
     );
 
-    const detailsElement = screen.getByText('Error details (development only)');
+    const detailsElement = screen.getByText('errorBoundary.devDetails');
     expect(detailsElement).toBeInTheDocument();
 
     // Click to expand details
     fireEvent.click(detailsElement);
-    
+
     expect(screen.getByText('Test error')).toBeInTheDocument();
 
     // Restore original env
@@ -80,11 +80,11 @@ describe('ErrorBoundary', () => {
       </ErrorBoundary>
     );
 
-    const headings = screen.getAllByText('Something went wrong');
+    const headings = screen.getAllByText('errorBoundary.title');
     expect(headings[headings.length - 1]).toBeInTheDocument();
 
     // Click retry button
-    const retryButtons = screen.getAllByText('Try Again');
+    const retryButtons = screen.getAllByText('errorBoundary.tryAgain');
     fireEvent.click(retryButtons[retryButtons.length - 1]);
 
     // Re-render with no error and a new key to force re-mounting
@@ -111,7 +111,7 @@ describe('ErrorBoundary', () => {
     );
 
     // Click go home button
-    const goHomeButtons = screen.getAllByText('Go Home');
+    const goHomeButtons = screen.getAllByText('errorBoundary.goHome');
     fireEvent.click(goHomeButtons[goHomeButtons.length - 1]);
 
     expect(window.location.href).toBe('/');
@@ -131,7 +131,7 @@ describe('ErrorBoundary', () => {
 
     const scoped = within(container);
     expect(scoped.getByText('Custom error UI')).toBeInTheDocument();
-    expect(scoped.queryByText('Something went wrong')).not.toBeInTheDocument();
+    expect(scoped.queryByText('errorBoundary.title')).not.toBeInTheDocument();
   });
 
   it('logs errors to console', () => {

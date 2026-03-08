@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Dialog,
   DialogContent,
@@ -74,6 +75,7 @@ export function VideoPlayerModal({
   onToggleShuffle,
   onFocusMode,
 }: VideoPlayerModalProps) {
+  const { t } = useTranslation();
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [sidePanel, setSidePanel] = useState<'none' | 'tags' | 'split'>('none');
@@ -358,7 +360,7 @@ export function VideoPlayerModal({
     if (Math.abs(deltaX) > 90 && deltaTime < 500) {
       const direction = deltaX > 0 ? 1 : -1;
       skip(direction * 15);
-      showGestureMessage(direction > 0 ? 'Seek +15s' : 'Seek -15s');
+      showGestureMessage(direction > 0 ? t('player.seekForward', { seconds: 15 }) : t('player.seekBackward', { seconds: 15 }));
       gestureStateRef.current.lastTap = 0;
     } else {
       const isDouble = now - gestureStateRef.current.lastTap < 280;
@@ -371,14 +373,14 @@ export function VideoPlayerModal({
       if (isDouble) {
         const direction = tapX < rect.width / 2 ? -10 : 10;
         skip(direction);
-        showGestureMessage(direction > 0 ? 'Seek +10s' : 'Seek -10s');
+        showGestureMessage(direction > 0 ? t('player.seekForward', { seconds: 10 }) : t('player.seekBackward', { seconds: 10 }));
         gestureStateRef.current.lastTap = 0;
       } else {
         gestureStateRef.current.lastTap = now;
         const willPause = isPlaying;
         gestureStateRef.current.timeoutId = window.setTimeout(() => {
           togglePlayPause();
-          showGestureMessage(willPause ? 'Paused' : 'Playing');
+          showGestureMessage(willPause ? t('player.paused') : t('player.playing'));
           gestureStateRef.current.timeoutId = null;
         }, 220);
       }
@@ -455,7 +457,7 @@ export function VideoPlayerModal({
         <DialogHeader className="p-4 border-b">
           <DialogTitle data-testid="text-video-title">{video.displayName}</DialogTitle>
           <DialogDescription className="sr-only">
-            Video player with playback controls and navigation
+            {t('player.playerDescription')}
           </DialogDescription>
         </DialogHeader>
 
@@ -533,8 +535,8 @@ export function VideoPlayerModal({
                 />
               ) : (
                 <div className="w-full h-full bg-black flex flex-col items-center justify-center text-white space-y-3 p-4">
-                  <span>Video source unavailable. Try rescanning or re-importing the file.</span>
-                  <span className="text-xs opacity-80">Path: {video.path}</span>
+                  <span>{t('player.videoUnavailable')}</span>
+                  <span className="text-xs opacity-80">{t('player.path', { path: video.path })}</span>
                   {onRescan && (
                     <Button
                       variant="secondary"
@@ -542,7 +544,7 @@ export function VideoPlayerModal({
                       onClick={onRescan}
                       data-testid="button-rescan-root"
                     >
-                      <RefreshCcw className="h-4 w-4 mr-2" /> Rescan root to restore playback
+                      <RefreshCcw className="h-4 w-4 mr-2" /> {t('player.rescanRoot')}
                     </Button>
                   )}
                 </div>
@@ -615,7 +617,7 @@ export function VideoPlayerModal({
                     data-testid="slider-progress"
                     buffer={buffered}
                     disabled={sliderDisabled}
-                    aria-label="Seek"
+                    aria-label={t('player.seek')}
                   />
                 </div>
 
@@ -661,9 +663,9 @@ export function VideoPlayerModal({
                       className="text-white hover:bg-white hover:bg-opacity-20 hidden sm:inline-flex"
                       data-testid="button-forward-10m"
                       disabled={!hasSource}
-                      aria-label="Forward 10 minutes"
+                      aria-label={t('player.forward10min')}
                     >
-                      +10m
+                      {t('player.forward10m')}
                     </Button>
                   </div>
 
@@ -695,7 +697,7 @@ export function VideoPlayerModal({
                         onValueChange={handleVolumeChange}
                         className="w-20 hidden sm:flex"
                         data-testid="slider-volume"
-                        aria-label="Volume"
+                        aria-label={t('player.volume')}
                         disabled={!hasSource}
                       />
                     </div>
@@ -707,7 +709,7 @@ export function VideoPlayerModal({
                       className={`text-white hover:bg-white hover:bg-opacity-20 ${sidePanel === 'tags' ? 'bg-white/20' : ''}`}
                       data-testid="button-edit-tags-inline"
                       disabled={!onUpdateVideo}
-                      aria-label="Edit Tags"
+                      aria-label={t('player.editTags')}
                     >
                       <Tags className="h-4 w-4" />
                     </Button>
@@ -722,8 +724,8 @@ export function VideoPlayerModal({
                         }}
                         className="text-white hover:bg-white hover:bg-opacity-20 hidden sm:inline-flex"
                         data-testid="button-focus-mode"
-                        aria-label="Open in Focus Mode"
-                        title="Open in Focus Mode"
+                        aria-label={t('player.openFocusMode')}
+                        title={t('player.openFocusMode')}
                       >
                         <Focus className="h-4 w-4" />
                       </Button>
@@ -736,7 +738,7 @@ export function VideoPlayerModal({
                         onClick={() => setSidePanel(sidePanel === 'split' ? 'none' : 'split')}
                         className={`text-white hover:bg-white hover:bg-opacity-20 hidden sm:inline-flex ${sidePanel === 'split' ? 'bg-white/20' : ''}`}
                         data-testid="button-split-inline"
-                        aria-label="Split video"
+                        aria-label={t('player.splitVideo')}
                       >
                         <Scissors className="h-4 w-4" />
                       </Button>
@@ -749,7 +751,7 @@ export function VideoPlayerModal({
                       className="text-white hover:bg-white hover:bg-opacity-20 hidden sm:inline-flex"
                       data-testid="button-shuffle"
                       aria-pressed={!!shuffleEnabled}
-                      aria-label="Shuffle"
+                      aria-label={t('player.shuffle')}
                     >
                       <Shuffle className={`h-4 w-4 ${shuffleEnabled ? 'text-emerald-400' : ''}`} />
                     </Button>
@@ -762,7 +764,7 @@ export function VideoPlayerModal({
                       data-testid="button-pip"
                       disabled={!hasSource || !pipSupported}
                       aria-pressed={isPip}
-                      aria-label="Picture in Picture"
+                      aria-label={t('player.pictureInPicture')}
                     >
                       <PictureInPicture className="h-4 w-4" />
                     </Button>
@@ -794,10 +796,10 @@ export function VideoPlayerModal({
               {sidePanel === 'tags' && onUpdateVideo && (
                 <>
                   <div className="flex items-center justify-between mb-4">
-                    <h3 className="font-semibold text-lg">Edit Tags</h3>
+                    <h3 className="font-semibold text-lg">{t('player.editTags')}</h3>
                     <Button variant="ghost" size="icon" onClick={() => setSidePanel('none')}>
                       <X className="h-4 w-4" />
-                      <span className="sr-only">Close panel</span>
+                      <span className="sr-only">{t('player.closePanel')}</span>
                     </Button>
                   </div>
                   <VideoTagsEditor
@@ -811,10 +813,10 @@ export function VideoPlayerModal({
               {sidePanel === 'split' && onSplitVideo && (
                 <>
                   <div className="flex items-center justify-between mb-4">
-                    <h3 className="font-semibold text-lg">Split Video</h3>
+                    <h3 className="font-semibold text-lg">{t('player.splitVideo')}</h3>
                     <Button variant="ghost" size="icon" onClick={() => setSidePanel('none')}>
                       <X className="h-4 w-4" />
-                      <span className="sr-only">Close panel</span>
+                      <span className="sr-only">{t('player.closePanel')}</span>
                     </Button>
                   </div>
                   <VideoSplitter
