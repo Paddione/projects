@@ -43,7 +43,7 @@ if [ ! -f "${DEPLOY_KEY}" ]; then
 fi
 
 scp "${DEPLOY_KEY}" "${PXE_HOST}:${PXE_KEYS}/deploy_key"
-ssh "${PXE_HOST}" "chmod 600 ${PXE_KEYS}/deploy_key"
+ssh "${PXE_HOST}" "chmod 644 ${PXE_KEYS}/deploy_key"
 
 echo "=== Done ==="
 echo "Secrets: $(ssh ${PXE_HOST} "ls ${PXE_SECRETS}" | wc -l) files"
