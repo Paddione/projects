@@ -1,0 +1,173 @@
+import express from 'express';
+import cors from 'cors';
+import helmet from 'helmet';
+import { config } from './config/index.js';
+import { DatabaseService } from './services/DatabaseService.js';
+import { LobbyService } from './services/LobbyService.js';
+
+const app = express();
+
+// Middleware
+app.use(helmet());
+app.use(cors({
+    origin: config.cors.origin,
+    credentials: true,
+}));
+app.use(express.json());
+
+// ============================================================================
+// HEALTH
+// ============================================================================
+
+app.get('/api/health', async (_req, res) => {
+    try {
+        const db = DatabaseService.getInstance();
+        const isHealthy = await db.healthCheck();
+        res.json({
+            status: isHealthy ? 'OK' : 'DEGRADED',
+            service: 'arena-backend',
+            timestamp: new Date().toISOString(),
+            database: isHealthy ? 'connected' : 'disconnected',
+        });
+    } catch {
+        res.status(503).json({
+            status: 'ERROR',
+            service: 'arena-backend',
+            timestamp: new Date().toISOString(),
+        });
+    }
+});
+
+// ============================================================================
+// LOBBIES
+// ============================================================================
+
+const lobbyService = new LobbyService();
+
+app.post('/api/lobbies', async (req, res) => {
+    try {
+        const lobby = await lobbyService.createLobby(req.body);
+        res.status(201).json(lobby);
+    } catch (error) {
+        res.status(400).json({ error: (error as Error).message });
+    }
+});
+
+app.get('/api/lobbies/:code', async (req, res) => {
+    try {
+        const lobby = await lobbyService.getLobbyByCode(req.params.code);
+        if (!lobby) {
+            return res.status(404).json({ error: 'Lobby not found' });
+        }
+        res.json(lobby);
+    } catch (error) {
+        res.status(500).json({ error: (error as Error).message });
+    }
+});
+
+app.get('/api/lobbies', async (_req, res) => {
+    try {
+        const lobbies = await lobbyService.getActiveLobbies();
+        res.json(lobbies);
+    } catch (error) {
+        res.status(500).json({ error: (error as Error).message });
+    }
+});
+
+app.delete('/api/lobbies/:code', async (req, res) => {
+    try {
+        const deleted = await lobbyService.deleteLobbyByCode(req.params.code);
+        if (!deleted) {
+            return res.status(404).json({ error: 'Lobby not found' });
+        }
+        res.json({ success: true });
+    } catch (error) {
+        res.status(500).json({ error: (error as Error).message });
+    }
+});
+
+// ============================================================================
+// LEADERBOARD
+// ============================================================================
+
+app.get('/api/leaderboard', async (_req, res) => {
+    try {
+        const db = DatabaseService.getInstance();
+        const result = await db.query(
+            'SELECT * FROM arena_leaderboard LIMIT 100'
+        );
+        res.json(result.rows);
+    } catch (error) {
+        res.status(500).json({ error: (error as Error).message });
+    }
+});
+
+// ============================================================================
+// PLAYER PROFILE
+// ============================================================================
+
+app.get('/api/players/:authUserId', async (req, res) => {
+    try {
+        const db = DatabaseService.getInstance();
+        const result = await db.query(
+            'SELECT * FROM players WHERE auth_user_id = $1',
+            [parseInt(req.params.authUserId)]
+        );
+        if (result.rowCount === 0) {
+            return res.status(404).json({ error: 'Player not found' });
+        }
+        res.json(result.rows[0]);
+    } catch (error) {
+        res.status(500).json({ error: (error as Error).message });
+    }
+});
+
+app.post('/api/players', async (req, res) => {
+    try {
+        const { authUserId, username, selectedCharacter } = req.body;
+        const db = DatabaseService.getInstance();
+        const result = await db.query(
+            `INSERT INTO players (auth_user_id, username, selected_character)
+       VALUES ($1, $2, $3)
+       ON CONFLICT (auth_user_id) DO UPDATE SET username = $2, updated_at = CURRENT_TIMESTAMP
+       RETURNING *`,
+            [authUserId, username, selectedCharacter || 'soldier']
+        );
+        res.status(201).json(result.rows[0]);
+    } catch (error) {
+        res.status(400).json({ error: (error as Error).message });
+    }
+});
+
+// ============================================================================
+// MATCH HISTORY
+// ============================================================================
+
+app.get('/api/matches', async (req, res) => {
+    try {
+        const db = DatabaseService.getInstance();
+        const limit = parseInt(req.query.limit as string) || 20;
+        const result = await db.query(
+            'SELECT * FROM matches ORDER BY started_at DESC LIMIT $1',
+            [limit]
+        );
+        res.json(result.rows);
+    } catch (error) {
+        res.status(500).json({ error: (error as Error).message });
+    }
+});
+
+app.get('/api/matches/:id/results', async (req, res) => {
+    try {
+        const db = DatabaseService.getInstance();
+        const result = await db.query(
+            'SELECT * FROM match_results WHERE match_id = $1 ORDER BY placement ASC',
+            [parseInt(req.params.id)]
+        );
+        res.json(result.rows);
+    } catch (error) {
+        res.status(500).json({ error: (error as Error).message });
+    }
+});
+
+export default app;

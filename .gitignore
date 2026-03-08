@@ -11,6 +11,7 @@ package-lock.json
 !shop/package-lock.json
 !VideoVault/package-lock.json
 !SOS/package-lock.json
+!arena/package-lock.json
 yarn.lock
 /home/patrick/projects/Obsidian
 Obsidian/
@@ -153,7 +154,8 @@ postgres-data/
 pgdata/
 data/postgres/
 */data/postgres/
-l2p/data/
+l2p/data/*
+!l2p/data/question-sets/
 vllm/data/
 
 # ChromaDB and Vector Databases

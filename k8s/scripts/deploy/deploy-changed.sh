@@ -76,6 +76,7 @@ declare -A SERVICE_DIRS=(
     ["shop"]="shop"
     ["videovault"]="VideoVault"
     ["sos"]="SOS"
+    ["arena"]="arena"
 )
 
 # Service to Dockerfile mapping (relative to PROJECT_ROOT)
@@ -86,6 +87,8 @@ declare -A SERVICE_DOCKERFILES=(
     ["shop"]="shop/Dockerfile"
     ["videovault"]="VideoVault/Dockerfile.prod"
     ["sos"]="SOS/Dockerfile"
+    ["arena-backend"]="arena/backend/Dockerfile"
+    ["arena-frontend"]="arena/frontend/Dockerfile"
 )
 
 # Service to k8s manifest paths
@@ -96,6 +99,8 @@ declare -A SERVICE_MANIFESTS=(
     ["shop"]="services/shop"
     ["videovault"]="services/videovault"
     ["sos"]="services/sos"
+    ["arena-backend"]="services/arena-backend"
+    ["arena-frontend"]="services/arena-frontend"
 )
 
 # Service to deployment names (for rollout restart)
@@ -106,6 +111,8 @@ declare -A SERVICE_DEPLOYMENTS=(
     ["shop"]="shop"
     ["videovault"]="videovault"
     ["sos"]="sos"
+    ["arena-backend"]="arena-backend"
+    ["arena-frontend"]="arena-frontend"
 )
 
 # Health check endpoints (selector|port|path)
@@ -116,6 +123,8 @@ declare -A SERVICE_HEALTH=(
     ["shop"]="app=shop|3000|/"
     ["videovault"]="app=videovault|5000|/api/health"
     ["sos"]="app=sos|3005|/health"
+    ["arena-backend"]="app=arena-backend|3003|/api/health"
+    ["arena-frontend"]="app=arena-frontend|80|/"
 )
 
 # Map a top-level service to its image targets
@@ -124,6 +133,7 @@ get_image_targets() {
     local service=$1
     case $service in
         l2p) echo "l2p-backend l2p-frontend" ;;
+        arena) echo "arena-backend arena-frontend" ;;
         *)   echo "$service" ;;
     esac
 }

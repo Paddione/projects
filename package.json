@@ -11,6 +11,7 @@
     "dev:l2p:parallel": "cd l2p && concurrently -n \"frontend,backend\" -c \"green,blue\" \"npm run dev:frontend\" \"npm run dev:backend\"",
     "dev:shop": "cd shop && npm run dev",
     "dev:sos": "cd SOS && npm run dev",
+    "dev:arena": "cd arena && concurrently -n \"frontend,backend\" -c \"green,blue\" \"npm run dev:frontend\" \"npm run dev:backend\"",
     "dev:videovault": "cd VideoVault && npm run dev",
     "install:all": "cd l2p && npm run install:all && cd ../VideoVault && npm install && cd ../shop && npm install && cd ../SOS && npm install",
     "test:all": "npm --prefix l2p run test:all && npm --prefix auth run test && npm --prefix VideoVault run test && npm --prefix shop run test && npm --prefix SOS run test",

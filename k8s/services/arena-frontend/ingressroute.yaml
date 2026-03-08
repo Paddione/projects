@@ -1,0 +1,31 @@
+---
+# =============================================================================
+# Arena Frontend IngressRoute
+# =============================================================================
+# Serves the frontend for all paths not matched by backend routes.
+# Lower priority ensures /api and /socket.io go to backend.
+# =============================================================================
+
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: arena-frontend
+  namespace: korczewski-services
+  labels:
+    app: arena-frontend
+    app.kubernetes.io/name: arena-frontend
+    app.kubernetes.io/component: frontend
+    app.kubernetes.io/part-of: korczewski
+    tier: services
+spec:
+  routes:
+    - match: Host(`arena.korczewski.de`)
+      kind: Rule
+      priority: 10
+      services:
+        - name: arena-frontend
+          port: 80
+      middlewares:
+        - name: user-auth-chain
+          namespace: korczewski-infra
+  tls: {}

@@ -35,7 +35,7 @@ log_warn() { echo -e "${YELLOW}[WARN]${NC} $1"; }
 log_error() { echo -e "${RED}[ERROR]${NC} $1"; }
 
 # All known services
-ALL_SERVICES=(auth l2p shop videovault sos)
+ALL_SERVICES=(auth l2p shop videovault sos arena)
 
 # Service to directory mapping (for git log paths)
 declare -A SERVICE_DIRS=(
@@ -44,6 +44,7 @@ declare -A SERVICE_DIRS=(
     ["shop"]="shop"
     ["videovault"]="VideoVault"
     ["sos"]="SOS"
+    ["arena"]="arena"
 )
 
 # Ensure the ConfigMap exists

@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Arena Audio Preview</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: system-ui, sans-serif; background: #0f1117; color: #e0e0e0; padding: 2rem; }
+  h1 { color: #7c8aff; margin-bottom: 0.5rem; font-size: 1.6rem; }
+  h2 { color: #5c6bc0; margin: 2rem 0 1rem; font-size: 1.1rem; text-transform: uppercase; letter-spacing: 0.1em;
+       border-bottom: 1px solid #2a2d3a; padding-bottom: 0.5rem; }
+  .subtitle { color: #666; margin-bottom: 2rem; font-size: 0.9rem; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem; }
+  .card { background: #1a1d27; border-radius: 8px; padding: 1rem; border: 1px solid #2a2d3a; transition: border-color 0.2s; }
+  .card:hover { border-color: #5c6bc0; }
+  .card .name { font-weight: 600; margin-bottom: 0.5rem; color: #c0c8ff; }
+  .card .meta { font-size: 0.8rem; color: #666; margin-bottom: 0.5rem; }
+  .card audio { width: 100%; height: 36px; }
+</style>
+</head>
+<body>
+<h1>Arena Audio Preview</h1>
+<p class="subtitle">15 SFX + 4 Music tracks — generated with AudioCraft (AudioGen + MusicGen)</p>
+
+<h2>Sound Effects</h2>
+<div class="grid" id="sfx"></div>
+
+<h2>Music</h2>
+<div class="grid" id="music"></div>
+
+<script>
+const SFX_DIR = '../frontend/public/assets/sfx/';
+const MUSIC_DIR = '../frontend/public/assets/music/';
+
+const sfx = [
+  { id: 'gunshot', label: 'Gunshot', dur: '0.5s' },
+  { id: 'melee_swing', label: 'Melee Swing', dur: '0.8s' },
+  { id: 'bullet_impact', label: 'Bullet Impact', dur: '0.3s' },
+  { id: 'player_hit', label: 'Player Hit', dur: '0.5s' },
+  { id: 'player_death', label: 'Player Death', dur: '1.5s' },
+  { id: 'health_pickup', label: 'Health Pickup', dur: '1.0s' },
+  { id: 'armor_pickup', label: 'Armor Pickup', dur: '1.0s' },
+  { id: 'round_start', label: 'Round Start', dur: '2.0s' },
+  { id: 'round_end', label: 'Round End', dur: '2.0s' },
+  { id: 'match_victory', label: 'Match Victory', dur: '3.0s' },
+  { id: 'match_defeat', label: 'Match Defeat', dur: '3.0s' },
+  { id: 'zone_warning', label: 'Zone Warning', dur: '2.0s' },
+  { id: 'zone_tick', label: 'Zone Tick', dur: '0.5s' },
+  { id: 'footstep_walk', label: 'Footstep Walk', dur: '0.3s' },
+  { id: 'footstep_sprint', label: 'Footstep Sprint', dur: '0.3s' },
+];
+
+const music = [
+  { id: 'lobby', label: 'Lobby Theme', dur: '60s' },
+  { id: 'battle', label: 'Battle Theme', dur: '90s' },
+  { id: 'victory', label: 'Victory Sting', dur: '8s' },
+  { id: 'defeat', label: 'Defeat Sting', dur: '8s' },
+];
+
+function createCard(item, baseDir) {
+  const card = document.createElement('div');
+  card.className = 'card';
+
+  const name = document.createElement('div');
+  name.className = 'name';
+  name.textContent = item.label;
+
+  const meta = document.createElement('div');
+  meta.className = 'meta';
+  meta.textContent = item.id + '.ogg — ' + item.dur;
+
+  const audio = document.createElement('audio');
+  audio.controls = true;
+  audio.preload = 'none';
+
+  const srcOgg = document.createElement('source');
+  srcOgg.src = baseDir + item.id + '.ogg';
+  srcOgg.type = 'audio/ogg';
+
+  const srcMp3 = document.createElement('source');
+  srcMp3.src = baseDir + item.id + '.mp3';
+  srcMp3.type = 'audio/mpeg';
+
+  audio.appendChild(srcOgg);
+  audio.appendChild(srcMp3);
+
+  card.appendChild(name);
+  card.appendChild(meta);
+  card.appendChild(audio);
+  return card;
+}
+
+const sfxGrid = document.getElementById('sfx');
+const musicGrid = document.getElementById('music');
+sfx.forEach(function(s) { sfxGrid.appendChild(createCard(s, SFX_DIR)); });
+music.forEach(function(m) { musicGrid.appendChild(createCard(m, MUSIC_DIR)); });
+</script>
+</body>
+</html>

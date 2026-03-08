@@ -1,0 +1,25 @@
+---
+# =============================================================================
+# Arena Backend Service
+# =============================================================================
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: arena-backend
+  namespace: korczewski-services
+  labels:
+    app: arena-backend
+    app.kubernetes.io/name: arena-backend
+    app.kubernetes.io/component: backend
+    app.kubernetes.io/part-of: korczewski
+    tier: services
+spec:
+  type: ClusterIP
+  ports:
+    - port: 3003
+      targetPort: 3003
+      protocol: TCP
+      name: http
+  selector:
+    app: arena-backend

@@ -1,0 +1,159 @@
+{
+  "meta": {
+    "version": "1.0.0",
+    "style": "low-poly stylized isometric",
+    "camera_angle": 60,
+    "tile_size": 32,
+    "character_size": 64,
+    "item_size": 32,
+    "ui_size": 16
+  },
+
+  "characters": [
+    {
+      "id": "warrior",
+      "prompt": "low-poly stylized warrior character, heavy plate armor, broadsword on back, top-down game asset, isometric view, dark fantasy style, clean silhouette",
+      "color_accent": "#6366f1",
+      "animations": {
+        "idle":         { "frames": 2, "fps": 4 },
+        "walk":         { "frames": 4, "fps": 8 },
+        "gun_attack":   { "frames": 3, "fps": 12 },
+        "melee_attack": { "frames": 3, "fps": 12 },
+        "death":        { "frames": 4, "fps": 6 },
+        "hit":          { "frames": 2, "fps": 10 }
+      },
+      "directions": ["N", "NE", "E", "SE", "S", "SW", "W", "NW"]
+    },
+    {
+      "id": "rogue",
+      "prompt": "low-poly stylized rogue character, leather armor, dual daggers, hooded cloak, top-down game asset, isometric view, dark fantasy style, clean silhouette",
+      "color_accent": "#22c55e",
+      "animations": {
+        "idle":         { "frames": 2, "fps": 4 },
+        "walk":         { "frames": 4, "fps": 8 },
+        "gun_attack":   { "frames": 3, "fps": 12 },
+        "melee_attack": { "frames": 3, "fps": 12 },
+        "death":        { "frames": 4, "fps": 6 },
+        "hit":          { "frames": 2, "fps": 10 }
+      },
+      "directions": ["N", "NE", "E", "SE", "S", "SW", "W", "NW"]
+    },
+    {
+      "id": "mage",
+      "prompt": "low-poly stylized mage character, flowing robes, glowing staff, arcane symbols, top-down game asset, isometric view, dark fantasy style, clean silhouette",
+      "color_accent": "#a855f7",
+      "animations": {
+        "idle":         { "frames": 2, "fps": 4 },
+        "walk":         { "frames": 4, "fps": 8 },
+        "gun_attack":   { "frames": 3, "fps": 12 },
+        "melee_attack": { "frames": 3, "fps": 12 },
+        "death":        { "frames": 4, "fps": 6 },
+        "hit":          { "frames": 2, "fps": 10 }
+      },
+      "directions": ["N", "NE", "E", "SE", "S", "SW", "W", "NW"]
+    },
+    {
+      "id": "tank",
+      "prompt": "low-poly stylized tank character, massive shield, spiked armor, heavy build, top-down game asset, isometric view, dark fantasy style, clean silhouette",
+      "color_accent": "#f59e0b",
+      "animations": {
+        "idle":         { "frames": 2, "fps": 4 },
+        "walk":         { "frames": 4, "fps": 8 },
+        "gun_attack":   { "frames": 3, "fps": 12 },
+        "melee_attack": { "frames": 3, "fps": 12 },
+        "death":        { "frames": 4, "fps": 6 },
+        "hit":          { "frames": 2, "fps": 10 }
+      },
+      "directions": ["N", "NE", "E", "SE", "S", "SW", "W", "NW"]
+    }
+  ],
+
+  "weapons": [
+    {
+      "id": "projectile",
+      "prompt": "glowing energy projectile, sci-fi laser bolt, yellow-orange, game asset, transparent background",
+      "frames": 2,
+      "size": 32
+    },
+    {
+      "id": "melee_arc",
+      "prompt": "sword slash arc effect, energy trail, white-blue glow, game VFX, transparent background",
+      "frames": 3,
+      "size": 48
+    },
+    {
+      "id": "muzzle_flash",
+      "prompt": "muzzle flash effect, bright yellow-white burst, game VFX, transparent background",
+      "frames": 4,
+      "size": 32
+    }
+  ],
+
+  "items": [
+    {
+      "id": "health_pack",
+      "prompt": "low-poly red health pack, glowing cross symbol, game item, isometric view, transparent background",
+      "frames": 3,
+      "size": 32
+    },
+    {
+      "id": "armor_plate",
+      "prompt": "low-poly blue armor plate pickup, glowing shield icon, game item, isometric view, transparent background",
+      "frames": 3,
+      "size": 32
+    }
+  ],
+
+  "tiles": [
+    { "id": "floor_01", "prompt": "dark stone floor tile, top-down view, low-poly, seamless, dark navy tone" },
+    { "id": "floor_02", "prompt": "dark stone floor tile variant, top-down view, low-poly, seamless, slightly cracked" },
+    { "id": "floor_03", "prompt": "dark stone floor tile variant, top-down view, low-poly, seamless, moss patches" },
+    { "id": "floor_04", "prompt": "dark stone floor tile variant, top-down view, low-poly, seamless, worn edges" },
+    { "id": "wall",     "prompt": "stone wall tile, top-down view, low-poly, dark gray, rough hewn blocks" },
+    { "id": "boundary", "prompt": "boundary wall edge tile, top-down view, low-poly, dark with glowing blue border" },
+    { "id": "zone_overlay", "prompt": "danger zone overlay tile, translucent red tint, subtle hazard pattern, top-down" }
+  ],
+
+  "cover": [
+    { "id": "wall_cover",  "prompt": "low-poly stone wall barrier, top-down view, dark gray, destructible" },
+    { "id": "crate",       "prompt": "low-poly wooden crate, top-down view, brown, destructible game object" },
+    { "id": "pillar",      "prompt": "low-poly stone pillar, top-down view, circular, dark gray" },
+    { "id": "bush",        "prompt": "low-poly bush, top-down view, dark green, semi-transparent cover" },
+    { "id": "water",       "prompt": "low-poly water puddle, top-down view, blue reflective surface, slowing terrain" }
+  ],
+
+  "ui": [
+    { "id": "heart_full",   "prompt": "pixel art red heart icon, full health, game UI",   "size": 16 },
+    { "id": "heart_empty",  "prompt": "pixel art dark heart icon, empty health, game UI",  "size": 16 },
+    { "id": "shield",       "prompt": "pixel art blue shield icon, armor indicator, game UI", "size": 16 },
+    { "id": "gun_icon",     "prompt": "pixel art gun icon, ranged weapon, game UI",        "size": 16 },
+    { "id": "melee_icon",   "prompt": "pixel art sword icon, melee weapon, game UI",       "size": 16 },
+    { "id": "round_pip_on", "prompt": "pixel art glowing pip, round won indicator, game UI", "size": 8 },
+    { "id": "round_pip_off","prompt": "pixel art dim pip, round not won indicator, game UI", "size": 8 }
+  ],
+
+  "sfx": [
+    { "id": "gunshot",        "prompt": "sci-fi laser gunshot, short sharp burst, video game sound effect",     "duration": 0.5 },
+    { "id": "melee_swing",    "prompt": "sword swing whoosh, fast melee attack, video game sound effect",       "duration": 0.4 },
+    { "id": "bullet_impact",  "prompt": "laser bullet impact on surface, sci-fi hit, video game sound effect",  "duration": 0.3 },
+    { "id": "player_hit",     "prompt": "character taking damage, flesh impact, video game sound effect",       "duration": 0.4 },
+    { "id": "player_death",   "prompt": "character death sound, dramatic collapse, video game sound effect",    "duration": 1.0 },
+    { "id": "health_pickup",  "prompt": "health pickup sparkle, positive chime, video game sound effect",       "duration": 0.5 },
+    { "id": "armor_pickup",   "prompt": "armor equip metallic clank, shield activate, video game sound effect", "duration": 0.5 },
+    { "id": "round_start",    "prompt": "battle round start horn, dramatic fanfare, video game sound effect",   "duration": 1.5 },
+    { "id": "round_end",      "prompt": "round end gong, resolution chime, video game sound effect",           "duration": 1.5 },
+    { "id": "match_victory",  "prompt": "triumphant victory fanfare, celebration, video game sound effect",     "duration": 2.0 },
+    { "id": "match_defeat",   "prompt": "somber defeat sound, loss, video game sound effect",                   "duration": 2.0 },
+    { "id": "zone_warning",   "prompt": "danger zone warning alarm, urgent beeping, video game sound effect",   "duration": 1.0 },
+    { "id": "zone_tick",      "prompt": "zone damage tick, electric zap, recurring pain, video game",           "duration": 0.3 },
+    { "id": "footstep_walk",  "prompt": "footstep on stone, single step walking pace, video game sound",        "duration": 0.3 },
+    { "id": "footstep_sprint","prompt": "fast footstep on stone, sprinting pace, video game sound",             "duration": 0.2 }
+  ],
+
+  "music": [
+    { "id": "lobby",   "prompt": "ambient atmospheric music, mysterious dark electronic, slow tempo, loopable, video game lobby theme",       "duration": 60,  "loop": true },
+    { "id": "battle",  "prompt": "intense electronic battle music, fast driving tempo, aggressive synths, loopable, video game combat theme", "duration": 90,  "loop": true },
+    { "id": "victory", "prompt": "triumphant electronic victory fanfare, heroic synths, video game win sting",                                "duration": 8,   "loop": false },
+    { "id": "defeat",  "prompt": "somber electronic defeat theme, melancholic synths, video game loss sting",                                 "duration": 8,   "loop": false }
+  ]
+}

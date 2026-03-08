@@ -58,6 +58,18 @@ build:
       docker:
         dockerfile: SOS/Dockerfile
 
+    # Arena Backend
+    - image: registry.korczewski.de/korczewski/arena-backend
+      context: ..
+      docker:
+        dockerfile: arena/backend/Dockerfile
+
+    # Arena Frontend
+    - image: registry.korczewski.de/korczewski/arena-frontend
+      context: ..
+      docker:
+        dockerfile: arena/frontend/Dockerfile
+
 # =============================================================================
 # Manifest Configuration
 # =============================================================================
@@ -75,6 +87,8 @@ manifests:
       - services/shop
       - services/videovault
       - services/sos
+      - services/arena-backend
+      - services/arena-frontend
   rawYaml:
     - base/namespaces.yaml
 
@@ -137,6 +151,16 @@ portForward:
     namespace: korczewski-services
     port: 3005
     localPort: 3005
+  - resourceType: service
+    resourceName: arena-backend
+    namespace: korczewski-services
+    port: 3003
+    localPort: 3003
+  - resourceType: service
+    resourceName: arena-frontend
+    namespace: korczewski-services
+    port: 80
+    localPort: 3002
 
 # =============================================================================
 # Profiles
@@ -212,6 +236,24 @@ profiles:
         paths:
           - services/sos
 
+  # Arena only (backend + frontend)
+  - name: arena
+    build:
+      artifacts:
+        - image: registry.korczewski.de/korczewski/arena-backend
+          context: ..
+          docker:
+            dockerfile: arena/backend/Dockerfile
+        - image: registry.korczewski.de/korczewski/arena-frontend
+          context: ..
+          docker:
+            dockerfile: arena/frontend/Dockerfile
+    manifests:
+      kustomize:
+        paths:
+          - services/arena-backend
+          - services/arena-frontend
+
   # Infrastructure only (no builds)
   - name: infra
     manifests:
@@ -257,6 +299,14 @@ profiles:
           context: ..
           docker:
             dockerfile: SOS/Dockerfile
+        - image: registry.korczewski.de/korczewski/arena-backend
+          context: ..
+          docker:
+            dockerfile: arena/backend/Dockerfile
+        - image: registry.korczewski.de/korczewski/arena-frontend
+          context: ..
+          docker:
+            dockerfile: arena/frontend/Dockerfile
     manifests:
       kustomize:
         paths:
@@ -303,3 +353,13 @@ profiles:
         namespace: korczewski-dev
         port: 3005
         localPort: 3105
+      - resourceType: service
+        resourceName: arena-backend
+        namespace: korczewski-dev
+        port: 3003
+        localPort: 3103
+      - resourceType: service
+        resourceName: arena-frontend
+        namespace: korczewski-dev
+        port: 80
+        localPort: 3102

@@ -1,0 +1,15 @@
+# Generated assets (re-create via scripts/generate_all.sh)
+assets/concepts/
+assets/models/
+assets/renders/
+assets/audio/
+
+# Environment variables (secrets)
+.env
+
+# Python virtual environment
+.venv/
+
+# Keep manifest and final frontend assets in git
+!assets/manifest.json
+!frontend/public/assets/
