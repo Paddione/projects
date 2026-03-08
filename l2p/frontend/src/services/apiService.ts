@@ -13,6 +13,7 @@ import {
   CreateLobbyRequest,
   JoinLobbyRequest,
   LobbyData,
+  Category,
   FileMetadata,
   QuestionText,
   QuestionAnswers,
@@ -1537,7 +1538,7 @@ class ApiService {
 
   // Question Database (M:N) methods
   async browseQuestions(filters: {
-    category?: string
+    category_id?: number
     difficulty?: number
     answer_type?: string
     search?: string
@@ -1553,6 +1554,7 @@ class ApiService {
       explanation?: string
       difficulty: number
       category?: string
+      category_id?: number
       language?: string
       answer_type?: string
       created_at?: string
@@ -1562,7 +1564,7 @@ class ApiService {
     pageSize: number
   }>> {
     const params = new URLSearchParams()
-    if (filters.category) params.set('category', filters.category)
+    if (filters.category_id) params.set('category_id', String(filters.category_id))
     if (filters.difficulty) params.set('difficulty', String(filters.difficulty))
     if (filters.answer_type) params.set('answer_type', filters.answer_type)
     if (filters.search) params.set('q', filters.search)
@@ -1576,6 +1578,42 @@ class ApiService {
 
   async getQuestionCategories(): Promise<ApiResponse<string[]>> {
     return this.request<string[]>('/questions/categories')
+  }
+
+  // Category CRUD
+  async getCategories(): Promise<ApiResponse<Category[]>> {
+    return this.request<Category[]>('/categories')
+  }
+
+  async createCategory(name: string): Promise<ApiResponse<Category>> {
+    return this.request<Category>('/categories', {
+      method: 'POST',
+      body: JSON.stringify({ name })
+    })
+  }
+
+  async updateCategory(id: number, name: string): Promise<ApiResponse<Category>> {
+    return this.request<Category>(`/categories/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify({ name })
+    })
+  }
+
+  async deleteCategory(id: number): Promise<ApiResponse<{ message: string }>> {
+    return this.request<{ message: string }>(`/categories/${id}`, {
+      method: 'DELETE'
+    })
+  }
+
+  // Bulk update questions
+  async bulkUpdateQuestions(
+    questionIds: number[],
+    updates: { category_id?: number; difficulty?: number; answer_type?: string }
+  ): Promise<ApiResponse<{ updated: number }>> {
+    return this.request<{ updated: number }>('/questions/bulk', {
+      method: 'PATCH',
+      body: JSON.stringify({ questionIds, updates })
+    })
   }
 
   async linkQuestionsToSet(setId: number, questionIds: number[]): Promise<ApiResponse<{ message: string }>> {

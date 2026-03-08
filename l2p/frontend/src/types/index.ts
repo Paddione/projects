@@ -58,12 +58,13 @@ export interface Question {
   explanation?: string;
   difficulty: number;
   category?: string;
+  category_id?: number;
   language?: string;
   answer_type?: string;
 }
 
 export interface QuestionFilterParams {
-  category?: string;
+  category_id?: number;
   difficulty?: number;
   answer_type?: string;
   search?: string;
@@ -71,6 +72,13 @@ export interface QuestionFilterParams {
   pageSize?: number;
   sortBy?: string;
   sortDir?: 'ASC' | 'DESC';
+}
+
+export interface Category {
+  id: number;
+  name: string;
+  question_count: number;
+  created_at?: string;
 }
 
 export interface QuestionSet {
