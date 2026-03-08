@@ -19,7 +19,7 @@ vi.mock('./DatabaseService.js', () => ({
 // ============================================================================
 
 import { LobbyService } from './LobbyService.js';
-import type { ArenaLobby, ArenaPlayer, ArenaLobbySettings } from '../types/game.js';
+import type { ArenaPlayer } from '../types/game.js';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -277,20 +277,62 @@ describe('LobbyService', () => {
             ).rejects.toThrow('Lobby is full');
         });
 
-        it('throws if player with same id is already in lobby', async () => {
-            mockQuery.mockResolvedValueOnce({ rowCount: 1, rows: [makeDbRow()] });
+        it('reconnects player with same id (updates isConnected)', async () => {
+            const reconnectedRow = makeDbRow({
+                players: JSON.stringify([
+                    {
+                        id: '42',
+                        username: 'Alice',
+                        character: 'soldier',
+                        characterLevel: 1,
+                        isReady: false,
+                        isHost: true,
+                        isConnected: true,
+                        joinedAt: new Date().toISOString(),
+                    },
+                ]),
+            });
 
-            await expect(
-                service.joinLobby({ lobbyCode: 'ABCD12', player: { id: '42', username: 'Duplicate', character: 'a', characterLevel: 1, isReady: false, isConnected: true } })
-            ).rejects.toThrow('Player already in lobby');
+            mockQuery
+                .mockResolvedValueOnce({ rowCount: 1, rows: [makeDbRow()] })      // findByCode
+                .mockResolvedValueOnce({ rowCount: 1, rows: [reconnectedRow] });   // UPDATE (reconnect)
+
+            const lobby = await service.joinLobby({
+                lobbyCode: 'ABCD12',
+                player: { id: '42', username: 'Duplicate', character: 'a', characterLevel: 1, isReady: false, isConnected: true },
+            });
+
+            expect(lobby.players).toHaveLength(1);
+            expect(lobby.players[0].isConnected).toBe(true);
         });
 
-        it('throws if player with same username is already in lobby', async () => {
-            mockQuery.mockResolvedValueOnce({ rowCount: 1, rows: [makeDbRow()] });
+        it('reconnects player with same username (updates isConnected)', async () => {
+            const reconnectedRow = makeDbRow({
+                players: JSON.stringify([
+                    {
+                        id: '42',
+                        username: 'Alice',
+                        character: 'soldier',
+                        characterLevel: 1,
+                        isReady: false,
+                        isHost: true,
+                        isConnected: true,
+                        joinedAt: new Date().toISOString(),
+                    },
+                ]),
+            });
 
-            await expect(
-                service.joinLobby({ lobbyCode: 'ABCD12', player: { id: '99', username: 'alice', character: 'a', characterLevel: 1, isReady: false, isConnected: true } })
-            ).rejects.toThrow('Player already in lobby');
+            mockQuery
+                .mockResolvedValueOnce({ rowCount: 1, rows: [makeDbRow()] })      // findByCode
+                .mockResolvedValueOnce({ rowCount: 1, rows: [reconnectedRow] });   // UPDATE (reconnect)
+
+            const lobby = await service.joinLobby({
+                lobbyCode: 'ABCD12',
+                player: { id: '99', username: 'alice', character: 'a', characterLevel: 1, isReady: false, isConnected: true },
+            });
+
+            expect(lobby.players).toHaveLength(1);
+            expect(lobby.players[0].isConnected).toBe(true);
         });
     });
 
