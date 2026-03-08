@@ -1,0 +1,250 @@
+/* CategoryManager Modal — Cybervault Theme */
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  animation: fadeIn 0.15s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.modal {
+  width: 90%;
+  max-width: 520px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--cv-void-lighter, #111822);
+  border: 1px solid var(--cv-border-2, rgba(255, 255, 255, 0.08));
+  border-radius: 12px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  animation: slideUp 0.2s ease-out;
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 20px 14px;
+  border-bottom: 1px solid var(--cv-border-2, rgba(255, 255, 255, 0.08));
+}
+
+.title {
+  margin: 0;
+  font-size: var(--cv-text-lg, 1.125rem);
+  font-weight: 700;
+  color: var(--cv-cyan, #00f2ff);
+  font-family: var(--cv-font-heading, 'Orbitron', sans-serif);
+  letter-spacing: 0.5px;
+}
+
+.closeButton {
+  background: none;
+  border: none;
+  color: var(--cv-text-dim, #94a3b8);
+  font-size: 24px;
+  cursor: pointer;
+  padding: 0 4px;
+  line-height: 1;
+  transition: color 0.15s;
+}
+
+.closeButton:hover {
+  color: var(--cv-text-bright, #f8fafc);
+}
+
+.error {
+  margin: 12px 20px 0;
+  padding: 10px 14px;
+  background: var(--cv-danger-subtle, rgba(255, 62, 62, 0.1));
+  border: 1px solid var(--cv-danger-border, rgba(255, 62, 62, 0.2));
+  border-radius: 6px;
+  color: var(--cv-danger, #ff3e3e);
+  font-size: var(--cv-text-sm, 0.875rem);
+}
+
+.list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.loading,
+.empty {
+  padding: 24px;
+  text-align: center;
+  color: var(--cv-text-muted, #64748b);
+  font-size: var(--cv-text-sm, 0.875rem);
+}
+
+.categoryRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  background: var(--cv-glass-3, rgba(255, 255, 255, 0.04));
+  border: 1px solid var(--cv-border-1, rgba(255, 255, 255, 0.05));
+  border-radius: 8px;
+  transition: border-color 0.15s;
+}
+
+.categoryRow:hover {
+  border-color: var(--cv-border-2, rgba(255, 255, 255, 0.08));
+}
+
+.categoryName {
+  flex: 1;
+  font-size: var(--cv-text-sm, 0.875rem);
+  color: var(--cv-text-bright, #f8fafc);
+  cursor: pointer;
+  padding: 4px 0;
+  transition: color 0.15s;
+}
+
+.categoryName:hover {
+  color: var(--cv-cyan, #00f2ff);
+}
+
+.editInput {
+  flex: 1;
+  padding: 6px 10px;
+  background: var(--cv-glass-4, rgba(255, 255, 255, 0.05));
+  border: 1px solid var(--cv-cyan-border, rgba(0, 242, 255, 0.2));
+  border-radius: 4px;
+  color: var(--cv-text-bright, #f8fafc);
+  font-family: var(--cv-font-body, 'Space Grotesk', sans-serif);
+  font-size: var(--cv-text-sm, 0.875rem);
+  outline: none;
+}
+
+.count {
+  font-size: var(--cv-text-xs, 0.75rem);
+  color: var(--cv-text-muted, #64748b);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.actions {
+  display: flex;
+  gap: 6px;
+}
+
+.saveButton {
+  padding: 4px 12px;
+  background: var(--cv-cyan-bg, rgba(0, 242, 255, 0.05));
+  border: 1px solid var(--cv-cyan-border, rgba(0, 242, 255, 0.2));
+  border-radius: 4px;
+  color: var(--cv-cyan, #00f2ff);
+  font-size: var(--cv-text-xs, 0.75rem);
+  font-family: var(--cv-font-body, 'Space Grotesk', sans-serif);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.saveButton:hover {
+  background: rgba(0, 242, 255, 0.1);
+}
+
+.cancelButton {
+  padding: 4px 12px;
+  background: transparent;
+  border: 1px solid var(--cv-border-2, rgba(255, 255, 255, 0.08));
+  border-radius: 4px;
+  color: var(--cv-text-dim, #94a3b8);
+  font-size: var(--cv-text-xs, 0.75rem);
+  font-family: var(--cv-font-body, 'Space Grotesk', sans-serif);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.cancelButton:hover {
+  border-color: var(--cv-text-dim, #94a3b8);
+}
+
+.deleteButton {
+  padding: 4px 12px;
+  background: transparent;
+  border: 1px solid var(--cv-danger-border, rgba(255, 62, 62, 0.2));
+  border-radius: 4px;
+  color: var(--cv-danger, #ff3e3e);
+  font-size: var(--cv-text-xs, 0.75rem);
+  font-family: var(--cv-font-body, 'Space Grotesk', sans-serif);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.deleteButton:hover:not(:disabled) {
+  background: var(--cv-danger-subtle, rgba(255, 62, 62, 0.1));
+}
+
+.deleteButton:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.addRow {
+  display: flex;
+  gap: 10px;
+  padding: 14px 20px 18px;
+  border-top: 1px solid var(--cv-border-2, rgba(255, 255, 255, 0.08));
+}
+
+.addInput {
+  flex: 1;
+  padding: 8px 12px;
+  background: var(--cv-glass-4, rgba(255, 255, 255, 0.05));
+  border: 1px solid var(--cv-border-2, rgba(255, 255, 255, 0.08));
+  border-radius: 6px;
+  color: var(--cv-text, #fff);
+  font-family: var(--cv-font-body, 'Space Grotesk', sans-serif);
+  font-size: var(--cv-text-sm, 0.875rem);
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.addInput::placeholder {
+  color: var(--cv-text-muted, #64748b);
+}
+
+.addInput:focus {
+  border-color: var(--cv-cyan-border, rgba(0, 242, 255, 0.2));
+}
+
+.addButton {
+  padding: 8px 20px;
+  background: linear-gradient(135deg, var(--cv-cyan, #00f2ff) 0%, var(--cv-purple, #bc13fe) 100%);
+  border: none;
+  border-radius: 6px;
+  color: #fff;
+  font-family: var(--cv-font-body, 'Space Grotesk', sans-serif);
+  font-size: var(--cv-text-sm, 0.875rem);
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.addButton:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.addButton:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}

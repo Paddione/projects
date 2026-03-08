@@ -5,6 +5,7 @@ import { QuestionBrowser } from './QuestionBrowser'
 import { QuestionSet, Answer } from '../types'
 import { useFocusTrap } from '../hooks/useFocusTrap'
 import { useLocalization } from '../hooks/useLocalization'
+import { CategoryManager } from './CategoryManager'
 import styles from '../styles/QuestionSetManager.module.css'
 
 interface QuestionSetStats {
@@ -30,6 +31,7 @@ export const QuestionSetManager: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'sets' | 'database'>('sets')
   // Question picker modal (for adding existing questions to a set)
   const [showQuestionPicker, setShowQuestionPicker] = useState(false)
+  const [showCategoryManager, setShowCategoryManager] = useState(false)
 
   // Focus traps for modals
   const editModalRef = useFocusTrap(showEditForm, () => setShowEditForm(false))
@@ -446,6 +448,13 @@ export const QuestionSetManager: React.FC = () => {
               {t('questionSets.databaseTab', 'Question Database')}
             </button>
           </div>
+          <button
+            className={styles.manageCategoriesButton}
+            onClick={() => setShowCategoryManager(true)}
+            type="button"
+          >
+            Manage Categories
+          </button>
           {activeTab === 'sets' && (
             <>
               <button
@@ -1137,6 +1146,9 @@ ${t('questionSets.aiPrompt.rule6')}
       )}
 
       {/* AI Generator removed */}
+
+      {/* Category Manager Modal */}
+      <CategoryManager isOpen={showCategoryManager} onClose={() => setShowCategoryManager(false)} />
     </div>
   )
 } 
