@@ -23,7 +23,7 @@ rsync -av --delete "${LOCAL_SECRETS}/" "${PXE_HOST}:${PXE_SECRETS}/"
 
 # Write SMB password as a standalone file (used by storage-setup.sh on new nodes)
 if [ -f "${ENV_FILE}" ]; then
-    SMB_PASS=$(grep "^SMB_PASSWORD=" "${ENV_FILE}" | cut -d= -f2)
+    SMB_PASS=$(grep "^SMB_PASSWORD=" "${ENV_FILE}" | cut -d= -f2-)
     echo "${SMB_PASS}" | ssh "${PXE_HOST}" "cat > ${PXE_SECRETS}/smb-password.txt"
     echo "SMB password synced"
 else

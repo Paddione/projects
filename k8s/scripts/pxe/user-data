@@ -111,7 +111,7 @@ autoinstall:
     - chmod 440 /target/etc/sudoers.d/patrick
 
     # --- Groups ---
-    - curtin in-target -- usermod -aG sudo,adm,plugdev,netdev patrick
+    - curtin in-target -- usermod -aG sudo,adm,plugdev,netdev,lxd patrick
     - curtin in-target -- groupadd -f docker
     - curtin in-target -- usermod -aG docker patrick
     - curtin in-target -- groupadd -f sambashare
@@ -157,7 +157,7 @@ autoinstall:
         echo "ERROR: Could not determine boot disk"; exit 1
       fi
       echo "Boot disk: /dev/${BOOT_DISK}"
-      SMB_PASS=$(curl -sf http://10.10.0.4:8080/secrets/smb-password.txt || echo "170591pk")
+      SMB_PASS=$(curl -sf http://10.10.0.4:8080/secrets/smb-password.txt) || { echo "ERROR: Cannot fetch SMB password from PXE server"; exit 1; }
       cat > /etc/samba/smb.conf << 'SMBGLOBAL'
       [global]
         workgroup = KORCZEWSKI
