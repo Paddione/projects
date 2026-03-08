@@ -38,6 +38,7 @@ const DIRECTION_ANGLES: Record<Direction, number> = {
 
 class AssetServiceImpl {
     private loaded = false;
+    private loadingPromise: Promise<void> | null = null;
     private spritesheets: Partial<Record<AtlasKey, Spritesheet>> = {};
 
     /**
@@ -53,6 +54,8 @@ class AssetServiceImpl {
      */
     async loadAll(onProgress?: (progress: number) => void): Promise<void> {
         if (this.loaded) return;
+        // Deduplicate concurrent calls — return the same promise if already loading
+        if (this.loadingPromise) return this.loadingPromise;
 
         const bundles: UnresolvedAsset[] = [];
 
@@ -79,6 +82,7 @@ class AssetServiceImpl {
         }
 
         this.loaded = true;
+        this.loadingPromise = null;
     }
 
     /**
