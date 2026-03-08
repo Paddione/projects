@@ -21,13 +21,7 @@ export default function Home() {
         setIsLoading(true);
         setError('');
         try {
-            // Use a temp ID for now (would come from auth in production)
-            const hostId = Math.floor(Math.random() * 100000);
-            const lobby: any = await api.createLobby({
-                hostId,
-                username: username.trim(),
-            });
-            setPlayer(String(hostId), username.trim());
+            const lobby: any = await api.createLobby({});
             setLobby(lobby.code, true);
             navigate(`/lobby/${lobby.code}`);
         } catch (err) {

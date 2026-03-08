@@ -3,6 +3,7 @@ import { io, Socket } from 'socket.io-client';
 const env = (window as any).__IMPORT_META_ENV__ || {};
 const API_URL = import.meta.env.VITE_API_URL || env.VITE_API_URL || '';
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || env.VITE_SOCKET_URL || window.location.origin;
+const AUTH_SERVICE_URL = import.meta.env.VITE_AUTH_SERVICE_URL || env.VITE_AUTH_SERVICE_URL || '';
 
 // ============================================================================
 // REST API
@@ -11,6 +12,7 @@ const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || env.VITE_SOCKET_URL || win
 async function fetchJSON<T>(url: string, options?: RequestInit): Promise<T> {
     const res = await fetch(`${API_URL}${url}`, {
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         ...options,
     });
     if (!res.ok) {
@@ -21,11 +23,15 @@ async function fetchJSON<T>(url: string, options?: RequestInit): Promise<T> {
 }
 
 export const api = {
+    // Auth
+    getMe: () => fetchJSON<{ user: { userId: number; username: string; email: string; role: string } }>('/api/auth/me'),
+    getAuthServiceUrl: () => AUTH_SERVICE_URL,
+
     // Health
     health: () => fetchJSON<{ status: string }>('/api/health'),
 
     // Lobbies
-    createLobby: (data: { hostId: number; username: string; settings?: Record<string, unknown> }) =>
+    createLobby: (data: { settings?: Record<string, unknown> }) =>
         fetchJSON('/api/lobbies', { method: 'POST', body: JSON.stringify(data) }),
 
     getLobby: (code: string) => fetchJSON(`/api/lobbies/${code}`),
