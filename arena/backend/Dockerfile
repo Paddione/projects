@@ -14,7 +14,7 @@ FROM base AS build
 WORKDIR /app/backend
 
 COPY arena/backend/package*.json ./
-RUN npm ci
+RUN npm install
 RUN npm install -g typescript
 
 COPY arena/backend/src ./src
@@ -28,7 +28,7 @@ FROM base AS prod-deps
 WORKDIR /app/backend
 
 COPY arena/backend/package*.json ./
-RUN npm ci --omit=dev && npm cache clean --force || true
+RUN npm install --omit=dev && npm cache clean --force || true
 
 # Production stage
 FROM base AS production

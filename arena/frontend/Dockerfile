@@ -9,7 +9,7 @@ RUN addgroup -g 1001 -S nodejs && adduser -S nodejs -u 1001 -G nodejs
 FROM base AS dependencies
 WORKDIR /app
 COPY arena/frontend/package*.json ./
-RUN npm ci && npm cache clean --force || true
+RUN npm install && npm cache clean --force || true
 
 # Build
 FROM dependencies AS build
