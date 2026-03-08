@@ -1,0 +1,355 @@
+{
+  "questionSet": {
+    "name": "False Friends & Tricky Words",
+    "description": "Falsche Freunde und verwechslungsanfällige Wörter Deutsch-Englisch (A2)",
+    "category": "english-a2",
+    "difficulty": "medium",
+    "is_active": true
+  },
+  "questions": [
+    {
+      "question_text": "What does the English word 'become' mean?",
+      "answers": [
+        { "text": "bekommen", "correct": false },
+        { "text": "werden", "correct": true },
+        { "text": "kommen", "correct": false },
+        { "text": "ankommen", "correct": false }
+      ],
+      "explanation": "'Become' bedeutet 'werden', NICHT 'bekommen'. 'Bekommen' heißt auf Englisch 'to get' oder 'to receive'. Beispiel: 'She became a doctor.' = 'Sie wurde Ärztin.'",
+      "hint": "'Become' klingt wie 'bekommen', hat aber eine ganz andere Bedeutung.",
+      "difficulty": 1,
+      "answer_type": "multiple_choice"
+    },
+    {
+      "question_text": "What does the English word 'gift' mean?",
+      "answers": [
+        { "text": "Gift (Poison)", "correct": false },
+        { "text": "Geschenk (Present)", "correct": true },
+        { "text": "Gabe (Talent)", "correct": false },
+        { "text": "Mitgift (Dowry)", "correct": false }
+      ],
+      "explanation": "'Gift' auf Englisch bedeutet 'Geschenk'. Das deutsche Wort 'Gift' (Poison) heißt auf Englisch 'poison'. Beispiel: 'I bought a gift for my mother.' = 'Ich habe ein Geschenk für meine Mutter gekauft.'",
+      "hint": "Denke an 'birthday gift' — was bekommt man zum Geburtstag?",
+      "difficulty": 1,
+      "answer_type": "multiple_choice"
+    },
+    {
+      "question_text": "What does the English word 'actual' mean?",
+      "answers": [
+        { "text": "aktuell (current)", "correct": false },
+        { "text": "tatsächlich (real/true)", "correct": true },
+        { "text": "genau (exact)", "correct": false },
+        { "text": "eigentlich (actually)", "correct": false }
+      ],
+      "explanation": "'Actual' bedeutet 'tatsächlich' oder 'wirklich', NICHT 'aktuell'. 'Aktuell' heißt auf Englisch 'current'. Beispiel: 'The actual price is higher.' = 'Der tatsächliche Preis ist höher.'",
+      "hint": "Verwechsle es nicht mit dem deutschen 'aktuell'!",
+      "difficulty": 2,
+      "answer_type": "multiple_choice"
+    },
+    {
+      "question_text": "What does the English word 'eventually' mean?",
+      "answers": [
+        { "text": "eventuell (possibly)", "correct": false },
+        { "text": "schließlich (finally/in the end)", "correct": true },
+        { "text": "vielleicht (maybe)", "correct": false },
+        { "text": "gelegentlich (occasionally)", "correct": false }
+      ],
+      "explanation": "'Eventually' bedeutet 'schließlich' oder 'am Ende', NICHT 'eventuell'. 'Eventuell' heißt auf Englisch 'possibly' oder 'perhaps'. Beispiel: 'He eventually found a job.' = 'Er fand schließlich einen Job.'",
+      "hint": "Es geht um etwas, das am Ende passiert — nicht um eine Möglichkeit.",
+      "difficulty": 2,
+      "answer_type": "multiple_choice"
+    },
+    {
+      "question_text": "What does the English word 'sensible' mean?",
+      "answers": [
+        { "text": "sensibel (sensitive)", "correct": false },
+        { "text": "vernünftig (reasonable)", "correct": true },
+        { "text": "empfindlich (touchy)", "correct": false },
+        { "text": "sinnlich (sensual)", "correct": false }
+      ],
+      "explanation": "'Sensible' bedeutet 'vernünftig', NICHT 'sensibel'. 'Sensibel' heißt auf Englisch 'sensitive'. Beispiel: 'That's a sensible decision.' = 'Das ist eine vernünftige Entscheidung.'",
+      "hint": "Ein 'sensible' Mensch trifft kluge Entscheidungen.",
+      "difficulty": 2,
+      "answer_type": "multiple_choice"
+    },
+    {
+      "question_text": "What does the German word 'Handy' mean in English?",
+      "answers": [
+        { "text": "handy (practical/useful)", "correct": false },
+        { "text": "mobile phone / cell phone", "correct": true },
+        { "text": "hand (body part)", "correct": false },
+        { "text": "handle (grip)", "correct": false }
+      ],
+      "explanation": "Das deutsche 'Handy' bedeutet auf Englisch 'mobile phone' oder 'cell phone'. Das englische Wort 'handy' bedeutet 'praktisch' oder 'nützlich'. Beispiel: 'Where is my mobile phone?' — NICHT 'Where is my handy?'",
+      "hint": "Im Englischen sagt man NICHT 'Handy' für ein Telefon!",
+      "difficulty": 1,
+      "answer_type": "multiple_choice"
+    },
+    {
+      "question_text": "What does the English word 'chef' mean?",
+      "answers": [
+        { "text": "Chef (boss)", "correct": false },
+        { "text": "Koch (cook)", "correct": true },
+        { "text": "Kellner (waiter)", "correct": false },
+        { "text": "Leiter (manager)", "correct": false }
+      ],
+      "explanation": "'Chef' auf Englisch bedeutet 'Koch', NICHT 'Chef/Boss'. 'Chef' im Deutschen heißt auf Englisch 'boss' oder 'manager'. Beispiel: 'The chef prepared a wonderful meal.' = 'Der Koch hat ein wunderbares Essen zubereitet.'",
+      "hint": "Denke an eine Restaurantküche!",
+      "difficulty": 1,
+      "answer_type": "multiple_choice"
+    },
+    {
+      "question_text": "What does the English word 'fabric' mean?",
+      "answers": [
+        { "text": "Fabrik (factory)", "correct": false },
+        { "text": "Stoff (material/cloth)", "correct": true },
+        { "text": "Gebäude (building)", "correct": false },
+        { "text": "Herstellung (production)", "correct": false }
+      ],
+      "explanation": "'Fabric' bedeutet 'Stoff' oder 'Gewebe', NICHT 'Fabrik'. 'Fabrik' heißt auf Englisch 'factory'. Beispiel: 'This fabric is very soft.' = 'Dieser Stoff ist sehr weich.'",
+      "hint": "Man kann daraus Kleidung nähen.",
+      "difficulty": 2,
+      "answer_type": "multiple_choice"
+    },
+    {
+      "question_text": "The German word 'fast' means the same as the English word 'fast' (= schnell).",
+      "answers": [
+        { "text": "True", "correct": false },
+        { "text": "False", "correct": true }
+      ],
+      "explanation": "Falsch! Das deutsche 'fast' bedeutet 'almost' (beinahe/fast), NICHT 'fast' (schnell). Beispiel: 'Ich bin fast fertig.' = 'I am almost finished.' Das englische 'fast' bedeutet 'schnell'.",
+      "hint": "'Ich habe fast alles gegessen' — heißt das 'quickly' oder 'nearly'?",
+      "difficulty": 1,
+      "answer_type": "true_false"
+    },
+    {
+      "question_text": "What does the English word 'brave' mean?",
+      "answers": [
+        { "text": "brav (well-behaved)", "correct": false },
+        { "text": "mutig (courageous)", "correct": true },
+        { "text": "stark (strong)", "correct": false },
+        { "text": "lieb (kind)", "correct": false }
+      ],
+      "explanation": "'Brave' bedeutet 'mutig', NICHT 'brav'. Das deutsche 'brav' heißt auf Englisch 'well-behaved' oder 'good'. Beispiel: 'The brave firefighter saved the child.' = 'Der mutige Feuerwehrmann rettete das Kind.'",
+      "hint": "Denke an Helden und Abenteuer!",
+      "difficulty": 1,
+      "answer_type": "multiple_choice"
+    },
+    {
+      "question_text": "The English word 'become' means 'bekommen' (to get/receive).",
+      "answers": [
+        { "text": "True", "correct": false },
+        { "text": "False", "correct": true }
+      ],
+      "explanation": "Falsch! 'Become' bedeutet 'werden', NICHT 'bekommen'. 'Bekommen' = 'to get' oder 'to receive'. Beispiel: 'He became famous.' = 'Er wurde berühmt.' NICHT: 'Er bekam berühmt.'",
+      "hint": "'She became a teacher' — wurde sie Lehrerin oder bekam sie eine Lehrerin?",
+      "difficulty": 1,
+      "answer_type": "true_false"
+    },
+    {
+      "question_text": "The English word 'gymnasium' refers to a type of school (like the German 'Gymnasium').",
+      "answers": [
+        { "text": "True", "correct": false },
+        { "text": "False", "correct": true }
+      ],
+      "explanation": "Falsch! 'Gymnasium' auf Englisch bedeutet 'Turnhalle' oder 'Sporthalle', NICHT die Schulform. Das deutsche 'Gymnasium' hat keine direkte englische Entsprechung — man sagt 'grammar school' oder 'secondary school'. Beispiel: 'We play basketball in the gymnasium.' = 'Wir spielen Basketball in der Turnhalle.'",
+      "hint": "Denke an Sport und Bewegung, nicht an Unterricht.",
+      "difficulty": 2,
+      "answer_type": "true_false"
+    },
+    {
+      "question_text": "The German word 'Mist' and the English word 'mist' have the same meaning.",
+      "answers": [
+        { "text": "True", "correct": false },
+        { "text": "False", "correct": true }
+      ],
+      "explanation": "Falsch! Das deutsche 'Mist' bedeutet 'Dung/Mist' (manure) oder wird als Ausruf benutzt ('So ein Mist!'). Das englische 'mist' bedeutet 'Nebel' oder 'Dunst'. Beispiel: 'There was mist over the lake.' = 'Es lag Nebel über dem See.'",
+      "hint": "Morgens über einem See sieht man manchmal...?",
+      "difficulty": 2,
+      "answer_type": "true_false"
+    },
+    {
+      "question_text": "Match each German false friend with its CORRECT English translation.",
+      "answers": [],
+      "explanation": "Diese Wörter sehen im Deutschen und Englischen ähnlich aus, bedeuten aber etwas ganz anderes. 'Gift' = poison (nicht 'gift'), 'aktuell' = current (nicht 'actual'), 'Chef' = boss (nicht 'chef'), 'Rat' = advice (nicht 'rat'), 'brav' = well-behaved (nicht 'brave').",
+      "hint": "Denke daran: Ähnlich aussehende Wörter haben oft verschiedene Bedeutungen!",
+      "difficulty": 2,
+      "answer_type": "matching",
+      "answer_metadata": {
+        "pairs": [
+          { "left": "Gift (German)", "right": "poison" },
+          { "left": "aktuell (German)", "right": "current" },
+          { "left": "Chef (German)", "right": "boss" },
+          { "left": "Rat (German)", "right": "advice" },
+          { "left": "brav (German)", "right": "well-behaved" }
+        ]
+      }
+    },
+    {
+      "question_text": "Match each German false friend with its CORRECT English translation.",
+      "answers": [],
+      "explanation": "'Fabrik' = factory (nicht 'fabric'), 'sensibel' = sensitive (nicht 'sensible'), 'Handy' = mobile phone (nicht 'handy'), 'bekommen' = to get/receive (nicht 'become'). Diese falschen Freunde verwirren viele Deutschlerner!",
+      "hint": "Keines dieser Wörter bedeutet das, wonach es auf Englisch klingt!",
+      "difficulty": 2,
+      "answer_type": "matching",
+      "answer_metadata": {
+        "pairs": [
+          { "left": "Fabrik (German)", "right": "factory" },
+          { "left": "sensibel (German)", "right": "sensitive" },
+          { "left": "Handy (German)", "right": "mobile phone" },
+          { "left": "bekommen (German)", "right": "to get / to receive" }
+        ]
+      }
+    },
+    {
+      "question_text": "Match each English word with its CORRECT German translation (not the false friend!).",
+      "answers": [],
+      "explanation": "'gift' (Englisch) = Geschenk, 'brave' = mutig, 'fabric' = Stoff, 'chef' = Koch, 'fast' (Deutsch) = almost. Lass dich nicht von den ähnlich klingenden Wörtern täuschen!",
+      "hint": "Die richtige Übersetzung ist NICHT das ähnlich klingende deutsche Wort!",
+      "difficulty": 2,
+      "answer_type": "matching",
+      "answer_metadata": {
+        "pairs": [
+          { "left": "gift (English)", "right": "Geschenk" },
+          { "left": "brave (English)", "right": "mutig" },
+          { "left": "fabric (English)", "right": "Stoff" },
+          { "left": "chef (English)", "right": "Koch" },
+          { "left": "fast (German)", "right": "almost" }
+        ]
+      }
+    },
+    {
+      "question_text": "Match each English word with its CORRECT German translation.",
+      "answers": [],
+      "explanation": "'eventually' = schließlich (nicht 'eventuell'), 'sensible' = vernünftig (nicht 'sensibel'), 'receipt' = Quittung (nicht 'Rezept'), 'dose' = Dosis (nicht 'Dose/Büchse'). Vorsicht bei diesen häufigen Verwechslungen!",
+      "hint": "Die offensichtliche Übersetzung ist bei falschen Freunden immer falsch!",
+      "difficulty": 3,
+      "answer_type": "matching",
+      "answer_metadata": {
+        "pairs": [
+          { "left": "eventually (English)", "right": "schließlich" },
+          { "left": "sensible (English)", "right": "vernünftig" },
+          { "left": "receipt (English)", "right": "Quittung" },
+          { "left": "dose (English)", "right": "Dosis" }
+        ]
+      }
+    },
+    {
+      "question_text": "Match each German word with what it means in English.",
+      "answers": [],
+      "explanation": "'Oldtimer' (deutsch) = vintage/classic car, 'Slip' (deutsch) = underwear/underpants, 'Dose' (deutsch) = tin/can, 'Rezept' (deutsch) = recipe oder Rezept (vom Arzt), 'Kritik' (deutsch) = criticism. Im Englischen bedeuten die ähnlich klingenden Wörter etwas anderes!",
+      "hint": "Deutsche Wörter, die englisch klingen, aber anders verwendet werden.",
+      "difficulty": 3,
+      "answer_type": "matching",
+      "answer_metadata": {
+        "pairs": [
+          { "left": "Oldtimer (German)", "right": "vintage car" },
+          { "left": "Slip (German)", "right": "underwear" },
+          { "left": "Dose (German)", "right": "tin / can" },
+          { "left": "Rezept (German)", "right": "recipe / prescription" },
+          { "left": "Kritik (German)", "right": "criticism" }
+        ]
+      }
+    },
+    {
+      "question_text": "Match each German word with its CORRECT English translation.",
+      "answers": [],
+      "explanation": "'spenden' = to donate (nicht 'to spend'), 'also' (deutsch) = so/therefore (nicht 'also'), 'Gymnasium' = grammar school (nicht 'gymnasium'), 'Mist' = manure (nicht 'mist/Nebel'). Diese Wörter sind klassische Fallen für deutsche Englischlerner!",
+      "hint": "Achtung: Kein einziges Wort bedeutet das, was du denkst!",
+      "difficulty": 3,
+      "answer_type": "matching",
+      "answer_metadata": {
+        "pairs": [
+          { "left": "spenden (German)", "right": "to donate" },
+          { "left": "also (German)", "right": "so / therefore" },
+          { "left": "Gymnasium (German)", "right": "grammar school / secondary school" },
+          { "left": "Mist (German)", "right": "manure / rubbish" }
+        ]
+      }
+    },
+    {
+      "question_text": "I need to ___ a new phone because my old one is broken.",
+      "answers": [
+        { "text": "become", "correct": false },
+        { "text": "get", "correct": true },
+        { "text": "bekommen", "correct": false },
+        { "text": "earn", "correct": false }
+      ],
+      "explanation": "Richtig: 'get'. 'Bekommen' heißt auf Englisch 'to get' oder 'to receive'. 'Become' bedeutet 'werden' und passt hier nicht. Beispiel: 'I need to get a new phone.' = 'Ich muss ein neues Handy bekommen.'",
+      "hint": "'Bekommen' = to ___? (Nicht 'become'!)",
+      "difficulty": 1,
+      "answer_type": "fill_in_blank"
+    },
+    {
+      "question_text": "She is very ___. She always makes good decisions and thinks before she acts.",
+      "answers": [
+        { "text": "sensitive", "correct": false },
+        { "text": "sensible", "correct": true },
+        { "text": "senseful", "correct": false },
+        { "text": "sensational", "correct": false }
+      ],
+      "explanation": "Richtig: 'sensible' (= vernünftig). Sie trifft gute Entscheidungen, also ist sie vernünftig. 'Sensitive' (= sensibel/empfindlich) würde bedeuten, dass sie leicht verletzt wird. Beispiel: 'A sensible person thinks before acting.'",
+      "hint": "Vernünftig oder empfindlich? Welches englische Wort passt?",
+      "difficulty": 2,
+      "answer_type": "fill_in_blank"
+    },
+    {
+      "question_text": "The ___ in the restaurant prepared an amazing Italian dinner for us.",
+      "answers": [
+        { "text": "chief", "correct": false },
+        { "text": "chef", "correct": true },
+        { "text": "boss", "correct": false },
+        { "text": "cooker", "correct": false }
+      ],
+      "explanation": "Richtig: 'chef' (= Koch). Im Restaurant kocht der 'chef'. Achtung: 'chief' bedeutet 'Häuptling' oder 'Chef', und 'cooker' ist ein Kochgerät (Herd), keine Person! Das deutsche 'Chef' (Boss) heißt auf Englisch 'boss' oder 'manager'.",
+      "hint": "Wer kocht im Restaurant? (Nicht der Boss!)",
+      "difficulty": 1,
+      "answer_type": "fill_in_blank"
+    },
+    {
+      "question_text": "Arrange the words to form a correct English sentence: A German student wants to say 'Ich muss ein Geschenk für sie bekommen.'",
+      "answers": [],
+      "explanation": "Der korrekte Satz ist: 'I need to get a gift for her.' Achtung: 'bekommen' = 'to get' (NICHT 'to become'), und 'Geschenk' = 'gift' (NICHT 'Gift/poison'). Viele Deutsche sagen fälschlicherweise 'I must become a gift' — das würde bedeuten 'Ich muss ein Geschenk werden'!",
+      "hint": "'Bekommen' = get, 'Geschenk' = gift — nicht verwechseln!",
+      "difficulty": 2,
+      "answer_type": "ordering",
+      "answer_metadata": {
+        "correctOrder": [
+          "I need to",
+          "get",
+          "a gift",
+          "for her"
+        ]
+      }
+    },
+    {
+      "question_text": "Arrange the words to form a correct English sentence: A German speaker wants to say 'Er wurde schließlich ein berühmter Koch.'",
+      "answers": [],
+      "explanation": "Der korrekte Satz ist: 'He eventually became a famous chef.' Drei falsche Freunde in einem Satz! 'Schließlich' = 'eventually' (NICHT 'eventuell'), 'wurde' = 'became' (NICHT 'bekam'), 'Koch' = 'chef' (NICHT der deutsche 'Chef'). Ein typischer Fehler wäre: 'He eventuell became a famous boss.'",
+      "hint": "Drei falsche Freunde: schließlich, wurde, Koch — übersetze sie korrekt!",
+      "difficulty": 3,
+      "answer_type": "ordering",
+      "answer_metadata": {
+        "correctOrder": [
+          "He eventually",
+          "became",
+          "a famous",
+          "chef"
+        ]
+      }
+    },
+    {
+      "question_text": "What does the German word 'also' mean in English?",
+      "answers": [
+        { "text": "also (too/as well)", "correct": false },
+        { "text": "so / therefore", "correct": true },
+        { "text": "although", "correct": false },
+        { "text": "always", "correct": false }
+      ],
+      "explanation": "Das deutsche 'also' bedeutet 'so' oder 'therefore', NICHT das englische 'also' (= auch). Beispiel: 'Also, was machen wir jetzt?' = 'So, what do we do now?' Das englische 'also' heißt auf Deutsch 'auch' oder 'ebenfalls'.",
+      "hint": "'Also gut!' — heißt das 'Also good!' oder 'So, alright!'?",
+      "difficulty": 2,
+      "answer_type": "multiple_choice"
+    }
+  ]
+}

@@ -1,0 +1,600 @@
+{
+  "questionSet": {
+    "name": "Conversation & Polite English",
+    "description": "Höfliches Englisch für Gespräche, Smalltalk und formelle Situationen (A2)",
+    "category": "english-a2",
+    "difficulty": "medium",
+    "is_active": true
+  },
+  "questions": [
+    {
+      "question_text": "You meet your boss in the morning. What is the most appropriate greeting?",
+      "answers": [
+        {
+          "text": "Hey, what's up?",
+          "correct": false
+        },
+        {
+          "text": "Good morning, how are you?",
+          "correct": true
+        },
+        {
+          "text": "Yo, how's it going?",
+          "correct": false
+        },
+        {
+          "text": "Hi mate!",
+          "correct": false
+        }
+      ],
+      "explanation": "In formellen Situationen, z.B. mit dem Chef, verwendet man 'Good morning, how are you?' statt umgangssprachlicher Begrüßungen wie 'Hey' oder 'Yo'.",
+      "hint": "Formell = höflich und respektvoll",
+      "difficulty": 1,
+      "answer_type": "multiple_choice"
+    },
+    {
+      "question_text": "Someone says: \"Thank you so much for your help!\" What is the best polite response?",
+      "answers": [
+        {
+          "text": "Yeah, whatever.",
+          "correct": false
+        },
+        {
+          "text": "You're very welcome!",
+          "correct": true
+        },
+        {
+          "text": "I know.",
+          "correct": false
+        },
+        {
+          "text": "OK bye.",
+          "correct": false
+        }
+      ],
+      "explanation": "'You're very welcome!' ist die höflichste Antwort auf ein Dankeschön. 'Yeah, whatever' ist unhöflich, und 'I know' klingt arrogant.",
+      "hint": "Wie antwortet man freundlich auf 'Danke'?",
+      "difficulty": 1,
+      "answer_type": "multiple_choice"
+    },
+    {
+      "question_text": "You want to disagree with a colleague's idea in a meeting. Which response is the most polite?",
+      "answers": [
+        {
+          "text": "That's a terrible idea.",
+          "correct": false
+        },
+        {
+          "text": "No, you're wrong.",
+          "correct": false
+        },
+        {
+          "text": "I see your point, but I think we could also consider another option.",
+          "correct": true
+        },
+        {
+          "text": "I don't care what you think.",
+          "correct": false
+        }
+      ],
+      "explanation": "Im Englischen widerspricht man höflich, indem man zuerst den anderen anerkennt ('I see your point') und dann seine eigene Meinung äußert. Direkte Ablehnung wie 'That's a terrible idea' gilt als unhöflich.",
+      "hint": "Erst zustimmen, dann höflich widersprechen",
+      "difficulty": 2,
+      "answer_type": "multiple_choice"
+    },
+    {
+      "question_text": "You are at a party and want to start a conversation with someone you don't know. What do you say?",
+      "answers": [
+        {
+          "text": "Tell me about yourself!",
+          "correct": false
+        },
+        {
+          "text": "Hi, I'm Anna. How do you know the host?",
+          "correct": true
+        },
+        {
+          "text": "What is your salary?",
+          "correct": false
+        },
+        {
+          "text": "You look old. How old are you?",
+          "correct": false
+        }
+      ],
+      "explanation": "Beim Smalltalk stellt man sich vor und stellt eine leichte, unverfängliche Frage. Fragen nach Gehalt oder Alter gelten im englischsprachigen Raum als unhöflich.",
+      "hint": "Smalltalk beginnt mit einer lockeren, freundlichen Frage",
+      "difficulty": 1,
+      "answer_type": "multiple_choice"
+    },
+    {
+      "question_text": "Your friend suggests going to the cinema. You want to make a different suggestion. Which phrase is the most natural?",
+      "answers": [
+        {
+          "text": "No, I don't want that.",
+          "correct": false
+        },
+        {
+          "text": "How about going for a walk instead?",
+          "correct": true
+        },
+        {
+          "text": "Your idea is bad.",
+          "correct": false
+        },
+        {
+          "text": "I refuse.",
+          "correct": false
+        }
+      ],
+      "explanation": "'How about...?' ist eine freundliche Art, einen Gegenvorschlag zu machen. 'No, I don't want that' oder 'I refuse' klingt zu direkt und ablehnend.",
+      "hint": "'How about...?' = 'Wie wäre es mit...?'",
+      "difficulty": 1,
+      "answer_type": "multiple_choice"
+    },
+    {
+      "question_text": "You need to ask a stranger for directions. Which question is the most polite?",
+      "answers": [
+        {
+          "text": "Where is the train station?",
+          "correct": false
+        },
+        {
+          "text": "Excuse me, could you tell me how to get to the train station, please?",
+          "correct": true
+        },
+        {
+          "text": "Train station! Where?",
+          "correct": false
+        },
+        {
+          "text": "Hey you, I need the train station.",
+          "correct": false
+        }
+      ],
+      "explanation": "Eine höfliche Frage beginnt mit 'Excuse me' und verwendet 'could you' statt einer direkten Forderung. 'Please' am Ende macht den Satz noch höflicher.",
+      "hint": "Höfliche Fragen beginnen mit 'Excuse me' und verwenden 'could'",
+      "difficulty": 2,
+      "answer_type": "multiple_choice"
+    },
+    {
+      "question_text": "You receive an email from a client. Which is the most appropriate way to begin your reply?",
+      "answers": [
+        {
+          "text": "Hey!",
+          "correct": false
+        },
+        {
+          "text": "Dear Mr. Smith, thank you for your email.",
+          "correct": true
+        },
+        {
+          "text": "What do you want?",
+          "correct": false
+        },
+        {
+          "text": "Yo Mr. Smith!",
+          "correct": false
+        }
+      ],
+      "explanation": "Formelle E-Mails beginnen mit 'Dear' + Name und einem Dank für die Nachricht. 'Hey' und 'Yo' sind zu informell für geschäftliche Korrespondenz.",
+      "hint": "Geschäftliche E-Mails = formell und höflich",
+      "difficulty": 2,
+      "answer_type": "multiple_choice"
+    },
+    {
+      "question_text": "You accidentally step on someone's foot. Which apology is the most appropriate?",
+      "answers": [
+        {
+          "text": "Move your foot!",
+          "correct": false
+        },
+        {
+          "text": "Not my problem.",
+          "correct": false
+        },
+        {
+          "text": "Oh, I'm so sorry! Are you alright?",
+          "correct": true
+        },
+        {
+          "text": "Oops.",
+          "correct": false
+        }
+      ],
+      "explanation": "Eine aufrichtige Entschuldigung im Englischen beinhaltet 'I'm so sorry' und zeigt Interesse am Wohlbefinden des anderen. 'Oops' allein ist zu lässig.",
+      "hint": "Entschuldigung + Nachfrage, ob alles in Ordnung ist",
+      "difficulty": 1,
+      "answer_type": "multiple_choice"
+    },
+    {
+      "question_text": "___ you mind opening the window, please?",
+      "answers": [
+        {
+          "text": "Would",
+          "correct": true
+        },
+        {
+          "text": "Do",
+          "correct": false
+        },
+        {
+          "text": "Are",
+          "correct": false
+        },
+        {
+          "text": "Can",
+          "correct": false
+        }
+      ],
+      "explanation": "'Would you mind...?' ist eine sehr höfliche Bitte im Englischen. Die Struktur ist: Would you mind + Verb-ing. 'Do you mind' ist auch möglich, aber 'Would' ist höflicher.",
+      "hint": "Die höflichste Form einer Bitte mit 'mind'",
+      "difficulty": 2,
+      "answer_type": "fill_in_blank"
+    },
+    {
+      "question_text": "I'm sorry, but I'm afraid I ___ agree with you on that.",
+      "answers": [
+        {
+          "text": "can't",
+          "correct": true
+        },
+        {
+          "text": "won't",
+          "correct": false
+        },
+        {
+          "text": "don't",
+          "correct": false
+        },
+        {
+          "text": "mustn't",
+          "correct": false
+        }
+      ],
+      "explanation": "'I'm afraid I can't agree' ist eine höfliche Art zu widersprechen. 'I'm afraid' mildert die Aussage ab. 'Won't' klingt zu bestimmt, 'don't' ist zu direkt.",
+      "hint": "'I'm afraid I ___' = höfliche Abschwächung",
+      "difficulty": 2,
+      "answer_type": "fill_in_blank"
+    },
+    {
+      "question_text": "It was nice ___ to you. Have a great day!",
+      "answers": [
+        {
+          "text": "talking",
+          "correct": true
+        },
+        {
+          "text": "to talk",
+          "correct": false
+        },
+        {
+          "text": "talk",
+          "correct": false
+        },
+        {
+          "text": "talked",
+          "correct": false
+        }
+      ],
+      "explanation": "'It was nice talking to you' ist eine übliche Verabschiedungsformel nach einem Gespräch. Nach 'nice' + Rückblick auf ein gerade geführtes Gespräch steht das Gerund (-ing).",
+      "hint": "Gerund (-ing) nach 'It was nice...'",
+      "difficulty": 1,
+      "answer_type": "fill_in_blank"
+    },
+    {
+      "question_text": "Could you ___ repeat that, please? I didn't quite catch it.",
+      "answers": [
+        {
+          "text": "possibly",
+          "correct": true
+        },
+        {
+          "text": "must",
+          "correct": false
+        },
+        {
+          "text": "hard",
+          "correct": false
+        },
+        {
+          "text": "never",
+          "correct": false
+        }
+      ],
+      "explanation": "'Could you possibly...?' macht eine Bitte noch höflicher. 'Possibly' (= möglicherweise) zeigt, dass man den anderen nicht unter Druck setzen will.",
+      "hint": "Ein Wort, das 'vielleicht/möglicherweise' bedeutet",
+      "difficulty": 2,
+      "answer_type": "fill_in_blank"
+    },
+    {
+      "question_text": "I ___ like to make a reservation for two, please.",
+      "answers": [
+        {
+          "text": "would",
+          "correct": true
+        },
+        {
+          "text": "will",
+          "correct": false
+        },
+        {
+          "text": "can",
+          "correct": false
+        },
+        {
+          "text": "must",
+          "correct": false
+        }
+      ],
+      "explanation": "'I would like to...' (= Ich möchte gerne...) ist die Standardform für höfliche Wünsche und Bitten, z.B. im Restaurant oder Hotel. 'I want' wäre zu direkt.",
+      "hint": "Die höfliche Form von 'I want'",
+      "difficulty": 1,
+      "answer_type": "fill_in_blank"
+    },
+    {
+      "question_text": "Why ___ we meet at the café on Saturday?",
+      "answers": [
+        {
+          "text": "don't",
+          "correct": true
+        },
+        {
+          "text": "won't",
+          "correct": false
+        },
+        {
+          "text": "can",
+          "correct": false
+        },
+        {
+          "text": "shall",
+          "correct": false
+        }
+      ],
+      "explanation": "'Why don't we...?' ist eine freundliche Art, einen Vorschlag zu machen. Es ist eine rhetorische Frage, die bedeutet: 'Lass uns doch...'. Ähnlich wie 'How about...?'",
+      "hint": "'Warum ___ wir nicht...?' – freundlicher Vorschlag",
+      "difficulty": 2,
+      "answer_type": "fill_in_blank"
+    },
+    {
+      "question_text": "Put this phone conversation in the correct order.",
+      "answers": [],
+      "explanation": "Ein Telefongespräch im Englischen folgt einer festen Struktur: Begrüßung und Vorstellung → Grund des Anrufs → Antwort/Information → höfliche Verabschiedung.",
+      "hint": "Zuerst stellt man sich vor, dann nennt man den Grund des Anrufs",
+      "difficulty": 2,
+      "answer_type": "ordering",
+      "answer_metadata": {
+        "correctOrder": [
+          "Good morning, this is Lisa speaking. How can I help you?",
+          "Hello Lisa, my name is Tom. I'm calling about the meeting on Friday.",
+          "Of course, Tom. What would you like to know?",
+          "Could you tell me what time it starts, please?",
+          "It starts at 10 a.m. Is there anything else I can help you with?"
+        ]
+      }
+    },
+    {
+      "question_text": "Arrange this small talk conversation in the correct order.",
+      "answers": [],
+      "explanation": "Smalltalk folgt einem natürlichen Muster: Begrüßung → Frage zum Befinden → Antwort + Rückfrage → Antwort → Überleitung zum Thema.",
+      "hint": "Smalltalk beginnt mit einer Begrüßung und Frage nach dem Befinden",
+      "difficulty": 1,
+      "answer_type": "ordering",
+      "answer_metadata": {
+        "correctOrder": [
+          "Hi Sarah, how are you doing?",
+          "I'm great, thanks! And you?",
+          "Not bad, thanks. Did you have a nice weekend?",
+          "Yes, I went hiking with my family. It was lovely!",
+          "That sounds wonderful! I love hiking too."
+        ]
+      }
+    },
+    {
+      "question_text": "Put this polite request conversation in the correct order.",
+      "answers": [],
+      "explanation": "Höfliche Bitten im Englischen beginnen mit einer Einleitung (Excuse me), dann die Bitte, eine Antwort, Dank und Verabschiedung.",
+      "hint": "Zuerst um Aufmerksamkeit bitten, dann die Frage stellen",
+      "difficulty": 2,
+      "answer_type": "ordering",
+      "answer_metadata": {
+        "correctOrder": [
+          "Excuse me, could I ask you something?",
+          "Of course, go ahead!",
+          "Would you mind helping me carry these boxes?",
+          "Not at all! I'd be happy to help.",
+          "That's very kind of you, thank you so much!"
+        ]
+      }
+    },
+    {
+      "question_text": "Arrange this email in the correct order.",
+      "answers": [],
+      "explanation": "Formelle E-Mails haben eine klare Struktur: Anrede → Dank/Bezugnahme → Hauptinhalt → Abschluss → Grußformel.",
+      "hint": "E-Mails beginnen mit der Anrede und enden mit der Grußformel",
+      "difficulty": 3,
+      "answer_type": "ordering",
+      "answer_metadata": {
+        "correctOrder": [
+          "Dear Mrs. Johnson,",
+          "Thank you for your email regarding the project deadline.",
+          "I would like to suggest that we extend it by one week.",
+          "Please let me know if this works for you.",
+          "Kind regards, Michael"
+        ]
+      }
+    },
+    {
+      "question_text": "Match the formal expressions with their informal equivalents.",
+      "answers": [],
+      "explanation": "Im Englischen gibt es für viele Ausdrücke eine formelle und eine informelle Variante. In Geschäftssituationen verwendet man die formelle Version, unter Freunden die informelle.",
+      "hint": "Links = formell (Büro), rechts = informell (Freunde)",
+      "difficulty": 2,
+      "answer_type": "matching",
+      "answer_metadata": {
+        "pairs": [
+          {
+            "left": "Good afternoon",
+            "right": "Hey there"
+          },
+          {
+            "left": "I would like to",
+            "right": "I wanna"
+          },
+          {
+            "left": "Could you please",
+            "right": "Can you"
+          },
+          {
+            "left": "Thank you very much",
+            "right": "Thanks a lot"
+          },
+          {
+            "left": "Goodbye",
+            "right": "See ya"
+          }
+        ]
+      }
+    },
+    {
+      "question_text": "Match the polite question with its purpose.",
+      "answers": [],
+      "explanation": "Im Englischen haben höfliche Fragen bestimmte Funktionen. Es ist wichtig zu wissen, welche Phrase in welcher Situation passt.",
+      "hint": "Überlege, was man mit jeder Frage erreichen will",
+      "difficulty": 2,
+      "answer_type": "matching",
+      "answer_metadata": {
+        "pairs": [
+          {
+            "left": "Would you mind closing the door?",
+            "right": "Um einen Gefallen bitten"
+          },
+          {
+            "left": "How about going out for dinner?",
+            "right": "Einen Vorschlag machen"
+          },
+          {
+            "left": "I'm sorry, could you say that again?",
+            "right": "Um Wiederholung bitten"
+          },
+          {
+            "left": "Do you happen to know where the bank is?",
+            "right": "Nach dem Weg fragen"
+          }
+        ]
+      }
+    },
+    {
+      "question_text": "Match the English small talk question with the appropriate German translation.",
+      "answers": [],
+      "explanation": "Diese Smalltalk-Fragen kommen im Alltag häufig vor. Die Übersetzungen helfen, die natürliche Bedeutung zu verstehen.",
+      "hint": "Welche deutsche Frage passt zur englischen?",
+      "difficulty": 1,
+      "answer_type": "matching",
+      "answer_metadata": {
+        "pairs": [
+          {
+            "left": "How's it going?",
+            "right": "Wie läuft's?"
+          },
+          {
+            "left": "What do you do for a living?",
+            "right": "Was machst du beruflich?"
+          },
+          {
+            "left": "Have you been here before?",
+            "right": "Warst du schon mal hier?"
+          },
+          {
+            "left": "What are you up to this weekend?",
+            "right": "Was hast du am Wochenende vor?"
+          },
+          {
+            "left": "Lovely weather, isn't it?",
+            "right": "Schönes Wetter, oder?"
+          }
+        ]
+      }
+    },
+    {
+      "question_text": "Match each apology phrase with the correct situation.",
+      "answers": [],
+      "explanation": "Je nach Schwere des Fehlers verwendet man im Englischen unterschiedlich starke Entschuldigungen. 'Sorry' ist leicht, 'I sincerely apologize' ist sehr formell.",
+      "hint": "Kleine Fehler = leichte Entschuldigung, große Fehler = starke Entschuldigung",
+      "difficulty": 3,
+      "answer_type": "matching",
+      "answer_metadata": {
+        "pairs": [
+          {
+            "left": "Oops, sorry!",
+            "right": "Du stößt leicht gegen jemanden"
+          },
+          {
+            "left": "I'm really sorry about that.",
+            "right": "Du hast einen Termin vergessen"
+          },
+          {
+            "left": "I sincerely apologize for the inconvenience.",
+            "right": "Formelle E-Mail an einen Kunden"
+          },
+          {
+            "left": "My bad!",
+            "right": "Kleiner Fehler unter Freunden"
+          }
+        ]
+      }
+    },
+    {
+      "question_text": "In English-speaking countries, it is common to ask \"How are you?\" as a greeting, and people usually expect a detailed, honest answer.",
+      "answers": [
+        {
+          "text": "True",
+          "correct": false
+        },
+        {
+          "text": "False",
+          "correct": true
+        }
+      ],
+      "explanation": "'How are you?' ist im Englischen oft nur eine Begrüßung und keine echte Frage nach dem Befinden. Die erwartete Antwort ist kurz und positiv, z.B. 'I'm fine, thanks!' oder 'Good, and you?' – nicht eine ausführliche, ehrliche Antwort.",
+      "hint": "Ist 'How are you?' wirklich eine Frage oder eher eine Begrüßung?",
+      "difficulty": 1,
+      "answer_type": "true_false"
+    },
+    {
+      "question_text": "\"Could you\" is more polite than \"Can you\" when making a request in English.",
+      "answers": [
+        {
+          "text": "True",
+          "correct": true
+        },
+        {
+          "text": "False",
+          "correct": false
+        }
+      ],
+      "explanation": "'Could you...?' gilt als höflicher als 'Can you...?' weil 'could' eine indirektere, weniger fordernde Form ist. Für formelle Situationen und gegenüber Fremden ist 'could' die bessere Wahl.",
+      "hint": "Vergleiche die Direktheit von 'can' und 'could'",
+      "difficulty": 1,
+      "answer_type": "true_false"
+    },
+    {
+      "question_text": "When someone thanks you in English, it is perfectly polite to reply with \"No problem\" in both formal and informal situations.",
+      "answers": [
+        {
+          "text": "True",
+          "correct": false
+        },
+        {
+          "text": "False",
+          "correct": true
+        }
+      ],
+      "explanation": "'No problem' ist unter Freunden völlig in Ordnung, gilt aber in formellen Situationen (z.B. gegenüber Kunden oder Vorgesetzten) als zu lässig. Besser: 'You're welcome', 'My pleasure' oder 'Happy to help'.",
+      "hint": "Passt 'No problem' in jede Situation – auch im Büro oder mit Kunden?",
+      "difficulty": 3,
+      "answer_type": "true_false"
+    }
+  ]
+}

@@ -8,11 +8,13 @@ Patrick's Projects is a monorepo containing independent full-stack applications 
 
 | Project | Stack | Ports |
 |---------|-------|-------|
+| arena | React, PixiJS, Vite, Express, Socket.io, Drizzle ORM | 3002, 3003 |
 | l2p | React, Express, Socket.io, Drizzle ORM | 3000, 3001 |
 | VideoVault | React, Vite, File System Access API, Express | 5100/5000 |
 | SOS | Express, Static HTML | 3005 |
 | shop | Next.js 16, Prisma, Stripe | 3004 |
 | auth | Express, Passport.js, JWT/OAuth | 5500 |
+| openclaw | Node.js, WhatsApp/Telegram Bot, AI Media Pipeline | (Docker on 10.10.0.4) |
 | shared-infrastructure | PostgreSQL, shared design system | 5432 |
 | Obsidian | Obsidian vault (Markdown, Dataview, Templater), on SMB share | — |
 
@@ -23,6 +25,7 @@ Patrick's Projects is a monorepo containing independent full-stack applications 
 ```bash
 # Development
 npm run dev:all              # Start all services concurrently
+npm run dev:arena             # Arena frontend + backend
 npm run dev:l2p              # L2P frontend + backend
 npm run dev:videovault       # VideoVault dev server
 npm run dev:shop             # Shop dev server
@@ -36,6 +39,7 @@ npm run validate:env         # Validate environment files
 
 # Deployment (k8s) - shell scripts (build + push + deploy)
 ./k8s/scripts/deploy/deploy-all.sh           # Full stack: build, push, deploy all services
+./k8s/scripts/deploy/deploy-arena.sh          # Arena: build, push, restart (backend + frontend)
 ./k8s/scripts/deploy/deploy-l2p.sh           # L2P: build, push, restart (backend + frontend)
 ./k8s/scripts/deploy/deploy-auth.sh          # Auth: build, push, restart
 ./k8s/scripts/deploy/deploy-shop.sh          # Shop: build, push, restart
@@ -118,6 +122,7 @@ Each service follows a three-layer architecture:
 ### Centralized PostgreSQL
 
 All services connect to a single PostgreSQL instance with isolated databases:
+- `arena_db` - Arena battle royale game
 - `l2p_db` - L2P quiz platform
 - `videovault_db` - VideoVault (optional persistence)
 - `shop_db` - Shop service
@@ -144,6 +149,12 @@ L2P has two auth layers that must stay in sync:
 ### API Response Convention
 
 Backend returns raw PostgreSQL column names (**snake_case**: `host_id`, `selected_character`). Frontend TypeScript types use **camelCase**. Always check the actual API response shape when accessing fields.
+
+### Observability & Security Standards
+
+- **Cross-Service Tracing**: Auth and VideoVault use a dual-header pattern (`x-request-id` and `x-correlation-id`) to trace requests across services.
+- **Rate Limiting**: APIs use `express-rate-limit`. A standard `X-RateLimit-Warning: true` header is added when remaining requests drop below 20% of the limit. 429 Too Many Requests responses include a standardized `Retry-After` header.
+- **Test Data**: VideoVault's `/fixtures` path is gated and only accessible when `NODE_ENV !== 'production'`.
 
 ### Client-First Architecture (VideoVault)
 
@@ -281,6 +292,7 @@ import { ErrorCodes } from '@shared/errors';
 ## Project-Specific Documentation
 
 Each major project has its own CLAUDE.md with detailed guidance:
+- `arena/CLAUDE.md` - Game architecture, PixiJS rendering, Socket.io events, asset pipeline
 - `l2p/CLAUDE.md` - Backend/frontend architecture, Socket.io patterns, test setup
 - `VideoVault/CLAUDE.md` - Client-first architecture, service patterns, test stubs
 - `SOS/CLAUDE.md` - Static HTML wrapper, health endpoints, minimal Express server
@@ -305,6 +317,7 @@ When multiple agents work simultaneously:
 
 ## Production URLs
 
+- **Arena**: https://arena.korczewski.de
 - **Auth**: https://auth.korczewski.de
 - **L2P**: https://l2p.korczewski.de
 - **Shop**: https://shop.korczewski.de
@@ -315,6 +328,7 @@ When multiple agents work simultaneously:
 
 ## Development URLs (Cluster Dev Stack)
 
+- **Arena**: https://dev-arena.korczewski.de
 - **Auth**: https://dev-auth.korczewski.de
 - **L2P**: https://dev-l2p.korczewski.de
 - **Shop**: https://dev-shop.korczewski.de

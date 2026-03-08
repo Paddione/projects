@@ -1,0 +1,358 @@
+{
+  "questionSet": {
+    "name": "Everyday English — Shopping, Food & Travel",
+    "description": "Praktisches Englisch für Alltag, Einkaufen, Essen und Reisen (A2)",
+    "category": "english-a2",
+    "difficulty": "medium",
+    "is_active": true
+  },
+  "questions": [
+    {
+      "question_text": "You are at a restaurant. The waiter asks: \"Are you ready to order?\" What do you say?",
+      "answers": [
+        { "text": "Yes, I'd like the chicken, please.", "correct": true },
+        { "text": "Yes, I am wanting the chicken, please give.", "correct": false },
+        { "text": "I will chicken.", "correct": false },
+        { "text": "The chicken is coming for me.", "correct": false }
+      ],
+      "explanation": "Im Restaurant antwortet man höflich mit \"I'd like ...\" (Ich hätte gern ...). Das ist die gebräuchlichste und höflichste Bestellform im Englischen.",
+      "hint": "\"I'd like\" ist die höfliche Standardform zum Bestellen.",
+      "difficulty": 1,
+      "answer_type": "multiple_choice"
+    },
+    {
+      "question_text": "What does the sign \"No returns without receipt\" mean?",
+      "answers": [
+        { "text": "Man darf nicht ohne Erlaubnis zurückkommen.", "correct": false },
+        { "text": "Ohne Kassenbon kann man Waren nicht umtauschen.", "correct": true },
+        { "text": "Man muss den Bon an der Kasse vorzeigen.", "correct": false },
+        { "text": "Rückgabe ist generell nicht möglich.", "correct": false }
+      ],
+      "explanation": "\"Returns\" bedeutet hier Rückgabe/Umtausch, und \"receipt\" ist der Kassenbon. Ohne Kassenbon ist keine Rückgabe möglich.",
+      "hint": "\"Receipt\" = Kassenbon, \"returns\" = Rückgabe/Umtausch.",
+      "difficulty": 2,
+      "answer_type": "multiple_choice"
+    },
+    {
+      "question_text": "You are lost in a city. How do you politely ask for directions?",
+      "answers": [
+        { "text": "Where is the station? Tell me!", "correct": false },
+        { "text": "Excuse me, could you tell me how to get to the station?", "correct": true },
+        { "text": "Hey, station where?", "correct": false },
+        { "text": "I need station. Which way I go?", "correct": false }
+      ],
+      "explanation": "Im Englischen beginnt man höfliche Fragen an Fremde mit \"Excuse me\" und benutzt \"could you tell me\" statt direkter Fragen. Das klingt viel freundlicher.",
+      "hint": "Höfliche Fragen beginnen mit \"Excuse me, could you...\"",
+      "difficulty": 1,
+      "answer_type": "multiple_choice"
+    },
+    {
+      "question_text": "At a hotel, the receptionist says: \"Your room comes with a complimentary breakfast.\" What does \"complimentary\" mean here?",
+      "answers": [
+        { "text": "ergänzend (zusätzlich buchbar)", "correct": false },
+        { "text": "kostenlos (im Preis inbegriffen)", "correct": true },
+        { "text": "lobend (besonders gut)", "correct": false },
+        { "text": "kompliziert (schwer zu finden)", "correct": false }
+      ],
+      "explanation": "\"Complimentary\" bedeutet in diesem Zusammenhang \"kostenlos\" oder \"gratis\". Das Frühstück ist im Zimmerpreis enthalten. Achtung: Nicht verwechseln mit \"complementary\" (ergänzend)!",
+      "hint": "Denke an Hotels — was ist oft im Preis dabei?",
+      "difficulty": 3,
+      "answer_type": "multiple_choice"
+    },
+    {
+      "question_text": "What is the correct way to ask about the weather forecast?",
+      "answers": [
+        { "text": "How makes the weather tomorrow?", "correct": false },
+        { "text": "What will the weather be like tomorrow?", "correct": true },
+        { "text": "Which weather comes tomorrow?", "correct": false },
+        { "text": "How is the weather making tomorrow?", "correct": false }
+      ],
+      "explanation": "Im Englischen fragt man nach dem Wetter mit \"What will the weather be like...?\" — nicht wörtlich aus dem Deutschen übersetzt. \"How makes the weather\" wäre eine falsche 1:1-Übersetzung von \"Wie wird das Wetter?\"",
+      "hint": "Die Struktur ist: \"What will the weather be like...?\"",
+      "difficulty": 2,
+      "answer_type": "multiple_choice"
+    },
+    {
+      "question_text": "You want to buy a shirt but it's too small. What do you say to the shop assistant?",
+      "answers": [
+        { "text": "Do you have this in a bigger size?", "correct": true },
+        { "text": "Can I get this more big?", "correct": false },
+        { "text": "This is small. Make it big.", "correct": false },
+        { "text": "I need the large from this.", "correct": false }
+      ],
+      "explanation": "\"Do you have this in a bigger size?\" ist die natürliche Frage, wenn man eine andere Größe möchte. Man kann auch \"in a larger size\" oder \"in a medium/large\" sagen.",
+      "hint": "\"Do you have this in...?\" ist die Standardfrage nach einer anderen Größe.",
+      "difficulty": 1,
+      "answer_type": "multiple_choice"
+    },
+    {
+      "question_text": "Your train departs at 14:45. How would a British person say this time in conversation?",
+      "answers": [
+        { "text": "fourteen forty-five", "correct": false },
+        { "text": "a quarter to three", "correct": true },
+        { "text": "three less fifteen", "correct": false },
+        { "text": "fifteen before three", "correct": false }
+      ],
+      "explanation": "Im britischen Alltagsenglisch sagt man \"a quarter to three\" für 14:45. \"Fourteen forty-five\" wird eher in offiziellen Durchsagen benutzt. \"Three less fifteen\" wäre eine falsche Übertragung aus dem Deutschen.",
+      "hint": "Im Alltag nutzen Briten das 12-Stunden-Format mit \"to\" und \"past\".",
+      "difficulty": 2,
+      "answer_type": "multiple_choice"
+    },
+    {
+      "question_text": "At a café, the barista asks: \"Is that for here or to go?\" What does this mean?",
+      "answers": [
+        { "text": "Ob das Essen gut ist oder nicht.", "correct": false },
+        { "text": "Ob man hier essen oder mitnehmen möchte.", "correct": true },
+        { "text": "Ob man gehen oder bleiben möchte.", "correct": false },
+        { "text": "Ob man bar oder mit Karte zahlt.", "correct": false }
+      ],
+      "explanation": "\"For here or to go?\" ist die Standardfrage, ob man vor Ort essen oder das Essen mitnehmen möchte. In Großbritannien hört man auch \"eat in or take away?\"",
+      "hint": "\"To go\" hat mit Mitnehmen zu tun.",
+      "difficulty": 1,
+      "answer_type": "multiple_choice"
+    },
+    {
+      "question_text": "You're at the hotel reception. What does \"Check-out is at 11 a.m.\" mean?",
+      "answers": [
+        { "text": "Man muss das Zimmer bis 11 Uhr verlassen haben.", "correct": true },
+        { "text": "Man kann ab 11 Uhr ins Zimmer.", "correct": false },
+        { "text": "Das Frühstück endet um 11 Uhr.", "correct": false },
+        { "text": "Die Rezeption schließt um 11 Uhr.", "correct": false }
+      ],
+      "explanation": "\"Check-out\" ist das Abreisen aus dem Hotel. Bis 11 Uhr muss man das Zimmer geräumt und den Schlüssel abgegeben haben. Das Gegenteil ist \"check-in\" (Anreise).",
+      "hint": "\"Check-out\" = Abreise. \"Check-in\" = Anreise.",
+      "difficulty": 1,
+      "answer_type": "multiple_choice"
+    },
+    {
+      "question_text": "A shop assistant says: \"We're having a sale — everything is 30% off.\" What does \"30% off\" mean?",
+      "answers": [
+        { "text": "30% Aufschlag auf den Originalpreis", "correct": false },
+        { "text": "Nur noch 30% der Ware verfügbar", "correct": false },
+        { "text": "30% Rabatt auf den Originalpreis", "correct": true },
+        { "text": "30% Mehrwertsteuer wird hinzugefügt", "correct": false }
+      ],
+      "explanation": "\"30% off\" bedeutet 30% Rabatt. \"Off\" steht hier für einen Abzug vom Originalpreis. Bei einem Preis von £100 zahlt man also nur £70.",
+      "hint": "\"Off\" bedeutet hier \"weniger\" oder \"Abzug\".",
+      "difficulty": 1,
+      "answer_type": "multiple_choice"
+    },
+    {
+      "question_text": "Match the English food items with their German translations.",
+      "answers": [],
+      "explanation": "Diese Lebensmittel-Vokabeln begegnen dir ständig in Restaurants und Supermärkten. Besonders \"prawns\" (Garnelen) wird oft verwechselt — in den USA sagt man \"shrimp\".",
+      "hint": "Denke an typische Speisekarten in englischen Restaurants.",
+      "difficulty": 1,
+      "answer_type": "matching",
+      "answer_metadata": {
+        "pairs": [
+          { "left": "chicken breast", "right": "Hähnchenbrust" },
+          { "left": "prawns", "right": "Garnelen" },
+          { "left": "sparkling water", "right": "Sprudelwasser" },
+          { "left": "side dish", "right": "Beilage" },
+          { "left": "bill", "right": "Rechnung" }
+        ]
+      }
+    },
+    {
+      "question_text": "Match each type of shop with what you can buy there.",
+      "answers": [],
+      "explanation": "In englischsprachigen Ländern haben viele Geschäfte spezielle Namen. Ein \"chemist\" (britisch) oder \"pharmacy\" (amerikanisch) verkauft Medikamente. \"Newsagent\" ist typisch britisch für einen Zeitungsladen.",
+      "hint": "Überlege, was man in Deutschland in diesen Geschäften kauft.",
+      "difficulty": 2,
+      "answer_type": "matching",
+      "answer_metadata": {
+        "pairs": [
+          { "left": "bakery", "right": "Brot und Kuchen" },
+          { "left": "chemist / pharmacy", "right": "Medikamente und Kosmetik" },
+          { "left": "newsagent", "right": "Zeitungen und Zeitschriften" },
+          { "left": "greengrocer", "right": "Obst und Gemüse" },
+          { "left": "butcher", "right": "Fleisch und Wurst" }
+        ]
+      }
+    },
+    {
+      "question_text": "Match the English direction phrases with their German meaning.",
+      "answers": [],
+      "explanation": "Wegbeschreibungen sind im Alltag sehr wichtig. \"Turn left/right\" und \"go straight on\" sind die Grundlagen. \"Roundabout\" (Kreisverkehr) ist besonders in Großbritannien sehr häufig.",
+      "hint": "Stell dir vor, jemand erklärt dir den Weg in einer Stadt.",
+      "difficulty": 2,
+      "answer_type": "matching",
+      "answer_metadata": {
+        "pairs": [
+          { "left": "Turn left at the traffic lights.", "right": "Biegen Sie an der Ampel links ab." },
+          { "left": "Go straight on for two blocks.", "right": "Gehen Sie zwei Häuserblocks geradeaus." },
+          { "left": "It's on the corner.", "right": "Es ist an der Ecke." },
+          { "left": "Take the second exit at the roundabout.", "right": "Nehmen Sie die zweite Ausfahrt im Kreisverkehr." },
+          { "left": "It's opposite the bank.", "right": "Es ist gegenüber der Bank." }
+        ]
+      }
+    },
+    {
+      "question_text": "Match the weather expressions with their German translations.",
+      "answers": [],
+      "explanation": "Wetter ist das beliebteste Smalltalk-Thema in Großbritannien! \"Overcast\" (bedeckt) und \"drizzle\" (Nieselregen) sind sehr britische Wörter, die man oft hört.",
+      "hint": "Briten reden ständig übers Wetter — diese Wörter sind wichtig!",
+      "difficulty": 2,
+      "answer_type": "matching",
+      "answer_metadata": {
+        "pairs": [
+          { "left": "It's drizzling.", "right": "Es nieselt." },
+          { "left": "It's overcast.", "right": "Es ist bedeckt." },
+          { "left": "There's a heatwave.", "right": "Es gibt eine Hitzewelle." },
+          { "left": "It's freezing cold.", "right": "Es ist eiskalt." },
+          { "left": "It's chilly outside.", "right": "Es ist kühl draußen." }
+        ]
+      }
+    },
+    {
+      "question_text": "Match the hotel vocabulary with the German translations.",
+      "answers": [],
+      "explanation": "Diese Begriffe brauchst du bei jeder Hotelbuchung. \"Twin room\" hat zwei Einzelbetten, \"double room\" ein Doppelbett. \"Vacancy\" (freies Zimmer) und \"No vacancy\" (ausgebucht) sieht man oft auf Schildern.",
+      "hint": "Denke an das Einchecken und die Zimmerausstattung.",
+      "difficulty": 2,
+      "answer_type": "matching",
+      "answer_metadata": {
+        "pairs": [
+          { "left": "single room", "right": "Einzelzimmer" },
+          { "left": "twin room", "right": "Zweibettzimmer" },
+          { "left": "vacancy", "right": "freies Zimmer" },
+          { "left": "luggage", "right": "Gepäck" },
+          { "left": "ground floor", "right": "Erdgeschoss" }
+        ]
+      }
+    },
+    {
+      "question_text": "Excuse me, where is the nearest ___?",
+      "answers": [
+        { "text": "underground station", "correct": true },
+        { "text": "underground stop", "correct": false },
+        { "text": "underground parking", "correct": false },
+        { "text": "underground house", "correct": false }
+      ],
+      "explanation": "Man fragt nach der \"nearest underground station\" (nächste U-Bahn-Station). In London sagt man auch \"tube station\". In den USA heißt es \"subway station\". \"Underground stop\" klingt unnatürlich.",
+      "hint": "Wie heißt die U-Bahn-Haltestelle auf Englisch?",
+      "difficulty": 1,
+      "answer_type": "fill_in_blank"
+    },
+    {
+      "question_text": "I'd like to order the fish and chips, and a glass of ___, please.",
+      "answers": [
+        { "text": "tap water", "correct": true },
+        { "text": "crane water", "correct": false },
+        { "text": "pipe water", "correct": false },
+        { "text": "hose water", "correct": false }
+      ],
+      "explanation": "\"Tap water\" ist Leitungswasser (kostenlos im Restaurant). \"Tap\" ist der Wasserhahn. Deutsche Lerner sagen manchmal fälschlich \"crane water\" (wörtliche Übersetzung von \"Kran\"), aber das ist falsch.",
+      "hint": "\"Tap\" = Wasserhahn. Welches Wasser ist kostenlos?",
+      "difficulty": 2,
+      "answer_type": "fill_in_blank"
+    },
+    {
+      "question_text": "Good afternoon. I have a ___ under the name Miller.",
+      "answers": [
+        { "text": "reservation", "correct": true },
+        { "text": "booking place", "correct": false },
+        { "text": "reserve", "correct": false },
+        { "text": "place order", "correct": false }
+      ],
+      "explanation": "Beim Einchecken im Hotel oder im Restaurant sagt man \"I have a reservation under the name...\" Man kann auch \"booking\" (britisch) verwenden. \"Under the name\" bedeutet \"auf den Namen\".",
+      "hint": "Wie sagt man \"Reservierung\" auf Englisch?",
+      "difficulty": 1,
+      "answer_type": "fill_in_blank"
+    },
+    {
+      "question_text": "Could I try this on? Where is the ___?",
+      "answers": [
+        { "text": "fitting room", "correct": true },
+        { "text": "try room", "correct": false },
+        { "text": "changing cabin", "correct": false },
+        { "text": "dress room", "correct": false }
+      ],
+      "explanation": "Die Umkleidekabine im Geschäft heißt \"fitting room\" (britisch) oder \"changing room\" (auch britisch) oder \"dressing room\" (amerikanisch). \"Try on\" bedeutet \"anprobieren\".",
+      "hint": "Wo probiert man Kleidung an? \"Fitting\" kommt von \"to fit\".",
+      "difficulty": 2,
+      "answer_type": "fill_in_blank"
+    },
+    {
+      "question_text": "The train to Manchester departs from ___ 7 at half past ten.",
+      "answers": [
+        { "text": "platform", "correct": true },
+        { "text": "track", "correct": false },
+        { "text": "rail", "correct": false },
+        { "text": "lane", "correct": false }
+      ],
+      "explanation": "Im britischen Englisch fährt der Zug von einem \"platform\" (Bahnsteig) ab. Im amerikanischen Englisch sagt man eher \"track\". \"Lane\" ist eine Fahrspur auf der Straße, \"rail\" ist die Schiene selbst.",
+      "hint": "Im Bahnhof steht man auf dem...? (britisches Englisch)",
+      "difficulty": 2,
+      "answer_type": "fill_in_blank"
+    },
+    {
+      "question_text": "In British English, the first floor of a building is the floor above the ground floor.",
+      "answers": [
+        { "text": "True", "correct": true },
+        { "text": "False", "correct": false }
+      ],
+      "explanation": "Richtig! Im britischen Englisch ist \"ground floor\" das Erdgeschoss und \"first floor\" der erste Stock darüber. Im amerikanischen Englisch ist \"first floor\" dagegen das Erdgeschoss. Das führt oft zu Verwirrung!",
+      "hint": "Briten und Amerikaner zählen Stockwerke unterschiedlich.",
+      "difficulty": 2,
+      "answer_type": "true_false"
+    },
+    {
+      "question_text": "In the UK, it is common to tip 10-15% at restaurants when the service charge is not included.",
+      "answers": [
+        { "text": "True", "correct": true },
+        { "text": "False", "correct": false }
+      ],
+      "explanation": "Richtig! In Großbritannien gibt man in Restaurants normalerweise 10-15% Trinkgeld, wenn kein \"service charge\" (Bedienungszuschlag) auf der Rechnung steht. Viele Restaurants fügen aber automatisch 12,5% hinzu — das steht dann als \"service charge included\" auf dem Bon.",
+      "hint": "Trinkgeld-Kultur variiert von Land zu Land.",
+      "difficulty": 2,
+      "answer_type": "true_false"
+    },
+    {
+      "question_text": "In English-speaking countries, saying \"How much does it cost?\" is considered rude in a shop.",
+      "answers": [
+        { "text": "True", "correct": false },
+        { "text": "False", "correct": true }
+      ],
+      "explanation": "Falsch! \"How much does it cost?\" oder \"How much is this?\" ist eine völlig normale und höfliche Frage in Geschäften. Man kann auch noch höflicher fragen: \"Could you tell me the price of this?\"",
+      "hint": "Ist es unhöflich, nach dem Preis zu fragen?",
+      "difficulty": 1,
+      "answer_type": "true_false"
+    },
+    {
+      "question_text": "Put the restaurant dialogue in the correct order — from arriving to leaving.",
+      "answers": [],
+      "explanation": "Ein typischer Restaurantbesuch folgt immer dieser Reihenfolge: Zuerst wird man begrüßt und bekommt einen Tisch, dann bestellt man, isst, bittet um die Rechnung und zahlt. \"Could we have the bill?\" ist die höfliche britische Art, nach der Rechnung zu fragen (amerikanisch: \"check\").",
+      "hint": "Was passiert zuerst — bestellen oder sich setzen?",
+      "difficulty": 2,
+      "answer_type": "ordering",
+      "answer_metadata": {
+        "correctOrder": [
+          "Good evening. A table for two, please.",
+          "Could we see the menu, please?",
+          "I'd like the steak, and my partner will have the salmon.",
+          "Excuse me, could we have the bill, please?",
+          "Thank you. We'll pay by card."
+        ]
+      }
+    },
+    {
+      "question_text": "Put the hotel check-in dialogue in the correct order.",
+      "answers": [],
+      "explanation": "Beim Hotel-Check-in folgt man einem festen Ablauf: Man nennt seinen Namen und die Reservierung, zeigt den Ausweis, bekommt die Zimmernummer und den Schlüssel, fragt nach wichtigen Infos (z.B. WLAN) und geht dann aufs Zimmer. \"Key card\" ist die Schlüsselkarte, die in den meisten modernen Hotels benutzt wird.",
+      "hint": "Was sagt man zuerst an der Rezeption?",
+      "difficulty": 3,
+      "answer_type": "ordering",
+      "answer_metadata": {
+        "correctOrder": [
+          "Hello, I have a reservation under the name Schmidt.",
+          "Here's my passport. The booking is for three nights.",
+          "Your room number is 214. Here's your key card.",
+          "Could you tell me the Wi-Fi password, please?",
+          "Thank you. Is breakfast included?"
+        ]
+      }
+    }
+  ]
+}

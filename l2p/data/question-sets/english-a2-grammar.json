@@ -1,0 +1,371 @@
+{
+  "questionSet": {
+    "name": "English Grammar for German Speakers",
+    "description": "Englische Grammatik speziell für deutschsprachige Lernende (A2)",
+    "category": "english-a2",
+    "difficulty": "medium",
+    "is_active": true
+  },
+  "questions": [
+    {
+      "question_text": "She ___ to school every day.",
+      "answers": [
+        { "text": "goes", "correct": true },
+        { "text": "go", "correct": false },
+        { "text": "going", "correct": false },
+        { "text": "gos", "correct": false }
+      ],
+      "explanation": "In der dritten Person Singular (he/she/it) wird im Present Simple ein -s angehaengt: go -> goes. Im Deutschen gibt es diese Regel nicht, deshalb vergessen deutschsprachige Lernende das -s oft.",
+      "hint": "Dritte Person Singular: he/she/it + Verb + s",
+      "difficulty": 1,
+      "answer_type": "fill_in_blank"
+    },
+    {
+      "question_text": "I ___ my homework right now.",
+      "answers": [
+        { "text": "am doing", "correct": true },
+        { "text": "do", "correct": false },
+        { "text": "does", "correct": false },
+        { "text": "doing", "correct": false }
+      ],
+      "explanation": "Fuer Handlungen, die gerade jetzt passieren, verwendet man das Present Progressive (am/is/are + Verb-ing). 'Right now' ist ein typisches Signalwort. Im Deutschen gibt es keine Verlaufsform — man sagt einfach 'Ich mache', aber auf Englisch muss man zwischen 'I do' (allgemein) und 'I am doing' (gerade jetzt) unterscheiden.",
+      "hint": "'Right now' = gerade jetzt -> Verlaufsform (be + -ing)",
+      "difficulty": 1,
+      "answer_type": "fill_in_blank"
+    },
+    {
+      "question_text": "We arrived ___ Monday ___ 9 o'clock.",
+      "answers": [
+        { "text": "on / at", "correct": true },
+        { "text": "at / on", "correct": false },
+        { "text": "in / at", "correct": false },
+        { "text": "on / in", "correct": false }
+      ],
+      "explanation": "Zeitpraeposition: ON fuer Wochentage (on Monday), AT fuer Uhrzeiten (at 9 o'clock), IN fuer Monate/Jahre (in January, in 2024). Im Deutschen sagt man 'am Montag' und 'um 9 Uhr' — die Zuordnung ist anders als im Englischen.",
+      "hint": "Wochentage = on, Uhrzeiten = at",
+      "difficulty": 2,
+      "answer_type": "fill_in_blank"
+    },
+    {
+      "question_text": "My brother is ___ engineer. He works at ___ university.",
+      "answers": [
+        { "text": "an / a", "correct": true },
+        { "text": "a / a", "correct": false },
+        { "text": "an / an", "correct": false },
+        { "text": "the / the", "correct": false }
+      ],
+      "explanation": "Vor Berufen steht im Englischen der unbestimmte Artikel a/an (im Deutschen: 'Er ist Ingenieur' — ohne Artikel!). 'An' steht vor Vokallaut (an engineer), 'a' vor Konsonantenlaut (a university — 'university' beginnt mit dem Laut /j/, nicht mit einem Vokal).",
+      "hint": "Berufe brauchen a/an. Entscheidend ist der Laut, nicht der Buchstabe!",
+      "difficulty": 2,
+      "answer_type": "fill_in_blank"
+    },
+    {
+      "question_text": "There aren't ___ apples left, but there is ___ bread.",
+      "answers": [
+        { "text": "any / some", "correct": true },
+        { "text": "some / any", "correct": false },
+        { "text": "any / any", "correct": false },
+        { "text": "no / some", "correct": false }
+      ],
+      "explanation": "'Any' wird in verneinten Saetzen und Fragen verwendet, 'some' in bejahten Saetzen. Im Deutschen gibt es diesen Unterschied nicht — man sagt einfach 'keine Aepfel' und 'etwas Brot'.",
+      "hint": "Verneinung/Frage = any, bejahter Satz = some",
+      "difficulty": 2,
+      "answer_type": "fill_in_blank"
+    },
+    {
+      "question_text": "He ___ like coffee. He prefers tea.",
+      "answers": [
+        { "text": "doesn't", "correct": true },
+        { "text": "don't", "correct": false },
+        { "text": "isn't", "correct": false },
+        { "text": "not", "correct": false }
+      ],
+      "explanation": "Die Verneinung im Present Simple braucht do/does + not. Bei he/she/it verwendet man 'doesn't' (does not). Im Deutschen verneint man einfach mit 'nicht': 'Er mag keinen Kaffee'. Im Englischen braucht man das Hilfsverb 'do/does'.",
+      "hint": "He/she/it -> does + not = doesn't",
+      "difficulty": 1,
+      "answer_type": "fill_in_blank"
+    },
+    {
+      "question_text": "I live ___ Berlin, ___ Friedrichstrasse 12.",
+      "answers": [
+        { "text": "in / at", "correct": true },
+        { "text": "at / in", "correct": false },
+        { "text": "on / at", "correct": false },
+        { "text": "in / on", "correct": false }
+      ],
+      "explanation": "Ortspraeposition: IN fuer Staedte und Laender (in Berlin, in Germany), AT fuer genaue Adressen (at Friedrichstrasse 12), ON fuer Strassen ohne Hausnummer (on Friedrichstrasse). Im Deutschen sagt man 'in Berlin' und 'in der Friedrichstrasse' — beides mit 'in'.",
+      "hint": "Stadt = in, genaue Adresse = at",
+      "difficulty": 2,
+      "answer_type": "fill_in_blank"
+    },
+    {
+      "question_text": "How ___ sugar do you need? And how ___ eggs?",
+      "answers": [
+        { "text": "much / many", "correct": true },
+        { "text": "many / much", "correct": false },
+        { "text": "much / much", "correct": false },
+        { "text": "many / many", "correct": false }
+      ],
+      "explanation": "'Much' steht vor unzaehlbaren Nomen (sugar, water, money), 'many' vor zaehlbaren Nomen (eggs, books, people). Im Deutschen verwendet man fuer beides 'wie viel/wie viele' — im Englischen muss man unterscheiden.",
+      "hint": "Zaehlbar (Plural moeglich) = many, unzaehlbar = much",
+      "difficulty": 2,
+      "answer_type": "fill_in_blank"
+    },
+    {
+      "question_text": "Which sentence is grammatically correct?",
+      "answers": [
+        { "text": "She doesn't want to go.", "correct": true },
+        { "text": "She don't want to go.", "correct": false },
+        { "text": "She not want to go.", "correct": false },
+        { "text": "She wants not to go.", "correct": false }
+      ],
+      "explanation": "Bei he/she/it im Present Simple braucht man 'doesn't' (nicht 'don't') fuer die Verneinung. 'She not want' ist falsch, weil das Hilfsverb fehlt. 'She wants not' folgt der deutschen Wortstellung ('Sie will nicht'), ist aber im Englischen falsch.",
+      "hint": "She/he/it -> doesn't + Grundform des Verbs",
+      "difficulty": 1,
+      "answer_type": "multiple_choice"
+    },
+    {
+      "question_text": "Which question is correctly formed?",
+      "answers": [
+        { "text": "Does he play football?", "correct": true },
+        { "text": "Plays he football?", "correct": false },
+        { "text": "He does play football?", "correct": false },
+        { "text": "Play he does football?", "correct": false }
+      ],
+      "explanation": "Im Englischen bildet man Fragen im Present Simple mit do/does + Subjekt + Grundform: 'Does he play...?' Im Deutschen stellt man einfach das Verb vor das Subjekt: 'Spielt er...?' Diese direkte Umstellung funktioniert im Englischen NICHT (ausser bei be/have/Modalverben).",
+      "hint": "Fragebildung: Do/Does + Subjekt + Verb (Grundform)",
+      "difficulty": 1,
+      "answer_type": "multiple_choice"
+    },
+    {
+      "question_text": "Which sentence uses the present progressive correctly?",
+      "answers": [
+        { "text": "They are watching TV at the moment.", "correct": true },
+        { "text": "They watching TV at the moment.", "correct": false },
+        { "text": "They are watch TV at the moment.", "correct": false },
+        { "text": "They watch TV at the moment.", "correct": false }
+      ],
+      "explanation": "Present Progressive = am/is/are + Verb-ing. Alle drei Teile sind noetig: Subjekt + be-Form + Verb mit -ing. 'At the moment' zeigt, dass etwas gerade jetzt passiert -> Present Progressive. Im Deutschen wuerde man einfach sagen: 'Sie schauen gerade fern.'",
+      "hint": "Present Progressive braucht immer: be + Verb-ing",
+      "difficulty": 1,
+      "answer_type": "multiple_choice"
+    },
+    {
+      "question_text": "Choose the correct sentence with the right article usage.",
+      "answers": [
+        { "text": "I like music. (kein Artikel)", "correct": true },
+        { "text": "I like the music. (allgemein)", "correct": false },
+        { "text": "I like a music.", "correct": false },
+        { "text": "I like an music.", "correct": false }
+      ],
+      "explanation": "Im Englischen stehen allgemeine, abstrakte Begriffe OHNE Artikel: 'I like music', 'Life is beautiful'. Im Deutschen sagt man 'Ich mag Musik' (auch ohne Artikel), ABER bei vielen anderen Faellen verwendet Deutsch einen Artikel, wo Englisch keinen hat: 'Das Leben ist schoen' -> 'Life is beautiful' (kein 'the').",
+      "hint": "Allgemeine Aussagen ueber unzaehlbare Nomen: kein Artikel",
+      "difficulty": 2,
+      "answer_type": "multiple_choice"
+    },
+    {
+      "question_text": "Which is correct? 'I have ___ friends in London.'",
+      "answers": [
+        { "text": "a few", "correct": true },
+        { "text": "a little", "correct": false },
+        { "text": "a less", "correct": false },
+        { "text": "a much", "correct": false }
+      ],
+      "explanation": "'A few' steht vor zaehlbaren Nomen im Plural (friends, books). 'A little' steht vor unzaehlbaren Nomen (time, money). Im Deutschen sagt man beides mit 'ein paar' oder 'ein wenig/bisschen'. Merke: few/many = zaehlbar, little/much = unzaehlbar.",
+      "hint": "Friends ist zaehlbar -> few oder many (nicht little/much)",
+      "difficulty": 2,
+      "answer_type": "multiple_choice"
+    },
+    {
+      "question_text": "Select the correct sentence about daily routines.",
+      "answers": [
+        { "text": "He usually gets up at 7 o'clock.", "correct": true },
+        { "text": "He gets usually up at 7 o'clock.", "correct": false },
+        { "text": "Usually he gets up at 7 o'clock.", "correct": false },
+        { "text": "He gets up usually at 7 o'clock.", "correct": false }
+      ],
+      "explanation": "Haeufigkeitsadverbien (usually, always, often, never) stehen im Englischen VOR dem Vollverb: 'He usually gets up'. Im Deutschen steht das Adverb flexibler: 'Er steht normalerweise um 7 auf' oder 'Normalerweise steht er um 7 auf'. Achtung: Nach 'be' steht das Adverb dahinter: 'He is usually tired.'",
+      "hint": "Haeufigkeitsadverb steht VOR dem Vollverb",
+      "difficulty": 2,
+      "answer_type": "multiple_choice"
+    },
+    {
+      "question_text": "Which sentence correctly places the adjective?",
+      "answers": [
+        { "text": "She bought a beautiful red dress.", "correct": true },
+        { "text": "She bought a dress beautiful red.", "correct": false },
+        { "text": "She bought a red beautiful dress.", "correct": false },
+        { "text": "She bought beautiful a red dress.", "correct": false }
+      ],
+      "explanation": "Im Englischen stehen Adjektive IMMER vor dem Nomen: 'a beautiful red dress'. Die Reihenfolge mehrerer Adjektive folgt einer festen Regel: Meinung (beautiful) vor Farbe (red). Im Deutschen ist die Stellung gleich ('ein schoenes rotes Kleid'), aber im Franzoesischen z.B. stehen Adjektive oft nach dem Nomen.",
+      "hint": "Adjektive stehen im Englischen immer VOR dem Nomen",
+      "difficulty": 1,
+      "answer_type": "multiple_choice"
+    },
+    {
+      "question_text": "What does he ___ for breakfast? — He usually ___ toast.",
+      "answers": [
+        { "text": "have / has", "correct": true },
+        { "text": "has / has", "correct": false },
+        { "text": "have / have", "correct": false },
+        { "text": "has / have", "correct": false }
+      ],
+      "explanation": "In Fragen mit 'do/does' steht das Hauptverb in der Grundform: 'What does he have?' (nicht 'has'). Im Aussagesatz bekommt he/she/it das -s: 'He has'. Das ist ein typischer Fehler: Nach 'does' darf kein -s mehr am Verb stehen, weil 'does' das -s bereits traegt.",
+      "hint": "Nach does -> Grundform. Im Aussagesatz: he/she/it + Verb-s",
+      "difficulty": 3,
+      "answer_type": "multiple_choice"
+    },
+    {
+      "question_text": "Put the words in the correct order to form an English question: 'Where / does / live / she'",
+      "answers": [
+        { "text": "Where", "correct": true },
+        { "text": "does", "correct": true }
+      ],
+      "answer_metadata": {
+        "correctOrder": [
+          "Where",
+          "does",
+          "she",
+          "live?"
+        ]
+      },
+      "explanation": "Englische Fragen mit Fragewort: Fragewort + do/does + Subjekt + Verb. Im Deutschen: 'Wo wohnt sie?' — das Verb steht direkt nach dem Fragewort. Im Englischen braucht man das Hilfsverb 'does' dazwischen.",
+      "hint": "Fragewort + Hilfsverb + Subjekt + Vollverb",
+      "difficulty": 1,
+      "answer_type": "ordering"
+    },
+    {
+      "question_text": "Put the words in the correct English word order: 'I / always / drink / coffee / in the morning'",
+      "answers": [
+        { "text": "I", "correct": true },
+        { "text": "always", "correct": true }
+      ],
+      "answer_metadata": {
+        "correctOrder": [
+          "I",
+          "always",
+          "drink",
+          "coffee",
+          "in the morning."
+        ]
+      },
+      "explanation": "Im Englischen: Subjekt + Adverb + Verb + Objekt + Zeitangabe. Im Deutschen ist die Wortstellung flexibler: 'Ich trinke morgens immer Kaffee' oder 'Morgens trinke ich immer Kaffee'. Im Englischen steht die Zeitangabe meist am Ende und das Adverb vor dem Verb.",
+      "hint": "Englisch: S + Adverb + V + O + Zeit",
+      "difficulty": 2,
+      "answer_type": "ordering"
+    },
+    {
+      "question_text": "Put the words in the correct order: 'not / does / he / like / spicy food'",
+      "answers": [
+        { "text": "He", "correct": true },
+        { "text": "does", "correct": true }
+      ],
+      "answer_metadata": {
+        "correctOrder": [
+          "He",
+          "does",
+          "not",
+          "like",
+          "spicy food."
+        ]
+      },
+      "explanation": "Verneinung im Present Simple: Subjekt + does + not + Verb (Grundform). Im Deutschen: 'Er mag kein scharfes Essen' — 'nicht/kein' steht beim Objekt. Im Englischen steht 'not' beim Hilfsverb: 'does not like'.",
+      "hint": "Subjekt + does + not + Verb (Grundform) + Objekt",
+      "difficulty": 2,
+      "answer_type": "ordering"
+    },
+    {
+      "question_text": "Build the correct sentence: 'a / is / she / very / teacher / good'",
+      "answers": [
+        { "text": "She", "correct": true },
+        { "text": "is", "correct": true }
+      ],
+      "answer_metadata": {
+        "correctOrder": [
+          "She",
+          "is",
+          "a",
+          "very",
+          "good teacher."
+        ]
+      },
+      "explanation": "Im Englischen: Subjekt + be + Artikel + Adverb + Adjektiv + Nomen. Im Deutschen: 'Sie ist eine sehr gute Lehrerin' — aehnliche Struktur, aber beachte: Im Englischen kommt der Artikel 'a' VOR dem Adverb 'very'. Auch braucht Englisch den Artikel vor Berufen, Deutsch nicht immer.",
+      "hint": "She is + a + very + good teacher",
+      "difficulty": 3,
+      "answer_type": "ordering"
+    },
+    {
+      "question_text": "In English, you always need 'do' or 'does' to form questions in present simple (except with 'be' and modal verbs).",
+      "answers": [
+        { "text": "True", "correct": true },
+        { "text": "False", "correct": false }
+      ],
+      "explanation": "Richtig! Im Present Simple braucht man 'do/does' fuer Fragen: 'Do you like...?', 'Does she know...?' AUSNAHME: 'be' und Modalverben (can, must, will) koennen direkt vor das Subjekt gestellt werden: 'Are you...?', 'Can she...?' Im Deutschen stellt man einfach das Verb um: 'Magst du...?'",
+      "hint": "Denke an: Do you...? Does he...? Aber: Are you...? Can she...?",
+      "difficulty": 1,
+      "answer_type": "true_false"
+    },
+    {
+      "question_text": "In English, adjectives change their form depending on the gender of the noun (like in German: der gute Mann / die gute Frau).",
+      "answers": [
+        { "text": "True", "correct": false },
+        { "text": "False", "correct": true }
+      ],
+      "explanation": "Falsch! Englische Adjektive aendern sich NIE — weder nach Geschlecht, noch nach Zahl, noch nach Fall. 'A good man', 'a good woman', 'good people' — immer 'good'. Im Deutschen muss man Adjektive deklinieren: 'ein guter Mann', 'eine gute Frau', 'gute Leute'. Das ist ein grosser Vorteil des Englischen!",
+      "hint": "Vergleiche: 'the big house', 'the big houses' — aendert sich 'big'?",
+      "difficulty": 1,
+      "answer_type": "true_false"
+    },
+    {
+      "question_text": "The English present progressive ('I am going') can be used for planned future actions, similar to how German uses the present tense for future plans.",
+      "answers": [
+        { "text": "True", "correct": true },
+        { "text": "False", "correct": false }
+      ],
+      "explanation": "Richtig! Das Present Progressive kann geplante Zukunft ausdruecken: 'I am meeting Tom tomorrow' (Ich treffe Tom morgen). Im Deutschen benutzt man dafuer das Praesens: 'Ich treffe Tom morgen.' Beide Sprachen koennen also die Gegenwartsform fuer geplante Zukunft verwenden, aber Englisch nutzt dafuer die Verlaufsform.",
+      "hint": "Denke an: 'I am flying to London next week.'",
+      "difficulty": 3,
+      "answer_type": "true_false"
+    },
+    {
+      "question_text": "Match the German prepositions with their English equivalents for TIME expressions.",
+      "answers": [
+        { "text": "Zeitausdruecke", "correct": true },
+        { "text": "Praeposition", "correct": true }
+      ],
+      "answer_metadata": {
+        "pairs": [
+          { "left": "am Montag", "right": "on Monday" },
+          { "left": "um 8 Uhr", "right": "at 8 o'clock" },
+          { "left": "im Januar", "right": "in January" },
+          { "left": "am Wochenende", "right": "at the weekend" },
+          { "left": "in der Nacht", "right": "at night" }
+        ]
+      },
+      "explanation": "Deutsche Zeitpraepositionen lassen sich nicht 1:1 uebersetzen. 'Am' wird je nach Kontext zu 'on' (Tage), 'at' (Wochenende) oder bleibt weg. 'Im' wird zu 'in' (Monate, Jahre). Besonders tricky: 'in der Nacht' = 'at night' (nicht 'in the night'). Diese Zuordnungen muss man auswendig lernen.",
+      "hint": "Tage = on, Uhrzeiten = at, Monate/Jahre = in",
+      "difficulty": 2,
+      "answer_type": "matching"
+    },
+    {
+      "question_text": "Match the German prepositions with their English equivalents for PLACE expressions.",
+      "answers": [
+        { "text": "Ortausdruecke", "correct": true },
+        { "text": "Praeposition", "correct": true }
+      ],
+      "answer_metadata": {
+        "pairs": [
+          { "left": "in der Schule", "right": "at school" },
+          { "left": "auf dem Tisch", "right": "on the table" },
+          { "left": "in Deutschland", "right": "in Germany" },
+          { "left": "zu Hause", "right": "at home" },
+          { "left": "an der Wand", "right": "on the wall" }
+        ]
+      },
+      "explanation": "Ortspraepositionen unterscheiden sich stark zwischen Deutsch und Englisch. 'In der Schule' wird zu 'at school' (nicht 'in school' im britischen Englisch). 'Zu Hause' = 'at home' (nicht 'to house'). 'An der Wand' = 'on the wall' (nicht 'at the wall'). Diese Kombinationen muss man als feste Ausdruecke lernen.",
+      "hint": "Vorsicht: 'in' im Deutschen ist nicht immer 'in' im Englischen!",
+      "difficulty": 3,
+      "answer_type": "matching"
+    }
+  ]
+}

@@ -1,7 +1,8 @@
 # Test artifacts (all subdirectories)
 **/test-artifacts/
 
-data
+data/*
+!data/question-sets/
 .env
 .env-dev
 .env-prod
