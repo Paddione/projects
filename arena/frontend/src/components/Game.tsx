@@ -515,7 +515,7 @@ export default function Game() {
 
         function handleFootstepAudio(me: any) {
             const isMoving = me.lastMoveDirection &&
-                (me.lastMoveDirection.x !== 0 || me.lastMoveDirection.y !== 0);
+                (me.lastMoveDirection.dx !== 0 || me.lastMoveDirection.dy !== 0);
             const isSprinting = keysRef.current.has('shift');
 
             if (isMoving && me.isAlive) {
