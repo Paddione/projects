@@ -20,7 +20,6 @@ K8S_DIR="$(dirname "$(dirname "$SCRIPT_DIR")")"
 PROJECT_ROOT="$(dirname "$K8S_DIR")"
 TRACKER="$SCRIPT_DIR/../utils/deploy-tracker.sh"
 
-REGISTRY="registry.korczewski.de/korczewski"
 NAMESPACE="korczewski-services"
 
 # Colors
@@ -68,6 +67,10 @@ for arg in "$@"; do
             ;;
     esac
 done
+
+# Auto-detect registry (k3d local vs production)
+source "$SCRIPT_DIR/../utils/detect-registry.sh"
+detect_registry
 
 # Service to source directory mapping (for change detection)
 declare -A SERVICE_DIRS=(

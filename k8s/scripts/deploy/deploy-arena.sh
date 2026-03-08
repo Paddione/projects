@@ -15,7 +15,6 @@ K8S_DIR="$(dirname "$(dirname "$SCRIPT_DIR")")"
 PROJECT_ROOT="$(dirname "$K8S_DIR")"
 TRACKER="$SCRIPT_DIR/../utils/deploy-tracker.sh"
 
-REGISTRY="registry.korczewski.de/korczewski"
 NAMESPACE="korczewski-services"
 
 GREEN='\033[0;32m'
@@ -38,6 +37,10 @@ for arg in "$@"; do
 done
 
 log_step "Deploying Arena Service"
+
+# Auto-detect registry (k3d local vs production)
+source "$SCRIPT_DIR/../utils/detect-registry.sh"
+detect_registry
 
 # Build and push images
 if [ "$MANIFESTS_ONLY" = false ]; then

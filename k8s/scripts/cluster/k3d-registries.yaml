@@ -1,0 +1,13 @@
+# =============================================================================
+# k3d Registry Mirror Configuration
+# =============================================================================
+# Maps "registry.local:5000" (used in all deployment manifests) to the
+# k3d-managed local registry container (k3d-registry.local:5000).
+#
+# This file is passed to k3d via --registry-config and gets written to
+# /etc/rancher/k3s/registries.yaml inside the k3s node.
+# =============================================================================
+mirrors:
+  "registry.local:5000":
+    endpoint:
+      - "http://k3d-registry.local:5000"
