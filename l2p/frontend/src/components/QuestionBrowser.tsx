@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { apiService } from '../services/apiService'
 import { useLocalization } from '../hooks/useLocalization'
+import { Category } from '../types'
 import styles from '../styles/QuestionBrowser.module.css'
 
 interface BrowseQuestion {
@@ -46,6 +47,13 @@ export const QuestionBrowser: React.FC<QuestionBrowserProps> = ({ mode, onSelect
   // Selection (picker mode)
   const [selected, setSelected] = useState<Set<number>>(new Set())
 
+  // Bulk editing
+  const [bulkCategory, setBulkCategory] = useState('')
+  const [bulkDifficulty, setBulkDifficulty] = useState('')
+  const [bulkAnswerType, setBulkAnswerType] = useState('')
+  const [isBulkUpdating, setIsBulkUpdating] = useState(false)
+  const [categoriesData, setCategoriesData] = useState<Category[]>([])
+
   // Debounce search
   const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [debouncedSearch, setDebouncedSearch] = useState('')
@@ -61,8 +69,11 @@ export const QuestionBrowser: React.FC<QuestionBrowserProps> = ({ mode, onSelect
 
   // Fetch categories once
   useEffect(() => {
-    apiService.getQuestionCategories().then(res => {
-      if (res.success && res.data) setCategories(res.data)
+    apiService.getCategories().then(res => {
+      if (res.success && res.data) {
+        setCategoriesData(res.data)
+        setCategories(res.data.map(c => c.name))
+      }
     })
   }, [])
 
@@ -72,7 +83,7 @@ export const QuestionBrowser: React.FC<QuestionBrowserProps> = ({ mode, onSelect
     try {
       const res = await apiService.browseQuestions({
         search: debouncedSearch || undefined,
-        category: category || undefined,
+        category_id: category ? parseInt(category, 10) : undefined,
         difficulty: difficulty ? parseInt(difficulty, 10) : undefined,
         answer_type: answerType || undefined,
         page,
@@ -124,6 +135,33 @@ export const QuestionBrowser: React.FC<QuestionBrowserProps> = ({ mode, onSelect
     if (onSelect && selected.size > 0) {
       onSelect(Array.from(selected))
       setSelected(new Set())
+    }
+  }
+
+  const handleBulkApply = async () => {
+    const updates: Record<string, unknown> = {}
+    if (bulkCategory) updates.category_id = parseInt(bulkCategory, 10)
+    if (bulkDifficulty) updates.difficulty = parseInt(bulkDifficulty, 10)
+    if (bulkAnswerType) updates.answer_type = bulkAnswerType
+    if (Object.keys(updates).length === 0) return
+
+    setIsBulkUpdating(true)
+    try {
+      const res = await apiService.bulkUpdateQuestions(
+        Array.from(selected),
+        updates as { category_id?: number; difficulty?: number; answer_type?: string }
+      )
+      if (res.success) {
+        setSelected(new Set())
+        setBulkCategory('')
+        setBulkDifficulty('')
+        setBulkAnswerType('')
+        fetchQuestions()
+      }
+    } catch (err) {
+      console.error('Bulk update failed:', err)
+    } finally {
+      setIsBulkUpdating(false)
     }
   }
 
@@ -181,7 +219,7 @@ export const QuestionBrowser: React.FC<QuestionBrowserProps> = ({ mode, onSelect
           onChange={e => { setCategory(e.target.value); setPage(1) }}
         >
           <option value="">{t('questionBrowser.allCategories', 'All Categories')}</option>
-          {categories.map(c => <option key={c} value={c}>{c}</option>)}
+          {categoriesData.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
         </select>
         <select
           className={styles.filterSelect}
@@ -212,6 +250,44 @@ export const QuestionBrowser: React.FC<QuestionBrowserProps> = ({ mode, onSelect
         )}
       </div>
 
+      {/* Bulk Action Toolbar */}
+      {selected.size > 0 && mode === 'standalone' && (
+        <div className={styles.bulkToolbar}>
+          <span className={styles.bulkInfo}>
+            <span className={styles.selectionCount}>{selected.size}</span> selected
+          </span>
+          <select className={styles.filterSelect} value={bulkCategory} onChange={e => setBulkCategory(e.target.value)}>
+            <option value="">Category...</option>
+            {categoriesData.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+          </select>
+          <select className={styles.filterSelect} value={bulkDifficulty} onChange={e => setBulkDifficulty(e.target.value)}>
+            <option value="">Difficulty...</option>
+            {[1,2,3,4,5].map(d => <option key={d} value={d}>{d}</option>)}
+          </select>
+          <select className={styles.filterSelect} value={bulkAnswerType} onChange={e => setBulkAnswerType(e.target.value)}>
+            <option value="">Type...</option>
+            <option value="multiple_choice">Multiple Choice</option>
+            <option value="free_text">Free Text</option>
+            <option value="true_false">True/False</option>
+            <option value="estimation">Estimation</option>
+            <option value="ordering">Ordering</option>
+            <option value="matching">Matching</option>
+            <option value="fill_in_blank">Fill in Blank</option>
+          </select>
+          <button
+            className={styles.applyBulkButton}
+            disabled={isBulkUpdating || (!bulkCategory && !bulkDifficulty && !bulkAnswerType)}
+            onClick={handleBulkApply}
+            type="button"
+          >
+            {isBulkUpdating ? 'Applying...' : 'Apply'}
+          </button>
+          <button className={styles.clearFilters} onClick={() => setSelected(new Set())} type="button">
+            Clear
+          </button>
+        </div>
+      )}
+
       {/* Table */}
       {isLoading ? (
         <div className={styles.loadingOverlay}>Loading...</div>
@@ -229,7 +305,20 @@ export const QuestionBrowser: React.FC<QuestionBrowserProps> = ({ mode, onSelect
           <table className={styles.table}>
             <thead>
               <tr>
-                {mode === 'picker' && <th className={styles.checkboxCell}></th>}
+                <th className={styles.checkboxCell}>
+                  <input
+                    type="checkbox"
+                    className={styles.checkbox}
+                    checked={displayQuestions.length > 0 && selected.size === displayQuestions.length}
+                    onChange={() => {
+                      if (selected.size === displayQuestions.length) {
+                        setSelected(new Set())
+                      } else {
+                        setSelected(new Set(displayQuestions.map(q => q.id)))
+                      }
+                    }}
+                  />
+                </th>
                 <th className={styles.sortable} onClick={() => handleSort('id')}>
                   # {sortBy === 'id' && <span className={styles.sortIndicator}>{sortDir === 'ASC' ? '\u25B2' : '\u25BC'}</span>}
                 </th>
@@ -252,16 +341,14 @@ export const QuestionBrowser: React.FC<QuestionBrowserProps> = ({ mode, onSelect
                       className={isExpanded ? styles.expanded : ''}
                       onClick={() => toggleExpand(q.id)}
                     >
-                      {mode === 'picker' && (
-                        <td className={styles.checkboxCell} onClick={e => e.stopPropagation()}>
-                          <input
-                            type="checkbox"
-                            className={styles.checkbox}
-                            checked={selected.has(q.id)}
-                            onChange={() => toggleSelect(q.id)}
-                          />
-                        </td>
-                      )}
+                      <td className={styles.checkboxCell} onClick={e => e.stopPropagation()}>
+                        <input
+                          type="checkbox"
+                          className={styles.checkbox}
+                          checked={selected.has(q.id)}
+                          onChange={() => toggleSelect(q.id)}
+                        />
+                      </td>
                       <td>{q.id}</td>
                       <td className={styles.questionTextCell}>
                         <div className={styles.truncatedText}>{q.question_text}</div>
@@ -281,7 +368,7 @@ export const QuestionBrowser: React.FC<QuestionBrowserProps> = ({ mode, onSelect
                     </tr>
                     {isExpanded && (
                       <tr className={styles.detailRow}>
-                        <td colSpan={mode === 'picker' ? 7 : 6}>
+                        <td colSpan={7}>
                           <div className={styles.detailContent}>
                             <div className={styles.detailFullText}>{q.question_text}</div>
                             <div className={styles.detailAnswers}>

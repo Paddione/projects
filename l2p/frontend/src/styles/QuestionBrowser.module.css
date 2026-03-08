@@ -433,6 +433,48 @@
   color: var(--cv-cyan, #00f2ff);
 }
 
+/* ─── Bulk Action Toolbar ───────────────────── */
+
+.bulkToolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  padding: 12px 16px;
+  background: var(--cv-cyan-bg, rgba(0, 242, 255, 0.05));
+  border: 1px solid var(--cv-cyan-border, rgba(0, 242, 255, 0.2));
+  border-radius: 10px;
+  animation: slideDown 0.15s ease-out;
+}
+
+.bulkInfo {
+  font-size: var(--cv-text-sm, 0.875rem);
+  color: var(--cv-text-dim, #94a3b8);
+  margin-right: 4px;
+}
+
+.applyBulkButton {
+  padding: 7px 18px;
+  background: linear-gradient(135deg, var(--cv-cyan, #00f2ff) 0%, var(--cv-purple, #bc13fe) 100%);
+  border: none;
+  border-radius: 6px;
+  color: #fff;
+  font-family: var(--cv-font-body, 'Space Grotesk', sans-serif);
+  font-size: var(--cv-text-sm, 0.875rem);
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.applyBulkButton:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.applyBulkButton:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
 /* ─── Responsive ─────────────────────────────── */
 
 @media (max-width: 768px) {
