@@ -1,0 +1,13 @@
+DEFAULT install
+PROMPT 1
+TIMEOUT 50
+
+LABEL install
+  MENU LABEL Install Ubuntu 24.04 (amd64) - Autoinstall
+  KERNEL amd64/vmlinuz
+  INITRD amd64/initrd
+  APPEND autoinstall ip=dhcp ds=nocloud-net;s=http://10.10.0.4:8080/autoinstall/ fsck.mode=skip ---
+
+LABEL local
+  MENU LABEL Boot from local disk
+  LOCALBOOT 0

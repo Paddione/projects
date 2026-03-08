@@ -65,6 +65,11 @@ cd k8s && skaffold delete -p dev              # Tear down dev stack
 ./k8s/scripts/deploy/deploy-kube-vip.sh      # Deploy kube-vip (API VIP + Service LB)
 ./k8s/scripts/deploy/deploy-smb-csi.sh       # Install SMB-CSI driver via Helm
 ./k8s/scripts/cluster/setup-registry.sh      # Deploy private registry + configure nodes
+
+# PXE Boot Server (on 10.10.0.4 - ubuntu-laptop)
+./k8s/scripts/pxe/sync-secrets.sh                              # Push secrets + deploy key to PXE server
+ssh patrick@10.10.0.4 '/srv/pxe/scripts/update-iso.sh'        # Download/update Ubuntu 24.04 ISOs
+ssh patrick@10.10.0.4 'sudo /srv/pxe/scripts/setup-pxe.sh'    # Re-run PXE setup (idempotent)
 ```
 
 ### Project-Specific Commands
@@ -221,6 +226,17 @@ Production uses 6 bare-metal Ubuntu 24.04 nodes (3 CP + 3 workers) with:
 - **No hostPort** on Traefik — uses LoadBalancer service via kube-vip
 
 See `shared-infrastructure/SMB-Share/Obsidian/infrastructure/Kubernetes.md` for full multi-node setup guide.
+
+### PXE Boot Server (Node Provisioning)
+
+A PXE boot server on `10.10.0.4` (ubuntu-laptop) auto-provisions new cluster nodes:
+- **dnsmasq** in proxy mode — provides PXE boot options without replacing FritzBox DHCP
+- **nginx** on port 8080 — serves Ubuntu ISOs, autoinstall config, k8s secrets, deploy key
+- **Multi-arch**: Detects amd64/arm64 via DHCP option 93, serves architecture-specific GRUB + kernel
+- **Autoinstall** creates user `patrick`, SSH key, passwordless sudo, all k3s prerequisites, clones git repo, fetches secrets
+- **Storage auto-discovery**: Extra drives (non-boot NVMe, SATA, USB) are formatted ext4 and shared via SMB (`<hostname>-<device>-<size>`)
+- **Cluster-ready nodes**: PXE provisions OS only — `bootstrap-cluster.sh` handles k3s join
+- Config files: `k8s/scripts/pxe/` (dnsmasq.conf, nginx-pxe.conf, user-data, grub.cfg, setup-pxe.sh)
 
 ## Environment Configuration
 

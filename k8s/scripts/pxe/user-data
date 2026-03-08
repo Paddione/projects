@@ -1,0 +1,240 @@
+#cloud-config
+autoinstall:
+  version: 1
+  locale: en_US.UTF-8
+  keyboard:
+    layout: us
+  refresh-installer:
+    update: false
+
+  # ── Storage: Install on first NVMe ──
+  storage:
+    config:
+      - id: nvme-disk
+        type: disk
+        match:
+          path: /dev/nvme*
+        ptable: gpt
+        wipe: superblock-recursive
+        grub_device: false
+      - id: efi-part
+        type: partition
+        device: nvme-disk
+        size: 1G
+        flag: boot
+        grub_device: true
+      - id: efi-format
+        type: format
+        volume: efi-part
+        fstype: fat32
+      - id: boot-part
+        type: partition
+        device: nvme-disk
+        size: 2G
+      - id: boot-format
+        type: format
+        volume: boot-part
+        fstype: ext4
+      - id: root-part
+        type: partition
+        device: nvme-disk
+        size: -1
+      - id: root-vg
+        type: lvm_volgroup
+        name: ubuntu-vg
+        devices:
+          - root-part
+      - id: root-lv
+        type: lvm_partition
+        volgroup: root-vg
+        name: ubuntu-lv
+        size: -1
+      - id: root-format
+        type: format
+        volume: root-lv
+        fstype: ext4
+      - id: mount-root
+        type: mount
+        device: root-format
+        path: /
+      - id: mount-boot
+        type: mount
+        device: boot-format
+        path: /boot
+      - id: mount-efi
+        type: mount
+        device: efi-format
+        path: /boot/efi
+
+  # ── Network: DHCP ──
+  network:
+    version: 2
+    ethernets:
+      id0:
+        match:
+          driver: "!veth"
+        dhcp4: true
+
+  # ── User ──
+  identity:
+    hostname: k3s-node
+    username: patrick
+    password: "$6$htx9UQ4As7moxMzA$EUEAruo8AGbkV8m1BxpZ8cHFMakb6.vnZGws4ceRiAQz4YeQcciED59WO2vgSct05U3G60LrR/Ejb06QZJvLp."
+
+  # ── SSH ──
+  ssh:
+    install-server: true
+    authorized-keys:
+      - "ssh-ed25519 AAAAC3NzIFN75CnuOz7YXaJipTFxWMVDgm35heu64JKN1QL+Z84+ patrick@korczewski.de"
+    allow-pw: true
+
+  # ── Packages ──
+  packages:
+    - cifs-utils
+    - open-iscsi
+    - nfs-common
+    - curl
+    - jq
+    - git
+    - ca-certificates
+    - apt-transport-https
+    - samba
+    - parted
+    - gdisk
+    - net-tools
+    - vim
+
+  # ── Late commands (run in target chroot after install) ──
+  late-commands:
+    # --- Passwordless sudo ---
+    - echo 'patrick ALL=(ALL) NOPASSWD:ALL' > /target/etc/sudoers.d/patrick
+    - chmod 440 /target/etc/sudoers.d/patrick
+
+    # --- Groups ---
+    - curtin in-target -- usermod -aG sudo,adm,plugdev,netdev patrick
+    - curtin in-target -- groupadd -f docker
+    - curtin in-target -- usermod -aG docker patrick
+    - curtin in-target -- groupadd -f sambashare
+    - curtin in-target -- usermod -aG sambashare patrick
+
+    # --- Disable swap permanently ---
+    - curtin in-target -- swapoff -a || true
+    - sed -i '/\sswap\s/d' /target/etc/fstab
+
+    # --- Kernel modules for k3s ---
+    - printf 'overlay\nbr_netfilter\n' > /target/etc/modules-load.d/k3s.conf
+
+    # --- Sysctl for k3s ---
+    - printf 'net.ipv4.ip_forward = 1\nnet.bridge.bridge-nf-call-iptables = 1\nnet.bridge.bridge-nf-call-ip6tables = 1\nnet.ipv4.conf.all.forwarding = 1\n' > /target/etc/sysctl.d/99-k3s.conf
+
+    # --- Clone git repository ---
+    - curtin in-target -- git clone https://github.com/Paddione/projects.git /home/patrick/projects
+
+    # --- Fetch secrets from PXE server ---
+    - curtin in-target -- mkdir -p /home/patrick/projects/k8s/secrets
+    - curtin in-target -- sh -c 'for s in postgres-secret.yaml auth-secret.yaml l2p-backend-secret.yaml shop-secret.yaml videovault-secret.yaml traefik-secret.yaml registry-secret.yaml ipv64-secret.yaml smb-secret.yaml tls-secret.yaml; do curl -sf http://10.10.0.4:8080/secrets/$s -o /home/patrick/projects/k8s/secrets/$s || true; done'
+
+    # --- Fetch SSH deploy key ---
+    - mkdir -p /target/home/patrick/.ssh
+    - 'curl -sf http://10.10.0.4:8080/keys/deploy_key -o /target/home/patrick/.ssh/deploy_key || true'
+    - chmod 600 /target/home/patrick/.ssh/deploy_key
+    - printf 'Host github.com\n  IdentityFile ~/.ssh/deploy_key\n  IdentitiesOnly yes\n' > /target/home/patrick/.ssh/config
+    - chmod 600 /target/home/patrick/.ssh/config
+
+    # --- Storage setup script (formats extra drives + SMB shares) ---
+    - |
+      cat > /target/usr/local/bin/storage-setup.sh << 'STORAGE_EOF'
+      #!/bin/bash
+      set -euo pipefail
+      HOSTNAME=$(hostname)
+      ROOT_SOURCE=$(findmnt -n -o SOURCE /)
+      BOOT_DISK=$(lsblk -ndo PKNAME "${ROOT_SOURCE}" 2>/dev/null | head -1)
+      if [ -z "${BOOT_DISK}" ]; then
+        PV_DEV=$(pvs --noheadings -o pv_name 2>/dev/null | head -1 | tr -d ' ')
+        BOOT_DISK=$(lsblk -ndo PKNAME "${PV_DEV}" 2>/dev/null | head -1)
+      fi
+      if [ -z "${BOOT_DISK}" ]; then
+        echo "ERROR: Could not determine boot disk"; exit 1
+      fi
+      echo "Boot disk: /dev/${BOOT_DISK}"
+      SMB_PASS=$(curl -sf http://10.10.0.4:8080/secrets/smb-password.txt || echo "170591pk")
+      cat > /etc/samba/smb.conf << 'SMBGLOBAL'
+      [global]
+        workgroup = KORCZEWSKI
+        server string = %h k3s storage
+        security = user
+        map to guest = never
+        min protocol = SMB3
+        logging = systemd
+        log level = 1
+      SMBGLOBAL
+      useradd -r -s /usr/sbin/nologin smbcluster 2>/dev/null || true
+      printf '%s\n%s\n' "${SMB_PASS}" "${SMB_PASS}" | smbpasswd -a -s smbcluster
+      FOUND=0
+      for DEV in $(lsblk -dnpo NAME,TYPE | awk '$2=="disk"{print $1}'); do
+        DEV_SHORT=$(basename "${DEV}")
+        [ "${DEV_SHORT}" = "${BOOT_DISK}" ] && echo "Skipping boot: ${DEV}" && continue
+        if lsblk -nro MOUNTPOINT "${DEV}" 2>/dev/null | grep -q .; then
+          echo "Skipping mounted: ${DEV}"; continue
+        fi
+        SIZE_BYTES=$(lsblk -bdno SIZE "${DEV}" 2>/dev/null || echo 0)
+        [ "${SIZE_BYTES}" -lt 1073741824 ] && echo "Skipping small: ${DEV}" && continue
+        SIZE_HUMAN=$(lsblk -dno SIZE "${DEV}" | tr -d ' ')
+        SHARE_NAME="${HOSTNAME}-${DEV_SHORT}-${SIZE_HUMAN}"
+        MOUNT_POINT="/srv/smb/${SHARE_NAME}"
+        echo "Formatting: ${DEV} -> ${SHARE_NAME}"
+        wipefs --all --force "${DEV}"
+        sgdisk --zap-all "${DEV}"
+        mkfs.ext4 -F -L "${SHARE_NAME}" "${DEV}"
+        mkdir -p "${MOUNT_POINT}"
+        UUID=$(blkid -s UUID -o value "${DEV}")
+        echo "UUID=${UUID} ${MOUNT_POINT} ext4 defaults,nofail 0 2" >> /etc/fstab
+        mount "${DEV}" "${MOUNT_POINT}"
+        chown smbcluster:smbcluster "${MOUNT_POINT}"
+        chmod 775 "${MOUNT_POINT}"
+        cat >> /etc/samba/smb.conf << SHARE
+      [${SHARE_NAME}]
+        path = ${MOUNT_POINT}
+        browseable = yes
+        read only = no
+        valid users = smbcluster
+        force user = smbcluster
+        force group = smbcluster
+        create mask = 0664
+        directory mask = 0775
+      SHARE
+        FOUND=$((FOUND + 1))
+        echo "Shared: //${HOSTNAME}/${SHARE_NAME}"
+      done
+      if [ ${FOUND} -gt 0 ]; then
+        systemctl enable smbd nmbd
+        systemctl restart smbd nmbd
+        echo "SMB: ${FOUND} drive(s) formatted and shared"
+        testparm -s 2>/dev/null | grep '^\[' || true
+      else
+        echo "No extra drives found to share"
+      fi
+      STORAGE_EOF
+    - chmod +x /target/usr/local/bin/storage-setup.sh
+
+    # --- Systemd one-shot to run storage-setup on first boot ---
+    - |
+      cat > /target/etc/systemd/system/storage-setup.service << 'SVCUNIT'
+      [Unit]
+      Description=Auto-format and SMB-share extra drives
+      After=network-online.target
+      Wants=network-online.target
+      ConditionPathExists=!/var/lib/storage-setup-done
+      [Service]
+      Type=oneshot
+      ExecStart=/usr/local/bin/storage-setup.sh
+      ExecStartPost=/usr/bin/touch /var/lib/storage-setup-done
+      RemainAfterExit=true
+      StandardOutput=journal+console
+      [Install]
+      WantedBy=multi-user.target
+      SVCUNIT
+    - curtin in-target -- systemctl enable storage-setup.service
+
+    # --- Fix ownership ---
+    - curtin in-target -- chown -R patrick:patrick /home/patrick
