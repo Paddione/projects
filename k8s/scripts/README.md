@@ -31,6 +31,8 @@ Deployment and cluster management scripts for the Korczewski Kubernetes infrastr
 | `deploy-l2p.sh` | Deploy L2P backend + frontend |
 | `deploy-shop.sh` | Deploy Shop service |
 | `deploy-videovault.sh` | Deploy VideoVault service |
+| `deploy-sos.sh` | Deploy SOS (Taschentherapeut) service |
+| `deploy-arena.sh` | Deploy Arena service |
 
 Note: SMB-CSI is deployed via `kubectl apply -k k8s/infrastructure/smb-csi` (no dedicated script).
 

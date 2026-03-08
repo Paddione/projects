@@ -167,6 +167,9 @@ check_service "L2P Backend" "korczewski-services" "app=l2p-backend" "3001" "/api
 check_service "L2P Frontend" "korczewski-services" "app=l2p-frontend" "80" "/"
 check_service "Shop" "korczewski-services" "app=shop" "3000" "/"
 check_service "VideoVault" "korczewski-services" "app=videovault" "5000" "/api/health"
+check_service "SOS" "korczewski-services" "app=sos" "3005" "/health"
+check_service "Arena Backend" "korczewski-services" "app=arena-backend" "3003" "/api/health"
+check_service "Arena Frontend" "korczewski-services" "app=arena-frontend" "80" "/"
 echo ""
 
 # =============================================================================
@@ -272,6 +275,8 @@ echo "  https://l2p.korczewski.de"
 echo "  https://auth.korczewski.de"
 echo "  https://shop.korczewski.de"
 echo "  https://videovault.korczewski.de"
+echo "  https://sos.korczewski.de"
+echo "  https://arena.korczewski.de"
 echo "  https://traefik.korczewski.de (dashboard)"
 echo ""
 
