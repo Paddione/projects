@@ -13,7 +13,7 @@ export interface CategoryWithCount extends Category {
 export class CategoryRepository extends BaseRepository {
   private readonly table = 'categories';
 
-  async findAll(): Promise<CategoryWithCount[]> {
+  async findAllCategories(): Promise<CategoryWithCount[]> {
     const result = await this.getDb().query<CategoryWithCount>(
       `SELECT c.*, COUNT(q.id)::int AS question_count
        FROM categories c

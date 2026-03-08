@@ -8,7 +8,7 @@ export class CategoryService {
   }
 
   async getAllCategories(): Promise<CategoryWithCount[]> {
-    return this.categoryRepository.findAll();
+    return this.categoryRepository.findAllCategories();
   }
 
   async getCategoryById(id: number): Promise<Category | null> {
