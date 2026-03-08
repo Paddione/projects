@@ -42,7 +42,7 @@ apt-get install -y -qq grub-efi-arm64-signed 2>/dev/null || \
 # Step 2: Create directory structure
 log_info "Step 2: Creating directory structure..."
 mkdir -p /srv/pxe/tftp/{grub,pxelinux.cfg,amd64,arm64}
-mkdir -p /srv/pxe/http/{ubuntu/amd64,ubuntu/arm64,autoinstall,secrets,keys,hostnames}
+mkdir -p /srv/pxe/http/{ubuntu/amd64,ubuntu/arm64,autoinstall,autoinstall-vm,secrets,keys,hostnames}
 mkdir -p /srv/pxe/scripts
 
 # Step 3: Copy bootloader files
