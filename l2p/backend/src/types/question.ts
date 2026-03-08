@@ -82,6 +82,7 @@ export interface CreateQuestionData {
   hint?: string;
   answer_metadata?: AnswerMetadata;
   category?: string;
+  category_id?: number;
   language?: string;
 }
 
@@ -94,7 +95,7 @@ export interface CreateQuestionSetData {
 }
 
 export interface QuestionFilterOptions {
-  category?: string;
+  category_id?: number;
   difficulty?: number;
   answer_type?: AnswerType;
   search?: string;

@@ -381,7 +381,7 @@ router.get('/search', asyncHandler(async (req: express.Request, res: express.Res
 router.get('/browse', asyncHandler(async (req: express.Request, res: express.Response) => {
   const q = req.query as Record<string, unknown>;
   const options = {
-    category: (q['category'] as string) || undefined,
+    category_id: q['category_id'] ? parseInt(q['category_id'] as string, 10) : undefined,
     difficulty: q['difficulty'] ? parseInt(q['difficulty'] as string, 10) : undefined,
     answer_type: (q['answer_type'] as any) || undefined,
     search: (q['q'] as string) || undefined,
@@ -432,6 +432,23 @@ router.delete('/sets/:id/unlink', asyncHandler(async (req: express.Request, res:
 
   await questionService.removeQuestionsFromSet(id, questionIds);
   res.json({ success: true, message: `Unlinked ${questionIds.length} questions from set ${id}` });
+}));
+
+// Bulk update questions
+router.patch('/bulk', asyncHandler(async (req: express.Request, res: express.Response) => {
+  const { questionIds, updates } = req.body;
+  if (!Array.isArray(questionIds) || questionIds.length === 0) {
+    throw new ValidationError('questionIds must be a non-empty array');
+  }
+  if (!updates || typeof updates !== 'object') {
+    throw new ValidationError('updates object is required');
+  }
+  try {
+    const count = await questionService.bulkUpdateQuestions(questionIds, updates);
+    res.json({ success: true, data: { updated: count } });
+  } catch (err: any) {
+    throw new ValidationError(err.message);
+  }
 }));
 
 // Get which sets contain a question

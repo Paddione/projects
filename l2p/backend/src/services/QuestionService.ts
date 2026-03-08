@@ -482,6 +482,22 @@ export class QuestionService {
     return this.questionRepository.getDistinctQuestionCategories();
   }
 
+  async bulkUpdateQuestions(
+    questionIds: number[],
+    updates: { category_id?: number; difficulty?: number; answer_type?: string }
+  ): Promise<number> {
+    if (updates.difficulty !== undefined && (updates.difficulty < 1 || updates.difficulty > 5)) {
+      throw new Error('Difficulty must be between 1 and 5');
+    }
+    const validTypes = ['multiple_choice', 'free_text', 'true_false', 'estimation', 'ordering', 'matching', 'fill_in_blank'];
+    if (updates.answer_type !== undefined && !validTypes.includes(updates.answer_type)) {
+      throw new Error(`answer_type must be one of: ${validTypes.join(', ')}`);
+    }
+    const count = await this.questionRepository.bulkUpdateQuestions(questionIds, updates);
+    this.invalidateQuestionSetCaches();
+    return count;
+  }
+
   // Utility methods
   async getAvailableCategories(): Promise<string[]> {
     return this.categoriesCache.getOrRefresh(

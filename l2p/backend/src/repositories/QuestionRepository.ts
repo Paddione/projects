@@ -154,12 +154,19 @@ export class QuestionRepository extends BaseRepository {
 
   // Question Methods
   async findQuestionById(id: number): Promise<Question | null> {
-    return this.findById<Question>(this.questionsTable, id);
+    const result = await this.getDb().query<Question>(
+      `SELECT q.*, c.name AS category FROM questions q
+       LEFT JOIN categories c ON q.category_id = c.id
+       WHERE q.id = $1`,
+      [id]
+    );
+    return result.rows[0] || null;
   }
 
   async findQuestionsBySetId(questionSetId: number): Promise<Question[]> {
     const result = await this.getDb().query<Question>(
-      `SELECT q.* FROM questions q
+      `SELECT q.*, c.name AS category FROM questions q
+       LEFT JOIN categories c ON q.category_id = c.id
        INNER JOIN question_set_questions qsq ON q.id = qsq.question_id
        WHERE qsq.question_set_id = $1
        ORDER BY qsq.position, q.id`,
@@ -190,7 +197,8 @@ export class QuestionRepository extends BaseRepository {
 
     const orderBy = buildOrderBy(`q.${sortBy}`, sortDir, 'q.id');
     const result = await this.getDb().query<Question>(
-      `SELECT q.* FROM ${this.questionsTable} q
+      `SELECT q.*, c.name AS category FROM ${this.questionsTable} q
+       LEFT JOIN categories c ON q.category_id = c.id
        INNER JOIN ${this.junctionTable} qsq ON q.id = qsq.question_id
        WHERE qsq.question_set_id = $1
        ORDER BY ${orderBy}
@@ -207,7 +215,7 @@ export class QuestionRepository extends BaseRepository {
       explanation: data.explanation,
       difficulty: data.difficulty || 1,
     };
-    if (data.category !== undefined) questionData['category'] = data.category;
+    if ((data as any).category_id !== undefined) questionData['category_id'] = (data as any).category_id;
     if (data.language !== undefined) questionData['language'] = data.language;
 
     return this.create<Question>(this.questionsTable, questionData);
@@ -226,7 +234,8 @@ export class QuestionRepository extends BaseRepository {
     const placeholders = questionSetIds.map((_, index) => `$${index + 2}`).join(', ');
 
     const result = await this.getDb().query<Question>(
-      `SELECT q.* FROM questions q
+      `SELECT q.*, c.name AS category FROM questions q
+       LEFT JOIN categories c ON q.category_id = c.id
        INNER JOIN question_set_questions qsq ON q.id = qsq.question_id
        WHERE qsq.question_set_id IN (${placeholders})
        AND q.question_text IS NOT NULL
@@ -254,7 +263,8 @@ export class QuestionRepository extends BaseRepository {
 
   async getQuestionsByDifficulty(questionSetId: number, difficulty: number): Promise<Question[]> {
     const result = await this.getDb().query<Question>(
-      `SELECT q.* FROM questions q
+      `SELECT q.*, c.name AS category FROM questions q
+       LEFT JOIN categories c ON q.category_id = c.id
        INNER JOIN question_set_questions qsq ON q.id = qsq.question_id
        WHERE qsq.question_set_id = $1 AND q.difficulty = $2
        ORDER BY q.id`,
@@ -287,7 +297,8 @@ export class QuestionRepository extends BaseRepository {
 
     if (questionSetId) {
       query = `
-        SELECT q.* FROM questions q
+        SELECT q.*, c.name AS category FROM questions q
+        LEFT JOIN categories c ON q.category_id = c.id
         INNER JOIN question_set_questions qsq ON q.id = qsq.question_id
         WHERE q.question_text ILIKE $1 AND qsq.question_set_id = $2
         ORDER BY q.id LIMIT 50
@@ -295,9 +306,10 @@ export class QuestionRepository extends BaseRepository {
       params.push(questionSetId);
     } else {
       query = `
-        SELECT * FROM questions
-        WHERE question_text ILIKE $1
-        ORDER BY id LIMIT 50
+        SELECT q.*, c.name AS category FROM questions q
+        LEFT JOIN categories c ON q.category_id = c.id
+        WHERE q.question_text ILIKE $1
+        ORDER BY q.id LIMIT 50
       `;
     }
 
@@ -331,7 +343,8 @@ export class QuestionRepository extends BaseRepository {
 
       const orderBy = buildOrderBy(`q.${sortBy}`, sortDir, 'q.id');
       const result = await this.getDb().query<Question>(
-        `SELECT q.* FROM questions q
+        `SELECT q.*, c.name AS category FROM questions q
+         LEFT JOIN categories c ON q.category_id = c.id
          INNER JOIN question_set_questions qsq ON q.id = qsq.question_id
          WHERE q.question_text ILIKE $1 AND qsq.question_set_id = $2
          ORDER BY ${orderBy}
@@ -346,8 +359,9 @@ export class QuestionRepository extends BaseRepository {
     const total = await this.count(this.questionsTable, 'question_text ILIKE $1', params);
     const orderBy = buildOrderBy(sortBy, sortDir, 'id');
     const result = await this.getDb().query<Question>(
-      `SELECT * FROM ${this.questionsTable}
-       WHERE question_text ILIKE $1
+      `SELECT q.*, c.name AS category FROM ${this.questionsTable} q
+       LEFT JOIN categories c ON q.category_id = c.id
+       WHERE q.question_text ILIKE $1
        ORDER BY ${orderBy}
        LIMIT $2 OFFSET $3`,
       [`%${searchTerm}%`, pageSize, (page - 1) * pageSize]
@@ -357,10 +371,11 @@ export class QuestionRepository extends BaseRepository {
 
   async getQuestionsWithAnswerCount(): Promise<Array<Question & { answer_count: number }>> {
     const result = await this.getDb().query<Question & { answer_count: number }>(
-      `SELECT *,
-       jsonb_array_length(answers) as answer_count
-       FROM questions
-       ORDER BY id`
+      `SELECT q.*, c.name AS category,
+       jsonb_array_length(q.answers) as answer_count
+       FROM questions q
+       LEFT JOIN categories c ON q.category_id = c.id
+       ORDER BY q.id`
     );
     return result.rows;
   }
@@ -434,34 +449,35 @@ export class QuestionRepository extends BaseRepository {
     const params: unknown[] = [];
     let idx = 1;
 
-    if (options.category) {
-      filters.push(`category = $${idx++}`);
-      params.push(options.category);
+    if (options.category_id) {
+      filters.push(`q.category_id = $${idx++}`);
+      params.push(options.category_id);
     }
     if (options.difficulty) {
-      filters.push(`difficulty = $${idx++}`);
+      filters.push(`q.difficulty = $${idx++}`);
       params.push(options.difficulty);
     }
     if (options.answer_type) {
-      filters.push(`answer_type = $${idx++}`);
+      filters.push(`q.answer_type = $${idx++}`);
       params.push(options.answer_type);
     }
     if (options.search) {
-      filters.push(`question_text ILIKE $${idx++}`);
+      filters.push(`q.question_text ILIKE $${idx++}`);
       params.push(`%${options.search}%`);
     }
 
     const where = filters.length ? `WHERE ${filters.join(' AND ')}` : '';
 
     const countResult = await this.getDb().query<{ count: string }>(
-      `SELECT COUNT(*) as count FROM ${this.questionsTable} ${where}`,
+      `SELECT COUNT(*) as count FROM ${this.questionsTable} q ${where}`,
       params
     );
     const total = parseInt(countResult.rows[0]?.count || '0', 10);
 
     const orderBy = buildOrderBy(sortBy, sortDir, 'id');
     const result = await this.getDb().query<Question>(
-      `SELECT * FROM ${this.questionsTable}
+      `SELECT q.*, c.name AS category FROM ${this.questionsTable} q
+       LEFT JOIN categories c ON q.category_id = c.id
        ${where}
        ORDER BY ${orderBy}
        LIMIT $${idx} OFFSET $${idx + 1}`,
@@ -519,9 +535,42 @@ export class QuestionRepository extends BaseRepository {
   }
 
   async getDistinctQuestionCategories(): Promise<string[]> {
-    const result = await this.getDb().query<{ category: string }>(
-      `SELECT DISTINCT category FROM ${this.questionsTable} WHERE category IS NOT NULL AND category != '' ORDER BY category`
+    const result = await this.getDb().query<{ name: string }>(
+      `SELECT name FROM categories ORDER BY name`
     );
-    return result.rows.map(r => r.category);
+    return result.rows.map(r => r.name);
+  }
+
+  async bulkUpdateQuestions(
+    questionIds: number[],
+    updates: { category_id?: number; difficulty?: number; answer_type?: string }
+  ): Promise<number> {
+    if (questionIds.length === 0) return 0;
+
+    const setClauses: string[] = [];
+    const params: unknown[] = [];
+    let idx = 1;
+
+    if (updates.category_id !== undefined) {
+      setClauses.push(`category_id = $${idx++}`);
+      params.push(updates.category_id);
+    }
+    if (updates.difficulty !== undefined) {
+      setClauses.push(`difficulty = $${idx++}`);
+      params.push(updates.difficulty);
+    }
+    if (updates.answer_type !== undefined) {
+      setClauses.push(`answer_type = $${idx++}`);
+      params.push(updates.answer_type);
+    }
+
+    if (setClauses.length === 0) return 0;
+
+    const placeholders = questionIds.map((_, i) => `$${idx + i}`).join(', ');
+    const result = await this.getDb().query(
+      `UPDATE ${this.questionsTable} SET ${setClauses.join(', ')} WHERE id IN (${placeholders})`,
+      [...params, ...questionIds]
+    );
+    return result.rowCount ?? 0;
   }
 }
