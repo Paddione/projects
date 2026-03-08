@@ -27,7 +27,7 @@ export const QuestionBrowser: React.FC<QuestionBrowserProps> = ({ mode, onSelect
   const [questions, setQuestions] = useState<BrowseQuestion[]>([])
   const [total, setTotal] = useState(0)
   const [page, setPage] = useState(1)
-  const [pageSize] = useState(20)
+  const [pageSize, setPageSize] = useState(20)
   const [isLoading, setIsLoading] = useState(false)
 
   // Filters
@@ -405,6 +405,15 @@ export const QuestionBrowser: React.FC<QuestionBrowserProps> = ({ mode, onSelect
           <span className={styles.pageInfo}>
             {((page - 1) * pageSize) + 1}&ndash;{Math.min(page * pageSize, total)} of {total}
           </span>
+          <select
+            className={styles.pageSizeSelect}
+            value={pageSize}
+            onChange={e => { setPageSize(Number(e.target.value)); setPage(1) }}
+          >
+            <option value={20}>20 / page</option>
+            <option value={50}>50 / page</option>
+            <option value={100}>100 / page</option>
+          </select>
           <div className={styles.pageButtons}>
             <button
               className={styles.pageButton}

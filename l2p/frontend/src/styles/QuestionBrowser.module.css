@@ -356,6 +356,16 @@
   cursor: not-allowed;
 }
 
+.pageSizeSelect {
+  padding: 4px 8px;
+  background: var(--cv-glass-4, rgba(255, 255, 255, 0.05));
+  border: 1px solid var(--cv-border-2, rgba(255, 255, 255, 0.08));
+  border-radius: 6px;
+  color: var(--cv-text, #fff);
+  font-size: var(--cv-text-sm, 0.875rem);
+  cursor: pointer;
+}
+
 /* ─── Picker Mode Footer ─────────────────────── */
 
 .pickerFooter {
