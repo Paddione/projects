@@ -43,5 +43,5 @@ spec:
           port: 8006
           scheme: https
       middlewares:
-        - name: admin-auth-chain
+        - name: proxmox-auth-chain
   tls: {}
