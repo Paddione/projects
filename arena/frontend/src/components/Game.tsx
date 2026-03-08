@@ -697,8 +697,10 @@ export default function Game() {
     // RENDER
     // ============================================================================
 
+    const handleAssetsLoaded = useCallback(() => setAssetsLoaded(true), []);
+
     if (!assetsLoaded) {
-        return <LoadingScreen onLoaded={() => setAssetsLoaded(true)} />;
+        return <LoadingScreen onLoaded={handleAssetsLoaded} />;
     }
 
     return (
