@@ -237,7 +237,7 @@ describe('QuestionRepository', () => {
 
         expect(result).toEqual(mockQuestion);
         expect(mockDb.query).toHaveBeenCalledWith(
-          expect.stringContaining('SELECT * FROM questions WHERE id = $1'),
+          expect.stringContaining('WHERE q.id = $1'),
           [1]
         );
       });
