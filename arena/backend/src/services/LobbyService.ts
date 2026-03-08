@@ -113,7 +113,15 @@ export class LobbyService {
                 p.username.toLowerCase() === request.player.username.toLowerCase()
         );
         if (existing) {
-            throw new Error('Player already in lobby');
+            // Player reconnecting - update isConnected status and return current lobby state
+            const updatedPlayers = lobby.players.map((p) =>
+                String(p.id) === String(request.player.id) ? { ...p, isConnected: true } : p
+            );
+            const result = await this.db.query(
+                `UPDATE lobbies SET players = $1 WHERE code = $2 RETURNING *`,
+                [JSON.stringify(updatedPlayers), request.lobbyCode]
+            );
+            return this.formatLobby(result.rows[0]);
         }
 
         const newPlayer: ArenaPlayer = {
