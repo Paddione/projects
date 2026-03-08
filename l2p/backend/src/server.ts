@@ -23,6 +23,7 @@ import characterRoutes from './routes/characters.js';
 import adminRoutes from './routes/admin.js';
 import perksRoutes from './routes/perks.js';
 import perkDraftRoutes from './routes/perkDraft.js';
+import categoryRoutes from './routes/categories.js';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
 import { requestLogger } from './middleware/logging.js';
 import { initializeBackendHealthChecks } from './health/index.js';
@@ -368,6 +369,7 @@ app.get('/api/migrations/status', async (req: Request, res: Response) => {
 // API routes with specific rate limiting
 app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/lobbies', lobbyRoutes);
+app.use('/api/categories', categoryRoutes);
 app.use('/api/questions', questionRoutes);
 app.use('/api/question-management', questionManagementRoutes);
 app.use('/api/scoring', scoringRoutes);
