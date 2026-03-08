@@ -81,16 +81,15 @@ export const QuestionBrowser: React.FC<QuestionBrowserProps> = ({ mode, onSelect
   const fetchQuestions = useCallback(async () => {
     setIsLoading(true)
     try {
-      const res = await apiService.browseQuestions({
-        search: debouncedSearch || undefined,
-        category_id: category ? parseInt(category, 10) : undefined,
-        difficulty: difficulty ? parseInt(difficulty, 10) : undefined,
-        answer_type: answerType || undefined,
-        page,
-        pageSize,
-        sortBy,
-        sortDir,
-      })
+      const filters: {
+        category_id?: number; difficulty?: number; answer_type?: string;
+        search?: string; page?: number; pageSize?: number; sortBy?: string; sortDir?: 'ASC' | 'DESC';
+      } = { page, pageSize, sortBy, sortDir }
+      if (debouncedSearch) filters.search = debouncedSearch
+      if (category) filters.category_id = parseInt(category, 10)
+      if (difficulty) filters.difficulty = parseInt(difficulty, 10)
+      if (answerType) filters.answer_type = answerType
+      const res = await apiService.browseQuestions(filters)
       if (res.success && res.data) {
         setQuestions(res.data.items || [])
         setTotal(res.data.total || 0)
@@ -139,7 +138,7 @@ export const QuestionBrowser: React.FC<QuestionBrowserProps> = ({ mode, onSelect
   }
 
   const handleBulkApply = async () => {
-    const updates: Record<string, unknown> = {}
+    const updates: { category_id?: number; difficulty?: number; answer_type?: string } = {}
     if (bulkCategory) updates.category_id = parseInt(bulkCategory, 10)
     if (bulkDifficulty) updates.difficulty = parseInt(bulkDifficulty, 10)
     if (bulkAnswerType) updates.answer_type = bulkAnswerType
@@ -149,7 +148,7 @@ export const QuestionBrowser: React.FC<QuestionBrowserProps> = ({ mode, onSelect
     try {
       const res = await apiService.bulkUpdateQuestions(
         Array.from(selected),
-        updates as { category_id?: number; difficulty?: number; answer_type?: string }
+        updates
       )
       if (res.success) {
         setSelected(new Set())
