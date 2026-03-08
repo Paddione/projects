@@ -40,10 +40,18 @@ cp "${MOUNT_DIR}/casper/vmlinuz" "${TFTP_DIR}/amd64/vmlinuz"
 cp "${MOUNT_DIR}/casper/initrd" "${TFTP_DIR}/amd64/initrd"
 sudo umount "${MOUNT_DIR}"
 
-echo "Extracting arm64 kernel/initrd..."
+echo "Extracting arm64 kernel/initrd + GRUB EFI..."
 sudo mount -o loop,ro "${ISO_DIR}/arm64/${ARM64_ISO}" "${MOUNT_DIR}"
 cp "${MOUNT_DIR}/casper/vmlinuz" "${TFTP_DIR}/arm64/vmlinuz"
 cp "${MOUNT_DIR}/casper/initrd" "${TFTP_DIR}/arm64/initrd"
+# Extract arm64 GRUB EFI bootloader from the ISO (avoids needing cross-arch packages)
+GRUB_ARM64=$(find "${MOUNT_DIR}" -iname "grubaa64.efi" -print -quit 2>/dev/null)
+if [ -n "${GRUB_ARM64}" ]; then
+    cp "${GRUB_ARM64}" "${TFTP_DIR}/grubnetaa64.efi"
+    echo "arm64 GRUB EFI: extracted from ${GRUB_ARM64}"
+else
+    echo "WARN: arm64 GRUB EFI not found in ISO"
+fi
 sudo umount "${MOUNT_DIR}"
 
 sudo rmdir "${MOUNT_DIR}"
