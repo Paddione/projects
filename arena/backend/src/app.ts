@@ -61,9 +61,12 @@ const lobbyService = new LobbyService();
 app.post('/api/lobbies', async (req, res) => {
     try {
         const user = (req as any).user;
+        if (!user) {
+            return res.status(401).json({ error: 'Not authenticated' });
+        }
         const lobby = await lobbyService.createLobby({
-            hostId: user?.userId ?? req.body.hostId,
-            username: user?.username ?? req.body.username,
+            hostId: user.userId,
+            username: user.username,
             settings: req.body.settings,
         });
         res.status(201).json(lobby);
@@ -95,10 +98,18 @@ app.get('/api/lobbies', async (_req, res) => {
 
 app.delete('/api/lobbies/:code', async (req, res) => {
     try {
-        const deleted = await lobbyService.deleteLobbyByCode(req.params.code);
-        if (!deleted) {
+        const user = (req as any).user;
+        if (!user) {
+            return res.status(401).json({ error: 'Not authenticated' });
+        }
+        const lobby = await lobbyService.getLobbyByCode(req.params.code);
+        if (!lobby) {
             return res.status(404).json({ error: 'Lobby not found' });
         }
+        if (!lobby.authUserId || lobby.authUserId !== user.userId) {
+            return res.status(403).json({ error: 'Only the host can delete a lobby' });
+        }
+        await lobbyService.deleteLobbyByCode(req.params.code);
         res.json({ success: true });
     } catch (error) {
         res.status(500).json({ error: (error as Error).message });
@@ -143,14 +154,18 @@ app.get('/api/players/:authUserId', async (req, res) => {
 
 app.post('/api/players', async (req, res) => {
     try {
-        const { authUserId, username, selectedCharacter } = req.body;
+        const user = (req as any).user;
+        if (!user) {
+            return res.status(401).json({ error: 'Not authenticated' });
+        }
+        const { selectedCharacter } = req.body;
         const db = DatabaseService.getInstance();
         const result = await db.query(
             `INSERT INTO players (auth_user_id, username, selected_character)
        VALUES ($1, $2, $3)
        ON CONFLICT (auth_user_id) DO UPDATE SET username = $2, updated_at = CURRENT_TIMESTAMP
        RETURNING *`,
-            [authUserId, username, selectedCharacter || 'soldier']
+            [user.userId, user.username, selectedCharacter || 'soldier']
         );
         res.status(201).json(result.rows[0]);
     } catch (error) {

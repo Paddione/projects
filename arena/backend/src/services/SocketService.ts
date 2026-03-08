@@ -13,6 +13,13 @@ import type {
 } from '../types/game.js';
 import { config } from '../config/index.js';
 
+interface AuthUser {
+    userId: number;
+    username: string;
+    email: string;
+    role: string;
+}
+
 interface ConnectedPlayer {
     socketId: string;
     playerId: string;
@@ -41,6 +48,48 @@ export class SocketService {
         this.lobbyService = new LobbyService();
         this.gameService = new GameService(config.game.tickRate);
 
+        // Socket auth middleware — validate session cookie against auth service
+        this.io.use(async (socket, next) => {
+            try {
+                const cookie = socket.request.headers.cookie ?? '';
+                if (!cookie) {
+                    return next(new Error('Authentication required'));
+                }
+
+                const res = await fetch(`${config.auth.authServiceUrl}/api/auth/verify`, {
+                    headers: { cookie },
+                    signal: AbortSignal.timeout(5000),
+                });
+
+                if (!res.ok) {
+                    return next(new Error('Authentication failed'));
+                }
+
+                // Auth service returns user info in response headers (same as ForwardAuth)
+                const userId = res.headers.get('x-auth-user-id');
+                const username = res.headers.get('x-auth-user');
+                const email = res.headers.get('x-auth-email');
+                const role = res.headers.get('x-auth-role');
+
+                const parsedUserId = parseInt(userId ?? '', 10);
+                if (!userId || isNaN(parsedUserId)) {
+                    return next(new Error('Authentication failed: no user ID'));
+                }
+
+                socket.data.user = {
+                    userId: parsedUserId,
+                    username: username || email?.split('@')[0] || 'player',
+                    email: email || '',
+                    role: role || 'USER',
+                } as AuthUser;
+
+                next();
+            } catch (err) {
+                console.error('Socket auth error:', err);
+                next(new Error('Authentication check failed'));
+            }
+        });
+
         // Register game callbacks
         this.gameService.setCallbacks({
             onStateUpdate: (matchId: string, state: SerializedGameState) => this.broadcastToMatch(matchId, 'game-state', state),
@@ -68,22 +117,34 @@ export class SocketService {
             // -- Lobby Events --
 
             socket.on('join-lobby', async (data) => {
+                const user = this.requireAuth(socket, 'join');
+                if (!user) return;
+
                 try {
+                    // Use authenticated identity, not client-supplied
+                    const playerId = String(user.userId);
                     const lobby = await this.lobbyService.joinLobby({
                         lobbyCode: data.lobbyCode,
-                        player: data.player,
+                        player: {
+                            id: playerId,
+                            username: user.username,
+                            character: data.player?.character || 'soldier',
+                            characterLevel: data.player?.characterLevel || 1,
+                            isReady: false,
+                            isConnected: true,
+                        },
                     });
 
                     this.connectedPlayers.set(socket.id, {
                         socketId: socket.id,
-                        playerId: data.player.id,
+                        playerId,
                         lobbyCode: data.lobbyCode,
                         matchId: null,
                     });
-                    this.playerToSocket.set(data.player.id, socket.id);
+                    this.playerToSocket.set(playerId, socket.id);
 
                     socket.join(`lobby:${data.lobbyCode}`);
-                    socket.emit('join-success', { lobby, playerId: data.player.id });
+                    socket.emit('join-success', { lobby, playerId });
                     this.io.to(`lobby:${data.lobbyCode}`).emit('lobby-updated', lobby);
                 } catch (error) {
                     socket.emit('join-error', { message: (error as Error).message });
@@ -91,8 +152,12 @@ export class SocketService {
             });
 
             socket.on('leave-lobby', async (data) => {
+                const user = this.requireAuth(socket, 'leave');
+                if (!user) return;
+
                 try {
-                    const lobby = await this.lobbyService.leaveLobby(data.lobbyCode, data.playerId);
+                    const playerId = String(user.userId);
+                    const lobby = await this.lobbyService.leaveLobby(data.lobbyCode, playerId);
                     socket.leave(`lobby:${data.lobbyCode}`);
 
                     const playerInfo = this.connectedPlayers.get(socket.id);
@@ -114,10 +179,14 @@ export class SocketService {
             });
 
             socket.on('player-ready', async (data) => {
+                const user = this.requireAuth(socket, 'ready');
+                if (!user) return;
+
                 try {
+                    const playerId = String(user.userId);
                     const lobby = await this.lobbyService.updatePlayerReady(
                         data.lobbyCode,
-                        data.playerId,
+                        playerId,
                         data.isReady
                     );
                     this.io.to(`lobby:${data.lobbyCode}`).emit('lobby-updated', lobby);
@@ -127,21 +196,29 @@ export class SocketService {
             });
 
             socket.on('update-settings', async (data) => {
+                const user = this.requireAuth(socket, 'update-settings');
+                if (!user) return;
+
                 try {
+                    // Use authenticated userId as hostId — LobbyService validates ownership
                     const lobby = await this.lobbyService.updateSettings(
                         data.lobbyCode,
-                        data.hostId,
+                        user.userId,
                         data.settings
                     );
                     this.io.to(`lobby:${data.lobbyCode}`).emit('lobby-updated', lobby);
                 } catch (error) {
-                    socket.emit('start-game-error', { message: (error as Error).message });
+                    socket.emit('update-settings-error', { message: (error as Error).message });
                 }
             });
 
             socket.on('start-game', async (data) => {
+                const user = this.requireAuth(socket, 'start-game');
+                if (!user) return;
+
                 try {
-                    const lobby = await this.lobbyService.startGame(data.lobbyCode, data.hostId);
+                    // Use authenticated userId — LobbyService validates host ownership
+                    const lobby = await this.lobbyService.startGame(data.lobbyCode, user.userId);
 
                     // Start the match
                     const matchId = this.gameService.startMatch(lobby);
@@ -192,7 +269,7 @@ export class SocketService {
                 this.gameService.processInput(data.matchId, playerInfo.playerId, data.input);
             });
 
-            socket.on('pickup-item', (data) => {
+            socket.on('pickup-item', (_data) => {
                 // Handled through player-input with pickup flag
             });
 
@@ -238,6 +315,17 @@ export class SocketService {
                 this.playerToSocket.delete(playerInfo.playerId);
             });
         });
+    }
+
+    // -- Auth helpers --
+
+    private requireAuth(socket: Socket, event: string): AuthUser | null {
+        const user = socket.data?.user as AuthUser | undefined;
+        if (!user) {
+            socket.emit(`${event}-error`, { type: 'UNAUTHORIZED', message: 'Authentication required' });
+            return null;
+        }
+        return user;
     }
 
     // -- Broadcast helpers --

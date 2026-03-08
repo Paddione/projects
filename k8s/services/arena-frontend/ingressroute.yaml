@@ -26,6 +26,6 @@ spec:
         - name: arena-frontend
           port: 80
       middlewares:
-        - name: user-auth-chain
+        - name: default-chain
           namespace: korczewski-infra
   tls: {}

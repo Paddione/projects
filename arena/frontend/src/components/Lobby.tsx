@@ -37,7 +37,7 @@ export default function Lobby() {
 
         socket.on('join-success', (data: any) => {
             setIsJoined(true);
-            setLobby(code, data.lobby.players[0]?.id === playerId);
+            setLobby(code, String(data.lobby.authUserId) === playerId);
             setPlayers(data.lobby.players);
             if (data.lobby.settings) setSettings(data.lobby.settings);
         });
