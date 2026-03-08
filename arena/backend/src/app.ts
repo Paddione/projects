@@ -4,6 +4,7 @@ import helmet from 'helmet';
 import { config } from './config/index.js';
 import { DatabaseService } from './services/DatabaseService.js';
 import { LobbyService } from './services/LobbyService.js';
+import { attachAuthUser } from './middleware/auth.js';
 
 const app = express();
 
@@ -14,6 +15,7 @@ app.use(cors({
     credentials: true,
 }));
 app.use(express.json());
+app.use(attachAuthUser);
 
 // ============================================================================
 // HEALTH
@@ -39,6 +41,18 @@ app.get('/api/health', async (_req, res) => {
 });
 
 // ============================================================================
+// AUTH
+// ============================================================================
+
+app.get('/api/auth/me', (req, res) => {
+    const user = (req as any).user;
+    if (!user) {
+        return res.status(401).json({ error: 'Not authenticated' });
+    }
+    res.json({ user });
+});
+
+// ============================================================================
 // LOBBIES
 // ============================================================================
 
@@ -46,7 +60,12 @@ const lobbyService = new LobbyService();
 
 app.post('/api/lobbies', async (req, res) => {
     try {
-        const lobby = await lobbyService.createLobby(req.body);
+        const user = (req as any).user;
+        const lobby = await lobbyService.createLobby({
+            hostId: user?.userId ?? req.body.hostId,
+            username: user?.username ?? req.body.username,
+            settings: req.body.settings,
+        });
         res.status(201).json(lobby);
     } catch (error) {
         res.status(400).json({ error: (error as Error).message });
