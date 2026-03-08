@@ -2,22 +2,18 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../services/apiService';
 import { useGameStore } from '../stores/gameStore';
+import { useAuthStore } from '../stores/authStore';
 
 export default function Home() {
     const navigate = useNavigate();
-    const setPlayer = useGameStore((s) => s.setPlayer);
     const setLobby = useGameStore((s) => s.setLobby);
+    const user = useAuthStore((s) => s.user);
 
-    const [username, setUsername] = useState('');
     const [joinCode, setJoinCode] = useState('');
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
 
     const handleCreate = async () => {
-        if (!username.trim()) {
-            setError('Enter a username');
-            return;
-        }
         setIsLoading(true);
         setError('');
         try {
@@ -32,37 +28,25 @@ export default function Home() {
     };
 
     const handleJoin = () => {
-        if (!username.trim()) {
-            setError('Enter a username');
-            return;
-        }
         if (!joinCode.trim() || joinCode.trim().length !== 6) {
             setError('Enter a valid 6-character lobby code');
             return;
         }
-        // Use a temp ID for now
-        const playerId = Math.floor(Math.random() * 100000);
-        setPlayer(String(playerId), username.trim());
         navigate(`/lobby/${joinCode.trim().toUpperCase()}`);
     };
 
     return (
         <div className="page">
-            <h1 className="page-title">⚔️ ARENA</h1>
+            <h1 className="page-title">ARENA</h1>
             <p className="page-subtitle">Top-Down Battle Royale</p>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)', width: '100%', maxWidth: '380px' }}>
-                <input
-                    className="input"
-                    type="text"
-                    placeholder="Enter your username"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    maxLength={20}
-                    id="username-input"
-                    onKeyDown={(e) => e.key === 'Enter' && handleCreate()}
-                />
+            {user && (
+                <p style={{ color: 'var(--color-text-muted)', marginBottom: 'var(--space-md)' }}>
+                    Playing as <strong>{user.username}</strong>
+                </p>
+            )}
 
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)', width: '100%', maxWidth: '380px' }}>
                 {error && (
                     <p style={{ color: 'var(--color-danger)', fontSize: '0.9rem', textAlign: 'center' }}>
                         {error}
@@ -75,7 +59,7 @@ export default function Home() {
                     disabled={isLoading}
                     id="create-lobby-btn"
                 >
-                    {isLoading ? '⏳ Creating...' : '🎮 Create Lobby'}
+                    {isLoading ? 'Creating...' : 'Create Lobby'}
                 </button>
 
                 <div style={{

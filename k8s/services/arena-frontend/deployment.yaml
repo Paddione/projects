@@ -55,6 +55,8 @@ spec:
           env:
             - name: VITE_SOCKET_URL
               value: "wss://arena.korczewski.de"
+            - name: VITE_AUTH_SERVICE_URL
+              value: "https://auth.korczewski.de"
           resources:
             requests:
               memory: "64Mi"
