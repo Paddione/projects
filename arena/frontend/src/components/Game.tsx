@@ -432,11 +432,11 @@ export default function Game() {
                 if (useSprites) {
                     // Determine animation state
                     const isMoving = player.lastMoveDirection &&
-                        (player.lastMoveDirection.x !== 0 || player.lastMoveDirection.y !== 0);
+                        (player.lastMoveDirection.dx !== 0 || player.lastMoveDirection.dy !== 0);
                     const animState: CharacterAnimation = isMoving ? 'walk' : 'idle';
 
                     // Character ID (default to 'warrior' if not set)
-                    const charId = player.selectedCharacter || player.selected_character || 'warrior';
+                    const charId = player.character || 'warrior';
                     const frames = AssetService.getAnimation(charId, animState, direction);
 
                     if (frames.length > 0) {
