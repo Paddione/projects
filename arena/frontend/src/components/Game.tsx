@@ -24,6 +24,19 @@ export default function Game() {
     const keysRef = useRef<Set<string>>(new Set());
     const mouseRef = useRef({ x: 0, y: 0, down: false, rightDown: false });
 
+    // ---- Touch control state ----
+    // Left joystick: movement   Right joystick: aim + fire
+    const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    const leftStickRef = useRef({ active: false, startX: 0, startY: 0, dx: 0, dy: 0, touchId: -1 });
+    const rightStickRef = useRef({ active: false, startX: 0, startY: 0, dx: 0, dy: 0, touchId: -1, firing: false });
+    const sprintActiveRef = useRef(false);
+    const meleeActiveRef = useRef(false);
+    // Derived joystick puck offsets for React render (clamped to 40px radius)
+    const [leftPuck, setLeftPuck] = useState({ x: 0, y: 0 });
+    const [rightPuck, setRightPuck] = useState({ x: 0, y: 0 });
+    const [sprintOn, setSprintOn] = useState(false);
+    const [meleeOn, setMeleeOn] = useState(false);
+
     // Track animated sprites for reuse (avoid recreating every frame)
     const playerSpritesRef = useRef<Map<string, AnimatedSprite | Sprite>>(new Map());
     const itemSpritesRef = useRef<Map<string, AnimatedSprite | Sprite>>(new Map());
@@ -76,6 +89,72 @@ export default function Game() {
     const handleContextMenu = useCallback((e: Event) => e.preventDefault(), []);
 
     // ============================================================================
+    // TOUCH INPUT HANDLERS (dual joystick)
+    // ============================================================================
+
+    // Clamp dx/dy to the joystick radius (60px = half of 120px ring)
+    const RADIUS = 50;
+
+    const handleTouchStart = useCallback((e: TouchEvent) => {
+        e.preventDefault();
+        const halfW = window.innerWidth / 2;
+        for (let i = 0; i < e.changedTouches.length; i++) {
+            const t = e.changedTouches[i];
+            if (t.clientX < halfW && !leftStickRef.current.active) {
+                leftStickRef.current = { active: true, startX: t.clientX, startY: t.clientY, dx: 0, dy: 0, touchId: t.identifier };
+            } else if (t.clientX >= halfW && !rightStickRef.current.active) {
+                rightStickRef.current = { active: true, startX: t.clientX, startY: t.clientY, dx: 0, dy: 0, touchId: t.identifier, firing: false };
+                mouseRef.current.down = true;
+            }
+        }
+    }, []);
+
+    const handleTouchMove = useCallback((e: TouchEvent) => {
+        e.preventDefault();
+        for (let i = 0; i < e.changedTouches.length; i++) {
+            const t = e.changedTouches[i];
+            const ls = leftStickRef.current;
+            const rs = rightStickRef.current;
+
+            if (ls.active && t.identifier === ls.touchId) {
+                const rawDx = t.clientX - ls.startX;
+                const rawDy = t.clientY - ls.startY;
+                const dist = Math.sqrt(rawDx * rawDx + rawDy * rawDy);
+                const clamp = Math.min(dist, RADIUS);
+                ls.dx = dist > 0 ? (rawDx / dist) * clamp : 0;
+                ls.dy = dist > 0 ? (rawDy / dist) * clamp : 0;
+                setLeftPuck({ x: ls.dx, y: ls.dy });
+            }
+
+            if (rs.active && t.identifier === rs.touchId) {
+                const rawDx = t.clientX - rs.startX;
+                const rawDy = t.clientY - rs.startY;
+                const dist = Math.sqrt(rawDx * rawDx + rawDy * rawDy);
+                const clamp = Math.min(dist, RADIUS);
+                rs.dx = dist > 0 ? (rawDx / dist) * clamp : 0;
+                rs.dy = dist > 0 ? (rawDy / dist) * clamp : 0;
+                setRightPuck({ x: rs.dx, y: rs.dy });
+            }
+        }
+    }, []);
+
+    const handleTouchEnd = useCallback((e: TouchEvent) => {
+        e.preventDefault();
+        for (let i = 0; i < e.changedTouches.length; i++) {
+            const t = e.changedTouches[i];
+            if (leftStickRef.current.active && t.identifier === leftStickRef.current.touchId) {
+                leftStickRef.current = { active: false, startX: 0, startY: 0, dx: 0, dy: 0, touchId: -1 };
+                setLeftPuck({ x: 0, y: 0 });
+            }
+            if (rightStickRef.current.active && t.identifier === rightStickRef.current.touchId) {
+                rightStickRef.current = { active: false, startX: 0, startY: 0, dx: 0, dy: 0, touchId: -1, firing: false };
+                mouseRef.current.down = false;
+                setRightPuck({ x: 0, y: 0 });
+            }
+        }
+    }, []);
+
+    // ============================================================================
     // PIXI SETUP
     // ============================================================================
 
@@ -93,6 +172,14 @@ export default function Game() {
 
         canvasRef.current.appendChild(app.view as HTMLCanvasElement);
         appRef.current = app;
+
+        // Resize canvas on orientation change / browser resize
+        const resizeObserver = new ResizeObserver(() => {
+            const w = window.innerWidth;
+            const h = window.innerHeight;
+            app.renderer.resize(w, h);
+        });
+        resizeObserver.observe(document.documentElement);
 
         // Layer containers for z-ordering
         const worldContainer = new Container();
@@ -117,34 +204,54 @@ export default function Game() {
             const mouse = mouseRef.current;
 
             let mx = 0, my = 0;
-            if (keys.has('w') || keys.has('arrowup')) my = -1;
-            if (keys.has('s') || keys.has('arrowdown')) my = 1;
-            if (keys.has('a') || keys.has('arrowleft')) mx = -1;
-            if (keys.has('d') || keys.has('arrowright')) mx = 1;
 
-            if (mx !== 0 && my !== 0) {
-                const len = Math.sqrt(mx * mx + my * my);
-                mx /= len;
-                my /= len;
-            }
-
-            const state = gameStateRef.current;
-            let aimAngle = 0;
-            if (state) {
-                const me = state.players?.find((p: any) => p.id === playerId);
-                if (me) {
-                    aimAngle = Math.atan2(mouse.y - window.innerHeight / 2, mouse.x - window.innerWidth / 2);
+            if (isTouchDevice && leftStickRef.current.active) {
+                // Left joystick drives movement
+                const { dx, dy } = leftStickRef.current;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist > 4) { mx = dx / RADIUS; my = dy / RADIUS; }
+            } else {
+                // Keyboard fallback
+                if (keys.has('w') || keys.has('arrowup')) my = -1;
+                if (keys.has('s') || keys.has('arrowdown')) my = 1;
+                if (keys.has('a') || keys.has('arrowleft')) mx = -1;
+                if (keys.has('d') || keys.has('arrowright')) mx = 1;
+                if (mx !== 0 && my !== 0) {
+                    const len = Math.sqrt(mx * mx + my * my);
+                    mx /= len; my /= len;
                 }
             }
+
+            let aimAngle = 0;
+            if (isTouchDevice && rightStickRef.current.active) {
+                // Right joystick drives aiming
+                const { dx, dy } = rightStickRef.current;
+                if (Math.sqrt(dx * dx + dy * dy) > 4) {
+                    aimAngle = Math.atan2(dy, dx);
+                }
+            } else {
+                // Mouse aim fallback
+                const state = gameStateRef.current;
+                if (state) {
+                    const me = state.players?.find((p: any) => p.id === playerId);
+                    if (me) {
+                        aimAngle = Math.atan2(mouse.y - window.innerHeight / 2, mouse.x - window.innerWidth / 2);
+                    }
+                }
+            }
+
+            const shooting = isTouchDevice ? (rightStickRef.current.active) : mouse.down;
+            const melee = isTouchDevice ? meleeActiveRef.current : (mouse.rightDown || keys.has('e'));
+            const sprint = isTouchDevice ? sprintActiveRef.current : keys.has('shift');
 
             socket.emit('player-input', {
                 matchId,
                 input: {
                     movement: { x: mx, y: my },
                     aimAngle,
-                    shooting: mouse.down,
-                    melee: mouse.rightDown || keys.has('e'),
-                    sprint: keys.has('shift'),
+                    shooting,
+                    melee,
+                    sprint,
                     pickup: keys.has('f'),
                     timestamp: Date.now(),
                 },
@@ -430,15 +537,28 @@ export default function Game() {
         window.addEventListener('mousedown', handleMouseDown);
         window.addEventListener('mouseup', handleMouseUp);
         window.addEventListener('contextmenu', handleContextMenu);
+        if (isTouchDevice) {
+            window.addEventListener('touchstart', handleTouchStart, { passive: false });
+            window.addEventListener('touchmove', handleTouchMove, { passive: false });
+            window.addEventListener('touchend', handleTouchEnd, { passive: false });
+            window.addEventListener('touchcancel', handleTouchEnd, { passive: false });
+        }
 
         return () => {
             clearInterval(inputLoop);
+            resizeObserver.disconnect();
             window.removeEventListener('keydown', handleKeyDown);
             window.removeEventListener('keyup', handleKeyUp);
             window.removeEventListener('mousemove', handleMouseMove);
             window.removeEventListener('mousedown', handleMouseDown);
             window.removeEventListener('mouseup', handleMouseUp);
             window.removeEventListener('contextmenu', handleContextMenu);
+            if (isTouchDevice) {
+                window.removeEventListener('touchstart', handleTouchStart);
+                window.removeEventListener('touchmove', handleTouchMove);
+                window.removeEventListener('touchend', handleTouchEnd);
+                window.removeEventListener('touchcancel', handleTouchEnd);
+            }
             SoundService.stopMusic();
             app.destroy(true);
             appRef.current = null;
@@ -582,7 +702,7 @@ export default function Game() {
     }
 
     return (
-        <div style={{ width: '100vw', height: '100vh', overflow: 'hidden', cursor: 'crosshair' }}>
+        <div style={{ width: '100vw', height: '100vh', overflow: 'hidden', cursor: isTouchDevice ? 'default' : 'crosshair' }}>
             {/* PixiJS Canvas */}
             <div ref={canvasRef} style={{ width: '100%', height: '100%' }} />
 
@@ -639,6 +759,69 @@ export default function Game() {
                     </div>
                 )}
             </div>
+
+            {/* Virtual Joystick Controls — touch devices only */}
+            {isTouchDevice && (
+                <div className="touch-controls">
+                    {/* Left joystick — movement */}
+                    <div className="joystick-zone left">
+                        <div className="joystick-ring" />
+                        <div
+                            className="joystick-puck"
+                            style={{
+                                transform: `translate(calc(-50% + ${leftPuck.x}px), calc(-50% + ${leftPuck.y}px))`,
+                            }}
+                        />
+                    </div>
+
+                    {/* Action buttons — melee + sprint (between the two sticks) */}
+                    <div className="touch-action-buttons">
+                        <button
+                            className={`touch-btn ${meleeOn ? 'active' : ''}`}
+                            onTouchStart={(e) => {
+                                e.preventDefault();
+                                meleeActiveRef.current = true;
+                                setMeleeOn(true);
+                            }}
+                            onTouchEnd={(e) => {
+                                e.preventDefault();
+                                meleeActiveRef.current = false;
+                                setMeleeOn(false);
+                            }}
+                        >
+                            🗡️
+                        </button>
+                        <button
+                            className={`touch-btn ${sprintOn ? 'active' : ''}`}
+                            onTouchStart={(e) => {
+                                e.preventDefault();
+                                sprintActiveRef.current = !sprintActiveRef.current;
+                                setSprintOn(sprintActiveRef.current);
+                            }}
+                            onTouchEnd={(e) => { e.preventDefault(); }}
+                        >
+                            {sprintOn ? '⚡' : '⇧'}
+                        </button>
+                    </div>
+
+                    {/* Right joystick — aim + fire */}
+                    <div className="joystick-zone right">
+                        <div className="joystick-ring" />
+                        <div
+                            className="joystick-puck"
+                            style={{
+                                transform: `translate(calc(-50% + ${rightPuck.x}px), calc(-50% + ${rightPuck.y}px))`,
+                                background: rightStickRef.current.active
+                                    ? 'rgba(239, 68, 68, 0.45)'
+                                    : 'rgba(255, 255, 255, 0.22)',
+                                borderColor: rightStickRef.current.active
+                                    ? 'rgba(239, 68, 68, 0.9)'
+                                    : 'rgba(255, 255, 255, 0.5)',
+                            }}
+                        />
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
