@@ -1,4 +1,4 @@
-import { WeaponState, PISTOL_DEFAULT } from './weapon.js';
+import type { WeaponState } from './weapon.js';
 
 // ============================================================================
 // Core Game Types for Arena
@@ -215,7 +215,7 @@ export interface ServerToClientEvents {
     'round-start': (data: { roundNumber: number; spawnPositions: Record<string, SpawnPoint> }) => void;
     'game-state': (state: SerializedGameState) => void;
     'player-hit': (data: { targetId: string; attackerId: string; damage: number; remainingHp: number; hasArmor: boolean }) => void;
-    'player-killed': (data: { victimId: string; killerId: string; weapon: 'gun' | 'melee' | 'zone' }) => void;
+    'player-killed': (data: { victimId: string; killerId: string; weapon: 'gun' | 'melee' | 'zone' | 'zombie' }) => void;
     'item-spawned': (data: { item: MapItem; announcement: string }) => void;
     'item-collected': (data: { itemId: string; playerId: string }) => void;
     'round-end': (data: { roundNumber: number; winnerId: string; scores: Record<string, number> }) => void;
@@ -246,6 +246,7 @@ export interface SerializedGameState {
     players: SerializedPlayerState[];
     projectiles: Projectile[];
     items: MapItem[];
+    npcs: NPC[];
     zone?: ShrinkingZone;
     currentRound: RoundState;
     roundScores: Record<string, number>;

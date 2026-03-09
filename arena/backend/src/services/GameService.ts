@@ -5,6 +5,7 @@ import type {
     PlayerInput,
     Projectile,
     MapItem,
+    ItemType,
     GameMap,
     SpawnPoint,
     ShrinkingZone,
@@ -14,8 +15,11 @@ import type {
     SerializedGameState,
     MatchResult,
     CoverObject,
+    NPC,
 } from '../types/game.js';
-import { GAME, HP, DAMAGE } from '../types/game.js';
+import { GAME, HP, DAMAGE, NPC_CONST } from '../types/game.js';
+import type { WeaponState } from '../types/weapon.js';
+import { WEAPON_STATS, MACHINE_GUN_PICKUP } from '../types/weapon.js';
 import { PlayerService } from './PlayerService.js';
 import { DatabaseService } from './DatabaseService.js';
 
@@ -29,7 +33,7 @@ export class GameService {
     // Callbacks for emitting events
     private onStateUpdate?: (matchId: string, state: SerializedGameState) => void;
     private onPlayerHit?: (matchId: string, data: { targetId: string; attackerId: string; damage: number; remainingHp: number; hasArmor: boolean }) => void;
-    private onPlayerKilled?: (matchId: string, data: { victimId: string; killerId: string; weapon: 'gun' | 'melee' | 'zone' }) => void;
+    private onPlayerKilled?: (matchId: string, data: { victimId: string; killerId: string; weapon: 'gun' | 'melee' | 'zone' | 'zombie' }) => void;
     private onItemSpawned?: (matchId: string, data: { item: MapItem; announcement: string }) => void;
     private onItemCollected?: (matchId: string, data: { itemId: string; playerId: string }) => void;
     private onRoundEnd?: (matchId: string, data: { roundNumber: number; winnerId: string; scores: Record<string, number> }) => void;
@@ -49,7 +53,7 @@ export class GameService {
     setCallbacks(callbacks: {
         onStateUpdate: (matchId: string, state: SerializedGameState) => void;
         onPlayerHit: (matchId: string, data: { targetId: string; attackerId: string; damage: number; remainingHp: number; hasArmor: boolean }) => void;
-        onPlayerKilled: (matchId: string, data: { victimId: string; killerId: string; weapon: 'gun' | 'melee' | 'zone' }) => void;
+        onPlayerKilled: (matchId: string, data: { victimId: string; killerId: string; weapon: 'gun' | 'melee' | 'zone' | 'zombie' }) => void;
         onItemSpawned: (matchId: string, data: { item: MapItem; announcement: string }) => void;
         onItemCollected: (matchId: string, data: { itemId: string; playerId: string }) => void;
         onRoundEnd: (matchId: string, data: { roundNumber: number; winnerId: string; scores: Record<string, number> }) => void;
@@ -111,6 +115,8 @@ export class GameService {
             settings: lobby.settings,
             tickCount: 0,
             lastItemSpawnTick: 0,
+            npcs: [],
+            lastNPCSpawnTick: 0,
         };
 
         this.activeGames.set(matchId, gameState);
@@ -151,10 +157,23 @@ export class GameService {
         // Aim
         player.rotation = input.aimAngle;
 
-        // Shooting
-        if (input.shooting && !input.sprint) {
-            this.createProjectile(game, player);
+        // Shooting (weapon-aware)
+        if (input.shooting && !input.sprint && this.playerService.canShoot(player)) {
+            if (this.playerService.consumeAmmo(player)) {
+                player.lastShotTime = Date.now();
+                const stats = WEAPON_STATS[player.weapon.type];
+                const spread = (Math.random() - 0.5) * 2 * stats.spreadRad;
+                this.createProjectile(game, player, input.aimAngle + spread);
+            }
         }
+
+        // Manual reload
+        if (input.reload) {
+            this.playerService.startReload(player);
+        }
+
+        // Update pose based on current action
+        this.playerService.updatePose(player, input.shooting, input.melee);
 
         // Melee
         if (input.melee && !input.sprint) {
@@ -213,6 +232,21 @@ export class GameService {
             }
         }
 
+        // NPC spawning
+        const npcSpawnTicks = NPC_CONST.SPAWN_INTERVAL_S * this.tickRate;
+        if (game.tickCount - game.lastNPCSpawnTick >= npcSpawnTicks) {
+            this.spawnNPC(game);
+            game.lastNPCSpawnTick = game.tickCount;
+        }
+
+        // NPC AI
+        this.updateNPCs(game);
+
+        // Reload timers
+        for (const [, player] of game.players) {
+            this.playerService.updateReload(player);
+        }
+
         // Check round end
         this.checkRoundEnd(game);
 
@@ -226,14 +260,15 @@ export class GameService {
     // PROJECTILES
     // ============================================================================
 
-    private createProjectile(game: GameState, player: PlayerState): void {
+    private createProjectile(game: GameState, player: PlayerState, angle?: number): void {
+        const fireAngle = angle ?? player.rotation;
         const projectile: Projectile = {
             id: uuidv4(),
             ownerId: player.id,
             x: player.x,
             y: player.y,
-            velocityX: Math.cos(player.rotation) * GAME.PROJECTILE_SPEED,
-            velocityY: Math.sin(player.rotation) * GAME.PROJECTILE_SPEED,
+            velocityX: Math.cos(fireAngle) * GAME.PROJECTILE_SPEED,
+            velocityY: Math.sin(fireAngle) * GAME.PROJECTILE_SPEED,
             damage: DAMAGE.GUN,
             createdAt: Date.now(),
         };
@@ -300,7 +335,36 @@ export class GameService {
                             killerId: projectile.ownerId,
                             weapon: 'gun',
                         });
+
+                        // Drop weapon on death
+                        const weaponDrop = this.playerService.getDeathDrop(target);
+                        if (weaponDrop) {
+                            const dropItem: MapItem = {
+                                id: uuidv4(),
+                                type: 'machine_gun',
+                                x: target.x,
+                                y: target.y,
+                                isCollected: false,
+                                spawnedAt: Date.now(),
+                                weaponState: weaponDrop,
+                            };
+                            game.items.push(dropItem);
+                            this.onItemSpawned?.(game.matchId, {
+                                item: dropItem,
+                                announcement: '🔫 Machine gun dropped!',
+                            });
+                        }
                     }
+                    break;
+                }
+            }
+
+            // NPC hit detection
+            for (const npc of game.npcs) {
+                const dist = Math.hypot(npc.x - projectile.x, npc.y - projectile.y);
+                if (dist < GAME.TILE_SIZE / 2) {
+                    npc.hp -= projectile.damage;
+                    toRemove.push(projectile.id);
                     break;
                 }
             }
@@ -335,8 +399,40 @@ export class GameService {
                             killerId: attacker.id,
                             weapon: 'melee',
                         });
+
+                        // Drop weapon on death
+                        const weaponDrop = this.playerService.getDeathDrop(target);
+                        if (weaponDrop) {
+                            const dropItem: MapItem = {
+                                id: uuidv4(),
+                                type: 'machine_gun',
+                                x: target.x,
+                                y: target.y,
+                                isCollected: false,
+                                spawnedAt: Date.now(),
+                                weaponState: weaponDrop,
+                            };
+                            game.items.push(dropItem);
+                            this.onItemSpawned?.(game.matchId, {
+                                item: dropItem,
+                                announcement: '🔫 Machine gun dropped!',
+                            });
+                        }
                     }
                     break; // Only hit one player per melee
+                }
+            }
+        }
+
+        // NPC melee
+        for (const npc of game.npcs) {
+            const dist = Math.hypot(npc.x - attacker.x, npc.y - attacker.y);
+            if (dist <= GAME.MELEE_RANGE) {
+                const angleToNPC = Math.atan2(npc.y - attacker.y, npc.x - attacker.x);
+                const angleDiff = Math.abs(attacker.rotation - angleToNPC);
+                if (angleDiff < Math.PI / 2 || angleDiff > Math.PI * 1.5) {
+                    npc.hp -= DAMAGE.MELEE;
+                    break;
                 }
             }
         }
@@ -392,6 +488,27 @@ export class GameService {
 
             const dist = Math.hypot(item.x - player.x, item.y - player.y);
             if (dist <= GAME.ITEM_PICKUP_RANGE) {
+                // Weapon pickup
+                if (item.type === 'machine_gun' && item.weaponState) {
+                    const oldWeapon = this.playerService.pickupWeapon(player, item.weaponState);
+                    item.isCollected = true;
+                    this.onItemCollected?.(game.matchId, { itemId: item.id, playerId: player.id });
+                    // If player dropped an old weapon, spawn it
+                    if (oldWeapon) {
+                        const swapItem: MapItem = {
+                            id: uuidv4(),
+                            type: 'machine_gun',
+                            x: player.x,
+                            y: player.y,
+                            isCollected: false,
+                            spawnedAt: Date.now(),
+                            weaponState: oldWeapon,
+                        };
+                        game.items.push(swapItem);
+                    }
+                    break;
+                }
+
                 const collected = this.playerService.collectItem(player, item);
                 if (collected) {
                     this.onItemCollected?.(game.matchId, {
@@ -402,6 +519,191 @@ export class GameService {
                 }
             }
         }
+    }
+
+    // ============================================================================
+    // NPC ZOMBIES
+    // ============================================================================
+
+    private spawnNPC(game: GameState): void {
+        if (game.npcs.length >= NPC_CONST.MAX_ALIVE) return;
+
+        const mapWidth = game.map.width * GAME.TILE_SIZE;
+        const mapHeight = game.map.height * GAME.TILE_SIZE;
+
+        // Spawn at random map edge
+        let x: number, y: number;
+        const edge = Math.floor(Math.random() * 4);
+        switch (edge) {
+            case 0: // top
+                x = Math.random() * mapWidth;
+                y = GAME.TILE_SIZE * 2;
+                break;
+            case 1: // bottom
+                x = Math.random() * mapWidth;
+                y = mapHeight - GAME.TILE_SIZE * 2;
+                break;
+            case 2: // left
+                x = GAME.TILE_SIZE * 2;
+                y = Math.random() * mapHeight;
+                break;
+            default: // right
+                x = mapWidth - GAME.TILE_SIZE * 2;
+                y = Math.random() * mapHeight;
+                break;
+        }
+
+        const npc: NPC = {
+            id: uuidv4(),
+            type: 'zombie',
+            x,
+            y,
+            hp: NPC_CONST.HP,
+            speed: GAME.PLAYER_SPEED * NPC_CONST.SPEED_FACTOR,
+            rotation: 0,
+            targetPlayerId: null,
+            state: 'wander',
+            wanderAngle: Math.random() * Math.PI * 2,
+            wanderChangeTime: Date.now() + NPC_CONST.WANDER_CHANGE_MS,
+            lastDamageTime: 0,
+        };
+
+        game.npcs.push(npc);
+    }
+
+    private updateNPCs(game: GameState): void {
+        const now = Date.now();
+        const toRemove: string[] = [];
+
+        for (const npc of game.npcs) {
+            // Find nearest alive player
+            let nearestPlayer: PlayerState | null = null;
+            let nearestDist = Infinity;
+            for (const [, player] of game.players) {
+                if (!player.isAlive) continue;
+                const dist = Math.hypot(player.x - npc.x, player.y - npc.y);
+                if (dist < nearestDist) {
+                    nearestDist = dist;
+                    nearestPlayer = player;
+                }
+            }
+
+            // Aggro/de-aggro logic
+            if (npc.state === 'wander' && nearestPlayer && nearestDist < NPC_CONST.AGGRO_RANGE_TILES * GAME.TILE_SIZE) {
+                npc.state = 'chase';
+                npc.targetPlayerId = nearestPlayer.id;
+            } else if (npc.state === 'chase') {
+                const target = npc.targetPlayerId ? game.players.get(npc.targetPlayerId) : null;
+                if (!target || !target.isAlive || Math.hypot(target.x - npc.x, target.y - npc.y) > NPC_CONST.DEAGGRO_RANGE_TILES * GAME.TILE_SIZE) {
+                    npc.state = 'wander';
+                    npc.targetPlayerId = null;
+                    npc.wanderAngle = Math.random() * Math.PI * 2;
+                    npc.wanderChangeTime = now + NPC_CONST.WANDER_CHANGE_MS;
+                }
+            }
+
+            // Movement
+            if (npc.state === 'chase' && npc.targetPlayerId) {
+                const target = game.players.get(npc.targetPlayerId);
+                if (target) {
+                    const angle = Math.atan2(target.y - npc.y, target.x - npc.x);
+                    npc.x += Math.cos(angle) * npc.speed;
+                    npc.y += Math.sin(angle) * npc.speed;
+                    npc.rotation = angle;
+                }
+            } else {
+                // Wander movement
+                if (now >= npc.wanderChangeTime) {
+                    npc.wanderAngle = Math.random() * Math.PI * 2;
+                    npc.wanderChangeTime = now + NPC_CONST.WANDER_CHANGE_MS;
+                }
+                npc.x += Math.cos(npc.wanderAngle) * npc.speed * 0.5;
+                npc.y += Math.sin(npc.wanderAngle) * npc.speed * 0.5;
+                npc.rotation = npc.wanderAngle;
+            }
+
+            // Clamp to map bounds
+            const mapWidth = game.map.width * GAME.TILE_SIZE;
+            const mapHeight = game.map.height * GAME.TILE_SIZE;
+            npc.x = Math.max(GAME.TILE_SIZE, Math.min(mapWidth - GAME.TILE_SIZE, npc.x));
+            npc.y = Math.max(GAME.TILE_SIZE, Math.min(mapHeight - GAME.TILE_SIZE, npc.y));
+
+            // Contact damage to players
+            for (const [playerId, player] of game.players) {
+                if (!player.isAlive) continue;
+                const dist = Math.hypot(player.x - npc.x, player.y - npc.y);
+                if (dist < NPC_CONST.CONTACT_RANGE && now - npc.lastDamageTime >= NPC_CONST.DAMAGE_COOLDOWN_MS) {
+                    npc.lastDamageTime = now;
+                    const result = this.playerService.applyDamage(player, NPC_CONST.DAMAGE, npc.id);
+
+                    this.onPlayerHit?.(game.matchId, {
+                        targetId: playerId,
+                        attackerId: npc.id,
+                        damage: NPC_CONST.DAMAGE,
+                        remainingHp: result.remainingHp,
+                        hasArmor: result.hasArmor,
+                    });
+
+                    if (result.died) {
+                        this.playerService.makeSpectator(player);
+                        game.currentRound.alivePlayers = game.currentRound.alivePlayers.filter((id) => id !== playerId);
+
+                        this.onPlayerKilled?.(game.matchId, {
+                            victimId: playerId,
+                            killerId: npc.id,
+                            weapon: 'zombie',
+                        });
+                    }
+                }
+            }
+
+            // Zone damage to NPCs
+            if (game.zone?.isActive) {
+                const distToCenter = Math.hypot(npc.x - game.zone.centerX, npc.y - game.zone.centerY);
+                if (distToCenter > game.zone.currentRadius) {
+                    npc.hp -= DAMAGE.ZONE;
+                }
+            }
+
+            // Check NPC death
+            if (npc.hp <= 0) {
+                toRemove.push(npc.id);
+                this.spawnNPCDrop(game, npc);
+            }
+        }
+
+        game.npcs = game.npcs.filter((npc) => !toRemove.includes(npc.id));
+    }
+
+    private spawnNPCDrop(game: GameState, npc: NPC): void {
+        const roll = Math.random();
+        let type: ItemType;
+        let weaponState: WeaponState | undefined;
+
+        if (roll < 0.4) {
+            type = 'health';
+        } else if (roll < 0.8) {
+            type = 'armor';
+        } else {
+            type = 'machine_gun';
+            weaponState = { ...MACHINE_GUN_PICKUP };
+        }
+
+        const item: MapItem = {
+            id: uuidv4(),
+            type,
+            x: npc.x,
+            y: npc.y,
+            isCollected: false,
+            spawnedAt: Date.now(),
+            weaponState,
+        };
+
+        game.items.push(item);
+        this.onItemSpawned?.(game.matchId, {
+            item,
+            announcement: type === 'health' ? '💊 Health pack dropped!' : type === 'armor' ? '🛡️ Armor dropped!' : '🔫 Machine gun dropped!',
+        });
     }
 
     // ============================================================================
@@ -518,8 +820,10 @@ export class GameService {
         // Reset game state for new round
         game.projectiles = [];
         game.items = [];
+        game.npcs = [];
         game.tickCount = 0;
         game.lastItemSpawnTick = 0;
+        game.lastNPCSpawnTick = 0;
         if (game.zone) {
             game.zone = this.createInitialZone(game.map);
         }
@@ -780,6 +1084,7 @@ export class GameService {
             players: Array.from(game.players.values()),
             projectiles: game.projectiles,
             items: game.items.filter((i) => !i.isCollected),
+            npcs: game.npcs,
             zone: game.zone,
             currentRound: game.currentRound,
             roundScores: game.roundScores,
