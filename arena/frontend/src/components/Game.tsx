@@ -6,7 +6,7 @@ import {
 } from 'pixi.js';
 import { useGameStore } from '../stores/gameStore';
 import { getSocket } from '../services/apiService';
-import { AssetService, type CharacterAnimation } from '../services/AssetService';
+import { AssetService } from '../services/AssetService';
 import { SoundService } from '../services/SoundService';
 import LoadingScreen from './LoadingScreen';
 
@@ -427,30 +427,20 @@ export default function Game() {
                 if (!player.isAlive) continue;
 
                 const isMe = player.id === playerId;
-                const direction = AssetService.angleToDirection(player.rotation);
 
                 if (useSprites) {
-                    // Determine animation state
-                    const isMoving = player.lastMoveDirection &&
-                        (player.lastMoveDirection.x !== 0 || player.lastMoveDirection.y !== 0);
-                    const animState: CharacterAnimation = isMoving ? 'walk' : 'idle';
-
                     // Character ID (default to 'warrior' if not set)
                     const charId = player.selectedCharacter || player.selected_character || 'warrior';
-                    const frames = AssetService.getAnimation(charId, animState, direction);
+                    // Pose-based: use 'stand' pose (single sprite rotated in-engine)
+                    const poseTexture = AssetService.getCharacterPose(charId, 'stand');
 
-                    if (frames.length > 0) {
-                        const sprite = frames.length > 1
-                            ? new AnimatedSprite(frames)
-                            : new Sprite(frames[0]);
+                    if (poseTexture) {
+                        const sprite = new Sprite(poseTexture);
                         sprite.anchor.set(0.5);
                         sprite.position.set(player.x, player.y);
                         sprite.width = 28;
                         sprite.height = 28;
-                        if (sprite instanceof AnimatedSprite) {
-                            sprite.animationSpeed = isMoving ? 0.15 : 0.05;
-                            sprite.play();
-                        }
+                        sprite.rotation = player.rotation;
                         playerContainer.addChild(sprite);
 
                         // Armor ring overlay
