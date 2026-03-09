@@ -78,4 +78,22 @@ test.describe('Asset Coverage', () => {
             ['ogg', 'mp3']
         );
     });
+
+    test('sprite atlases are valid JSON with texture data', () => {
+        for (const atlasName of SPRITE_ATLASES) {
+            const jsonPath = getSpriteAtlasPath(atlasName);
+
+            // Should not throw on parse
+            const atlas = readJsonFile(jsonPath) as SpriteAtlas;
+
+            // Verify required structure
+            expect(atlas.frames).toBeDefined();
+            expect(typeof atlas.frames).toBe('object');
+            expect(Object.keys(atlas.frames).length).toBeGreaterThan(0);
+
+            expect(atlas.meta).toBeDefined();
+            expect(typeof atlas.meta).toBe('object');
+            expect(atlas.meta.image).toBeTruthy();
+        }
+    });
 });
