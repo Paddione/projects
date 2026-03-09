@@ -1,71 +1,47 @@
 {
   "frames": {
-    "armor_plate/armor_plate-00": {
+    "machine_gun/machine_gun-00": {
       "frame": {
         "x": 2,
         "y": 2,
-        "w": 128,
-        "h": 128
+        "w": 46,
+        "h": 46
       },
       "rotated": false,
-      "trimmed": false,
+      "trimmed": true,
       "spriteSourceSize": {
-        "x": 0,
-        "y": 0,
-        "w": 128,
-        "h": 128
+        "x": 10,
+        "y": 9,
+        "w": 46,
+        "h": 46
       },
       "sourceSize": {
-        "w": 128,
-        "h": 128
+        "w": 64,
+        "h": 64
       },
       "pivot": {
         "x": 0.5,
         "y": 0.5
       }
     },
-    "armor_plate/armor_plate-01": {
+    "armor_plate/armor_plate-00": {
       "frame": {
-        "x": 2,
-        "y": 134,
-        "w": 128,
-        "h": 128
+        "x": 52,
+        "y": 2,
+        "w": 35,
+        "h": 34
       },
       "rotated": false,
-      "trimmed": false,
+      "trimmed": true,
       "spriteSourceSize": {
-        "x": 0,
-        "y": 0,
-        "w": 128,
-        "h": 128
+        "x": 14,
+        "y": 15,
+        "w": 35,
+        "h": 34
       },
       "sourceSize": {
-        "w": 128,
-        "h": 128
-      },
-      "pivot": {
-        "x": 0.5,
-        "y": 0.5
-      }
-    },
-    "armor_plate/armor_plate-02": {
-      "frame": {
-        "x": 2,
-        "y": 266,
-        "w": 128,
-        "h": 128
-      },
-      "rotated": false,
-      "trimmed": false,
-      "spriteSourceSize": {
-        "x": 0,
-        "y": 0,
-        "w": 128,
-        "h": 128
-      },
-      "sourceSize": {
-        "w": 128,
-        "h": 128
+        "w": 64,
+        "h": 64
       },
       "pivot": {
         "x": 0.5,
@@ -74,70 +50,22 @@
     },
     "health_pack/health_pack-00": {
       "frame": {
-        "x": 2,
-        "y": 398,
-        "w": 128,
-        "h": 128
+        "x": 91,
+        "y": 2,
+        "w": 23,
+        "h": 22
       },
       "rotated": false,
-      "trimmed": false,
+      "trimmed": true,
       "spriteSourceSize": {
-        "x": 0,
-        "y": 0,
-        "w": 128,
-        "h": 128
+        "x": 19,
+        "y": 21,
+        "w": 23,
+        "h": 22
       },
       "sourceSize": {
-        "w": 128,
-        "h": 128
-      },
-      "pivot": {
-        "x": 0.5,
-        "y": 0.5
-      }
-    },
-    "health_pack/health_pack-01": {
-      "frame": {
-        "x": 2,
-        "y": 530,
-        "w": 128,
-        "h": 128
-      },
-      "rotated": false,
-      "trimmed": false,
-      "spriteSourceSize": {
-        "x": 0,
-        "y": 0,
-        "w": 128,
-        "h": 128
-      },
-      "sourceSize": {
-        "w": 128,
-        "h": 128
-      },
-      "pivot": {
-        "x": 0.5,
-        "y": 0.5
-      }
-    },
-    "health_pack/health_pack-02": {
-      "frame": {
-        "x": 2,
-        "y": 662,
-        "w": 128,
-        "h": 128
-      },
-      "rotated": false,
-      "trimmed": false,
-      "spriteSourceSize": {
-        "x": 0,
-        "y": 0,
-        "w": 128,
-        "h": 128
-      },
-      "sourceSize": {
-        "w": 128,
-        "h": 128
+        "w": 64,
+        "h": 64
       },
       "pivot": {
         "x": 0.5,
@@ -151,21 +79,20 @@
     "image": "items.png",
     "format": "RGBA8888",
     "size": {
-      "w": 256,
-      "h": 1024
+      "w": 128,
+      "h": 64
     },
     "scale": 1
   },
   "animations": {
     "health_pack_idle": [
-      "health_pack/health_pack-00",
-      "health_pack/health_pack-01",
-      "health_pack/health_pack-02"
+      "health_pack/health_pack-00"
     ],
     "armor_plate_idle": [
-      "armor_plate/armor_plate-00",
-      "armor_plate/armor_plate-01",
-      "armor_plate/armor_plate-02"
+      "armor_plate/armor_plate-00"
+    ],
+    "machine_gun_idle": [
+      "machine_gun/machine_gun-00"
     ]
   }
 }

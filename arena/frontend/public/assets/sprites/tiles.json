@@ -1,47 +1,23 @@
 {
   "frames": {
-    "boundary/boundary-00": {
-      "frame": {
-        "x": 2,
-        "y": 2,
-        "w": 512,
-        "h": 512
-      },
-      "rotated": false,
-      "trimmed": false,
-      "spriteSourceSize": {
-        "x": 0,
-        "y": 0,
-        "w": 512,
-        "h": 512
-      },
-      "sourceSize": {
-        "w": 512,
-        "h": 512
-      },
-      "pivot": {
-        "x": 0.5,
-        "y": 0.5
-      }
-    },
     "floor_01/floor_01-00": {
       "frame": {
         "x": 2,
-        "y": 518,
-        "w": 512,
-        "h": 512
+        "y": 2,
+        "w": 64,
+        "h": 64
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 512,
-        "h": 512
+        "w": 64,
+        "h": 64
       },
       "sourceSize": {
-        "w": 512,
-        "h": 512
+        "w": 64,
+        "h": 64
       },
       "pivot": {
         "x": 0.5,
@@ -51,21 +27,21 @@
     "floor_02/floor_02-00": {
       "frame": {
         "x": 2,
-        "y": 1034,
-        "w": 512,
-        "h": 512
+        "y": 70,
+        "w": 64,
+        "h": 64
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 512,
-        "h": 512
+        "w": 64,
+        "h": 64
       },
       "sourceSize": {
-        "w": 512,
-        "h": 512
+        "w": 64,
+        "h": 64
       },
       "pivot": {
         "x": 0.5,
@@ -74,22 +50,22 @@
     },
     "floor_03/floor_03-00": {
       "frame": {
-        "x": 518,
-        "y": 2,
-        "w": 512,
-        "h": 512
+        "x": 2,
+        "y": 138,
+        "w": 64,
+        "h": 64
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 512,
-        "h": 512
+        "w": 64,
+        "h": 64
       },
       "sourceSize": {
-        "w": 512,
-        "h": 512
+        "w": 64,
+        "h": 64
       },
       "pivot": {
         "x": 0.5,
@@ -98,22 +74,22 @@
     },
     "floor_04/floor_04-00": {
       "frame": {
-        "x": 1034,
-        "y": 2,
-        "w": 512,
-        "h": 512
+        "x": 2,
+        "y": 206,
+        "w": 64,
+        "h": 64
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 512,
-        "h": 512
+        "w": 64,
+        "h": 64
       },
       "sourceSize": {
-        "w": 512,
-        "h": 512
+        "w": 64,
+        "h": 64
       },
       "pivot": {
         "x": 0.5,
@@ -122,46 +98,46 @@
     },
     "wall/wall-00": {
       "frame": {
-        "x": 518,
-        "y": 518,
-        "w": 512,
-        "h": 512
+        "x": 2,
+        "y": 274,
+        "w": 52,
+        "h": 52
       },
       "rotated": false,
-      "trimmed": false,
+      "trimmed": true,
       "spriteSourceSize": {
-        "x": 0,
-        "y": 0,
-        "w": 512,
-        "h": 512
+        "x": 6,
+        "y": 6,
+        "w": 52,
+        "h": 52
       },
       "sourceSize": {
-        "w": 512,
-        "h": 512
+        "w": 64,
+        "h": 64
       },
       "pivot": {
         "x": 0.5,
         "y": 0.5
       }
     },
-    "zone_overlay/zone_overlay-00": {
+    "boundary/boundary-00": {
       "frame": {
-        "x": 518,
-        "y": 1034,
-        "w": 512,
-        "h": 512
+        "x": 2,
+        "y": 330,
+        "w": 64,
+        "h": 37
       },
       "rotated": false,
-      "trimmed": false,
+      "trimmed": true,
       "spriteSourceSize": {
         "x": 0,
-        "y": 0,
-        "w": 512,
-        "h": 512
+        "y": 27,
+        "w": 64,
+        "h": 37
       },
       "sourceSize": {
-        "w": 512,
-        "h": 512
+        "w": 64,
+        "h": 64
       },
       "pivot": {
         "x": 0.5,
@@ -175,8 +151,8 @@
     "image": "tiles.png",
     "format": "RGBA8888",
     "size": {
-      "w": 2048,
-      "h": 2048
+      "w": 128,
+      "h": 512
     },
     "scale": 1
   }

@@ -12,59 +12,28 @@
   "characters": [
     {
       "id": "warrior",
-      "prompt": "low-poly stylized warrior character, heavy plate armor, broadsword on back, top-down game asset, isometric view, dark fantasy style, clean silhouette",
-      "color_accent": "#6366f1",
-      "animations": {
-        "idle":         { "frames": 2, "fps": 4 },
-        "walk":         { "frames": 4, "fps": 8 },
-        "gun_attack":   { "frames": 3, "fps": 12 },
-        "melee_attack": { "frames": 3, "fps": 12 },
-        "death":        { "frames": 4, "fps": 6 },
-        "hit":          { "frames": 2, "fps": 10 }
-      },
-      "directions": ["N", "NE", "E", "SE", "S", "SW", "W", "NW"]
+      "poses": ["stand", "gun", "machine", "reload", "hold", "silencer"],
+      "color": "#6366f1"
     },
     {
       "id": "rogue",
-      "prompt": "low-poly stylized rogue character, leather armor, dual daggers, hooded cloak, top-down game asset, isometric view, dark fantasy style, clean silhouette",
-      "color_accent": "#22c55e",
-      "animations": {
-        "idle":         { "frames": 2, "fps": 4 },
-        "walk":         { "frames": 4, "fps": 8 },
-        "gun_attack":   { "frames": 3, "fps": 12 },
-        "melee_attack": { "frames": 3, "fps": 12 },
-        "death":        { "frames": 4, "fps": 6 },
-        "hit":          { "frames": 2, "fps": 10 }
-      },
-      "directions": ["N", "NE", "E", "SE", "S", "SW", "W", "NW"]
+      "poses": ["stand", "gun", "machine", "reload", "hold", "silencer"],
+      "color": "#22c55e"
     },
     {
       "id": "mage",
-      "prompt": "low-poly stylized mage character, flowing robes, glowing staff, arcane symbols, top-down game asset, isometric view, dark fantasy style, clean silhouette",
-      "color_accent": "#a855f7",
-      "animations": {
-        "idle":         { "frames": 2, "fps": 4 },
-        "walk":         { "frames": 4, "fps": 8 },
-        "gun_attack":   { "frames": 3, "fps": 12 },
-        "melee_attack": { "frames": 3, "fps": 12 },
-        "death":        { "frames": 4, "fps": 6 },
-        "hit":          { "frames": 2, "fps": 10 }
-      },
-      "directions": ["N", "NE", "E", "SE", "S", "SW", "W", "NW"]
+      "poses": ["stand", "gun", "machine", "reload", "hold", "silencer"],
+      "color": "#a855f7"
     },
     {
       "id": "tank",
-      "prompt": "low-poly stylized tank character, massive shield, spiked armor, heavy build, top-down game asset, isometric view, dark fantasy style, clean silhouette",
-      "color_accent": "#f59e0b",
-      "animations": {
-        "idle":         { "frames": 2, "fps": 4 },
-        "walk":         { "frames": 4, "fps": 8 },
-        "gun_attack":   { "frames": 3, "fps": 12 },
-        "melee_attack": { "frames": 3, "fps": 12 },
-        "death":        { "frames": 4, "fps": 6 },
-        "hit":          { "frames": 2, "fps": 10 }
-      },
-      "directions": ["N", "NE", "E", "SE", "S", "SW", "W", "NW"]
+      "poses": ["stand", "gun", "machine", "reload", "hold", "silencer"],
+      "color": "#f59e0b"
+    },
+    {
+      "id": "zombie",
+      "poses": ["stand", "gun", "machine", "reload", "hold", "silencer"],
+      "color": "#ef4444"
     }
   ],
 
@@ -93,14 +62,19 @@
     {
       "id": "health_pack",
       "prompt": "low-poly red health pack, glowing cross symbol, game item, isometric view, transparent background",
-      "frames": 3,
+      "frames": 1,
       "size": 32
     },
     {
       "id": "armor_plate",
       "prompt": "low-poly blue armor plate pickup, glowing shield icon, game item, isometric view, transparent background",
-      "frames": 3,
+      "frames": 1,
       "size": 32
+    },
+    {
+      "id": "machine_gun",
+      "frames": 1,
+      "size": 64
     }
   ],
 

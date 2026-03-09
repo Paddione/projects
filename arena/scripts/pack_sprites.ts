@@ -35,8 +35,9 @@ interface ManifestMeta {
 
 interface ManifestCharacter {
   id: string;
-  animations: Record<string, { frames: number; fps: number }>;
-  directions: string[];
+  poses?: string[];
+  animations?: Record<string, { frames: number; fps: number }>;
+  directions?: string[];
 }
 
 interface Manifest {
@@ -91,19 +92,12 @@ function addAnimations(
   // Build animation groups for characters
   if (category === 'characters') {
     for (const char of manifest.characters) {
-      for (const [animName, animData] of Object.entries(char.animations)) {
-        for (const dir of char.directions) {
-          const key = `${char.id}/${char.id}-${animName}-${dir}`;
-          const frameNames: string[] = [];
-          for (let i = 0; i < animData.frames; i++) {
-            const frameName = `${key}-${i.toString().padStart(2, '0')}`;
-            if (frames[frameName]) {
-              frameNames.push(frameName);
-            }
-          }
-          if (frameNames.length > 0) {
-            animations[`${char.id}_${animName}_${dir}`] = frameNames;
-          }
+      // Pose-based: each character has single-frame poses (no directions)
+      const poses = (char as any).poses || [];
+      for (const pose of poses) {
+        const frameName = `${char.id}/${char.id}-${pose}-00`;
+        if (frames[frameName]) {
+          animations[`${char.id}_${pose}`] = [frameName];
         }
       }
     }

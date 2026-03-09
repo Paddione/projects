@@ -4,20 +4,20 @@
       "frame": {
         "x": 2,
         "y": 2,
-        "w": 128,
-        "h": 128
+        "w": 64,
+        "h": 64
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 128,
-        "h": 128
+        "w": 64,
+        "h": 64
       },
       "sourceSize": {
-        "w": 128,
-        "h": 128
+        "w": 64,
+        "h": 64
       },
       "pivot": {
         "x": 0.5,
@@ -27,21 +27,21 @@
     "pillar/pillar-00": {
       "frame": {
         "x": 2,
-        "y": 134,
-        "w": 128,
-        "h": 128
+        "y": 70,
+        "w": 64,
+        "h": 64
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 128,
-        "h": 128
+        "w": 64,
+        "h": 64
       },
       "sourceSize": {
-        "w": 128,
-        "h": 128
+        "w": 64,
+        "h": 64
       },
       "pivot": {
         "x": 0.5,
@@ -51,45 +51,21 @@
     "wall_cover/wall_cover-00": {
       "frame": {
         "x": 2,
-        "y": 266,
-        "w": 82,
-        "h": 16
+        "y": 138,
+        "w": 32,
+        "h": 64
       },
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 22,
-        "y": 112,
-        "w": 82,
-        "h": 16
+        "x": 0,
+        "y": 0,
+        "w": 32,
+        "h": 64
       },
       "sourceSize": {
-        "w": 128,
-        "h": 128
-      },
-      "pivot": {
-        "x": 0.5,
-        "y": 0.5
-      }
-    },
-    "water/water-00": {
-      "frame": {
-        "x": 2,
-        "y": 286,
-        "w": 72,
-        "h": 11
-      },
-      "rotated": false,
-      "trimmed": true,
-      "spriteSourceSize": {
-        "x": 28,
-        "y": 117,
-        "w": 72,
-        "h": 11
-      },
-      "sourceSize": {
-        "w": 128,
-        "h": 128
+        "w": 64,
+        "h": 64
       },
       "pivot": {
         "x": 0.5,
@@ -99,21 +75,45 @@
     "crate/crate-00": {
       "frame": {
         "x": 2,
-        "y": 301,
-        "w": 61,
-        "h": 9
+        "y": 206,
+        "w": 46,
+        "h": 39
       },
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 34,
-        "y": 119,
-        "w": 61,
-        "h": 9
+        "x": 8,
+        "y": 13,
+        "w": 46,
+        "h": 39
       },
       "sourceSize": {
-        "w": 128,
-        "h": 128
+        "w": 64,
+        "h": 64
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "water/water-00": {
+      "frame": {
+        "x": 38,
+        "y": 138,
+        "w": 30,
+        "h": 30
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 17,
+        "y": 17,
+        "w": 30,
+        "h": 30
+      },
+      "sourceSize": {
+        "w": 64,
+        "h": 64
       },
       "pivot": {
         "x": 0.5,
@@ -127,8 +127,8 @@
     "image": "cover.png",
     "format": "RGBA8888",
     "size": {
-      "w": 256,
-      "h": 512
+      "w": 128,
+      "h": 256
     },
     "scale": 1
   }
