@@ -1,0 +1,58 @@
+{
+  "version": "1.0",
+  "description": "Audio asset mapping for reusable sound effects",
+  "characters": {
+    "warrior": {
+      "armor_type": "leather",
+      "footstep": "leather_footstep",
+      "impact": "flesh_impact",
+      "idle_ambience": null
+    },
+    "knight": {
+      "armor_type": "metal",
+      "footstep": "metal_footstep",
+      "impact": "metal_impact",
+      "idle_ambience": null
+    },
+    "archer": {
+      "armor_type": "leather",
+      "footstep": "leather_footstep",
+      "impact": "flesh_impact",
+      "idle_ambience": null,
+      "special": "bowshot"
+    },
+    "mage": {
+      "armor_type": "cloth",
+      "footstep": "cloth_footstep",
+      "impact": "flesh_impact",
+      "idle_ambience": "magic_hum"
+    }
+  },
+  "weapons": {
+    "sword": {
+      "swing": "melee_swing",
+      "impact": "metal_impact"
+    },
+    "bow": {
+      "release": "bowshot",
+      "impact": "arrow_hit"
+    },
+    "staff": {
+      "swing": "staff_whoosh",
+      "impact": "magical_impact"
+    }
+  },
+  "shared_sounds": {
+    "leather_footstep": "assets/audio/_shared/footsteps/leather.wav",
+    "metal_footstep": "assets/audio/_shared/footsteps/metal.wav",
+    "cloth_footstep": "assets/audio/_shared/footsteps/cloth.wav",
+    "flesh_impact": "assets/audio/_shared/impacts/flesh.wav",
+    "metal_impact": "assets/audio/_shared/impacts/metal.wav",
+    "melee_swing": "assets/audio/_shared/weapons/melee_swing.wav",
+    "staff_whoosh": "assets/audio/_shared/weapons/staff_whoosh.wav",
+    "bowshot": "assets/audio/_shared/weapons/bowshot.wav",
+    "arrow_hit": "assets/audio/_shared/impacts/arrow_hit.wav",
+    "magical_impact": "assets/audio/_shared/impacts/magical.wav",
+    "magic_hum": "assets/audio/_shared/ambience/magic_hum.wav"
+  }
+}
