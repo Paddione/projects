@@ -121,7 +121,9 @@
     { "id": "zone_warning",   "prompt": "danger zone warning alarm, urgent beeping, video game sound effect",   "duration": 1.0 },
     { "id": "zone_tick",      "prompt": "zone damage tick, electric zap, recurring pain, video game",           "duration": 0.3 },
     { "id": "footstep_walk",  "prompt": "footstep on stone, single step walking pace, video game sound",        "duration": 0.3 },
-    { "id": "footstep_sprint","prompt": "fast footstep on stone, sprinting pace, video game sound",             "duration": 0.2 }
+    { "id": "footstep_sprint","prompt": "fast footstep on stone, sprinting pace, video game sound",             "duration": 0.2 },
+    { "id": "grenade_launch", "prompt": "grenade launcher firing, heavy thunk mechanical release, sci-fi weapon shoot, video game sound effect", "duration": 0.6 },
+    { "id": "grenade_explode","prompt": "grenade explosion blast, large boom impact, debris scatter, sci-fi explosion, video game sound effect", "duration": 1.2 }
   ],
 
   "music": [
