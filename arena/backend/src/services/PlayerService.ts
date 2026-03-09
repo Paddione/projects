@@ -7,6 +7,7 @@ import type {
     HP,
     GAME,
 } from '../types/game.js';
+import { WeaponState, PISTOL_DEFAULT, MACHINE_GUN_PICKUP, WEAPON_STATS, RELOAD_DURATION_MS } from '../types/weapon.js';
 
 // Re-import constants
 const DMG = { GUN: 1, MELEE: 99, ZONE: 1 } as const;
@@ -41,6 +42,9 @@ export class PlayerService {
             deaths: 0,
             roundsWon: 0,
             lastMoveDirection: { dx: 0, dy: 0 },
+            weapon: { ...PISTOL_DEFAULT },
+            lastShotTime: 0,
+            pose: 'stand',
         };
     }
 
@@ -130,6 +134,9 @@ export class PlayerService {
         player.isAlive = true;
         player.isSpectating = false;
         player.lastMoveDirection = { dx: 0, dy: 0 };
+        player.weapon = { ...PISTOL_DEFAULT };
+        player.lastShotTime = 0;
+        player.pose = 'stand';
     }
 
     /**
@@ -138,6 +145,97 @@ export class PlayerService {
     makeSpectator(player: PlayerState): void {
         player.isSpectating = true;
         player.isAlive = false;
+    }
+
+    /**
+     * Get health display state
+     */
+    /**
+     * Check if a player can shoot (not reloading, has ammo, cooldown elapsed)
+     */
+    canShoot(player: PlayerState): boolean {
+        if (player.weapon.isReloading) return false;
+        if (player.weapon.clipAmmo <= 0) return false;
+        const stats = WEAPON_STATS[player.weapon.type];
+        return (Date.now() - player.lastShotTime) >= stats.cooldownMs;
+    }
+
+    /**
+     * Consume one round of ammo. Returns true if ammo was available.
+     * Pistol has infinite ammo. Auto-reloads or reverts to pistol when empty.
+     */
+    consumeAmmo(player: PlayerState): boolean {
+        if (player.weapon.type === 'pistol') return true;
+        if (player.weapon.clipAmmo <= 0) return false;
+        player.weapon.clipAmmo--;
+        if (player.weapon.clipAmmo <= 0 && player.weapon.totalAmmo > 0) {
+            this.startReload(player);
+        }
+        if (player.weapon.clipAmmo <= 0 && player.weapon.totalAmmo <= 0) {
+            player.weapon = { ...PISTOL_DEFAULT };
+        }
+        return true;
+    }
+
+    /**
+     * Start reloading the current weapon
+     */
+    startReload(player: PlayerState): void {
+        if (player.weapon.type === 'pistol') return;
+        if (player.weapon.isReloading) return;
+        if (player.weapon.totalAmmo <= 0) return;
+        if (player.weapon.clipAmmo >= player.weapon.clipSize) return;
+        player.weapon.isReloading = true;
+        player.weapon.reloadStartTime = Date.now();
+    }
+
+    /**
+     * Tick-based reload completion check
+     */
+    updateReload(player: PlayerState): void {
+        if (!player.weapon.isReloading || !player.weapon.reloadStartTime) return;
+        if (Date.now() - player.weapon.reloadStartTime >= RELOAD_DURATION_MS) {
+            const needed = player.weapon.clipSize - player.weapon.clipAmmo;
+            const toLoad = Math.min(needed, player.weapon.totalAmmo);
+            player.weapon.clipAmmo += toLoad;
+            player.weapon.totalAmmo -= toLoad;
+            player.weapon.isReloading = false;
+            player.weapon.reloadStartTime = null;
+        }
+    }
+
+    /**
+     * Pick up a weapon, returning the old weapon (if not pistol) for ground drop
+     */
+    pickupWeapon(player: PlayerState, itemWeapon: WeaponState): WeaponState | null {
+        const oldWeapon = player.weapon.type !== 'pistol' ? { ...player.weapon } : null;
+        player.weapon = { ...itemWeapon };
+        return oldWeapon;
+    }
+
+    /**
+     * Get the weapon to drop on death (null if pistol)
+     */
+    getDeathDrop(player: PlayerState): WeaponState | null {
+        if (player.weapon.type === 'pistol') return null;
+        return { ...player.weapon };
+    }
+
+    /**
+     * Update the player's pose based on current action and weapon
+     */
+    updatePose(player: PlayerState, isShooting: boolean, isMeleeing: boolean): void {
+        if (player.weapon.isReloading) {
+            player.pose = 'reload';
+        } else if (isMeleeing) {
+            player.pose = 'hold';
+        } else if (player.weapon.type === 'machine_gun') {
+            player.pose = 'machine';
+        } else if (isShooting) {
+            player.pose = 'gun';
+        } else {
+            player.pose = 'stand';
+        }
     }
 
     /**
