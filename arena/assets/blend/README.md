@@ -114,11 +114,28 @@ With NVIDIA RTX 5070 Ti (GPU/OptiX):
 
 | Asset | Frames | Time | Notes |
 |-------|--------|------|-------|
-| 1 character (8 dir × 2 poses) | 16 | ~16s | EEVEE + AO |
-| 5 characters | 80 | ~80s | 1m20s |
-| Full batch | Varies | 2-5min | All characters |
+| 1 character (8 dir × 6 poses) | 48 | ~48s | 1s per frame, EEVEE + AO |
+| 1 weapon (1 angle × 2 frames) | 2 | ~2s | Fast static assets |
+| 1 item (1 angle × 1 frame) | 1 | ~1s | Minimal geometry |
+| 5 characters | 240 | ~4min | ~1s per frame consistent |
+| Full batch (all assets) | 500+ | ~8-10min | All characters, weapons, items |
 
-CPU rendering: ~5x slower (avoid)
+**Expected workflow:**
+```bash
+# Single character test
+blender --background --python scripts/render_sprites.py -- --id warrior
+  → 48 frames in ~48 seconds
+
+# Full pipeline
+./scripts/generate_all.sh --phase 3  # All renders
+./scripts/generate_all.sh --phase 4  # Pack atlases
+  → 8-10 minutes total
+
+# Timeout is normal in isolated environments (CI/containers)
+# Local rendering on GPU is fast: 1s per frame average
+```
+
+CPU rendering: ~5x slower (avoid—use GPU)
 
 ## Troubleshooting
 
