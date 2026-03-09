@@ -9,7 +9,12 @@ import { attachAuthUser } from './middleware/auth.js';
 const app = express();
 
 // Middleware
-app.use(helmet());
+app.use(helmet({
+    contentSecurityPolicy: false,
+    crossOriginEmbedderPolicy: false,
+    crossOriginOpenerPolicy: false,
+    originAgentCluster: false
+}));
 app.use(cors({
     origin: config.cors.origin,
     credentials: true,
