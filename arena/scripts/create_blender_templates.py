@@ -107,6 +107,60 @@ def setup_eevee_rendering():
 
     print("✅ EEVEE rendering configured (GPU: OptiX, 256×256, transparent)")
 
+def link_materials_from_library(materials_path):
+    """Link materials from shared library into current blend file."""
+    if not materials_path.exists():
+        print(f"⚠️ Materials library not found at {materials_path}")
+        return False
+
+    try:
+        with bpy.data.libraries.load(str(materials_path), link=True) as (data_from, data_to):
+            data_to.materials = data_from.materials
+        print(f"✅ Materials linked from shared library")
+        return True
+    except Exception as e:
+        print(f"⚠️ Could not link materials: {e}")
+        return False
+
+def create_template(template_name, camera_pos, camera_rot, ortho_scale, description):
+    """Create a single Blender template with lighting, camera, and materials."""
+    print(f"\n[Template] Creating {template_name}.blend...")
+    clear_scene()
+
+    # Setup base components
+    setup_lighting_rig()
+    setup_camera(f"{template_name}_Camera", camera_pos, camera_rot, ortho_scale)
+    setup_world_lighting()
+    setup_eevee_rendering()
+
+    # Save template first
+    template_path = BLEND_DIR / f"{template_name}.blend"
+    bpy.ops.wm.save_as_mainfile(filepath=str(template_path))
+    print(f"✅ Template saved: {template_path}")
+
+    return template_path
+
+# Template specifications: (name, camera_position, camera_rotation, ortho_scale, description)
+TEMPLATES = [
+    ("character", (0, -3, 2), (math.radians(60), 0, 0), 2.5,
+     "Humanoid characters - 60° isometric, 8-direction rendering"),
+
+    ("weapon", (0, -2, 1.5), (math.radians(60), 0, 0), 1.5,
+     "Weapons & equipment - close-up, rim-lit detail"),
+
+    ("item", (0, 0, 2), (math.radians(90), 0, 0), 1.2,
+     "Items & pickups - centered icon-like view"),
+
+    ("tile", (0, 0, 2), (math.radians(90), 0, 0), 2.0,
+     "Floor tiles & terrain - perfect top-down"),
+
+    ("cover", (2, -2, 2), (math.radians(45), 0, math.radians(30)), 2.2,
+     "Obstacles & barricades - 45° side-lit depth"),
+
+    ("ui", (0, 0, 2), (math.radians(90), 0, 0), 1.5,
+     "UI icons & HUD - flat orthographic"),
+]
+
 def create_materials_library():
     """Create _shared/materials.blend with PBR material definitions."""
     print("[Materials] Creating shared materials library...")
@@ -203,7 +257,7 @@ def create_materials_library():
 
 if __name__ == "__main__":
     print("=" * 60)
-    print("Blender Template Creator - Testing Lighting & Camera")
+    print("Blender Template Creator")
     print("=" * 60)
 
     # Step 1: Create shared materials library
@@ -211,20 +265,45 @@ if __name__ == "__main__":
     clear_scene()
     create_materials_library()
 
-    # Step 2: Test lighting in a new file
-    print("\n[Step 2/2] Creating character template with lighting...")
-    clear_scene()
+    # Step 2: Create all 6 templates
+    print("\n[Step 2/2] Creating template files...")
+    created_templates = []
 
-    setup_lighting_rig()
-    setup_camera("ISOCamera", (0, -3, 2), (math.radians(60), 0, 0), scale=2.5)
-    setup_world_lighting()
-    setup_eevee_rendering()
+    for name, pos, rot, scale, desc in TEMPLATES:
+        try:
+            path = create_template(name, pos, rot, scale, desc)
+            created_templates.append(str(path))
+        except Exception as e:
+            print(f"❌ Error creating {name}: {e}")
 
-    # Save test file
-    test_path = BLEND_DIR / "character.blend"
-    bpy.ops.wm.save_as_mainfile(filepath=str(test_path))
-    print(f"✅ Test character template saved: {test_path}")
+    # Step 3: Link materials to each template
+    print("\n[Step 3/3] Linking materials to templates...")
+    materials_path = BLEND_DIR / "_shared" / "materials.blend"
 
+    for template_path in created_templates:
+        template_file = Path(template_path)
+        print(f"\nLinking materials to {template_file.name}...")
+        try:
+            # Open template
+            bpy.ops.wm.open_mainfile(filepath=str(template_path))
+
+            # Link materials
+            if link_materials_from_library(materials_path):
+                # Save with linked materials
+                bpy.ops.wm.save_mainfile()
+                print(f"✅ {template_file.name} saved with linked materials")
+            else:
+                print(f"⚠️ {template_file.name} created but materials linking failed")
+        except Exception as e:
+            print(f"❌ Error linking materials to {template_file.name}: {e}")
+
+    # Summary
     print("\n" + "=" * 60)
-    print("✅ Blender template creation complete!")
+    print(f"✅ SUCCESS: Created {len(created_templates)} template files")
     print("=" * 60)
+    for path in created_templates:
+        print(f"  ✓ {Path(path).name}")
+    print("\nNext steps:")
+    print("  1. Verify templates in Blender GUI: blender assets/blend/character.blend")
+    print("  2. Update render_sprites.py to use templates")
+    print("  3. Run sprite rendering pipeline")
