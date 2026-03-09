@@ -102,11 +102,23 @@ test.describe('Asset Coverage', () => {
         const csp = response.headers()['content-security-policy'] || '';
 
         expect(csp.length).toBeGreaterThan(0);
-        expect(csp).toContain('worker-src');
-        expect(csp).toContain("'self'");
-        expect(csp).toContain('blob:');
-        expect(csp).toContain('img-src');
-        expect(csp).toContain('connect-src');
-        expect(csp).toContain('data:');
+
+        // Worker-src: Required for PixiJS workers
+        expect(csp).toContain("worker-src 'self' blob:");
+
+        // Img-src: Required for sprite atlases + data: for bitmap validation
+        expect(csp).toContain("img-src 'self' blob: data:");
+
+        // Script-src: Required for React + Vite
+        expect(csp).toContain("script-src 'self' 'unsafe-inline' 'unsafe-eval'");
+
+        // Style-src: Required for inline styles
+        expect(csp).toContain("style-src 'self' 'unsafe-inline'");
+
+        // Connect-src: Required for WebSockets + data: for image validation
+        expect(csp).toContain("connect-src 'self' data:");
+
+        // Default-src: Fallback policy
+        expect(csp).toContain("default-src 'self'");
     });
 });

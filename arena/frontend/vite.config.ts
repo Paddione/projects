@@ -8,7 +8,7 @@ export default defineConfig({
         middlewareMode: false,
         // Add CSP headers for E2E asset validation testing
         headers: {
-            'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; worker-src 'self' blob:; img-src 'self' blob: data:; connect-src 'self' data: ws: wss:;",
+            'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; worker-src 'self' blob:; img-src 'self' blob: data:; connect-src 'self' data: ws: wss:; base-uri 'self';",
         },
         proxy: {
             '/api': {
