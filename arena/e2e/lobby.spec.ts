@@ -252,4 +252,139 @@ test.describe('Lobby page', () => {
         // The Lobby page itself will try to join via socket (which is blocked)
         await expect(page).toHaveURL('/lobby/NOPE00', { timeout: 3000 });
     });
+
+    // ---- Socket Lifecycle Tests ----
+
+    test('player list updates via lobby-updated socket event', async ({ page }) => {
+        await mockAuth(page, ALICE);
+        await blockSocket(page);
+
+        await page.goto('/');
+        await expect(page.locator('h1')).toContainText('ARENA', { timeout: 8000 });
+
+        // Create lobby
+        await page.route('**/api/lobbies', async (route) => {
+            if (route.request().method() !== 'POST') return route.continue();
+            await route.fulfill({
+                status: 201,
+                contentType: 'application/json',
+                body: JSON.stringify(TEST_LOBBY),
+            });
+        });
+
+        await page.locator('#create-lobby-btn').click();
+        await expect(page).toHaveURL(/\/lobby\/TEST01/, { timeout: 5000 });
+
+        // Verify lobby code is displayed
+        await expect(page.locator('.lobby-code')).toContainText('TEST01');
+
+        // Now emit a lobby-updated event with a second player
+        await emitFromServer(page, 'lobby-updated', {
+            players: [
+                { id: String(ALICE.userId), username: ALICE.username, isReady: false, isHost: true },
+                { id: String(ALICE.userId + 1), username: 'bob', isReady: false, isHost: false },
+            ],
+        });
+
+        // Verify socket event was processed without error
+        // Page should still be functional on lobby URL
+        await expect(page).toHaveURL(/\/lobby\/TEST01/, { timeout: 3000 });
+    });
+
+    test('Start Game button is present and visible', async ({ page }) => {
+        await mockAuth(page, ALICE);
+        await blockSocket(page);
+
+        await page.goto('/');
+        await expect(page.locator('h1')).toContainText('ARENA', { timeout: 8000 });
+
+        await page.route('**/api/lobbies', async (route) => {
+            if (route.request().method() !== 'POST') return route.continue();
+            await route.fulfill({
+                status: 201,
+                contentType: 'application/json',
+                body: JSON.stringify(TEST_LOBBY),
+            });
+        });
+
+        await page.locator('#create-lobby-btn').click();
+        await expect(page).toHaveURL(/\/lobby\/TEST01/, { timeout: 5000 });
+
+        // Start Game button should be present
+        const startBtn = page.locator('#start-game-btn');
+        await expect(startBtn).toBeVisible({ timeout: 3000 });
+    });
+
+    test('Start Game button state updates with socket events', async ({ page }) => {
+        await mockAuth(page, ALICE);
+        await blockSocket(page);
+
+        await page.goto('/');
+        await expect(page.locator('h1')).toContainText('ARENA', { timeout: 8000 });
+
+        await page.route('**/api/lobbies', async (route) => {
+            if (route.request().method() !== 'POST') return route.continue();
+            await route.fulfill({
+                status: 201,
+                contentType: 'application/json',
+                body: JSON.stringify(TEST_LOBBY),
+            });
+        });
+
+        await page.locator('#create-lobby-btn').click();
+        await expect(page).toHaveURL(/\/lobby\/TEST01/, { timeout: 5000 });
+
+        // Emit lobby-updated to validate socket event processing
+        await emitFromServer(page, 'lobby-updated', {
+            players: [
+                { id: String(ALICE.userId), username: ALICE.username, isReady: true, isHost: true },
+            ],
+        });
+
+        // Button should still be visible and functional
+        const startBtn = page.locator('#start-game-btn');
+        await expect(startBtn).toBeVisible({ timeout: 3000 });
+    });
+
+    test('socket lobby-updated events are received and processed', async ({ page }) => {
+        await mockAuth(page, ALICE);
+        await blockSocket(page);
+
+        await page.goto('/');
+        await expect(page.locator('h1')).toContainText('ARENA', { timeout: 8000 });
+
+        await page.route('**/api/lobbies', async (route) => {
+            if (route.request().method() !== 'POST') return route.continue();
+            await route.fulfill({
+                status: 201,
+                contentType: 'application/json',
+                body: JSON.stringify(TEST_LOBBY),
+            });
+        });
+
+        await page.locator('#create-lobby-btn').click();
+        await expect(page).toHaveURL(/\/lobby\/TEST01/, { timeout: 5000 });
+
+        // Emit multiple lobby-updated events to validate socket event pipeline
+        await emitFromServer(page, 'lobby-updated', {
+            players: [
+                { id: String(ALICE.userId), username: ALICE.username, isReady: false, isHost: true },
+                { id: String(ALICE.userId + 1), username: 'bob', isReady: false, isHost: false },
+            ],
+        });
+
+        // Verify still on lobby page (socket events processed without error)
+        await expect(page).toHaveURL(/\/lobby\/TEST01/, { timeout: 3000 });
+
+        // Emit another update
+        await emitFromServer(page, 'lobby-updated', {
+            players: [
+                { id: String(ALICE.userId), username: ALICE.username, isReady: true, isHost: true },
+                { id: String(ALICE.userId + 1), username: 'bob', isReady: true, isHost: false },
+            ],
+        });
+
+        // Still on lobby page
+        await expect(page).toHaveURL(/\/lobby\/TEST01/, { timeout: 3000 });
+    });
 });

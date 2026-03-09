@@ -191,3 +191,91 @@ export async function injectLobbyState(
         window.dispatchEvent(new CustomEvent('__e2e:setLobby', { detail: data }));
     }, payload);
 }
+
+// ---------------------------------------------------------------------------
+// E2E Socket Helpers — for Game page testing
+// ---------------------------------------------------------------------------
+
+/**
+ * Emit a socket event from the server side by directly triggering the
+ * listeners on window.__arenaSocket (exposed in Game.tsx for DEV).
+ */
+export async function emitFromServer(page: Page, event: string, data: unknown) {
+    await page.evaluate(({ event, data }) => {
+        const socket = (window as any).__arenaSocket;
+        if (socket) {
+            // Trigger internal listeners
+            const listeners = socket._callbacks?.[`$${event}`] || [];
+            listeners.forEach((fn: Function) => fn(data));
+        }
+    }, { event, data });
+}
+
+/**
+ * Mock GET /api/matches/:id/results endpoint
+ */
+export async function mockMatchResults(
+    page: Page,
+    matchId: string,
+    results: Array<{
+        playerId: string;
+        username: string;
+        placement: number;
+        kills?: number;
+        deaths?: number;
+        damage?: number;
+        itemsCollected?: number;
+        roundsWon?: number;
+        xpGained?: number;
+        levelBefore?: number;
+        levelAfter?: number;
+    }>
+) {
+    await page.route(`**/api/matches/${matchId}/results`, (route) => {
+        route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: JSON.stringify({ results }),
+        });
+    });
+}
+
+/**
+ * Factory for creating a minimal valid game-state snapshot for E2E injection.
+ */
+export function makeGameState(overrides: Partial<Record<string, unknown>> = {}) {
+    const now = Date.now();
+    return {
+        matchId: 'match-test-001',
+        round: 1,
+        roundStartTime: now - 5000,
+        isActive: true,
+        zone: {
+            isActive: false,
+            centerX: 640,
+            centerY: 480,
+            currentRadius: 1200,
+            maxRadius: 1200,
+        },
+        players: [
+            {
+                id: String(ALICE.userId),
+                username: ALICE.username,
+                x: 640,
+                y: 480,
+                rotation: 0,
+                hp: 2,
+                hasArmor: false,
+                isAlive: true,
+                kills: 0,
+                deaths: 0,
+                selectedCharacter: 'warrior',
+                weapon: { type: 'pistol' },
+                lastMoveDirection: { x: 0, y: 0 },
+            },
+        ],
+        items: [],
+        projectiles: [],
+        ...overrides,
+    };
+}

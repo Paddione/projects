@@ -70,13 +70,73 @@ Procedural `Graphics` rendering is replaced by sprite-based `Sprite`/`AnimatedSp
 ```bash
 ./scripts/generate_all.sh               # Run full pipeline (all phases)
 ./scripts/generate_all.sh --phase 1     # Concept art only (ComfyUI/SDXL)
+./scripts/generate_all.sh --phase 2     # 3D models (TripoSR/Meshy)
+./scripts/generate_all.sh --phase 3     # Sprite rendering (Blender)
 ./scripts/generate_all.sh --phase 4     # Sprite packing only
-./scripts/generate_all.sh --phase audio # Audio only (AudioCraft/ElevenLabs)
+./scripts/generate_all.sh --phase 5     # Audio generation (AudioCraft)
+./scripts/generate_all.sh --phase 6     # Audio processing (ffmpeg)
 ```
 
-**Pipeline phases**: concepts → 3D models → Blender render → sprite pack → audio gen → audio process
+**Pipeline phases**: concepts → 3D models → **Blender render** → sprite pack → audio gen → audio process
 
 **Asset manifest**: `assets/manifest.json` — defines all characters, items, tiles, SFX, music with prompts and frame counts.
+
+#### Blender Sprite Rendering (Phase 3)
+
+Professional sprite rendering using persistent Blender templates:
+
+**Templates** (`assets/blend/`):
+- **character.blend** — 60° isometric, warm key + cool fill + rim lighting, 8-direction
+- **weapon.blend** — Close-up, rim-heavy lighting, single angle × N poses
+- **item.blend** — Centered, bright, minimal shadow, icon-like
+- **tile.blend** — Perfect top-down, seamless, flat overhead lighting
+- **cover.blend** — 45° angle, side-lit, shows depth/silhouette
+- **ui.blend** — Orthographic flat, bright, zero shadows
+
+**Rendering setup**:
+- Engine: EEVEE (fast, good quality)
+- Resolution: 256×256px (downscale to 128px in-game for sharp pixels)
+- Output: PNG RGBA (transparent background)
+- Render time: 0.5-2s per frame depending on complexity
+
+**How it works**:
+1. `render_sprites.py` loads appropriate `.blend` template
+2. Imports 3D model from `assets/models/{category}/{id}.glb`
+3. Links materials from `assets/blend/_shared/materials.blend`
+4. Batch renders via Python script (8 directions for character, etc.)
+5. Outputs PNG frames to `assets/renders/{category}/{id}/{pose}_{direction}.png`
+
+**Benefits over procedural rendering**:
+- ✅ Professional 3-point lighting (key, fill, rim)
+- ✅ PBR materials with depth (metallic, roughness, normal maps)
+- ✅ Ambient occlusion shadows add dimension
+- ✅ Consistent appearance across all renders
+- ✅ One-time setup, reusable forever
+- ✅ Easy global improvements (tweak template, all renders improve)
+
+**Quick setup** (see BLENDER_WORKFLOW.md for details):
+```bash
+# Create character.blend template:
+1. Open Blender
+2. Add 3 lights (Key, Fill, Rim)
+3. Add orthographic camera (60° angle)
+4. Link materials: File → Link → _shared/materials.blend
+5. Import test character.glb: File → Import glTF
+6. Configure EEVEE: 256×256, transparent, AO enabled
+7. Render test: F12
+8. Save: File → Save As character.blend
+```
+
+**Batch render Python script** (ready to use):
+```python
+import bpy, math, os
+DIRECTIONS = {"N": 0, "NE": 45, "E": 90, "SE": 135, "S": 180, "SW": 225, "W": 270, "NW": 315}
+character = bpy.data.objects["Character"]
+for direction, angle in DIRECTIONS.items():
+    character.rotation_euler.z = math.radians(angle)
+    bpy.context.scene.render.filepath = f"/path/to/renders/{direction}.png"
+    bpy.ops.render.render(write_still=True)
+```
 
 **Frontend services**:
 | Service | Responsibility |
@@ -90,6 +150,7 @@ Procedural `Graphics` rendering is replaced by sprite-based `Sprite`/`AnimatedSp
 **Generated asset locations** (gitignored, regenerate with pipeline):
 - `assets/concepts/` — Concept art PNGs
 - `assets/models/` — 3D `.glb` models
+- `assets/blend/` — Blender project templates
 - `assets/renders/` — Individual sprite frame PNGs
 - `assets/audio/` — Raw `.wav` audio files
 

@@ -42,10 +42,13 @@ export default function Game() {
     // Track animated sprites for reuse (avoid recreating every frame)
     const playerSpritesRef = useRef<Map<string, AnimatedSprite | Sprite>>(new Map());
     const itemSpritesRef = useRef<Map<string, AnimatedSprite | Sprite>>(new Map());
-    const footstepTimerRef = useRef(0);
+    const footstepTimerRef = useRef(Date.now());
     const explosionsRef = useRef<Array<{ x: number; y: number; radius: number; createdAt: number }>>(
         []
     );
+    const mapRenderedRef = useRef(false);
+    const zoneDirtyRef = useRef(true);
+    const hudRafIdRef = useRef<number | null>(null);
 
     const [assetsLoaded, setAssetsLoaded] = useState(false);
     const [isMuted, setIsMuted] = useState(SoundService.isMuted);
@@ -61,6 +64,11 @@ export default function Game() {
     } = useGameStore();
 
     const socket = getSocket();
+
+    // Expose socket for E2E testing (tree-shaken in production)
+    if (import.meta.env.DEV) {
+        (window as any).__arenaSocket = socket;
+    }
 
     const useSprites = AssetService.isLoaded;
 
@@ -286,25 +294,28 @@ export default function Game() {
             const cameraY = -camTarget.y + window.innerHeight / 2;
             worldContainer.position.set(cameraX, cameraY);
 
-            // ---- MAP LAYER ----
-            mapLayer.removeChildren();
-            renderMap(mapLayer, state);
+            // ---- MAP LAYER (render once, cache) ----
+            if (!mapRenderedRef.current) {
+                mapLayer.removeChildren();
+                renderMap(mapLayer, state);
+                mapRenderedRef.current = true;
+            }
 
-            // ---- ITEM LAYER ----
-            itemLayer.removeChildren();
+            // ---- ITEM LAYER (reuse sprites) ----
             renderItems(itemLayer, state);
 
             // ---- PROJECTILE LAYER ----
             projectileLayer.removeChildren();
             renderProjectiles(projectileLayer, state);
 
-            // ---- ZONE LAYER ----
-            zoneLayer.removeChildren();
-            renderZone(zoneLayer, state);
+            // ---- ZONE LAYER (redraw only when zone changed) ----
+            if (zoneDirtyRef.current) {
+                zoneLayer.removeChildren();
+                renderZone(zoneLayer, state);
+                zoneDirtyRef.current = false;
+            }
 
-            // ---- PLAYER LAYER + LABELS ----
-            playerLayer.removeChildren();
-            labelLayer.removeChildren();
+            // ---- PLAYER LAYER + LABELS (reuse sprites) ----
             renderPlayers(playerLayer, labelLayer, state, me);
 
             // ---- FOOTSTEP AUDIO ----
@@ -361,23 +372,40 @@ export default function Game() {
         }
 
         function renderItems(container: Container, state: any) {
+            // Mark all items as hidden first
+            itemSpritesRef.current.forEach((sprite) => {
+                sprite.visible = false;
+            });
+
+            // Update or create sprites for active items
             for (const item of state.items || []) {
+                const cachedSprite = itemSpritesRef.current.get(item.id);
+
                 if (useSprites) {
                     const assetId = item.type === 'health' ? 'health_pack' : 'armor_plate';
                     const frames = AssetService.getItemAnimation('items', assetId);
                     if (frames.length > 0) {
-                        const sprite = frames.length > 1
-                            ? new AnimatedSprite(frames)
-                            : new Sprite(frames[0]);
-                        sprite.anchor.set(0.5);
-                        sprite.position.set(item.x, item.y);
-                        sprite.width = 20;
-                        sprite.height = 20;
-                        if (sprite instanceof AnimatedSprite) {
-                            sprite.animationSpeed = 0.1;
-                            sprite.play();
+                        let sprite = cachedSprite;
+
+                        // Create sprite if not cached
+                        if (!sprite) {
+                            sprite = frames.length > 1
+                                ? new AnimatedSprite(frames)
+                                : new Sprite(frames[0]);
+                            sprite.anchor.set(0.5);
+                            sprite.width = 20;
+                            sprite.height = 20;
+                            if (sprite instanceof AnimatedSprite) {
+                                sprite.animationSpeed = 0.1;
+                                sprite.play();
+                            }
+                            container.addChild(sprite);
+                            itemSpritesRef.current.set(item.id, sprite);
                         }
-                        container.addChild(sprite);
+
+                        // Update position and visibility
+                        sprite.position.set(item.x, item.y);
+                        sprite.visible = true;
                         continue;
                     }
                 }
@@ -450,10 +478,19 @@ export default function Game() {
             state: any,
             _me: any,
         ) {
+            // Mark all sprites as hidden, then show only alive players
+            playerSpritesRef.current.forEach((sprite) => {
+                sprite.visible = false;
+            });
+
+            // Rebuild label layer (labels change frequently with HP/position)
+            labelContainer.removeChildren();
+
             for (const player of state.players || []) {
                 if (!player.isAlive) continue;
 
                 const isMe = player.id === playerId;
+                const cachedSprite = playerSpritesRef.current.get(player.id);
 
                 if (useSprites) {
                     // Character ID (default to 'warrior' if not set)
@@ -462,15 +499,24 @@ export default function Game() {
                     const poseTexture = AssetService.getCharacterPose(charId, 'stand');
 
                     if (poseTexture) {
-                        const sprite = new Sprite(poseTexture);
-                        sprite.anchor.set(0.5);
-                        sprite.position.set(player.x, player.y);
-                        sprite.width = 28;
-                        sprite.height = 28;
-                        sprite.rotation = player.rotation;
-                        playerContainer.addChild(sprite);
+                        let sprite = cachedSprite;
 
-                        // Armor ring overlay
+                        // Create sprite if not cached
+                        if (!sprite) {
+                            sprite = new Sprite(poseTexture);
+                            sprite.anchor.set(0.5);
+                            sprite.width = 28;
+                            sprite.height = 28;
+                            playerContainer.addChild(sprite);
+                            playerSpritesRef.current.set(player.id, sprite);
+                        }
+
+                        // Update position and rotation
+                        sprite.position.set(player.x, player.y);
+                        sprite.rotation = player.rotation;
+                        sprite.visible = true;
+
+                        // Armor ring overlay (recreate if needed)
                         if (player.hasArmor) {
                             const armorG = new Graphics();
                             armorG.lineStyle(2, 0x38bdf8, 0.8);
@@ -536,11 +582,13 @@ export default function Game() {
             const isSprinting = keysRef.current.has('shift');
 
             if (isMoving && me.isAlive) {
-                footstepTimerRef.current++;
-                const interval = isSprinting ? 10 : 16; // ticks between steps
-                if (footstepTimerRef.current >= interval) {
+                const now = Date.now();
+                // Constant 4 Hz footstep cadence: 250ms between steps
+                // Sprint increases speed to 3x: ~166ms per step
+                const interval = isSprinting ? 166 : 250;
+                if (now - footstepTimerRef.current >= interval) {
                     SoundService.playFootstep(isSprinting);
-                    footstepTimerRef.current = 0;
+                    footstepTimerRef.current = now;
                 }
             } else {
                 footstepTimerRef.current = 0;
@@ -581,6 +629,8 @@ export default function Game() {
             appRef.current = null;
             playerSpritesRef.current.clear();
             itemSpritesRef.current.clear();
+            mapRenderedRef.current = false;
+            zoneDirtyRef.current = true;
         };
     }, [matchId, playerId, assetsLoaded]);
 
@@ -593,29 +643,35 @@ export default function Game() {
             prevStateRef.current = gameStateRef.current;
             gameStateRef.current = state;
 
-            const me = state.players?.find((p: any) => p.id === playerId);
-            if (me) {
-                setPlayerState({
-                    hp: me.hp,
-                    hasArmor: me.hasArmor,
-                    isAlive: me.isAlive,
-                    kills: me.kills,
-                    deaths: me.deaths,
-                    weaponType: me.weapon?.type || 'pistol',
-                });
+            // Throttle HUD re-renders to rAF (max 60/sec) instead of socket frequency (20/sec)
+            // This coalesces multiple socket messages into single React render
+            if (hudRafIdRef.current) cancelAnimationFrame(hudRafIdRef.current);
+            hudRafIdRef.current = requestAnimationFrame(() => {
+                const me = state.players?.find((p: any) => p.id === playerId);
+                if (me) {
+                    setPlayerState({
+                        hp: me.hp,
+                        hasArmor: me.hasArmor,
+                        isAlive: me.isAlive,
+                        kills: me.kills,
+                        deaths: me.deaths,
+                        weaponType: me.weapon?.type || 'pistol',
+                    });
 
-                // Auto-spectate first alive player when you die
-                if (me.isAlive === false && !isSpectating) {
-                    const alivePlayers = state.players?.filter((p: any) => p.isAlive && p.id !== playerId);
-                    if (alivePlayers?.length > 0) {
-                        const firstAlive = alivePlayers[0];
-                        socket.emit('spectate-player', {
-                            matchId: state.matchId,
-                            targetPlayerId: firstAlive.id,
-                        });
+                    // Auto-spectate first alive player when you die
+                    if (me.isAlive === false && !isSpectating) {
+                        const alivePlayers = state.players?.filter((p: any) => p.isAlive && p.id !== playerId);
+                        if (alivePlayers?.length > 0) {
+                            const firstAlive = alivePlayers[0];
+                            socket.emit('spectate-player', {
+                                matchId: state.matchId,
+                                targetPlayerId: firstAlive.id,
+                            });
+                        }
                     }
                 }
-            }
+                hudRafIdRef.current = null;
+            });
         });
 
         socket.on('player-killed', (data: any) => {
@@ -682,6 +738,7 @@ export default function Game() {
         });
 
         socket.on('zone-shrink', () => {
+            zoneDirtyRef.current = true;
             SoundService.playSFX('zone_warning');
         });
 
