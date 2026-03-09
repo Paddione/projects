@@ -1,3 +1,5 @@
+import { WeaponState, PISTOL_DEFAULT } from './weapon.js';
+
 // ============================================================================
 // Core Game Types for Arena
 // ============================================================================
@@ -22,6 +24,9 @@ export interface PlayerState {
     deaths: number;
     roundsWon: number;
     lastMoveDirection: { dx: number; dy: number };
+    weapon: WeaponState;
+    lastShotTime: number;
+    pose: string;
 }
 
 export interface PlayerInput {
@@ -31,6 +36,7 @@ export interface PlayerInput {
     melee: boolean;
     sprint: boolean;
     pickup: boolean;
+    reload: boolean;
     timestamp: number;
 }
 
@@ -49,7 +55,7 @@ export interface Projectile {
 
 // -- Items --
 
-export type ItemType = 'health' | 'armor';
+export type ItemType = 'health' | 'armor' | 'machine_gun';
 
 export interface MapItem {
     id: string;
@@ -58,6 +64,7 @@ export interface MapItem {
     y: number;
     isCollected: boolean;
     spawnedAt: number;
+    weaponState?: WeaponState;
 }
 
 // -- Cover --
@@ -136,6 +143,27 @@ export interface GameState {
     settings: ArenaLobbySettings;
     tickCount: number;
     lastItemSpawnTick: number;
+    npcs: NPC[];
+    lastNPCSpawnTick: number;
+}
+
+// -- NPC --
+
+export type NPCState = 'wander' | 'chase';
+
+export interface NPC {
+    id: string;
+    type: 'zombie';
+    x: number;
+    y: number;
+    hp: number;
+    speed: number;
+    rotation: number;
+    targetPlayerId: string | null;
+    state: NPCState;
+    wanderAngle: number;
+    wanderChangeTime: number;
+    lastDamageTime: number;
 }
 
 // -- Lobby --
@@ -268,4 +296,17 @@ export const GAME = {
     MELEE_COOLDOWN: 800,   // ms
     SHOOT_COOLDOWN: 300,    // ms
     ITEM_PICKUP_RANGE: 32,  // pixels
+} as const;
+
+export const NPC_CONST = {
+    MAX_ALIVE: 6,
+    SPAWN_INTERVAL_S: 45,
+    SPEED_FACTOR: 0.4,
+    AGGRO_RANGE_TILES: 5,
+    DEAGGRO_RANGE_TILES: 8,
+    DAMAGE: 1,
+    HP: 2,
+    CONTACT_RANGE: 16,
+    DAMAGE_COOLDOWN_MS: 1000,
+    WANDER_CHANGE_MS: 2500,
 } as const;
