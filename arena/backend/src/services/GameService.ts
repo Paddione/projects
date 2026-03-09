@@ -124,8 +124,10 @@ export class GameService {
 
         this.activeGames.set(matchId, gameState);
 
-        // Spawn initial weapons at map center
-        this.spawnInitialWeapons(gameState);
+        // Spawn initial weapons at map center (only if item spawning is enabled)
+        if (gameState.settings.itemSpawns) {
+            this.spawnInitialWeapons(gameState);
+        }
 
         // Start the game loop
         const interval = setInterval(() => this.tick(matchId), 1000 / this.tickRate);
@@ -997,7 +999,10 @@ export class GameService {
             );
 
             if (matchWinner || game.currentRound.roundNumber >= game.bestOf) {
-                this.endMatchWithResults(game, matchWinner?.[0] || winnerId);
+                // Fire and forget - match end happens asynchronously
+                this.endMatchWithResults(game, matchWinner?.[0] || winnerId).catch(err => {
+                    console.error('Error ending match:', err);
+                });
             } else {
                 // Start next round after a delay
                 game.phase = 'round-transition';

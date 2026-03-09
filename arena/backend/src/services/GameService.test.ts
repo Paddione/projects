@@ -445,7 +445,7 @@ describe('GameService', () => {
             }));
         });
 
-        it('calls onMatchEnd after round ends in bestOf:1', () => {
+        it('calls onMatchEnd after round ends in bestOf:1', async () => {
             const onMatchEnd = vi.fn();
             service.setCallbacks({
                 onStateUpdate: vi.fn(),
@@ -471,7 +471,7 @@ describe('GameService', () => {
 
             mockQuery.mockResolvedValue({ rowCount: 1, rows: [{ id: 99 }] });
 
-            vi.advanceTimersByTime(1000 / 20);
+            await vi.runAllTimersAsync();
             expect(onMatchEnd).toHaveBeenCalled();
         });
 
@@ -487,6 +487,7 @@ describe('GameService', () => {
                 onMatchEnd: vi.fn(),
                 onZoneShrink: vi.fn(),
                 onCoverDestroyed: vi.fn(),
+                onExplosion: vi.fn(),
             });
 
             const lobby = makeLobby(
@@ -513,6 +514,7 @@ describe('GameService', () => {
                 onMatchEnd: vi.fn(),
                 onZoneShrink: vi.fn(),
                 onCoverDestroyed: vi.fn(),
+                onExplosion: vi.fn(),
             });
 
             const lobby = makeLobby(
@@ -861,7 +863,7 @@ describe('GameService', () => {
 
             mockQuery.mockResolvedValue({ rowCount: 1, rows: [{ id: 99 }] });
 
-            vi.advanceTimersByTime(1000 / 20);
+            await vi.runAllTimersAsync();
 
             const callArgs = onMatchEnd.mock.calls[0];
             expect(callArgs[1].winnerId).toBe('1');
