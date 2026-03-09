@@ -20,6 +20,7 @@ export type CharacterPose = 'stand' | 'gun' | 'machine' | 'reload' | 'hold' | 's
 
 class AssetServiceImpl {
     private loaded = false;
+    private loading = false;
     private spritesheets: Partial<Record<AtlasKey, Spritesheet>> = {};
 
     get isLoaded(): boolean {
@@ -27,25 +28,39 @@ class AssetServiceImpl {
     }
 
     async loadAll(onProgress?: (progress: number) => void): Promise<void> {
+        // Guard against multiple simultaneous loads
         if (this.loaded) return;
-
-        const bundles: UnresolvedAsset[] = [];
-        for (const key of ATLAS_KEYS) {
-            bundles.push({ alias: key, src: `${ASSETS_BASE}/${key}.json` });
+        if (this.loading) {
+            // Wait for in-progress load to complete
+            while (this.loading) await new Promise(resolve => setTimeout(resolve, 10));
+            return;
         }
 
-        Assets.addBundle('arena-sprites', bundles);
-        const assets = await Assets.loadBundle('arena-sprites', (progress) => {
-            onProgress?.(progress);
-        });
+        this.loading = true;
+        try {
+            // Clear any cached bundle to prevent "already has key" warnings
+            Assets.reset();
 
-        for (const key of ATLAS_KEYS) {
-            if (assets[key] instanceof Spritesheet) {
-                this.spritesheets[key] = assets[key];
+            const bundles: UnresolvedAsset[] = [];
+            for (const key of ATLAS_KEYS) {
+                bundles.push({ alias: key, src: `${ASSETS_BASE}/${key}.json` });
             }
-        }
 
-        this.loaded = true;
+            Assets.addBundle('arena-sprites', bundles);
+            const assets = await Assets.loadBundle('arena-sprites', (progress) => {
+                onProgress?.(progress);
+            });
+
+            for (const key of ATLAS_KEYS) {
+                if (assets[key] instanceof Spritesheet) {
+                    this.spritesheets[key] = assets[key];
+                }
+            }
+
+            this.loaded = true;
+        } finally {
+            this.loading = false;
+        }
     }
 
     /**
