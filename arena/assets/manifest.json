@@ -129,7 +129,7 @@
   "music": [
     { "id": "lobby",   "prompt": "ambient atmospheric music, mysterious dark electronic, slow tempo, loopable, video game lobby theme",       "duration": 60,  "loop": true },
     { "id": "battle",  "prompt": "intense electronic battle music, fast driving tempo, aggressive synths, loopable, video game combat theme", "duration": 90,  "loop": true },
-    { "id": "victory", "prompt": "triumphant electronic victory fanfare, heroic synths, video game win sting",                                "duration": 8,   "loop": false },
-    { "id": "defeat",  "prompt": "somber electronic defeat theme, melancholic synths, video game loss sting",                                 "duration": 8,   "loop": false }
+    { "id": "victory", "prompt": "triumphant sci-fi victory fanfare, ascending heroic synth melody, bright major key, dynamic crescendo, celebratory energy, video game win sting, 8 seconds",                                "duration": 8,   "loop": false },
+    { "id": "defeat",  "prompt": "melancholic sci-fi defeat theme, descending minor key synths, somber electronic tones, electronic string pad, sad loss sting, video game, 8 seconds",                                 "duration": 8,   "loop": false }
   ]
 }
