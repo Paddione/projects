@@ -801,7 +801,11 @@ export default function Game() {
         const shootCheck = setInterval(() => {
             const mouse = mouseRef.current;
             if (mouse.down) {
-                SoundService.playSFX('gunshot', { volume: 0.6 });
+                if (weaponType === 'grenade_launcher') {
+                    SoundService.playSFX('grenade_launch', { volume: 0.8 });
+                } else {
+                    SoundService.playSFX('gunshot', { volume: 0.6 });
+                }
             }
             if (mouse.rightDown || keysRef.current.has('e')) {
                 SoundService.playSFX('melee_swing', { volume: 0.7 });
@@ -809,7 +813,7 @@ export default function Game() {
         }, 250); // Throttle to 4/sec to avoid sound spam
 
         return () => clearInterval(shootCheck);
-    }, []);
+    }, [weaponType]);
 
     // ============================================================================
     // RENDER
