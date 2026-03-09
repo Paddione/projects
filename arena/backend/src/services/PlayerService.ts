@@ -41,6 +41,8 @@ export class PlayerService {
             kills: 0,
             deaths: 0,
             roundsWon: 0,
+            damageDealt: 0,
+            itemsCollected: 0,
             lastMoveDirection: { dx: 0, dy: 0 },
             weapon: { ...PISTOL_DEFAULT },
             lastShotTime: 0,
@@ -231,6 +233,8 @@ export class PlayerService {
             player.pose = 'hold';
         } else if (player.weapon.type === 'machine_gun') {
             player.pose = 'machine';
+        } else if (player.weapon.type === 'grenade_launcher') {
+            player.pose = 'machine';  // Use same pose as machine gun
         } else if (isShooting) {
             player.pose = 'gun';
         } else {

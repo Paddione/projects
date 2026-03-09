@@ -646,3 +646,315 @@ body {
   .player-list   { max-height: 40vh; overflow-y: auto; }
   .settings-panel { max-height: 30vh; overflow-y: auto; }
 }
+
+/* ============================================================================
+   Match Results Screen
+   ============================================================================ */
+
+.match-results {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: var(--space-xl);
+  background: radial-gradient(ellipse at 50% 0%, rgba(99, 102, 241, 0.08) 0%, transparent 60%),
+              var(--color-bg);
+}
+
+.results-container {
+  width: 100%;
+  max-width: 900px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xl);
+}
+
+.results-title {
+  font-size: 3.5rem;
+  font-weight: 900;
+  text-align: center;
+  margin-bottom: var(--space-lg);
+  letter-spacing: -0.02em;
+}
+
+.results-container.victory .results-title {
+  background: linear-gradient(135deg, #34d399, #6ee7b7);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.results-container.defeat .results-title {
+  background: linear-gradient(135deg, #ef4444, #f87171);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.podium-section {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  gap: var(--space-lg);
+  height: 240px;
+  margin-bottom: var(--space-lg);
+}
+
+.podium-position {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  flex: 1;
+  max-width: 140px;
+  padding: var(--space-md);
+  background: var(--color-bg-card);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  text-align: center;
+}
+
+.podium-position.place-1 {
+  order: 2;
+  height: 100%;
+  border-color: #fbbf24;
+  background: rgba(251, 191, 36, 0.1);
+}
+
+.podium-position.place-2 {
+  order: 1;
+  height: 75%;
+  border-color: #38bdf8;
+  background: rgba(56, 189, 248, 0.1);
+}
+
+.podium-position.place-3 {
+  order: 3;
+  height: 50%;
+  border-color: #f97316;
+  background: rgba(249, 115, 22, 0.1);
+}
+
+.medal {
+  font-size: 2.5rem;
+  margin-bottom: var(--space-sm);
+}
+
+.player-name {
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--color-text);
+  margin-bottom: var(--space-xs);
+}
+
+.player-character {
+  font-size: 0.85rem;
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-xs);
+}
+
+.player-kills {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-danger-light);
+}
+
+.results-table-section {
+  width: 100%;
+}
+
+.results-table-section h2 {
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin-bottom: var(--space-lg);
+  color: var(--color-text);
+}
+
+.results-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.results-table thead {
+  background: var(--color-surface);
+}
+
+.results-table th {
+  padding: var(--space-md);
+  text-align: left;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.results-table td {
+  padding: var(--space-md);
+  border-bottom: 1px solid rgba(58, 61, 106, 0.3);
+  color: var(--color-text);
+}
+
+.results-table tbody tr:hover {
+  background: rgba(99, 102, 241, 0.05);
+}
+
+.results-table .placement {
+  font-weight: 700;
+  color: var(--color-primary);
+}
+
+.results-table .player-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.results-table .username {
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.results-table .character {
+  font-size: 0.85rem;
+  color: var(--color-text-secondary);
+}
+
+.results-table .kd {
+  font-weight: 600;
+}
+
+.results-table .kills {
+  color: var(--color-danger-light);
+}
+
+.results-table .separator {
+  color: var(--color-text-muted);
+  margin: 0 4px;
+}
+
+.results-table .deaths {
+  color: var(--color-text-secondary);
+}
+
+.results-table .damage {
+  font-weight: 600;
+  color: var(--color-warning);
+}
+
+.results-table .items {
+  color: var(--color-success);
+}
+
+.results-table .rounds {
+  font-weight: 600;
+  color: var(--color-primary-light);
+}
+
+.results-table .xp {
+  font-weight: 700;
+  color: var(--color-success);
+}
+
+.results-buttons {
+  display: flex;
+  gap: var(--space-md);
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.btn-secondary {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+}
+
+.btn-secondary:hover {
+  background: var(--color-bg-card);
+  border-color: var(--color-primary);
+  color: var(--color-primary-light);
+}
+
+.loading, .error {
+  text-align: center;
+  font-size: 1.2rem;
+  color: var(--color-text-secondary);
+}
+
+.level-up-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  width: 100%;
+  margin-bottom: var(--space-lg);
+}
+
+.level-up-banner {
+  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+  border: 2px solid #fbbf24;
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+  text-align: center;
+  animation: levelUpPulse 0.8s ease-out forwards;
+  box-shadow: 0 0 30px rgba(251, 191, 36, 0.5);
+}
+
+.level-up-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-md);
+}
+
+.level-emoji {
+  font-size: 2rem;
+  animation: levelUpSpin 0.6s ease-out;
+}
+
+.level-text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.level-up-player {
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: #1f2937;
+}
+
+.level-transition {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+@keyframes levelUpPulse {
+  0% {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes levelUpSpin {
+  0% {
+    transform: rotateZ(0deg) scale(0);
+  }
+  50% {
+    transform: rotateZ(-10deg);
+  }
+  100% {
+    transform: rotateZ(0deg) scale(1);
+  }
+}

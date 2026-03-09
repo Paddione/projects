@@ -31,24 +31,32 @@ export default function Game() {
     const rightStickRef = useRef({ active: false, startX: 0, startY: 0, dx: 0, dy: 0, touchId: -1, firing: false });
     const sprintActiveRef = useRef(false);
     const meleeActiveRef = useRef(false);
+    const pickupActiveRef = useRef(false);
     // Derived joystick puck offsets for React render (clamped to 40px radius)
     const [leftPuck, setLeftPuck] = useState({ x: 0, y: 0 });
     const [rightPuck, setRightPuck] = useState({ x: 0, y: 0 });
     const [sprintOn, setSprintOn] = useState(false);
     const [meleeOn, setMeleeOn] = useState(false);
+    const [pickupOn, setPickupOn] = useState(false);
 
     // Track animated sprites for reuse (avoid recreating every frame)
     const playerSpritesRef = useRef<Map<string, AnimatedSprite | Sprite>>(new Map());
     const itemSpritesRef = useRef<Map<string, AnimatedSprite | Sprite>>(new Map());
     const footstepTimerRef = useRef(0);
+    const explosionsRef = useRef<Array<{ x: number; y: number; radius: number; createdAt: number }>>(
+        []
+    );
 
     const [assetsLoaded, setAssetsLoaded] = useState(false);
+    const [isMuted, setIsMuted] = useState(SoundService.isMuted);
+    const lastZoneTickRef = useRef(0);
 
     const {
-        playerId, hp, hasArmor, kills, deaths,
+        playerId, hp, hasArmor, kills, deaths, weaponType,
         killfeed, announcement, currentRound,
-        isSpectating,
+        isSpectating, spectatedPlayerId,
         setPlayerState, addKillfeed, setAnnouncement, setRound, setRoundScores,
+        setSpectating, setSpectatedPlayer,
         endMatch,
     } = useGameStore();
 
@@ -243,6 +251,7 @@ export default function Game() {
             const shooting = isTouchDevice ? (rightStickRef.current.active) : mouse.down;
             const melee = isTouchDevice ? meleeActiveRef.current : (mouse.rightDown || keys.has('e'));
             const sprint = isTouchDevice ? sprintActiveRef.current : keys.has('shift');
+            const pickup = keys.has('f') || (isTouchDevice && pickupActiveRef.current);
 
             socket.emit('player-input', {
                 matchId,
@@ -252,7 +261,7 @@ export default function Game() {
                     shooting,
                     melee,
                     sprint,
-                    pickup: keys.has('f'),
+                    pickup,
                     timestamp: Date.now(),
                 },
             });
@@ -269,9 +278,12 @@ export default function Game() {
             const me = state.players?.find((p: any) => p.id === playerId);
             if (!me) return;
 
-            // Camera follows player
-            const cameraX = -me.x + window.innerWidth / 2;
-            const cameraY = -me.y + window.innerHeight / 2;
+            // Camera follows player or spectated player
+            const camTarget = isSpectating && spectatedPlayerId
+                ? state.players?.find((p: any) => p.id === spectatedPlayerId) || me
+                : me;
+            const cameraX = -camTarget.x + window.innerWidth / 2;
+            const cameraY = -camTarget.y + window.innerHeight / 2;
             worldContainer.position.set(cameraX, cameraY);
 
             // ---- MAP LAYER ----
@@ -297,6 +309,21 @@ export default function Game() {
 
             // ---- FOOTSTEP AUDIO ----
             handleFootstepAudio(me);
+
+            // ---- ZONE TICK AUDIO ----
+            // Play zone tick sound when player is outside safe zone (throttled to 1/sec)
+            if (state.zone?.isActive && me.isAlive) {
+                const dx = me.x - state.zone.centerX;
+                const dy = me.y - state.zone.centerY;
+                const distToCenter = Math.sqrt(dx * dx + dy * dy);
+                if (distToCenter > state.zone.currentRadius) {
+                    const now = Date.now();
+                    if (now - lastZoneTickRef.current >= 1000) {
+                        SoundService.playSFX('zone_tick', { volume: 0.4 });
+                        lastZoneTickRef.current = now;
+                    }
+                }
+            }
         });
 
         // ====================================================================
@@ -574,7 +601,20 @@ export default function Game() {
                     isAlive: me.isAlive,
                     kills: me.kills,
                     deaths: me.deaths,
+                    weaponType: me.weapon?.type || 'pistol',
                 });
+
+                // Auto-spectate first alive player when you die
+                if (me.isAlive === false && !isSpectating) {
+                    const alivePlayers = state.players?.filter((p: any) => p.isAlive && p.id !== playerId);
+                    if (alivePlayers?.length > 0) {
+                        const firstAlive = alivePlayers[0];
+                        socket.emit('spectate-player', {
+                            matchId: state.matchId,
+                            targetPlayerId: firstAlive.id,
+                        });
+                    }
+                }
             }
         });
 
@@ -595,10 +635,20 @@ export default function Game() {
             if (data.weapon === 'melee') {
                 SoundService.playSFX('melee_swing');
             }
+
+            // Haptic feedback on kill (pattern)
+            if (navigator.vibrate) {
+                navigator.vibrate([100, 50, 100]);
+            }
         });
 
         socket.on('player-hit', (_data: any) => {
             SoundService.playSFX('player_hit');
+            SoundService.playSFX('bullet_impact', { volume: 0.5 });
+            // Haptic feedback on hit (short pulse)
+            if (navigator.vibrate) {
+                navigator.vibrate(50);
+            }
         });
 
         socket.on('item-spawned', (data: any) => {
@@ -635,6 +685,16 @@ export default function Game() {
             SoundService.playSFX('zone_warning');
         });
 
+        socket.on('explosion', (data: any) => {
+            explosionsRef.current.push({ ...data, createdAt: Date.now() });
+            SoundService.playSFX('grenade_explode', { volume: 0.7 });
+        });
+
+        socket.on('spectate-start', (data: any) => {
+            setSpectating(true);
+            setSpectatedPlayer(data.targetPlayerId);
+        });
+
         socket.on('match-end', (data: any) => {
             const winner = data.results?.find((r: any) => r.placement === 1);
             const isWinner = winner?.playerId === playerId;
@@ -646,9 +706,18 @@ export default function Game() {
                 SoundService.playSting(isWinner ? 'victory' : 'defeat');
             }, 600);
 
+            // Haptic feedback on match end (longer pulse for defeat)
+            if (navigator.vibrate && !isWinner) {
+                navigator.vibrate(300);
+            }
+
             setTimeout(() => {
                 endMatch();
-                navigate('/');
+                if (data.dbMatchId) {
+                    navigate(`/results/${data.dbMatchId}`);
+                } else {
+                    navigate('/');
+                }
             }, 8000);
         });
 
@@ -661,6 +730,8 @@ export default function Game() {
             socket.off('round-end');
             socket.off('round-start');
             socket.off('zone-shrink');
+            socket.off('explosion');
+            socket.off('spectate-start');
             socket.off('match-end');
         };
     }, [playerId]);
@@ -726,6 +797,25 @@ export default function Game() {
                     Round {currentRound} • K: {kills} D: {deaths}
                 </div>
 
+                {/* Weapon Label (touch devices only) */}
+                {isTouchDevice && (
+                    <div style={{
+                        position: 'absolute',
+                        bottom: '20px',
+                        left: '50%',
+                        transform: 'translateX(-50%)',
+                        padding: '6px 12px',
+                        background: 'rgba(10, 11, 26, 0.85)',
+                        border: '1px solid var(--color-border)',
+                        borderRadius: 'var(--radius-full)',
+                        color: 'var(--color-text-secondary)',
+                        fontWeight: 600,
+                        fontSize: '12px',
+                    }}>
+                        🔫 {weaponType === 'pistol' ? 'Pistol' : weaponType === 'machine_gun' ? 'Machine Gun' : weaponType === 'grenade_launcher' ? 'Grenade Launcher' : 'Unknown'}
+                    </div>
+                )}
+
                 {/* Announcement */}
                 {announcement && (
                     <div className="hud-announcement">{announcement}</div>
@@ -745,9 +835,41 @@ export default function Game() {
                         color: 'var(--color-text-secondary)',
                         fontWeight: 600,
                     }}>
-                        👀 Spectating
+                        👀 Spectating {spectatedPlayerId && gameStateRef.current?.players?.find((p: any) => p.id === spectatedPlayerId)?.username}
                     </div>
                 )}
+
+                {/* Mute Button */}
+                <button
+                    onClick={() => {
+                        const newMuted = SoundService.toggleMute();
+                        setIsMuted(newMuted);
+                    }}
+                    style={{
+                        position: 'absolute',
+                        top: '12px',
+                        right: '12px',
+                        padding: '6px 12px',
+                        background: 'rgba(10, 11, 26, 0.85)',
+                        border: '1px solid var(--color-border)',
+                        borderRadius: 'var(--radius-md)',
+                        color: 'var(--color-text-secondary)',
+                        cursor: 'pointer',
+                        fontSize: '14px',
+                        fontWeight: 600,
+                        transition: 'all 0.2s',
+                    }}
+                    onMouseEnter={(e) => {
+                        e.currentTarget.style.background = 'rgba(10, 11, 26, 0.95)';
+                        e.currentTarget.style.color = 'var(--color-text)';
+                    }}
+                    onMouseLeave={(e) => {
+                        e.currentTarget.style.background = 'rgba(10, 11, 26, 0.85)';
+                        e.currentTarget.style.color = 'var(--color-text-secondary)';
+                    }}
+                >
+                    {isMuted ? '🔇' : '🔊'}
+                </button>
             </div>
 
             {/* Virtual Joystick Controls — touch devices only */}
@@ -764,7 +886,7 @@ export default function Game() {
                         />
                     </div>
 
-                    {/* Action buttons — melee + sprint (between the two sticks) */}
+                    {/* Action buttons — melee + pickup + sprint (between the two sticks) */}
                     <div className="touch-action-buttons">
                         <button
                             className={`touch-btn ${meleeOn ? 'active' : ''}`}
@@ -780,6 +902,21 @@ export default function Game() {
                             }}
                         >
                             🗡️
+                        </button>
+                        <button
+                            className={`touch-btn ${pickupOn ? 'active' : ''}`}
+                            onTouchStart={(e) => {
+                                e.preventDefault();
+                                pickupActiveRef.current = true;
+                                setPickupOn(true);
+                            }}
+                            onTouchEnd={(e) => {
+                                e.preventDefault();
+                                pickupActiveRef.current = false;
+                                setPickupOn(false);
+                            }}
+                        >
+                            📦
                         </button>
                         <button
                             className={`touch-btn ${sprintOn ? 'active' : ''}`}

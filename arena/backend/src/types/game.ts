@@ -23,6 +23,8 @@ export interface PlayerState {
     kills: number;
     deaths: number;
     roundsWon: number;
+    damageDealt: number;        // accumulated across full match
+    itemsCollected: number;     // accumulated across full match
     lastMoveDirection: { dx: number; dy: number };
     weapon: WeaponState;
     lastShotTime: number;
@@ -51,11 +53,12 @@ export interface Projectile {
     velocityY: number;
     damage: number;
     createdAt: number;
+    explosionRadius?: number;
 }
 
 // -- Items --
 
-export type ItemType = 'health' | 'armor' | 'machine_gun';
+export type ItemType = 'health' | 'armor' | 'machine_gun' | 'grenade_launcher';
 
 export interface MapItem {
     id: string;
@@ -219,11 +222,12 @@ export interface ServerToClientEvents {
     'item-spawned': (data: { item: MapItem; announcement: string }) => void;
     'item-collected': (data: { itemId: string; playerId: string }) => void;
     'round-end': (data: { roundNumber: number; winnerId: string; scores: Record<string, number> }) => void;
-    'match-end': (data: { winnerId: string; results: MatchResult[] }) => void;
+    'match-end': (data: { winnerId: string; results: MatchResult[]; dbMatchId?: number }) => void;
     'zone-shrink': (data: { zone: ShrinkingZone }) => void;
     'cover-destroyed': (data: { coverId: string }) => void;
     'start-game-error': (data: { message: string }) => void;
     'spectate-start': (data: { targetPlayerId: string }) => void;
+    'explosion': (data: { x: number; y: number; radius: number }) => void;
 }
 
 export interface ClientToServerEvents {
@@ -270,6 +274,8 @@ export interface MatchResult {
     roundsWon: number;
     placement: number;
     experienceGained: number;
+    levelBefore?: number;
+    levelAfter?: number;
 }
 
 // -- Damage Constants --
@@ -278,6 +284,7 @@ export const DAMAGE = {
     GUN: 1,
     MELEE: 99,          // instant kill regardless of armor
     ZONE: 1,
+    GRENADE: 3,
 } as const;
 
 export const HP = {

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../services/apiService';
 import { useGameStore } from '../stores/gameStore';
@@ -12,6 +12,8 @@ export default function Home() {
     const [joinCode, setJoinCode] = useState('');
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const [lobbies, setLobbies] = useState<any[]>([]);
+    const [loadingLobbies, setLoadingLobbies] = useState(false);
 
     const handleCreate = async () => {
         setIsLoading(true);
@@ -34,6 +36,26 @@ export default function Home() {
         }
         navigate(`/lobby/${joinCode.trim().toUpperCase()}`);
     };
+
+    // Fetch active lobbies on mount and every 10 seconds
+    useEffect(() => {
+        const fetchLobbies = async () => {
+            try {
+                setLoadingLobbies(true);
+                const data = await api.getActiveLobbies();
+                setLobbies(Array.isArray(data) ? data : (data as any).lobbies || []);
+            } catch (err) {
+                console.error('Failed to fetch lobbies:', err);
+                setLobbies([]);
+            } finally {
+                setLoadingLobbies(false);
+            }
+        };
+
+        fetchLobbies();
+        const interval = setInterval(fetchLobbies, 10000);
+        return () => clearInterval(interval);
+    }, []);
 
     return (
         <div className="page">
@@ -93,6 +115,91 @@ export default function Home() {
                     >
                         Join
                     </button>
+                </div>
+
+                {/* Open Lobbies Section */}
+                <div style={{
+                    marginTop: 'var(--space-lg)',
+                    paddingTop: 'var(--space-md)',
+                    borderTop: '1px solid var(--color-border)',
+                }}>
+                    <h2 style={{
+                        fontSize: '0.9rem',
+                        fontWeight: 600,
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.05em',
+                        color: 'var(--color-text-secondary)',
+                        marginBottom: 'var(--space-md)',
+                    }}>
+                        Open Lobbies
+                    </h2>
+
+                    {loadingLobbies && (
+                        <p style={{ color: 'var(--color-text-muted)', fontSize: '0.9rem', textAlign: 'center' }}>
+                            Loading lobbies...
+                        </p>
+                    )}
+
+                    {!loadingLobbies && lobbies.length === 0 && (
+                        <p style={{ color: 'var(--color-text-muted)', fontSize: '0.9rem', textAlign: 'center' }}>
+                            No open lobbies
+                        </p>
+                    )}
+
+                    {!loadingLobbies && lobbies.length > 0 && (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)' }}>
+                            {lobbies
+                                .filter((lobby: any) => {
+                                    const playerCount = Array.isArray(lobby.players) ? lobby.players.length : 0;
+                                    return playerCount < (lobby.maxPlayers || 4);
+                                })
+                                .map((lobby: any) => {
+                                    const playerCount = Array.isArray(lobby.players) ? lobby.players.length : 0;
+                                    const maxPlayers = lobby.maxPlayers || 4;
+                                    return (
+                                        <div
+                                            key={lobby.code}
+                                            style={{
+                                                padding: 'var(--space-sm) var(--space-md)',
+                                                background: 'rgba(255, 255, 255, 0.05)',
+                                                border: '1px solid var(--color-border)',
+                                                borderRadius: 'var(--radius-md)',
+                                                display: 'flex',
+                                                justifyContent: 'space-between',
+                                                alignItems: 'center',
+                                                gap: 'var(--space-md)',
+                                            }}
+                                        >
+                                            <div style={{ flex: 1 }}>
+                                                <div style={{
+                                                    fontFamily: 'var(--font-mono)',
+                                                    fontWeight: 600,
+                                                    letterSpacing: '0.1em',
+                                                    marginBottom: '4px',
+                                                }}>
+                                                    {lobby.code}
+                                                </div>
+                                                <div style={{
+                                                    fontSize: '0.85rem',
+                                                    color: 'var(--color-text-secondary)',
+                                                }}>
+                                                    {playerCount}/{maxPlayers} players • Best of {lobby.bestOf || 1}
+                                                </div>
+                                            </div>
+                                            <button
+                                                className="btn btn-secondary btn-sm"
+                                                onClick={() => {
+                                                    setLobby(lobby.code, false);
+                                                    navigate(`/lobby/${lobby.code}`);
+                                                }}
+                                            >
+                                                Join
+                                            </button>
+                                        </div>
+                                    );
+                                })}
+                        </div>
+                    )}
                 </div>
             </div>
         </div>

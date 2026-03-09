@@ -27,6 +27,7 @@ interface GameStore {
     matchId: string | null;
     isInMatch: boolean;
     isSpectating: boolean;
+    spectatedPlayerId: string | null;
     currentRound: number;
     roundScores: Record<string, number>;
 
@@ -38,6 +39,7 @@ interface GameStore {
     isAlive: boolean;
     kills: number;
     deaths: number;
+    weaponType: string;
 
     // UI state
     killfeed: Array<{ killer: string; victim: string; weapon: string; timestamp: number }>;
@@ -50,8 +52,9 @@ interface GameStore {
     setSettings: (settings: Partial<GameStore['settings']>) => void;
     setMatch: (matchId: string) => void;
     endMatch: () => void;
-    setPlayerState: (state: { hp?: number; hasArmor?: boolean; isAlive?: boolean; kills?: number; deaths?: number }) => void;
+    setPlayerState: (state: { hp?: number; hasArmor?: boolean; isAlive?: boolean; kills?: number; deaths?: number; weaponType?: string }) => void;
     setSpectating: (isSpectating: boolean) => void;
+    setSpectatedPlayer: (playerId: string | null) => void;
     addKillfeed: (entry: { killer: string; victim: string; weapon: string }) => void;
     setAnnouncement: (text: string | null) => void;
     setRound: (round: number) => void;
@@ -77,6 +80,7 @@ export const useGameStore = create<GameStore>((set) => ({
     matchId: null,
     isInMatch: false,
     isSpectating: false,
+    spectatedPlayerId: null,
     currentRound: 1,
     roundScores: {},
 
@@ -87,6 +91,7 @@ export const useGameStore = create<GameStore>((set) => ({
     isAlive: true,
     kills: 0,
     deaths: 0,
+    weaponType: 'pistol',
 
     killfeed: [],
     announcement: null,
@@ -109,8 +114,10 @@ export const useGameStore = create<GameStore>((set) => ({
         isAlive: state.isAlive ?? prev.isAlive,
         kills: state.kills ?? prev.kills,
         deaths: state.deaths ?? prev.deaths,
+        weaponType: state.weaponType ?? prev.weaponType,
     })),
     setSpectating: (isSpectating) => set({ isSpectating }),
+    setSpectatedPlayer: (playerId) => set({ spectatedPlayerId: playerId }),
     addKillfeed: (entry) => set((state) => ({
         killfeed: [{ ...entry, timestamp: Date.now() }, ...state.killfeed].slice(0, 8),
     })),

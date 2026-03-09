@@ -22,7 +22,7 @@ const SFX_IDS = [
     'gunshot', 'melee_swing', 'bullet_impact', 'player_hit', 'player_death',
     'health_pickup', 'armor_pickup', 'round_start', 'round_end',
     'match_victory', 'match_defeat', 'zone_warning', 'zone_tick',
-    'footstep_walk', 'footstep_sprint',
+    'footstep_walk', 'footstep_sprint', 'grenade_launch', 'grenade_explode',
 ] as const;
 
 // All music track IDs

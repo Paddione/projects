@@ -33,6 +33,9 @@ export class SocketService {
     private gameService: GameService;
     private connectedPlayers: Map<string, ConnectedPlayer> = new Map(); // socketId -> player info
     private playerToSocket: Map<string, string> = new Map(); // playerId -> socketId
+    private inputCounts: Map<string, { count: number; windowStart: number }> = new Map(); // socketId -> input rate tracker
+    private readonly INPUT_LIMIT = 40; // max inputs per second
+    private readonly RATE_WINDOW_MS = 1000;
 
     constructor(httpServer: HTTPServer) {
         this.io = new SocketIOServer(httpServer, {
@@ -101,6 +104,7 @@ export class SocketService {
             onMatchEnd: (matchId: string, data: { winnerId: string; results: MatchResult[] }) => this.handleMatchEnd(matchId, data),
             onZoneShrink: (matchId: string, data: unknown) => this.broadcastToMatch(matchId, 'zone-shrink', data),
             onCoverDestroyed: (matchId: string, data: unknown) => this.broadcastToMatch(matchId, 'cover-destroyed', data),
+            onExplosion: (matchId: string, data: unknown) => this.broadcastToMatch(matchId, 'explosion', data),
         });
 
         this.setupEventHandlers();
@@ -266,6 +270,26 @@ export class SocketService {
                 const playerInfo = this.connectedPlayers.get(socket.id);
                 if (!playerInfo) return;
 
+                // Rate limiting: max 40 inputs/sec per socket
+                const now = Date.now();
+                let rateLimiter = this.inputCounts.get(socket.id);
+                if (!rateLimiter) {
+                    rateLimiter = { count: 0, windowStart: now };
+                    this.inputCounts.set(socket.id, rateLimiter);
+                }
+
+                // Check if window has expired
+                if (now - rateLimiter.windowStart > this.RATE_WINDOW_MS) {
+                    rateLimiter.count = 0;
+                    rateLimiter.windowStart = now;
+                }
+
+                rateLimiter.count++;
+                if (rateLimiter.count > this.INPUT_LIMIT) {
+                    console.warn(`[Anti-Cheat] Rate limit exceeded for socket ${socket.id} (${rateLimiter.count}/${this.INPUT_LIMIT} inputs)`);
+                    return; // Drop the input
+                }
+
                 this.gameService.processInput(data.matchId, playerInfo.playerId, data.input);
             });
 
@@ -313,6 +337,7 @@ export class SocketService {
 
                 this.connectedPlayers.delete(socket.id);
                 this.playerToSocket.delete(playerInfo.playerId);
+                this.inputCounts.delete(socket.id);
             });
         });
     }
@@ -334,7 +359,7 @@ export class SocketService {
         this.io.to(`match:${matchId}`).emit(event, data);
     }
 
-    private handleMatchEnd(matchId: string, data: { winnerId: string; results: MatchResult[] }): void {
+    private handleMatchEnd(matchId: string, data: { winnerId: string; results: MatchResult[]; dbMatchId?: number }): void {
         this.io.to(`match:${matchId}`).emit('match-end', data);
 
         // Clean up after a delay

@@ -19,7 +19,7 @@ import type {
 } from '../types/game.js';
 import { GAME, HP, DAMAGE, NPC_CONST } from '../types/game.js';
 import type { WeaponState } from '../types/weapon.js';
-import { WEAPON_STATS, MACHINE_GUN_PICKUP } from '../types/weapon.js';
+import { WEAPON_STATS, MACHINE_GUN_PICKUP, GRENADE_LAUNCHER_PICKUP } from '../types/weapon.js';
 import { PlayerService } from './PlayerService.js';
 import { DatabaseService } from './DatabaseService.js';
 
@@ -37,9 +37,10 @@ export class GameService {
     private onItemSpawned?: (matchId: string, data: { item: MapItem; announcement: string }) => void;
     private onItemCollected?: (matchId: string, data: { itemId: string; playerId: string }) => void;
     private onRoundEnd?: (matchId: string, data: { roundNumber: number; winnerId: string; scores: Record<string, number> }) => void;
-    private onMatchEnd?: (matchId: string, data: { winnerId: string; results: MatchResult[] }) => void;
+    private onMatchEnd?: (matchId: string, data: { winnerId: string; results: MatchResult[]; dbMatchId?: number }) => void;
     private onZoneShrink?: (matchId: string, data: { zone: ShrinkingZone }) => void;
     private onCoverDestroyed?: (matchId: string, data: { coverId: string }) => void;
+    private onExplosion?: (matchId: string, data: { x: number; y: number; radius: number }) => void;
 
     constructor(tickRate = 20) {
         this.playerService = new PlayerService();
@@ -57,9 +58,10 @@ export class GameService {
         onItemSpawned: (matchId: string, data: { item: MapItem; announcement: string }) => void;
         onItemCollected: (matchId: string, data: { itemId: string; playerId: string }) => void;
         onRoundEnd: (matchId: string, data: { roundNumber: number; winnerId: string; scores: Record<string, number> }) => void;
-        onMatchEnd: (matchId: string, data: { winnerId: string; results: MatchResult[] }) => void;
+        onMatchEnd: (matchId: string, data: { winnerId: string; results: MatchResult[]; dbMatchId?: number }) => void;
         onZoneShrink: (matchId: string, data: { zone: ShrinkingZone }) => void;
         onCoverDestroyed: (matchId: string, data: { coverId: string }) => void;
+        onExplosion: (matchId: string, data: { x: number; y: number; radius: number }) => void;
     }): void {
         this.onStateUpdate = callbacks.onStateUpdate;
         this.onPlayerHit = callbacks.onPlayerHit;
@@ -70,6 +72,7 @@ export class GameService {
         this.onMatchEnd = callbacks.onMatchEnd;
         this.onZoneShrink = callbacks.onZoneShrink;
         this.onCoverDestroyed = callbacks.onCoverDestroyed;
+        this.onExplosion = callbacks.onExplosion;
     }
 
     /**
@@ -121,6 +124,9 @@ export class GameService {
 
         this.activeGames.set(matchId, gameState);
 
+        // Spawn initial weapons at map center
+        this.spawnInitialWeapons(gameState);
+
         // Start the game loop
         const interval = setInterval(() => this.tick(matchId), 1000 / this.tickRate);
         this.gameIntervals.set(matchId, interval);
@@ -139,10 +145,27 @@ export class GameService {
         const player = game.players.get(playerId);
         if (!player || !player.isAlive) return;
 
+        // ====== ANTI-CHEAT: Timestamp validation ======
+        const now = Date.now();
+        if (input.timestamp > now + 500) {
+            console.warn(`[Anti-Cheat] Future timestamp from player ${playerId}: ${input.timestamp} > ${now}`);
+            return; // Reject input with future timestamp
+        }
+
         // Movement
         const speed = input.sprint ? GAME.PLAYER_SPEED * GAME.SPRINT_MULTIPLIER : GAME.PLAYER_SPEED;
-        const dx = input.movement.x * speed;
-        const dy = input.movement.y * speed;
+        let dx = input.movement.x * speed;
+        let dy = input.movement.y * speed;
+
+        // ====== ANTI-CHEAT: Movement clamping ======
+        const maxDelta = (GAME.PLAYER_SPEED * GAME.SPRINT_MULTIPLIER / this.tickRate) * 2;
+        const movementMagnitude = Math.sqrt(dx * dx + dy * dy);
+        if (movementMagnitude > maxDelta) {
+            console.warn(`[Anti-Cheat] Excessive movement speed from player ${playerId}: ${movementMagnitude.toFixed(2)} > ${maxDelta.toFixed(2)}`);
+            const scale = maxDelta / movementMagnitude;
+            dx *= scale;
+            dy *= scale;
+        }
 
         const newX = player.x + dx;
         const newY = player.y + dy;
@@ -157,13 +180,20 @@ export class GameService {
         // Aim
         player.rotation = input.aimAngle;
 
-        // Shooting (weapon-aware)
-        if (input.shooting && !input.sprint && this.playerService.canShoot(player)) {
-            if (this.playerService.consumeAmmo(player)) {
-                player.lastShotTime = Date.now();
+        // Shooting (weapon-aware) — anti-cheat: use latency-tolerant cooldown check (0.8x)
+        if (input.shooting && !input.sprint) {
+            // Check shooting requirements: not reloading, has ammo, cooldown passed
+            if (!player.weapon.isReloading && player.weapon.clipAmmo > 0) {
                 const stats = WEAPON_STATS[player.weapon.type];
-                const spread = (Math.random() - 0.5) * 2 * stats.spreadRad;
-                this.createProjectile(game, player, input.aimAngle + spread);
+                const timeSinceShot = now - player.lastShotTime;
+                const effectiveCooldown = stats.cooldownMs * 0.8; // More latency-tolerant
+                if (timeSinceShot >= effectiveCooldown) {
+                    if (this.playerService.consumeAmmo(player)) {
+                        player.lastShotTime = now;
+                        const spread = (Math.random() - 0.5) * 2 * stats.spreadRad;
+                        this.createProjectile(game, player, input.aimAngle + spread);
+                    }
+                }
             }
         }
 
@@ -262,17 +292,67 @@ export class GameService {
 
     private createProjectile(game: GameState, player: PlayerState, angle?: number): void {
         const fireAngle = angle ?? player.rotation;
+        const isGrenade = player.weapon.type === 'grenade_launcher';
+        const speed = isGrenade ? GAME.PROJECTILE_SPEED * 0.6 : GAME.PROJECTILE_SPEED;
+
         const projectile: Projectile = {
             id: uuidv4(),
             ownerId: player.id,
             x: player.x,
             y: player.y,
-            velocityX: Math.cos(fireAngle) * GAME.PROJECTILE_SPEED,
-            velocityY: Math.sin(fireAngle) * GAME.PROJECTILE_SPEED,
-            damage: DAMAGE.GUN,
+            velocityX: Math.cos(fireAngle) * speed,
+            velocityY: Math.sin(fireAngle) * speed,
+            damage: isGrenade ? DAMAGE.GRENADE : DAMAGE.GUN,
             createdAt: Date.now(),
+            explosionRadius: isGrenade ? 64 : undefined,
         };
         game.projectiles.push(projectile);
+    }
+
+    private triggerExplosion(game: GameState, projectile: Projectile): void {
+        const radius = projectile.explosionRadius || 64;
+
+        // Damage all players in radius
+        for (const [targetId, target] of game.players) {
+            if (!target.isAlive) continue;
+            const dist = Math.hypot(target.x - projectile.x, target.y - projectile.y);
+            if (dist <= radius) {
+                const result = this.playerService.applyDamage(target, projectile.damage, projectile.ownerId);
+                const attacker = game.players.get(projectile.ownerId);
+                if (attacker) attacker.damageDealt += projectile.damage;
+
+                this.onPlayerHit?.(game.matchId, {
+                    targetId,
+                    attackerId: projectile.ownerId,
+                    damage: projectile.damage,
+                    remainingHp: result.remainingHp,
+                    hasArmor: result.hasArmor,
+                });
+
+                if (result.died) {
+                    if (attacker) attacker.kills++;
+                    this.playerService.makeSpectator(target);
+                    game.currentRound.alivePlayers = game.currentRound.alivePlayers.filter((id) => id !== targetId);
+
+                    this.onPlayerKilled?.(game.matchId, {
+                        victimId: targetId,
+                        killerId: projectile.ownerId,
+                        weapon: 'gun',
+                    });
+                }
+            }
+        }
+
+        // Damage all NPCs in radius
+        for (const npc of game.npcs) {
+            const dist = Math.hypot(npc.x - projectile.x, npc.y - projectile.y);
+            if (dist <= radius) {
+                npc.hp -= projectile.damage;
+            }
+        }
+
+        // Emit explosion event
+        this.onExplosion?.(game.matchId, { x: projectile.x, y: projectile.y, radius });
     }
 
     private updateProjectiles(game: GameState): void {
@@ -286,14 +366,21 @@ export class GameService {
             const mapWidth = game.map.width * GAME.TILE_SIZE;
             const mapHeight = game.map.height * GAME.TILE_SIZE;
             if (projectile.x < 0 || projectile.x > mapWidth || projectile.y < 0 || projectile.y > mapHeight) {
+                if (projectile.explosionRadius) {
+                    this.triggerExplosion(game, projectile);
+                }
                 toRemove.push(projectile.id);
                 continue;
             }
 
             // Cover collision
+            let hitCover = false;
             for (const cover of game.map.coverObjects) {
                 if (!cover.blocksProjectiles) continue;
                 if (this.pointInRect(projectile.x, projectile.y, cover)) {
+                    if (projectile.explosionRadius) {
+                        this.triggerExplosion(game, projectile);
+                    }
                     toRemove.push(projectile.id);
                     if (cover.hp > 0) {
                         cover.hp--;
@@ -303,18 +390,59 @@ export class GameService {
                             this.onCoverDestroyed?.(game.matchId, { coverId: cover.id });
                         }
                     }
+                    hitCover = true;
                     break;
                 }
             }
+            if (hitCover) continue;
 
-            // Player hit detection
+            // For grenades, check radius for any hit
+            if (projectile.explosionRadius) {
+                let hasHit = false;
+
+                // Check player hits
+                for (const [targetId, target] of game.players) {
+                    if (targetId === projectile.ownerId || !target.isAlive) continue;
+                    const dist = Math.hypot(target.x - projectile.x, target.y - projectile.y);
+                    if (dist < projectile.explosionRadius) {
+                        this.triggerExplosion(game, projectile);
+                        toRemove.push(projectile.id);
+                        hasHit = true;
+                        break;
+                    }
+                }
+
+                // Check NPC hits
+                if (!hasHit) {
+                    for (const npc of game.npcs) {
+                        const dist = Math.hypot(npc.x - projectile.x, npc.y - projectile.y);
+                        if (dist < projectile.explosionRadius) {
+                            this.triggerExplosion(game, projectile);
+                            toRemove.push(projectile.id);
+                            hasHit = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (hasHit) continue;
+            }
+
+            // Player hit detection (non-grenade or grenade direct hit)
             for (const [targetId, target] of game.players) {
                 if (targetId === projectile.ownerId || !target.isAlive) continue;
 
                 const dist = Math.hypot(target.x - projectile.x, target.y - projectile.y);
                 if (dist < GAME.TILE_SIZE / 2) {
+                    const prevHp = target.hp;
+                    const hadArmor = target.hasArmor;
                     const result = this.playerService.applyDamage(target, projectile.damage, projectile.ownerId);
                     toRemove.push(projectile.id);
+
+                    // Calculate actual damage dealt (armor absorbs 0 actual damage)
+                    const actualDmg = (hadArmor && !result.hasArmor ? 1 : 0) + (prevHp - result.remainingHp);
+                    const attacker = game.players.get(projectile.ownerId);
+                    if (attacker) attacker.damageDealt += actualDmg;
 
                     this.onPlayerHit?.(game.matchId, {
                         targetId,
@@ -325,7 +453,6 @@ export class GameService {
                     });
 
                     if (result.died) {
-                        const attacker = game.players.get(projectile.ownerId);
                         if (attacker) attacker.kills++;
                         this.playerService.makeSpectator(target);
                         game.currentRound.alivePlayers = game.currentRound.alivePlayers.filter((id) => id !== targetId);
@@ -388,6 +515,7 @@ export class GameService {
                 const angleDiff = Math.abs(attacker.rotation - angleToTarget);
                 if (angleDiff < Math.PI / 2 || angleDiff > Math.PI * 1.5) {
                     const died = this.playerService.applyMelee(target, attacker.id);
+                    attacker.damageDealt += DAMAGE.MELEE; // Melee is instant kill
 
                     if (died) {
                         attacker.kills++;
@@ -480,6 +608,76 @@ export class GameService {
             item: armorItem,
             announcement: '🛡️ Armor spawned!',
         });
+
+        // ~20% chance to spawn grenade launcher at 3rd spawn point
+        if (shuffled.length >= 3 && Math.random() < 0.2) {
+            const grenadeItem: MapItem = {
+                id: uuidv4(),
+                type: 'grenade_launcher',
+                x: shuffled[2].x * GAME.TILE_SIZE + GAME.TILE_SIZE / 2,
+                y: shuffled[2].y * GAME.TILE_SIZE + GAME.TILE_SIZE / 2,
+                isCollected: false,
+                spawnedAt: Date.now(),
+                weaponState: { ...GRENADE_LAUNCHER_PICKUP },
+            };
+            game.items.push(grenadeItem);
+            this.onItemSpawned?.(game.matchId, {
+                item: grenadeItem,
+                announcement: '💥 Grenade launcher spawned!',
+            });
+        }
+    }
+
+    private spawnInitialWeapons(game: GameState): void {
+        // Spawn one machine gun and one grenade launcher at center-most item spawn points
+        const accessiblePoints = game.map.itemSpawnPoints.filter((p) =>
+            this.isValidPosition(p.x * GAME.TILE_SIZE, p.y * GAME.TILE_SIZE, game.map)
+        );
+
+        if (accessiblePoints.length < 2) return;
+
+        const mapCenterX = game.map.width * GAME.TILE_SIZE / 2;
+        const mapCenterY = game.map.height * GAME.TILE_SIZE / 2;
+
+        // Sort by distance to center and take the 2 closest
+        const sorted = accessiblePoints.sort((a, b) => {
+            const distA = Math.hypot(a.x * GAME.TILE_SIZE - mapCenterX, a.y * GAME.TILE_SIZE - mapCenterY);
+            const distB = Math.hypot(b.x * GAME.TILE_SIZE - mapCenterX, b.y * GAME.TILE_SIZE - mapCenterY);
+            return distA - distB;
+        });
+
+        // Machine gun at 1st center point
+        const machineGunItem: MapItem = {
+            id: uuidv4(),
+            type: 'machine_gun',
+            x: sorted[0].x * GAME.TILE_SIZE + GAME.TILE_SIZE / 2,
+            y: sorted[0].y * GAME.TILE_SIZE + GAME.TILE_SIZE / 2,
+            isCollected: false,
+            spawnedAt: Date.now(),
+            weaponState: { ...MACHINE_GUN_PICKUP },
+        };
+
+        // Grenade launcher at 2nd center point
+        const grenadeItem: MapItem = {
+            id: uuidv4(),
+            type: 'grenade_launcher',
+            x: sorted[1].x * GAME.TILE_SIZE + GAME.TILE_SIZE / 2,
+            y: sorted[1].y * GAME.TILE_SIZE + GAME.TILE_SIZE / 2,
+            isCollected: false,
+            spawnedAt: Date.now(),
+            weaponState: { ...GRENADE_LAUNCHER_PICKUP },
+        };
+
+        game.items.push(machineGunItem, grenadeItem);
+
+        this.onItemSpawned?.(game.matchId, {
+            item: machineGunItem,
+            announcement: '🔫 Machine gun spawned!',
+        });
+        this.onItemSpawned?.(game.matchId, {
+            item: grenadeItem,
+            announcement: '💥 Grenade launcher spawned!',
+        });
     }
 
     private processPickup(game: GameState, player: PlayerState): void {
@@ -489,15 +687,16 @@ export class GameService {
             const dist = Math.hypot(item.x - player.x, item.y - player.y);
             if (dist <= GAME.ITEM_PICKUP_RANGE) {
                 // Weapon pickup
-                if (item.type === 'machine_gun' && item.weaponState) {
+                if ((item.type === 'machine_gun' || item.type === 'grenade_launcher') && item.weaponState) {
                     const oldWeapon = this.playerService.pickupWeapon(player, item.weaponState);
                     item.isCollected = true;
+                    player.itemsCollected++;
                     this.onItemCollected?.(game.matchId, { itemId: item.id, playerId: player.id });
                     // If player dropped an old weapon, spawn it
                     if (oldWeapon) {
                         const swapItem: MapItem = {
                             id: uuidv4(),
-                            type: 'machine_gun',
+                            type: oldWeapon.type as ItemType,
                             x: player.x,
                             y: player.y,
                             isCollected: false,
@@ -511,6 +710,7 @@ export class GameService {
 
                 const collected = this.playerService.collectItem(player, item);
                 if (collected) {
+                    player.itemsCollected++;
                     this.onItemCollected?.(game.matchId, {
                         itemId: item.id,
                         playerId: player.id,
@@ -684,9 +884,12 @@ export class GameService {
             type = 'health';
         } else if (roll < 0.8) {
             type = 'armor';
-        } else {
+        } else if (roll < 0.9) {
             type = 'machine_gun';
             weaponState = { ...MACHINE_GUN_PICKUP };
+        } else {
+            type = 'grenade_launcher';
+            weaponState = { ...GRENADE_LAUNCHER_PICKUP };
         }
 
         const item: MapItem = {
@@ -702,7 +905,7 @@ export class GameService {
         game.items.push(item);
         this.onItemSpawned?.(game.matchId, {
             item,
-            announcement: type === 'health' ? '💊 Health pack dropped!' : type === 'armor' ? '🛡️ Armor dropped!' : '🔫 Machine gun dropped!',
+            announcement: type === 'health' ? '💊 Health pack dropped!' : type === 'armor' ? '🛡️ Armor dropped!' : type === 'machine_gun' ? '🔫 Machine gun dropped!' : '💥 Grenade launcher dropped!',
         });
     }
 
@@ -862,28 +1065,39 @@ export class GameService {
 
         playerArray.forEach((player, index) => {
             const xpGained = this.calculateXP(player, index + 1, game.players.size);
+            const levelBefore = player.characterLevel;
+            // Level formula: level = floor(1 + sqrt(totalXp / 50))
+            const totalXp = player.characterLevel > 1
+                ? Math.floor((player.characterLevel - 1) ** 2 * 50)  // reverse formula to get cumulative XP
+                : 0;
+            const newTotalXp = totalXp + xpGained;
+            const levelAfter = Math.floor(1 + Math.sqrt(newTotalXp / 50));
+
             results.push({
                 playerId: player.id,
                 username: player.username,
                 character: player.character,
                 kills: player.kills,
                 deaths: player.deaths,
-                damageDealt: player.kills * DAMAGE.GUN, // Simplified
-                itemsCollected: 0, // TODO: track properly
+                damageDealt: player.damageDealt,
+                itemsCollected: player.itemsCollected,
                 roundsWon: player.roundsWon,
                 placement: index + 1,
                 experienceGained: xpGained,
+                levelBefore,
+                levelAfter,
             });
         });
 
-        this.onMatchEnd?.(game.matchId, { winnerId, results });
-
         // Save to database
+        let dbMatchId: number | undefined;
         try {
-            await this.saveMatchResults(game, winnerId, results);
+            dbMatchId = await this.saveMatchResults(game, winnerId, results);
         } catch (error) {
             console.error('Failed to save match results:', error);
         }
+
+        this.onMatchEnd?.(game.matchId, { winnerId, results, dbMatchId });
 
         // Clean up game state after a delay
         setTimeout(() => {
@@ -904,7 +1118,7 @@ export class GameService {
         return xp;
     }
 
-    private async saveMatchResults(game: GameState, winnerId: string, results: MatchResult[]): Promise<void> {
+    private async saveMatchResults(game: GameState, winnerId: string, results: MatchResult[]): Promise<number | undefined> {
         const duration = Math.floor((Date.now() - game.currentRound.startedAt) / 1000);
 
         // Insert match
@@ -916,17 +1130,32 @@ export class GameService {
         );
 
         const dbMatchId = matchResult.rows[0]?.id;
-        if (!dbMatchId) return;
+        if (!dbMatchId) return undefined;
 
         // Insert match results
         for (const result of results) {
             await this.db.query(
-                `INSERT INTO match_results (match_id, player_id, username, character_name, kills, deaths, damage_dealt, items_collected, rounds_won, placement, experience_gained)
-         VALUES ($1, (SELECT id FROM players WHERE auth_user_id = $2), $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
-                [dbMatchId, parseInt(result.playerId), result.username, result.character, result.kills, result.deaths, result.damageDealt, result.itemsCollected, result.roundsWon, result.placement, result.experienceGained]
+                `INSERT INTO match_results (match_id, player_id, username, character_name, kills, deaths, damage_dealt, items_collected, rounds_won, placement, experience_gained, level_before, level_after, level_up_occurred)
+         VALUES ($1, (SELECT id FROM players WHERE auth_user_id = $2), $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)`,
+                [
+                    dbMatchId,
+                    parseInt(result.playerId),
+                    result.username,
+                    result.character,
+                    result.kills,
+                    result.deaths,
+                    result.damageDealt,
+                    result.itemsCollected,
+                    result.roundsWon,
+                    result.placement,
+                    result.experienceGained,
+                    result.levelBefore,
+                    result.levelAfter,
+                    (result.levelAfter ?? 1) > (result.levelBefore ?? 1) ? true : false,
+                ]
             );
 
-            // Update player stats
+            // Update player stats and character level
             await this.db.query(
                 `UPDATE players SET
            total_kills = total_kills + $1,
@@ -934,11 +1163,14 @@ export class GameService {
            games_played = games_played + 1,
            total_wins = total_wins + $3,
            experience = experience + $4,
+           character_level = $6,
            updated_at = CURRENT_TIMESTAMP
          WHERE auth_user_id = $5`,
-                [result.kills, result.deaths, result.placement === 1 ? 1 : 0, result.experienceGained, parseInt(result.playerId)]
+                [result.kills, result.deaths, result.placement === 1 ? 1 : 0, result.experienceGained, parseInt(result.playerId), result.levelAfter]
             );
         }
+
+        return dbMatchId;
     }
 
     // ============================================================================
