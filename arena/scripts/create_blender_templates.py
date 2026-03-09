@@ -95,13 +95,30 @@ def create_materials_library():
     output = nodes.new(type='ShaderNodeOutputMaterial')
     links.new(bsdf.outputs['BSDF'], output.inputs['Surface'])
 
+    # FIX: Create dummy cube and attach all materials to it
+    # This ensures Blender saves the materials (they're now referenced)
+    bpy.ops.mesh.primitive_cube_add(size=1, location=(0, 0, 0))
+    dummy_cube = bpy.context.active_object
+    dummy_cube.name = "MaterialHolder"
+
+    # Assign all materials to the dummy object
+    dummy_cube.data.materials.append(mat_skin)
+    dummy_cube.data.materials.append(mat_metal)
+    dummy_cube.data.materials.append(mat_fabric)
+    dummy_cube.data.materials.append(mat_glow)
+
+    print("✅ Created 4 PBR materials and attached to MaterialHolder object")
+
     # Save materials library
     BLEND_DIR.mkdir(parents=True, exist_ok=True)
     materials_path = BLEND_DIR / "_shared" / "materials.blend"
     materials_path.parent.mkdir(parents=True, exist_ok=True)
 
     bpy.ops.wm.save_as_mainfile(filepath=str(materials_path))
-    print(f"✅ Materials library created: {materials_path}")
+    print(f"✅ Materials library saved: {materials_path}")
+
+    # Verify materials were saved
+    print(f"✅ Materials in file: {len(bpy.data.materials)} (should be 4)")
 
 if __name__ == "__main__":
     create_materials_library()
