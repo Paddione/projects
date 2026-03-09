@@ -4,16 +4,28 @@ import { defineConfig, devices } from '@playwright/test';
  * Arena E2E Test Configuration
  *
  * Strategy:
- * - Playwright spins up the Vite dev server (frontend only).
+ * - Playwright spins up the Vite dev server (frontend only) for local testing.
  * - Individual tests mock the backend API + socket.io at the network layer
  *   using page.route() / page.evaluate() so no live database is required.
  * - Auth headers are injected via mocked /api/auth/me responses.
  *
- * To run:
+ * To run locally:
  *   npx playwright test
  *   npx playwright test --ui
+ *
+ * To run against production:
+ *   PLAYWRIGHT_BASE_URL=https://arena.korczewski.de npx playwright test
+ *   (Filesystem tests are automatically skipped for remote servers)
+ *
+ * Show report:
  *   npx playwright show-report
  */
+
+const isRemoteTest = () => {
+    const baseUrl = process.env.PLAYWRIGHT_BASE_URL;
+    return baseUrl && (baseUrl.includes('http://') || baseUrl.includes('https://'));
+};
+
 export default defineConfig({
     testDir: './e2e',
     fullyParallel: false,          // Socket tests need isolation
@@ -26,7 +38,7 @@ export default defineConfig({
     ],
 
     use: {
-        baseURL: 'http://localhost:3002',
+        baseURL: process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:3002',
         trace: 'on-first-retry',
         screenshot: 'only-on-failure',
         // Don't actually talk to the backend — tests mock what they need
@@ -62,8 +74,8 @@ export default defineConfig({
         },
     ],
 
-    // Spin up Vite dev server before tests
-    webServer: {
+    // Spin up Vite dev server before tests (local only)
+    webServer: isRemoteTest() ? undefined : {
         command: 'npm run dev:frontend',
         url: 'http://localhost:3002',
         reuseExistingServer: !process.env.CI,
