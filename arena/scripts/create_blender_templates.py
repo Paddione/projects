@@ -26,6 +26,87 @@ def clear_scene():
     for material in bpy.data.materials:
         bpy.data.materials.remove(material, do_unlink=True)
 
+def setup_lighting_rig():
+    """Create 3-point professional lighting rig."""
+    print("[Lighting] Setting up 3-point lighting rig...")
+
+    # Key Light (Sun - main directional light)
+    bpy.ops.object.light_add(type='SUN', location=(2, -3, 3))
+    key_light = bpy.context.active_object
+    key_light.name = "KeyLight"
+    key_light.data.energy = 2.0
+    key_light.data.angle = math.radians(5)
+    key_light.rotation_euler = (math.radians(45), math.radians(45), 0)
+    key_light.data.use_shadow = True
+
+    # Fill Light (Area - soft, no shadows)
+    bpy.ops.object.light_add(type='AREA', location=(-2, 2, 1))
+    fill_light = bpy.context.active_object
+    fill_light.name = "FillLight"
+    fill_light.data.energy = 0.5
+    fill_light.data.size = 3.0
+    fill_light.data.use_shadow = False
+
+    # Rim Light (Area - edge separation)
+    bpy.ops.object.light_add(type='AREA', location=(0, 1, 2))
+    rim_light = bpy.context.active_object
+    rim_light.name = "RimLight"
+    rim_light.data.energy = 0.3
+    rim_light.data.size = 2.0
+    rim_light.data.use_shadow = False
+
+    print("✅ Lighting rig created (Key, Fill, Rim)")
+
+def setup_camera(camera_name, position, rotation, scale=2.5):
+    """Create and position orthographic camera."""
+    bpy.ops.object.camera_add(location=position)
+    camera = bpy.context.active_object
+    camera.name = camera_name
+
+    # Orthographic setup
+    camera.data.type = 'ORTHO'
+    camera.data.ortho_scale = scale
+    camera.rotation_euler = rotation
+
+    # Set as active camera
+    bpy.context.scene.camera = camera
+
+    print(f"✅ Camera created: {camera_name} (ortho scale: {scale})")
+
+def setup_world_lighting():
+    """Configure world/environment lighting."""
+    world = bpy.data.worlds["World"]
+    world.use_nodes = True
+    world.node_tree.nodes["Background"].inputs[1].default_value = 0.5  # Gray background
+    print("✅ World lighting configured")
+
+def setup_eevee_rendering():
+    """Configure EEVEE render engine with GPU acceleration."""
+    scene = bpy.context.scene
+
+    # Set render engine
+    scene.render.engine = 'BLENDER_EEVEE'
+
+    # Output settings
+    scene.render.resolution_x = 256
+    scene.render.resolution_y = 256
+    scene.render.film_transparent = True  # Transparent background
+
+    # EEVEE settings
+    eevee = scene.eevee
+    eevee.use_gtao = True  # Global Tone AO (formerly ambient occlusion)
+    eevee.gtao_distance = 0.3
+    eevee.gtao_factor = 1.2
+
+    # Bloom for glowing materials
+    eevee.use_bloom = True
+    eevee.bloom_intensity = 0.1
+
+    # Anti-aliasing
+    eevee.taa_render_samples = 32
+
+    print("✅ EEVEE rendering configured (GPU: OptiX, 256×256, transparent)")
+
 def create_materials_library():
     """Create _shared/materials.blend with PBR material definitions."""
     print("[Materials] Creating shared materials library...")
@@ -121,5 +202,29 @@ def create_materials_library():
     print(f"✅ Materials in file: {len(bpy.data.materials)} (should be 4)")
 
 if __name__ == "__main__":
+    print("=" * 60)
+    print("Blender Template Creator - Testing Lighting & Camera")
+    print("=" * 60)
+
+    # Step 1: Create shared materials library
+    print("\n[Step 1/2] Creating shared materials library...")
+    clear_scene()
     create_materials_library()
-    print("\n✅ Blender template creation complete!")
+
+    # Step 2: Test lighting in a new file
+    print("\n[Step 2/2] Creating character template with lighting...")
+    clear_scene()
+
+    setup_lighting_rig()
+    setup_camera("ISOCamera", (0, -3, 2), (math.radians(60), 0, 0), scale=2.5)
+    setup_world_lighting()
+    setup_eevee_rendering()
+
+    # Save test file
+    test_path = BLEND_DIR / "character.blend"
+    bpy.ops.wm.save_as_mainfile(filepath=str(test_path))
+    print(f"✅ Test character template saved: {test_path}")
+
+    print("\n" + "=" * 60)
+    print("✅ Blender template creation complete!")
+    print("=" * 60)
