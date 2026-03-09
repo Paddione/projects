@@ -153,10 +153,14 @@ test.describe('Asset Coverage', () => {
         // Monitor console for audio-related errors
         page.on('console', (msg) => {
             const text = msg.text();
-            // Look for Howler.js or Web Audio API errors
+            // Capture:
+            // - SoundService errors: "[SoundService] Failed to load ..."
+            // - Howler.js errors: "Error loading audio" or similar
+            // - General audio issues: contains 'audio' or 'sound' with error keywords
             if (
-                text.includes('audio') &&
-                (text.includes('error') || text.includes('Error') || text.includes('failed'))
+                text.includes('[SoundService]') ||
+                (text.includes('audio') && (text.includes('error') || text.includes('Error') || text.includes('failed'))) ||
+                (text.includes('sound') && (text.includes('error') || text.includes('Error') || text.includes('failed')))
             ) {
                 audioErrors.push(text);
             }
@@ -164,8 +168,21 @@ test.describe('Asset Coverage', () => {
 
         // Monitor for uncaught exceptions related to audio
         page.on('pageerror', (error) => {
-            if (error.message.includes('audio') || error.message.includes('Audio')) {
-                audioErrors.push(error.message);
+            // Catch various audio/decode related errors:
+            // - NotSupportedError, InvalidStateError from Web Audio API
+            // - CORS issues on audio files
+            // - Codec support issues
+            const message = error.message;
+            if (
+                message.includes('audio') ||
+                message.includes('Audio') ||
+                message.includes('decode') ||
+                message.includes('Decode') ||
+                message.includes('NotSupported') ||
+                message.includes('InvalidState') ||
+                message.includes('codec')
+            ) {
+                audioErrors.push(message);
             }
         });
 
@@ -178,8 +195,8 @@ test.describe('Asset Coverage', () => {
             // That's OK — we just want assets to load
         });
 
-        // Give audio a moment to decode
-        await page.waitForTimeout(2000);
+        // Give audio a moment to decode - Howler.js can take 1-3s per file on slower hardware
+        await page.waitForTimeout(3000);
 
         // Verify no audio errors were logged
         expect(
