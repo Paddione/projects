@@ -144,4 +144,47 @@ test.describe('Asset Coverage', () => {
         const arenaHeading = page.getByRole('heading', { name: 'ARENA' });
         await expect(arenaHeading).toBeVisible({ timeout: 5000 });
     });
+
+    test('all audio files decode without errors', async ({ page }) => {
+        await mockAuthNoAssetBlock(page, ALICE);
+
+        const audioErrors: string[] = [];
+
+        // Monitor console for audio-related errors
+        page.on('console', (msg) => {
+            const text = msg.text();
+            // Look for Howler.js or Web Audio API errors
+            if (
+                text.includes('audio') &&
+                (text.includes('error') || text.includes('Error') || text.includes('failed'))
+            ) {
+                audioErrors.push(text);
+            }
+        });
+
+        // Monitor for uncaught exceptions related to audio
+        page.on('pageerror', (error) => {
+            if (error.message.includes('audio') || error.message.includes('Audio')) {
+                audioErrors.push(error.message);
+            }
+        });
+
+        // Navigate and wait for SoundService to load all audio
+        await page.goto('/');
+
+        // Wait for page to settle (assets + audio should be loading)
+        await page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => {
+            // Network idle might not reach if there are long-running connections
+            // That's OK — we just want assets to load
+        });
+
+        // Give audio a moment to decode
+        await page.waitForTimeout(2000);
+
+        // Verify no audio errors were logged
+        expect(
+            audioErrors,
+            `Audio decode errors detected:\n${audioErrors.join('\n')}`
+        ).toHaveLength(0);
+    });
 });
