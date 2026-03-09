@@ -159,6 +159,57 @@ for direction, angle in DIRECTIONS.items():
 - `frontend/public/assets/sfx/` — `.ogg` + `.mp3` sound effects
 - `frontend/public/assets/music/` — `.ogg` + `.mp3` music tracks
 
+## E2E Testing
+
+### Asset Coverage Tests
+
+Arena includes dedicated E2E tests that verify real assets (not mocks) load correctly:
+
+```bash
+# Run asset coverage tests locally
+npx playwright test e2e/assets.spec.ts
+
+# With UI
+npx playwright test e2e/assets.spec.ts --ui
+
+# Specific test
+npx playwright test e2e/assets.spec.ts -g "LoadingScreen"
+```
+
+**What they test:**
+
+1. **File existence** — All sprite atlases (6) + audio SFX (17) + music (4) exist in dist/
+2. **Sprite validity** — JSON atlases have valid frame data (not corrupted)
+3. **CSP headers** — Content-Security-Policy permits worker, image, and audio operations
+4. **Loading progress** — LoadingScreen reaches 100% with real assets (not mocks)
+5. **Audio decode** — Audio files load and decode without errors in browser
+
+**Why they matter:** Mock-based tests can hide real failures (missing files, CSP violations, audio format issues). These tests catch production-ready issues before deployment.
+
+**Key difference from other E2E tests:**
+- Other tests mock the backend API and assets (fast, isolated)
+- Asset tests load real assets from public/ (slower, integration-level)
+- Asset tests must run AFTER `npm run build:all` to verify dist/ contents
+
+### Other E2E Tests
+
+```bash
+# Run all E2E tests (auth, home, lobby, game, results, mobile, performance, assets)
+npx playwright test
+
+# Run desktop tests only (skip mobile)
+npx playwright test -g "chromium"
+
+# Run specific test file
+npx playwright test e2e/home.spec.ts
+```
+
+**Test Configuration:**
+
+- See `playwright.config.ts` for test configuration (browser selection, timeouts, reporters)
+- Vite dev server is automatically started by Playwright's `webServer` hook
+- Tests run sequentially (`workers: 1`) to avoid port conflicts with dev server
+
 ## Deployment
 
 ### Production (k3s)
