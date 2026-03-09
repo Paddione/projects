@@ -457,6 +457,7 @@ describe('GameService', () => {
                 onMatchEnd,
                 onZoneShrink: vi.fn(),
                 onCoverDestroyed: vi.fn(),
+                onExplosion: vi.fn(),
             });
 
             const lobby = makeLobby([makeLobbyPlayer('1', 'A'), makeLobbyPlayer('2', 'B')], { bestOf: 1 });
@@ -843,6 +844,7 @@ describe('GameService', () => {
                 onMatchEnd,
                 onZoneShrink: vi.fn(),
                 onCoverDestroyed: vi.fn(),
+                onExplosion: vi.fn(),
             });
 
             const lobby = makeLobby([makeLobbyPlayer('1', 'A'), makeLobbyPlayer('2', 'B')], { bestOf: 1 });
