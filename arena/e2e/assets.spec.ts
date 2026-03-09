@@ -27,34 +27,55 @@ import {
  * They verify production-ready state before deployment.
  */
 
+/**
+ * Generic file existence test helper.
+ * Validates that all files exist using provided path getters.
+ * Eliminates DRY violation from similar loops across sprite/audio/music tests.
+ *
+ * @param files - List of file identifiers (atlas names, audio file names, etc.)
+ * @param pathGetters - Array of functions that resolve file paths (one per extension)
+ * @param fileExtNames - Array of extension names for error messages
+ */
+function testFilesExist(
+    files: string[],
+    pathGetters: Array<(file: string) => string>,
+    fileExtNames: string[]
+): void {
+    for (const file of files) {
+        for (let i = 0; i < pathGetters.length; i++) {
+            const path = pathGetters[i](file);
+            expect(
+                fileExists(path),
+                `${file}.${fileExtNames[i]} missing at ${path}`
+            ).toBe(true);
+        }
+    }
+}
+
 test.describe('Asset Coverage', () => {
     test('all sprite atlas files exist in dist/', () => {
-        for (const atlasName of SPRITE_ATLASES) {
-            const jsonPath = getSpriteAtlasPath(atlasName);
-            const pngPath = getSpritePngPath(atlasName);
-
-            expect(fileExists(jsonPath), `${atlasName}.json missing at ${jsonPath}`).toBe(true);
-            expect(fileExists(pngPath), `${atlasName}.png missing at ${pngPath}`).toBe(true);
-        }
+        testFilesExist(SPRITE_ATLASES, [getSpriteAtlasPath, getSpritePngPath], ['json', 'png']);
     });
 
     test('all audio SFX files exist in dist/ (.ogg + .mp3)', () => {
-        for (const audioFile of AUDIO_FILES) {
-            const oggPath = getAudioPath(`${audioFile}.ogg`);
-            const mp3Path = getAudioPath(`${audioFile}.mp3`);
-
-            expect(fileExists(oggPath), `${audioFile}.ogg missing at ${oggPath}`).toBe(true);
-            expect(fileExists(mp3Path), `${audioFile}.mp3 missing at ${mp3Path}`).toBe(true);
-        }
+        testFilesExist(
+            AUDIO_FILES,
+            [
+                (file) => getAudioPath(`${file}.ogg`),
+                (file) => getAudioPath(`${file}.mp3`),
+            ],
+            ['ogg', 'mp3']
+        );
     });
 
     test('all music files exist in dist/ (.ogg + .mp3)', () => {
-        for (const musicFile of MUSIC_FILES) {
-            const oggPath = getMusicPath(`${musicFile}.ogg`);
-            const mp3Path = getMusicPath(`${musicFile}.mp3`);
-
-            expect(fileExists(oggPath), `${musicFile}.ogg missing at ${oggPath}`).toBe(true);
-            expect(fileExists(mp3Path), `${musicFile}.mp3 missing at ${mp3Path}`).toBe(true);
-        }
+        testFilesExist(
+            MUSIC_FILES,
+            [
+                (file) => getMusicPath(`${file}.ogg`),
+                (file) => getMusicPath(`${file}.mp3`),
+            ],
+            ['ogg', 'mp3']
+        );
     });
 });
