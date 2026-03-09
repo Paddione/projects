@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import type { Page } from '@playwright/test';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -69,3 +70,21 @@ export const MUSIC_FILES = [
     'victory',
     'defeat',
 ];
+
+/**
+ * Mock auth but allow assets to load (don't mock /assets/ paths).
+ * This lets us test real asset loading without a live backend.
+ * Only mocks auth API + blocks socket.io.
+ */
+export async function mockAuthNoAssetBlock(page: Page, user: unknown) {
+    await page.route('**/api/auth/me', (route) =>
+        route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: JSON.stringify({ user }),
+        })
+    );
+
+    // Block socket but allow everything else including /assets/
+    await page.route('**/socket.io/**', (route) => route.abort());
+}

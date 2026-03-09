@@ -11,6 +11,7 @@ import {
     fileExists,
     readJsonFile,
     SpriteAtlas,
+    mockAuthNoAssetBlock,
 } from './helpers/assetChecks';
 
 /**
@@ -120,5 +121,27 @@ test.describe('Asset Coverage', () => {
 
         // Default-src: Fallback policy
         expect(csp).toContain("default-src 'self'");
+    });
+
+    test('LoadingScreen progresses to 100%', async ({ page }) => {
+        // Use mock that allows assets to load (don't mock /assets/ paths)
+        await mockAuthNoAssetBlock(page, ALICE);
+
+        // Navigate to game page (LoadingScreen component is only shown here)
+        // Using a test match ID since we don't have a real backend
+        await page.goto('/game/test-match-id');
+
+        // Wait for LoadingScreen to appear (shows "ARENA" title)
+        await expect(page.getByRole('heading', { name: 'ARENA' })).toBeVisible({ timeout: 10000 });
+
+        // Wait for "Ready!" text to appear, indicating loading is complete
+        // LoadingScreen sets status to "Ready!" when assets finish loading
+        // This timeout is long because real asset loading takes time (sprites + audio)
+        await expect(page.getByText('Ready!')).toBeVisible({ timeout: 60000 });
+
+        // Verify the LoadingScreen is still visible but assets are loaded
+        // (the component stays for a brief 300ms before calling onLoaded)
+        const arenaHeading = page.getByRole('heading', { name: 'ARENA' });
+        await expect(arenaHeading).toBeVisible({ timeout: 5000 });
     });
 });
