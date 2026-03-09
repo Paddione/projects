@@ -96,4 +96,17 @@ test.describe('Asset Coverage', () => {
             expect(atlas.meta.image).toBeTruthy();
         }
     });
+
+    test('CSP headers allow asset operations', async ({ page }) => {
+        const response = await page.request.get('/');
+        const csp = response.headers()['content-security-policy'] || '';
+
+        expect(csp.length).toBeGreaterThan(0);
+        expect(csp).toContain('worker-src');
+        expect(csp).toContain("'self'");
+        expect(csp).toContain('blob:');
+        expect(csp).toContain('img-src');
+        expect(csp).toContain('connect-src');
+        expect(csp).toContain('data:');
+    });
 });
