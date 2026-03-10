@@ -72,7 +72,7 @@ export interface MapItem {
 
 // -- Cover --
 
-export type CoverType = 'wall' | 'crate' | 'pillar' | 'bush' | 'water';
+export type CoverType = 'building' | 'bench' | 'fountain' | 'hedge' | 'pond';
 
 export interface CoverObject {
     id: string;

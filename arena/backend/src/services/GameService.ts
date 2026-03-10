@@ -18,6 +18,7 @@ import type {
     NPC,
 } from '../types/game.js';
 import { GAME, HP, DAMAGE, NPC_CONST } from '../types/game.js';
+import { createCampusCourtyard } from '../maps/campus-courtyard.js';
 import type { WeaponState } from '../types/weapon.js';
 import { WEAPON_STATS, MACHINE_GUN_PICKUP, GRENADE_LAUNCHER_PICKUP } from '../types/weapon.js';
 import { PlayerService } from './PlayerService.js';
@@ -1197,88 +1198,7 @@ export class GameService {
     // ============================================================================
 
     private generateMap(): GameMap {
-        const width = GAME.MAP_WIDTH_TILES;
-        const height = GAME.MAP_HEIGHT_TILES;
-
-        // Initialize tiles (0 = ground)
-        const tiles: number[][] = Array(height).fill(null).map(() => Array(width).fill(0));
-
-        // Add walls around the perimeter
-        for (let x = 0; x < width; x++) {
-            tiles[0][x] = 1; // top wall
-            tiles[height - 1][x] = 1; // bottom wall
-        }
-        for (let y = 0; y < height; y++) {
-            tiles[y][0] = 1; // left wall
-            tiles[y][width - 1] = 1; // right wall
-        }
-
-        // Generate cover objects
-        const coverObjects: CoverObject[] = [];
-        const coverCount = 25 + Math.floor(Math.random() * 15);
-
-        for (let i = 0; i < coverCount; i++) {
-            const x = 3 + Math.floor(Math.random() * (width - 6));
-            const y = 3 + Math.floor(Math.random() * (height - 6));
-
-            // Don't place near corners (spawn points)
-            if (this.isNearCorner(x, y, width, height, 5)) continue;
-
-            const coverType = this.randomCoverType();
-            coverObjects.push({
-                id: uuidv4(),
-                type: coverType,
-                x: x * GAME.TILE_SIZE,
-                y: y * GAME.TILE_SIZE,
-                width: GAME.TILE_SIZE,
-                height: GAME.TILE_SIZE,
-                hp: coverType === 'crate' ? 3 : -1,
-                blocksProjectiles: coverType !== 'bush' && coverType !== 'water',
-                blocksLineOfSight: coverType !== 'bush' && coverType !== 'water',
-                blocksMovement: coverType !== 'bush' && coverType !== 'water',
-                slowsMovement: coverType === 'water',
-            });
-        }
-
-        // Spawn points (one per corner)
-        const spawnPoints: SpawnPoint[] = [
-            { x: 2, y: 2, corner: 'top-left' },
-            { x: width - 3, y: 2, corner: 'top-right' },
-            { x: 2, y: height - 3, corner: 'bottom-left' },
-            { x: width - 3, y: height - 3, corner: 'bottom-right' },
-        ];
-
-        // Item spawn points (scattered around center area)
-        const itemSpawnPoints: { x: number; y: number }[] = [];
-        for (let i = 0; i < 20; i++) {
-            const ix = 5 + Math.floor(Math.random() * (width - 10));
-            const iy = 5 + Math.floor(Math.random() * (height - 10));
-            itemSpawnPoints.push({ x: ix, y: iy });
-        }
-
-        return {
-            width,
-            height,
-            tileSize: GAME.TILE_SIZE,
-            tiles,
-            coverObjects,
-            spawnPoints,
-            itemSpawnPoints,
-        };
-    }
-
-    private randomCoverType(): CoverObject['type'] {
-        const types: CoverObject['type'][] = ['wall', 'crate', 'crate', 'pillar', 'bush', 'bush'];
-        return types[Math.floor(Math.random() * types.length)];
-    }
-
-    private isNearCorner(x: number, y: number, mapW: number, mapH: number, margin: number): boolean {
-        return (
-            (x < margin && y < margin) ||
-            (x > mapW - margin && y < margin) ||
-            (x < margin && y > mapH - margin) ||
-            (x > mapW - margin && y > mapH - margin)
-        );
+        return createCampusCourtyard();
     }
 
     // ============================================================================
