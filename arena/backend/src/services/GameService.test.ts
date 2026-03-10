@@ -15,6 +15,7 @@ vi.mock('./DatabaseService.js', () => ({
 }));
 
 import { GameService } from './GameService.js';
+import { CAMPUS_COURTYARD_COVER_COUNT } from '../maps/campus-courtyard.js';
 import type {
     ArenaLobby,
     ArenaPlayer,
@@ -49,7 +50,7 @@ function makeLobbyPlayer(id: string, username: string): ArenaPlayer {
     return {
         id,
         username,
-        character: 'soldier',
+        character: 'student',
         characterLevel: 1,
         isReady: true,
         isHost: id === '1',
@@ -235,26 +236,24 @@ describe('GameService', () => {
             }
         });
 
-        it('interior tiles are ground (0)', () => {
+        it('interior tiles are grass or path (not wall)', () => {
             const lobby = makeLobby([makeLobbyPlayer('1', 'A'), makeLobbyPlayer('2', 'B')]);
             const matchId = service.startMatch(lobby);
             const state = service.getGameState(matchId)!;
 
             for (let y = 1; y < GAME.MAP_HEIGHT_TILES - 1; y++) {
                 for (let x = 1; x < GAME.MAP_WIDTH_TILES - 1; x++) {
-                    expect(state.map.tiles[y][x]).toBe(0);
+                    expect([0, 2]).toContain(state.map.tiles[y][x]);
                 }
             }
         });
 
-        it('generates cover objects between 25 and 39', () => {
+        it('has correct number of static cover objects', () => {
             const lobby = makeLobby([makeLobbyPlayer('1', 'A'), makeLobbyPlayer('2', 'B')]);
             const matchId = service.startMatch(lobby);
             const state = service.getGameState(matchId)!;
 
-            expect(state.map.coverObjects.length).toBeGreaterThanOrEqual(0);
-            // Cover count is 25 + random(15) but some skip near corners
-            expect(state.map.coverObjects.length).toBeLessThanOrEqual(40);
+            expect(state.map.coverObjects.length).toBe(CAMPUS_COURTYARD_COVER_COUNT);
         });
 
         it('spawn points are inside map bounds', () => {
@@ -877,12 +876,13 @@ describe('GameService', () => {
             const matchId = service.startMatch(lobby);
             const state = service.getGameState(matchId)!;
 
-            // Add a destructible crate right where the projectile is
+            // Add a destructible bench right where the projectile is
+            // Use tile (7,7) = pixel (224,224) which is clear of existing cover
             const crate: CoverObject = {
                 id: 'crate-1',
-                type: 'crate',
-                x: 300,
-                y: 300,
+                type: 'bench',
+                x: 224,
+                y: 224,
                 width: GAME.TILE_SIZE,
                 height: GAME.TILE_SIZE,
                 hp: 1,
@@ -896,8 +896,8 @@ describe('GameService', () => {
             state.projectiles.push({
                 id: 'pj3',
                 ownerId: '1',
-                x: 300,
-                y: 300,
+                x: 224,
+                y: 224,
                 velocityX: 0,
                 velocityY: 0,
                 damage: DAMAGE.GUN,
