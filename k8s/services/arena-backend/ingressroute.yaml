@@ -30,7 +30,7 @@ spec:
         - name: websocket-chain
           namespace: korczewski-infra
 
-    # API routes (auth required)
+    # API routes (backend handles auth per-route, like L2P)
     - match: Host(`arena.korczewski.de`) && PathPrefix(`/api`)
       kind: Rule
       priority: 100
@@ -38,6 +38,6 @@ spec:
         - name: arena-backend
           port: 3003
       middlewares:
-        - name: user-auth-chain
+        - name: default-chain
           namespace: korczewski-infra
   tls: {}
