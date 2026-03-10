@@ -20,7 +20,7 @@ SELECT
     username,
     COALESCE(
         (SELECT mr2.character_name FROM match_results mr2 WHERE mr2.username = mr.username AND mr2.character_name IS NOT NULL LIMIT 1),
-        'warrior'
+        'student'
     ) as selected_character,
     1 as character_level,
     0 as experience,
