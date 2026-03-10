@@ -21,7 +21,7 @@ describe('Home Component — Lobby Browser', () => {
             status: 'waiting',
             maxPlayers: 4,
             players: [
-                { id: '1', username: 'Alice', character: 'warrior', characterLevel: 5, isReady: true, isHost: true, isConnected: true },
+                { id: '1', username: 'Alice', character: 'student', characterLevel: 5, isReady: true, isHost: true, isConnected: true },
             ],
             settings: { maxPlayers: 4, bestOf: 1, shrinkingZone: false, shrinkInterval: 30, itemSpawns: true, itemSpawnInterval: 60 },
             createdAt: new Date(),
@@ -48,10 +48,10 @@ describe('Home Component — Lobby Browser', () => {
             status: 'full',
             maxPlayers: 4,
             players: [
-                { id: '4', username: 'Diana', character: 'warrior', characterLevel: 8, isReady: true, isHost: true, isConnected: true },
+                { id: '4', username: 'Diana', character: 'student', characterLevel: 8, isReady: true, isHost: true, isConnected: true },
                 { id: '5', username: 'Eve', character: 'rogue', characterLevel: 6, isReady: true, isHost: false, isConnected: true },
                 { id: '6', username: 'Frank', character: 'mage', characterLevel: 4, isReady: true, isHost: false, isConnected: true },
-                { id: '7', username: 'Grace', character: 'warrior', characterLevel: 7, isReady: true, isHost: false, isConnected: true },
+                { id: '7', username: 'Grace', character: 'student', characterLevel: 7, isReady: true, isHost: false, isConnected: true },
             ],
             settings: { maxPlayers: 4, bestOf: 1, shrinkingZone: false, shrinkInterval: 30, itemSpawns: true, itemSpawnInterval: 60 },
             createdAt: new Date(),

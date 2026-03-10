@@ -20,7 +20,7 @@ describe('MatchResults Component', () => {
             {
                 playerId: '1',
                 username: 'Alice',
-                character: 'warrior',
+                character: 'student',
                 kills: 5,
                 deaths: 1,
                 damageDealt: 45,
