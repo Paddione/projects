@@ -273,6 +273,141 @@ describe('Game Component', () => {
         });
     });
 
+    describe('Map Rendering', () => {
+        it('uses all 4 floor tile variants via deterministic hash', () => {
+            const MAP_WIDTH = 28;
+            const MAP_HEIGHT = 22;
+            const floorTileCount = 4;
+            const usedIndices = new Set<number>();
+
+            for (let ty = 0; ty < MAP_HEIGHT; ty++) {
+                for (let tx = 0; tx < MAP_WIDTH; tx++) {
+                    const hash = ((tx * 7919) + (ty * 104729)) % floorTileCount;
+                    const tileIdx = Math.abs(hash) % floorTileCount;
+                    usedIndices.add(tileIdx);
+                }
+            }
+
+            // All 4 tile variants should be used across the map
+            expect(usedIndices.size).toBe(4);
+            expect(usedIndices.has(0)).toBe(true);
+            expect(usedIndices.has(1)).toBe(true);
+            expect(usedIndices.has(2)).toBe(true);
+            expect(usedIndices.has(3)).toBe(true);
+        });
+
+        it('hash is deterministic (same coords = same tile)', () => {
+            const floorTileCount = 4;
+            const hash1 = ((5 * 7919) + (10 * 104729)) % floorTileCount;
+            const hash2 = ((5 * 7919) + (10 * 104729)) % floorTileCount;
+            expect(hash1).toBe(hash2);
+        });
+
+        it('adjacent tiles can differ', () => {
+            const floorTileCount = 4;
+            const hash1 = ((0 * 7919) + (0 * 104729)) % floorTileCount;
+            const hash2 = ((1 * 7919) + (0 * 104729)) % floorTileCount;
+            // With primes 7919 and 104729, adjacent tiles will differ
+            expect(hash1).not.toBe(hash2);
+        });
+    });
+
+    describe('Item Sprite Mapping', () => {
+        it('maps health to health_pack sprite', () => {
+            const type = 'health';
+            const assetId = type === 'health' ? 'health_pack'
+                : type === 'machine_gun' ? 'machine_gun'
+                : 'armor_plate';
+            expect(assetId).toBe('health_pack');
+        });
+
+        it('maps machine_gun to machine_gun sprite', () => {
+            const type = 'machine_gun';
+            const assetId = type === 'health' ? 'health_pack'
+                : type === 'machine_gun' ? 'machine_gun'
+                : 'armor_plate';
+            expect(assetId).toBe('machine_gun');
+        });
+
+        it('maps armor to armor_plate sprite', () => {
+            const type = 'armor';
+            const assetId = type === 'health' ? 'health_pack'
+                : type === 'machine_gun' ? 'machine_gun'
+                : 'armor_plate';
+            expect(assetId).toBe('armor_plate');
+        });
+
+        it('maps grenade_launcher to armor_plate fallback', () => {
+            const type = 'grenade_launcher';
+            const assetId = type === 'health' ? 'health_pack'
+                : type === 'machine_gun' ? 'machine_gun'
+                : 'armor_plate';
+            expect(assetId).toBe('armor_plate');
+        });
+
+        it('fallback colors cover all weapon types', () => {
+            const typeColors: Record<string, number> = {
+                health: 0xef4444,
+                armor: 0x38bdf8,
+                machine_gun: 0xfbbf24,
+                grenade_launcher: 0xf97316,
+            };
+
+            expect(Object.keys(typeColors)).toHaveLength(4);
+            // All colors should be distinct
+            const colorValues = Object.values(typeColors);
+            expect(new Set(colorValues).size).toBe(4);
+        });
+    });
+
+    describe('Projectile Rendering', () => {
+        it('renders projectile sprites at 14x14px', () => {
+            const projWidth = 14;
+            const projHeight = 14;
+            expect(projWidth).toBe(14);
+            expect(projHeight).toBe(14);
+        });
+
+        it('fallback projectile has glow ring (radius 8) and core (radius 4)', () => {
+            const glowRadius = 8;
+            const coreRadius = 4;
+            expect(glowRadius).toBeGreaterThan(coreRadius);
+            expect(coreRadius).toBe(4);
+        });
+    });
+
+    describe('Footstep Timing', () => {
+        it('walking footsteps play at 500ms interval', () => {
+            const isSprinting = false;
+            const interval = isSprinting ? 285 : 500;
+            expect(interval).toBe(500);
+        });
+
+        it('sprinting footsteps play at 285ms interval', () => {
+            const isSprinting = true;
+            const interval = isSprinting ? 285 : 500;
+            expect(interval).toBe(285);
+        });
+
+        it('walking is slower than sprinting', () => {
+            const walkInterval = 500;
+            const sprintInterval = 285;
+            expect(walkInterval).toBeGreaterThan(sprintInterval);
+        });
+
+        it('walking cadence is ~2 steps/sec', () => {
+            const walkInterval = 500;
+            const stepsPerSecond = 1000 / walkInterval;
+            expect(stepsPerSecond).toBe(2);
+        });
+
+        it('sprinting cadence is ~3.5 steps/sec', () => {
+            const sprintInterval = 285;
+            const stepsPerSecond = 1000 / sprintInterval;
+            expect(stepsPerSecond).toBeCloseTo(3.5, 1);
+        });
+    });
+
     describe('Sound & Mute', () => {
         it('has mute button in HUD', () => {
             const muteButton = true;

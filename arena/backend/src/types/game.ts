@@ -295,9 +295,9 @@ export const HP = {
 
 export const GAME = {
     TILE_SIZE: 32,
-    MAP_WIDTH_TILES: 40,
-    MAP_HEIGHT_TILES: 30,
-    PLAYER_SPEED: 3,
+    MAP_WIDTH_TILES: 28,
+    MAP_HEIGHT_TILES: 22,
+    PLAYER_SPEED: 4,
     SPRINT_MULTIPLIER: 1.6,
     PROJECTILE_SPEED: 8,
     MELEE_RANGE: 48,       // pixels

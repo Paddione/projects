@@ -83,7 +83,7 @@ class SoundServiceImpl {
     ): Promise<void> {
         return new Promise((resolve) => {
             const howl = new Howl({
-                src: [`${basePath}/${id}.ogg`, `${basePath}/${id}.mp3`],
+                src: [`${basePath}/${id}.mp3`],
                 preload: true,
                 html5,  // Stream music (large files) vs. buffer SFX
                 onload: () => resolve(),

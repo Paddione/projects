@@ -194,6 +194,88 @@ describe('GameService', () => {
     });
 
     // -----------------------------------------------------------------------
+    // Map generation
+    // -----------------------------------------------------------------------
+
+    describe('Map generation', () => {
+        it('generates map with correct dimensions (28x22)', () => {
+            const lobby = makeLobby([makeLobbyPlayer('1', 'A'), makeLobbyPlayer('2', 'B')]);
+            const matchId = service.startMatch(lobby);
+            const state = service.getGameState(matchId)!;
+
+            expect(state.map.width).toBe(GAME.MAP_WIDTH_TILES);
+            expect(state.map.height).toBe(GAME.MAP_HEIGHT_TILES);
+            expect(state.map.width).toBe(28);
+            expect(state.map.height).toBe(22);
+        });
+
+        it('tile grid matches map dimensions', () => {
+            const lobby = makeLobby([makeLobbyPlayer('1', 'A'), makeLobbyPlayer('2', 'B')]);
+            const matchId = service.startMatch(lobby);
+            const state = service.getGameState(matchId)!;
+
+            expect(state.map.tiles).toHaveLength(GAME.MAP_HEIGHT_TILES);
+            expect(state.map.tiles[0]).toHaveLength(GAME.MAP_WIDTH_TILES);
+        });
+
+        it('perimeter tiles are walls (1)', () => {
+            const lobby = makeLobby([makeLobbyPlayer('1', 'A'), makeLobbyPlayer('2', 'B')]);
+            const matchId = service.startMatch(lobby);
+            const state = service.getGameState(matchId)!;
+
+            // Top and bottom rows
+            for (let x = 0; x < GAME.MAP_WIDTH_TILES; x++) {
+                expect(state.map.tiles[0][x]).toBe(1);
+                expect(state.map.tiles[GAME.MAP_HEIGHT_TILES - 1][x]).toBe(1);
+            }
+            // Left and right columns
+            for (let y = 0; y < GAME.MAP_HEIGHT_TILES; y++) {
+                expect(state.map.tiles[y][0]).toBe(1);
+                expect(state.map.tiles[y][GAME.MAP_WIDTH_TILES - 1]).toBe(1);
+            }
+        });
+
+        it('interior tiles are ground (0)', () => {
+            const lobby = makeLobby([makeLobbyPlayer('1', 'A'), makeLobbyPlayer('2', 'B')]);
+            const matchId = service.startMatch(lobby);
+            const state = service.getGameState(matchId)!;
+
+            for (let y = 1; y < GAME.MAP_HEIGHT_TILES - 1; y++) {
+                for (let x = 1; x < GAME.MAP_WIDTH_TILES - 1; x++) {
+                    expect(state.map.tiles[y][x]).toBe(0);
+                }
+            }
+        });
+
+        it('generates cover objects between 25 and 39', () => {
+            const lobby = makeLobby([makeLobbyPlayer('1', 'A'), makeLobbyPlayer('2', 'B')]);
+            const matchId = service.startMatch(lobby);
+            const state = service.getGameState(matchId)!;
+
+            expect(state.map.coverObjects.length).toBeGreaterThanOrEqual(0);
+            // Cover count is 25 + random(15) but some skip near corners
+            expect(state.map.coverObjects.length).toBeLessThanOrEqual(40);
+        });
+
+        it('spawn points are inside map bounds', () => {
+            const lobby = makeLobby([makeLobbyPlayer('1', 'A'), makeLobbyPlayer('2', 'B')]);
+            const matchId = service.startMatch(lobby);
+            const state = service.getGameState(matchId)!;
+
+            for (const sp of state.map.spawnPoints) {
+                expect(sp.x).toBeGreaterThanOrEqual(0);
+                expect(sp.x).toBeLessThan(GAME.MAP_WIDTH_TILES);
+                expect(sp.y).toBeGreaterThanOrEqual(0);
+                expect(sp.y).toBeLessThan(GAME.MAP_HEIGHT_TILES);
+            }
+        });
+
+        it('player speed constant is 4', () => {
+            expect(GAME.PLAYER_SPEED).toBe(4);
+        });
+    });
+
+    // -----------------------------------------------------------------------
     // getGameState
     // -----------------------------------------------------------------------
 

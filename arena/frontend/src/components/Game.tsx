@@ -2,7 +2,7 @@ import { useEffect, useRef, useCallback, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
     Application, Container, Graphics, Text, TextStyle,
-    Sprite, AnimatedSprite, TilingSprite,
+    Sprite, AnimatedSprite,
 } from 'pixi.js';
 import { useGameStore } from '../stores/gameStore';
 import { getSocket } from '../services/apiService';
@@ -11,8 +11,8 @@ import { SoundService } from '../services/SoundService';
 import LoadingScreen from './LoadingScreen';
 
 const TILE_SIZE = 32;
-const MAP_WIDTH = 40;
-const MAP_HEIGHT = 30;
+const MAP_WIDTH = 28;
+const MAP_HEIGHT = 22;
 
 export default function Game() {
     const { matchId } = useParams<{ matchId: string }>();
@@ -290,8 +290,13 @@ export default function Game() {
             const camTarget = isSpectating && spectatedPlayerId
                 ? state.players?.find((p: any) => p.id === spectatedPlayerId) || me
                 : me;
-            const cameraX = -camTarget.x + window.innerWidth / 2;
-            const cameraY = -camTarget.y + window.innerHeight / 2;
+
+            // Dynamic zoom based on screen height (keeps gameplay fair & visible across resolutions)
+            const zoom = Math.max(1.5, window.innerHeight / 500);
+            const cameraX = -camTarget.x * zoom + window.innerWidth / 2;
+            const cameraY = -camTarget.y * zoom + window.innerHeight / 2;
+
+            worldContainer.scale.set(zoom);
             worldContainer.position.set(cameraX, cameraY);
 
             // ---- MAP LAYER (render once, cache) ----
@@ -346,18 +351,35 @@ export default function Game() {
                 // Try to use tile sprites
                 const floorTiles = AssetService.getFloorTiles();
                 if (floorTiles.length > 0) {
-                    // Use tiling sprite for the floor
-                    const tiling = new TilingSprite(floorTiles[0], MAP_WIDTH * TILE_SIZE, MAP_HEIGHT * TILE_SIZE);
-                    container.addChild(tiling);
+                    // Place individual sprites per tile with random variety
+                    // Use a simple hash of (x, y) for deterministic randomness
+                    for (let ty = 0; ty < MAP_HEIGHT; ty++) {
+                        for (let tx = 0; tx < MAP_WIDTH; tx++) {
+                            const hash = ((tx * 7919) + (ty * 104729)) % floorTiles.length;
+                            const tileIdx = Math.abs(hash) % floorTiles.length;
+                            const sprite = new Sprite(floorTiles[tileIdx]);
+                            sprite.position.set(tx * TILE_SIZE, ty * TILE_SIZE);
+                            sprite.width = TILE_SIZE;
+                            sprite.height = TILE_SIZE;
+                            container.addChild(sprite);
+                        }
+                    }
                     return;
                 }
             }
 
-            // Fallback: procedural map
+            // Fallback: procedural map with varied tile colors
             const g = new Graphics();
-            g.beginFill(0x1a1c3a);
-            g.drawRect(0, 0, MAP_WIDTH * TILE_SIZE, MAP_HEIGHT * TILE_SIZE);
-            g.endFill();
+            const floorColors = [0x1a1c3a, 0x1c1e3e, 0x181a36, 0x1e2042];
+            for (let ty = 0; ty < MAP_HEIGHT; ty++) {
+                for (let tx = 0; tx < MAP_WIDTH; tx++) {
+                    const hash = ((tx * 7919) + (ty * 104729)) % floorColors.length;
+                    const colorIdx = Math.abs(hash) % floorColors.length;
+                    g.beginFill(floorColors[colorIdx]);
+                    g.drawRect(tx * TILE_SIZE, ty * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+                    g.endFill();
+                }
+            }
 
             g.lineStyle(1, 0x222450, 0.3);
             for (let x = 0; x <= MAP_WIDTH; x++) {
@@ -382,7 +404,9 @@ export default function Game() {
                 const cachedSprite = itemSpritesRef.current.get(item.id);
 
                 if (useSprites) {
-                    const assetId = item.type === 'health' ? 'health_pack' : 'armor_plate';
+                    const assetId = item.type === 'health' ? 'health_pack'
+                        : item.type === 'machine_gun' ? 'machine_gun'
+                        : 'armor_plate';
                     const frames = AssetService.getItemAnimation('items', assetId);
                     if (frames.length > 0) {
                         let sprite = cachedSprite;
@@ -412,17 +436,30 @@ export default function Game() {
 
                 // Fallback: procedural items
                 const ig = new Graphics();
+                const pulse = 0.3 + Math.sin(Date.now() / 300) * 0.3;
                 if (item.type === 'health') {
                     ig.beginFill(0xef4444);
                     ig.drawCircle(item.x, item.y, 8);
                     ig.endFill();
-                    ig.lineStyle(2, 0xef4444, 0.3 + Math.sin(Date.now() / 300) * 0.3);
+                    ig.lineStyle(2, 0xef4444, pulse);
                     ig.drawCircle(item.x, item.y, 12);
                 } else if (item.type === 'armor') {
                     ig.beginFill(0x38bdf8);
                     ig.drawCircle(item.x, item.y, 8);
                     ig.endFill();
-                    ig.lineStyle(2, 0x38bdf8, 0.3 + Math.sin(Date.now() / 300) * 0.3);
+                    ig.lineStyle(2, 0x38bdf8, pulse);
+                    ig.drawCircle(item.x, item.y, 12);
+                } else if (item.type === 'machine_gun') {
+                    ig.beginFill(0xfbbf24);
+                    ig.drawCircle(item.x, item.y, 8);
+                    ig.endFill();
+                    ig.lineStyle(2, 0xfbbf24, pulse);
+                    ig.drawCircle(item.x, item.y, 12);
+                } else if (item.type === 'grenade_launcher') {
+                    ig.beginFill(0xf97316);
+                    ig.drawCircle(item.x, item.y, 8);
+                    ig.endFill();
+                    ig.lineStyle(2, 0xf97316, pulse);
                     ig.drawCircle(item.x, item.y, 12);
                 }
                 container.addChild(ig);
@@ -437,8 +474,8 @@ export default function Game() {
                         const sprite = new Sprite(tex);
                         sprite.anchor.set(0.5);
                         sprite.position.set(proj.x, proj.y);
-                        sprite.width = 8;
-                        sprite.height = 8;
+                        sprite.width = 14;
+                        sprite.height = 14;
                         // Rotate projectile to match velocity direction
                         sprite.rotation = Math.atan2(proj.velocityY ?? 0, proj.velocityX ?? 0);
                         container.addChild(sprite);
@@ -446,12 +483,15 @@ export default function Game() {
                     }
                 }
 
-                // Fallback: procedural projectiles
+                // Fallback: procedural projectiles with glow
                 const pg = new Graphics();
-                pg.beginFill(0xfbbf24);
-                pg.drawCircle(proj.x, proj.y, 3);
+                pg.beginFill(0xfbbf24, 0.2);
+                pg.drawCircle(proj.x, proj.y, 8);
                 pg.endFill();
-                pg.lineStyle(1, 0xfbbf24, 0.5);
+                pg.beginFill(0xfbbf24);
+                pg.drawCircle(proj.x, proj.y, 4);
+                pg.endFill();
+                pg.lineStyle(1, 0xfef08a, 0.7);
                 pg.drawCircle(proj.x, proj.y, 5);
                 container.addChild(pg);
             }
@@ -583,9 +623,8 @@ export default function Game() {
 
             if (isMoving && me.isAlive) {
                 const now = Date.now();
-                // Constant 4 Hz footstep cadence: 250ms between steps
-                // Sprint increases speed to 3x: ~166ms per step
-                const interval = isSprinting ? 166 : 250;
+                // Walking: ~2 steps/sec (500ms). Sprinting: ~3.5 steps/sec (285ms)
+                const interval = isSprinting ? 285 : 500;
                 if (now - footstepTimerRef.current >= interval) {
                     SoundService.playFootstep(isSprinting);
                     footstepTimerRef.current = now;
