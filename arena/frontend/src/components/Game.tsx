@@ -14,6 +14,14 @@ const TILE_SIZE = 32;
 const MAP_WIDTH = 28;
 const MAP_HEIGHT = 22;
 
+const CHARACTER_COLORS: Record<string, number> = {
+    student: 0x00f2ff,
+    researcher: 0x3eff8b,
+    professor: 0xbc13fe,
+    dean: 0xffd700,
+    librarian: 0xff6b9d,
+};
+
 export default function Game() {
     const { matchId } = useParams<{ matchId: string }>();
     const navigate = useNavigate();
@@ -391,7 +399,7 @@ export default function Game() {
                     }
                 }
 
-                // Procedural fallback
+                // Procedural fallback with distinctive shapes
                 const g = new Graphics();
                 const colors: Record<string, number> = {
                     building: 0x3a3a5a,
@@ -400,9 +408,62 @@ export default function Game() {
                     hedge: 0x1a4a2a,
                     pond: 0x0a2a4a,
                 };
-                g.beginFill(colors[cover.type] || 0x444444, 0.8);
-                g.drawRect(cover.x, cover.y, cover.width, cover.height);
-                g.endFill();
+                const borderColors: Record<string, number> = {
+                    building: 0x5a5a7a,
+                    bench: 0x7a6040,
+                    fountain: 0x3a6a8a,
+                    hedge: 0x2a6a3a,
+                    pond: 0x1a4a6a,
+                };
+                const fillColor = colors[cover.type] || 0x444444;
+                const borderColor = borderColors[cover.type] || 0x666666;
+                const cx = cover.x + cover.width / 2;
+                const cy = cover.y + cover.height / 2;
+
+                if (cover.type === 'fountain') {
+                    // Circle with inner ring
+                    g.beginFill(fillColor, 0.9);
+                    g.drawCircle(cx, cy, cover.width / 2);
+                    g.endFill();
+                    g.lineStyle(2, borderColor, 0.8);
+                    g.drawCircle(cx, cy, cover.width / 2);
+                    g.lineStyle(1, 0x4a8aaa, 0.5);
+                    g.drawCircle(cx, cy, cover.width / 4);
+                } else if (cover.type === 'pond') {
+                    // Rounded rectangle with wavy feel
+                    g.beginFill(fillColor, 0.7);
+                    g.drawRoundedRect(cover.x + 1, cover.y + 1, cover.width - 2, cover.height - 2, 8);
+                    g.endFill();
+                    g.lineStyle(1, borderColor, 0.5);
+                    g.drawRoundedRect(cover.x + 1, cover.y + 1, cover.width - 2, cover.height - 2, 8);
+                } else if (cover.type === 'hedge') {
+                    // Soft rounded shape
+                    g.beginFill(fillColor, 0.85);
+                    g.drawRoundedRect(cover.x + 2, cover.y + 2, cover.width - 4, cover.height - 4, 6);
+                    g.endFill();
+                    g.lineStyle(1.5, borderColor, 0.7);
+                    g.drawRoundedRect(cover.x + 2, cover.y + 2, cover.width - 4, cover.height - 4, 6);
+                } else if (cover.type === 'bench') {
+                    // Rectangle with thicker border (destructible feel)
+                    g.beginFill(fillColor, 0.9);
+                    g.drawRect(cover.x + 1, cover.y + 1, cover.width - 2, cover.height - 2);
+                    g.endFill();
+                    g.lineStyle(2, borderColor, 0.8);
+                    g.drawRect(cover.x + 1, cover.y + 1, cover.width - 2, cover.height - 2);
+                    // Damage indicator for low HP benches
+                    if (cover.hp > 0 && cover.hp < 3) {
+                        g.lineStyle(1, 0xff4444, 0.4);
+                        g.moveTo(cover.x + 4, cover.y + 4);
+                        g.lineTo(cover.x + cover.width - 4, cover.y + cover.height - 4);
+                    }
+                } else {
+                    // building: solid heavy block
+                    g.beginFill(fillColor, 0.95);
+                    g.drawRect(cover.x, cover.y, cover.width, cover.height);
+                    g.endFill();
+                    g.lineStyle(2, borderColor, 0.9);
+                    g.drawRect(cover.x, cover.y, cover.width, cover.height);
+                }
                 container.addChild(g);
             }
         }
@@ -480,15 +541,26 @@ export default function Game() {
                     }
                 }
 
-                // Fallback: procedural projectiles with glow
+                // Fallback: procedural projectile with neon glow
                 const pg = new Graphics();
-                pg.beginFill(0xfbbf24, 0.2);
-                pg.drawCircle(proj.x, proj.y, 8);
+                const isGrenade = proj.explosionRadius && proj.explosionRadius > 0;
+                const coreColor = isGrenade ? 0xf97316 : 0xfbbf24;
+                const glowColor = isGrenade ? 0xff6b35 : 0xfef08a;
+
+                // Outer glow
+                pg.beginFill(glowColor, 0.15);
+                pg.drawCircle(proj.x, proj.y, 12);
                 pg.endFill();
-                pg.beginFill(0xfbbf24);
-                pg.drawCircle(proj.x, proj.y, 4);
+                // Mid glow
+                pg.beginFill(coreColor, 0.3);
+                pg.drawCircle(proj.x, proj.y, 7);
                 pg.endFill();
-                pg.lineStyle(1, 0xfef08a, 0.7);
+                // Core
+                pg.beginFill(0xffffff);
+                pg.drawCircle(proj.x, proj.y, 3);
+                pg.endFill();
+                // Bright outline ring
+                pg.lineStyle(1.5, glowColor, 0.9);
                 pg.drawCircle(proj.x, proj.y, 5);
                 container.addChild(pg);
             }
@@ -559,22 +631,56 @@ export default function Game() {
                     }
                 }
 
-                // Fallback: procedural player
+                // Fallback: detailed procedural player
                 const pg = new Graphics();
-                const color = isMe ? 0x6366f1 : 0xef4444;
-                pg.beginFill(color);
+                const charColor = CHARACTER_COLORS[player.character] || (isMe ? 0x6366f1 : 0xef4444);
+
+                // Outer glow (character accent)
+                pg.beginFill(charColor, 0.12);
+                pg.drawCircle(player.x, player.y, 18);
+                pg.endFill();
+
+                // Dark body
+                pg.beginFill(0x1a1a2e);
                 pg.drawCircle(player.x, player.y, 12);
                 pg.endFill();
 
-                const dirX = player.x + Math.cos(player.rotation) * 18;
-                const dirY = player.y + Math.sin(player.rotation) * 18;
-                pg.lineStyle(3, color, 0.8);
-                pg.moveTo(player.x, player.y);
+                // Accent ring
+                pg.lineStyle(2, charColor, 0.9);
+                pg.drawCircle(player.x, player.y, 12);
+
+                // Direction indicator (weapon barrel)
+                const dirLen = 20;
+                const dirX = player.x + Math.cos(player.rotation) * dirLen;
+                const dirY = player.y + Math.sin(player.rotation) * dirLen;
+                pg.lineStyle(3, charColor, 0.8);
+                pg.moveTo(player.x + Math.cos(player.rotation) * 10, player.y + Math.sin(player.rotation) * 10);
                 pg.lineTo(dirX, dirY);
 
+                // Barrel tip crossbar
+                const perpAngle = player.rotation + Math.PI / 2;
+                const tipX = player.x + Math.cos(player.rotation) * (dirLen - 3);
+                const tipY = player.y + Math.sin(player.rotation) * (dirLen - 3);
+                pg.lineStyle(2, charColor, 0.6);
+                pg.moveTo(tipX + Math.cos(perpAngle) * 3, tipY + Math.sin(perpAngle) * 3);
+                pg.lineTo(tipX - Math.cos(perpAngle) * 3, tipY - Math.sin(perpAngle) * 3);
+
+                // Inner accent dot (character identity)
+                pg.beginFill(charColor, 0.7);
+                pg.drawCircle(player.x, player.y, 4);
+                pg.endFill();
+
+                // "Me" pulse indicator
+                if (isMe) {
+                    const pulse = 0.3 + Math.sin(Date.now() / 400) * 0.3;
+                    pg.lineStyle(1.5, 0xffffff, pulse);
+                    pg.drawCircle(player.x, player.y, 15);
+                }
+
+                // Armor ring
                 if (player.hasArmor) {
                     pg.lineStyle(2, 0x38bdf8, 0.8);
-                    pg.drawCircle(player.x, player.y, 15);
+                    pg.drawCircle(player.x, player.y, 16);
                 }
                 playerContainer.addChild(pg);
 
