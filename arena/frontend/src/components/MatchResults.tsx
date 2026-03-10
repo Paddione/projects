@@ -64,8 +64,17 @@ export default function MatchResults() {
         );
     }
 
+    if (!results.results || results.results.length === 0) {
+        return (
+            <div className="match-results">
+                <div className="error">Keine Ergebnisse verfügbar</div>
+                <button onClick={() => navigate('/')}>Back to Home</button>
+            </div>
+        );
+    }
+
     const winner = results.results[0];
-    const isWin = winner.placement === 1;
+    const isWin = winner?.placement === 1;
     const levelUpPlayers = results.results.filter((r) => (r.levelAfter ?? 1) > (r.levelBefore ?? 1));
 
     return (

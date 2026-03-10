@@ -6,7 +6,7 @@ import {
 } from 'pixi.js';
 import { useGameStore } from '../stores/gameStore';
 import { getSocket } from '../services/apiService';
-import { AssetService } from '../services/AssetService';
+import { AssetService, type CharacterAnimation } from '../services/AssetService';
 import { SoundService } from '../services/SoundService';
 import LoadingScreen from './LoadingScreen';
 
@@ -31,44 +31,28 @@ export default function Game() {
     const rightStickRef = useRef({ active: false, startX: 0, startY: 0, dx: 0, dy: 0, touchId: -1, firing: false });
     const sprintActiveRef = useRef(false);
     const meleeActiveRef = useRef(false);
-    const pickupActiveRef = useRef(false);
     // Derived joystick puck offsets for React render (clamped to 40px radius)
     const [leftPuck, setLeftPuck] = useState({ x: 0, y: 0 });
     const [rightPuck, setRightPuck] = useState({ x: 0, y: 0 });
     const [sprintOn, setSprintOn] = useState(false);
     const [meleeOn, setMeleeOn] = useState(false);
-    const [pickupOn, setPickupOn] = useState(false);
 
     // Track animated sprites for reuse (avoid recreating every frame)
     const playerSpritesRef = useRef<Map<string, AnimatedSprite | Sprite>>(new Map());
     const itemSpritesRef = useRef<Map<string, AnimatedSprite | Sprite>>(new Map());
-    const footstepTimerRef = useRef(Date.now());
-    const explosionsRef = useRef<Array<{ x: number; y: number; radius: number; createdAt: number }>>(
-        []
-    );
-    const mapRenderedRef = useRef(false);
-    const zoneDirtyRef = useRef(true);
-    const hudRafIdRef = useRef<number | null>(null);
+    const footstepTimerRef = useRef(0);
 
     const [assetsLoaded, setAssetsLoaded] = useState(false);
-    const [isMuted, setIsMuted] = useState(SoundService.isMuted);
-    const lastZoneTickRef = useRef(0);
 
     const {
-        playerId, hp, hasArmor, kills, deaths, weaponType,
+        playerId, hp, hasArmor, kills, deaths,
         killfeed, announcement, currentRound,
-        isSpectating, spectatedPlayerId,
+        isSpectating,
         setPlayerState, addKillfeed, setAnnouncement, setRound, setRoundScores,
-        setSpectating, setSpectatedPlayer,
         endMatch,
     } = useGameStore();
 
     const socket = getSocket();
-
-    // Expose socket for E2E testing (tree-shaken in production)
-    if (import.meta.env.DEV) {
-        (window as any).__arenaSocket = socket;
-    }
 
     const useSprites = AssetService.isLoaded;
 
@@ -259,7 +243,6 @@ export default function Game() {
             const shooting = isTouchDevice ? (rightStickRef.current.active) : mouse.down;
             const melee = isTouchDevice ? meleeActiveRef.current : (mouse.rightDown || keys.has('e'));
             const sprint = isTouchDevice ? sprintActiveRef.current : keys.has('shift');
-            const pickup = keys.has('f') || (isTouchDevice && pickupActiveRef.current);
 
             socket.emit('player-input', {
                 matchId,
@@ -269,7 +252,7 @@ export default function Game() {
                     shooting,
                     melee,
                     sprint,
-                    pickup,
+                    pickup: keys.has('f'),
                     timestamp: Date.now(),
                 },
             });
@@ -286,60 +269,34 @@ export default function Game() {
             const me = state.players?.find((p: any) => p.id === playerId);
             if (!me) return;
 
-            // Camera follows player or spectated player
-            const camTarget = isSpectating && spectatedPlayerId
-                ? state.players?.find((p: any) => p.id === spectatedPlayerId) || me
-                : me;
-
-            // Dynamic zoom based on screen height (keeps gameplay fair & visible across resolutions)
-            const zoom = Math.max(1.5, window.innerHeight / 500);
-            const cameraX = -camTarget.x * zoom + window.innerWidth / 2;
-            const cameraY = -camTarget.y * zoom + window.innerHeight / 2;
-
-            worldContainer.scale.set(zoom);
+            // Camera follows player
+            const cameraX = -me.x + window.innerWidth / 2;
+            const cameraY = -me.y + window.innerHeight / 2;
             worldContainer.position.set(cameraX, cameraY);
 
-            // ---- MAP LAYER (render once, cache) ----
-            if (!mapRenderedRef.current) {
-                mapLayer.removeChildren();
-                renderMap(mapLayer, state);
-                mapRenderedRef.current = true;
-            }
+            // ---- MAP LAYER ----
+            mapLayer.removeChildren();
+            renderMap(mapLayer, state);
 
-            // ---- ITEM LAYER (reuse sprites) ----
+            // ---- ITEM LAYER ----
+            itemLayer.removeChildren();
             renderItems(itemLayer, state);
 
             // ---- PROJECTILE LAYER ----
             projectileLayer.removeChildren();
             renderProjectiles(projectileLayer, state);
 
-            // ---- ZONE LAYER (redraw only when zone changed) ----
-            if (zoneDirtyRef.current) {
-                zoneLayer.removeChildren();
-                renderZone(zoneLayer, state);
-                zoneDirtyRef.current = false;
-            }
+            // ---- ZONE LAYER ----
+            zoneLayer.removeChildren();
+            renderZone(zoneLayer, state);
 
-            // ---- PLAYER LAYER + LABELS (reuse sprites) ----
+            // ---- PLAYER LAYER + LABELS ----
+            playerLayer.removeChildren();
+            labelLayer.removeChildren();
             renderPlayers(playerLayer, labelLayer, state, me);
 
             // ---- FOOTSTEP AUDIO ----
             handleFootstepAudio(me);
-
-            // ---- ZONE TICK AUDIO ----
-            // Play zone tick sound when player is outside safe zone (throttled to 1/sec)
-            if (state.zone?.isActive && me.isAlive) {
-                const dx = me.x - state.zone.centerX;
-                const dy = me.y - state.zone.centerY;
-                const distToCenter = Math.sqrt(dx * dx + dy * dy);
-                if (distToCenter > state.zone.currentRadius) {
-                    const now = Date.now();
-                    if (now - lastZoneTickRef.current >= 1000) {
-                        SoundService.playSFX('zone_tick', { volume: 0.4 });
-                        lastZoneTickRef.current = now;
-                    }
-                }
-            }
         });
 
         // ====================================================================
@@ -352,7 +309,6 @@ export default function Game() {
                 const floorTiles = AssetService.getFloorTiles();
                 if (floorTiles.length > 0) {
                     // Place individual sprites per tile with random variety
-                    // Use a simple hash of (x, y) for deterministic randomness
                     for (let ty = 0; ty < MAP_HEIGHT; ty++) {
                         for (let tx = 0; tx < MAP_WIDTH; tx++) {
                             const hash = ((tx * 7919) + (ty * 104729)) % floorTiles.length;
@@ -394,42 +350,25 @@ export default function Game() {
         }
 
         function renderItems(container: Container, state: any) {
-            // Mark all items as hidden first
-            itemSpritesRef.current.forEach((sprite) => {
-                sprite.visible = false;
-            });
-
-            // Update or create sprites for active items
             for (const item of state.items || []) {
-                const cachedSprite = itemSpritesRef.current.get(item.id);
-
                 if (useSprites) {
                     const assetId = item.type === 'health' ? 'health_pack'
                         : item.type === 'machine_gun' ? 'machine_gun'
                         : 'armor_plate';
                     const frames = AssetService.getItemAnimation('items', assetId);
                     if (frames.length > 0) {
-                        let sprite = cachedSprite;
-
-                        // Create sprite if not cached
-                        if (!sprite) {
-                            sprite = frames.length > 1
-                                ? new AnimatedSprite(frames)
-                                : new Sprite(frames[0]);
-                            sprite.anchor.set(0.5);
-                            sprite.width = 20;
-                            sprite.height = 20;
-                            if (sprite instanceof AnimatedSprite) {
-                                sprite.animationSpeed = 0.1;
-                                sprite.play();
-                            }
-                            container.addChild(sprite);
-                            itemSpritesRef.current.set(item.id, sprite);
-                        }
-
-                        // Update position and visibility
+                        const sprite = frames.length > 1
+                            ? new AnimatedSprite(frames)
+                            : new Sprite(frames[0]);
+                        sprite.anchor.set(0.5);
                         sprite.position.set(item.x, item.y);
-                        sprite.visible = true;
+                        sprite.width = 20;
+                        sprite.height = 20;
+                        if (sprite instanceof AnimatedSprite) {
+                            sprite.animationSpeed = 0.1;
+                            sprite.play();
+                        }
+                        container.addChild(sprite);
                         continue;
                     }
                 }
@@ -518,45 +457,37 @@ export default function Game() {
             state: any,
             _me: any,
         ) {
-            // Mark all sprites as hidden, then show only alive players
-            playerSpritesRef.current.forEach((sprite) => {
-                sprite.visible = false;
-            });
-
-            // Rebuild label layer (labels change frequently with HP/position)
-            labelContainer.removeChildren();
-
             for (const player of state.players || []) {
                 if (!player.isAlive) continue;
 
                 const isMe = player.id === playerId;
-                const cachedSprite = playerSpritesRef.current.get(player.id);
+                const direction = AssetService.angleToDirection(player.rotation);
 
                 if (useSprites) {
+                    // Determine animation state
+                    const isMoving = player.lastMoveDirection &&
+                        (player.lastMoveDirection.dx !== 0 || player.lastMoveDirection.dy !== 0);
+                    const animState: CharacterAnimation = isMoving ? 'walk' : 'idle';
+
                     // Character ID (default to 'warrior' if not set)
-                    const charId = player.selectedCharacter || player.selected_character || 'warrior';
-                    // Pose-based: use 'stand' pose (single sprite rotated in-engine)
-                    const poseTexture = AssetService.getCharacterPose(charId, 'stand');
+                    const charId = player.character || 'warrior';
+                    const frames = AssetService.getAnimation(charId, animState, direction);
 
-                    if (poseTexture) {
-                        let sprite = cachedSprite;
-
-                        // Create sprite if not cached
-                        if (!sprite) {
-                            sprite = new Sprite(poseTexture);
-                            sprite.anchor.set(0.5);
-                            sprite.width = 28;
-                            sprite.height = 28;
-                            playerContainer.addChild(sprite);
-                            playerSpritesRef.current.set(player.id, sprite);
-                        }
-
-                        // Update position and rotation
+                    if (frames.length > 0) {
+                        const sprite = frames.length > 1
+                            ? new AnimatedSprite(frames)
+                            : new Sprite(frames[0]);
+                        sprite.anchor.set(0.5);
                         sprite.position.set(player.x, player.y);
-                        sprite.rotation = player.rotation;
-                        sprite.visible = true;
+                        sprite.width = 28;
+                        sprite.height = 28;
+                        if (sprite instanceof AnimatedSprite) {
+                            sprite.animationSpeed = isMoving ? 0.15 : 0.05;
+                            sprite.play();
+                        }
+                        playerContainer.addChild(sprite);
 
-                        // Armor ring overlay (recreate if needed)
+                        // Armor ring overlay
                         if (player.hasArmor) {
                             const armorG = new Graphics();
                             armorG.lineStyle(2, 0x38bdf8, 0.8);
@@ -618,16 +549,16 @@ export default function Game() {
 
         function handleFootstepAudio(me: any) {
             const isMoving = me.lastMoveDirection &&
-                (me.lastMoveDirection.x !== 0 || me.lastMoveDirection.y !== 0);
+                (me.lastMoveDirection.dx !== 0 || me.lastMoveDirection.dy !== 0);
             const isSprinting = keysRef.current.has('shift');
 
             if (isMoving && me.isAlive) {
-                const now = Date.now();
-                // Walking: ~2 steps/sec (500ms). Sprinting: ~3.5 steps/sec (285ms)
-                const interval = isSprinting ? 285 : 500;
-                if (now - footstepTimerRef.current >= interval) {
+                footstepTimerRef.current++;
+                // Walking: ~2 steps/sec (30 ticks @ 60fps = 500ms). Sprinting: ~3.5 steps/sec (17 ticks = 285ms)
+                const interval = isSprinting ? 17 : 30;
+                if (footstepTimerRef.current >= interval) {
                     SoundService.playFootstep(isSprinting);
-                    footstepTimerRef.current = now;
+                    footstepTimerRef.current = 0;
                 }
             } else {
                 footstepTimerRef.current = 0;
@@ -668,8 +599,6 @@ export default function Game() {
             appRef.current = null;
             playerSpritesRef.current.clear();
             itemSpritesRef.current.clear();
-            mapRenderedRef.current = false;
-            zoneDirtyRef.current = true;
         };
     }, [matchId, playerId, assetsLoaded]);
 
@@ -682,35 +611,16 @@ export default function Game() {
             prevStateRef.current = gameStateRef.current;
             gameStateRef.current = state;
 
-            // Throttle HUD re-renders to rAF (max 60/sec) instead of socket frequency (20/sec)
-            // This coalesces multiple socket messages into single React render
-            if (hudRafIdRef.current) cancelAnimationFrame(hudRafIdRef.current);
-            hudRafIdRef.current = requestAnimationFrame(() => {
-                const me = state.players?.find((p: any) => p.id === playerId);
-                if (me) {
-                    setPlayerState({
-                        hp: me.hp,
-                        hasArmor: me.hasArmor,
-                        isAlive: me.isAlive,
-                        kills: me.kills,
-                        deaths: me.deaths,
-                        weaponType: me.weapon?.type || 'pistol',
-                    });
-
-                    // Auto-spectate first alive player when you die
-                    if (me.isAlive === false && !isSpectating) {
-                        const alivePlayers = state.players?.filter((p: any) => p.isAlive && p.id !== playerId);
-                        if (alivePlayers?.length > 0) {
-                            const firstAlive = alivePlayers[0];
-                            socket.emit('spectate-player', {
-                                matchId: state.matchId,
-                                targetPlayerId: firstAlive.id,
-                            });
-                        }
-                    }
-                }
-                hudRafIdRef.current = null;
-            });
+            const me = state.players?.find((p: any) => p.id === playerId);
+            if (me) {
+                setPlayerState({
+                    hp: me.hp,
+                    hasArmor: me.hasArmor,
+                    isAlive: me.isAlive,
+                    kills: me.kills,
+                    deaths: me.deaths,
+                });
+            }
         });
 
         socket.on('player-killed', (data: any) => {
@@ -730,20 +640,10 @@ export default function Game() {
             if (data.weapon === 'melee') {
                 SoundService.playSFX('melee_swing');
             }
-
-            // Haptic feedback on kill (pattern)
-            if (navigator.vibrate) {
-                navigator.vibrate([100, 50, 100]);
-            }
         });
 
         socket.on('player-hit', (_data: any) => {
             SoundService.playSFX('player_hit');
-            SoundService.playSFX('bullet_impact', { volume: 0.5 });
-            // Haptic feedback on hit (short pulse)
-            if (navigator.vibrate) {
-                navigator.vibrate(50);
-            }
         });
 
         socket.on('item-spawned', (data: any) => {
@@ -777,18 +677,7 @@ export default function Game() {
         });
 
         socket.on('zone-shrink', () => {
-            zoneDirtyRef.current = true;
             SoundService.playSFX('zone_warning');
-        });
-
-        socket.on('explosion', (data: any) => {
-            explosionsRef.current.push({ ...data, createdAt: Date.now() });
-            SoundService.playSFX('grenade_explode', { volume: 0.7 });
-        });
-
-        socket.on('spectate-start', (data: any) => {
-            setSpectating(true);
-            setSpectatedPlayer(data.targetPlayerId);
         });
 
         socket.on('match-end', (data: any) => {
@@ -802,18 +691,9 @@ export default function Game() {
                 SoundService.playSting(isWinner ? 'victory' : 'defeat');
             }, 600);
 
-            // Haptic feedback on match end (longer pulse for defeat)
-            if (navigator.vibrate && !isWinner) {
-                navigator.vibrate(300);
-            }
-
             setTimeout(() => {
                 endMatch();
-                if (data.dbMatchId) {
-                    navigate(`/results/${data.dbMatchId}`);
-                } else {
-                    navigate('/');
-                }
+                navigate('/');
             }, 8000);
         });
 
@@ -826,8 +706,6 @@ export default function Game() {
             socket.off('round-end');
             socket.off('round-start');
             socket.off('zone-shrink');
-            socket.off('explosion');
-            socket.off('spectate-start');
             socket.off('match-end');
         };
     }, [playerId]);
@@ -840,11 +718,7 @@ export default function Game() {
         const shootCheck = setInterval(() => {
             const mouse = mouseRef.current;
             if (mouse.down) {
-                if (weaponType === 'grenade_launcher') {
-                    SoundService.playSFX('grenade_launch', { volume: 0.8 });
-                } else {
-                    SoundService.playSFX('gunshot', { volume: 0.6 });
-                }
+                SoundService.playSFX('gunshot', { volume: 0.6 });
             }
             if (mouse.rightDown || keysRef.current.has('e')) {
                 SoundService.playSFX('melee_swing', { volume: 0.7 });
@@ -852,14 +726,16 @@ export default function Game() {
         }, 250); // Throttle to 4/sec to avoid sound spam
 
         return () => clearInterval(shootCheck);
-    }, [weaponType]);
+    }, []);
 
     // ============================================================================
     // RENDER
     // ============================================================================
 
+    const handleAssetsLoaded = useCallback(() => setAssetsLoaded(true), []);
+
     if (!assetsLoaded) {
-        return <LoadingScreen onLoaded={() => setAssetsLoaded(true)} />;
+        return <LoadingScreen onLoaded={handleAssetsLoaded} />;
     }
 
     return (
@@ -897,25 +773,6 @@ export default function Game() {
                     Round {currentRound} • K: {kills} D: {deaths}
                 </div>
 
-                {/* Weapon Label (touch devices only) */}
-                {isTouchDevice && (
-                    <div style={{
-                        position: 'absolute',
-                        bottom: '20px',
-                        left: '50%',
-                        transform: 'translateX(-50%)',
-                        padding: '6px 12px',
-                        background: 'rgba(10, 11, 26, 0.85)',
-                        border: '1px solid var(--color-border)',
-                        borderRadius: 'var(--radius-full)',
-                        color: 'var(--color-text-secondary)',
-                        fontWeight: 600,
-                        fontSize: '12px',
-                    }}>
-                        🔫 {weaponType === 'pistol' ? 'Pistol' : weaponType === 'machine_gun' ? 'Machine Gun' : weaponType === 'grenade_launcher' ? 'Grenade Launcher' : 'Unknown'}
-                    </div>
-                )}
-
                 {/* Announcement */}
                 {announcement && (
                     <div className="hud-announcement">{announcement}</div>
@@ -935,41 +792,9 @@ export default function Game() {
                         color: 'var(--color-text-secondary)',
                         fontWeight: 600,
                     }}>
-                        👀 Spectating {spectatedPlayerId && gameStateRef.current?.players?.find((p: any) => p.id === spectatedPlayerId)?.username}
+                        👀 Spectating
                     </div>
                 )}
-
-                {/* Mute Button */}
-                <button
-                    onClick={() => {
-                        const newMuted = SoundService.toggleMute();
-                        setIsMuted(newMuted);
-                    }}
-                    style={{
-                        position: 'absolute',
-                        top: '12px',
-                        right: '12px',
-                        padding: '6px 12px',
-                        background: 'rgba(10, 11, 26, 0.85)',
-                        border: '1px solid var(--color-border)',
-                        borderRadius: 'var(--radius-md)',
-                        color: 'var(--color-text-secondary)',
-                        cursor: 'pointer',
-                        fontSize: '14px',
-                        fontWeight: 600,
-                        transition: 'all 0.2s',
-                    }}
-                    onMouseEnter={(e) => {
-                        e.currentTarget.style.background = 'rgba(10, 11, 26, 0.95)';
-                        e.currentTarget.style.color = 'var(--color-text)';
-                    }}
-                    onMouseLeave={(e) => {
-                        e.currentTarget.style.background = 'rgba(10, 11, 26, 0.85)';
-                        e.currentTarget.style.color = 'var(--color-text-secondary)';
-                    }}
-                >
-                    {isMuted ? '🔇' : '🔊'}
-                </button>
             </div>
 
             {/* Virtual Joystick Controls — touch devices only */}
@@ -986,7 +811,7 @@ export default function Game() {
                         />
                     </div>
 
-                    {/* Action buttons — melee + pickup + sprint (between the two sticks) */}
+                    {/* Action buttons — melee + sprint (between the two sticks) */}
                     <div className="touch-action-buttons">
                         <button
                             className={`touch-btn ${meleeOn ? 'active' : ''}`}
@@ -1002,21 +827,6 @@ export default function Game() {
                             }}
                         >
                             🗡️
-                        </button>
-                        <button
-                            className={`touch-btn ${pickupOn ? 'active' : ''}`}
-                            onTouchStart={(e) => {
-                                e.preventDefault();
-                                pickupActiveRef.current = true;
-                                setPickupOn(true);
-                            }}
-                            onTouchEnd={(e) => {
-                                e.preventDefault();
-                                pickupActiveRef.current = false;
-                                setPickupOn(false);
-                            }}
-                        >
-                            📦
                         </button>
                         <button
                             className={`touch-btn ${sprintOn ? 'active' : ''}`}
