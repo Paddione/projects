@@ -2,7 +2,7 @@ import { useEffect, useRef, useCallback, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
     Application, Container, Graphics, Text, TextStyle,
-    Sprite, AnimatedSprite,
+    Sprite, AnimatedSprite, Texture,
 } from 'pixi.js';
 import { useGameStore } from '../stores/gameStore';
 import { getSocket } from '../services/apiService';
@@ -284,6 +284,9 @@ export default function Game() {
             mapLayer.removeChildren();
             renderMap(mapLayer, state);
 
+            // ---- COVER LAYER ----
+            renderCover(mapLayer, state);
+
             // ---- ITEM LAYER ----
             itemLayer.removeChildren();
             renderItems(itemLayer, state);
@@ -309,35 +312,50 @@ export default function Game() {
         // RENDER FUNCTIONS
         // ====================================================================
 
-        function renderMap(container: Container, _state: any) {
+        function renderMap(container: Container, state: any) {
             if (useSprites) {
-                // Try to use tile sprites
                 const floorTiles = AssetService.getFloorTiles();
                 if (floorTiles.length > 0) {
-                    // Place individual sprites per tile with random variety
                     for (let ty = 0; ty < MAP_HEIGHT; ty++) {
                         for (let tx = 0; tx < MAP_WIDTH; tx++) {
-                            const hash = ((tx * 7919) + (ty * 104729)) % floorTiles.length;
-                            const tileIdx = Math.abs(hash) % floorTiles.length;
-                            const sprite = new Sprite(floorTiles[tileIdx]);
-                            sprite.position.set(tx * TILE_SIZE, ty * TILE_SIZE);
-                            sprite.width = TILE_SIZE;
-                            sprite.height = TILE_SIZE;
-                            container.addChild(sprite);
+                            const tileType = state.map?.tiles?.[ty]?.[tx] ?? 0;
+                            let texture: Texture | null = null;
+                            if (tileType === 1) {
+                                texture = AssetService.getSprite('tiles', 'wall_01');
+                            } else if (tileType === 2) {
+                                texture = AssetService.getSprite('tiles', 'path_01');
+                            } else {
+                                const hash = (tx * 7919 + ty * 104729) % floorTiles.length;
+                                texture = floorTiles[Math.abs(hash) % floorTiles.length] || null;
+                            }
+                            if (texture) {
+                                const sprite = new Sprite(texture);
+                                sprite.position.set(tx * TILE_SIZE, ty * TILE_SIZE);
+                                sprite.width = TILE_SIZE;
+                                sprite.height = TILE_SIZE;
+                                container.addChild(sprite);
+                            }
                         }
                     }
                     return;
                 }
             }
 
-            // Fallback: procedural map with varied tile colors
+            // Fallback: procedural map with tile-type-aware colors
             const g = new Graphics();
-            const floorColors = [0x1a1c3a, 0x1c1e3e, 0x181a36, 0x1e2042];
             for (let ty = 0; ty < MAP_HEIGHT; ty++) {
                 for (let tx = 0; tx < MAP_WIDTH; tx++) {
-                    const hash = ((tx * 7919) + (ty * 104729)) % floorColors.length;
-                    const colorIdx = Math.abs(hash) % floorColors.length;
-                    g.beginFill(floorColors[colorIdx]);
+                    const tileType = state.map?.tiles?.[ty]?.[tx] ?? 0;
+                    let color: number;
+                    if (tileType === 1) {
+                        color = 0x2a2a4a; // wall - dark blue-gray
+                    } else if (tileType === 2) {
+                        color = (tx + ty) % 2 === 0 ? 0x2a2520 : 0x282320; // path - warm stone
+                    } else {
+                        const hash = (tx * 7919 + ty * 104729) % 4;
+                        color = [0x1a2e1a, 0x1c301c, 0x182a18, 0x1e321e][Math.abs(hash) % 4]; // grass - green
+                    }
+                    g.beginFill(color);
                     g.drawRect(tx * TILE_SIZE, ty * TILE_SIZE, TILE_SIZE, TILE_SIZE);
                     g.endFill();
                 }
@@ -353,6 +371,40 @@ export default function Game() {
                 g.lineTo(MAP_WIDTH * TILE_SIZE, y * TILE_SIZE);
             }
             container.addChild(g);
+        }
+
+        function renderCover(container: Container, state: any) {
+            if (!state.map?.coverObjects) return;
+
+            for (const cover of state.map.coverObjects) {
+                if (cover.hp === 0) continue; // destroyed
+
+                if (useSprites) {
+                    const coverSprite = AssetService.getSprite('cover', cover.type);
+                    if (coverSprite) {
+                        const sprite = new Sprite(coverSprite);
+                        sprite.position.set(cover.x, cover.y);
+                        sprite.width = cover.width;
+                        sprite.height = cover.height;
+                        container.addChild(sprite);
+                        continue;
+                    }
+                }
+
+                // Procedural fallback
+                const g = new Graphics();
+                const colors: Record<string, number> = {
+                    building: 0x3a3a5a,
+                    bench: 0x5a4020,
+                    fountain: 0x1a3a5a,
+                    hedge: 0x1a4a2a,
+                    pond: 0x0a2a4a,
+                };
+                g.beginFill(colors[cover.type] || 0x444444, 0.8);
+                g.drawRect(cover.x, cover.y, cover.width, cover.height);
+                g.endFill();
+                container.addChild(g);
+            }
         }
 
         function renderItems(container: Container, state: any) {
@@ -475,8 +527,8 @@ export default function Game() {
                         (player.lastMoveDirection.dx !== 0 || player.lastMoveDirection.dy !== 0);
                     const animState: CharacterAnimation = isMoving ? 'walk' : 'idle';
 
-                    // Character ID (default to 'warrior' if not set)
-                    const charId = player.character || 'warrior';
+                    // Character ID (default to 'student' if not set)
+                    const charId = player.character || 'student';
                     const frames = AssetService.getAnimation(charId, animState, direction);
 
                     if (frames.length > 0) {

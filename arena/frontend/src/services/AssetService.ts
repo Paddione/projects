@@ -6,7 +6,7 @@
  *
  * Usage:
  *   await AssetService.loadAll(onProgress);
- *   const textures = AssetService.getAnimation('warrior', 'walk', 'N');
+ *   const textures = AssetService.getAnimation('student', 'walk', 'N');
  *   const texture = AssetService.getSprite('health_pack', 0);
  */
 
@@ -88,7 +88,7 @@ class AssetServiceImpl {
     /**
      * Get animation frame textures for a character.
      *
-     * @param characterId e.g. 'warrior', 'rogue', 'mage', 'tank'
+     * @param characterId e.g. 'student', 'professor', 'researcher', 'dean', 'librarian'
      * @param animation   e.g. 'idle', 'walk', 'gun_attack', 'melee_attack', 'death', 'hit'
      * @param direction   e.g. 'N', 'NE', 'E', etc.
      * @returns Array of Textures for AnimatedSprite, or empty array if not found

@@ -28,7 +28,7 @@ export default function Lobby() {
             player: {
                 id: playerId,
                 username,
-                character: 'warrior',
+                character: 'student',
                 characterLevel: 1,
                 isReady: false,
                 isConnected: true,
