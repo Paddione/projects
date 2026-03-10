@@ -298,6 +298,78 @@ The E2E config sets `workers: 1` because socket tests share port 3002. Running i
 
 ---
 
+## E2E Coverage Gaps
+
+The E2E test suite uses **network-level API mocking** — it intercepts all HTTP/WebSocket calls and returns fixture data. This makes tests fast and isolated, but masks real-world failures.
+
+### What E2E Tests Cover
+
+| Area | How Tested |
+|------|-----------|
+| Auth flow | Mocked `/api/auth/me` responses |
+| Lobby CRUD | Mocked API + injected socket events |
+| Game HUD | Canvas presence + injected game-state |
+| Touch controls | Layout verification + touch event simulation |
+| Render perf | FPS measurement via `requestAnimationFrame` |
+| Asset files | `assets.spec.ts` — real HTTP HEAD requests to dev server |
+| CSP headers | `assets.spec.ts` — header string validation |
+| Audio decode | `assets.spec.ts` — Howler.js load without errors |
+
+### What E2E Tests Do NOT Cover
+
+These areas can fail in production but pass all current tests:
+
+| Gap | Risk | Why Missed |
+|-----|------|-----------|
+| **Real Socket.io connection** | Game state never arrives | E2E blocks socket via `page.route('**/socket.io/**', route.abort)` |
+| **PixiJS rendering pipeline** | Canvas blank or fallback Graphics | Tests wait for `<canvas>` but don't verify sprite textures |
+| **Audio playback** | Game is silent | SoundService tested for state, not actual `howl.play()` |
+| **Full game startup sequence** | Race conditions between asset load + socket connect | No test runs steps 1-11 of the startup flow in sequence |
+| **Touch → socket input mapping** | Touch works visually but doesn't emit events | Tests verify touch math in isolation, not wired to socket |
+| **LoadingScreen 0→100%** | Stuck loading forever | `assets.spec.ts` spot-checks URLs but doesn't mount the component |
+| **Music crossfade** | Jarring audio transitions | No test verifies fade timing or volume curves |
+| **Disconnect/reconnect** | Network interruption hangs game | Socket.io auto-reconnect untested |
+
+### Production failures this has caused
+
+| Failure | Root Cause | Date |
+|---------|-----------|------|
+| Loading screen stuck at 0% | AssetService.loadAll() failed silently | 2026-03-09 |
+| Audio decode errors in console | Committed WAV stubs instead of real MP3/OGG | 2026-03-09 |
+| PixiJS worker CSP violation | `worker-src 'self' blob:` missing from CSP | 2026-03-09 |
+| Data URI CSP block | `data:` missing from `connect-src` | 2026-03-09 |
+
+### Mitigation
+
+1. **`assets.spec.ts`** — Added post-incident to verify file existence, CSP headers, and audio decode (partially closes the gap)
+2. **OpenClaw 1v1 testing** — Automated production monitoring catches issues E2E misses (see `OPENCLAW_1V1_TESTING.md`)
+3. **Hookify rules** — Remind about asset pipeline completion before deploy
+
+### Closing the remaining gaps
+
+To fully test what E2E misses, the following would be needed:
+
+**Smoke test with real backend** (new test project in Playwright):
+```bash
+# Requires: running backend + database + real assets
+npx playwright test --project=smoke
+```
+
+This project would:
+- Connect to real backend (no mocks)
+- Verify Socket.io WebSocket upgrade succeeds
+- Wait for LoadingScreen to reach 100% with real assets
+- Verify PixiJS renders sprites (not fallback Graphics)
+- Verify at least one audio file plays without errors
+- Complete one full game loop (join → fight → results)
+
+**Visual regression testing** (screenshot comparison):
+- Capture baseline screenshots of game states
+- Compare on each PR to detect rendering regressions
+- Catches Z-order issues, missing sprites, wrong colors
+
+---
+
 ## Next Steps
 
 1. Run `npm run test:all` to verify your setup
