@@ -104,7 +104,7 @@ spec:
       name: smbcreds
       namespace: korczewski-infra
 ---
-# HDD-ext PV - mounts //10.10.0.4/HDD-ext directly (external 2TB HDD)
+# HDD-ext PV - mounts //10.0.0.11/SDD-Share (1.8TB drive on pve3)
 apiVersion: v1
 kind: PersistentVolume
 metadata:
@@ -132,7 +132,7 @@ spec:
     driver: smb.csi.k8s.io
     volumeHandle: videovault-hdd-ext-pv
     volumeAttributes:
-      source: "//10.10.0.4/HDD-ext"
+      source: "//10.0.0.11/SDD-Share"
     nodeStageSecretRef:
       name: smbcreds
       namespace: korczewski-infra
