@@ -10,7 +10,7 @@ function makePlayer(overrides: Partial<PlayerState> = {}): PlayerState {
     return {
         id: 'p1',
         username: 'Alice',
-        character: 'soldier',
+        character: 'student',
         characterLevel: 1,
         x: 100,
         y: 100,
@@ -56,11 +56,11 @@ describe('PlayerService', () => {
 
     describe('createPlayer', () => {
         it('creates a player with correct initial stats', () => {
-            const player = service.createPlayer('id-1', 'Bob', 'warrior', 3, 50, 80);
+            const player = service.createPlayer('id-1', 'Bob', 'student', 3, 50, 80);
 
             expect(player.id).toBe('id-1');
             expect(player.username).toBe('Bob');
-            expect(player.character).toBe('warrior');
+            expect(player.character).toBe('student');
             expect(player.characterLevel).toBe(3);
             expect(player.x).toBe(50);
             expect(player.y).toBe(80);

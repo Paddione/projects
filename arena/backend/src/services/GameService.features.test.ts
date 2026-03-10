@@ -38,7 +38,7 @@ function makeLobbyPlayer(id: string, username: string): ArenaPlayer {
     return {
         id,
         username,
-        character: 'soldier',
+        character: 'student',
         characterLevel: 1,
         isReady: true,
         isHost: id === '1',

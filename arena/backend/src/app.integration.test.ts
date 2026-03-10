@@ -70,7 +70,7 @@ function makeLobbyRow(overrides: Record<string, unknown> = {}): Record<string, u
             {
                 id: '42',
                 username: 'testuser',
-                character: 'soldier',
+                character: 'student',
                 characterLevel: 1,
                 isReady: false,
                 isHost: true,
@@ -391,7 +391,7 @@ describe('HTTP API Integration', () => {
                 id: 1,
                 auth_user_id: 42,
                 username: 'testuser',
-                selected_character: 'soldier',
+                selected_character: 'student',
                 total_kills: 10,
                 total_deaths: 5,
                 games_played: 3,
@@ -449,12 +449,12 @@ describe('HTTP API Integration', () => {
             expect(res.body.selected_character).toBe('ninja');
         });
 
-        it('defaults to "soldier" when selectedCharacter is not provided', async () => {
+        it('defaults to "student" when selectedCharacter is not provided', async () => {
             const playerRow = {
                 id: 2,
                 auth_user_id: 42,
                 username: 'testuser',
-                selected_character: 'soldier',
+                selected_character: 'student',
             };
             mockDbQuery.mockResolvedValueOnce({ rowCount: 1, rows: [playerRow] });
 
@@ -464,12 +464,12 @@ describe('HTTP API Integration', () => {
                 .send({});
 
             const insertedChar = mockDbQuery.mock.calls[0][1][2];
-            expect(insertedChar).toBe('soldier');
+            expect(insertedChar).toBe('student');
             expect(res.status).toBe(201);
         });
 
         it('returns 401 when not authenticated', async () => {
-            const res = await request(app).post('/api/players').send({ selectedCharacter: 'soldier' });
+            const res = await request(app).post('/api/players').send({ selectedCharacter: 'student' });
 
             expect(res.status).toBe(401);
         });
@@ -480,7 +480,7 @@ describe('HTTP API Integration', () => {
             const res = await request(app)
                 .post('/api/players')
                 .set(AUTH_HEADERS)
-                .send({ selectedCharacter: 'soldier' });
+                .send({ selectedCharacter: 'student' });
 
             expect(res.status).toBe(400);
         });

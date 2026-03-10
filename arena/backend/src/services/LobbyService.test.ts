@@ -45,7 +45,7 @@ function makeDbRow(overrides: Partial<Record<string, unknown>> = {}): Record<str
             {
                 id: '42',
                 username: 'Alice',
-                character: 'soldier',
+                character: 'student',
                 characterLevel: 1,
                 isReady: false,
                 isHost: true,
@@ -63,7 +63,7 @@ function makeLobbyRow(extraPlayers: ArenaPlayer[] = []): Record<string, unknown>
         {
             id: '42',
             username: 'Alice',
-            character: 'soldier',
+            character: 'student',
             characterLevel: 1,
             isReady: true,
             isHost: true,
@@ -136,7 +136,7 @@ describe('LobbyService', () => {
             const lobby = await service.createLobby({
                 hostId: 42,
                 username: 'Alice',
-                selectedCharacter: 'soldier',
+                selectedCharacter: 'student',
                 characterLevel: 1,
             });
 
@@ -183,7 +183,7 @@ describe('LobbyService', () => {
             ).rejects.toThrow('Failed to generate unique lobby code after maximum attempts');
         });
 
-        it('defaults character to "soldier" when not specified', async () => {
+        it('defaults character to "student" when not specified', async () => {
             const insertSpy = vi.fn().mockResolvedValueOnce({ rowCount: 1, rows: [makeDbRow()] });
             mockQuery
                 .mockResolvedValueOnce({ rowCount: 0, rows: [] })
@@ -194,7 +194,7 @@ describe('LobbyService', () => {
             const insertCall = mockQuery.mock.calls[1];
             // The 5th param is the JSON-stringified players array
             const playersJson = JSON.parse(insertCall[1][4]);
-            expect(playersJson[0].character).toBe('soldier');
+            expect(playersJson[0].character).toBe('student');
         });
     });
 
@@ -210,7 +210,7 @@ describe('LobbyService', () => {
                     {
                         id: '42',
                         username: 'Alice',
-                        character: 'soldier',
+                        character: 'student',
                         characterLevel: 1,
                         isReady: false,
                         isHost: true,
@@ -262,7 +262,7 @@ describe('LobbyService', () => {
             const players = Array.from({ length: 4 }, (_, i) => ({
                 id: String(i),
                 username: `P${i}`,
-                character: 'soldier',
+                character: 'student',
                 characterLevel: 1,
                 isReady: false,
                 isHost: i === 0,
@@ -283,7 +283,7 @@ describe('LobbyService', () => {
                     {
                         id: '42',
                         username: 'Alice',
-                        character: 'soldier',
+                        character: 'student',
                         characterLevel: 1,
                         isReady: false,
                         isHost: true,
@@ -312,7 +312,7 @@ describe('LobbyService', () => {
                     {
                         id: '42',
                         username: 'Alice',
-                        character: 'soldier',
+                        character: 'student',
                         characterLevel: 1,
                         isReady: false,
                         isHost: true,
@@ -405,7 +405,7 @@ describe('LobbyService', () => {
                     {
                         id: '42',
                         username: 'Alice',
-                        character: 'soldier',
+                        character: 'student',
                         characterLevel: 1,
                         isReady: true,
                         isHost: true,
@@ -725,7 +725,7 @@ describe('LobbyService', () => {
                 {
                     id: '42',
                     username: 'Alice',
-                    character: 'soldier',
+                    character: 'student',
                     characterLevel: 1,
                     isReady: false,
                     isHost: true,

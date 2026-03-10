@@ -82,7 +82,7 @@ function makeLobbyRow(overrides: Record<string, unknown> = {}): Record<string, u
             shrinkInterval: 30, itemSpawns: false, itemSpawnInterval: 60,
         }),
         players: JSON.stringify([{
-            id: '42', username: 'alice', character: 'soldier', characterLevel: 1,
+            id: '42', username: 'alice', character: 'student', characterLevel: 1,
             isReady: false, isHost: true, isConnected: true,
             joinedAt: new Date().toISOString(),
         }]),
@@ -217,7 +217,7 @@ describe('Socket.io Integration', () => {
             client = await connectClient();
 
             const result = await new Promise<{ lobby: object; playerId: string }>((resolve, reject) => {
-                client.emit('join-lobby', { lobbyCode: 'SOCK01', player: { character: 'soldier', characterLevel: 1 } });
+                client.emit('join-lobby', { lobbyCode: 'SOCK01', player: { character: 'student', characterLevel: 1 } });
                 client.once('join-success', resolve);
                 client.once('join-error', (e: { message: string }) => reject(new Error(e.message)));
                 setTimeout(() => reject(new Error('timeout')), 4000);
@@ -233,7 +233,7 @@ describe('Socket.io Integration', () => {
             client = await connectClient();
 
             const err = await new Promise<{ message: string }>((resolve, reject) => {
-                client.emit('join-lobby', { lobbyCode: 'NOPE00', player: { character: 'soldier', characterLevel: 1 } });
+                client.emit('join-lobby', { lobbyCode: 'NOPE00', player: { character: 'student', characterLevel: 1 } });
                 client.once('join-error', resolve);
                 client.once('join-success', () => reject(new Error('should have errored')));
                 setTimeout(() => reject(new Error('timeout')), 4000);
@@ -248,7 +248,7 @@ describe('Socket.io Integration', () => {
 
         it('emits join-error when lobby is full', async () => {
             const fullPlayers = Array.from({ length: 4 }, (_, i) => ({
-                id: String(i), username: `P${i}`, character: 'soldier', characterLevel: 1,
+                id: String(i), username: `P${i}`, character: 'student', characterLevel: 1,
                 isReady: false, isHost: i === 0, isConnected: true, joinedAt: new Date().toISOString(),
             }));
 
@@ -260,7 +260,7 @@ describe('Socket.io Integration', () => {
             client = await connectClient();
 
             const err = await new Promise<{ message: string }>((resolve, reject) => {
-                client.emit('join-lobby', { lobbyCode: 'SOCK01', player: { character: 'soldier', characterLevel: 1 } });
+                client.emit('join-lobby', { lobbyCode: 'SOCK01', player: { character: 'student', characterLevel: 1 } });
                 client.once('join-error', resolve);
                 client.once('join-success', () => reject(new Error('should have errored')));
                 setTimeout(() => reject(new Error('timeout')), 4000);
@@ -278,7 +278,7 @@ describe('Socket.io Integration', () => {
             client = await connectClient();
 
             const err = await new Promise<{ message: string }>((resolve, reject) => {
-                client.emit('join-lobby', { lobbyCode: 'SOCK01', player: { character: 'soldier', characterLevel: 1 } });
+                client.emit('join-lobby', { lobbyCode: 'SOCK01', player: { character: 'student', characterLevel: 1 } });
                 client.once('join-error', resolve);
                 setTimeout(() => reject(new Error('timeout')), 4000);
             });
@@ -298,7 +298,7 @@ describe('Socket.io Integration', () => {
                 .mockResolvedValueOnce({ rowCount: 1, rows: [makeLobbyRow()] });
 
             await new Promise<void>((resolve, reject) => {
-                c.emit('join-lobby', { lobbyCode: 'SOCK01', player: { character: 'soldier', characterLevel: 1 } });
+                c.emit('join-lobby', { lobbyCode: 'SOCK01', player: { character: 'student', characterLevel: 1 } });
                 c.once('join-success', () => resolve());
                 c.once('join-error', (e: any) => reject(new Error(e.message)));
                 setTimeout(() => reject(new Error('join-timeout')), 4000);
@@ -344,8 +344,8 @@ describe('Socket.io Integration', () => {
         it('non-host player receives leave-success and DB UPDATE is executed', async () => {
             // When a non-host leaves, the server: calls findByCode, filters players,
             // calls UPDATE, and emits lobby-updated to the room + leave-success to the leaver.
-            const aliceHost = { id: '1', username: 'host', character: 'soldier', characterLevel: 1, isReady: false, isHost: true, isConnected: true, joinedAt: new Date().toISOString() };
-            const bobPlayer = { id: '42', username: 'bob', character: 'soldier', characterLevel: 1, isReady: false, isHost: false, isConnected: true, joinedAt: new Date().toISOString() };
+            const aliceHost = { id: '1', username: 'host', character: 'student', characterLevel: 1, isReady: false, isHost: true, isConnected: true, joinedAt: new Date().toISOString() };
+            const bobPlayer = { id: '42', username: 'bob', character: 'student', characterLevel: 1, isReady: false, isHost: false, isConnected: true, joinedAt: new Date().toISOString() };
 
             client = await connectClient();
 
@@ -355,7 +355,7 @@ describe('Socket.io Integration', () => {
                 .mockResolvedValueOnce({ rowCount: 1, rows: [makeLobbyRow({ players: JSON.stringify([aliceHost, bobPlayer]) })] });
 
             await new Promise<void>((resolve, reject) => {
-                client.emit('join-lobby', { lobbyCode: 'SOCK01', player: { character: 'soldier', characterLevel: 1 } });
+                client.emit('join-lobby', { lobbyCode: 'SOCK01', player: { character: 'student', characterLevel: 1 } });
                 client.once('join-success', () => resolve());
                 client.once('join-error', (e: any) => reject(new Error(e.message)));
                 setTimeout(() => reject(new Error('join-timeout')), 4000);
@@ -395,7 +395,7 @@ describe('Socket.io Integration', () => {
                 .mockResolvedValueOnce({ rowCount: 1, rows: [makeLobbyRow()] });
 
             await new Promise<void>((resolve, reject) => {
-                client.emit('join-lobby', { lobbyCode: 'SOCK01', player: { character: 'soldier', characterLevel: 1 } });
+                client.emit('join-lobby', { lobbyCode: 'SOCK01', player: { character: 'student', characterLevel: 1 } });
                 client.once('join-success', () => resolve());
                 client.once('join-error', (e: any) => reject(new Error(e.message)));
                 setTimeout(() => reject(new Error('timeout')), 4000);
@@ -404,7 +404,7 @@ describe('Socket.io Integration', () => {
             // Ready up
             const readyRow = makeLobbyRow({
                 players: JSON.stringify([{
-                    id: '42', username: 'alice', character: 'soldier', characterLevel: 1,
+                    id: '42', username: 'alice', character: 'student', characterLevel: 1,
                     isReady: true, isHost: true, isConnected: true, joinedAt: new Date().toISOString(),
                 }]),
             });
@@ -449,7 +449,7 @@ describe('Socket.io Integration', () => {
                 .mockResolvedValueOnce({ rowCount: 1, rows: [makeLobbyRow()] });
 
             await new Promise<void>((resolve, reject) => {
-                client.emit('join-lobby', { lobbyCode: 'SOCK01', player: { character: 'soldier', characterLevel: 1 } });
+                client.emit('join-lobby', { lobbyCode: 'SOCK01', player: { character: 'student', characterLevel: 1 } });
                 client.once('join-success', () => resolve());
                 client.once('join-error', (e: any) => reject(new Error(e.message)));
                 setTimeout(() => reject(new Error('timeout')), 4000);
@@ -494,7 +494,7 @@ describe('Socket.io Integration', () => {
                 .mockResolvedValueOnce({ rowCount: 1, rows: [makeLobbyRow()] });
 
             await new Promise<void>((resolve, reject) => {
-                client.emit('join-lobby', { lobbyCode: 'SOCK01', player: { character: 'soldier', characterLevel: 1 } });
+                client.emit('join-lobby', { lobbyCode: 'SOCK01', player: { character: 'student', characterLevel: 1 } });
                 client.once('join-success', () => resolve());
                 client.once('join-error', (e: any) => reject(new Error(e.message)));
                 setTimeout(() => reject(new Error('timeout')), 4000);
@@ -549,8 +549,8 @@ describe('Socket.io Integration', () => {
         it('emits start-game-error when not all players are ready', async () => {
             // Lobby has 2 players, one not ready
             const players = [
-                { id: '42', username: 'alice', character: 'soldier', characterLevel: 1, isReady: true, isHost: true, isConnected: true, joinedAt: new Date().toISOString() },
-                { id: '99', username: 'bob', character: 'soldier', characterLevel: 1, isReady: false, isHost: false, isConnected: true, joinedAt: new Date().toISOString() },
+                { id: '42', username: 'alice', character: 'student', characterLevel: 1, isReady: true, isHost: true, isConnected: true, joinedAt: new Date().toISOString() },
+                { id: '99', username: 'bob', character: 'student', characterLevel: 1, isReady: false, isHost: false, isConnected: true, joinedAt: new Date().toISOString() },
             ];
             mockDbQuery.mockResolvedValueOnce({ rowCount: 1, rows: [makeLobbyRow({ players: JSON.stringify(players) })] });
 
@@ -580,7 +580,7 @@ describe('Socket.io Integration', () => {
                 .mockResolvedValueOnce({ rowCount: 1, rows: [makeLobbyRow()] });
 
             await new Promise<void>((resolve, reject) => {
-                client.emit('join-lobby', { lobbyCode: 'SOCK01', player: { character: 'soldier', characterLevel: 1 } });
+                client.emit('join-lobby', { lobbyCode: 'SOCK01', player: { character: 'student', characterLevel: 1 } });
                 client.once('join-success', () => resolve());
                 client.once('join-error', (e: any) => reject(new Error(e.message)));
                 setTimeout(() => reject(new Error('timeout')), 4000);
