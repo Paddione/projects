@@ -17,6 +17,7 @@ import oauthRoutes from './routes/oauth.js';
 import appsRoutes from './routes/apps.js';
 import adminRoutes from './routes/admin.js';
 import accessRequestsRoutes from './routes/access-requests.js';
+import forwardAuthRoutes from './routes/forward-auth.js';
 import healthRoutes from './routes/health.js';
 import { client } from './config/database.js';
 
@@ -212,6 +213,9 @@ app.get('/api', (_req, res) => {
   });
 });
 
+// ForwardAuth endpoint for Traefik (no CSRF, no rate limiting — internal cluster traffic only)
+app.use('/api/auth/forward-auth', forwardAuthRoutes);
+
 // Authentication routes (with rate limiting + CSRF)
 app.use('/api/auth/login', strictAuthLimiter);
 app.use('/api/auth/register', strictAuthLimiter);
@@ -274,7 +278,10 @@ async function syncAppCatalog() {
       VALUES
         ('l2p', 'Learn2Play', 'Multiplayer quiz platform', 'https://l2p.korczewski.de'),
         ('videovault', 'VideoVault', 'Video manager', 'https://videovault.korczewski.de'),
-        ('shop', 'GoldCoins Shop', 'Digital currency shop', 'https://shop.korczewski.de')
+        ('shop', 'GoldCoins Shop', 'Digital currency shop', 'https://shop.korczewski.de'),
+        ('arena', 'Arena', 'Battle royale game', 'https://arena.korczewski.de'),
+        ('fritzbox', 'FritzBox', 'Router management', 'https://fritz.korczewski.de'),
+        ('proxmox', 'Proxmox', 'Cluster management', 'https://proxmox.korczewski.de')
       ON CONFLICT (key) DO UPDATE SET
         name = EXCLUDED.name,
         description = EXCLUDED.description,

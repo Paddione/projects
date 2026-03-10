@@ -3,6 +3,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Hub from './pages/Hub';
 import Admin from './pages/Admin';
+import AccessDenied from './pages/AccessDenied';
 import HelpGuide from './components/HelpGuide';
 
 function App() {
@@ -17,6 +18,7 @@ function App() {
         <Route path="/hub" element={<Hub />} />
         <Route path="/apps" element={<Navigate to="/hub" replace />} />
         <Route path="/admin" element={<Admin />} />
+        <Route path="/access-denied" element={<AccessDenied />} />
         <Route path="/" element={<Navigate to="/login" replace />} />
       </Routes>
     </BrowserRouter>

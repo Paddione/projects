@@ -369,7 +369,7 @@ metadata:
     tier: infrastructure
 spec:
   forwardAuth:
-    address: "http://auth.korczewski-services.svc.cluster.local:5500/api/auth/verify?app=fritzbox"
+    address: "http://auth.korczewski-services.svc.cluster.local:5500/api/auth/forward-auth?app=fritzbox"
     trustForwardHeader: true
     authResponseHeaders:
       - "X-Auth-User"
@@ -412,7 +412,7 @@ metadata:
     tier: infrastructure
 spec:
   forwardAuth:
-    address: "http://auth.korczewski-services.svc.cluster.local:5500/api/auth/verify?app=proxmox"
+    address: "http://auth.korczewski-services.svc.cluster.local:5500/api/auth/forward-auth?app=proxmox"
     trustForwardHeader: true
     authResponseHeaders:
       - "X-Auth-User"

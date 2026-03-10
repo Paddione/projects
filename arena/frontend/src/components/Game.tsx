@@ -44,15 +44,21 @@ export default function Game() {
 
     const [assetsLoaded, setAssetsLoaded] = useState(false);
 
+    const [isMuted, setIsMuted] = useState(false);
+
     const {
         playerId, hp, hasArmor, kills, deaths,
         killfeed, announcement, currentRound,
-        isSpectating,
+        isSpectating, spectatedPlayerId,
         setPlayerState, addKillfeed, setAnnouncement, setRound, setRoundScores,
+        setSpectating, setSpectatedPlayer,
         endMatch,
     } = useGameStore();
 
     const socket = getSocket();
+
+    // Expose socket for E2E test helpers (emitFromServer)
+    (window as any).__arenaSocket = socket;
 
     const useSprites = AssetService.isLoaded;
 
@@ -693,8 +699,13 @@ export default function Game() {
 
             setTimeout(() => {
                 endMatch();
-                navigate('/');
+                navigate(data.dbMatchId ? `/results/${data.dbMatchId}` : '/');
             }, 8000);
+        });
+
+        socket.on('spectate-start', (data: any) => {
+            setSpectating(true);
+            setSpectatedPlayer(data.targetPlayerId);
         });
 
         return () => {
@@ -707,6 +718,7 @@ export default function Game() {
             socket.off('round-start');
             socket.off('zone-shrink');
             socket.off('match-end');
+            socket.off('spectate-start');
         };
     }, [playerId]);
 
@@ -778,6 +790,29 @@ export default function Game() {
                     <div className="hud-announcement">{announcement}</div>
                 )}
 
+                {/* Mute Button */}
+                <button
+                    onClick={() => {
+                        const nowMuted = SoundService.toggleMute();
+                        setIsMuted(nowMuted);
+                    }}
+                    style={{
+                        position: 'absolute',
+                        top: 'calc(var(--space-xl, 16px) + env(safe-area-inset-top, 0px))',
+                        left: 'var(--space-xl, 16px)',
+                        pointerEvents: 'auto',
+                        background: 'rgba(10, 11, 26, 0.85)',
+                        border: '1px solid var(--color-border, #333)',
+                        borderRadius: '8px',
+                        padding: '6px 10px',
+                        cursor: 'pointer',
+                        fontSize: '1.2rem',
+                        color: 'white',
+                    }}
+                >
+                    {isMuted ? '🔇' : '🔊'}
+                </button>
+
                 {/* Spectating Banner */}
                 {isSpectating && (
                     <div style={{
@@ -792,7 +827,9 @@ export default function Game() {
                         color: 'var(--color-text-secondary)',
                         fontWeight: 600,
                     }}>
-                        👀 Spectating
+                        👀 Spectating {gameStateRef.current?.players?.find(
+                            (p: any) => p.id === spectatedPlayerId
+                        )?.username || ''}
                     </div>
                 )}
             </div>
