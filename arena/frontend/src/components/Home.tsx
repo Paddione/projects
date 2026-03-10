@@ -117,6 +117,14 @@ export default function Home() {
                     </button>
                 </div>
 
+                <button
+                    className="btn btn-ghost"
+                    onClick={() => navigate('/leaderboard')}
+                    style={{ width: '100%' }}
+                >
+                    View Leaderboard
+                </button>
+
                 {/* Open Lobbies Section */}
                 <div style={{
                     marginTop: 'var(--space-lg)',

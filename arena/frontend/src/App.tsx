@@ -4,6 +4,7 @@ import Home from './components/Home';
 import Lobby from './components/Lobby';
 import Game from './components/Game';
 import MatchResults from './components/MatchResults';
+import Leaderboard from './components/Leaderboard';
 
 export default function App() {
     return (
@@ -14,6 +15,7 @@ export default function App() {
                     <Route path="/lobby/:code" element={<Lobby />} />
                     <Route path="/game/:matchId" element={<Game />} />
                     <Route path="/results/:matchId" element={<MatchResults />} />
+                    <Route path="/leaderboard" element={<Leaderboard />} />
                 </Routes>
             </AuthGuard>
         </BrowserRouter>

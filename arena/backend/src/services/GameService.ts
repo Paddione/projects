@@ -101,6 +101,7 @@ export class GameService {
 
         const gameState: GameState = {
             matchId,
+            lobbyCode: lobby.code,
             phase: 'round-active',
             players,
             projectiles: [],
@@ -1126,22 +1127,35 @@ export class GameService {
     private async saveMatchResults(game: GameState, winnerId: string, results: MatchResult[]): Promise<number | undefined> {
         const duration = Math.floor((Date.now() - game.currentRound.startedAt) / 1000);
 
-        // Insert match
+        // Upsert all players first — guarantees player rows exist before FK references
+        for (const result of results) {
+            await this.db.query(
+                `INSERT INTO players (auth_user_id, username, selected_character)
+                 VALUES ($1, $2, $3)
+                 ON CONFLICT (auth_user_id) DO UPDATE SET
+                   username = EXCLUDED.username,
+                   selected_character = EXCLUDED.selected_character,
+                   updated_at = CURRENT_TIMESTAMP`,
+                [parseInt(result.playerId), result.username, result.character]
+            );
+        }
+
+        // Insert match with real lobby_code and resolved winner_id
         const matchResult = await this.db.query(
             `INSERT INTO matches (lobby_code, winner_id, player_count, total_rounds, duration_seconds, settings)
-       VALUES ($1, (SELECT id FROM players WHERE auth_user_id = $2), $3, $4, $5, $6)
-       RETURNING id`,
-            [null, parseInt(winnerId), game.players.size, game.currentRound.roundNumber, duration, JSON.stringify(game.settings)]
+             VALUES ($1, (SELECT id FROM players WHERE auth_user_id = $2), $3, $4, $5, $6)
+             RETURNING id`,
+            [game.lobbyCode, parseInt(winnerId), game.players.size, game.currentRound.roundNumber, duration, JSON.stringify(game.settings)]
         );
 
         const dbMatchId = matchResult.rows[0]?.id;
         if (!dbMatchId) return undefined;
 
-        // Insert match results
+        // Insert match results with resolved player_id
         for (const result of results) {
             await this.db.query(
                 `INSERT INTO match_results (match_id, player_id, username, character_name, kills, deaths, damage_dealt, items_collected, rounds_won, placement, experience_gained, level_before, level_after, level_up_occurred)
-         VALUES ($1, (SELECT id FROM players WHERE auth_user_id = $2), $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)`,
+                 VALUES ($1, (SELECT id FROM players WHERE auth_user_id = $2), $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)`,
                 [
                     dbMatchId,
                     parseInt(result.playerId),
@@ -1163,14 +1177,14 @@ export class GameService {
             // Update player stats and character level
             await this.db.query(
                 `UPDATE players SET
-           total_kills = total_kills + $1,
-           total_deaths = total_deaths + $2,
-           games_played = games_played + 1,
-           total_wins = total_wins + $3,
-           experience = experience + $4,
-           character_level = $6,
-           updated_at = CURRENT_TIMESTAMP
-         WHERE auth_user_id = $5`,
+                   total_kills = total_kills + $1,
+                   total_deaths = total_deaths + $2,
+                   games_played = games_played + 1,
+                   total_wins = total_wins + $3,
+                   experience = experience + $4,
+                   character_level = $6,
+                   updated_at = CURRENT_TIMESTAMP
+                 WHERE auth_user_id = $5`,
                 [result.kills, result.deaths, result.placement === 1 ? 1 : 0, result.experienceGained, parseInt(result.playerId), result.levelAfter]
             );
         }

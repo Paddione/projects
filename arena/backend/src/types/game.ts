@@ -134,6 +134,7 @@ export interface RoundState {
 
 export interface GameState {
     matchId: string;
+    lobbyCode: string;
     phase: MatchPhase;
     players: Map<string, PlayerState>;
     projectiles: Projectile[];
