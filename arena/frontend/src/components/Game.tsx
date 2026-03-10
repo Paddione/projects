@@ -492,33 +492,70 @@ export default function Game() {
                     }
                 }
 
-                // Fallback: procedural items
+                // Fallback: procedural items with distinctive shapes
                 const ig = new Graphics();
                 const pulse = 0.3 + Math.sin(Date.now() / 300) * 0.3;
+                const x = item.x;
+                const y = item.y;
+
                 if (item.type === 'health') {
+                    // Red cross shape
+                    ig.beginFill(0x1a0808, 0.6);
+                    ig.drawCircle(x, y, 11);
+                    ig.endFill();
                     ig.beginFill(0xef4444);
-                    ig.drawCircle(item.x, item.y, 8);
+                    ig.drawRect(x - 3, y - 9, 6, 18); // vertical bar
+                    ig.drawRect(x - 9, y - 3, 18, 6); // horizontal bar
                     ig.endFill();
                     ig.lineStyle(2, 0xef4444, pulse);
-                    ig.drawCircle(item.x, item.y, 12);
+                    ig.drawCircle(x, y, 13);
                 } else if (item.type === 'armor') {
-                    ig.beginFill(0x38bdf8);
-                    ig.drawCircle(item.x, item.y, 8);
+                    // Diamond/shield shape with chevron
+                    ig.beginFill(0x081a2a, 0.6);
+                    ig.drawCircle(x, y, 11);
                     ig.endFill();
+                    ig.beginFill(0x38bdf8);
+                    ig.moveTo(x, y - 10);
+                    ig.lineTo(x + 8, y);
+                    ig.lineTo(x, y + 10);
+                    ig.lineTo(x - 8, y);
+                    ig.closePath();
+                    ig.endFill();
+                    // Inner chevron lines
+                    ig.lineStyle(1.5, 0x0a0b1a, 0.8);
+                    ig.moveTo(x - 4, y - 2);
+                    ig.lineTo(x, y + 3);
+                    ig.lineTo(x + 4, y - 2);
                     ig.lineStyle(2, 0x38bdf8, pulse);
-                    ig.drawCircle(item.x, item.y, 12);
+                    ig.drawCircle(x, y, 13);
                 } else if (item.type === 'machine_gun') {
+                    // Gun silhouette (rectangle + barrel)
+                    ig.beginFill(0x1a1808, 0.6);
+                    ig.drawCircle(x, y, 11);
+                    ig.endFill();
                     ig.beginFill(0xfbbf24);
-                    ig.drawCircle(item.x, item.y, 8);
+                    ig.drawRect(x - 8, y - 3, 12, 6); // body
+                    ig.drawRect(x + 4, y - 1.5, 6, 3); // barrel
+                    ig.drawRect(x - 4, y + 3, 3, 5); // grip
                     ig.endFill();
                     ig.lineStyle(2, 0xfbbf24, pulse);
-                    ig.drawCircle(item.x, item.y, 12);
+                    ig.drawCircle(x, y, 13);
                 } else if (item.type === 'grenade_launcher') {
+                    // Grenade shape (rounded body + fuse)
+                    ig.beginFill(0x1a0c04, 0.6);
+                    ig.drawCircle(x, y, 11);
+                    ig.endFill();
                     ig.beginFill(0xf97316);
-                    ig.drawCircle(item.x, item.y, 8);
+                    ig.drawRoundedRect(x - 5, y - 4, 10, 10, 3); // body
+                    ig.endFill();
+                    ig.lineStyle(2, 0xf97316, 0.9);
+                    ig.moveTo(x, y - 4);
+                    ig.lineTo(x + 2, y - 8); // fuse stem
+                    ig.beginFill(0xfbbf24);
+                    ig.drawCircle(x + 2, y - 9, 2); // fuse spark
                     ig.endFill();
                     ig.lineStyle(2, 0xf97316, pulse);
-                    ig.drawCircle(item.x, item.y, 12);
+                    ig.drawCircle(x, y, 13);
                 }
                 container.addChild(ig);
             }
