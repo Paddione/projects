@@ -329,6 +329,7 @@ export function VideoCard({
   }, [isHovering, hoverFrames.length, video.id, video.filename, isVisible]);
 
   const formatDuration = (seconds: number): string => {
+    if (!Number.isFinite(seconds) || seconds <= 0) return '-:--';
     const mins = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
     return `${mins}:${secs.toString().padStart(2, '0')}`;
@@ -615,6 +616,10 @@ export function VideoCard({
             className="p-3 bg-white bg-opacity-20 backdrop-blur-sm rounded-full text-white hover:bg-opacity-30 transition-colors"
             data-testid={`button-play-${video.id}`}
             aria-label={`Play ${video.displayName}`}
+            onClick={(e) => {
+              e.stopPropagation();
+              onPlay(video);
+            }}
           >
             <Play className="h-6 w-6" />
           </Button>

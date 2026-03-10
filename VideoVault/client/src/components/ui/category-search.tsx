@@ -1,10 +1,9 @@
-import { useState, useRef, useEffect, useMemo } from "react";
+import { useState, useRef, useMemo } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Category } from "@/types/video";
-import { CategoryNormalizer } from "@/services/category-normalizer";
 import { getCategoryColorClasses } from "@/lib/category-colors";
 import { Search, X } from "lucide-react";
 
@@ -148,11 +147,13 @@ export function CategorySearch({
           </div>
         </PopoverTrigger>
         
-        <PopoverContent 
-          className="w-full p-0 max-h-64 overflow-y-auto" 
+        <PopoverContent
+          className="w-full p-0 max-h-64 overflow-y-auto"
           align="start"
           side="bottom"
           sideOffset={4}
+          onOpenAutoFocus={(e) => e.preventDefault()}
+          onCloseAutoFocus={(e) => e.preventDefault()}
         >
           {suggestions.length > 0 ? (
             <div className="p-2">

@@ -109,6 +109,8 @@ export function VideoPlayerModal({
   const touchActiveRef = useRef(false);
   const [gestureMessage, setGestureMessage] = useState<string | null>(null);
   const gestureMessageTimeout = useRef<number | null>(null);
+  // Guard: after seeking, suppress timeupdate briefly to prevent stale position overwrite
+  const seekCommittedRef = useRef(false);
 
   useEffect(() => {
     const videoElement = videoRef.current;
@@ -120,10 +122,14 @@ export function VideoPlayerModal({
     );
 
     const handleTimeUpdate = () => {
-      if (!isScrubbing) {
+      if (!isScrubbing && !seekCommittedRef.current) {
         setCurrentTime(videoElement.currentTime);
       }
       updateBuffered();
+    };
+    const handleSeeked = () => {
+      seekCommittedRef.current = false;
+      setCurrentTime(videoElement.currentTime);
     };
     const handleDurationChange = () =>
       setDuration(Number.isFinite(videoElement.duration) ? videoElement.duration : 0);
@@ -179,6 +185,7 @@ export function VideoPlayerModal({
     videoElement.addEventListener('play', handlePlay);
     videoElement.addEventListener('pause', handlePause);
     videoElement.addEventListener('progress', handleProgress);
+    videoElement.addEventListener('seeked', handleSeeked);
     videoElement.addEventListener('enterpictureinpicture', handleEnterPip);
     videoElement.addEventListener('leavepictureinpicture', handleLeavePip);
 
@@ -189,6 +196,7 @@ export function VideoPlayerModal({
       videoElement.removeEventListener('play', handlePlay);
       videoElement.removeEventListener('pause', handlePause);
       videoElement.removeEventListener('progress', handleProgress);
+      videoElement.removeEventListener('seeked', handleSeeked);
       videoElement.removeEventListener('enterpictureinpicture', handleEnterPip);
       videoElement.removeEventListener('leavepictureinpicture', handleLeavePip);
     };
@@ -286,6 +294,7 @@ export function VideoPlayerModal({
 
   const handleSeekCommit = (value: number[]) => {
     if (videoRef.current) {
+      seekCommittedRef.current = true;
       videoRef.current.currentTime = value[0];
       setCurrentTime(value[0]);
     }

@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -33,6 +33,7 @@ export function CategoryGroup({
   const [isOpen, setIsOpen] = useState(defaultOpen);
   const [searchQuery, setSearchQuery] = useState('');
   const [showSearch, setShowSearch] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   const colorClasses = getCategoryColorClasses(type, isCustom);
 
@@ -64,6 +65,8 @@ export function CategoryGroup({
   const handleAddValue = (value: string) => {
     onAdd(value);
     setSearchQuery('');
+    // Re-focus search input so user can keep typing
+    requestAnimationFrame(() => searchInputRef.current?.focus());
   };
 
   const handleAddCustomValue = () => {
@@ -127,6 +130,7 @@ export function CategoryGroup({
           <div className="relative mb-2">
             <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
             <Input
+              ref={searchInputRef}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder={`Search or add ${label.toLowerCase()}...`}
