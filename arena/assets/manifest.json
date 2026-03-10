@@ -11,29 +11,29 @@
 
   "characters": [
     {
-      "id": "warrior",
+      "id": "student",
       "poses": ["stand", "gun", "machine", "reload", "hold", "silencer"],
-      "color": "#6366f1"
+      "color": "#00f2ff"
     },
     {
-      "id": "rogue",
+      "id": "researcher",
       "poses": ["stand", "gun", "machine", "reload", "hold", "silencer"],
-      "color": "#22c55e"
+      "color": "#3eff8b"
     },
     {
-      "id": "mage",
+      "id": "professor",
       "poses": ["stand", "gun", "machine", "reload", "hold", "silencer"],
-      "color": "#a855f7"
+      "color": "#bc13fe"
     },
     {
-      "id": "tank",
+      "id": "dean",
       "poses": ["stand", "gun", "machine", "reload", "hold", "silencer"],
-      "color": "#f59e0b"
+      "color": "#ffd700"
     },
     {
-      "id": "zombie",
+      "id": "librarian",
       "poses": ["stand", "gun", "machine", "reload", "hold", "silencer"],
-      "color": "#ef4444"
+      "color": "#ff6b9d"
     }
   ],
 
@@ -89,11 +89,11 @@
   ],
 
   "cover": [
-    { "id": "wall_cover",  "prompt": "low-poly stone wall barrier, top-down view, dark gray, destructible" },
-    { "id": "crate",       "prompt": "low-poly wooden crate, top-down view, brown, destructible game object" },
-    { "id": "pillar",      "prompt": "low-poly stone pillar, top-down view, circular, dark gray" },
-    { "id": "bush",        "prompt": "low-poly bush, top-down view, dark green, semi-transparent cover" },
-    { "id": "water",       "prompt": "low-poly water puddle, top-down view, blue reflective surface, slowing terrain" }
+    { "id": "building",  "prompt": "low-poly campus building wall, top-down view, brick facade, academic architecture" },
+    { "id": "bench",     "prompt": "low-poly park bench, top-down view, wooden slats, campus outdoor seating" },
+    { "id": "fountain",  "prompt": "low-poly stone fountain, top-down view, circular base, campus courtyard centerpiece" },
+    { "id": "hedge",     "prompt": "low-poly trimmed hedge, top-down view, dark green, campus garden border" },
+    { "id": "pond",      "prompt": "low-poly ornamental pond, top-down view, blue reflective surface, campus water feature" }
   ],
 
   "ui": [

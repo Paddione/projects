@@ -170,7 +170,7 @@ app.post('/api/players', async (req, res) => {
        VALUES ($1, $2, $3)
        ON CONFLICT (auth_user_id) DO UPDATE SET username = $2, updated_at = CURRENT_TIMESTAMP
        RETURNING *`,
-            [user.userId, user.username, selectedCharacter || 'soldier']
+            [user.userId, user.username, selectedCharacter || 'student']
         );
         res.status(201).json(result.rows[0]);
     } catch (error) {

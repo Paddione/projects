@@ -72,7 +72,7 @@ export class LobbyService {
         const hostPlayer: ArenaPlayer = {
             id: String(request.hostId),
             username: request.username,
-            character: request.selectedCharacter || 'soldier',
+            character: request.selectedCharacter || 'student',
             characterLevel: request.characterLevel || 1,
             isReady: false,
             isHost: true,

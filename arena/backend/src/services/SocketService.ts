@@ -132,7 +132,7 @@ export class SocketService {
                         player: {
                             id: playerId,
                             username: user.username,
-                            character: data.player?.character || 'soldier',
+                            character: data.player?.character || 'student',
                             characterLevel: data.player?.characterLevel || 1,
                             isReady: false,
                             isConnected: true,
