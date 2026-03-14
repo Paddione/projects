@@ -477,4 +477,169 @@ describe('GameService — New Features', () => {
             expect(result).toBe(true);
         });
     });
+
+    describe('Enemy NPC AI', () => {
+        it('should patrol toward target position', () => {
+            const gs = new GameService(20);
+            const lobby = makeLobby(
+                [makeLobbyPlayer('1', 'p1'), makeLobbyPlayer('2', 'p2')],
+                { npcEnemies: 1 }
+            );
+            const matchId = gs.startMatch(lobby);
+            const game = (gs as any).activeGames.get(matchId);
+            const npc = game.npcs.find((n: any) => n.type === 'enemy');
+
+            npc.patrolTarget = { x: npc.x + 200, y: npc.y };
+            const startX = npc.x;
+
+            (gs as any).updateEnemyNPCs(game);
+
+            expect(npc.x).toBeGreaterThan(startX);
+            expect(npc.state).toBe('patrol');
+        });
+
+        it('should engage when player is in LOS and range', () => {
+            const gs = new GameService(20);
+            const lobby = makeLobby(
+                [makeLobbyPlayer('1', 'p1'), makeLobbyPlayer('2', 'p2')],
+                { npcEnemies: 1 }
+            );
+            const matchId = gs.startMatch(lobby);
+            const game = (gs as any).activeGames.get(matchId);
+            const npc = game.npcs.find((n: any) => n.type === 'enemy');
+            const player = game.players.get('1')!;
+
+            // Place both NPC and player in open area within aggro range
+            npc.x = 200;
+            npc.y = 200;
+            player.x = npc.x + 100;
+            player.y = npc.y;
+
+            (gs as any).updateEnemyNPCs(game);
+
+            expect(npc.state).toBe('engage');
+            expect(npc.targetPlayerId).toBe('1');
+        });
+
+        it('should disengage when player leaves range', () => {
+            const gs = new GameService(20);
+            const lobby = makeLobby(
+                [makeLobbyPlayer('1', 'p1'), makeLobbyPlayer('2', 'p2')],
+                { npcEnemies: 1 }
+            );
+            const matchId = gs.startMatch(lobby);
+            const game = (gs as any).activeGames.get(matchId);
+            const npc = game.npcs.find((n: any) => n.type === 'enemy');
+            const player = game.players.get('1')!;
+
+            npc.state = 'engage';
+            npc.targetPlayerId = '1';
+
+            player.x = npc.x + 500;
+            player.y = npc.y + 500;
+
+            (gs as any).updateEnemyNPCs(game);
+
+            expect(npc.state).toBe('patrol');
+            expect(npc.targetPlayerId).toBeNull();
+        });
+
+        it('should fire projectile when engaged and fire rate allows', () => {
+            const gs = new GameService(20);
+            const lobby = makeLobby(
+                [makeLobbyPlayer('1', 'p1'), makeLobbyPlayer('2', 'p2')],
+                { npcEnemies: 1 }
+            );
+            const matchId = gs.startMatch(lobby);
+            const game = (gs as any).activeGames.get(matchId);
+            const npc = game.npcs.find((n: any) => n.type === 'enemy');
+            const player = game.players.get('1')!;
+
+            player.x = npc.x + 100;
+            player.y = npc.y;
+
+            npc.lastShotTime = 0;
+            npc.state = 'engage';
+            npc.targetPlayerId = '1';
+
+            const initialProjectiles = game.projectiles.length;
+            (gs as any).updateEnemyNPCs(game);
+
+            expect(game.projectiles.length).toBeGreaterThan(initialProjectiles);
+        });
+
+        it('should not target other NPCs', () => {
+            const gs = new GameService(20);
+            const lobby = makeLobby(
+                [makeLobbyPlayer('1', 'p1'), makeLobbyPlayer('2', 'p2')],
+                { npcEnemies: 2 }
+            );
+            const matchId = gs.startMatch(lobby);
+            const game = (gs as any).activeGames.get(matchId);
+
+            for (const [, player] of game.players) {
+                player.isAlive = false;
+            }
+
+            for (const npc of game.npcs) {
+                npc.state = 'patrol';
+                npc.targetPlayerId = null;
+            }
+
+            (gs as any).updateEnemyNPCs(game);
+
+            for (const npc of game.npcs) {
+                expect(npc.targetPlayerId).toBeNull();
+                expect(npc.state).toBe('patrol');
+            }
+        });
+
+        it('should not disengage during LOS grace period (< 2s)', () => {
+            const gs = new GameService(20);
+            const lobby = makeLobby(
+                [makeLobbyPlayer('1', 'p1'), makeLobbyPlayer('2', 'p2')],
+                { npcEnemies: 1 }
+            );
+            const matchId = gs.startMatch(lobby);
+            const game = (gs as any).activeGames.get(matchId);
+            const npc = game.npcs.find((n: any) => n.type === 'enemy');
+            const player = game.players.get('1')!;
+
+            npc.state = 'engage';
+            npc.targetPlayerId = '1';
+            // Player close and in open — NPC has LOS, so losLostTime gets cleared
+            player.x = npc.x + 100;
+            player.y = npc.y;
+            npc.losLostTime = Date.now() - 500;
+
+            (gs as any).updateEnemyNPCs(game);
+
+            // Should stay engaged (player is visible, grace period irrelevant)
+            expect(npc.state).toBe('engage');
+        });
+
+        it('should disengage after LOS grace period expires (> 2s)', () => {
+            const gs = new GameService(20);
+            const lobby = makeLobby(
+                [makeLobbyPlayer('1', 'p1'), makeLobbyPlayer('2', 'p2')],
+                { npcEnemies: 1 }
+            );
+            const matchId = gs.startMatch(lobby);
+            const game = (gs as any).activeGames.get(matchId);
+            const npc = game.npcs.find((n: any) => n.type === 'enemy');
+            const player = game.players.get('1')!;
+
+            npc.state = 'engage';
+            npc.targetPlayerId = '1';
+            npc.losLostTime = Date.now() - 3000;
+            // Put player behind wall — LOS blocked
+            player.x = 0.5 * 32;
+            player.y = npc.y;
+
+            (gs as any).updateEnemyNPCs(game);
+
+            expect(npc.state).toBe('patrol');
+            expect(npc.targetPlayerId).toBeNull();
+        });
+    });
 });

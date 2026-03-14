@@ -271,15 +271,20 @@ export class GameService {
             }
         }
 
-        // NPC spawning
-        const npcSpawnTicks = NPC_CONST.SPAWN_INTERVAL_S * this.tickRate;
-        if (game.tickCount - game.lastNPCSpawnTick >= npcSpawnTicks) {
-            this.spawnNPC(game);
-            game.lastNPCSpawnTick = game.tickCount;
+        // Zombie NPC spawning (disabled when enemy NPCs are present)
+        if (!game.settings.npcEnemies || game.settings.npcEnemies === 0) {
+            const npcSpawnTicks = NPC_CONST.SPAWN_INTERVAL_S * this.tickRate;
+            if (game.tickCount - game.lastNPCSpawnTick >= npcSpawnTicks) {
+                this.spawnNPC(game);
+                game.lastNPCSpawnTick = game.tickCount;
+            }
         }
 
         // NPC AI
         this.updateNPCs(game);
+
+        // Enemy NPC AI
+        this.updateEnemyNPCs(game);
 
         // Reload timers
         for (const [, player] of game.players) {
@@ -799,6 +804,7 @@ export class GameService {
         const toRemove: string[] = [];
 
         for (const npc of game.npcs) {
+            if (npc.type !== 'zombie') continue;
             // Find nearest alive player
             let nearestPlayer: PlayerState | null = null;
             let nearestDist = Infinity;
@@ -976,6 +982,134 @@ export class GameService {
             };
 
             game.npcs.push(npc);
+        }
+    }
+
+    private pickPatrolTarget(game: GameState): { x: number; y: number } {
+        const mapWidth = game.map.width * GAME.TILE_SIZE;
+        const mapHeight = game.map.height * GAME.TILE_SIZE;
+        const margin = GAME.TILE_SIZE * 2;
+
+        for (let attempt = 0; attempt < 10; attempt++) {
+            const x = margin + Math.random() * (mapWidth - margin * 2);
+            const y = margin + Math.random() * (mapHeight - margin * 2);
+            if (this.isValidPosition(x, y, game.map)) {
+                return { x, y };
+            }
+        }
+
+        return { x: mapWidth / 2, y: mapHeight / 2 };
+    }
+
+    private updateEnemyNPCs(game: GameState): void {
+        const now = Date.now();
+
+        for (const npc of game.npcs) {
+            if (npc.type !== 'enemy' || npc.hp <= 0) continue;
+
+            // Find nearest alive human player
+            let nearestPlayer: PlayerState | null = null;
+            let nearestDist = Infinity;
+            for (const [, player] of game.players) {
+                if (!player.isAlive) continue;
+                const dist = Math.hypot(player.x - npc.x, player.y - npc.y);
+                if (dist < nearestDist) {
+                    nearestDist = dist;
+                    nearestPlayer = player;
+                }
+            }
+
+            // State transitions
+            if (npc.state === 'patrol') {
+                if (nearestPlayer && nearestDist <= ENEMY_CONST.AGGRO_RANGE) {
+                    if (this.hasLineOfSight(npc.x, npc.y, nearestPlayer.x, nearestPlayer.y, game.map)) {
+                        npc.state = 'engage';
+                        npc.targetPlayerId = nearestPlayer.id;
+                        npc.losLostTime = undefined;
+                    }
+                }
+            } else if (npc.state === 'engage') {
+                const target = npc.targetPlayerId ? game.players.get(npc.targetPlayerId) : null;
+
+                if (!target || !target.isAlive) {
+                    // Target dead — scan for next or disengage
+                    if (nearestPlayer && nearestDist <= ENEMY_CONST.AGGRO_RANGE &&
+                        this.hasLineOfSight(npc.x, npc.y, nearestPlayer.x, nearestPlayer.y, game.map)) {
+                        npc.targetPlayerId = nearestPlayer.id;
+                        npc.losLostTime = undefined;
+                    } else {
+                        npc.state = 'patrol';
+                        npc.targetPlayerId = null;
+                        npc.patrolTarget = undefined;
+                        npc.losLostTime = undefined;
+                    }
+                } else {
+                    const targetDist = Math.hypot(target.x - npc.x, target.y - npc.y);
+                    const hasLOS = this.hasLineOfSight(npc.x, npc.y, target.x, target.y, game.map);
+
+                    if (targetDist > ENEMY_CONST.DEAGGRO_RANGE) {
+                        npc.state = 'patrol';
+                        npc.targetPlayerId = null;
+                        npc.patrolTarget = undefined;
+                        npc.losLostTime = undefined;
+                    } else if (!hasLOS) {
+                        if (!npc.losLostTime) {
+                            npc.losLostTime = now;
+                        } else if (now - npc.losLostTime >= ENEMY_CONST.LOS_LOSS_MS) {
+                            npc.state = 'patrol';
+                            npc.targetPlayerId = null;
+                            npc.patrolTarget = undefined;
+                            npc.losLostTime = undefined;
+                        }
+                    } else {
+                        npc.losLostTime = undefined;
+                    }
+                }
+            }
+
+            // Movement
+            if (npc.state === 'patrol') {
+                if (!npc.patrolTarget) {
+                    npc.patrolTarget = this.pickPatrolTarget(game);
+                }
+
+                const dx = npc.patrolTarget.x - npc.x;
+                const dy = npc.patrolTarget.y - npc.y;
+                const dist = Math.hypot(dx, dy);
+
+                if (dist < 16) {
+                    npc.patrolTarget = this.pickPatrolTarget(game);
+                } else {
+                    const angle = Math.atan2(dy, dx);
+                    const newX = npc.x + Math.cos(angle) * npc.speed;
+                    const newY = npc.y + Math.sin(angle) * npc.speed;
+
+                    if (this.isValidPosition(newX, newY, game.map)) {
+                        npc.x = newX;
+                        npc.y = newY;
+                    } else {
+                        npc.patrolTarget = this.pickPatrolTarget(game);
+                    }
+                    npc.rotation = angle;
+                }
+            } else if (npc.state === 'engage') {
+                const target = npc.targetPlayerId ? game.players.get(npc.targetPlayerId) : null;
+                if (target && target.isAlive) {
+                    npc.rotation = Math.atan2(target.y - npc.y, target.x - npc.x);
+
+                    if (now - (npc.lastShotTime || 0) >= ENEMY_CONST.FIRE_RATE_MS) {
+                        const spread = (Math.random() - 0.5) * 2 * ENEMY_CONST.SPREAD_RAD;
+                        this.createNPCProjectile(game, npc, npc.rotation + spread);
+                        npc.lastShotTime = now;
+                    }
+                }
+            }
+
+            // Clamp to map bounds
+            const mapWidth = game.map.width * GAME.TILE_SIZE;
+            const mapHeight = game.map.height * GAME.TILE_SIZE;
+            npc.x = Math.max(GAME.TILE_SIZE, Math.min(mapWidth - GAME.TILE_SIZE, npc.x));
+            npc.y = Math.max(GAME.TILE_SIZE, Math.min(mapHeight - GAME.TILE_SIZE, npc.y));
         }
     }
 
