@@ -334,4 +334,76 @@ describe('GameService — New Features', () => {
             expect(state?.items).toBeDefined();
         });
     });
+
+    describe('Line of Sight', () => {
+        it('should have clear LOS between two open positions', () => {
+            const gs = new GameService(20);
+            const lobby = makeLobby([makeLobbyPlayer('1', 'p1'), makeLobbyPlayer('2', 'p2')]);
+            const matchId = gs.startMatch(lobby);
+            const game = (gs as any).activeGames.get(matchId);
+
+            const result = (gs as any).hasLineOfSight(
+                2.5 * 32, 2.5 * 32,
+                4.5 * 32, 2.5 * 32,
+                game.map
+            );
+            expect(result).toBe(true);
+        });
+
+        it('should block LOS through wall tiles', () => {
+            const gs = new GameService(20);
+            const lobby = makeLobby([makeLobbyPlayer('1', 'p1'), makeLobbyPlayer('2', 'p2')]);
+            const matchId = gs.startMatch(lobby);
+            const game = (gs as any).activeGames.get(matchId);
+
+            // Ray from tile (3,3) center to tile (0,3) — crosses perimeter wall at tileX=0
+            // dist = 3*32 = 96, steps = ceil(96/16) = 6
+            // step i=5: t=5/6, x = 3.5*32 - 5/6*3*32 = 112 - 80 = 32 → tileX=1 (no wall)
+            // step i=6 not reached (< steps). Adjust: use longer ray crossing wall clearly
+            // From (5.5*32, 1.5*32) to (0.1*32, 1.5*32) — passes through tileX=0 (perimeter wall)
+            const result = (gs as any).hasLineOfSight(
+                5.5 * 32, 1.5 * 32,
+                0.1 * 32, 1.5 * 32,
+                game.map
+            );
+            expect(result).toBe(false);
+        });
+
+        it('should block LOS through cover with blocksLineOfSight', () => {
+            const gs = new GameService(20);
+            const lobby = makeLobby([makeLobbyPlayer('1', 'p1'), makeLobbyPlayer('2', 'p2')]);
+            const matchId = gs.startMatch(lobby);
+            const game = (gs as any).activeGames.get(matchId);
+
+            const building = game.map.coverObjects.find((c: any) => c.type === 'building');
+            expect(building).toBeDefined();
+
+            const centerX = building.x + building.width / 2;
+            const centerY = building.y + building.height / 2;
+            const result = (gs as any).hasLineOfSight(
+                building.x - 32, centerY,
+                building.x + building.width + 32, centerY,
+                game.map
+            );
+            expect(result).toBe(false);
+        });
+
+        it('should allow LOS through hedge (blocksLineOfSight=false)', () => {
+            const gs = new GameService(20);
+            const lobby = makeLobby([makeLobbyPlayer('1', 'p1'), makeLobbyPlayer('2', 'p2')]);
+            const matchId = gs.startMatch(lobby);
+            const game = (gs as any).activeGames.get(matchId);
+
+            const hedge = game.map.coverObjects.find((c: any) => c.type === 'hedge');
+            if (!hedge) return;
+
+            const centerY = hedge.y + hedge.height / 2;
+            const result = (gs as any).hasLineOfSight(
+                hedge.x - 32, centerY,
+                hedge.x + hedge.width + 32, centerY,
+                game.map
+            );
+            expect(result).toBe(true);
+        });
+    });
 });

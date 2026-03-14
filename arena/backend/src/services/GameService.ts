@@ -1249,6 +1249,36 @@ export class GameService {
         return px >= rect.x && px <= rect.x + rect.width && py >= rect.y && py <= rect.y + rect.height;
     }
 
+    private hasLineOfSight(fromX: number, fromY: number, toX: number, toY: number, map: GameMap): boolean {
+        const dx = toX - fromX;
+        const dy = toY - fromY;
+        const dist = Math.hypot(dx, dy);
+        const stepSize = GAME.TILE_SIZE / 2; // 16px steps
+        const steps = Math.ceil(dist / stepSize);
+
+        for (let i = 1; i < steps; i++) {
+            const t = i / steps;
+            const x = fromX + dx * t;
+            const y = fromY + dy * t;
+
+            // Wall tile check
+            const tileX = Math.floor(x / GAME.TILE_SIZE);
+            const tileY = Math.floor(y / GAME.TILE_SIZE);
+            if (tileX >= 0 && tileX < map.width && tileY >= 0 && tileY < map.height) {
+                if (map.tiles[tileY][tileX] === 1) return false;
+            }
+
+            // Cover LOS check
+            for (const cover of map.coverObjects) {
+                if (cover.blocksLineOfSight && this.pointInRect(x, y, cover)) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
     private serializeState(game: GameState): SerializedGameState {
         return {
             matchId: game.matchId,
