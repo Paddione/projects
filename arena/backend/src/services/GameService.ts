@@ -162,7 +162,8 @@ export class GameService {
         let dy = input.movement.y * speed;
 
         // ====== ANTI-CHEAT: Movement clamping ======
-        const maxDelta = (GAME.PLAYER_SPEED * GAME.SPRINT_MULTIPLIER / this.tickRate) * 2;
+        // Max legitimate move: sprint speed along one axis (diagonal is normalized to magnitude 1)
+        const maxDelta = GAME.PLAYER_SPEED * GAME.SPRINT_MULTIPLIER * 1.1;
         const movementMagnitude = Math.sqrt(dx * dx + dy * dy);
         if (movementMagnitude > maxDelta) {
             console.warn(`[Anti-Cheat] Excessive movement speed from player ${playerId}: ${movementMagnitude.toFixed(2)} > ${maxDelta.toFixed(2)}`);
