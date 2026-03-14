@@ -110,7 +110,7 @@ const SPAWN_POINTS: SpawnPoint[] = [
     { x: W - 3, y: H - 3, corner: 'bottom-right' },
 ];
 
-const ITEM_SPAWN_POINTS: { x: number; y: number }[] = [
+export const ITEM_SPAWN_POINTS: { x: number; y: number }[] = [
     // Horizontal path
     { x: 7, y: 10 }, { x: 7, y: 11 }, { x: 20, y: 10 }, { x: 20, y: 11 },
     // Vertical path
