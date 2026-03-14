@@ -25,6 +25,7 @@ const DEFAULT_SETTINGS: ArenaLobbySettings = {
     shrinkInterval: 30,
     itemSpawns: true,
     itemSpawnInterval: 60,
+    npcEnemies: 0,
 };
 
 export class LobbyService {
@@ -232,7 +233,8 @@ export class LobbyService {
             throw new Error('Cannot start game for lobby that is not in waiting status');
         }
 
-        if (lobby.players.length < 2) {
+        const totalParticipants = lobby.players.length + (lobby.settings.npcEnemies || 0);
+        if (totalParticipants < 2) {
             throw new Error('At least 2 players are required to start');
         }
 

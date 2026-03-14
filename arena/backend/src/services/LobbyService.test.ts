@@ -570,6 +570,69 @@ describe('LobbyService', () => {
     });
 
     // -----------------------------------------------------------------------
+    // Solo play with NPC enemies
+    // -----------------------------------------------------------------------
+
+    describe('Solo play with NPC enemies', () => {
+        it('should allow starting game with 1 player when npcEnemies >= 1', async () => {
+            const settingsWithEnemies = JSON.stringify({
+                maxPlayers: 4,
+                bestOf: 1,
+                shrinkingZone: false,
+                shrinkInterval: 30,
+                itemSpawns: true,
+                itemSpawnInterval: 60,
+                npcEnemies: 2,
+            });
+            const soloRow = makeDbRow({
+                settings: settingsWithEnemies,
+                players: JSON.stringify([
+                    {
+                        id: '1',
+                        username: 'solo_player',
+                        character: 'student',
+                        characterLevel: 1,
+                        isReady: true,
+                        isHost: true,
+                        isConnected: true,
+                        joinedAt: new Date().toISOString(),
+                    },
+                ]),
+            });
+            const startedRow = makeDbRow({ status: 'starting', settings: settingsWithEnemies });
+
+            mockQuery
+                .mockResolvedValueOnce({ rowCount: 1, rows: [soloRow] })     // findByCode (startGame)
+                .mockResolvedValueOnce({ rowCount: 1, rows: [startedRow] }); // UPDATE status
+
+            const started = await service.startGame('ABCD12', 42);
+            expect(started.status).toBe('starting');
+        });
+
+        it('should reject starting game with 1 player when npcEnemies is 0', async () => {
+            const soloRow = makeDbRow({
+                players: JSON.stringify([
+                    {
+                        id: '1',
+                        username: 'solo_player',
+                        character: 'student',
+                        characterLevel: 1,
+                        isReady: true,
+                        isHost: true,
+                        isConnected: true,
+                        joinedAt: new Date().toISOString(),
+                    },
+                ]),
+            });
+
+            mockQuery.mockResolvedValueOnce({ rowCount: 1, rows: [soloRow] });
+
+            await expect(service.startGame('ABCD12', 42))
+                .rejects.toThrow('At least 2 players are required');
+        });
+    });
+
+    // -----------------------------------------------------------------------
     // getLobbyByCode
     // -----------------------------------------------------------------------
 
