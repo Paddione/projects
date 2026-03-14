@@ -34,7 +34,7 @@ export class GameService {
     // Callbacks for emitting events
     private onStateUpdate?: (matchId: string, state: SerializedGameState) => void;
     private onPlayerHit?: (matchId: string, data: { targetId: string; attackerId: string; damage: number; remainingHp: number; hasArmor: boolean }) => void;
-    private onPlayerKilled?: (matchId: string, data: { victimId: string; killerId: string; weapon: 'gun' | 'melee' | 'zone' | 'zombie' }) => void;
+    private onPlayerKilled?: (matchId: string, data: { victimId: string; killerId: string; weapon: 'gun' | 'melee' | 'zone' | 'zombie' | 'npc'; killerName?: string; victimName?: string }) => void;
     private onItemSpawned?: (matchId: string, data: { item: MapItem; announcement: string }) => void;
     private onItemCollected?: (matchId: string, data: { itemId: string; playerId: string }) => void;
     private onRoundEnd?: (matchId: string, data: { roundNumber: number; winnerId: string; scores: Record<string, number> }) => void;
@@ -55,7 +55,7 @@ export class GameService {
     setCallbacks(callbacks: {
         onStateUpdate: (matchId: string, state: SerializedGameState) => void;
         onPlayerHit: (matchId: string, data: { targetId: string; attackerId: string; damage: number; remainingHp: number; hasArmor: boolean }) => void;
-        onPlayerKilled: (matchId: string, data: { victimId: string; killerId: string; weapon: 'gun' | 'melee' | 'zone' | 'zombie' }) => void;
+        onPlayerKilled: (matchId: string, data: { victimId: string; killerId: string; weapon: 'gun' | 'melee' | 'zone' | 'zombie' | 'npc'; killerName?: string; victimName?: string }) => void;
         onItemSpawned: (matchId: string, data: { item: MapItem; announcement: string }) => void;
         onItemCollected: (matchId: string, data: { itemId: string; playerId: string }) => void;
         onRoundEnd: (matchId: string, data: { roundNumber: number; winnerId: string; scores: Record<string, number> }) => void;
@@ -272,7 +272,7 @@ export class GameService {
         }
 
         // Zombie NPC spawning (disabled when enemy NPCs are present)
-        if (!game.settings.npcEnemies || game.settings.npcEnemies === 0) {
+        if (!game.settings.npcEnemies) {
             const npcSpawnTicks = NPC_CONST.SPAWN_INTERVAL_S * this.tickRate;
             if (game.tickCount - game.lastNPCSpawnTick >= npcSpawnTicks) {
                 this.spawnNPC(game);
@@ -362,10 +362,12 @@ export class GameService {
                     this.playerService.makeSpectator(target);
                     game.currentRound.alivePlayers = game.currentRound.alivePlayers.filter((id) => id !== targetId);
 
+                    const killerNPC = game.npcs.find(n => n.id === projectile.ownerId);
                     this.onPlayerKilled?.(game.matchId, {
                         victimId: targetId,
                         killerId: projectile.ownerId,
                         weapon: 'gun',
+                        killerName: killerNPC?.label,
                     });
                 }
             }
@@ -373,6 +375,10 @@ export class GameService {
 
         // Damage all NPCs in radius
         for (const npc of game.npcs) {
+            if (npc.id === projectile.ownerId) continue;
+            const ownerIsNPC = game.npcs.some(n => n.id === projectile.ownerId);
+            if (ownerIsNPC && npc.type === 'enemy') continue;
+
             const dist = Math.hypot(npc.x - projectile.x, npc.y - projectile.y);
             if (dist <= radius) {
                 npc.hp -= projectile.damage;
@@ -443,6 +449,10 @@ export class GameService {
                 // Check NPC hits
                 if (!hasHit) {
                     for (const npc of game.npcs) {
+                        if (npc.id === projectile.ownerId) continue;
+                        const ownerIsNPC = game.npcs.some(n => n.id === projectile.ownerId);
+                        if (ownerIsNPC && npc.type === 'enemy') continue;
+
                         const dist = Math.hypot(npc.x - projectile.x, npc.y - projectile.y);
                         if (dist < projectile.explosionRadius) {
                             this.triggerExplosion(game, projectile);
@@ -485,10 +495,12 @@ export class GameService {
                         this.playerService.makeSpectator(target);
                         game.currentRound.alivePlayers = game.currentRound.alivePlayers.filter((id) => id !== targetId);
 
+                        const killerNPC = game.npcs.find(n => n.id === projectile.ownerId);
                         this.onPlayerKilled?.(game.matchId, {
                             victimId: targetId,
                             killerId: projectile.ownerId,
                             weapon: 'gun',
+                            killerName: killerNPC?.label,
                         });
 
                         // Drop weapon on death
@@ -516,16 +528,39 @@ export class GameService {
 
             // NPC hit detection
             for (const npc of game.npcs) {
+                if (npc.id === projectile.ownerId) continue;  // Don't hit self
+                // NPC projectiles don't hit other enemy NPCs (NPCs ignore each other)
+                const ownerIsNPC = game.npcs.some(n => n.id === projectile.ownerId);
+                if (ownerIsNPC && npc.type === 'enemy') continue;
+
                 const dist = Math.hypot(npc.x - projectile.x, npc.y - projectile.y);
                 if (dist < GAME.TILE_SIZE / 2) {
                     npc.hp -= projectile.damage;
                     toRemove.push(projectile.id);
+
+                    if (npc.hp <= 0) {
+                        this.spawnNPCDrop(game, npc);
+
+                        this.onPlayerKilled?.(game.matchId, {
+                            victimId: npc.id,
+                            killerId: projectile.ownerId,
+                            weapon: 'gun',
+                            victimName: npc.label,
+                        });
+
+                        // Credit the kill to human attacker
+                        const attacker = game.players.get(projectile.ownerId);
+                        if (attacker) attacker.kills++;
+                    }
                     break;
                 }
             }
         }
 
         game.projectiles = game.projectiles.filter((p) => !toRemove.includes(p.id));
+
+        // Remove dead NPCs
+        game.npcs = game.npcs.filter(n => n.hp > 0);
     }
 
     // ============================================================================
@@ -588,6 +623,19 @@ export class GameService {
                 const angleDiff = Math.abs(attacker.rotation - angleToNPC);
                 if (angleDiff < Math.PI / 2 || angleDiff > Math.PI * 1.5) {
                     npc.hp -= DAMAGE.MELEE;
+
+                    if (npc.hp <= 0) {
+                        this.spawnNPCDrop(game, npc);
+
+                        this.onPlayerKilled?.(game.matchId, {
+                            victimId: npc.id,
+                            killerId: attacker.id,
+                            weapon: 'melee',
+                            victimName: npc.label,
+                        });
+
+                        attacker.kills++;
+                    }
                     break;
                 }
             }
@@ -1176,8 +1224,12 @@ export class GameService {
     // ============================================================================
 
     private checkRoundEnd(game: GameState): void {
-        if (game.currentRound.alivePlayers.length <= 1) {
-            const winnerId = game.currentRound.alivePlayers[0] || '';
+        const aliveHumans = game.currentRound.alivePlayers;
+        const aliveEnemyNPCs = game.npcs.filter(n => n.type === 'enemy' && n.hp > 0);
+        const aliveCount = aliveHumans.length + aliveEnemyNPCs.length;
+
+        if (aliveCount <= 1) {
+            const winnerId = aliveHumans.length === 1 ? aliveHumans[0] : '';
             game.currentRound.phase = 'ended';
             game.currentRound.endedAt = Date.now();
             game.currentRound.winnerId = winnerId;
@@ -1194,19 +1246,16 @@ export class GameService {
                 scores: { ...game.roundScores },
             });
 
-            // Check if match is over
             const winsNeeded = Math.ceil(game.bestOf / 2);
             const matchWinner = Object.entries(game.roundScores).find(
                 ([, wins]) => wins >= winsNeeded
             );
 
             if (matchWinner || game.currentRound.roundNumber >= game.bestOf) {
-                // Fire and forget - match end happens asynchronously
                 this.endMatchWithResults(game, matchWinner?.[0] || winnerId).catch(err => {
                     console.error('Error ending match:', err);
                 });
             } else {
-                // Start next round after a delay
                 game.phase = 'round-transition';
                 setTimeout(() => this.startNextRound(game), 5000);
             }
@@ -1214,11 +1263,14 @@ export class GameService {
     }
 
     private startNextRound(game: GameState): void {
-        const spawnPoints = this.getSpawnPoints(game.players.size, game.map);
-        let index = 0;
+        const enemyNPCs = game.npcs.filter(n => n.type === 'enemy');
+        const npcCount = enemyNPCs.length;
+        const totalEntities = game.players.size + npcCount;
+        const allSpawns = this.getSpawnPoints(totalEntities, game.map);
 
+        let index = 0;
         for (const [, player] of game.players) {
-            const spawn = spawnPoints[index % spawnPoints.length];
+            const spawn = allSpawns[index % allSpawns.length];
             this.playerService.resetForRound(
                 player,
                 spawn.x * GAME.TILE_SIZE + GAME.TILE_SIZE / 2,
@@ -1227,7 +1279,6 @@ export class GameService {
             index++;
         }
 
-        // Reset game state for new round
         game.projectiles = [];
         game.items = [];
         game.npcs = [];
@@ -1236,6 +1287,25 @@ export class GameService {
         game.lastNPCSpawnTick = 0;
         if (game.zone) {
             game.zone = this.createInitialZone(game.map);
+        }
+
+        // Respawn enemy NPCs with full HP
+        if (npcCount > 0) {
+            const npcSpawns = allSpawns.slice(game.players.size);
+            enemyNPCs.forEach((npc, i) => {
+                if (i < npcSpawns.length) {
+                    npc.x = npcSpawns[i].x * GAME.TILE_SIZE + GAME.TILE_SIZE / 2;
+                    npc.y = npcSpawns[i].y * GAME.TILE_SIZE + GAME.TILE_SIZE / 2;
+                }
+                npc.hp = ENEMY_CONST.HP;
+                npc.state = 'patrol';
+                npc.targetPlayerId = null;
+                npc.patrolTarget = undefined;
+                npc.losLostTime = undefined;
+                npc.lastShotTime = 0;
+                npc.rotation = 0;
+                game.npcs.push(npc);
+            });
         }
 
         game.currentRound = {
@@ -1342,12 +1412,23 @@ export class GameService {
         }
 
         // Insert match with real lobby_code and resolved winner_id
-        const matchResult = await this.db.query(
-            `INSERT INTO matches (lobby_code, winner_id, player_count, total_rounds, duration_seconds, settings)
-             VALUES ($1, (SELECT id FROM players WHERE auth_user_id = $2), $3, $4, $5, $6)
-             RETURNING id`,
-            [game.lobbyCode, parseInt(winnerId), game.players.size, game.currentRound.roundNumber, duration, JSON.stringify(game.settings)]
-        );
+        const winnerIdInt = winnerId ? parseInt(winnerId) : null;
+        let matchResult;
+        if (winnerIdInt) {
+            matchResult = await this.db.query(
+                `INSERT INTO matches (lobby_code, winner_id, player_count, total_rounds, duration_seconds, settings)
+                 VALUES ($1, (SELECT id FROM players WHERE auth_user_id = $2), $3, $4, $5, $6)
+                 RETURNING id`,
+                [game.lobbyCode, winnerIdInt, game.players.size, game.currentRound.roundNumber, duration, JSON.stringify(game.settings)]
+            );
+        } else {
+            matchResult = await this.db.query(
+                `INSERT INTO matches (lobby_code, winner_id, player_count, total_rounds, duration_seconds, settings)
+                 VALUES ($1, NULL, $2, $3, $4, $5)
+                 RETURNING id`,
+                [game.lobbyCode, game.players.size, game.currentRound.roundNumber, duration, JSON.stringify(game.settings)]
+            );
+        }
 
         const dbMatchId = matchResult.rows[0]?.id;
         if (!dbMatchId) return undefined;

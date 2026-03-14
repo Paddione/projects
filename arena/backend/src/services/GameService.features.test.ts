@@ -643,3 +643,120 @@ describe('GameService — New Features', () => {
         });
     });
 });
+
+describe('Round-End with NPCs', () => {
+    it('should not end round while enemy NPCs are still alive', () => {
+        const gs = new GameService(20);
+        const lobby = makeLobby(
+            [makeLobbyPlayer('1', 'p1'), makeLobbyPlayer('2', 'p2')],
+            { npcEnemies: 1 }
+        );
+        const matchId = gs.startMatch(lobby);
+        const game = (gs as any).activeGames.get(matchId);
+
+        const player2 = game.players.get('2')!;
+        player2.isAlive = false;
+        player2.hp = 0;
+        game.currentRound.alivePlayers = ['1'];
+
+        (gs as any).checkRoundEnd(game);
+
+        expect(game.currentRound.phase).toBe('playing');
+    });
+
+    it('should end round when only 1 human remains and all NPCs dead', () => {
+        const gs = new GameService(20);
+        let roundEndData: any = null;
+        gs.setCallbacks({
+            onStateUpdate: vi.fn(),
+            onPlayerHit: vi.fn(),
+            onPlayerKilled: vi.fn(),
+            onItemSpawned: vi.fn(),
+            onItemCollected: vi.fn(),
+            onRoundEnd: (_matchId: string, data: any) => { roundEndData = data; },
+            onMatchEnd: vi.fn(),
+            onZoneShrink: vi.fn(),
+            onCoverDestroyed: vi.fn(),
+            onExplosion: vi.fn(),
+        });
+
+        const lobby = makeLobby(
+            [makeLobbyPlayer('1', 'p1'), makeLobbyPlayer('2', 'p2')],
+            { npcEnemies: 1 }
+        );
+        const matchId = gs.startMatch(lobby);
+        const game = (gs as any).activeGames.get(matchId);
+
+        game.players.get('2')!.isAlive = false;
+        game.currentRound.alivePlayers = ['1'];
+        for (const npc of game.npcs) {
+            if (npc.type === 'enemy') npc.hp = 0;
+        }
+
+        (gs as any).checkRoundEnd(game);
+
+        expect(game.currentRound.phase).toBe('ended');
+        expect(roundEndData?.winnerId).toBe('1');
+    });
+
+    it('should set winnerId to empty string when NPC is last alive', () => {
+        const gs = new GameService(20);
+        let roundEndData: any = null;
+        gs.setCallbacks({
+            onStateUpdate: vi.fn(),
+            onPlayerHit: vi.fn(),
+            onPlayerKilled: vi.fn(),
+            onItemSpawned: vi.fn(),
+            onItemCollected: vi.fn(),
+            onRoundEnd: (_matchId: string, data: any) => { roundEndData = data; },
+            onMatchEnd: vi.fn(),
+            onZoneShrink: vi.fn(),
+            onCoverDestroyed: vi.fn(),
+            onExplosion: vi.fn(),
+        });
+
+        const lobby = makeLobby(
+            [makeLobbyPlayer('1', 'p1'), makeLobbyPlayer('2', 'p2')],
+            { npcEnemies: 1 }
+        );
+        const matchId = gs.startMatch(lobby);
+        const game = (gs as any).activeGames.get(matchId);
+
+        game.players.get('1')!.isAlive = false;
+        game.players.get('2')!.isAlive = false;
+        game.currentRound.alivePlayers = [];
+
+        (gs as any).checkRoundEnd(game);
+
+        expect(game.currentRound.phase).toBe('ended');
+        expect(roundEndData?.winnerId).toBe('');
+    });
+
+    it('should preserve and reset enemy NPCs on startNextRound', () => {
+        const gs = new GameService(20);
+        const lobby = makeLobby(
+            [makeLobbyPlayer('1', 'p1'), makeLobbyPlayer('2', 'p2')],
+            { npcEnemies: 2, bestOf: 3 }
+        );
+        const matchId = gs.startMatch(lobby);
+        const game = (gs as any).activeGames.get(matchId);
+
+        for (const npc of game.npcs) {
+            if (npc.type === 'enemy') {
+                npc.hp = 1;
+                npc.state = 'engage';
+                npc.targetPlayerId = '1';
+            }
+        }
+
+        (gs as any).startNextRound(game);
+
+        const enemyNPCs = game.npcs.filter((n: any) => n.type === 'enemy');
+        expect(enemyNPCs).toHaveLength(2);
+        for (const npc of enemyNPCs) {
+            expect(npc.hp).toBe(3);
+            expect(npc.state).toBe('patrol');
+            expect(npc.targetPlayerId).toBeNull();
+        }
+    });
+});
