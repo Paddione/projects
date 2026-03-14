@@ -29,6 +29,7 @@ function makeSettings(overrides: Partial<ArenaLobbySettings> = {}): ArenaLobbySe
         shrinkInterval: 30,
         itemSpawns: false,
         itemSpawnInterval: 60,
+        npcEnemies: 0,
         ...overrides,
     };
 }

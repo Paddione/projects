@@ -153,11 +153,12 @@ export interface GameState {
 
 // -- NPC --
 
-export type NPCState = 'wander' | 'chase';
+export type NPCType = 'zombie' | 'enemy';
+export type NPCState = 'wander' | 'chase' | 'patrol' | 'engage';
 
 export interface NPC {
     id: string;
-    type: 'zombie';
+    type: NPCType;
     x: number;
     y: number;
     hp: number;
@@ -168,6 +169,13 @@ export interface NPC {
     wanderAngle: number;
     wanderChangeTime: number;
     lastDamageTime: number;
+    // Enemy NPC fields:
+    weapon?: WeaponState;
+    lastShotTime?: number;
+    engageRange?: number;
+    patrolTarget?: { x: number; y: number };
+    losLostTime?: number;
+    label?: string;
 }
 
 // -- Lobby --
@@ -179,6 +187,7 @@ export interface ArenaLobbySettings {
     shrinkInterval: number;      // seconds between shrinks
     itemSpawns: boolean;
     itemSpawnInterval: number;   // seconds between spawns
+    npcEnemies: 0 | 1 | 2 | 3;
 }
 
 export interface ArenaPlayer {
@@ -219,7 +228,7 @@ export interface ServerToClientEvents {
     'round-start': (data: { roundNumber: number; spawnPositions: Record<string, SpawnPoint> }) => void;
     'game-state': (state: SerializedGameState) => void;
     'player-hit': (data: { targetId: string; attackerId: string; damage: number; remainingHp: number; hasArmor: boolean }) => void;
-    'player-killed': (data: { victimId: string; killerId: string; weapon: 'gun' | 'melee' | 'zone' | 'zombie' }) => void;
+    'player-killed': (data: { victimId: string; killerId: string; weapon: 'gun' | 'melee' | 'zone' | 'zombie' | 'npc'; killerName?: string; victimName?: string }) => void;
     'item-spawned': (data: { item: MapItem; announcement: string }) => void;
     'item-collected': (data: { itemId: string; playerId: string }) => void;
     'round-end': (data: { roundNumber: number; winnerId: string; scores: Record<string, number> }) => void;
@@ -319,4 +328,14 @@ export const NPC_CONST = {
     CONTACT_RANGE: 16,
     DAMAGE_COOLDOWN_MS: 1000,
     WANDER_CHANGE_MS: 2500,
+} as const;
+
+export const ENEMY_CONST = {
+    SPEED_FACTOR: 0.5,
+    AGGRO_RANGE: 192,
+    DEAGGRO_RANGE: 256,
+    FIRE_RATE_MS: 600,
+    SPREAD_RAD: 0.26,
+    HP: 3,
+    LOS_LOSS_MS: 2000,
 } as const;
