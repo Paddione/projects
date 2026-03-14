@@ -335,6 +335,77 @@ describe('GameService — New Features', () => {
         });
     });
 
+    describe('Enemy NPC Spawning', () => {
+        it('should spawn enemy NPCs at match start when npcEnemies > 0', () => {
+            const gs = new GameService(20);
+            const lobby = makeLobby(
+                [makeLobbyPlayer('1', 'p1'), makeLobbyPlayer('2', 'p2')],
+                { npcEnemies: 2 }
+            );
+            const matchId = gs.startMatch(lobby);
+            const game = (gs as any).activeGames.get(matchId);
+
+            const enemyNPCs = game.npcs.filter((n: any) => n.type === 'enemy');
+            expect(enemyNPCs).toHaveLength(2);
+            expect(enemyNPCs[0].state).toBe('patrol');
+            expect(enemyNPCs[0].hp).toBe(3);
+            expect(enemyNPCs[0].label).toBe('Bot 1');
+            expect(enemyNPCs[1].label).toBe('Bot 2');
+        });
+
+        it('should not spawn enemy NPCs when npcEnemies is 0', () => {
+            const gs = new GameService(20);
+            const lobby = makeLobby(
+                [makeLobbyPlayer('1', 'p1'), makeLobbyPlayer('2', 'p2')],
+                { npcEnemies: 0 }
+            );
+            const matchId = gs.startMatch(lobby);
+            const game = (gs as any).activeGames.get(matchId);
+
+            const enemyNPCs = game.npcs.filter((n: any) => n.type === 'enemy');
+            expect(enemyNPCs).toHaveLength(0);
+        });
+
+        it('should allow solo match with 1 player and 3 NPCs', () => {
+            const gs = new GameService(20);
+            const lobby = makeLobby(
+                [makeLobbyPlayer('1', 'solo')],
+                { npcEnemies: 3 }
+            );
+            const matchId = gs.startMatch(lobby);
+            const game = (gs as any).activeGames.get(matchId);
+
+            expect(game.players.size).toBe(1);
+            const enemyNPCs = game.npcs.filter((n: any) => n.type === 'enemy');
+            expect(enemyNPCs).toHaveLength(3);
+        });
+    });
+
+    describe('NPC Projectile Creation', () => {
+        it('should create a projectile from NPC position', () => {
+            const gs = new GameService(20);
+            const lobby = makeLobby(
+                [makeLobbyPlayer('1', 'p1'), makeLobbyPlayer('2', 'p2')],
+                { npcEnemies: 1 }
+            );
+            const matchId = gs.startMatch(lobby);
+            const game = (gs as any).activeGames.get(matchId);
+            const npc = game.npcs.find((n: any) => n.type === 'enemy');
+
+            const initialProjectiles = game.projectiles.length;
+            (gs as any).createNPCProjectile(game, npc, 0);
+
+            expect(game.projectiles.length).toBe(initialProjectiles + 1);
+            const proj = game.projectiles[game.projectiles.length - 1];
+            expect(proj.ownerId).toBe(npc.id);
+            expect(proj.x).toBe(npc.x);
+            expect(proj.y).toBe(npc.y);
+            expect(proj.damage).toBe(1);
+            expect(proj.velocityX).toBeCloseTo(16);
+            expect(proj.velocityY).toBeCloseTo(0);
+        });
+    });
+
     describe('Line of Sight', () => {
         it('should have clear LOS between two open positions', () => {
             const gs = new GameService(20);

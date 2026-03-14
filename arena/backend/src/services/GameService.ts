@@ -17,8 +17,8 @@ import type {
     CoverObject,
     NPC,
 } from '../types/game.js';
-import { GAME, HP, DAMAGE, NPC_CONST } from '../types/game.js';
-import { createCampusCourtyard } from '../maps/campus-courtyard.js';
+import { GAME, HP, DAMAGE, NPC_CONST, ENEMY_CONST } from '../types/game.js';
+import { createCampusCourtyard, ITEM_SPAWN_POINTS } from '../maps/campus-courtyard.js';
 import type { WeaponState } from '../types/weapon.js';
 import { WEAPON_STATS, MACHINE_GUN_PICKUP, GRENADE_LAUNCHER_PICKUP } from '../types/weapon.js';
 import { PlayerService } from './PlayerService.js';
@@ -84,8 +84,9 @@ export class GameService {
         const map = this.generateMap();
         const players = new Map<string, PlayerState>();
 
-        // Assign spawn points dynamically based on player count
-        const spawnPoints = this.getSpawnPoints(lobby.players.length, map);
+        // Assign spawn points dynamically based on player count + NPC enemies
+        const totalEntities = lobby.players.length + (lobby.settings.npcEnemies || 0);
+        const spawnPoints = this.getSpawnPoints(totalEntities, map);
 
         lobby.players.forEach((lobbyPlayer, index) => {
             const spawn = spawnPoints[index];
@@ -125,6 +126,9 @@ export class GameService {
         };
 
         this.activeGames.set(matchId, gameState);
+
+        // Spawn enemy NPCs
+        this.spawnEnemyNPCs(gameState);
 
         // Spawn initial weapons at map center (only if item spawning is enabled)
         if (gameState.settings.itemSpawns) {
@@ -310,6 +314,20 @@ export class GameService {
             damage: isGrenade ? DAMAGE.GRENADE : DAMAGE.GUN,
             createdAt: Date.now(),
             explosionRadius: isGrenade ? 64 : undefined,
+        };
+        game.projectiles.push(projectile);
+    }
+
+    private createNPCProjectile(game: GameState, npc: NPC, angle: number): void {
+        const projectile: Projectile = {
+            id: uuidv4(),
+            ownerId: npc.id,
+            x: npc.x,
+            y: npc.y,
+            velocityX: Math.cos(angle) * GAME.PROJECTILE_SPEED,
+            velocityY: Math.sin(angle) * GAME.PROJECTILE_SPEED,
+            damage: DAMAGE.GUN,
+            createdAt: Date.now(),
         };
         game.projectiles.push(projectile);
     }
@@ -912,6 +930,53 @@ export class GameService {
             item,
             announcement: type === 'health' ? '💊 Health pack dropped!' : type === 'armor' ? '🛡️ Armor dropped!' : type === 'machine_gun' ? '🔫 Machine gun dropped!' : '💥 Grenade launcher dropped!',
         });
+    }
+
+    private spawnEnemyNPCs(game: GameState): void {
+        const npcCount = game.settings.npcEnemies || 0;
+        if (npcCount === 0) return;
+
+        const totalEntities = game.players.size + npcCount;
+        const allSpawns = this.getSpawnPoints(totalEntities, game.map);
+
+        // Human players took the first game.players.size spawn points
+        const npcSpawns = allSpawns.slice(game.players.size);
+
+        for (let i = 0; i < npcCount; i++) {
+            let x: number, y: number;
+
+            if (i < npcSpawns.length) {
+                const spawn = npcSpawns[i];
+                x = spawn.x * GAME.TILE_SIZE + GAME.TILE_SIZE / 2;
+                y = spawn.y * GAME.TILE_SIZE + GAME.TILE_SIZE / 2;
+            } else {
+                const fallback = ITEM_SPAWN_POINTS[i % ITEM_SPAWN_POINTS.length];
+                x = fallback.x * GAME.TILE_SIZE + GAME.TILE_SIZE / 2;
+                y = fallback.y * GAME.TILE_SIZE + GAME.TILE_SIZE / 2;
+            }
+
+            const npc: NPC = {
+                id: uuidv4(),
+                type: 'enemy',
+                x,
+                y,
+                hp: ENEMY_CONST.HP,
+                speed: GAME.PLAYER_SPEED * ENEMY_CONST.SPEED_FACTOR,
+                rotation: 0,
+                targetPlayerId: null,
+                state: 'patrol',
+                wanderAngle: 0,
+                wanderChangeTime: 0,
+                lastDamageTime: 0,
+                lastShotTime: 0,
+                engageRange: ENEMY_CONST.AGGRO_RANGE,
+                patrolTarget: undefined,
+                losLostTime: undefined,
+                label: `Bot ${i + 1}`,
+            };
+
+            game.npcs.push(npc);
+        }
     }
 
     // ============================================================================
