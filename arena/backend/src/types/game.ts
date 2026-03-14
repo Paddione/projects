@@ -252,6 +252,7 @@ export interface SerializedGameState {
     projectiles: Projectile[];
     items: MapItem[];
     npcs: NPC[];
+    map: GameMap;
     zone?: ShrinkingZone;
     currentRound: RoundState;
     roundScores: Record<string, number>;

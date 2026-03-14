@@ -1256,6 +1256,7 @@ export class GameService {
             projectiles: game.projectiles,
             items: game.items.filter((i) => !i.isCollected),
             npcs: game.npcs,
+            map: game.map,
             zone: game.zone,
             currentRound: game.currentRound,
             roundScores: game.roundScores,
