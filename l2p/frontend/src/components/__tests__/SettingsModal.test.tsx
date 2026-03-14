@@ -21,7 +21,9 @@ const mockUseLocalization = {
       'help.multipliers': 'Multipliers',
       'help.audio': 'Audio Settings',
       'help.language': 'Language Settings',
-      'help.contact': 'Contact Support'
+      'help.contact': 'Contact Support',
+      'settings.contactEmail': 'Email: support@learn2play.com',
+      'settings.contactGithub': 'GitHub: github.com/learn2play'
     }
     return translations[key] || key
   }),
@@ -120,7 +122,9 @@ describe('SettingsModal Component', () => {
         'help.multipliers': 'Multipliers',
         'help.audio': 'Audio Settings',
         'help.language': 'Language Settings',
-        'help.contact': 'Contact Support'
+        'help.contact': 'Contact Support',
+        'settings.contactEmail': 'Email: support@learn2play.com',
+        'settings.contactGithub': 'GitHub: github.com/learn2play'
       }
       return translations[key] || key
     })

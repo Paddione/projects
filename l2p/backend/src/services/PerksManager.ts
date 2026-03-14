@@ -365,7 +365,7 @@ export class PerksManager {
     const perkType = perkResult.rows[0]!['type'] as string;
 
     // For types stored in perks_config, clear the slot entirely
-    if (['helper', 'display', 'emote', 'multiplier'].includes(perkType)) {
+    if (['helper', 'display', 'emote', 'sound', 'multiplier'].includes(perkType)) {
       await this.clearPerksConfigSlot(userId, perkType);
       this.invalidateCache();
       return true;
@@ -486,7 +486,7 @@ export class PerksManager {
     const configs: Record<string, { perk_id: number; perk_name?: string; configuration: any }> = {};
 
     // Read visual effect slots (including multiplier for score/streak visual config)
-    for (const slotType of ['helper', 'display', 'emote', 'multiplier']) {
+    for (const slotType of ['helper', 'display', 'emote', 'sound', 'multiplier']) {
       if (perksConfig[slotType]?.perk_id) {
         configs[slotType] = perksConfig[slotType];
       }
@@ -643,6 +643,7 @@ export class PerksManager {
       case 'helper':
       case 'display':
       case 'emote':
+      case 'sound':
       case 'multiplier': {
         await this.updatePerksConfig(userId, perkType, perkId, configuration);
         break;

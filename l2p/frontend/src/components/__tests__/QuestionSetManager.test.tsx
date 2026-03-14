@@ -185,7 +185,7 @@ describe('QuestionSetManager', () => {
 		fireEvent.click(screen.getByRole('button', { name: 'Import' }))
 
 		await waitFor(() => {
-			expect(screen.getByText(/Ungültiges JSON-Format/i)).toBeInTheDocument()
+			expect(screen.getByText(/Invalid JSON format/i)).toBeInTheDocument()
 		})
 	})
 
