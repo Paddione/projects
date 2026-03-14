@@ -299,7 +299,7 @@ export const GAME = {
     TILE_SIZE: 32,
     MAP_WIDTH_TILES: 28,
     MAP_HEIGHT_TILES: 22,
-    PLAYER_SPEED: 8,
+    PLAYER_SPEED: 16,
     SPRINT_MULTIPLIER: 1.6,
     PROJECTILE_SPEED: 8,
     MELEE_RANGE: 48,       // pixels

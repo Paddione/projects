@@ -269,8 +269,8 @@ describe('GameService', () => {
             }
         });
 
-        it('player speed constant is 8', () => {
-            expect(GAME.PLAYER_SPEED).toBe(8);
+        it('player speed constant is 16', () => {
+            expect(GAME.PLAYER_SPEED).toBe(16);
         });
     });
 
