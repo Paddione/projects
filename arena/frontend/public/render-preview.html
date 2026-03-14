@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Arena Rendering Preview</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0a0a1a; color: #e0e0e0; font-family: 'Outfit', system-ui, sans-serif; }
+  h1 { text-align: center; padding: 20px; color: #00f2ff; font-size: 24px; letter-spacing: 2px; }
+  .sections { display: flex; flex-wrap: wrap; justify-content: center; gap: 30px; padding: 20px; }
+  .section { background: #111122; border: 1px solid #222244; border-radius: 12px; padding: 20px; }
+  .section h2 { color: #888; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
+  canvas { display: block; border-radius: 8px; }
+  .label { text-align: center; margin-top: 8px; font-size: 12px; color: #666; }
+</style>
+</head>
+<body>
+<h1>ARENA — Procedural Rendering Preview</h1>
+<div class="sections">
+  <div class="section">
+    <h2>Characters (5 L2P Classes)</h2>
+    <canvas id="chars" width="600" height="180"></canvas>
+  </div>
+  <div class="section">
+    <h2>Projectiles</h2>
+    <canvas id="projs" width="250" height="120"></canvas>
+  </div>
+  <div class="section">
+    <h2>Cover Objects</h2>
+    <canvas id="covers" width="500" height="120"></canvas>
+  </div>
+  <div class="section">
+    <h2>Map Tiles</h2>
+    <canvas id="tiles" width="300" height="120"></canvas>
+  </div>
+  <div class="section">
+    <h2>Map Section (6x6 tiles)</h2>
+    <canvas id="mapSection" width="288" height="288"></canvas>
+  </div>
+  <div class="section">
+    <h2>Items</h2>
+    <canvas id="items" width="400" height="120"></canvas>
+  </div>
+</div>
+
+<script>
+const CHARACTER_COLORS = {
+  student: 0x00f2ff,
+  researcher: 0x3eff8b,
+  professor: 0xbc13fe,
+  dean: 0xffd700,
+  librarian: 0xff6b9d,
+};
+
+function hex(n) { return '#' + n.toString(16).padStart(6, '0'); }
+function rgba(n, a) { return `rgba(${(n>>16)&255},${(n>>8)&255},${n&255},${a})`; }
+
+// ===== CHARACTERS =====
+(function() {
+  const c = document.getElementById('chars');
+  const ctx = c.getContext('2d');
+  const chars = ['student','researcher','professor','dean','librarian'];
+
+  chars.forEach((name, i) => {
+    const cx = 60 + i * 110;
+    const cy = 70;
+    const color = CHARACTER_COLORS[name];
+    const rotation = -Math.PI / 4; // aiming top-right
+
+    // Outer glow
+    ctx.beginPath();
+    ctx.arc(cx, cy, 18, 0, Math.PI * 2);
+    ctx.fillStyle = rgba(color, 0.12);
+    ctx.fill();
+
+    // Dark body
+    ctx.beginPath();
+    ctx.arc(cx, cy, 12, 0, Math.PI * 2);
+    ctx.fillStyle = '#1a1a2e';
+    ctx.fill();
+
+    // Accent ring
+    ctx.beginPath();
+    ctx.arc(cx, cy, 12, 0, Math.PI * 2);
+    ctx.strokeStyle = rgba(color, 0.9);
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Direction indicator (weapon barrel)
+    const dirLen = 20;
+    const dirX = cx + Math.cos(rotation) * dirLen;
+    const dirY = cy + Math.sin(rotation) * dirLen;
+    ctx.beginPath();
+    ctx.moveTo(cx + Math.cos(rotation) * 10, cy + Math.sin(rotation) * 10);
+    ctx.lineTo(dirX, dirY);
+    ctx.strokeStyle = rgba(color, 0.8);
+    ctx.lineWidth = 3;
+    ctx.stroke();
+
+    // Barrel tip crossbar
+    const perpAngle = rotation + Math.PI / 2;
+    const tipX = cx + Math.cos(rotation) * (dirLen - 3);
+    const tipY = cy + Math.sin(rotation) * (dirLen - 3);
+    ctx.beginPath();
+    ctx.moveTo(tipX + Math.cos(perpAngle) * 3, tipY + Math.sin(perpAngle) * 3);
+    ctx.lineTo(tipX - Math.cos(perpAngle) * 3, tipY - Math.sin(perpAngle) * 3);
+    ctx.strokeStyle = rgba(color, 0.6);
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Inner accent dot
+    ctx.beginPath();
+    ctx.arc(cx, cy, 4, 0, Math.PI * 2);
+    ctx.fillStyle = rgba(color, 0.7);
+    ctx.fill();
+
+    // "Me" pulse (only first one)
+    if (i === 0) {
+      ctx.beginPath();
+      ctx.arc(cx, cy, 15, 0, Math.PI * 2);
+      ctx.strokeStyle = rgba(0xffffff, 0.5);
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+    }
+
+    // Armor ring (show on dean)
+    if (name === 'dean') {
+      ctx.beginPath();
+      ctx.arc(cx, cy, 16, 0, Math.PI * 2);
+      ctx.strokeStyle = rgba(0x38bdf8, 0.8);
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+
+    // Label
+    ctx.fillStyle = '#888';
+    ctx.font = '11px Outfit, system-ui';
+    ctx.textAlign = 'center';
+    ctx.fillText(name, cx, cy + 36);
+
+    // Character name label above (like in-game)
+    ctx.fillStyle = (i === 0) ? rgba(0x818cf8, 1) : '#fff';
+    ctx.font = '600 10px Outfit, system-ui';
+    ctx.fillText(i === 0 ? 'You' : `Player ${i+1}`, cx, cy - 26);
+  });
+})();
+
+// ===== PROJECTILES =====
+(function() {
+  const c = document.getElementById('projs');
+  const ctx = c.getContext('2d');
+
+  // Regular projectile
+  const px1 = 70, py1 = 60;
+  ctx.beginPath(); ctx.arc(px1, py1, 12, 0, Math.PI*2);
+  ctx.fillStyle = rgba(0xfef08a, 0.15); ctx.fill();
+  ctx.beginPath(); ctx.arc(px1, py1, 7, 0, Math.PI*2);
+  ctx.fillStyle = rgba(0xfbbf24, 0.3); ctx.fill();
+  ctx.beginPath(); ctx.arc(px1, py1, 3, 0, Math.PI*2);
+  ctx.fillStyle = '#ffffff'; ctx.fill();
+  ctx.beginPath(); ctx.arc(px1, py1, 5, 0, Math.PI*2);
+  ctx.strokeStyle = rgba(0xfef08a, 0.9); ctx.lineWidth = 1.5; ctx.stroke();
+  ctx.fillStyle = '#888'; ctx.font = '11px Outfit'; ctx.textAlign = 'center';
+  ctx.fillText('Regular', px1, py1 + 30);
+
+  // Grenade
+  const px2 = 180, py2 = 60;
+  ctx.beginPath(); ctx.arc(px2, py2, 12, 0, Math.PI*2);
+  ctx.fillStyle = rgba(0xff6b35, 0.15); ctx.fill();
+  ctx.beginPath(); ctx.arc(px2, py2, 7, 0, Math.PI*2);
+  ctx.fillStyle = rgba(0xf97316, 0.3); ctx.fill();
+  ctx.beginPath(); ctx.arc(px2, py2, 3, 0, Math.PI*2);
+  ctx.fillStyle = '#ffffff'; ctx.fill();
+  ctx.beginPath(); ctx.arc(px2, py2, 5, 0, Math.PI*2);
+  ctx.strokeStyle = rgba(0xff6b35, 0.9); ctx.lineWidth = 1.5; ctx.stroke();
+  ctx.fillStyle = '#888'; ctx.font = '11px Outfit';
+  ctx.fillText('Grenade', px2, py2 + 30);
+})();
+
+// ===== COVER OBJECTS =====
+(function() {
+  const c = document.getElementById('covers');
+  const ctx = c.getContext('2d');
+  const T = 32;
+  const types = [
+    { name: 'building', fill: '#3a3a5a', border: '#5a5a7a' },
+    { name: 'bench', fill: '#5a4020', border: '#7a6040' },
+    { name: 'fountain', fill: '#1a3a5a', border: '#3a6a8a' },
+    { name: 'hedge', fill: '#1a4a2a', border: '#2a6a3a' },
+    { name: 'pond', fill: '#0a2a4a', border: '#1a4a6a' },
+  ];
+
+  types.forEach((t, i) => {
+    const x = 20 + i * 95;
+    const y = 20;
+    const cx = x + T/2;
+    const cy = y + T/2;
+
+    if (t.name === 'fountain') {
+      ctx.beginPath(); ctx.arc(cx, cy, T/2, 0, Math.PI*2);
+      ctx.fillStyle = t.fill; ctx.globalAlpha = 0.9; ctx.fill(); ctx.globalAlpha = 1;
+      ctx.strokeStyle = t.border; ctx.lineWidth = 2; ctx.stroke();
+      ctx.beginPath(); ctx.arc(cx, cy, T/4, 0, Math.PI*2);
+      ctx.strokeStyle = rgba(0x4a8aaa, 0.5); ctx.lineWidth = 1; ctx.stroke();
+    } else if (t.name === 'pond') {
+      ctx.beginPath();
+      roundRect(ctx, x+1, y+1, T-2, T-2, 8);
+      ctx.fillStyle = t.fill; ctx.globalAlpha = 0.7; ctx.fill(); ctx.globalAlpha = 1;
+      ctx.strokeStyle = t.border; ctx.lineWidth = 1; ctx.stroke();
+    } else if (t.name === 'hedge') {
+      ctx.beginPath();
+      roundRect(ctx, x+2, y+2, T-4, T-4, 6);
+      ctx.fillStyle = t.fill; ctx.globalAlpha = 0.85; ctx.fill(); ctx.globalAlpha = 1;
+      ctx.strokeStyle = t.border; ctx.lineWidth = 1.5; ctx.stroke();
+    } else if (t.name === 'bench') {
+      ctx.fillStyle = t.fill; ctx.globalAlpha = 0.9;
+      ctx.fillRect(x+1, y+1, T-2, T-2); ctx.globalAlpha = 1;
+      ctx.strokeStyle = t.border; ctx.lineWidth = 2;
+      ctx.strokeRect(x+1, y+1, T-2, T-2);
+      // Damage crack
+      ctx.beginPath(); ctx.moveTo(x+4, y+4); ctx.lineTo(x+T-4, y+T-4);
+      ctx.strokeStyle = rgba(0xff4444, 0.4); ctx.lineWidth = 1; ctx.stroke();
+    } else {
+      ctx.fillStyle = t.fill; ctx.globalAlpha = 0.95;
+      ctx.fillRect(x, y, T, T); ctx.globalAlpha = 1;
+      ctx.strokeStyle = t.border; ctx.lineWidth = 2;
+      ctx.strokeRect(x, y, T, T);
+    }
+
+    ctx.fillStyle = '#888'; ctx.font = '11px Outfit'; ctx.textAlign = 'center';
+    ctx.fillText(t.name, cx, y + T + 18);
+  });
+
+  function roundRect(ctx, x, y, w, h, r) {
+    ctx.moveTo(x+r, y);
+    ctx.arcTo(x+w, y, x+w, y+h, r);
+    ctx.arcTo(x+w, y+h, x, y+h, r);
+    ctx.arcTo(x, y+h, x, y, r);
+    ctx.arcTo(x, y, x+w, y, r);
+    ctx.closePath();
+  }
+})();
+
+// ===== MAP TILES =====
+(function() {
+  const c = document.getElementById('tiles');
+  const ctx = c.getContext('2d');
+  const T = 32;
+  const grassColors = [0x1a2e1a, 0x1c301c, 0x182a18, 0x1e321e];
+
+  // Grass variants
+  for (let i = 0; i < 3; i++) {
+    ctx.fillStyle = hex(grassColors[i]);
+    ctx.fillRect(20 + i * 38, 20, T, T);
+  }
+  ctx.fillStyle = '#888'; ctx.font = '11px Outfit'; ctx.textAlign = 'center';
+  ctx.fillText('Grass', 20 + 38, 70);
+
+  // Wall
+  ctx.fillStyle = hex(0x2a2a4a);
+  ctx.fillRect(160, 20, T, T);
+  ctx.fillStyle = '#888'; ctx.fillText('Wall', 176, 70);
+
+  // Path variants
+  ctx.fillStyle = hex(0x2a2520);
+  ctx.fillRect(230, 20, T, T);
+  ctx.fillStyle = hex(0x282320);
+  ctx.fillRect(268, 20, T, T);
+  ctx.fillStyle = '#888'; ctx.fillText('Path', 249, 70);
+})();
+
+// ===== MAP SECTION =====
+(function() {
+  const c = document.getElementById('mapSection');
+  const ctx = c.getContext('2d');
+  const T = 48; // larger for preview
+  const grassColors = [0x1a2e1a, 0x1c301c, 0x182a18, 0x1e321e];
+
+  // 6x6 tile section showing path intersection with cover
+  // Simulate tiles around the center path crossing
+  const tiles = [
+    [0,0,0,0,2,2],
+    [0,0,0,0,2,2],
+    [0,0,0,0,2,2],
+    [2,2,2,2,2,2],
+    [2,2,2,2,2,2],
+    [0,0,0,0,2,2],
+  ];
+
+  for (let ty = 0; ty < 6; ty++) {
+    for (let tx = 0; tx < 6; tx++) {
+      const tileType = tiles[ty][tx];
+      let color;
+      if (tileType === 2) {
+        color = (tx+ty)%2===0 ? 0x2a2520 : 0x282320;
+      } else {
+        const hash = (tx*7919+ty*104729)%4;
+        color = grassColors[Math.abs(hash)%4];
+      }
+      ctx.fillStyle = hex(color);
+      ctx.fillRect(tx*T, ty*T, T, T);
+    }
+  }
+
+  // Grid lines
+  ctx.strokeStyle = rgba(0x222450, 0.3);
+  ctx.lineWidth = 1;
+  for (let x = 0; x <= 6; x++) {
+    ctx.beginPath(); ctx.moveTo(x*T, 0); ctx.lineTo(x*T, 6*T); ctx.stroke();
+  }
+  for (let y = 0; y <= 6; y++) {
+    ctx.beginPath(); ctx.moveTo(0, y*T); ctx.lineTo(6*T, y*T); ctx.stroke();
+  }
+
+  // Add a hedge on grass
+  const hx = 1*T+2, hy = 1*T+2;
+  ctx.beginPath();
+  roundRect(ctx, hx, hy, T-4, T-4, 6);
+  ctx.fillStyle = rgba(0x1a4a2a, 0.85); ctx.fill();
+  ctx.strokeStyle = rgba(0x2a6a3a, 0.7); ctx.lineWidth = 1.5; ctx.stroke();
+
+  // Fountain on path intersection
+  const fcx = 4*T+T/2, fcy = 3*T+T/2;
+  ctx.beginPath(); ctx.arc(fcx, fcy, T/2, 0, Math.PI*2);
+  ctx.fillStyle = rgba(0x1a3a5a, 0.9); ctx.fill();
+  ctx.strokeStyle = rgba(0x3a6a8a, 0.8); ctx.lineWidth = 2; ctx.stroke();
+  ctx.beginPath(); ctx.arc(fcx, fcy, T/4, 0, Math.PI*2);
+  ctx.strokeStyle = rgba(0x4a8aaa, 0.5); ctx.lineWidth = 1; ctx.stroke();
+
+  // A player on the map
+  const pcx = 2*T+T/2, pcy = 4*T+T/2;
+  const pcolor = CHARACTER_COLORS.student;
+  ctx.beginPath(); ctx.arc(pcx, pcy, 18, 0, Math.PI*2);
+  ctx.fillStyle = rgba(pcolor, 0.12); ctx.fill();
+  ctx.beginPath(); ctx.arc(pcx, pcy, 12, 0, Math.PI*2);
+  ctx.fillStyle = '#1a1a2e'; ctx.fill();
+  ctx.beginPath(); ctx.arc(pcx, pcy, 12, 0, Math.PI*2);
+  ctx.strokeStyle = rgba(pcolor, 0.9); ctx.lineWidth = 2; ctx.stroke();
+  const rot = 0;
+  ctx.beginPath();
+  ctx.moveTo(pcx+Math.cos(rot)*10, pcy+Math.sin(rot)*10);
+  ctx.lineTo(pcx+Math.cos(rot)*20, pcy+Math.sin(rot)*20);
+  ctx.strokeStyle = rgba(pcolor, 0.8); ctx.lineWidth = 3; ctx.stroke();
+  ctx.beginPath(); ctx.arc(pcx, pcy, 4, 0, Math.PI*2);
+  ctx.fillStyle = rgba(pcolor, 0.7); ctx.fill();
+  // "me" pulse
+  ctx.beginPath(); ctx.arc(pcx, pcy, 15, 0, Math.PI*2);
+  ctx.strokeStyle = rgba(0xffffff, 0.5); ctx.lineWidth = 1.5; ctx.stroke();
+  // Name label
+  ctx.fillStyle = rgba(0x818cf8, 1); ctx.font = '600 10px Outfit, system-ui'; ctx.textAlign = 'center';
+  ctx.fillText('You', pcx, pcy - 22);
+
+  // A projectile
+  const bx = 3*T+T/2, by = 4*T+T/2-5;
+  ctx.beginPath(); ctx.arc(bx, by, 12, 0, Math.PI*2);
+  ctx.fillStyle = rgba(0xfef08a, 0.15); ctx.fill();
+  ctx.beginPath(); ctx.arc(bx, by, 7, 0, Math.PI*2);
+  ctx.fillStyle = rgba(0xfbbf24, 0.3); ctx.fill();
+  ctx.beginPath(); ctx.arc(bx, by, 3, 0, Math.PI*2);
+  ctx.fillStyle = '#fff'; ctx.fill();
+  ctx.beginPath(); ctx.arc(bx, by, 5, 0, Math.PI*2);
+  ctx.strokeStyle = rgba(0xfef08a, 0.9); ctx.lineWidth = 1.5; ctx.stroke();
+
+  function roundRect(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x+r, y);
+    ctx.arcTo(x+w, y, x+w, y+h, r);
+    ctx.arcTo(x+w, y+h, x, y+h, r);
+    ctx.arcTo(x, y+h, x, y, r);
+    ctx.arcTo(x, y, x+w, y, r);
+    ctx.closePath();
+  }
+})();
+
+// ===== ITEMS =====
+(function() {
+  const c = document.getElementById('items');
+  const ctx = c.getContext('2d');
+  const pulse = 0.6;
+
+  function drawItem(cx, cy, type, label) {
+    // Dark background circle
+    ctx.beginPath(); ctx.arc(cx, cy, 11, 0, Math.PI*2);
+    ctx.fillStyle = 'rgba(20,20,30,0.6)'; ctx.fill();
+
+    if (type === 'health') {
+      // Red cross
+      ctx.fillStyle = hex(0xef4444);
+      ctx.fillRect(cx - 3, cy - 9, 6, 18);
+      ctx.fillRect(cx - 9, cy - 3, 18, 6);
+      // Glow ring
+      ctx.beginPath(); ctx.arc(cx, cy, 13, 0, Math.PI*2);
+      ctx.strokeStyle = rgba(0xef4444, pulse); ctx.lineWidth = 2; ctx.stroke();
+    } else if (type === 'armor') {
+      // Diamond shape
+      ctx.beginPath();
+      ctx.moveTo(cx, cy - 10); ctx.lineTo(cx + 8, cy); ctx.lineTo(cx, cy + 10); ctx.lineTo(cx - 8, cy);
+      ctx.closePath(); ctx.fillStyle = hex(0x38bdf8); ctx.fill();
+      // Inner chevron
+      ctx.beginPath(); ctx.moveTo(cx - 4, cy - 2); ctx.lineTo(cx, cy + 3); ctx.lineTo(cx + 4, cy - 2);
+      ctx.strokeStyle = 'rgba(10,11,26,0.8)'; ctx.lineWidth = 1.5; ctx.stroke();
+      // Glow ring
+      ctx.beginPath(); ctx.arc(cx, cy, 13, 0, Math.PI*2);
+      ctx.strokeStyle = rgba(0x38bdf8, pulse); ctx.lineWidth = 2; ctx.stroke();
+    } else if (type === 'machine_gun') {
+      // Gun silhouette
+      ctx.fillStyle = hex(0xfbbf24);
+      ctx.fillRect(cx - 8, cy - 3, 12, 6);  // body
+      ctx.fillRect(cx + 4, cy - 1.5, 6, 3); // barrel
+      ctx.fillRect(cx - 4, cy + 3, 3, 5);   // grip
+      // Glow ring
+      ctx.beginPath(); ctx.arc(cx, cy, 13, 0, Math.PI*2);
+      ctx.strokeStyle = rgba(0xfbbf24, pulse); ctx.lineWidth = 2; ctx.stroke();
+    } else if (type === 'grenade_launcher') {
+      // Grenade body (rounded rect approximation)
+      ctx.fillStyle = hex(0xf97316);
+      roundRect(ctx, cx - 5, cy - 4, 10, 10, 3); ctx.fill();
+      // Fuse stem
+      ctx.beginPath(); ctx.moveTo(cx, cy - 4); ctx.lineTo(cx + 2, cy - 8);
+      ctx.strokeStyle = hex(0xf97316); ctx.lineWidth = 2; ctx.stroke();
+      // Fuse spark
+      ctx.beginPath(); ctx.arc(cx + 2, cy - 9, 2, 0, Math.PI*2);
+      ctx.fillStyle = hex(0xfbbf24); ctx.fill();
+      // Glow ring
+      ctx.beginPath(); ctx.arc(cx, cy, 13, 0, Math.PI*2);
+      ctx.strokeStyle = rgba(0xf97316, pulse); ctx.lineWidth = 2; ctx.stroke();
+    }
+
+    ctx.fillStyle = '#888'; ctx.font = '10px Outfit'; ctx.textAlign = 'center';
+    ctx.fillText(label, cx, cy + 28);
+  }
+
+  // roundRect helper (Canvas2D)
+  function roundRect(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y); ctx.arcTo(x + w, y, x + w, y + r, r);
+    ctx.lineTo(x + w, y + h - r); ctx.arcTo(x + w, y + h, x + w - r, y + h, r);
+    ctx.lineTo(x + r, y + h); ctx.arcTo(x, y + h, x, y + h - r, r);
+    ctx.lineTo(x, y + r); ctx.arcTo(x, y, x + r, y, r);
+    ctx.closePath();
+  }
+
+  drawItem(50, 50, 'health', 'Health');
+  drawItem(140, 50, 'armor', 'Armor');
+  drawItem(230, 50, 'machine_gun', 'Machine Gun');
+  drawItem(320, 50, 'grenade_launcher', 'Grenade Launcher');
+})();
+</script>
+</body>
+</html>
