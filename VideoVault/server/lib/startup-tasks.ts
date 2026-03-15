@@ -394,13 +394,14 @@ async function autoIndexLibrary(db: any, moviesDir: string): Promise<void> {
 }
 
 /**
- * Write movies_index.json to the project root (process.cwd()).
+ * Write movies_index.json next to MOVIES_DIR (in MEDIA_ROOT).
  * Contains all completed videos with thumbnails — same shape as GET /api/videos.
  * Exported so it can be called after the movie watcher processes new files.
  */
 export async function generateMoviesIndex(db: any, moviesDir?: string): Promise<void> {
   const MOVIES_DIR = moviesDir || process.env.MOVIES_DIR || path.join(process.cwd(), 'media', 'movies');
-  const indexPath = path.join(process.cwd(), 'movies_index.json');
+  const MEDIA_ROOT = process.env.MEDIA_ROOT || path.join(process.cwd(), 'media');
+  const indexPath = path.join(MEDIA_ROOT, 'movies_index.json');
 
   // Try DB-based generation first
   if (db) {

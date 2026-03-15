@@ -24,7 +24,8 @@ function requireDb(res: Response) {
 }
 
 // Resolve the movies_index.json path once at module load
-const MOVIES_INDEX_PATH = path.join(process.cwd(), 'movies_index.json');
+const MEDIA_ROOT = process.env.MEDIA_ROOT || path.join(process.cwd(), 'media');
+const MOVIES_INDEX_PATH = path.join(MEDIA_ROOT, 'movies_index.json');
 
 // Videos
 export async function listVideos(req: Request, res: Response) {
