@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Assetgenerator — Asset Library</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='16' fill='%2308080f'/><path d='M50 18L22 82h12l5-14h22l5 14h12L50 18zm0 22l8 22H42l8-22z' fill='%2300e5ff'/><circle cx='74' cy='30' r='6' fill='%23ff4081'/></svg>">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
@@ -641,6 +642,119 @@
       border: 1px solid var(--border);
       object-fit: contain;
       background: var(--bg-deep);
+    }
+
+    .preview-full {
+      max-width: 100%;
+      max-height: 400px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      object-fit: contain;
+      background: var(--bg-deep);
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+    .preview-full:hover { border-color: var(--cyan); }
+
+    .render-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, 64px);
+      gap: 4px;
+      padding: 0.5rem;
+      background: var(--bg-deep);
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      max-height: 300px;
+      overflow-y: auto;
+    }
+    .render-grid img {
+      width: 64px;
+      height: 64px;
+      object-fit: contain;
+      border-radius: 2px;
+      border: 1px solid var(--border);
+      background: #1a1a2e;
+      image-rendering: pixelated;
+    }
+    .render-grid img:hover {
+      border-color: var(--cyan);
+      transform: scale(2);
+      z-index: 10;
+      position: relative;
+    }
+
+    .phase-preview {
+      margin: 0.5rem 0;
+      padding: 0.5rem;
+      border-left: 2px solid var(--border);
+    }
+    .phase-preview.done { border-left-color: var(--green); }
+    .phase-preview.pending { border-left-color: var(--text-muted); opacity: 0.5; }
+    .phase-preview.error { border-left-color: var(--red); }
+
+    .phase-preview-header {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.4rem;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+    }
+    .phase-preview-header .phase-label {
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+    }
+    .phase-preview-header .phase-status {
+      font-size: 0.7rem;
+    }
+    .phase-preview-header .phase-status.done { color: var(--green); }
+    .phase-preview-header .phase-status.pending { color: var(--text-muted); }
+    .phase-preview-header .phase-status.error { color: var(--red); }
+
+    .phase-actions {
+      display: flex;
+      gap: 0.4rem;
+      margin-top: 0.3rem;
+    }
+    .phase-actions button { font-size: 0.72rem; padding: 0.2rem 0.6rem; }
+    .phase-actions button.btn-accept { background: var(--green); color: var(--bg-deep); }
+    .phase-actions button.btn-accept:hover { background: #6dff9a; }
+
+    .add-visual-form {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      align-items: flex-end;
+      padding: 0.8rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin-bottom: 1rem;
+    }
+    .add-visual-form label {
+      display: flex;
+      flex-direction: column;
+      gap: 0.2rem;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+    }
+    .add-visual-form input, .add-visual-form select, .add-visual-form textarea {
+      font-size: 0.8rem;
+      padding: 0.3rem 0.5rem;
+    }
+    .add-visual-form textarea { min-width: 300px; resize: vertical; }
+
+    .atlas-preview {
+      max-width: 100%;
+      max-height: 256px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      object-fit: contain;
+      background: var(--bg-deep);
+      image-rendering: pixelated;
     }
 
     /* Audio slot row */
@@ -2169,10 +2283,71 @@ function renderVisualAssets() {
   const container = document.getElementById('visual-container');
   container.replaceChildren();
 
+  // Add to Library form
+  const addHeader = document.createElement('h2');
+  addHeader.className = 'section-header';
+  addHeader.textContent = 'Add Visual Asset';
+  container.appendChild(addHeader);
+
+  const addForm = document.createElement('div');
+  addForm.className = 'add-visual-form';
+
+  const categories = ['characters', 'weapons', 'items', 'tiles', 'cover', 'ui'];
+  addForm.innerHTML = `
+    <label>ID<input type="text" id="new-vis-id" placeholder="e.g. dragon"></label>
+    <label>Name<input type="text" id="new-vis-name" placeholder="e.g. Fire Dragon"></label>
+    <label>Category
+      <select id="new-vis-category">
+        ${categories.map(c => `<option value="${c}">${c}</option>`).join('')}
+      </select>
+    </label>
+    <label>Concept Backend
+      <select id="new-vis-backend">
+        <option value="">ComfyUI (GPU worker)</option>
+        <option value="diffusers">Diffusers (GPU worker)</option>
+        <option value="gemini-imagen">Gemini Imagen (cloud)</option>
+      </select>
+    </label>
+    <label>Prompt<textarea id="new-vis-prompt" rows="2" placeholder="Describe the asset..."></textarea></label>
+  `;
+
+  const addBtn = document.createElement('button');
+  addBtn.className = 'btn-primary';
+  addBtn.textContent = 'Add Asset';
+  addBtn.addEventListener('click', async () => {
+    const newId = document.getElementById('new-vis-id').value.trim();
+    const newName = document.getElementById('new-vis-name').value.trim();
+    const newCat = document.getElementById('new-vis-category').value;
+    const newBackend = document.getElementById('new-vis-backend').value || null;
+    const newPrompt = document.getElementById('new-vis-prompt').value.trim();
+    if (!newId || !newName) {
+      alert('ID and name are required');
+      return;
+    }
+    try {
+      await fetchJSON('/api/visual-library', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: newId, name: newName, category: newCat, prompt: newPrompt, conceptBackend: newBackend }),
+      });
+      visualData = await fetchJSON('/api/visual-library');
+      document.getElementById('new-vis-id').value = '';
+      document.getElementById('new-vis-name').value = '';
+      document.getElementById('new-vis-prompt').value = '';
+      renderVisualAssets();
+      appendLog(`Added visual asset: ${newId}`, 'success');
+    } catch (err) {
+      appendLog(err.message, 'error');
+    }
+  });
+  addForm.appendChild(addBtn);
+  container.appendChild(addForm);
+
+  // Asset list
   if (!visualData?.assets || Object.keys(visualData.assets).length === 0) {
     const empty = document.createElement('div');
     empty.className = 'empty-state';
-    empty.textContent = 'No visual assets. Import from project or create new.';
+    empty.textContent = 'No visual assets yet. Add one above or import from a project.';
     container.appendChild(empty);
     return;
   }
@@ -2198,6 +2373,7 @@ function renderVisualAssets() {
 function createVisualCard(id, asset) {
   const card = document.createElement('div');
   card.className = 'card';
+  card.id = `vcard-${id}`;
 
   // Header
   const headerRow = document.createElement('div');
@@ -2206,6 +2382,12 @@ function createVisualCard(id, asset) {
   nameEl.className = 'sound-name';
   nameEl.textContent = asset.name || id;
   headerRow.appendChild(nameEl);
+
+  const catBadge = document.createElement('span');
+  catBadge.className = 'badge badge-type';
+  catBadge.textContent = asset.category;
+  headerRow.appendChild(catBadge);
+
   for (const tag of (asset.tags || [])) {
     const tagEl = document.createElement('span');
     tagEl.className = 'badge badge-type';
@@ -2214,46 +2396,10 @@ function createVisualCard(id, asset) {
   }
   card.appendChild(headerRow);
 
-  // Pipeline indicator
-  const pipeline = document.createElement('div');
-  pipeline.className = 'pipeline';
-  const phases = ['concept', 'model', 'render', 'pack'];
-  const statusIcon = { done: '\u25CF', pending: '\u25CB', generating: '\u25D0', error: '\u2717' };
-  let first = true;
-  for (const p of phases) {
-    const phaseData = asset.pipeline?.[p];
-    if (!phaseData && p === 'model') continue;
-    if (!first) {
-      const arrow = document.createElement('span');
-      arrow.className = 'pipeline-arrow';
-      arrow.textContent = '\u2192';
-      pipeline.appendChild(arrow);
-    }
-    first = false;
-    const phaseEl = document.createElement('span');
-    phaseEl.className = `pipeline-phase ${phaseData?.status || 'pending'}`;
-    const label = p.charAt(0).toUpperCase() + p.slice(1);
-    phaseEl.textContent = `${statusIcon[phaseData?.status] || '\u25CB'} ${label}`;
-    if (phaseData?.frameCount) phaseEl.textContent += ` ${phaseData.frameCount}fr`;
-    pipeline.appendChild(phaseEl);
-  }
-  card.appendChild(pipeline);
-
-  // Preview
-  if (asset.pipeline?.concept?.status === 'done') {
-    const previewRow = document.createElement('div');
-    previewRow.className = 'preview-row';
-    const img = document.createElement('img');
-    img.className = 'preview-thumb';
-    img.src = `/api/visual-library/${id}/concept`;
-    img.alt = 'Concept';
-    previewRow.appendChild(img);
-    card.appendChild(previewRow);
-  }
-
-  // Controls
+  // Controls (prompt, backend, poses)
   const controls = document.createElement('div');
   controls.className = 'controls';
+
   const promptLabel = document.createElement('label');
   promptLabel.textContent = 'Prompt';
   const promptInput = document.createElement('textarea');
@@ -2263,7 +2409,6 @@ function createVisualCard(id, asset) {
   controls.appendChild(promptLabel);
   controls.appendChild(promptInput);
 
-  // Concept backend selector
   const cbRow = document.createElement('div');
   cbRow.className = 'controls-row';
   const cbLabel = document.createElement('label');
@@ -2275,7 +2420,6 @@ function createVisualCard(id, asset) {
     { value: '', label: 'ComfyUI (default, GPU worker)' },
     { value: 'diffusers', label: 'Diffusers (GPU worker)' },
     { value: 'gemini-imagen', label: 'Gemini Imagen (cloud API)' },
-    // { value: 'siliconflow', label: 'SiliconFlow FLUX (cloud API)' },  // disabled — no API key configured
   ];
   for (const opt of conceptBackends) {
     const option = document.createElement('option');
@@ -2286,10 +2430,7 @@ function createVisualCard(id, asset) {
   }
   cbLabel.appendChild(cbSelect);
   cbRow.appendChild(cbLabel);
-  controls.appendChild(cbRow);
 
-  const row = document.createElement('div');
-  row.className = 'controls-row';
   const posesLabel = document.createElement('label');
   posesLabel.textContent = 'Poses';
   const posesInput = document.createElement('input');
@@ -2297,25 +2438,12 @@ function createVisualCard(id, asset) {
   posesInput.id = `vposes-${id}`;
   posesInput.style.width = '200px';
   posesLabel.appendChild(posesInput);
-  row.appendChild(posesLabel);
-  controls.appendChild(row);
-
-  if (asset.assignedTo && Object.keys(asset.assignedTo).length > 0) {
-    const assignInfo = document.createElement('div');
-    assignInfo.className = 'assign-info';
-    assignInfo.textContent = 'Assigned: ' + Object.entries(asset.assignedTo)
-      .map(([proj, info]) => `${proj}/${info.atlas} (synced ${timeAgo(info.syncedAt)})`)
-      .join(', ');
-    controls.appendChild(assignInfo);
-  }
-  card.appendChild(controls);
-
-  // Actions
-  const actions = document.createElement('div');
-  actions.className = 'card-actions';
+  cbRow.appendChild(posesLabel);
+  controls.appendChild(cbRow);
 
   const saveBtn = document.createElement('button');
   saveBtn.textContent = 'Save';
+  saveBtn.style.marginTop = '0.3rem';
   saveBtn.addEventListener('click', async () => {
     await fetchJSON(`/api/visual-library/${id}`, {
       method: 'PUT',
@@ -2329,15 +2457,132 @@ function createVisualCard(id, asset) {
     card.classList.add('save-flash');
     setTimeout(() => card.classList.remove('save-flash'), 600);
   });
-  actions.appendChild(saveBtn);
+  controls.appendChild(saveBtn);
+  card.appendChild(controls);
 
-  for (const phase of ['concept', 'model', 'render', 'pack']) {
-    if (phase === 'model' && !asset.pipeline?.model) continue;
-    const btn = document.createElement('button');
-    btn.textContent = phase.charAt(0).toUpperCase() + phase.slice(1);
-    btn.addEventListener('click', () => startVisualGeneration(id, phase));
-    actions.appendChild(btn);
+  // Step-by-step pipeline with previews
+  const pipelineSection = document.createElement('div');
+  pipelineSection.className = 'pipeline-steps';
+
+  const phases = ['concept', 'model', 'render', 'pack'];
+  for (const phase of phases) {
+    const phaseData = asset.pipeline?.[phase];
+    if (!phaseData && phase === 'model') continue; // skip model for non-3D
+
+    const status = phaseData?.status || 'pending';
+    const phaseDiv = document.createElement('div');
+    phaseDiv.className = `phase-preview ${status}`;
+
+    // Phase header with status + action button
+    const phaseHeader = document.createElement('div');
+    phaseHeader.className = 'phase-preview-header';
+
+    const statusIcons = { done: '\u2714', pending: '\u25CB', generating: '\u25D0', error: '\u2717' };
+    const phaseLabel = document.createElement('span');
+    phaseLabel.className = 'phase-label';
+    phaseLabel.textContent = phase;
+    phaseHeader.appendChild(phaseLabel);
+
+    const statusEl = document.createElement('span');
+    statusEl.className = `phase-status ${status}`;
+    statusEl.textContent = `${statusIcons[status] || '\u25CB'} ${status}`;
+    if (phaseData?.generatedAt) statusEl.textContent += ` \u2014 ${timeAgo(phaseData.generatedAt)}`;
+    if (phaseData?.backend) statusEl.textContent += ` (${phaseData.backend})`;
+    phaseHeader.appendChild(statusEl);
+
+    phaseDiv.appendChild(phaseHeader);
+
+    // Preview content (different per phase)
+    if (status === 'done') {
+      if (phase === 'concept') {
+        const img = document.createElement('img');
+        img.className = 'preview-full';
+        img.src = `/api/visual-library/${id}/concept?t=${Date.now()}`;
+        img.alt = 'Concept';
+        img.title = 'Click to open full size';
+        img.addEventListener('click', () => window.open(img.src, '_blank'));
+        phaseDiv.appendChild(img);
+      }
+
+      if (phase === 'render' && phaseData?.frameCount > 0) {
+        const grid = document.createElement('div');
+        grid.className = 'render-grid';
+        grid.textContent = 'Loading frames...';
+        // Async load frame list
+        fetch(`/api/visual-library/${id}/renders`).then(r => r.json()).then(data => {
+          grid.textContent = '';
+          if (data.frames?.length > 0) {
+            for (const frame of data.frames) {
+              const img = document.createElement('img');
+              img.src = `/api/visual-library/${id}/render-frame/${frame}`;
+              img.alt = frame;
+              img.title = frame.replace('.png', '');
+              grid.appendChild(img);
+            }
+          } else {
+            grid.textContent = 'No rendered frames found';
+          }
+        }).catch(() => { grid.textContent = 'Failed to load frames'; });
+        phaseDiv.appendChild(grid);
+      }
+
+      if (phase === 'pack') {
+        const img = document.createElement('img');
+        img.className = 'atlas-preview';
+        img.src = `/api/visual-library/${id}/atlas?t=${Date.now()}`;
+        img.alt = 'Sprite Atlas';
+        img.title = 'Packed sprite atlas';
+        img.onerror = () => { img.style.display = 'none'; };
+        phaseDiv.appendChild(img);
+      }
+    }
+
+    // Phase action buttons
+    const phaseActions = document.createElement('div');
+    phaseActions.className = 'phase-actions';
+
+    // Determine if this phase can run (previous phase must be done)
+    const prevPhase = phases[phases.indexOf(phase) - 1];
+    const prevDone = !prevPhase || asset.pipeline?.[prevPhase]?.status === 'done'
+      || (prevPhase === 'model' && !asset.pipeline?.model); // skip model check for non-3D
+    const canRun = prevDone && status !== 'generating';
+
+    if (status === 'done') {
+      // Regenerate button
+      const regenBtn = document.createElement('button');
+      regenBtn.textContent = '\u21BB Redo';
+      regenBtn.disabled = !canRun;
+      regenBtn.addEventListener('click', () => startVisualGeneration(id, phase));
+      phaseActions.appendChild(regenBtn);
+    } else {
+      // Generate button
+      const genBtn = document.createElement('button');
+      genBtn.className = canRun ? 'btn-primary' : '';
+      genBtn.textContent = `Generate ${phase.charAt(0).toUpperCase() + phase.slice(1)}`;
+      genBtn.disabled = !canRun;
+      genBtn.addEventListener('click', () => startVisualGeneration(id, phase));
+      phaseActions.appendChild(genBtn);
+    }
+
+    phaseDiv.appendChild(phaseActions);
+    pipelineSection.appendChild(phaseDiv);
   }
+
+  card.appendChild(pipelineSection);
+
+  // Assignment info
+  if (asset.assignedTo && Object.keys(asset.assignedTo).length > 0) {
+    const assignInfo = document.createElement('div');
+    assignInfo.className = 'assign-info';
+    assignInfo.textContent = 'Assigned: ' + Object.entries(asset.assignedTo)
+      .map(([proj, info]) => `${proj}/${info.atlas} (synced ${timeAgo(info.syncedAt)})`)
+      .join(', ');
+    card.appendChild(assignInfo);
+  }
+
+  // Bottom actions
+  const actions = document.createElement('div');
+  actions.className = 'card-actions';
 
   const fullBtn = document.createElement('button');
   fullBtn.className = 'btn-primary';
@@ -2360,7 +2605,7 @@ function createVisualCard(id, asset) {
 
   const delBtn = document.createElement('button');
   delBtn.className = 'btn-danger';
-  delBtn.textContent = 'Del';
+  delBtn.textContent = 'Delete';
   delBtn.addEventListener('click', async () => {
     if (!confirm(`Delete ${id}?`)) return;
     await fetchJSON(`/api/visual-library/${id}`, { method: 'DELETE' });

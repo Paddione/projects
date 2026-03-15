@@ -104,12 +104,39 @@ const VISUAL_LIBRARY_PATH = join(_vConfig.libraryRoot, 'visual-library.json');
 const LIBRARY_CONFIG_PATH = join(__dirname, 'config', 'library-config.json');
 const VISUAL_CONFIG_PATH = join(__dirname, 'config', 'visual-config.json');
 
+// Seed NAS library from git-tracked copy if NAS copy is missing or empty
+function seedLibraryIfEmpty(nasPath, localFallback, label) {
+  const localPath = join(__dirname, localFallback);
+  if (!existsSync(localPath)) return;
+  const needsSeed = !existsSync(nasPath) ||
+    (() => { try { const d = JSON.parse(readFileSync(nasPath, 'utf-8')); return Object.keys(d.sounds || d.assets || {}).length === 0; } catch { return true; } })();
+  if (needsSeed) {
+    console.log(`  Seeding ${label} from ${localFallback}`);
+    const dir = dirname(nasPath);
+    if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
+    copyFileSync(localPath, nasPath);
+  }
+}
+
+seedLibraryIfEmpty(LIBRARY_PATH, 'library.json', 'audio library');
+seedLibraryIfEmpty(VISUAL_LIBRARY_PATH, 'visual-library.json', 'visual library');
+
 function loadLibrary() {
   if (!existsSync(LIBRARY_PATH)) return { version: 1, sounds: {} };
   return JSON.parse(readFileSync(LIBRARY_PATH, 'utf-8'));
 }
 
 function saveLibrary(library) {
+  const incoming = Object.keys(library.sounds || {}).length;
+  if (incoming === 0 && existsSync(LIBRARY_PATH)) {
+    try {
+      const existing = JSON.parse(readFileSync(LIBRARY_PATH, 'utf-8'));
+      if (Object.keys(existing.sounds || {}).length > 0) {
+        console.warn('saveLibrary: refusing to overwrite populated library with empty data');
+        return;
+      }
+    } catch { /* file unreadable, allow write */ }
+  }
   writeFileSync(LIBRARY_PATH, JSON.stringify(library, null, 2));
 }
 
@@ -119,6 +146,16 @@ function loadVisualLibrary() {
 }
 
 function saveVisualLibrary(library) {
+  const incoming = Object.keys(library.assets || {}).length;
+  if (incoming === 0 && existsSync(VISUAL_LIBRARY_PATH)) {
+    try {
+      const existing = JSON.parse(readFileSync(VISUAL_LIBRARY_PATH, 'utf-8'));
+      if (Object.keys(existing.assets || {}).length > 0) {
+        console.warn('saveVisualLibrary: refusing to overwrite populated library with empty data');
+        return;
+      }
+    } catch { /* file unreadable, allow write */ }
+  }
   writeFileSync(VISUAL_LIBRARY_PATH, JSON.stringify(library, null, 2));
 }
 
@@ -802,6 +839,29 @@ app.get('/api/visual-library/:id/render/:pose/:direction', (req, res) => {
     `${asset.id}-${req.params.pose}-${req.params.direction}.png`);
   if (!existsSync(filePath)) return res.status(404).json({ error: 'Render not found' });
   res.sendFile(filePath);
+});
+
+// Serve render frame by filename (simpler than pose/direction pattern)
+app.get('/api/visual-library/:id/render-frame/:filename', (req, res) => {
+  const library = loadVisualLibrary();
+  const asset = library.assets[req.params.id];
+  if (!asset) return res.status(404).json({ error: 'Asset not found' });
+  const vConfig = loadVisualConfig();
+  const filePath = join(vConfig.libraryRoot, 'renders', asset.category, asset.id, req.params.filename);
+  if (!existsSync(filePath)) return res.status(404).json({ error: 'Frame not found' });
+  res.sendFile(filePath);
+});
+
+// List all rendered frames for a visual asset
+app.get('/api/visual-library/:id/renders', (req, res) => {
+  const library = loadVisualLibrary();
+  const asset = library.assets[req.params.id];
+  if (!asset) return res.status(404).json({ error: 'Asset not found' });
+  const vConfig = loadVisualConfig();
+  const renderDir = join(vConfig.libraryRoot, 'renders', asset.category, asset.id);
+  if (!existsSync(renderDir)) return res.json({ frames: [] });
+  const frames = readdirSync(renderDir).filter(f => f.endsWith('.png')).sort();
+  res.json({ frames, basePath: `/api/visual-library/${req.params.id}/render` });
 });
 
 app.get('/api/visual-library/:id/atlas', (req, res) => {
