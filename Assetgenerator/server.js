@@ -815,7 +815,7 @@ app.get('/api/visual-library/:id/atlas', (req, res) => {
 });
 
 app.post('/api/visual-library', (req, res) => {
-  const { id, name, category, tags, prompt, poses, directions, size, color } = req.body;
+  const { id, name, category, tags, prompt, poses, directions, size, color, conceptBackend } = req.body;
   if (!id || !name || !category) return res.status(400).json({ error: 'id, name, category required' });
   const library = loadVisualLibrary();
   if (library.assets[id]) return res.status(409).json({ error: 'Asset already exists' });
@@ -839,6 +839,7 @@ app.post('/api/visual-library', (req, res) => {
     directions: directions || catConfig.directions || 1,
     size: size || catConfig.size || 32,
     color: color || '#ffffff',
+    conceptBackend: conceptBackend || null,
     pipeline,
     assignedTo: {},
   };
@@ -851,7 +852,7 @@ app.put('/api/visual-library/:id', (req, res) => {
   const library = loadVisualLibrary();
   const asset = library.assets[req.params.id];
   if (!asset) return res.status(404).json({ error: 'Asset not found' });
-  const allowed = ['name', 'category', 'tags', 'prompt', 'poses', 'directions', 'size', 'color'];
+  const allowed = ['name', 'category', 'tags', 'prompt', 'poses', 'directions', 'size', 'color', 'conceptBackend'];
   for (const key of allowed) {
     if (req.body[key] !== undefined) asset[key] = req.body[key];
   }
