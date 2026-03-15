@@ -254,6 +254,19 @@ profiles:
           - services/arena-backend
           - services/arena-frontend
 
+  # Assetgenerator only
+  - name: assetgenerator
+    build:
+      artifacts:
+        - image: registry.korczewski.de/korczewski/assetgenerator
+          context: ..
+          docker:
+            dockerfile: Assetgenerator/Dockerfile
+    manifests:
+      kustomize:
+        paths:
+          - services/assetgenerator
+
   # Infrastructure only (no builds)
   - name: infra
     manifests:
