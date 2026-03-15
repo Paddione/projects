@@ -12,6 +12,17 @@ metadata:
     tier: services
 spec:
   routes:
+    # WebSocket route for GPU worker — needs websocket-chain middleware
+    - match: Host(`assetgen.korczewski.de`) && PathPrefix(`/ws/worker`)
+      kind: Rule
+      middlewares:
+        - name: websocket-chain
+          namespace: korczewski-infra
+      priority: 110
+      services:
+        - name: assetgenerator
+          port: 5200
+    # Default route for UI + API
     - match: Host(`assetgen.korczewski.de`)
       kind: Rule
       services:
