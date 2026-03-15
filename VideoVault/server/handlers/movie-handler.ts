@@ -333,20 +333,22 @@ export async function handleMovieProcessing(
     // 5. Organize file if autoOrganize is enabled
     let finalPath = inputPath;
     let relativePath = path.relative(PATH_BASE, inputPath);
+    const originalFilename = path.basename(inputPath);
 
     if (autoOrganize) {
-      const currentDir = path.dirname(inputPath);
-      const filename = path.basename(inputPath);
+      const ext = path.extname(inputPath);
       const organizedFolder = generateOrganizedPath(title, year);
       const targetDir = path.join(MOVIES_DIR, organizedFolder);
-      const targetPath = path.join(targetDir, filename);
+      // Rename the file to match the organized directory name
+      const organizedFilename = `${organizedFolder}${ext}`;
+      const targetPath = path.join(targetDir, organizedFilename);
 
       // Only move if not already in the right location
-      if (path.dirname(inputPath) !== targetDir) {
+      if (path.dirname(inputPath) !== targetDir || path.basename(inputPath) !== organizedFilename) {
         // Create target directory
         await fs.mkdir(targetDir, { recursive: true });
 
-        // Move the file
+        // Move and rename the file
         try {
           await fs.rename(inputPath, targetPath);
           finalPath = targetPath;
@@ -447,6 +449,7 @@ export async function handleMovieProcessing(
           version: 1,
           id,
           filename: path.basename(finalPath),
+          originalFilename,
           displayName: title + (year ? ` (${year})` : ''),
           size: stats.size,
           lastModified: stats.mtime.toISOString(),

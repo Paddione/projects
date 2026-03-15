@@ -192,9 +192,10 @@ RootsRegistry.init();
 
   // Run startup tasks in the background so the server can start immediately
   // (avoids blocking the health endpoint and triggering K8s startup probe kills)
-  if (dbInstance && process.env.NODE_ENV !== 'test') {
+  // Runs with or without DB — filesystem-based index generation works either way.
+  if (process.env.NODE_ENV !== 'test') {
     import('./lib/startup-tasks').then(({ runStartupTasks }) =>
-      runStartupTasks(dbInstance).catch((err) =>
+      runStartupTasks(dbInstance || null).catch((err) =>
         logger.warn('Startup tasks failed (non-fatal)', { error: (err as Error).message })
       )
     );

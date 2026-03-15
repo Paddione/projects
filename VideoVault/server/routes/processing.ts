@@ -446,7 +446,10 @@ router.post('/movies/organize-inbox', async (req: Request, res: Response) => {
     for (const entry of videoFiles) {
       const videoPath = path.join(sourceDir, entry.name);
       const baseName = path.basename(entry.name, path.extname(entry.name));
+      const ext = path.extname(entry.name);
       const dirName = sanitizeName(baseName);
+      // Rename the file to match the directory name
+      const organizedFilename = `${dirName}${ext}`;
       const tempDir = path.join(sourceDir, dirName);
       const thumbsDir = path.join(tempDir, 'Thumbnails');
       const finalDir = path.join(destDir, dirName);
@@ -455,8 +458,8 @@ router.post('/movies/organize-inbox', async (req: Request, res: Response) => {
         // Create directory structure in source
         await fs.mkdir(thumbsDir, { recursive: true });
 
-        // Move video into the new directory
-        const newVideoPath = path.join(tempDir, entry.name);
+        // Move and rename video into the new directory
+        const newVideoPath = path.join(tempDir, organizedFilename);
         await fs.rename(videoPath, newVideoPath);
 
         // Generate thumbnails — rollback if this fails
@@ -479,6 +482,16 @@ router.post('/movies/organize-inbox', async (req: Request, res: Response) => {
           failed++;
           continue;
         }
+
+        // Write metadata.json sidecar preserving original filename
+        try {
+          await writeSidecar(tempDir, {
+            version: 1,
+            filename: organizedFilename,
+            originalFilename: entry.name,
+            displayName: dirName,
+          });
+        } catch { /* non-fatal */ }
 
         // Move organized directory to destination
         await fs.rename(tempDir, finalDir);

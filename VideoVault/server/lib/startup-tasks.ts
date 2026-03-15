@@ -43,19 +43,23 @@ export async function runStartupTasks(db: any): Promise<void> {
 
   // 2. Register 'movies' root in DB so indexed videos survive startup cleanup.
   //    Retry briefly — the DB may still be recovering from the startup TRUNCATE.
-  for (let attempt = 0; attempt < 5; attempt++) {
-    const ok = await ensureMoviesRoot(db, MOVIES_DIR);
-    if (ok) break;
-    await new Promise((r) => setTimeout(r, 2000));
+  if (db) {
+    for (let attempt = 0; attempt < 5; attempt++) {
+      const ok = await ensureMoviesRoot(db, MOVIES_DIR);
+      if (ok) break;
+      await new Promise((r) => setTimeout(r, 2000));
+    }
   }
 
   // 3. Drain inbox → move files to MOVIES_DIR root
   await drainInbox(MOVIES_DIR);
 
   // 4. Index all videos with existing thumbnails into DB (fast — no ffmpeg)
-  await autoIndexLibrary(db, MOVIES_DIR);
+  if (db) {
+    await autoIndexLibrary(db, MOVIES_DIR);
+  }
 
-  // 5. Write movies_index.json from DB — serves as the default library for all users
+  // 5. Write movies_index.json — uses DB if available, falls back to filesystem scan
   //    Retry since DB may still be recovering from the mass upserts above.
   for (let attempt = 0; attempt < 5; attempt++) {
     try {
@@ -390,30 +394,120 @@ async function autoIndexLibrary(db: any, moviesDir: string): Promise<void> {
 }
 
 /**
- * Write movies_index.json next to MOVIES_DIR.
+ * Write movies_index.json to the project root (process.cwd()).
  * Contains all completed videos with thumbnails — same shape as GET /api/videos.
  * Exported so it can be called after the movie watcher processes new files.
  */
 export async function generateMoviesIndex(db: any, moviesDir?: string): Promise<void> {
-  if (!db) return;
   const MOVIES_DIR = moviesDir || process.env.MOVIES_DIR || path.join(process.cwd(), 'media', 'movies');
-  const indexPath = path.join(path.dirname(MOVIES_DIR), 'movies_index.json');
+  const indexPath = path.join(process.cwd(), 'movies_index.json');
 
+  // Try DB-based generation first
+  if (db) {
+    try {
+      const rows = await db
+        .select()
+        .from(videos)
+        .where(
+          and(
+            isNotNull(videos.thumbnail),
+            eq(videos.processingStatus, 'completed'),
+          ),
+        );
+
+      if (rows.length > 0) {
+        await fs.writeFile(indexPath, JSON.stringify(rows), 'utf-8');
+        logger.info('[StartupTasks] Generated movies_index.json from DB', { count: rows.length, path: indexPath });
+        return;
+      }
+    } catch (err: any) {
+      logger.warn('[StartupTasks] DB query failed, falling back to filesystem scan', { error: err.message });
+    }
+  }
+
+  // Fallback: scan filesystem using metadata.json sidecars
   try {
-    const rows = await db
-      .select()
-      .from(videos)
-      .where(
-        and(
-          isNotNull(videos.thumbnail),
-          eq(videos.processingStatus, 'completed'),
-        ),
-      );
+    const entries = await fs.readdir(MOVIES_DIR, { withFileTypes: true });
+    const result: any[] = [];
 
-    await fs.writeFile(indexPath, JSON.stringify(rows), 'utf-8');
-    logger.info('[StartupTasks] Generated movies_index.json', { count: rows.length, path: indexPath });
+    // Pass 1: flat files in MOVIES_DIR/
+    const rootThumbsDir = path.join(MOVIES_DIR, 'Thumbnails');
+    const flatFiles = entries.filter(
+      (e) => e.isFile() && MOVIE_EXTENSIONS.includes(path.extname(e.name).toLowerCase()),
+    );
+
+    for (const entry of flatFiles) {
+      const baseName = path.basename(entry.name, path.extname(entry.name));
+      const thumbPath = path.join(rootThumbsDir, `${baseName}_thumb.jpg`);
+      try { await fs.access(thumbPath); } catch { continue; }
+
+      const videoPath = path.join(MOVIES_DIR, entry.name);
+      const stat = await fs.stat(videoPath);
+      const id = crypto.createHash('sha256').update('movies:' + entry.name).digest('hex').slice(0, 36);
+      const thumbUrl = `/media/movies/Thumbnails/${encodeURIComponent(baseName)}_thumb.jpg`;
+
+      result.push({
+        id, filename: entry.name, displayName: baseName,
+        path: `movies/${entry.name}`, size: stat.size,
+        lastModified: stat.mtime.toISOString(),
+        metadata: { duration: 0, width: 0, height: 0, bitrate: 0, codec: '', fps: 0, aspectRatio: '' },
+        categories: defaultCategories([]),
+        customCategories: {},
+        thumbnail: { generated: true, dataUrl: thumbUrl, timestamp: new Date().toISOString() },
+        rootKey: 'movies', processingStatus: 'completed',
+      });
+    }
+
+    // Pass 2: subdirectory movies with metadata.json sidecars
+    const SKIP_DIRS = new Set(['Thumbnails', '1_inbox', '2_processing', '3_complete']);
+    const subdirs = entries.filter((e) => e.isDirectory() && !SKIP_DIRS.has(e.name));
+
+    for (const dirEntry of subdirs) {
+      try {
+        const dir = path.join(MOVIES_DIR, dirEntry.name);
+        const dirFiles = await fs.readdir(dir, { withFileTypes: true });
+        const videoFile = dirFiles.find(
+          (e) => e.isFile() && MOVIE_EXTENSIONS.includes(path.extname(e.name).toLowerCase()),
+        );
+        if (!videoFile) continue;
+
+        const thumbsDir = path.join(dir, 'Thumbnails');
+        const thumbInfo = await findThumbInDir(thumbsDir);
+        if (!thumbInfo) continue;
+
+        const relVideoPath = path.join(dirEntry.name, videoFile.name);
+        const videoPath = path.join(dir, videoFile.name);
+        const stat = await fs.stat(videoPath);
+
+        // Read metadata.json sidecar if available
+        const sidecar = await readSidecar(dir);
+        const id = sidecar?.id
+          || crypto.createHash('sha256').update('movies:' + relVideoPath).digest('hex').slice(0, 36);
+        const displayName = sidecar?.displayName
+          || path.basename(videoFile.name, path.extname(videoFile.name));
+        const thumbUrl = `/media/movies/${encodeURIComponent(dirEntry.name)}/Thumbnails/${encodeURIComponent(thumbInfo.thumbFile)}`;
+        const metadata = sidecar?.metadata
+          || { duration: 0, width: 0, height: 0, bitrate: 0, codec: '', fps: 0, aspectRatio: '' };
+        const categories = sidecar?.categories || defaultCategories([]);
+        const customCategories = sidecar?.customCategories || {};
+
+        result.push({
+          id, filename: videoFile.name, displayName,
+          path: `movies/${relVideoPath}`, size: stat.size,
+          lastModified: stat.mtime.toISOString(),
+          metadata, categories, customCategories,
+          thumbnail: { generated: true, dataUrl: thumbUrl, timestamp: new Date().toISOString() },
+          rootKey: 'movies', processingStatus: 'completed',
+        });
+      } catch {
+        // Skip unreadable subdirectories
+      }
+    }
+
+    await fs.writeFile(indexPath, JSON.stringify(result), 'utf-8');
+    logger.info('[StartupTasks] Generated movies_index.json from filesystem', { count: result.length, path: indexPath });
   } catch (err: any) {
-    logger.warn('[StartupTasks] Failed to generate movies_index.json', { error: err.message });
+    logger.warn('[StartupTasks] Failed to generate movies_index.json from filesystem', { error: err.message });
   }
 }
 

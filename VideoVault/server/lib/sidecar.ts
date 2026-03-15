@@ -9,6 +9,7 @@ export interface SidecarData {
   version: number;
   id?: string;
   filename?: string;
+  originalFilename?: string;
   displayName?: string;
   size?: number;
   lastModified?: string;
