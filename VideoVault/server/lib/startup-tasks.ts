@@ -297,52 +297,44 @@ async function autoIndexLibrary(db: any, moviesDir: string): Promise<void> {
     }
   }
 
-  // --- Pass 2: Subdirectory movies ---
+  // --- Pass 2: Subdirectory movies (sequential to avoid DB pool exhaustion) ---
   const SKIP_DIRS = new Set(['Thumbnails', '1_inbox', '2_processing', '3_complete']);
   const subdirs = entries.filter((e) => e.isDirectory() && !SKIP_DIRS.has(e.name));
 
-  // Process in batches to avoid overwhelming ffprobe
-  const BATCH_SIZE = 8;
-  for (let i = 0; i < subdirs.length; i += BATCH_SIZE) {
-    const batch = subdirs.slice(i, i + BATCH_SIZE);
-    const results = await Promise.allSettled(batch.map(async (dirEntry) => {
+  for (const dirEntry of subdirs) {
+    try {
       const dir = path.join(moviesDir, dirEntry.name);
 
-      // Find video file in this directory
       let dirFiles;
       try {
         dirFiles = await fs.readdir(dir, { withFileTypes: true });
       } catch {
-        return 'skip'; // Can't read dir (encoding issue)
+        skipped++;
+        continue; // Can't read dir (encoding issue)
       }
 
       const videoFile = dirFiles.find(
         (e) => e.isFile() && MOVIE_EXTENSIONS.includes(path.extname(e.name).toLowerCase()),
       );
-      if (!videoFile) return 'skip';
+      if (!videoFile) { skipped++; continue; }
 
-      // Check for any _thumb.jpg in Thumbnails/
       const thumbsDir = path.join(dir, 'Thumbnails');
       const thumbInfo = await findThumbInDir(thumbsDir);
-      if (!thumbInfo) return 'skip';
+      if (!thumbInfo) { skipped++; continue; }
 
-      // Deterministic ID: use relative path (subdir/videofile)
       const relVideoPath = path.join(dirEntry.name, videoFile.name);
       const id = crypto.createHash('sha256').update('movies:' + relVideoPath).digest('hex').slice(0, 36);
 
-      // Skip if already indexed
       const existing = await db.select({ id: videos.id }).from(videos).where(eq(videos.id, id)).limit(1);
-      if (existing.length > 0) return 'skip';
+      if (existing.length > 0) { skipped++; continue; }
 
       const videoPath = path.join(dir, videoFile.name);
       const stat = await fs.stat(videoPath);
 
-      // Read sidecar for rich metadata (displayName, categories, etc.)
       const sidecar = await readSidecar(dir);
       const displayName = sidecar?.displayName || path.basename(videoFile.name, path.extname(videoFile.name));
       const thumbUrl = `/media/movies/${encodeURIComponent(dirEntry.name)}/Thumbnails/${encodeURIComponent(thumbInfo.thumbFile)}`;
 
-      // Use sidecar metadata if available, otherwise extract via ffprobe
       let metadata = sidecar?.metadata || { duration: 0, width: 0, height: 0, bitrate: 0, codec: '', fps: 0, aspectRatio: '' };
       if (!sidecar?.metadata) {
         try {
@@ -368,19 +360,11 @@ async function autoIndexLibrary(db: any, moviesDir: string): Promise<void> {
         dbPath: `movies/${relVideoPath}`, stat, metadata, thumbUrl,
         categories, customCategories: sidecar?.customCategories || {},
       });
-      return 'indexed';
-    }));
-
-    for (const r of results) {
-      if (r.status === 'fulfilled') {
-        if (r.value === 'indexed') indexed++;
-        else skipped++;
-      } else {
-        errors++;
-        // Log first few errors to help diagnose
-        if (errors <= 3) {
-          logger.warn('[StartupTasks] Subdir index error', { error: r.reason?.message || String(r.reason) });
-        }
+      indexed++;
+    } catch (err: any) {
+      errors++;
+      if (errors <= 3) {
+        logger.warn('[StartupTasks] Subdir index error', { dir: dirEntry.name, error: err.message });
       }
     }
   }
