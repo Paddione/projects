@@ -44,6 +44,9 @@ export async function runStartupTasks(db: any): Promise<void> {
   await autoIndexLibrary(db, MOVIES_DIR);
 }
 
+// Track filenames that failed stat (encoding issues on SMB) — warn only once
+const _failedStatNames = new Set<string>();
+
 /**
  * Move all video files from MOVIES_DIR/1_inbox/ into MOVIES_DIR/.
  * Exported so the movie watcher can call it on each scan cycle too.
@@ -76,8 +79,11 @@ export async function drainInbox(moviesDir: string): Promise<number> {
       const stat = await fs.stat(src);
       if (!stat.isFile()) continue;
     } catch {
-      // Can't stat — skip (encoding issue or file disappeared)
-      logger.warn(`[StartupTasks] Inbox skip: cannot stat ${name}`);
+      // Can't stat — skip (encoding issue or file disappeared). Warn once.
+      if (!_failedStatNames.has(name)) {
+        _failedStatNames.add(name);
+        logger.warn(`[StartupTasks] Inbox skip: cannot stat ${name} (SMB encoding issue? will not retry)`);
+      }
       continue;
     }
 
