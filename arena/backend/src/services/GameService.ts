@@ -1231,7 +1231,8 @@ export class GameService {
         const aliveEnemyNPCs = game.npcs.filter(n => n.type === 'enemy' && n.hp > 0);
         const aliveCount = aliveHumans.length + aliveEnemyNPCs.length;
 
-        if (aliveCount <= 1) {
+        // End round if <= 1 entity alive, OR if no human players remain
+        if (aliveCount <= 1 || aliveHumans.length === 0) {
             const winnerId = aliveHumans.length === 1 ? aliveHumans[0] : '';
             game.currentRound.phase = 'ended';
             game.currentRound.endedAt = Date.now();
