@@ -2,8 +2,10 @@ import express from 'express';
 import cors from 'cors';
 import { readFileSync, writeFileSync, existsSync, readdirSync, statSync, unlinkSync, copyFileSync, mkdirSync } from 'node:fs';
 import { resolve, join, dirname } from 'node:path';
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import { createServer } from 'node:http';
+import { initWorkerManager, getWorkerStatus } from './worker-manager.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -95,8 +97,10 @@ function saveProject(project) {
 // Library state management
 // =============================================================================
 
-const LIBRARY_PATH = join(__dirname, 'library.json');
-const VISUAL_LIBRARY_PATH = join(__dirname, 'visual-library.json');
+const _libConfig = JSON.parse(readFileSync(join(__dirname, 'config', 'library-config.json'), 'utf-8'));
+const _vConfig = JSON.parse(readFileSync(join(__dirname, 'config', 'visual-config.json'), 'utf-8'));
+const LIBRARY_PATH = join(_libConfig.libraryRoot, 'library.json');
+const VISUAL_LIBRARY_PATH = join(_vConfig.libraryRoot, 'visual-library.json');
 const LIBRARY_CONFIG_PATH = join(__dirname, 'config', 'library-config.json');
 const VISUAL_CONFIG_PATH = join(__dirname, 'config', 'visual-config.json');
 
@@ -133,6 +137,20 @@ function processAudioFile(wavPath, outputDir, id, type) {
 
   if (!existsSync(outputDir)) mkdirSync(outputDir, { recursive: true });
 
+  // Validate source WAV has audible content (reject silent stubs)
+  // volumedetect writes to stderr; spawnSync captures it regardless of exit code
+  const volProbe = spawnSync('ffmpeg', [
+    '-i', wavPath, '-af', 'volumedetect', '-f', 'null', '-'
+  ], { stdio: ['pipe', 'pipe', 'pipe'], timeout: 30000 });
+  const volStderr = volProbe.stderr?.toString() || '';
+  const volMatch = volStderr.match(/max_volume:\s*([-\d.]+)\s*dB/);
+  if (volMatch) {
+    const maxVol = parseFloat(volMatch[1]);
+    if (maxVol < -80) {
+      throw new Error(`Source WAV is silent (max_volume: ${maxVol} dB) — likely a placeholder stub. Re-generate with a real audio backend.`);
+    }
+  }
+
   const baseName = id;
   const oggPath = join(outputDir, `${baseName}.ogg`);
   execFileSync('ffmpeg', [
@@ -151,6 +169,15 @@ function processAudioFile(wavPath, outputDir, id, type) {
     '-c:a', 'libmp3lame', '-b:a', '128k',
     mp3Path
   ], { stdio: 'pipe' });
+
+  // Validate output files have actual content (not just headers)
+  const MIN_OUTPUT_SIZE = 1024;
+  for (const outPath of [oggPath, mp3Path]) {
+    const stat = statSync(outPath);
+    if (stat.size < MIN_OUTPUT_SIZE) {
+      throw new Error(`Output file ${outPath} is too small (${stat.size} bytes) — silenceremove may have stripped all audio. Check source WAV.`);
+    }
+  }
 
   return { oggPath, mp3Path };
 }
@@ -1181,9 +1208,22 @@ app.post('/api/projects/:name/sync-visual', (req, res) => {
 // Static serving & startup
 // =============================================================================
 
+// Health endpoint (k8s probes)
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok', uptime: process.uptime() });
+});
+
+// Worker status endpoint (UI polling)
+app.get('/api/worker-status', (req, res) => {
+  res.json(getWorkerStatus());
+});
+
 app.use(express.static(__dirname));
 
-app.listen(PORT, async () => {
+const httpServer = createServer(app);
+initWorkerManager(httpServer);
+
+httpServer.listen(PORT, async () => {
   console.log(`\n  Assetgenerator running at http://localhost:${PORT}`);
   console.log(`  Prerequisites: python=${prerequisites.python} ffmpeg=${prerequisites.ffmpeg} cuda=${prerequisites.cuda}\n`);
 
