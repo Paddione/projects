@@ -963,15 +963,23 @@ app.post('/api/visual-library/import', (req, res) => {
       for (const entry of readdirSync(src, { withFileTypes: true })) {
         const srcPath = join(src, entry.name);
         const destPath = join(dest, entry.name);
-        if (entry.isDirectory()) {
-          if (!existsSync(destPath)) mkdirSync(destPath, { recursive: true });
-          walkAndCopy(srcPath, destPath);
-        } else {
-          copyFileSync(srcPath, destPath);
+        try {
+          if (entry.isDirectory() || (entry.isSymbolicLink() && statSync(srcPath).isDirectory())) {
+            if (!existsSync(destPath)) mkdirSync(destPath, { recursive: true });
+            walkAndCopy(srcPath, destPath);
+          } else {
+            copyFileSync(srcPath, destPath);
+          }
+        } catch (err) {
+          console.warn(`  Skipping ${srcPath}: ${err.message}`);
         }
       }
     };
-    walkAndCopy(blendSrc, blendDest);
+    try {
+      walkAndCopy(blendSrc, blendDest);
+    } catch (err) {
+      console.warn(`  Blender template copy warning: ${err.message}`);
+    }
   }
 
   saveVisualLibrary(library);
