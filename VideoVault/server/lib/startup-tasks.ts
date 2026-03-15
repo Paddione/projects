@@ -2,7 +2,7 @@ import path from 'path';
 import fs from 'fs/promises';
 import crypto from 'crypto';
 import { eq } from 'drizzle-orm';
-import { videos } from '@shared/schema';
+import { videos, directoryRoots } from '@shared/schema';
 import { logger } from './logger';
 import { MOVIE_EXTENSIONS, extractMovieMetadata, detectQualityCategories, generateMovieThumbnail } from '../handlers/movie-handler';
 import { readSidecar } from './sidecar';
@@ -46,7 +46,10 @@ export async function runStartupTasks(db: any): Promise<void> {
   // 3. Generate missing thumbnails for flat files at root
   await generateMissingThumbnails(MOVIES_DIR);
 
-  // 4. Index all videos into DB (flat + subdirectory)
+  // 4. Register 'movies' as a directory root so indexed videos survive startup cleanup
+  await ensureMoviesRoot(db, MOVIES_DIR);
+
+  // 5. Index all videos into DB (flat + subdirectory)
   await autoIndexLibrary(db, MOVIES_DIR);
 }
 
@@ -115,6 +118,34 @@ export async function drainInbox(moviesDir: string): Promise<number> {
     logger.info(`[StartupTasks] Inbox drained: ${moved} files moved to movies root`);
   }
   return moved;
+}
+
+/**
+ * Ensure the 'movies' rootKey exists in directory_roots so that videos
+ * indexed with rootKey='movies' survive the startup cleanup
+ * (which deletes videos whose rootKey isn't in the directory_roots table).
+ */
+async function ensureMoviesRoot(db: any, moviesDir: string): Promise<void> {
+  if (!db) return;
+  try {
+    await db
+      .insert(directoryRoots)
+      .values({
+        rootKey: 'movies',
+        name: 'movies',
+        directories: [moviesDir],
+      })
+      .onConflictDoUpdate({
+        target: directoryRoots.rootKey,
+        set: {
+          directories: [moviesDir],
+          updatedAt: new Date(),
+        },
+      });
+    logger.info('[StartupTasks] Registered movies root', { rootKey: 'movies', path: moviesDir });
+  } catch (err: any) {
+    logger.warn('[StartupTasks] Failed to register movies root', { error: err.message });
+  }
 }
 
 /**
