@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Assetgenerator — Audio Review</title>
+  <title>Assetgenerator — Asset Library</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
@@ -198,13 +198,6 @@
       color: var(--cyan);
       border-color: var(--cyan-dim);
       background: var(--cyan-glow);
-    }
-
-    /* Sounds container */
-    #sounds-container {
-      padding: 1rem 1.5rem 6rem;
-      max-width: 1100px;
-      margin: 0 auto;
     }
 
     .section-header {
@@ -452,6 +445,88 @@
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: var(--border-focus); border-radius: 3px; }
     ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+    /* Tab toggle */
+    .tab-toggle {
+      display: flex;
+      gap: 0;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    .tab-btn {
+      background: transparent;
+      border: none;
+      border-radius: 0;
+      color: var(--text-dim);
+      padding: 0.35rem 0.8rem;
+      font-size: 0.78rem;
+      font-family: var(--font-mono);
+      font-weight: 600;
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      transition: all 0.15s;
+    }
+
+    .tab-btn:hover { color: var(--text); }
+
+    .tab-btn.active {
+      background: var(--cyan-dim);
+      color: var(--cyan);
+    }
+
+    /* Pipeline indicator */
+    .pipeline {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+      margin: 0.5rem 0;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+    }
+
+    .pipeline-phase {
+      display: flex;
+      align-items: center;
+      gap: 0.2rem;
+      padding: 0.2rem 0.4rem;
+      border-radius: 3px;
+      border: 1px solid var(--border);
+    }
+
+    .pipeline-phase.done { border-color: var(--green); color: var(--green); }
+    .pipeline-phase.pending { border-color: var(--text-muted); color: var(--text-muted); }
+    .pipeline-phase.generating { border-color: var(--cyan); color: var(--cyan); animation: pulse-flag 1.5s infinite; }
+    .pipeline-phase.error { border-color: var(--red); color: var(--red); }
+
+    .pipeline-arrow { color: var(--text-muted); font-size: 0.65rem; }
+
+    /* Assignment info */
+    .assign-info {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: var(--text-dim);
+      margin: 0.3rem 0;
+    }
+
+    /* Visual preview */
+    .preview-row {
+      display: flex;
+      gap: 0.75rem;
+      margin: 0.5rem 0;
+      overflow-x: auto;
+    }
+
+    .preview-thumb {
+      width: 80px;
+      height: 80px;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+      object-fit: contain;
+      background: var(--bg-deep);
+    }
   </style>
 </head>
 <body>
@@ -459,6 +534,10 @@
   <header>
     <div class="header-left">
       <div class="logo">Asset<span>generator</span></div>
+      <div class="tab-toggle">
+        <button class="tab-btn active" data-tab="audio">Audio</button>
+        <button class="tab-btn" data-tab="visual">Visual</button>
+      </div>
       <label style="display:flex;align-items:center;gap:0.4rem;">
         <span style="font-family:var(--font-mono);font-size:0.7rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em">Project</span>
         <select id="project-select"></select>
@@ -466,6 +545,7 @@
     </div>
     <div class="header-controls">
       <button id="scan-btn">Scan</button>
+      <button id="sync-btn">Sync</button>
       <button id="regen-btn" class="btn-primary">Regenerate Flagged</button>
     </div>
   </header>
@@ -479,7 +559,8 @@
     <button class="filter-btn" data-filter="flagged">Flagged</button>
   </div>
 
-  <div id="sounds-container"></div>
+  <div id="audio-container" style="padding:1rem 1.5rem 6rem;max-width:1100px;margin:0 auto;"></div>
+  <div id="visual-container" style="padding:1rem 1.5rem 6rem;max-width:1100px;margin:0 auto;display:none;"></div>
 
   <div id="regen-log" class="log-panel collapsed" hidden>
     <div class="log-header" id="log-toggle">
@@ -501,6 +582,9 @@ let activeFilter = 'all';
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 const playingAudio = {};
 const audioBuffers = {};
+let activeTab = 'audio';
+let libraryData = null;
+let visualData = null;
 
 // =============================================================================
 // API
@@ -532,8 +616,11 @@ async function loadProjects() {
 async function loadProjectData() {
   projectData = await fetchJSON(`/api/projects/${currentProject}`);
   backends = await fetchJSON('/api/backends');
+  libraryData = await fetchJSON('/api/library');
+  visualData = await fetchJSON('/api/visual-library');
   await checkPrerequisites();
   renderSounds();
+  if (activeTab === 'visual') renderVisualAssets();
 }
 
 async function checkPrerequisites() {
@@ -826,7 +913,7 @@ function createCard(id, sound) {
 }
 
 function renderSounds() {
-  const container = document.getElementById('sounds-container');
+  const container = document.getElementById('audio-container');
   container.replaceChildren();
 
   if (!projectData?.sounds || Object.keys(projectData.sounds).length === 0) {
@@ -982,6 +1069,247 @@ function appendLog(msg, level) {
 }
 
 // =============================================================================
+// Visual Assets
+// =============================================================================
+
+function timeAgo(isoString) {
+  if (!isoString) return 'never';
+  const diff = Date.now() - new Date(isoString).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return 'just now';
+  if (mins < 60) return `${mins}m ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  return `${Math.floor(hours / 24)}d ago`;
+}
+
+function renderVisualAssets() {
+  const container = document.getElementById('visual-container');
+  container.replaceChildren();
+
+  if (!visualData?.assets || Object.keys(visualData.assets).length === 0) {
+    const empty = document.createElement('div');
+    empty.className = 'empty-state';
+    empty.textContent = 'No visual assets. Import from project or create new.';
+    container.appendChild(empty);
+    return;
+  }
+
+  const byCategory = {};
+  for (const [id, asset] of Object.entries(visualData.assets)) {
+    if (!byCategory[asset.category]) byCategory[asset.category] = [];
+    byCategory[asset.category].push([id, asset]);
+  }
+
+  for (const [category, assets] of Object.entries(byCategory)) {
+    const header = document.createElement('h2');
+    header.className = 'section-header';
+    header.textContent = `${category} \u2014 ${assets.length} assets`;
+    container.appendChild(header);
+
+    for (const [id, asset] of assets) {
+      container.appendChild(createVisualCard(id, asset));
+    }
+  }
+}
+
+function createVisualCard(id, asset) {
+  const card = document.createElement('div');
+  card.className = 'card';
+
+  // Header
+  const headerRow = document.createElement('div');
+  headerRow.className = 'card-header';
+  const nameEl = document.createElement('span');
+  nameEl.className = 'sound-name';
+  nameEl.textContent = asset.name || id;
+  headerRow.appendChild(nameEl);
+  for (const tag of (asset.tags || [])) {
+    const tagEl = document.createElement('span');
+    tagEl.className = 'badge badge-type';
+    tagEl.textContent = tag;
+    headerRow.appendChild(tagEl);
+  }
+  card.appendChild(headerRow);
+
+  // Pipeline indicator
+  const pipeline = document.createElement('div');
+  pipeline.className = 'pipeline';
+  const phases = ['concept', 'model', 'render', 'pack'];
+  const statusIcon = { done: '\u25CF', pending: '\u25CB', generating: '\u25D0', error: '\u2717' };
+  let first = true;
+  for (const p of phases) {
+    const phaseData = asset.pipeline?.[p];
+    if (!phaseData && p === 'model') continue;
+    if (!first) {
+      const arrow = document.createElement('span');
+      arrow.className = 'pipeline-arrow';
+      arrow.textContent = '\u2192';
+      pipeline.appendChild(arrow);
+    }
+    first = false;
+    const phaseEl = document.createElement('span');
+    phaseEl.className = `pipeline-phase ${phaseData?.status || 'pending'}`;
+    const label = p.charAt(0).toUpperCase() + p.slice(1);
+    phaseEl.textContent = `${statusIcon[phaseData?.status] || '\u25CB'} ${label}`;
+    if (phaseData?.frameCount) phaseEl.textContent += ` ${phaseData.frameCount}fr`;
+    pipeline.appendChild(phaseEl);
+  }
+  card.appendChild(pipeline);
+
+  // Preview
+  if (asset.pipeline?.concept?.status === 'done') {
+    const previewRow = document.createElement('div');
+    previewRow.className = 'preview-row';
+    const img = document.createElement('img');
+    img.className = 'preview-thumb';
+    img.src = `/api/visual-library/${id}/concept`;
+    img.alt = 'Concept';
+    previewRow.appendChild(img);
+    card.appendChild(previewRow);
+  }
+
+  // Controls
+  const controls = document.createElement('div');
+  controls.className = 'controls';
+  const promptLabel = document.createElement('label');
+  promptLabel.textContent = 'Prompt';
+  const promptInput = document.createElement('textarea');
+  promptInput.rows = 2;
+  promptInput.value = asset.prompt || '';
+  promptInput.id = `vprompt-${id}`;
+  controls.appendChild(promptLabel);
+  controls.appendChild(promptInput);
+
+  const row = document.createElement('div');
+  row.className = 'controls-row';
+  const posesLabel = document.createElement('label');
+  posesLabel.textContent = 'Poses';
+  const posesInput = document.createElement('input');
+  posesInput.value = (asset.poses || []).join(', ');
+  posesInput.id = `vposes-${id}`;
+  posesInput.style.width = '200px';
+  posesLabel.appendChild(posesInput);
+  row.appendChild(posesLabel);
+  controls.appendChild(row);
+
+  if (asset.assignedTo && Object.keys(asset.assignedTo).length > 0) {
+    const assignInfo = document.createElement('div');
+    assignInfo.className = 'assign-info';
+    assignInfo.textContent = 'Assigned: ' + Object.entries(asset.assignedTo)
+      .map(([proj, info]) => `${proj}/${info.atlas} (synced ${timeAgo(info.syncedAt)})`)
+      .join(', ');
+    controls.appendChild(assignInfo);
+  }
+  card.appendChild(controls);
+
+  // Actions
+  const actions = document.createElement('div');
+  actions.className = 'card-actions';
+
+  const saveBtn = document.createElement('button');
+  saveBtn.textContent = 'Save';
+  saveBtn.addEventListener('click', async () => {
+    await fetchJSON(`/api/visual-library/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        prompt: document.getElementById(`vprompt-${id}`).value,
+        poses: document.getElementById(`vposes-${id}`).value.split(',').map(s => s.trim()).filter(Boolean),
+      }),
+    });
+    card.classList.add('save-flash');
+    setTimeout(() => card.classList.remove('save-flash'), 600);
+  });
+  actions.appendChild(saveBtn);
+
+  for (const phase of ['concept', 'model', 'render', 'pack']) {
+    if (phase === 'model' && !asset.pipeline?.model) continue;
+    const btn = document.createElement('button');
+    btn.textContent = phase.charAt(0).toUpperCase() + phase.slice(1);
+    btn.addEventListener('click', () => startVisualGeneration(id, phase));
+    actions.appendChild(btn);
+  }
+
+  const fullBtn = document.createElement('button');
+  fullBtn.className = 'btn-primary';
+  fullBtn.textContent = 'Full Pipeline';
+  fullBtn.addEventListener('click', () => startVisualGeneration(id, 'full'));
+  actions.appendChild(fullBtn);
+
+  const assignBtn = document.createElement('button');
+  assignBtn.textContent = 'Assign';
+  assignBtn.addEventListener('click', async () => {
+    await fetchJSON(`/api/visual-library/${id}/assign`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ project: currentProject, atlas: asset.category }),
+    });
+    card.classList.add('save-flash');
+    setTimeout(() => card.classList.remove('save-flash'), 600);
+  });
+  actions.appendChild(assignBtn);
+
+  const delBtn = document.createElement('button');
+  delBtn.className = 'btn-danger';
+  delBtn.textContent = 'Del';
+  delBtn.addEventListener('click', async () => {
+    if (!confirm(`Delete ${id}?`)) return;
+    await fetchJSON(`/api/visual-library/${id}`, { method: 'DELETE' });
+    visualData = await fetchJSON('/api/visual-library');
+    renderVisualAssets();
+  });
+  actions.appendChild(delBtn);
+
+  card.appendChild(actions);
+  return card;
+}
+
+async function startVisualGeneration(assetId, phase) {
+  const logPanel = document.getElementById('regen-log');
+  const logContent = document.getElementById('log-content');
+  logPanel.hidden = false;
+  logPanel.classList.remove('collapsed');
+
+  appendLog(`Starting ${phase} for ${assetId}...`, 'dim');
+
+  try {
+    const res = await fetch(`/api/visual-library/${assetId}/generate/${phase}`, { method: 'POST' });
+    if (res.status === 409) { appendLog('Visual generation already in progress', 'error'); return; }
+
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop();
+      let eventType = '';
+      for (const line of lines) {
+        if (line.startsWith('event: ')) eventType = line.slice(7);
+        else if (line.startsWith('data: ')) {
+          try {
+            const data = JSON.parse(line.slice(6));
+            if (eventType === 'progress') appendLog(`[${data.phase}] ${data.status} ${data.asset}`, 'dim');
+            else if (eventType === 'done') appendLog(`[${data.phase}] \u2713 ${data.asset}${data.frameCount ? ` (${data.frameCount} frames)` : ''}`, '');
+            else if (eventType === 'error') appendLog(`[${data.phase}] \u2717 ${data.asset}: ${data.error}`, 'error');
+            else if (eventType === 'complete') appendLog(`Pipeline complete for ${data.asset}`, 'success');
+          } catch {}
+        }
+      }
+    }
+  } catch (err) {
+    appendLog(err.message, 'error');
+  }
+
+  visualData = await fetchJSON('/api/visual-library');
+  renderVisualAssets();
+}
+
+// =============================================================================
 // Event Wiring
 // =============================================================================
 
@@ -1007,6 +1335,31 @@ document.querySelectorAll('.filter-btn').forEach(btn => {
     activeFilter = btn.dataset.filter;
     renderSounds();
   });
+});
+
+// Tab switching
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    activeTab = btn.dataset.tab;
+    document.getElementById('audio-container').style.display = activeTab === 'audio' ? '' : 'none';
+    document.getElementById('visual-container').style.display = activeTab === 'visual' ? '' : 'none';
+    document.getElementById('regen-btn').style.display = activeTab === 'audio' ? '' : 'none';
+    document.querySelector('.filter-bar').style.display = activeTab === 'audio' ? '' : 'none';
+    if (activeTab === 'visual') renderVisualAssets();
+  });
+});
+
+// Sync button
+document.getElementById('sync-btn').addEventListener('click', async () => {
+  if (activeTab === 'audio') {
+    const result = await fetchJSON(`/api/projects/${currentProject}/sync`, { method: 'POST' });
+    appendLog(`Audio sync: ${result.count} sounds updated`, result.count > 0 ? 'success' : 'dim');
+  } else {
+    const result = await fetchJSON(`/api/projects/${currentProject}/sync-visual`, { method: 'POST' });
+    appendLog(`Visual sync: ${result.count} assets updated`, result.count > 0 ? 'success' : 'dim');
+  }
 });
 
 // Init
