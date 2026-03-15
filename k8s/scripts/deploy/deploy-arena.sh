@@ -47,21 +47,33 @@ if [ "$MANIFESTS_ONLY" = false ]; then
     # Resolve audio symlinks for Docker build context (Docker can't follow symlinks outside context)
     AUDIO_SFX="$PROJECT_ROOT/arena/frontend/public/assets/sfx"
     AUDIO_MUSIC="$PROJECT_ROOT/arena/frontend/public/assets/music"
-    RESOLVED_SYMLINKS=false
+    SFX_TARGET=""
+    MUSIC_TARGET=""
+
+    restore_audio_symlinks() {
+        if [ -n "$SFX_TARGET" ]; then
+            rm -rf "$AUDIO_SFX"
+            ln -s "$SFX_TARGET" "$AUDIO_SFX"
+        fi
+        if [ -n "$MUSIC_TARGET" ]; then
+            rm -rf "$AUDIO_MUSIC"
+            ln -s "$MUSIC_TARGET" "$AUDIO_MUSIC"
+        fi
+    }
 
     if [ -L "$AUDIO_SFX" ] || [ -L "$AUDIO_MUSIC" ]; then
         log_info "Resolving audio symlinks for Docker build..."
-        RESOLVED_SYMLINKS=true
-        SFX_TARGET=$(readlink "$AUDIO_SFX" 2>/dev/null || true)
-        MUSIC_TARGET=$(readlink "$AUDIO_MUSIC" 2>/dev/null || true)
+        [ -L "$AUDIO_SFX" ] && SFX_TARGET=$(readlink -f "$AUDIO_SFX")
+        [ -L "$AUDIO_MUSIC" ] && MUSIC_TARGET=$(readlink -f "$AUDIO_MUSIC")
+        trap restore_audio_symlinks EXIT
 
-        if [ -L "$AUDIO_SFX" ] && [ -d "$SFX_TARGET" ]; then
+        if [ -n "$SFX_TARGET" ] && [ -d "$SFX_TARGET" ]; then
             rm "$AUDIO_SFX"
-            cp -r "$SFX_TARGET" "$AUDIO_SFX"
+            cp -rL "$SFX_TARGET" "$AUDIO_SFX"
         fi
-        if [ -L "$AUDIO_MUSIC" ] && [ -d "$MUSIC_TARGET" ]; then
+        if [ -n "$MUSIC_TARGET" ] && [ -d "$MUSIC_TARGET" ]; then
             rm "$AUDIO_MUSIC"
-            cp -r "$MUSIC_TARGET" "$AUDIO_MUSIC"
+            cp -rL "$MUSIC_TARGET" "$AUDIO_MUSIC"
         fi
     fi
 
@@ -71,18 +83,9 @@ if [ "$MANIFESTS_ONLY" = false ]; then
     log_info "Building arena-frontend..."
     docker build -t "$REGISTRY/arena-frontend:latest" -f "$PROJECT_ROOT/arena/frontend/Dockerfile" "$PROJECT_ROOT"
 
-    # Restore symlinks after build
-    if [ "$RESOLVED_SYMLINKS" = true ]; then
-        log_info "Restoring audio symlinks..."
-        if [ -n "$SFX_TARGET" ]; then
-            rm -rf "$AUDIO_SFX"
-            ln -s "$SFX_TARGET" "$AUDIO_SFX"
-        fi
-        if [ -n "$MUSIC_TARGET" ]; then
-            rm -rf "$AUDIO_MUSIC"
-            ln -s "$MUSIC_TARGET" "$AUDIO_MUSIC"
-        fi
-    fi
+    # Restore symlinks (also handled by EXIT trap as safety net)
+    restore_audio_symlinks
+    trap - EXIT
 
     log_info "Pushing arena-backend..."
     docker push "$REGISTRY/arena-backend:latest"
