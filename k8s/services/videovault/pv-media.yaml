@@ -29,6 +29,7 @@ spec:
     - mfsymlinks
     - cache=none
     - noserverino
+    - iocharset=utf8
   csi:
     driver: smb.csi.k8s.io
     volumeHandle: videovault-movies-pv
@@ -128,6 +129,7 @@ spec:
     - mfsymlinks
     - cache=none
     - noserverino
+    - iocharset=utf8
   csi:
     driver: smb.csi.k8s.io
     volumeHandle: videovault-hdd-ext-pv

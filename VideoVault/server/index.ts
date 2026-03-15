@@ -190,14 +190,14 @@ RootsRegistry.init();
 
   const server = registerRoutes(app);
 
-  // Run startup tasks: auto-index library, process inbox files
+  // Run startup tasks in the background so the server can start immediately
+  // (avoids blocking the health endpoint and triggering K8s startup probe kills)
   if (dbInstance && process.env.NODE_ENV !== 'test') {
-    try {
-      const { runStartupTasks } = await import('./lib/startup-tasks');
-      await runStartupTasks(dbInstance);
-    } catch (err) {
-      logger.warn('Startup tasks failed (non-fatal)', { error: (err as Error).message });
-    }
+    import('./lib/startup-tasks').then(({ runStartupTasks }) =>
+      runStartupTasks(dbInstance).catch((err) =>
+        logger.warn('Startup tasks failed (non-fatal)', { error: (err as Error).message })
+      )
+    );
   }
 
   if (process.env.ENABLE_MOVIE_WATCHER !== '0') {
