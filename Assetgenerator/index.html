@@ -740,6 +740,10 @@
   <header>
     <div class="header-left">
       <div class="logo">Asset<span>generator</span></div>
+      <span id="worker-status" style="display:inline-flex;align-items:center;gap:6px;margin-left:16px;font-size:13px;color:#6272a4;">
+        <span id="worker-dot" style="width:8px;height:8px;border-radius:50%;background:#6272a4;display:inline-block;"></span>
+        <span id="worker-label">No GPU worker</span>
+      </span>
       <div class="tab-toggle">
         <button class="tab-btn active" data-tab="audio">Audio</button>
         <button class="tab-btn" data-tab="visual">Visual</button>
@@ -2461,6 +2465,27 @@ document.getElementById('sync-btn').addEventListener('click', async () => {
 
 // Init
 document.addEventListener('DOMContentLoaded', loadProjects);
+
+// Worker status polling
+async function pollWorkerStatus() {
+  try {
+    const res = await fetch('/api/worker-status');
+    const data = await res.json();
+    const dot = document.getElementById('worker-dot');
+    const label = document.getElementById('worker-label');
+    if (data.connected) {
+      dot.style.background = '#50fa7b';
+      label.textContent = `${data.hostname} \u00b7 ${data.gpu}`;
+      label.style.color = '#50fa7b';
+    } else {
+      dot.style.background = '#6272a4';
+      label.textContent = 'No GPU worker';
+      label.style.color = '#6272a4';
+    }
+  } catch { /* silent */ }
+}
+pollWorkerStatus();
+setInterval(pollWorkerStatus, 5000);
 </script>
 
 </body>
