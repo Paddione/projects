@@ -8,7 +8,7 @@
       "tags": [
         "arena"
       ],
-      "prompt": "",
+      "prompt": "young university student character, casual hoodie and jeans, backpack, sneakers, determined expression, low-poly 3D model reference, isometric game sprite, bright cyan accent color, transparent background",
       "poses": [
         "stand",
         "gun",
@@ -20,6 +20,7 @@
       "directions": 8,
       "size": 64,
       "color": "#00f2ff",
+      "conceptBackend": "gemini-imagen",
       "pipeline": {
         "concept": {
           "status": "pending"
@@ -49,7 +50,7 @@
       "tags": [
         "arena"
       ],
-      "prompt": "",
+      "prompt": "university researcher character, lab coat over smart casual, safety goggles on forehead, tablet in hand, focused expression, low-poly 3D model reference, isometric game sprite, bright mint green accent color, transparent background",
       "poses": [
         "stand",
         "gun",
@@ -90,7 +91,7 @@
       "tags": [
         "arena"
       ],
-      "prompt": "",
+      "prompt": "senior university professor character, tweed jacket with elbow patches, bow tie, glasses, grey hair, authoritative stance, low-poly 3D model reference, isometric game sprite, vivid purple accent color, transparent background",
       "poses": [
         "stand",
         "gun",
@@ -131,7 +132,7 @@
       "tags": [
         "arena"
       ],
-      "prompt": "",
+      "prompt": "university dean character, formal dark suit, gold tie pin, slicked-back hair, commanding presence, broad shoulders, low-poly 3D model reference, isometric game sprite, gold accent color, transparent background",
       "poses": [
         "stand",
         "gun",
@@ -172,7 +173,7 @@
       "tags": [
         "arena"
       ],
-      "prompt": "",
+      "prompt": "university librarian character, cardigan sweater, reading glasses on chain, book tucked under arm, quiet intensity, low-poly 3D model reference, isometric game sprite, coral pink accent color, transparent background",
       "poses": [
         "stand",
         "gun",
@@ -419,7 +420,7 @@
       "tags": [
         "arena"
       ],
-      "prompt": "",
+      "prompt": "low-poly machine gun pickup, sci-fi automatic weapon, glowing ammo indicator, game item, isometric view, transparent background",
       "poses": [
         "idle"
       ],

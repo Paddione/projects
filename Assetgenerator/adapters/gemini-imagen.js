@@ -55,7 +55,8 @@ export async function generate({ id, asset, config, libraryRoot }) {
   if (!existsSync(outputDir)) mkdirSync(outputDir, { recursive: true });
   const outputPath = join(outputDir, `${id}.png`);
 
-  const prompt = asset.prompt || `${asset.category} game asset: ${id}`;
+  const basePrompt = asset.prompt || `${asset.category} game asset: ${id}`;
+  const prompt = `${basePrompt}, no text, no letters, no words, no labels, no watermark, no signature`;
   const resolution = asset.conceptResolution || 1024;
 
   // Map resolution to Imagen imageSize

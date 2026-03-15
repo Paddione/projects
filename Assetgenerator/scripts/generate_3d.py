@@ -280,8 +280,6 @@ def main():
         else:
             CONCEPTS_DIR = input_path.parent
 
-    manifest = load_manifest()
-
     # Determine backend
     backend = args.backend
     if backend == "auto":
@@ -303,6 +301,33 @@ def main():
         print("[ERROR] MESHY_API_KEY not set")
         sys.exit(1)
 
+    # Direct mode: --input points to a specific image file and --id is given
+    # Process that single image without needing a manifest entry
+    if args.input and args.id and Path(args.input).is_file():
+        concept_path = Path(args.input)
+        out_path = OUTPUT_BASE / f"{args.id}.glb"
+
+        if out_path.exists():
+            print(f"  [SKIP] {args.id}.glb — already exists")
+            sys.exit(0)
+
+        print(f"  [GEN] {args.id} (image-to-3D, direct mode)")
+        if backend == "triposr":
+            ok = triposr_generate(concept_path, out_path)
+        else:
+            ok = meshy_image_to_3d(args.meshy_key, concept_path, out_path)
+
+        if ok:
+            print(f"  [OK] {args.id}.glb")
+            print(f"\n[DONE] Generated 1/1 3D models")
+            print(f"  Output: {OUTPUT_BASE}")
+            sys.exit(0)
+        else:
+            print(f"  [FAIL] {args.id}.glb")
+            sys.exit(1)
+
+    # Manifest mode: iterate over manifest entries
+    manifest = load_manifest()
     total = 0
     success = 0
 

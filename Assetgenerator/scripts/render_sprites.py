@@ -100,8 +100,100 @@ def load_blender_template(template_path: Path):
     return bpy.context.scene
 
 
+def get_model_bounds(objects):
+    """Calculate world-space bounding box for a list of mesh objects."""
+    min_co = mathutils.Vector((float('inf'),) * 3)
+    max_co = mathutils.Vector((float('-inf'),) * 3)
+    found = False
+    for obj in objects:
+        if obj.type != 'MESH':
+            continue
+        found = True
+        for corner in obj.bound_box:
+            world_co = obj.matrix_world @ mathutils.Vector(corner)
+            for i in range(3):
+                min_co[i] = min(min_co[i], world_co[i])
+                max_co[i] = max(max_co[i], world_co[i])
+    if not found:
+        return mathutils.Vector((0, 0, 0)), mathutils.Vector((1, 1, 1))
+    return min_co, max_co
+
+
+def setup_vertex_color_material(objects):
+    """Create a material that displays vertex colors from TripoSR models."""
+    mat = bpy.data.materials.new(name="VertexColorMat")
+    mat.use_nodes = True
+    nodes = mat.node_tree.nodes
+    links = mat.node_tree.links
+    nodes.clear()
+
+    # Color Attribute node → reads vertex colors
+    attr_node = nodes.new('ShaderNodeVertexColor')
+    attr_node.layer_name = ""  # Uses the active color attribute
+
+    bsdf = nodes.new('ShaderNodeBsdfPrincipled')
+    bsdf.inputs['Roughness'].default_value = 0.8
+    bsdf.inputs['Specular IOR Level'].default_value = 0.2
+
+    output = nodes.new('ShaderNodeOutputMaterial')
+
+    links.new(attr_node.outputs['Color'], bsdf.inputs['Base Color'])
+    links.new(bsdf.outputs['BSDF'], output.inputs['Surface'])
+
+    for obj in objects:
+        if obj.type != 'MESH':
+            continue
+        # Check if the mesh has vertex colors
+        mesh = obj.data
+        has_vertex_colors = len(mesh.color_attributes) > 0 or len(mesh.vertex_colors) > 0
+        if has_vertex_colors:
+            obj.data.materials.clear()
+            obj.data.materials.append(mat)
+            print(f"    Applied vertex color material to {obj.name}")
+
+
+def normalize_model(pivot, objects):
+    """Center, scale, and orient the model to fit the camera frame."""
+    bpy.context.view_layer.update()
+    min_co, max_co = get_model_bounds(objects)
+    size = max_co - min_co
+
+    # Fix orientation: if tallest axis is Y (Y-up model), rotate to Z-up
+    if size.y > size.z and size.y > size.x:
+        pivot.rotation_euler.x = math.radians(-90)
+        bpy.context.view_layer.update()
+        min_co, max_co = get_model_bounds(objects)
+        size = max_co - min_co
+        print(f"    Corrected Y-up → Z-up orientation")
+    # If tallest axis is X, rotate around Y
+    elif size.x > size.z and size.x > size.y:
+        pivot.rotation_euler.y = math.radians(90)
+        bpy.context.view_layer.update()
+        min_co, max_co = get_model_bounds(objects)
+        size = max_co - min_co
+        print(f"    Corrected X-up → Z-up orientation")
+
+    center = (min_co + max_co) / 2
+
+    # Move pivot so model is centered at origin, sitting on ground plane (Z=0)
+    pivot.location.x = -center.x
+    pivot.location.y = -center.y
+    pivot.location.z = -min_co.z  # Bottom of model at Z=0
+
+    # Scale to fit within ~2 units tall (matches ortho_scale=2.5 camera)
+    max_dim = max(size.x, size.y, size.z)
+    scale_factor = 1.0
+    if max_dim > 0:
+        target_size = 1.8  # Leave some margin within the 2.5 ortho frame
+        scale_factor = target_size / max_dim
+        pivot.scale = (scale_factor, scale_factor, scale_factor)
+
+    bpy.context.view_layer.update()
+    print(f"    Model bounds: {tuple(round(x,2) for x in size)}, scale: {round(scale_factor, 3)}")
+
+
 def link_model_to_template(model_path: Path, position=(0, 0, 0)):
-    """Link a 3D model to the template scene."""
+    """Import a 3D model, apply vertex colors, and normalize to fit camera."""
     model_path = Path(model_path)
     if not model_path.exists():
         raise FileNotFoundError(f"Model not found: {model_path}")
@@ -109,19 +201,31 @@ def link_model_to_template(model_path: Path, position=(0, 0, 0)):
     # Use Blender's import for .glb files
     bpy.ops.import_scene.gltf(filepath=str(model_path))
 
-    # Get the imported object (usually the last selected)
+    # Get the imported objects
     imported = [obj for obj in bpy.context.selected_objects]
     if imported:
-        # Parent all imports to an empty for rotation
+        # Two-level pivot: inner for orientation/scale, outer for direction rotation
+        # This prevents render_character's rotation from overwriting the orientation fix
         bpy.ops.object.empty_add(type='PLAIN_AXES', location=position)
-        pivot = bpy.context.object
-        pivot.name = "ModelPivot"
+        inner_pivot = bpy.context.object
+        inner_pivot.name = "ModelInnerPivot"
 
         for obj in imported:
-            obj.parent = pivot
+            obj.parent = inner_pivot
+
+        bpy.ops.object.empty_add(type='PLAIN_AXES', location=position)
+        outer_pivot = bpy.context.object
+        outer_pivot.name = "ModelPivot"
+        inner_pivot.parent = outer_pivot
+
+        # Apply vertex color material (TripoSR uses vertex colors, not textures)
+        setup_vertex_color_material(imported)
+
+        # Normalize: center, scale, orient to fit camera frame (applied to inner pivot)
+        normalize_model(inner_pivot, imported)
 
         print(f"  Linked model: {model_path.name}")
-        return pivot
+        return outer_pivot  # render_character rotates this one
 
     return None
 
@@ -250,6 +354,36 @@ def main():
     if args.output:
         OUTPUT_BASE = Path(args.output)
 
+    frame_count = 0
+
+    # Direct mode: --model, --id, and --category are all provided
+    # Process a single model without needing a manifest entry
+    if args.model and args.id and args.category:
+        model_path = Path(args.model)
+        if not model_path.exists():
+            print(f"  [ERROR] Model not found: {model_path}")
+            sys.exit(1)
+
+        asset_stub = {"id": args.id, "poses": ["stand"], "directions": list(DIRECTIONS.keys())}
+
+        if args.category == "characters":
+            render_character(asset_stub, model_path, template_path=args.template)
+            out_dir = OUTPUT_BASE / "characters" / args.id
+        else:
+            render_static(asset_stub, args.category, model_path, template_path=args.template)
+            out_dir = OUTPUT_BASE / args.category / args.id
+
+        # Count rendered frames
+        if out_dir.exists():
+            frame_count = len([f for f in out_dir.iterdir() if f.suffix == '.png'])
+
+        print(f"FRAMES:{frame_count}")
+        print(f"\n[DONE] Renders saved to {OUTPUT_BASE}")
+        if frame_count == 0:
+            sys.exit(1)
+        sys.exit(0)
+
+    # Manifest mode: iterate over manifest entries
     manifest = load_manifest()
 
     # Render characters

@@ -3,7 +3,7 @@ import { fileURLToPath } from 'node:url';
 import { getWorker } from '../worker-manager.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const SCRIPTS_DIR = resolve(process.env.ASSETGENERATOR_ROOT || resolve(__dirname, '..'), 'scripts');
+const PROJECT_ROOT = process.env.ASSETGENERATOR_ROOT || resolve(__dirname, '..');
 
 const TEMPLATE_MAP = {
   characters: 'character.blend',
@@ -15,15 +15,16 @@ const TEMPLATE_MAP = {
 };
 
 export async function generate({ id, asset, config, libraryRoot }) {
-  const scriptPath = join(SCRIPTS_DIR, 'render_sprites.py');
+  // Paths resolved for the worker machine
+  const workerScript = join(PROJECT_ROOT, 'scripts', 'render_sprites.py');
   const modelPath = join(libraryRoot, 'models', asset.category, `${id}.glb`);
   const templatePath = join(libraryRoot, 'blend', TEMPLATE_MAP[asset.category] || 'character.blend');
-  const outputDir = join(libraryRoot, 'renders', asset.category);
+  const outputDir = join(libraryRoot, 'renders');
   const blenderPath = config.blenderPath || 'blender';
 
   const args = [
     '--background',
-    '--python', scriptPath,
+    '--python', workerScript,
     '--',
     '--id', id,
     '--category', asset.category,
@@ -34,11 +35,15 @@ export async function generate({ id, asset, config, libraryRoot }) {
 
   const worker = getWorker();
   if (worker) {
-    const result = await worker.exec({ cmd: blenderPath, args, cwd: process.env.ASSETGENERATOR_ROOT || resolve(__dirname, '..'), env: {} });
+    const result = await worker.exec({ cmd: blenderPath, args, cwd: PROJECT_ROOT, env: {} });
     if (result.code !== 0) throw new Error(`Blender render exited ${result.code}: ${result.stderr.slice(-500)}`);
 
     const frameMatch = result.stdout.match(/FRAMES:(\d+)|Rendered (\d+) frames/i);
     const frameCount = frameMatch ? parseInt(frameMatch[1] || frameMatch[2], 10) : 0;
+
+    if (frameCount === 0) {
+      throw new Error(`Blender rendered 0 frames for "${id}". Check model exists at ${modelPath}`);
+    }
 
     return { status: 'done', frameCount, backend: 'blender' };
   }
