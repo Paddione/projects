@@ -258,6 +258,45 @@ def main():
     if args.id:
         print(f"SEED:{seed}")
 
+    # Direct generation mode: --output + --id + --prompt bypasses manifest
+    # Used by Assetgenerator library when dispatching to remote worker
+    if args.output and args.id and args.prompt:
+        duration = args.duration or 1.0
+        out_path = Path(args.output)
+        ensure_dir(out_path.parent)
+
+        # Determine backend
+        backend = args.backend
+        if backend == "auto":
+            if audiocraft_available():
+                backend = "audiocraft"
+            elif elevenlabs_available():
+                backend = "elevenlabs"
+            else:
+                backend = "placeholder"
+
+        audio_type = args.type if args.type != "all" else "sfx"
+        print(f"  [GEN] {args.id} ({duration}s) → {out_path}")
+
+        if audio_type == "music" and backend == "audiocraft":
+            ok = audiocraft_generate_music(args.prompt, duration, out_path)
+        elif backend == "audiocraft":
+            ok = audiocraft_generate_sfx(args.prompt, duration, out_path)
+        elif backend == "elevenlabs":
+            ok = elevenlabs_generate_sfx(args.prompt, duration, out_path)
+        else:
+            generate_silence(duration, out_path)
+            ok = True
+
+        if ok:
+            print(f"    → {out_path}")
+        else:
+            print(f"  [ERROR] Generation failed for {args.id}")
+            sys.exit(1)
+
+        print(f"\n[DONE] Direct generation complete: {out_path}")
+        sys.exit(0)
+
     manifest = load_manifest()
 
     # Determine backend
