@@ -2275,7 +2275,7 @@ function createVisualCard(id, asset) {
     { value: '', label: 'ComfyUI (default, GPU worker)' },
     { value: 'diffusers', label: 'Diffusers (GPU worker)' },
     { value: 'gemini-imagen', label: 'Gemini Imagen (cloud API)' },
-    { value: 'siliconflow', label: 'SiliconFlow FLUX (cloud API)' },
+    // { value: 'siliconflow', label: 'SiliconFlow FLUX (cloud API)' },  // disabled — no API key configured
   ];
   for (const opt of conceptBackends) {
     const option = document.createElement('option');
