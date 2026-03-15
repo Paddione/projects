@@ -422,21 +422,21 @@ export const GamePage: React.FC = () => {
   if (effects) {
     // Helper slot: answer_previews
     if (effects.helper?.perk_name === 'answer_previews') {
-      const style = (effects.helper.configuration as Record<string, string>)?.style
+      const style = (effects.helper.configuration as Record<string, string>)?.['style']
       if (style === 'border') cosmeticClasses.push(gameStyles.answerPreviewBorder)
       else if (style === 'background') cosmeticClasses.push(gameStyles.answerPreviewBackground)
       else if (style === 'shadow') cosmeticClasses.push(gameStyles.answerPreviewShadow)
     }
     // Display slot: enhanced_timers
     if (effects.display?.perk_name === 'enhanced_timers') {
-      const style = (effects.display.configuration as Record<string, string>)?.timer_style
+      const style = (effects.display.configuration as Record<string, string>)?.['timer_style']
       if (style === 'neon') cosmeticClasses.push(gameStyles.timerNeon)
       else if (style === 'pulse') cosmeticClasses.push(gameStyles.timerPulse)
       else if (style === 'minimal') cosmeticClasses.push(gameStyles.timerMinimal)
     }
     // Emote slot: chat_emotes_basic / chat_emotes_premium
     if (effects.emote?.perk_name === 'chat_emotes_basic' || effects.emote?.perk_name === 'chat_emotes_premium') {
-      const style = (effects.emote.configuration as Record<string, string>)?.celebration_style
+      const style = (effects.emote.configuration as Record<string, string>)?.['celebration_style']
       if (style === 'confetti') cosmeticClasses.push(gameStyles.celebrationConfetti)
       else if (style === 'fireworks') cosmeticClasses.push(gameStyles.celebrationFireworks)
       else if (style === 'sparkle') cosmeticClasses.push(gameStyles.celebrationSparkle)

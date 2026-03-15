@@ -74,7 +74,7 @@ export class AuthMiddleware {
         username: usernameStr || emailStr.split('@')[0] || 'user',
         email: emailStr,
         isAdmin: roleStr === 'ADMIN',
-        role: roleStr
+        ...(roleStr !== undefined ? { role: roleStr } : {}),
       };
     }
     return null;
@@ -159,7 +159,7 @@ export class AuthMiddleware {
           userId: localUser.id, // Use local ID for internal consistency
           selectedCharacter: localUser.selected_character,
           characterLevel: localUser.character_level,
-          isAdmin: localUser.is_admin || headerUser.isAdmin
+          isAdmin: !!(localUser.is_admin || headerUser.isAdmin)
         };
         next();
         return;
@@ -223,7 +223,7 @@ export class AuthMiddleware {
             userId: localUser.id,
             selectedCharacter: localUser.selected_character,
             characterLevel: localUser.character_level,
-            isAdmin: localUser.is_admin || payload.isAdmin
+            isAdmin: !!(localUser.is_admin || payload.isAdmin)
           };
         } else {
           req.user = payload;
@@ -299,7 +299,7 @@ export class AuthMiddleware {
           userId: localUser.id,
           selectedCharacter: localUser.selected_character,
           characterLevel: localUser.character_level,
-          isAdmin: localUser.is_admin || headerUser.isAdmin
+          isAdmin: !!(localUser.is_admin || headerUser.isAdmin)
         };
         next();
         return;
@@ -327,7 +327,7 @@ export class AuthMiddleware {
                 userId: localUser.id,
                 selectedCharacter: localUser.selected_character,
                 characterLevel: localUser.character_level,
-                isAdmin: localUser.is_admin || payload.isAdmin
+                isAdmin: !!(localUser.is_admin || payload.isAdmin)
               };
             } else {
               req.user = payload;

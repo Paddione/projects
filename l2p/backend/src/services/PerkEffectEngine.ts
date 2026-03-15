@@ -232,10 +232,10 @@ export class PerkEffectEngine {
    */
   static extractInfoEffects(modifiers: GameplayModifiers): Record<string, boolean> {
     const effects: Record<string, boolean> = {};
-    if (modifiers.showCategory) effects.showCategory = true;
-    if (modifiers.showDifficulty) effects.showDifficulty = true;
-    if (modifiers.showHint) effects.showHint = true;
-    if (modifiers.showAnswerStats) effects.showAnswerStats = true;
+    if (modifiers.showCategory) effects['showCategory'] = true;
+    if (modifiers.showDifficulty) effects['showDifficulty'] = true;
+    if (modifiers.showHint) effects['showHint'] = true;
+    if (modifiers.showAnswerStats) effects['showAnswerStats'] = true;
     return effects;
   }
 

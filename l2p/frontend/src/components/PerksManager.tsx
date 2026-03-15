@@ -454,7 +454,7 @@ const PerksManager: React.FC = () => {
     if (slotType === 'title' && loadout.active_title) return getOptionLabel(loadout.active_title);
     const cosmeticPerks = loadout.active_cosmetic_perks || {};
     if (cosmeticPerks[slotType]) {
-      const matchingPerk = perksData?.perks.find(p => p.perk_id === cosmeticPerks[slotType].perk_id);
+      const matchingPerk = perksData?.perks.find(p => p.perk_id === cosmeticPerks[slotType]!.perk_id);
       return matchingPerk?.perk?.title || null;
     }
     return null;

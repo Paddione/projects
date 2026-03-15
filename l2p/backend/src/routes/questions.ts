@@ -4,6 +4,7 @@ import { ValidationMiddleware } from '../middleware/validation.js';
 import { asyncHandler } from '../middleware/errorHandler.js';
 import { ValidationError } from '../middleware/errorHandler.js';
 import { buildPaginationSchema, parseDir } from '../utils/pagination.js';
+import type { QuestionFilterOptions } from '../types/question.js';
 
 const router = express.Router();
 const questionService = new QuestionService();
@@ -380,11 +381,11 @@ router.get('/search', asyncHandler(async (req: express.Request, res: express.Res
 // Browse all questions with filters (question database)
 router.get('/browse', asyncHandler(async (req: express.Request, res: express.Response) => {
   const q = req.query as Record<string, unknown>;
-  const options = {
-    category_id: q['category_id'] ? parseInt(q['category_id'] as string, 10) : undefined,
-    difficulty: q['difficulty'] ? parseInt(q['difficulty'] as string, 10) : undefined,
-    answer_type: (q['answer_type'] as any) || undefined,
-    search: (q['q'] as string) || undefined,
+  const options: QuestionFilterOptions = {
+    ...(q['category_id'] ? { category_id: parseInt(q['category_id'] as string, 10) } : {}),
+    ...(q['difficulty'] ? { difficulty: parseInt(q['difficulty'] as string, 10) } : {}),
+    ...(q['answer_type'] ? { answer_type: q['answer_type'] as any } : {}),
+    ...(q['q'] ? { search: q['q'] as string } : {}),
     page: q['page'] ? parseInt(q['page'] as string, 10) : 1,
     pageSize: q['pageSize'] ? parseInt(q['pageSize'] as string, 10) : 20,
     sortBy: (q['sortBy'] as 'id' | 'difficulty' | 'created_at' | 'category') || 'id',

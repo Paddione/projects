@@ -298,11 +298,11 @@ export class GameService {
         const effects: Record<string, boolean | number> = PerkEffectEngine.extractInfoEffects(player.perkModifiers);
         // Include interactive perk use counts
         if (player.hintUsesRemaining != null) {
-          effects.hintUsesRemaining = player.hintUsesRemaining;
+          effects['hintUsesRemaining'] = player.hintUsesRemaining;
         }
         if (player.eliminateUsesRemaining != null) {
-          effects.eliminateUsesRemaining = player.eliminateUsesRemaining;
-          effects.eliminateCount = player.perkModifiers.eliminateWrongCount;
+          effects['eliminateUsesRemaining'] = player.eliminateUsesRemaining;
+          effects['eliminateCount'] = player.perkModifiers.eliminateWrongCount;
         }
         if (Object.keys(effects).length > 0) {
           playerPerkEffects[player.id] = effects;
@@ -1396,11 +1396,11 @@ export class GameService {
       if (player.perkModifiers) {
         const effects: Record<string, boolean | number> = PerkEffectEngine.extractInfoEffects(player.perkModifiers);
         if (player.hintUsesRemaining != null) {
-          effects.hintUsesRemaining = player.hintUsesRemaining;
+          effects['hintUsesRemaining'] = player.hintUsesRemaining;
         }
         if (player.eliminateUsesRemaining != null) {
-          effects.eliminateUsesRemaining = player.eliminateUsesRemaining;
-          effects.eliminateCount = player.perkModifiers.eliminateWrongCount;
+          effects['eliminateUsesRemaining'] = player.eliminateUsesRemaining;
+          effects['eliminateCount'] = player.perkModifiers.eliminateWrongCount;
         }
         if (Object.keys(effects).length > 0) {
           wagerPerkEffects[player.id] = effects;

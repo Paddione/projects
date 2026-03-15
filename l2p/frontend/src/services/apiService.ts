@@ -2395,6 +2395,7 @@ class ApiService {
       active_theme: string;
       perks_config: any;
       active_perks: any[];
+      active_cosmetic_perks: Record<string, { perk_id: number; configuration: any }>;
     };
   }>> {
     return this.request('/perks/user')

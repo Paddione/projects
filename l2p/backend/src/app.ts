@@ -52,14 +52,14 @@ export function setupApp(app: Application) {
 
   // Rate limiting — fully disabled in test/dev environments for E2E and browser test throughput
   const isRateLimitDisabled = (
-    process.env.DISABLE_RATE_LIMITING === 'true' ||
-    process.env.NODE_ENV === 'test' ||
-    process.env.NODE_ENV === 'development' ||
-    process.env.VITE_TEST_MODE === 'true'
+    process.env['DISABLE_RATE_LIMITING'] === 'true' ||
+    process.env['NODE_ENV'] === 'test' ||
+    process.env['NODE_ENV'] === 'development' ||
+    process.env['VITE_TEST_MODE'] === 'true'
   );
 
   // Bypass key for production testing (e.g., OpenClaw browser tests)
-  const rateLimitBypassKey = process.env.RATE_LIMIT_BYPASS_KEY || '';
+  const rateLimitBypassKey = process.env['RATE_LIMIT_BYPASS_KEY'] || '';
 
   if (!isRateLimitDisabled) {
     const apiLimiter = rateLimit({

@@ -22,6 +22,9 @@ log_fail() { echo -e "${RED}[FAIL]${NC} $1"; }
 log_warn() { echo -e "${YELLOW}[WARN]${NC} $1"; }
 log_info() { echo -e "${BLUE}[INFO]${NC} $1"; }
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/service-registry.sh"
+
 ERRORS=0
 PORT_FORWARD_LOG="/tmp/korczewski-port-forward.log"
 
@@ -162,14 +165,14 @@ else
     ERRORS=$((ERRORS + 1))
 fi
 
-check_service "Auth" "korczewski-services" "app=auth" "5500" "/health"
-check_service "L2P Backend" "korczewski-services" "app=l2p-backend" "3001" "/api/health"
-check_service "L2P Frontend" "korczewski-services" "app=l2p-frontend" "80" "/"
-check_service "Shop" "korczewski-services" "app=shop" "3000" "/"
-check_service "VideoVault" "korczewski-services" "app=videovault" "5000" "/api/health"
-check_service "SOS" "korczewski-services" "app=sos" "3005" "/health"
-check_service "Arena Backend" "korczewski-services" "app=arena-backend" "3003" "/api/health"
-check_service "Arena Frontend" "korczewski-services" "app=arena-frontend" "80" "/"
+# Check all services from the registry
+for svc in "${SERVICES[@]}"; do
+    check_service "${svc}" "${SERVICE_NAMESPACE[$svc]}" "${SERVICE_K8S_LABEL[$svc]}" "${SERVICE_PORT[$svc]}" "${SERVICE_HEALTH[$svc]}"
+done
+
+# Additional frontend checks (not in registry — these are secondary pods)
+check_service "l2p-frontend" "korczewski-services" "app=l2p-frontend" "80" "/"
+check_service "arena-frontend" "korczewski-services" "app=arena-frontend" "80" "/"
 echo ""
 
 # =============================================================================
@@ -271,12 +274,9 @@ fi
 echo "=========================================="
 echo ""
 echo "External access URLs:"
-echo "  https://l2p.korczewski.de"
-echo "  https://auth.korczewski.de"
-echo "  https://shop.korczewski.de"
-echo "  https://videovault.korczewski.de"
-echo "  https://sos.korczewski.de"
-echo "  https://arena.korczewski.de"
+for svc in "${SERVICES[@]}"; do
+    echo "  ${SERVICE_URL[$svc]}"
+done
 echo "  https://traefik.korczewski.de (dashboard)"
 echo ""
 
