@@ -81,6 +81,19 @@ Procedural `Graphics` rendering is replaced by sprite-based `Sprite`/`AnimatedSp
 
 **Asset manifest**: `assets/manifest.json` — defines all characters, items, tiles, SFX, music with prompts and frame counts.
 
+#### Audio Review Tool
+
+The Assetgenerator (`Assetgenerator/`) provides a web UI for reviewing and regenerating audio assets:
+
+```bash
+npm run dev:assetgenerator    # Opens http://localhost:5200
+```
+
+- Listen to each sound, edit prompts, flag for regeneration
+- Supports AudioCraft (local GPU) and ElevenLabs (API) backends
+- State persisted in `Assetgenerator/projects/arena.json`
+- `generate_audio.py` supports single-sound override flags: `--prompt`, `--seed`, `--duration`, `--force`
+
 #### Blender Sprite Rendering (Phase 3)
 
 Professional sprite rendering using persistent Blender templates:
