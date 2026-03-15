@@ -67,13 +67,20 @@ export function startMovieWatcher(options: MovieWatcherOptions = {}) {
     const movieDir = path.dirname(moviePath);
     const baseName = path.basename(moviePath, path.extname(moviePath));
     const thumbsDir = path.join(movieDir, 'Thumbnails');
-    const thumbPath = path.join(thumbsDir, `${baseName}_thumb.jpg`);
-    const spritePath = path.join(thumbsDir, `${baseName}_sprite.jpg`);
 
+    // First: check exact name match (fast path)
+    const thumbPath = path.join(thumbsDir, `${baseName}_thumb.jpg`);
     try {
       await fs.access(thumbPath);
-      await fs.access(spritePath);
       return true;
+    } catch { /* try fallback */ }
+
+    // Fallback: check if ANY _thumb.jpg exists in the Thumbnails dir.
+    // Many movies have thumbnails named differently from the video file
+    // (e.g., video: slug.mp4, thumb: "Display Name_thumb.jpg").
+    try {
+      const files = await fs.readdir(thumbsDir);
+      return files.some((f) => f.endsWith('_thumb.jpg'));
     } catch {
       return false;
     }

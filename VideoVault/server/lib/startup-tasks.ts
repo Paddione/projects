@@ -5,17 +5,23 @@ import { eq } from 'drizzle-orm';
 import { videos } from '@shared/schema';
 import { logger } from './logger';
 import { MOVIE_EXTENSIONS, extractMovieMetadata, detectQualityCategories, generateMovieThumbnail } from '../handlers/movie-handler';
+import { readSidecar } from './sidecar';
+
+// Track filenames that failed stat (encoding issues on SMB) — warn only once
+const _failedStatNames = new Set<string>();
 
 /**
  * Run all startup tasks for the movies library.
  *
- * Layout: flat — video files live directly in MOVIES_DIR/,
- * thumbnails and sprites in MOVIES_DIR/Thumbnails/.
+ * Handles two layouts:
+ * - Flat: video files directly in MOVIES_DIR/, thumbnails in MOVIES_DIR/Thumbnails/
+ * - Subdirectory: video in subdir/video.mp4, thumbnails in subdir/Thumbnails/,
+ *   metadata in subdir/metadata.json
  *
  * 1. Ensure 1_inbox and Thumbnails directories exist
  * 2. Drain inbox: move files from 1_inbox/ to MOVIES_DIR/
- * 3. Generate missing thumbnails/sprites for any video in MOVIES_DIR/
- * 4. Auto-index all videos (with thumbnails) into DB
+ * 3. Generate missing thumbnails/sprites for flat files in MOVIES_DIR/
+ * 4. Auto-index all videos (flat + subdirectory) into DB
  */
 export async function runStartupTasks(db: any): Promise<void> {
   const MOVIES_DIR = process.env.MOVIES_DIR || path.join(process.cwd(), 'media', 'movies');
@@ -37,15 +43,12 @@ export async function runStartupTasks(db: any): Promise<void> {
   // 2. Drain inbox → move files to MOVIES_DIR root
   await drainInbox(MOVIES_DIR);
 
-  // 3. Generate missing thumbnails for any video file in MOVIES_DIR
+  // 3. Generate missing thumbnails for flat files at root
   await generateMissingThumbnails(MOVIES_DIR);
 
-  // 4. Index all videos with thumbnails into DB
+  // 4. Index all videos into DB (flat + subdirectory)
   await autoIndexLibrary(db, MOVIES_DIR);
 }
-
-// Track filenames that failed stat (encoding issues on SMB) — warn only once
-const _failedStatNames = new Set<string>();
 
 /**
  * Move all video files from MOVIES_DIR/1_inbox/ into MOVIES_DIR/.
@@ -54,8 +57,6 @@ const _failedStatNames = new Set<string>();
 export async function drainInbox(moviesDir: string): Promise<number> {
   const inboxDir = path.join(moviesDir, '1_inbox');
 
-  // Use raw readdir (not withFileTypes) to get exact filenames as the filesystem reports them,
-  // then stat individually. This avoids encoding mismatches between readdir and rename on SMB.
   let filenames: string[];
   try {
     filenames = await fs.readdir(inboxDir);
@@ -74,12 +75,11 @@ export async function drainInbox(moviesDir: string): Promise<number> {
     const src = path.join(inboxDir, name);
     const dest = path.join(moviesDir, name);
 
-    // Verify it's actually a file (not a directory)
+    // Verify it's actually a file
     try {
       const stat = await fs.stat(src);
       if (!stat.isFile()) continue;
     } catch {
-      // Can't stat — skip (encoding issue or file disappeared). Warn once.
       if (!_failedStatNames.has(name)) {
         _failedStatNames.add(name);
         logger.warn(`[StartupTasks] Inbox skip: cannot stat ${name} (SMB encoding issue? will not retry)`);
@@ -87,12 +87,11 @@ export async function drainInbox(moviesDir: string): Promise<number> {
       continue;
     }
 
-    // Skip if a file with the same name already exists in root
+    // Skip if already exists at destination
     try {
       await fs.access(dest);
-      logger.warn(`[StartupTasks] Inbox skip: ${name} already exists in movies root`);
-      continue;
-    } catch { /* dest doesn't exist — good */ }
+      continue; // silently skip duplicates
+    } catch { /* good — doesn't exist */ }
 
     try {
       await fs.rename(src, dest);
@@ -168,13 +167,31 @@ async function generateMissingThumbnails(moviesDir: string): Promise<void> {
 }
 
 /**
- * Index all video files in MOVIES_DIR/ that have thumbnails into the DB.
- * Flat layout: videos at root level, thumbnails in Thumbnails/ subfolder.
+ * Find the first *_thumb.jpg file in a Thumbnails directory.
+ * Returns the base name (before _thumb.jpg) or null if none found.
+ */
+async function findThumbInDir(thumbsDir: string): Promise<{ thumbName: string; thumbFile: string } | null> {
+  try {
+    const files = await fs.readdir(thumbsDir);
+    const thumbFile = files.find((f) => f.endsWith('_thumb.jpg'));
+    if (thumbFile) {
+      const thumbName = thumbFile.replace(/_thumb\.jpg$/, '');
+      return { thumbName, thumbFile };
+    }
+  } catch { /* dir doesn't exist or can't be read */ }
+  return null;
+}
+
+/**
+ * Index all videos into the DB. Handles two layouts:
+ *
+ * 1. Flat files: MOVIES_DIR/video.mp4 + MOVIES_DIR/Thumbnails/video_thumb.jpg
+ * 2. Subdirectory: MOVIES_DIR/subdir/video.mp4 + MOVIES_DIR/subdir/Thumbnails/*_thumb.jpg
+ *    (thumbnail name may differ from video filename — use whatever _thumb.jpg exists)
+ *    Reads metadata.json sidecar for displayName, categories, metadata.
  */
 async function autoIndexLibrary(db: any, moviesDir: string): Promise<void> {
   if (!db) return;
-
-  const thumbsDir = path.join(moviesDir, 'Thumbnails');
 
   let entries;
   try {
@@ -183,21 +200,22 @@ async function autoIndexLibrary(db: any, moviesDir: string): Promise<void> {
     return;
   }
 
-  const videoFiles = entries.filter(
-    (e) => e.isFile() && MOVIE_EXTENSIONS.includes(path.extname(e.name).toLowerCase()),
-  );
-
   let indexed = 0;
   let skipped = 0;
   let errors = 0;
 
-  for (const entry of videoFiles) {
+  // --- Pass 1: Flat files at root level ---
+  const rootThumbsDir = path.join(moviesDir, 'Thumbnails');
+  const flatFiles = entries.filter(
+    (e) => e.isFile() && MOVIE_EXTENSIONS.includes(path.extname(e.name).toLowerCase()),
+  );
+
+  for (const entry of flatFiles) {
     try {
       const baseName = path.basename(entry.name, path.extname(entry.name));
-      const thumbPath = path.join(thumbsDir, `${baseName}_thumb.jpg`);
-      const spritePath = path.join(thumbsDir, `${baseName}_sprite.jpg`);
+      const thumbPath = path.join(rootThumbsDir, `${baseName}_thumb.jpg`);
+      const spritePath = path.join(rootThumbsDir, `${baseName}_sprite.jpg`);
 
-      // Require both thumbnail and sprite
       let hasThumb = false;
       let hasSprite = false;
       try { await fs.access(thumbPath); hasThumb = true; } catch { /* */ }
@@ -208,10 +226,7 @@ async function autoIndexLibrary(db: any, moviesDir: string): Promise<void> {
         continue;
       }
 
-      // Deterministic ID from filename (flat layout — file is at root)
       const id = crypto.createHash('sha256').update('movies:' + entry.name).digest('hex').slice(0, 36);
-
-      // Skip if already indexed
       const existing = await db.select({ id: videos.id }).from(videos).where(eq(videos.id, id)).limit(1);
       if (existing.length > 0) {
         skipped++;
@@ -222,68 +237,109 @@ async function autoIndexLibrary(db: any, moviesDir: string): Promise<void> {
       const stat = await fs.stat(videoPath);
       const thumbUrl = `/media/movies/Thumbnails/${encodeURIComponent(baseName)}_thumb.jpg`;
 
-      // Extract metadata via ffprobe
       let metadata = { duration: 0, width: 0, height: 0, bitrate: 0, codec: '', fps: 0, aspectRatio: '' };
       try {
         const probed = await extractMovieMetadata(videoPath);
         metadata = {
-          duration: probed.duration || 0,
-          width: probed.width || 0,
-          height: probed.height || 0,
-          bitrate: probed.bitrate || 0,
-          codec: probed.codec || '',
-          fps: probed.fps || 0,
+          duration: probed.duration || 0, width: probed.width || 0, height: probed.height || 0,
+          bitrate: probed.bitrate || 0, codec: probed.codec || '', fps: probed.fps || 0,
           aspectRatio: probed.aspectRatio || '',
         };
-      } catch (probeErr: any) {
-        logger.warn(`[StartupTasks] ffprobe failed for ${entry.name}`, { error: probeErr.message });
-      }
+      } catch { /* proceed without */ }
 
       const qualities = detectQualityCategories(metadata);
-
-      await db
-        .insert(videos)
-        .values({
-          id,
-          filename: entry.name,
-          displayName: baseName,
-          path: `movies/${entry.name}`,
-          size: stat.size,
-          lastModified: stat.mtime,
-          metadata,
-          categories: {
-            age: [] as string[],
-            physical: [] as string[],
-            ethnicity: [] as string[],
-            relationship: [] as string[],
-            acts: [] as string[],
-            setting: [] as string[],
-            quality: qualities,
-            performer: [] as string[],
-          },
-          customCategories: {},
-          thumbnail: { generated: true, dataUrl: thumbUrl, timestamp: new Date().toISOString() },
-          rootKey: 'movies',
-          processingStatus: 'completed',
-        })
-        .onConflictDoUpdate({
-          target: videos.id,
-          set: {
-            filename: entry.name,
-            displayName: baseName,
-            path: `movies/${entry.name}`,
-            size: stat.size,
-            lastModified: stat.mtime,
-            metadata,
-            thumbnail: { generated: true, dataUrl: thumbUrl, timestamp: new Date().toISOString() },
-            processingStatus: 'completed',
-          },
-        });
-
+      await upsertVideo(db, {
+        id, filename: entry.name, displayName: baseName,
+        dbPath: `movies/${entry.name}`, stat, metadata, thumbUrl,
+        categories: defaultCategories(qualities), customCategories: {},
+      });
       indexed++;
     } catch (err: any) {
       errors++;
-      logger.warn(`[StartupTasks] Failed to index ${entry.name}`, { error: err.message });
+    }
+  }
+
+  // --- Pass 2: Subdirectory movies ---
+  const SKIP_DIRS = new Set(['Thumbnails', '1_inbox', '2_processing', '3_complete']);
+  const subdirs = entries.filter((e) => e.isDirectory() && !SKIP_DIRS.has(e.name));
+
+  // Process in batches to avoid overwhelming ffprobe
+  const BATCH_SIZE = 8;
+  for (let i = 0; i < subdirs.length; i += BATCH_SIZE) {
+    const batch = subdirs.slice(i, i + BATCH_SIZE);
+    const results = await Promise.allSettled(batch.map(async (dirEntry) => {
+      const dir = path.join(moviesDir, dirEntry.name);
+
+      // Find video file in this directory
+      let dirFiles;
+      try {
+        dirFiles = await fs.readdir(dir, { withFileTypes: true });
+      } catch {
+        return 'skip'; // Can't read dir (encoding issue)
+      }
+
+      const videoFile = dirFiles.find(
+        (e) => e.isFile() && MOVIE_EXTENSIONS.includes(path.extname(e.name).toLowerCase()),
+      );
+      if (!videoFile) return 'skip';
+
+      // Check for any _thumb.jpg in Thumbnails/
+      const thumbsDir = path.join(dir, 'Thumbnails');
+      const thumbInfo = await findThumbInDir(thumbsDir);
+      if (!thumbInfo) return 'skip';
+
+      // Deterministic ID: use relative path (subdir/videofile)
+      const relVideoPath = path.join(dirEntry.name, videoFile.name);
+      const id = crypto.createHash('sha256').update('movies:' + relVideoPath).digest('hex').slice(0, 36);
+
+      // Skip if already indexed
+      const existing = await db.select({ id: videos.id }).from(videos).where(eq(videos.id, id)).limit(1);
+      if (existing.length > 0) return 'skip';
+
+      const videoPath = path.join(dir, videoFile.name);
+      const stat = await fs.stat(videoPath);
+
+      // Read sidecar for rich metadata (displayName, categories, etc.)
+      const sidecar = await readSidecar(dir);
+      const displayName = sidecar?.displayName || path.basename(videoFile.name, path.extname(videoFile.name));
+      const thumbUrl = `/media/movies/${encodeURIComponent(dirEntry.name)}/Thumbnails/${encodeURIComponent(thumbInfo.thumbFile)}`;
+
+      // Use sidecar metadata if available, otherwise extract via ffprobe
+      let metadata = sidecar?.metadata || { duration: 0, width: 0, height: 0, bitrate: 0, codec: '', fps: 0, aspectRatio: '' };
+      if (!sidecar?.metadata) {
+        try {
+          const probed = await extractMovieMetadata(videoPath);
+          metadata = {
+            duration: probed.duration || 0, width: probed.width || 0, height: probed.height || 0,
+            bitrate: probed.bitrate || 0, codec: probed.codec || '', fps: probed.fps || 0,
+            aspectRatio: probed.aspectRatio || '',
+          };
+        } catch { /* proceed without */ }
+      }
+
+      const sidecarCategories = sidecar?.categories || {};
+      const qualities = detectQualityCategories(metadata);
+      const categories = {
+        ...defaultCategories(qualities),
+        ...sidecarCategories,
+        quality: [...new Set([...(sidecarCategories.quality || []), ...qualities])],
+      };
+
+      await upsertVideo(db, {
+        id, filename: videoFile.name, displayName,
+        dbPath: `movies/${relVideoPath}`, stat, metadata, thumbUrl,
+        categories, customCategories: sidecar?.customCategories || {},
+      });
+      return 'indexed';
+    }));
+
+    for (const r of results) {
+      if (r.status === 'fulfilled') {
+        if (r.value === 'indexed') indexed++;
+        else skipped++;
+      } else {
+        errors++;
+      }
     }
   }
 
@@ -292,4 +348,38 @@ async function autoIndexLibrary(db: any, moviesDir: string): Promise<void> {
   } else {
     logger.info('[StartupTasks] Auto-index: library up to date', { skipped });
   }
+}
+
+function defaultCategories(qualities: string[]) {
+  return {
+    age: [] as string[], physical: [] as string[], ethnicity: [] as string[],
+    relationship: [] as string[], acts: [] as string[], setting: [] as string[],
+    quality: qualities, performer: [] as string[],
+  };
+}
+
+async function upsertVideo(db: any, v: {
+  id: string; filename: string; displayName: string; dbPath: string;
+  stat: { size: number; mtime: Date }; metadata: any; thumbUrl: string;
+  categories: any; customCategories: any;
+}) {
+  await db
+    .insert(videos)
+    .values({
+      id: v.id, filename: v.filename, displayName: v.displayName,
+      path: v.dbPath, size: v.stat.size, lastModified: v.stat.mtime,
+      metadata: v.metadata, categories: v.categories, customCategories: v.customCategories,
+      thumbnail: { generated: true, dataUrl: v.thumbUrl, timestamp: new Date().toISOString() },
+      rootKey: 'movies', processingStatus: 'completed',
+    })
+    .onConflictDoUpdate({
+      target: videos.id,
+      set: {
+        filename: v.filename, displayName: v.displayName,
+        path: v.dbPath, size: v.stat.size, lastModified: v.stat.mtime,
+        metadata: v.metadata,
+        thumbnail: { generated: true, dataUrl: v.thumbUrl, timestamp: new Date().toISOString() },
+        processingStatus: 'completed',
+      },
+    });
 }
