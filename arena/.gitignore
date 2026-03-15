@@ -10,9 +10,8 @@ assets/audio/
 # Python virtual environment
 .venv/
 
-# Keep manifest and sprite atlases in git (audio served from SMB via symlinks)
+# Keep manifest, sprites, and compressed audio in git
 !assets/manifest.json
 !frontend/public/assets/
-# Exclude audio dirs (symlinks to SMB share at /mnt/pve3a/arena/audio/)
-frontend/public/assets/sfx
-frontend/public/assets/music
+# Exclude raw WAV source files (large, regenerate via pipeline)
+frontend/public/assets/**/*.wav
