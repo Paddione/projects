@@ -1154,15 +1154,18 @@ Add import at top:
 import { getWorker } from '../worker-manager.js';
 ```
 
-Replace the body of the `generate` function. The remote path parses SEED from stdout and skips `copyFileSync` (worker writes to NAS). The local path is replaced with a "no worker" error:
+Replace the body of the `generate` function. The remote path parses SEED from stdout and skips `copyFileSync` (worker writes to NAS). The local path is replaced with a "no worker" error.
+
+**Important**: `projectConfig._basePath` is set to `__dirname` in server.js (which is `/app` in Docker). Script paths derived from it won't exist on the worker. Use `ASSETGENERATOR_ROOT` env var to resolve paths that the worker will execute:
 
 ```js
 export async function generate({ id, type, prompt, seed, duration, outputPath, projectConfig }) {
-  const scriptPath = resolve(projectConfig._basePath, projectConfig.generateScript);
+  const basePath = process.env.ASSETGENERATOR_ROOT || projectConfig._basePath;
+  const scriptPath = resolve(basePath, projectConfig.generateScript);
   const pythonPath = projectConfig.pythonPath
-    ? resolve(projectConfig._basePath, projectConfig.pythonPath)
+    ? resolve(basePath, projectConfig.pythonPath)
     : 'python3';
-  const projectDir = resolve(projectConfig._basePath, projectConfig.audioRoot, '..', '..');
+  const projectDir = resolve(basePath, projectConfig.audioRoot, '..', '..');
 
   const args = [
     scriptPath,
@@ -1194,9 +1197,14 @@ export async function generate({ id, type, prompt, seed, duration, outputPath, p
 
 - [ ] **Step 2: Modify comfyui.js**
 
-Add import at top:
+Add import at top and update `SCRIPTS_DIR` to use `ASSETGENERATOR_ROOT` (the old `__dirname`-based path resolves to `/app` in Docker, but scripts run on the worker where the repo is at a different path):
 ```js
 import { getWorker } from '../worker-manager.js';
+```
+
+Replace the `SCRIPTS_DIR` line:
+```js
+const SCRIPTS_DIR = resolve(process.env.ASSETGENERATOR_ROOT || resolve(__dirname, '..'), 'scripts');
 ```
 
 Replace the `generate` function body:
@@ -1231,10 +1239,15 @@ export async function generate({ id, asset, config, libraryRoot }) {
 
 - [ ] **Step 3: Modify diffusers.js**
 
-Same pattern as comfyui.js. Add import, replace function body:
+Same pattern as comfyui.js. Add import, update `SCRIPTS_DIR`, replace function body:
 
 ```js
 import { getWorker } from '../worker-manager.js';
+```
+
+Replace `SCRIPTS_DIR`:
+```js
+const SCRIPTS_DIR = resolve(process.env.ASSETGENERATOR_ROOT || resolve(__dirname, '..'), 'scripts');
 ```
 
 ```js
@@ -1267,10 +1280,15 @@ export async function generate({ id, asset, config, libraryRoot }) {
 
 - [ ] **Step 4: Modify triposr.js**
 
-Add import, replace function body:
+Add import, update `SCRIPTS_DIR`, replace function body:
 
 ```js
 import { getWorker } from '../worker-manager.js';
+```
+
+Replace `SCRIPTS_DIR`:
+```js
+const SCRIPTS_DIR = resolve(process.env.ASSETGENERATOR_ROOT || resolve(__dirname, '..'), 'scripts');
 ```
 
 ```js
@@ -1302,10 +1320,15 @@ export async function generate({ id, asset, config, libraryRoot }) {
 
 - [ ] **Step 5: Modify blender.js**
 
-Add import, replace function body. Blender adapter parses frame count from stdout instead of `readdirSync`:
+Add import, update `SCRIPTS_DIR`, replace function body. Blender adapter parses frame count from stdout instead of `readdirSync`:
 
 ```js
 import { getWorker } from '../worker-manager.js';
+```
+
+Replace `SCRIPTS_DIR`:
+```js
+const SCRIPTS_DIR = resolve(process.env.ASSETGENERATOR_ROOT || resolve(__dirname, '..'), 'scripts');
 ```
 
 ```js
