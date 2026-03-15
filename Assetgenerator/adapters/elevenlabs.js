@@ -1,11 +1,14 @@
 import { spawn } from 'node:child_process';
-import { resolve } from 'node:path';
+import { resolve, join } from 'node:path';
+import { existsSync, copyFileSync, mkdirSync } from 'node:fs';
+import { dirname } from 'node:path';
 
 /**
  * ElevenLabs adapter — spawns the project's generate_audio.py with elevenlabs backend.
  * The WAV conversion fix is handled in the Python script.
+ * After generation, copies the WAV to outputPath (NAS) if provided.
  */
-export async function generate({ id, type, prompt, seed, duration, projectConfig }) {
+export async function generate({ id, type, prompt, seed, duration, outputPath, projectConfig }) {
   const scriptPath = resolve(projectConfig._basePath, projectConfig.generateScript);
   const pythonPath = projectConfig.pythonPath
     ? resolve(projectConfig._basePath, projectConfig.pythonPath)
@@ -38,6 +41,18 @@ export async function generate({ id, type, prompt, seed, duration, projectConfig
     proc.on('close', (code) => {
       if (code !== 0) {
         return reject(new Error(`generate_audio.py (elevenlabs) exited ${code}: ${stderr}`));
+      }
+
+      // Copy generated WAV to NAS outputPath if provided
+      if (outputPath) {
+        const audioRoot = resolve(projectConfig._basePath, projectConfig.audioRoot);
+        const subdir = type === 'music' ? 'music' : 'sfx';
+        const projectWav = join(audioRoot, subdir, `${id}.wav`);
+        if (existsSync(projectWav)) {
+          const destDir = dirname(outputPath);
+          if (!existsSync(destDir)) mkdirSync(destDir, { recursive: true });
+          copyFileSync(projectWav, outputPath);
+        }
       }
 
       const seedMatch = stdout.match(/SEED:(\d+)/);

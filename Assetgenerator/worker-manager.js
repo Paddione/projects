@@ -21,10 +21,14 @@ let jobQueue = []; // { jobId, payload, resolve, reject, stdout, stderr }
 // Configurable for testing
 let PING_INTERVAL = 30_000;
 let PONG_TIMEOUT = 10_000;
+let JOB_RETRY_LIMIT = 2;
+let RECONNECT_WAIT_MS = 60_000;
 
 export function initWorkerManager(httpServer, opts = {}) {
   PING_INTERVAL = opts.pingInterval ?? 30_000;
   PONG_TIMEOUT = opts.pongTimeout ?? 10_000;
+  JOB_RETRY_LIMIT = opts.jobRetryLimit ?? 2;
+  RECONNECT_WAIT_MS = opts.reconnectWaitMs ?? 60_000;
 
   wss = new WebSocketServer({ noServer: true });
 
@@ -52,6 +56,9 @@ export function initWorkerManager(httpServer, opts = {}) {
 
       if (msg.type === 'register') {
         worker = { ws, hostname: msg.hostname, gpu: msg.gpu, currentJob: null };
+        // Clear reconnect timers on queued jobs — worker is back
+        for (const job of jobQueue) clearTimeout(job._reconnectTimer);
+        console.log(`Worker registered: ${msg.hostname} (${msg.gpu || 'no GPU'})${jobQueue.length ? `, ${jobQueue.length} job(s) queued` : ''}`);
         startHeartbeat();
         dispatchNext();
         return;
@@ -94,12 +101,28 @@ export function initWorkerManager(httpServer, opts = {}) {
       worker = null;
 
       if (currentJob) {
-        currentJob.reject(new Error('Worker disconnected during job'));
+        currentJob.retries = (currentJob.retries || 0) + 1;
+        if (currentJob.retries <= JOB_RETRY_LIMIT) {
+          console.warn(`Worker disconnected during ${currentJob.jobId} — re-queuing (attempt ${currentJob.retries}/${JOB_RETRY_LIMIT}), waiting ${RECONNECT_WAIT_MS / 1000}s for reconnect`);
+          currentJob.stdout = '';
+          currentJob.stderr = '';
+          jobQueue.unshift(currentJob);
+          // Set a timeout — if worker doesn't reconnect in time, reject remaining jobs
+          currentJob._reconnectTimer = setTimeout(() => {
+            if (!worker) {
+              console.error(`Worker did not reconnect within ${RECONNECT_WAIT_MS / 1000}s — failing queued jobs`);
+              for (const job of jobQueue) {
+                clearTimeout(job._reconnectTimer);
+                job.reject(new Error('Worker disconnected and did not reconnect'));
+              }
+              jobQueue = [];
+            }
+          }, RECONNECT_WAIT_MS);
+        } else {
+          currentJob.reject(new Error(`Worker disconnected during job (exhausted ${JOB_RETRY_LIMIT} retries)`));
+        }
       }
-      for (const job of jobQueue) {
-        job.reject(new Error('Worker disconnected'));
-      }
-      jobQueue = [];
+      // Don't reject queued jobs — they'll be dispatched when a new worker connects
     });
 
     ws.on('error', () => {

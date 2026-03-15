@@ -200,7 +200,7 @@ test.describe('Match Results page', () => {
         if (count > 0) {
             await buttons.first().click();
             // Should either navigate to home or stay on same page
-            await expect(page).toHaveURL(/^(\/|\/results\/)/, { timeout: 5000 });
+            await expect(page).toHaveURL(/\/(results\/.*)?$/, { timeout: 5000 });
         }
     });
 });

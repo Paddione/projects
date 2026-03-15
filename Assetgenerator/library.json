@@ -353,7 +353,7 @@
       "assignedTo": {
         "arena": {
           "targetPath": "sfx/zone_warning",
-          "syncedAt": "2026-03-15T04:39:42.682Z"
+          "syncedAt": "2026-03-15T11:11:10.097Z"
         }
       }
     },
@@ -389,13 +389,8 @@
       "duration": 8,
       "backend": "audiocraft",
       "filePath": "music/stings/defeat.wav",
-      "createdAt": "2026-03-15T05:48:07.091Z",
-      "assignedTo": {
-        "arena": {
-          "targetPath": "music/defeat",
-          "syncedAt": "2026-03-15T04:39:43.365Z"
-        }
-      }
+      "createdAt": "2026-03-15T11:10:45.135Z",
+      "assignedTo": {}
     },
     "lobby": {
       "id": "lobby",
@@ -445,30 +440,17 @@
         "arena"
       ],
       "prompt": "triumphant sci-fi victory fanfare, ascending heroic synth melody, bright major key, dynamic crescendo, celebratory energy, video game win sting, 8 seconds",
-      "seed": null,
+      "seed": 1179805473,
       "duration": 8,
       "backend": "audiocraft",
       "filePath": "music/stings/victory.wav",
-      "createdAt": "2026-03-15T04:39:44.397Z",
+      "createdAt": "2026-03-15T10:50:51.312Z",
       "assignedTo": {
         "arena": {
           "targetPath": "music/victory",
-          "syncedAt": "2026-03-15T04:39:44.397Z"
+          "syncedAt": "2026-03-15T11:11:10.123Z"
         }
       }
-    },
-    "test_sound_001": {
-      "id": "test_sound_001",
-      "name": "Test Sound",
-      "category": "sfx/test",
-      "tags": [],
-      "prompt": "",
-      "seed": null,
-      "duration": null,
-      "backend": "audiocraft",
-      "filePath": "sfx/test/test_sound_001.wav",
-      "createdAt": "2026-03-15T06:05:07.294Z",
-      "assignedTo": {}
     }
   }
 }

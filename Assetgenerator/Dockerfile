@@ -8,7 +8,7 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci --omit=dev
 
-COPY server.js worker-manager.js ./
+COPY server.js worker-manager.js library.json visual-library.json ./
 COPY adapters/ ./adapters/
 COPY config/ ./config/
 COPY projects/ ./projects/
