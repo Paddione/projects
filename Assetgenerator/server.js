@@ -121,6 +121,48 @@ function seedLibraryIfEmpty(nasPath, localFallback, label) {
 seedLibraryIfEmpty(LIBRARY_PATH, 'library.json', 'audio library');
 seedLibraryIfEmpty(VISUAL_LIBRARY_PATH, 'visual-library.json', 'visual library');
 
+// Merge asset definitions from git-tracked image into PV, preserving runtime state.
+// This ensures new fields (e.g. conceptBackend, prompt changes) propagate on deploy
+// without overwriting pipeline progress or assignment state stored on the PV.
+function mergeVisualLibraryDefinitions() {
+  const localPath = join(__dirname, 'visual-library.json');
+  if (!existsSync(localPath) || !existsSync(VISUAL_LIBRARY_PATH)) return;
+
+  try {
+    const image = JSON.parse(readFileSync(localPath, 'utf-8'));
+    const pv = JSON.parse(readFileSync(VISUAL_LIBRARY_PATH, 'utf-8'));
+    const runtimeKeys = new Set(['pipeline', 'assignedTo']);
+    let updated = false;
+
+    for (const [id, imgAsset] of Object.entries(image.assets || {})) {
+      const pvAsset = pv.assets[id];
+      if (!pvAsset) {
+        // New asset — add it entirely
+        pv.assets[id] = imgAsset;
+        updated = true;
+        continue;
+      }
+      // Merge: image definitions win, PV runtime state preserved
+      for (const [key, value] of Object.entries(imgAsset)) {
+        if (runtimeKeys.has(key)) continue;
+        if (JSON.stringify(pvAsset[key]) !== JSON.stringify(value)) {
+          pvAsset[key] = value;
+          updated = true;
+        }
+      }
+    }
+
+    if (updated) {
+      writeFileSync(VISUAL_LIBRARY_PATH, JSON.stringify(pv, null, 2));
+      console.log('  Merged visual library definitions from image → PV');
+    }
+  } catch (err) {
+    console.warn(`  Visual library merge warning: ${err.message}`);
+  }
+}
+
+mergeVisualLibraryDefinitions();
+
 function loadLibrary() {
   if (!existsSync(LIBRARY_PATH)) return { version: 1, sounds: {} };
   return JSON.parse(readFileSync(LIBRARY_PATH, 'utf-8'));
