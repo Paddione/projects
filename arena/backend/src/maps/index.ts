@@ -93,13 +93,61 @@ export function scaleMap(base: GameMap, scale: MapSize): GameMap {
 }
 
 /**
+ * Check if a tile position is blocked by a wall tile or a movement-blocking cover object.
+ */
+function isTileBlocked(map: GameMap, tx: number, ty: number): boolean {
+    // Wall tile
+    if (map.tiles[ty]?.[tx] === 1) return true;
+
+    // Blocking cover at this tile
+    const px = tx * map.tileSize;
+    const py = ty * map.tileSize;
+    for (const cover of map.coverObjects) {
+        if (!cover.blocksMovement) continue;
+        if (px < cover.x + cover.width && px + map.tileSize > cover.x &&
+            py < cover.y + cover.height && py + map.tileSize > cover.y) {
+            return true;
+        }
+    }
+    return false;
+}
+
+/**
+ * Ensure no spawn point sits on a wall or inside a blocking cover object.
+ * If one does, spiral outward to find the nearest free tile.
+ */
+export function sanitizeSpawns(map: GameMap): GameMap {
+    const sanitized = map.spawnPoints.map((sp) => {
+        if (!isTileBlocked(map, sp.x, sp.y)) return sp;
+
+        // Spiral search for nearest unblocked tile
+        for (let radius = 1; radius < Math.max(map.width, map.height); radius++) {
+            for (let dy = -radius; dy <= radius; dy++) {
+                for (let dx = -radius; dx <= radius; dx++) {
+                    if (Math.abs(dx) !== radius && Math.abs(dy) !== radius) continue;
+                    const nx = sp.x + dx;
+                    const ny = sp.y + dy;
+                    if (nx < 1 || ny < 1 || nx >= map.width - 1 || ny >= map.height - 1) continue;
+                    if (!isTileBlocked(map, nx, ny)) {
+                        return { ...sp, x: nx, y: ny };
+                    }
+                }
+            }
+        }
+        return sp; // no free tile found (shouldn't happen)
+    });
+
+    return { ...map, spawnPoints: sanitized };
+}
+
+/**
  * Create a map by ID and optional size multiplier.
  */
 export function createMap(mapId: MapId = 'campus', size: MapSize = 1): GameMap {
     const info = MAP_REGISTRY[mapId];
     if (!info) {
         console.warn(`Unknown map "${mapId}", falling back to campus`);
-        return scaleMap(MAP_REGISTRY.campus.create(), size);
+        return sanitizeSpawns(scaleMap(MAP_REGISTRY.campus.create(), size));
     }
-    return scaleMap(info.create(), size);
+    return sanitizeSpawns(scaleMap(info.create(), size));
 }

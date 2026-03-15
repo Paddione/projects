@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { createMap, scaleMap, MAP_REGISTRY, type MapId, type MapSize } from './index.js';
+import { createMap, scaleMap, sanitizeSpawns, MAP_REGISTRY, type MapId, type MapSize } from './index.js';
 import { GAME } from '../types/game.js';
 
 describe('Map registry', () => {
@@ -167,6 +167,85 @@ describe('scaleMap', () => {
                 expect(map.tiles).toHaveLength(map.height);
                 expect(map.tiles[0]).toHaveLength(map.width);
                 expect(map.spawnPoints.length).toBeGreaterThanOrEqual(4);
+            }
+        }
+    });
+});
+
+describe('sanitizeSpawns', () => {
+    it('does not move spawn points that are on open tiles', () => {
+        const map = MAP_REGISTRY.campus.create();
+        const sanitized = sanitizeSpawns(map);
+        // Campus spawns are already on open tiles
+        for (let i = 0; i < map.spawnPoints.length; i++) {
+            expect(sanitized.spawnPoints[i].x).toBe(map.spawnPoints[i].x);
+            expect(sanitized.spawnPoints[i].y).toBe(map.spawnPoints[i].y);
+        }
+    });
+
+    it('moves spawn points off wall tiles', () => {
+        const map = MAP_REGISTRY.campus.create();
+        // Force a spawn onto a wall tile
+        const broken = {
+            ...map,
+            spawnPoints: [
+                { x: 0, y: 0, corner: 'top-left' as const },  // perimeter wall
+                ...map.spawnPoints.slice(1),
+            ],
+        };
+        const sanitized = sanitizeSpawns(broken);
+        // Should have been moved off the wall
+        expect(sanitized.spawnPoints[0].x).not.toBe(0);
+        expect(sanitized.spawnPoints[0].y).not.toBe(0);
+        expect(sanitized.spawnPoints[0].corner).toBe('top-left');
+        // New position should not be a wall
+        expect(map.tiles[sanitized.spawnPoints[0].y][sanitized.spawnPoints[0].x]).not.toBe(1);
+    });
+
+    it('moves spawn points off blocking cover objects', () => {
+        const map = MAP_REGISTRY.campus.create();
+        // Find a building cover tile position
+        const building = map.coverObjects.find(c => c.type === 'building')!;
+        const coverTx = building.x / map.tileSize;
+        const coverTy = building.y / map.tileSize;
+
+        const broken = {
+            ...map,
+            spawnPoints: [
+                { x: coverTx, y: coverTy, corner: 'top-left' as const },
+                ...map.spawnPoints.slice(1),
+            ],
+        };
+        const sanitized = sanitizeSpawns(broken);
+        // Should have been moved away from the cover
+        const newX = sanitized.spawnPoints[0].x;
+        const newY = sanitized.spawnPoints[0].y;
+        expect(newX !== coverTx || newY !== coverTy).toBe(true);
+    });
+
+    it('no spawn overlaps blocking cover in any map at any scale', () => {
+        const ids: MapId[] = ['campus', 'warehouse', 'forest'];
+        const sizes: MapSize[] = [1, 2, 3];
+
+        for (const id of ids) {
+            for (const size of sizes) {
+                const map = createMap(id, size);
+                for (const sp of map.spawnPoints) {
+                    // Check wall tile
+                    const tileVal = map.tiles[sp.y]?.[sp.x];
+                    expect(tileVal, `${id} ${size}x spawn (${sp.x},${sp.y}) is on wall`).not.toBe(1);
+
+                    // Check blocking cover overlap
+                    const px = sp.x * map.tileSize;
+                    const py = sp.y * map.tileSize;
+                    for (const cover of map.coverObjects) {
+                        if (!cover.blocksMovement) continue;
+                        const overlaps =
+                            px < cover.x + cover.width && px + map.tileSize > cover.x &&
+                            py < cover.y + cover.height && py + map.tileSize > cover.y;
+                        expect(overlaps, `${id} ${size}x spawn (${sp.x},${sp.y}) overlaps ${cover.type} at (${cover.x},${cover.y})`).toBe(false);
+                    }
+                }
             }
         }
     });

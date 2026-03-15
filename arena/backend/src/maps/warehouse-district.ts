@@ -120,10 +120,10 @@ function createCover(): CoverObject[] {
 }
 
 const SPAWN_POINTS: SpawnPoint[] = [
-    { x: 2, y: 2, corner: 'top-left' },
-    { x: W - 3, y: 2, corner: 'top-right' },
-    { x: 2, y: H - 3, corner: 'bottom-left' },
-    { x: W - 3, y: H - 3, corner: 'bottom-right' },
+    { x: 1, y: 1, corner: 'top-left' },
+    { x: W - 2, y: 1, corner: 'top-right' },
+    { x: 1, y: H - 2, corner: 'bottom-left' },
+    { x: W - 2, y: H - 2, corner: 'bottom-right' },
 ];
 
 export const WAREHOUSE_ITEM_SPAWN_POINTS: { x: number; y: number }[] = [
