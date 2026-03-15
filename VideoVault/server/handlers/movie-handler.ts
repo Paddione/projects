@@ -64,7 +64,7 @@ interface FFprobeResult {
 /**
  * Parse title and year from a movie filename
  */
-function parseMovieFilename(filename: string): { title: string; year?: number } {
+export function parseMovieFilename(filename: string): { title: string; year?: number } {
   const baseName = path.basename(filename, path.extname(filename));
 
   for (const pattern of TITLE_YEAR_PATTERNS) {
@@ -96,7 +96,7 @@ function parseMovieFilename(filename: string): { title: string; year?: number } 
  * Generate organized folder path for a movie
  * Format: Title (Year)/ or Title/ if no year
  */
-function generateOrganizedPath(title: string, year?: number): string {
+export function generateOrganizedPath(title: string, year?: number): string {
   const sanitizedTitle = title.replace(/[<>:"/\\|?*]/g, '').trim();
   if (year) {
     return `${sanitizedTitle} (${year})`;

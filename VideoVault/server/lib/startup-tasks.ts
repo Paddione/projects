@@ -4,7 +4,7 @@ import crypto from 'crypto';
 import { eq, and, isNotNull } from 'drizzle-orm';
 import { videos, directoryRoots } from '@shared/schema';
 import { logger } from './logger';
-import { MOVIE_EXTENSIONS, extractMovieMetadata, detectQualityCategories, generateMovieThumbnail } from '../handlers/movie-handler';
+import { MOVIE_EXTENSIONS, extractMovieMetadata, detectQualityCategories, generateMovieThumbnail, parseMovieFilename, generateOrganizedPath } from '../handlers/movie-handler';
 import { readSidecar, writeSidecar } from './sidecar';
 import { extractCategoriesFromPath, mergeCategories } from '@shared/category-extractor';
 
@@ -53,6 +53,9 @@ export async function runStartupTasks(db: any): Promise<void> {
 
   // 3. Drain inbox → move files to MOVIES_DIR root
   await drainInbox(MOVIES_DIR);
+
+  // 3b. Organize any flat files in MOVIES_DIR root into subdirectories
+  await organizeFlatFiles(MOVIES_DIR);
 
   // 4. Index all videos with existing thumbnails into DB (fast — no ffmpeg)
   if (db) {
@@ -139,6 +142,80 @@ export async function drainInbox(moviesDir: string): Promise<number> {
     logger.info(`[StartupTasks] Inbox drained: ${moved} files moved to movies root`);
   }
   return moved;
+}
+
+/**
+ * Move flat video files from MOVIES_DIR/ root into organized subdirectories.
+ * Handles files that were processed with AUTO_ORGANIZE=0 and left flat.
+ * Moves any root-level thumbnails into the new subdirectory's Thumbnails/ folder.
+ */
+async function organizeFlatFiles(moviesDir: string): Promise<void> {
+  const rootThumbsDir = path.join(moviesDir, 'Thumbnails');
+
+  let entries;
+  try {
+    entries = await fs.readdir(moviesDir, { withFileTypes: true });
+  } catch {
+    return;
+  }
+
+  const flatVideos = entries.filter(
+    (e) => e.isFile() && MOVIE_EXTENSIONS.includes(path.extname(e.name).toLowerCase()),
+  );
+
+  if (flatVideos.length === 0) return;
+
+  let organized = 0;
+  for (const entry of flatVideos) {
+    const srcPath = path.join(moviesDir, entry.name);
+    const { title, year } = parseMovieFilename(entry.name);
+    const folderName = generateOrganizedPath(title, year);
+    const ext = path.extname(entry.name);
+    const organizedFilename = `${folderName}${ext}`;
+    const targetDir = path.join(moviesDir, folderName);
+    const targetPath = path.join(targetDir, organizedFilename);
+
+    // Skip if target directory already exists (avoid collisions)
+    try {
+      await fs.access(targetDir);
+      continue;
+    } catch { /* good — doesn't exist */ }
+
+    try {
+      const thumbsDir = path.join(targetDir, 'Thumbnails');
+      await fs.mkdir(thumbsDir, { recursive: true });
+
+      // Move video file
+      await fs.rename(srcPath, targetPath);
+
+      // Move root-level thumbnails if they exist
+      const baseName = path.basename(entry.name, ext);
+      for (const suffix of ['_thumb.jpg', '_sprite.jpg']) {
+        const oldThumb = path.join(rootThumbsDir, `${baseName}${suffix}`);
+        const newThumb = path.join(thumbsDir, `${folderName}${suffix}`);
+        try {
+          await fs.access(oldThumb);
+          await fs.rename(oldThumb, newThumb);
+        } catch { /* no thumbnail to move */ }
+      }
+
+      // Write metadata.json sidecar
+      await writeSidecar(targetDir, {
+        version: 1,
+        filename: organizedFilename,
+        originalFilename: entry.name,
+        displayName: title + (year ? ` (${year})` : ''),
+      });
+
+      organized++;
+    } catch (err: any) {
+      logger.warn(`[StartupTasks] Failed to organize flat file: ${entry.name}`, { error: err.message });
+    }
+  }
+
+  if (organized > 0) {
+    logger.info(`[StartupTasks] Organized ${organized} flat files into subdirectories`);
+  }
 }
 
 /**
