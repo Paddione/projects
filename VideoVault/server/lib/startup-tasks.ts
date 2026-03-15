@@ -40,17 +40,17 @@ export async function runStartupTasks(db: any): Promise<void> {
   await fs.mkdir(inboxDir, { recursive: true }).catch(() => {});
   logger.info('[StartupTasks] Directories ensured', { moviesDir: MOVIES_DIR });
 
-  // 2. Drain inbox → move files to MOVIES_DIR root
-  await drainInbox(MOVIES_DIR);
-
-  // 3. Generate missing thumbnails for flat files at root
-  await generateMissingThumbnails(MOVIES_DIR);
-
-  // 4. Register 'movies' as a directory root so indexed videos survive startup cleanup
+  // 2. Register 'movies' root in DB so indexed videos survive startup cleanup
   await ensureMoviesRoot(db, MOVIES_DIR);
 
-  // 5. Index all videos into DB (flat + subdirectory)
+  // 3. Drain inbox → move files to MOVIES_DIR root
+  await drainInbox(MOVIES_DIR);
+
+  // 4. Index all videos with existing thumbnails into DB (fast — no ffmpeg)
   await autoIndexLibrary(db, MOVIES_DIR);
+
+  // 5. Generate missing thumbnails for flat files (slow — runs last)
+  await generateMissingThumbnails(MOVIES_DIR);
 }
 
 /**
