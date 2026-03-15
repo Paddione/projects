@@ -1026,11 +1026,21 @@ async function loadProjectData() {
 
 async function checkPrerequisites() {
   const prereqs = await fetchJSON('/api/prerequisites');
+  const workerStatus = await fetchJSON('/api/worker-status');
   const el = document.getElementById('prereq-warning');
   const warnings = [];
-  if (!prereqs.python) warnings.push('Python3 not found');
-  if (!prereqs.ffmpeg) warnings.push('ffmpeg not found');
-  if (!prereqs.cuda) warnings.push('CUDA unavailable — AudioCraft disabled, ElevenLabs still works');
+
+  // When a GPU worker is connected, local Python/CUDA aren't needed
+  if (workerStatus.connected) {
+    if (!prereqs.ffmpeg) warnings.push('ffmpeg not found (needed for post-processing)');
+    // No Python/CUDA warnings — worker provides GPU capabilities
+  } else {
+    if (!prereqs.python) warnings.push('Python3 not found');
+    if (!prereqs.ffmpeg) warnings.push('ffmpeg not found');
+    if (!prereqs.cuda) warnings.push('CUDA unavailable');
+    warnings.push('No GPU worker — local backends disabled, cloud APIs still work');
+  }
+
   if (warnings.length > 0) {
     el.className = 'warning-bar';
     el.textContent = warnings.join(' | ');
