@@ -110,7 +110,7 @@ export async function generate({ id, type, prompt, seed, duration, outputPath, p
     style: style,
     title: id,
     model: DEFAULT_MODEL,
-    callBackUrl: '',  // We'll poll instead of using callbacks
+    callBackUrl: 'https://localhost/suno-callback',  // Required by API, not used (we poll instead)
   });
 
   if (submitResponse.code !== 200 || !submitResponse.data?.taskId) {
