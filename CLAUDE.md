@@ -16,6 +16,7 @@ Patrick's Projects is a monorepo containing independent full-stack applications 
 | auth | Express, Passport.js, JWT/OAuth | 5500 |
 | openclaw | Node.js, WhatsApp/Telegram Bot, AI Media Pipeline | (Docker on 10.10.0.4) |
 | shared-infrastructure | PostgreSQL, shared design system | 5432 |
+| Assetgenerator | Express, Vanilla JS SPA | 5200 |
 | Obsidian | Obsidian vault (Markdown, Dataview, Templater), on SMB share | — |
 
 ## Common Commands

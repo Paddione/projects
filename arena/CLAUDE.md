@@ -66,22 +66,13 @@ npm run typecheck                # Typecheck both packages
 
 Procedural `Graphics` rendering is replaced by sprite-based `Sprite`/`AnimatedSprite` with automatic fallback when assets aren't loaded.
 
-**Pipeline scripts** (in `scripts/`):
-```bash
-./scripts/generate_all.sh               # Run full pipeline (all phases)
-./scripts/generate_all.sh --phase 1     # Concept art only (ComfyUI/SDXL)
-./scripts/generate_all.sh --phase 2     # 3D models (TripoSR/Meshy)
-./scripts/generate_all.sh --phase 3     # Sprite rendering (Blender)
-./scripts/generate_all.sh --phase 4     # Sprite packing only
-./scripts/generate_all.sh --phase 5     # Audio generation (AudioCraft)
-./scripts/generate_all.sh --phase 6     # Audio processing (ffmpeg)
-```
+**Pipeline management**: Visual and audio generation is now managed via the **Assetgenerator** (`Assetgenerator/`) web UI. Pipeline scripts (`generate_concepts.py`, `generate_3d.py`, `render_sprites.py`, `pack_sprites.ts`) have moved to `Assetgenerator/scripts/`. Arena retains `generate_audio.py` and `process_audio.sh` for audio generation.
 
 **Pipeline phases**: concepts → 3D models → **Blender render** → sprite pack → audio gen → audio process
 
-**Asset manifest**: `assets/manifest.json` — defines all characters, items, tiles, SFX, music with prompts and frame counts.
+**Asset manifest**: `assets/manifest.json` — defines all characters, items, tiles, SFX, music with prompts and frame counts. Still drives runtime asset loading in the game.
 
-#### Audio Review Tool
+#### Assetgenerator (Audio + Visual Library)
 
 The Assetgenerator (`Assetgenerator/`) provides a web UI for reviewing and regenerating audio assets:
 
@@ -89,10 +80,12 @@ The Assetgenerator (`Assetgenerator/`) provides a web UI for reviewing and regen
 npm run dev:assetgenerator    # Opens http://localhost:5200
 ```
 
-- Listen to each sound, edit prompts, flag for regeneration
-- Supports AudioCraft (local GPU) and ElevenLabs (API) backends
-- State persisted in `Assetgenerator/projects/arena.json`
-- `generate_audio.py` supports single-sound override flags: `--prompt`, `--seed`, `--duration`, `--force`
+- Shared Audio Library: centralized on NAS, assign sounds to projects
+- Shared Visual Library: full pipeline (concept → 3D → render → pack) with per-phase control
+- Supports AudioCraft (local GPU) and ElevenLabs (API) audio backends
+- Supports ComfyUI/SDXL, TripoSR/Meshy, Blender visual backends
+- State persisted in `Assetgenerator/library.json` (audio) and `visual-library.json` (visual)
+- Assets copied to arena on assignment via Sync button
 
 #### Blender Sprite Rendering (Phase 3)
 
