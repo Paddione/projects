@@ -3,7 +3,7 @@
 # SMB StorageClasses for Media Types
 # =============================================================================
 # Separate StorageClasses for movies, audiobooks, and ebooks on the SMB share.
-# These point to specific subdirectories within //10.10.0.3/SMB-Share
+# These point to specific subdirectories within //10.0.0.11/storage-pve3b
 # =============================================================================
 
 # StorageClass for Movies
@@ -17,7 +17,7 @@ metadata:
     media-type: movies
 provisioner: smb.csi.k8s.io
 parameters:
-  source: "//10.10.0.3/SMB-Share/movies"
+  source: "//10.0.0.11/SDD-Share/movies"
   csi.storage.k8s.io/provisioner-secret-name: "smbcreds"
   csi.storage.k8s.io/provisioner-secret-namespace: "korczewski-infra"
   csi.storage.k8s.io/node-stage-secret-name: "smbcreds"
@@ -45,7 +45,7 @@ metadata:
     media-type: audiobooks
 provisioner: smb.csi.k8s.io
 parameters:
-  source: "//10.10.0.3/SMB-Share/audiobooks"
+  source: "//10.0.0.11/storage-pve3b/audiobooks"
   csi.storage.k8s.io/provisioner-secret-name: "smbcreds"
   csi.storage.k8s.io/provisioner-secret-namespace: "korczewski-infra"
   csi.storage.k8s.io/node-stage-secret-name: "smbcreds"
@@ -73,7 +73,7 @@ metadata:
     media-type: ebooks
 provisioner: smb.csi.k8s.io
 parameters:
-  source: "//10.10.0.3/SMB-Share/ebooks"
+  source: "//10.0.0.11/storage-pve3b/ebooks"
   csi.storage.k8s.io/provisioner-secret-name: "smbcreds"
   csi.storage.k8s.io/provisioner-secret-namespace: "korczewski-infra"
   csi.storage.k8s.io/node-stage-secret-name: "smbcreds"

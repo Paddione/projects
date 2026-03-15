@@ -10,8 +10,10 @@ This directory contains everything needed to deploy the full Korczewski stack to
 - **Traefik** - Ingress controller with TLS and middleware
 - **Auth Service** - JWT authentication and OAuth
 - **L2P** - Multiplayer quiz platform (frontend + backend)
+- **Arena** - Battle royale game (frontend + backend)
 - **Shop** - Next.js shop platform with Stripe
 - **VideoVault** - Video management with SMB-backed storage
+- **SOS** - Mental health companion (static HTML)
 
 ## Quick Start
 
@@ -63,9 +65,12 @@ k8s/
 │   └── smb-csi/          # SMB/CIFS storage class
 ├── services/             # Application services (see services/README.md)
 │   ├── auth/             # Auth service manifests
+│   ├── arena-backend/    # Arena backend manifests
+│   ├── arena-frontend/   # Arena frontend manifests
 │   ├── l2p-backend/      # L2P backend manifests
 │   ├── l2p-frontend/     # L2P frontend manifests
 │   ├── shop/             # Shop service manifests
+│   ├── sos/              # SOS service manifests
 │   └── videovault/       # VideoVault manifests
 ├── overlays/             # Kustomize overlays (dev/prod)
 ├── secrets/              # Generated secrets (see secrets/README.md)
@@ -120,8 +125,11 @@ Services must be deployed in this order due to dependencies:
 6. **Auth** - Authentication service
 7. **L2P Backend** - Depends on PostgreSQL, Auth
 8. **L2P Frontend** - Depends on Backend
-9. **Shop** - Depends on PostgreSQL, Auth
-10. **VideoVault** - Depends on PostgreSQL, SMB
+9. **Arena Backend** - Depends on PostgreSQL, Auth
+10. **Arena Frontend** - Depends on Backend
+11. **Shop** - Depends on PostgreSQL, Auth
+12. **VideoVault** - Depends on PostgreSQL, SMB
+13. **SOS** - No dependencies (static HTML)
 
 ## Configuration
 
@@ -205,11 +213,11 @@ kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/
 
 ### SMB Configuration
 
-Update the SMB share and credentials before deploying VideoVault:
+All SMB-backed storage uses NVMe on `10.0.0.11` (pve3b):
 ```yaml
 # infrastructure/smb-csi/storageclass.yaml
 parameters:
-  source: "//10.10.0.3/SMB-Share"
+  source: "//10.0.0.11/storage-pve3b"
 ```
 
 Generate `smb-secret.yaml` with `SMB_USER` and `SMB_PASSWORD` in `.env`.
@@ -283,31 +291,31 @@ kubectl logs -l app=csi-smb-controller -n kube-system
 ## Architecture
 
 ```
-                 ┌─────────────────┐
-                 │    Internet     │
-                 └────────┬────────┘
-                          │
-                 ┌────────▼────────┐
-                 │     Traefik     │
-                 │   (LoadBalancer)│
-                 └────────┬────────┘
-                          │
-       ┌──────────┬───────┼───────┬──────────┐
-       │          │       │       │          │
-┌──────▼───┐ ┌───▼────┐ ┌▼────┐ ┌▼───────┐ ┌▼──────────┐
-│   Auth   │ │  L2P   │ │ L2P │ │ Shop  │ │VideoVault │
-│  :5500   │ │Backend │ │ FE  │ │ :3000  │ │  :5000    │
-└──────┬───┘ │ :3001  │ │ :80 │ └───┬────┘ └─────┬─────┘
-       │     └───┬────┘ └─────┘     │            │
-       │         │                   │            │
-       └─────────┼───────────────────┘            │
-                 │                                │
-        ┌────────▼───────┐                ┌───────▼──────┐
-        │  PostgreSQL    │                │ SMB Storage  │
-        │    :5432       │                │ (movies,     │
-        │  (StatefulSet) │                │  audiobooks, │
-        └────────────────┘                │  ebooks)     │
-                                          └──────────────┘
+                     ┌─────────────────┐
+                     │    Internet     │
+                     └────────┬────────┘
+                              │
+                     ┌────────▼────────┐
+                     │     Traefik     │
+                     │   (LoadBalancer)│
+                     └────────┬────────┘
+                              │
+    ┌──────┬──────┬───────┬───┼───┬───────┬──────┐
+    │      │      │       │   │   │       │      │
+┌───▼──┐┌──▼──┐┌──▼──┐┌──▼─┐┌▼──┐┌▼─────┐┌▼────┐┌▼───┐
+│ Auth ││Arena││Arena││L2P ││L2P││Shop  ││Video││SOS │
+│:5500 ││ BE  ││ FE  ││ BE ││FE ││:3000 ││Vault││:3005│
+└──┬───┘│:3003││:80  ││:3001│:80│└──┬───┘│:5000│└────┘
+   │    └──┬──┘└─────┘└──┬──┘───┘   │    └──┬──┘
+   │       │              │          │       │
+   └───────┼──────────────┼──────────┘       │
+           │              │                  │
+     ┌─────▼──────────────▼──┐        ┌──────▼──────┐
+     │     PostgreSQL        │        │ SMB Storage  │
+     │       :5432           │        │ (movies,     │
+     │    (StatefulSet)      │        │  audiobooks, │
+     └───────────────────────┘        │  ebooks)     │
+                                      └─────────────┘
 ```
 
 ## L2P Frontend Runtime Config
@@ -318,11 +326,14 @@ The L2P frontend image is environment-agnostic — URLs are injected at containe
 
 | Service | Port | Health Endpoint | Domain |
 |---------|------|-----------------|--------|
-| Auth | 5500 | /health | auth.korczewski.de |
+| Auth | 5500 | /health/live | auth.korczewski.de |
 | L2P Backend | 3001 | /api/health | l2p.korczewski.de/api |
 | L2P Frontend | 80 | / | l2p.korczewski.de |
-| Shop | 3000 | / | shop.korczewski.de |
-| VideoVault | 5000 | /api/health | videovault.korczewski.de, video.korczewski.de |
+| Arena Backend | 3003 | /api/health | arena.korczewski.de/api |
+| Arena Frontend | 80 | / | arena.korczewski.de |
+| Shop | 3000 | /api/health/live | shop.korczewski.de |
+| VideoVault | 5000 | /api/health/public | videovault.korczewski.de, video.korczewski.de |
+| SOS | 3005 | /health/live | sos.korczewski.de |
 | PostgreSQL | 5432 | pg_isready | (internal) |
 | Traefik Dashboard | 8080 | /ping | traefik.korczewski.de |
 

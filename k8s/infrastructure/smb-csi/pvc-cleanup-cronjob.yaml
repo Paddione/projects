@@ -22,7 +22,7 @@ spec:
     driver: smb.csi.k8s.io
     volumeHandle: smb-root-pv
     volumeAttributes:
-      source: "//10.10.0.3/SMB-Share"
+      source: "//10.0.0.11/storage-pve3b"
     nodeStageSecretRef:
       name: smbcreds
       namespace: korczewski-infra

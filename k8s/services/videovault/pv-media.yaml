@@ -38,7 +38,7 @@ spec:
       name: smbcreds
       namespace: korczewski-infra
 ---
-# Audiobooks PV - mounts //10.10.0.3/SMB-Share/audiobooks directly
+# Audiobooks PV - mounts //10.0.0.11/storage-pve3b/audiobooks directly
 apiVersion: v1
 kind: PersistentVolume
 metadata:
@@ -66,12 +66,12 @@ spec:
     driver: smb.csi.k8s.io
     volumeHandle: videovault-audiobooks-pv
     volumeAttributes:
-      source: "//10.10.0.3/SMB-Share/audiobooks"
+      source: "//10.0.0.11/storage-pve3b/audiobooks"
     nodeStageSecretRef:
       name: smbcreds
       namespace: korczewski-infra
 ---
-# Ebooks PV - mounts //10.10.0.3/SMB-Share/ebooks directly
+# Ebooks PV - mounts //10.0.0.11/storage-pve3b/ebooks directly
 apiVersion: v1
 kind: PersistentVolume
 metadata:
@@ -99,7 +99,7 @@ spec:
     driver: smb.csi.k8s.io
     volumeHandle: videovault-ebooks-pv
     volumeAttributes:
-      source: "//10.10.0.3/SMB-Share/ebooks"
+      source: "//10.0.0.11/storage-pve3b/ebooks"
     nodeStageSecretRef:
       name: smbcreds
       namespace: korczewski-infra

@@ -23,6 +23,7 @@ StatefulSet running PostgreSQL with persistent storage.
 **Databases:**
 - `auth_db` - Auth service
 - `l2p_db` - L2P service
+- `arena_db` - Arena service
 - `shop_db` - Shop service
 - `videovault_db` - VideoVault service
 

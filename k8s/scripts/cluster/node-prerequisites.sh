@@ -19,8 +19,8 @@
 set -euo pipefail
 
 # Configuration
-NAS_IP="${NAS_IP:-10.10.0.3}"
-NAS_SHARE="${NAS_SHARE:-//10.10.0.3/k8s-storage}"
+NAS_IP="${NAS_IP:-10.0.0.11}"
+NAS_SHARE="${NAS_SHARE:-//10.0.0.11/storage-pve3b}"
 
 # Colors
 RED='\033[0;31m'

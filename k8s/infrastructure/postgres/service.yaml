@@ -19,10 +19,11 @@ metadata:
     app.kubernetes.io/part-of: korczewski
     tier: infrastructure
 spec:
-  type: ClusterIP
+  type: NodePort
   ports:
     - port: 5432
       targetPort: 5432
+      nodePort: 30432
       protocol: TCP
       name: postgres
   selector:
