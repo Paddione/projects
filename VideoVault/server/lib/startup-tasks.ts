@@ -56,7 +56,15 @@ export async function runStartupTasks(db: any): Promise<void> {
   await autoIndexLibrary(db, MOVIES_DIR);
 
   // 5. Write movies_index.json from DB — serves as the default library for all users
-  await generateMoviesIndex(db, MOVIES_DIR);
+  //    Retry since DB may still be recovering from the mass upserts above.
+  for (let attempt = 0; attempt < 5; attempt++) {
+    try {
+      await generateMoviesIndex(db, MOVIES_DIR);
+      break;
+    } catch {
+      await new Promise((r) => setTimeout(r, 2000));
+    }
+  }
 
   // 6. Generate missing thumbnails for flat files (slow — runs last)
   await generateMissingThumbnails(MOVIES_DIR);
