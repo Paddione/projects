@@ -17,4 +17,4 @@ COPY index.html ./
 
 EXPOSE 5200
 
-CMD ["node", "server.js"]
+CMD ["node", "server.js", "--project", "arena"]
