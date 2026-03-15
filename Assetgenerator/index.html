@@ -1162,6 +1162,29 @@ function createLibraryCard(id, sound) {
   seedLabel.appendChild(seedInput);
   row.appendChild(seedLabel);
 
+  const backendLabel = document.createElement('label');
+  backendLabel.textContent = 'Backend';
+  const backendSelect = document.createElement('select');
+  backendSelect.id = `lib-backend-${id}`;
+  backendSelect.style.minWidth = '180px';
+
+  const defaultOpt = document.createElement('option');
+  defaultOpt.value = 'audiocraft';
+  defaultOpt.textContent = 'AudioCraft (Local)';
+  defaultOpt.selected = !sound.backend || sound.backend === 'audiocraft';
+  backendSelect.appendChild(defaultOpt);
+
+  for (const [k, v] of Object.entries(backends)) {
+    if (k === 'audiocraft') continue;
+    const opt = document.createElement('option');
+    opt.value = k;
+    opt.textContent = v.label;
+    opt.selected = sound.backend === k;
+    backendSelect.appendChild(opt);
+  }
+  backendLabel.appendChild(backendSelect);
+  row.appendChild(backendLabel);
+
   controls.appendChild(row);
 
   // Assignment info
@@ -1190,6 +1213,7 @@ function createLibraryCard(id, sound) {
         prompt: document.getElementById(`lib-prompt-${id}`).value,
         duration: parseFloat(document.getElementById(`lib-duration-${id}`).value) || null,
         seed: document.getElementById(`lib-seed-${id}`).value ? parseInt(document.getElementById(`lib-seed-${id}`).value) : null,
+        backend: document.getElementById(`lib-backend-${id}`).value,
       }),
     });
     card.classList.add('save-flash');
