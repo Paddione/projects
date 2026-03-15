@@ -10,7 +10,7 @@ The Assetgenerator service runs locally on a workstation because it depends on G
 
 ## Goal
 
-Run the Assetgenerator server in the k3s cluster for always-on availability and web UI access, while offloading GPU-heavy generation work to a local workstation when available. When no GPU worker is connected, fall back to local CPU execution or cloud APIs based on user selection.
+Run the Assetgenerator server in the k3s cluster for always-on availability and web UI access, while offloading GPU-heavy generation work to a local workstation when available. When no GPU worker is connected, local backends (audiocraft, comfyui, etc.) are unavailable — the user must select a cloud API backend (elevenlabs, meshy) from the dropdown, or wait for a worker to connect. The server Docker image intentionally excludes Python/Blender/CUDA to stay small.
 
 ## Architecture
 
@@ -51,12 +51,15 @@ Run the Assetgenerator server in the k3s cluster for always-on availability and 
 
 When a generation request arrives, the server routes based on backend selection and worker availability:
 
-1. **Cloud API backend** (elevenlabs, meshy) → server runs locally via adapter (API call, no GPU needed)
+1. **Cloud API backend** (elevenlabs, meshy) → server runs locally via adapter (API call over network, no GPU needed). These work regardless of worker status.
 2. **Local backend** (audiocraft, comfyui, diffusers, triposr, blender):
    - GPU worker connected → dispatch command over WebSocket (fast, CUDA)
-   - No GPU worker → server spawns locally on CPU (slow fallback)
+   - No GPU worker → return error to the user ("No GPU worker connected. Select a cloud backend or start the worker.")
+   - The server pod has no Python/Blender/CUDA — local CPU fallback is not available in k3s
 
-The user picks the backend from the existing dropdown. The routing is automatic and transparent.
+The user picks the backend from the existing dropdown. The UI disables local backends when no worker is connected, guiding the user to select a cloud alternative.
+
+**Job queuing:** If the worker is busy with another job, the server queues the new job and sends it when the current one completes. Only one job runs on the worker at a time.
 
 ## Components
 
@@ -84,7 +87,7 @@ if (worker) {
   const result = await worker.exec({ cmd, args, cwd, env });
   // result: { stdout, stderr, code }
 } else {
-  // Fall back to local spawn
+  throw new Error('No GPU worker connected');
 }
 
 // For UI status endpoint
@@ -132,14 +135,25 @@ import { getWorker } from '../worker-manager.js';
 
 const worker = getWorker();
 if (worker) {
-  return worker.exec({ cmd: pythonPath, args, cwd, env: {} });
+  const result = await worker.exec({ cmd: pythonPath, args, cwd, env: {} });
+  if (result.code !== 0) throw new Error(`Remote: exited ${result.code}: ${result.stderr}`);
+  // Parse stdout for adapter-specific data (same parsing as local path)
+  const seedMatch = result.stdout.match(/SEED:(\d+)/);
+  return { seed: seedMatch ? parseInt(seedMatch[1], 10) : seed, stdout: result.stdout, stderr: result.stderr };
 } else {
-  const proc = spawn(pythonPath, args, { cwd, stdio: ['ignore', 'pipe', 'pipe'] });
-  // ... existing local spawn logic unchanged
+  throw new Error('No GPU worker connected. Select a cloud backend or start the worker.');
 }
 ```
 
-The `worker.exec()` Promise resolves with `{ stdout, stderr, code }` — same shape the adapters already extract from the local spawn. Seed extraction, frame counting, and all post-spawn logic remains identical.
+The `worker.exec()` Promise resolves with `{ stdout, stderr, code }` — the accumulated output from the remote process. Each adapter parses stdout for its specific data (audiocraft extracts `SEED:(\d+)`, blender counts frames from stdout, etc.). **Post-spawn file operations** (e.g., `copyFileSync` in audiocraft, `readdirSync` in blender) are skipped in the remote path because the worker writes directly to NAS — the files are already in place. Each adapter's remote path extracts what it needs from stdout only.
+
+**Per-adapter remote handling:**
+- `audiocraft.js` — Parses `SEED:(\d+)` from stdout. Skips `copyFileSync` (Python script writes WAV to NAS `outputPath` directly via `--output` flag, added to the script).
+- `comfyui.js` / `diffusers.js` — Returns `{ status: 'done', path, backend }`. Output written to NAS by script.
+- `triposr.js` — Returns `{ status: 'done', path, backend }`. GLB written to NAS by script.
+- `blender.js` — Parses frame count from Blender stdout (e.g., `FRAMES:48`). Skips local `readdirSync`. Rendered PNGs written to NAS by Blender.
+
+**Python script change:** `generate_audio.py` needs a `--output` flag to write the WAV directly to a specified path (the NAS). Currently it writes to the project's local audio root. This is a one-line addition to the argparse config.
 
 **Unchanged adapters:**
 - `packer.js` — CPU-only (sprite packing), always runs locally
@@ -148,11 +162,13 @@ The `worker.exec()` Promise resolves with `{ stdout, stderr, code }` — same sh
 
 ### 4. Server Changes (`server.js`) — MODIFIED
 
-Minimal changes:
-- Import and initialize `worker-manager` on the HTTP server
+Changes:
+- Refactor `app.listen(PORT)` to `const server = http.createServer(app); server.listen(PORT)` — needed to pass the HTTP server instance to `initWorkerManager(server)`
+- Import and initialize `worker-manager` with the HTTP server reference
 - Add `GET /api/worker-status` endpoint
 - Add `GET /health` endpoint (for k8s probes)
-- No changes to the 6 adapter invocation sites — routing happens inside each adapter
+- Add `ws` to `package.json` dependencies (server-side WebSocket library)
+- No changes to the 5 adapter invocation sites in server.js — routing happens inside each adapter
 
 ### 5. UI Changes (`index.html`) — MODIFIED
 
@@ -179,7 +195,7 @@ Single addition: **worker status indicator** in the header.
 
 | Type | Payload | Purpose |
 |------|---------|---------|
-| `register` | `{ hostname, gpu, capabilities }` | Worker identification |
+| `register` | `{ hostname, gpu }` | Worker identification |
 | `ack` | `{ jobId }` | Job received, starting |
 | `stdout` | `{ jobId, data }` | Process stdout line(s) |
 | `stderr` | `{ jobId, data }` | Process stderr line(s) |
@@ -199,6 +215,10 @@ Single addition: **worker status indicator** in the header.
 - Server sends `ping` every 30 seconds
 - Worker must reply `pong` within 10 seconds
 - Missed pong → server marks worker disconnected + any in-flight job as failed
+
+### Server Restart
+
+If the server pod restarts while a worker is connected, the WebSocket drops. The worker auto-reconnects within 5s. Any in-flight job's Promise is lost (server process died) — the job is effectively failed. The user retries manually. This is acceptable since pod restarts are rare and the failure mode is obvious (SSE stream closes).
 
 ## Kubernetes Manifests
 
@@ -290,7 +310,8 @@ New `k8s/scripts/deploy/deploy-assetgenerator.sh` following existing pattern:
 | `Assetgenerator/adapters/diffusers.js` | Same routing pattern |
 | `Assetgenerator/adapters/triposr.js` | Same routing pattern |
 | `Assetgenerator/adapters/blender.js` | Same routing pattern |
-| `Assetgenerator/index.html` | Worker status indicator in header |
+| `Assetgenerator/index.html` | Worker status indicator in header, disable local backends when no worker |
+| `Assetgenerator/scripts/generate_audio.py` | Add `--output` flag for direct NAS write path |
 | `k8s/skaffold.yaml` | Add assetgenerator profile |
 
 ### Unchanged Files
@@ -300,7 +321,7 @@ New `k8s/scripts/deploy/deploy-assetgenerator.sh` following existing pattern:
 | `Assetgenerator/adapters/packer.js` | CPU-only, always local |
 | `Assetgenerator/adapters/elevenlabs.js` | Cloud API, always local |
 | `Assetgenerator/adapters/meshy.js` | Cloud API, always local |
-| All Python scripts (`scripts/`) | Run by worker, not modified |
+| Most Python scripts (`scripts/`) | Run by worker, not modified |
 | All Blender scripts | Run by worker, not modified |
 | `Assetgenerator/test/api.test.js` | Tests CRUD/library, unaffected |
 | `Assetgenerator/config/*.json` | Config paths unchanged |
@@ -320,8 +341,9 @@ New `k8s/scripts/deploy/deploy-assetgenerator.sh` following existing pattern:
 
 **`test/adapter-routing.test.js`:**
 - Worker connected + local adapter (audiocraft) → calls `worker.exec()`
-- Worker disconnected + local adapter → falls back to `spawn()`
-- Cloud adapter → always calls `spawn()` regardless of worker
+- Worker disconnected + local adapter → throws "No GPU worker connected" error
+- Cloud adapter → always runs locally regardless of worker status
+- Job queuing: second job dispatched while worker busy → queued, sent after first completes
 - Verify message shape matches protocol
 
 **`worker/test/worker.test.js`:**
@@ -339,9 +361,11 @@ All tests use mocked WebSockets — no real GPU or Python needed.
 3. Open `assetgen.korczewski.de` — verify worker connected indicator
 4. Generate sound via AudioCraft — verify remote execution, WAV on NAS, post-processing
 5. Stop worker — verify disconnected indicator
-6. Generate again — verify local CPU fallback
-7. Start worker mid-generation — verify no interference with in-flight local job
-8. Disconnect worker mid-generation — verify job marked failed, asset unchanged
+6. Generate with local backend (audiocraft) — verify error message "No GPU worker connected"
+7. Generate with cloud backend (elevenlabs) — verify it works without worker
+8. Start worker — verify reconnect and status turns green
+9. Queue two jobs while worker is busy — verify second job starts after first completes
+10. Disconnect worker mid-generation — verify job marked failed, asset unchanged
 
 ### Existing Tests
 
