@@ -6,7 +6,8 @@
   "description": "Audio asset review and regeneration tool",
   "scripts": {
     "start": "node server.js --project arena",
-    "dev": "node server.js --project arena"
+    "dev": "node server.js --project arena",
+    "test": "node --test test/api.test.js"
   },
   "dependencies": {
     "cors": "^2.8.5",

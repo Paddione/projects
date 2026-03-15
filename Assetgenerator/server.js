@@ -10,7 +10,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-const PORT = 5200;
+const PORT = parseInt(process.env.PORT || '5200', 10);
 
 // CLI args
 const cliArgs = process.argv.slice(2);
@@ -138,7 +138,7 @@ function processAudioFile(wavPath, outputDir, id, type) {
   execFileSync('ffmpeg', [
     '-y', '-i', wavPath,
     '-af', af,
-    '-ar', '44100', '-ac', '1',
+    '-ar', '48000', '-ac', '1',
     '-c:a', 'libopus', '-b:a', '96k',
     oggPath
   ], { stdio: 'pipe' });
