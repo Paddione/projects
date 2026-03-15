@@ -51,28 +51,40 @@ export async function runStartupTasks(db: any): Promise<void> {
 export async function drainInbox(moviesDir: string): Promise<number> {
   const inboxDir = path.join(moviesDir, '1_inbox');
 
-  let entries;
+  // Use raw readdir (not withFileTypes) to get exact filenames as the filesystem reports them,
+  // then stat individually. This avoids encoding mismatches between readdir and rename on SMB.
+  let filenames: string[];
   try {
-    entries = await fs.readdir(inboxDir, { withFileTypes: true });
+    filenames = await fs.readdir(inboxDir);
   } catch {
     return 0;
   }
 
-  const videoFiles = entries.filter(
-    (e) => e.isFile() && MOVIE_EXTENSIONS.includes(path.extname(e.name).toLowerCase()),
+  const videoFilenames = filenames.filter(
+    (name) => MOVIE_EXTENSIONS.includes(path.extname(name).toLowerCase()),
   );
 
-  if (videoFiles.length === 0) return 0;
+  if (videoFilenames.length === 0) return 0;
 
   let moved = 0;
-  for (const entry of videoFiles) {
-    const src = path.join(inboxDir, entry.name);
-    const dest = path.join(moviesDir, entry.name);
+  for (const name of videoFilenames) {
+    const src = path.join(inboxDir, name);
+    const dest = path.join(moviesDir, name);
+
+    // Verify it's actually a file (not a directory)
+    try {
+      const stat = await fs.stat(src);
+      if (!stat.isFile()) continue;
+    } catch {
+      // Can't stat — skip (encoding issue or file disappeared)
+      logger.warn(`[StartupTasks] Inbox skip: cannot stat ${name}`);
+      continue;
+    }
 
     // Skip if a file with the same name already exists in root
     try {
       await fs.access(dest);
-      logger.warn(`[StartupTasks] Inbox skip: ${entry.name} already exists in movies root`);
+      logger.warn(`[StartupTasks] Inbox skip: ${name} already exists in movies root`);
       continue;
     } catch { /* dest doesn't exist — good */ }
 
@@ -81,11 +93,15 @@ export async function drainInbox(moviesDir: string): Promise<number> {
       moved++;
     } catch (err: any) {
       if (err.code === 'EXDEV') {
-        await fs.copyFile(src, dest);
-        await fs.unlink(src);
-        moved++;
+        try {
+          await fs.copyFile(src, dest);
+          await fs.unlink(src);
+          moved++;
+        } catch (copyErr: any) {
+          logger.warn(`[StartupTasks] Inbox copy failed: ${name}`, { error: copyErr.message });
+        }
       } else {
-        logger.warn(`[StartupTasks] Inbox move failed: ${entry.name}`, { error: err.message });
+        logger.warn(`[StartupTasks] Inbox move failed: ${name}`, { error: err.message });
       }
     }
   }
