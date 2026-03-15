@@ -166,7 +166,8 @@ function getAudioDuration(audioFilePath) {
       ['-v', 'quiet', '-show_entries', 'format=duration', '-of', 'csv=p=0', audioFilePath],
       { stdio: 'pipe' }
     );
-    return parseFloat(result.toString().trim());
+    const val = parseFloat(result.toString().trim());
+    return val != null && !isNaN(val) ? Math.round(val * 10) / 10 : null;
   } catch {
     return null;
   }
@@ -375,13 +376,13 @@ app.post('/api/projects/:name/regenerate', async (req, res) => {
 
       // Update state
       const updatedProject = loadProject(project.name);
-      updatedProject.sounds[id].seed = result.seed;
+      updatedProject.sounds[id].seed = result.seed != null ? Math.round(result.seed) : null;
       updatedProject.sounds[id].lastGeneratedAt = new Date().toISOString();
       updatedProject.sounds[id].flagged = false;
       saveProject(updatedProject);
 
       succeeded++;
-      res.write(`event: done\ndata: ${JSON.stringify({ sound: id, seed: result.seed, duration: sound.duration, index, total })}\n\n`);
+      res.write(`event: done\ndata: ${JSON.stringify({ sound: id, seed: result.seed != null ? Math.round(result.seed) : null, duration: sound.duration, index, total })}\n\n`);
     } catch (err) {
       failed++;
       res.write(`event: error\ndata: ${JSON.stringify({ sound: id, error: err.message, index, total })}\n\n`);
@@ -442,7 +443,7 @@ app.put('/api/library/:id', (req, res) => {
   const library = loadLibrary();
   const sound = library.sounds[req.params.id];
   if (!sound) return res.status(404).json({ error: 'Sound not found' });
-  const allowed = ['name', 'category', 'tags', 'prompt', 'seed', 'duration', 'backend'];
+  const allowed = ['name', 'category', 'tags', 'prompt', 'seed', 'duration', 'backend', 'flagged'];
   for (const key of allowed) {
     if (req.body[key] !== undefined) sound[key] = req.body[key];
   }
@@ -586,16 +587,75 @@ app.post('/api/library/:id/generate', async (req, res) => {
     res.write(`event: progress\ndata: ${JSON.stringify({ sound: req.params.id, status: 'processing' })}\n\n`);
     processAudioFile(wavPath, wavDir, req.params.id, sound.category);
 
-    sound.seed = result.seed;
+    sound.seed = result.seed != null ? Math.round(result.seed) : null;
     sound.createdAt = new Date().toISOString();
     saveLibrary(library);
 
-    res.write(`event: done\ndata: ${JSON.stringify({ sound: req.params.id, seed: result.seed })}\n\n`);
+    res.write(`event: done\ndata: ${JSON.stringify({ sound: req.params.id, seed: result.seed != null ? Math.round(result.seed) : null })}\n\n`);
   } catch (err) {
     res.write(`event: error\ndata: ${JSON.stringify({ sound: req.params.id, error: err.message })}\n\n`);
   }
 
   res.write(`event: complete\ndata: ${JSON.stringify({ sound: req.params.id })}\n\n`);
+  res.end();
+  audioGenerationInProgress = false;
+});
+
+app.post('/api/library/regenerate-flagged', async (req, res) => {
+  if (audioGenerationInProgress) return res.status(409).json({ error: 'Audio generation in progress' });
+  const library = loadLibrary();
+  const flagged = Object.entries(library.sounds).filter(([, s]) => s.flagged);
+  if (flagged.length === 0) return res.status(400).json({ error: 'No flagged sounds' });
+
+  res.writeHead(200, { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', Connection: 'keep-alive' });
+  audioGenerationInProgress = true;
+  const backends = loadBackends();
+  const config = loadLibraryConfig();
+  let succeeded = 0;
+  let failed = 0;
+
+  for (let i = 0; i < flagged.length; i++) {
+    const [id, sound] = flagged[i];
+    const backendKey = sound.backend || 'audiocraft';
+    const index = i + 1;
+    const total = flagged.length;
+
+    res.write(`event: progress\ndata: ${JSON.stringify({ sound: id, status: 'generating', backend: backendKey, index, total })}\n\n`);
+
+    try {
+      const adapterName = backends[backendKey]?.adapter || backendKey;
+      const adapterPath = join(__dirname, 'adapters', `${adapterName}.js`);
+      const adapter = await import(adapterPath);
+
+      const wavDir = join(config.libraryRoot, dirname(sound.filePath));
+      if (!existsSync(wavDir)) mkdirSync(wavDir, { recursive: true });
+      const wavPath = join(config.libraryRoot, sound.filePath);
+
+      const defaultProj = defaultProject ? loadProject(defaultProject) : null;
+      const result = await adapter.generate({
+        id, type: sound.category.startsWith('music') ? 'music' : 'sfx',
+        prompt: sound.prompt, seed: sound.seed, duration: sound.duration,
+        outputPath: wavPath, projectConfig: defaultProj || { _basePath: __dirname },
+      });
+
+      res.write(`event: progress\ndata: ${JSON.stringify({ sound: id, status: 'processing', index, total })}\n\n`);
+      processAudioFile(wavPath, wavDir, id, sound.category);
+
+      const updatedLib = loadLibrary();
+      updatedLib.sounds[id].seed = result.seed != null ? Math.round(result.seed) : null;
+      updatedLib.sounds[id].createdAt = new Date().toISOString();
+      updatedLib.sounds[id].flagged = false;
+      saveLibrary(updatedLib);
+
+      succeeded++;
+      res.write(`event: done\ndata: ${JSON.stringify({ sound: id, seed: result.seed != null ? Math.round(result.seed) : null, duration: sound.duration, index, total })}\n\n`);
+    } catch (err) {
+      failed++;
+      res.write(`event: error\ndata: ${JSON.stringify({ sound: id, error: err.message, index, total })}\n\n`);
+    }
+  }
+
+  res.write(`event: complete\ndata: ${JSON.stringify({ total: flagged.length, succeeded, failed })}\n\n`);
   res.end();
   audioGenerationInProgress = false;
 });

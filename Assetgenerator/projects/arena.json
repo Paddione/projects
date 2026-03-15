@@ -75,14 +75,14 @@
       "duration": 0.5,
       "backend": "default",
       "flagged": false,
-      "lastGeneratedAt": "2026-03-15T03:18:56.101Z",
+      "lastGeneratedAt": "2026-03-15T05:01:49.949Z",
       "filePath": "sfx/gunshot.wav"
     },
     "gunshot_new": {
       "type": "sfx",
       "prompt": "",
       "seed": null,
-      "duration": 0.194263,
+      "duration": 0.2,
       "backend": "default",
       "flagged": false,
       "lastGeneratedAt": null,
@@ -223,9 +223,9 @@
     },
     "respectisevt": {
       "type": "music",
-      "prompt": "",
+      "prompt": "dramatic round start fanfare sting, short energetic burst, competitive battle horn, video game, 4 seconds",
       "seed": null,
-      "duration": 4.381633,
+      "duration": 4.4,
       "backend": "default",
       "flagged": false,
       "lastGeneratedAt": null,

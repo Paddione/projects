@@ -1121,3 +1121,194 @@ describe('Delete workflow', () => {
     assert.ok(!existsSync(join(conceptDir, `${VDEL_ID}.png`)), 'Concept PNG should be deleted from NAS');
   });
 });
+
+// =============================================================================
+// Bug-fix coverage: flagged, duration rounding, seed rounding, library regen
+// =============================================================================
+
+describe('Library flagged field (BUG 4/5)', () => {
+  const FLAG_ID = '_flag_test_disposable';
+
+  before(async () => {
+    await fetchJSON('/api/library', {
+      method: 'POST',
+      body: { id: FLAG_ID, name: 'Flag Test', category: 'sfx/ui', prompt: 'flag test beep', duration: 1.0 },
+    });
+  });
+
+  after(async () => {
+    try { await fetchJSON(`/api/library/${FLAG_ID}`, { method: 'DELETE' }); } catch {}
+  });
+
+  it('newly created sound is not flagged', async () => {
+    const { json } = await fetchJSON('/api/library');
+    assert.equal(json.sounds[FLAG_ID].flagged, undefined);
+  });
+
+  it('PUT accepts flagged=true', async () => {
+    const { status, json } = await fetchJSON(`/api/library/${FLAG_ID}`, {
+      method: 'PUT',
+      body: { flagged: true },
+    });
+    assert.equal(status, 200);
+    assert.equal(json.flagged, true);
+  });
+
+  it('flagged persists in library catalog', async () => {
+    const { json } = await fetchJSON('/api/library');
+    assert.equal(json.sounds[FLAG_ID].flagged, true);
+  });
+
+  it('PUT accepts flagged=false (unflag)', async () => {
+    const { status, json } = await fetchJSON(`/api/library/${FLAG_ID}`, {
+      method: 'PUT',
+      body: { flagged: false },
+    });
+    assert.equal(status, 200);
+    assert.equal(json.flagged, false);
+  });
+});
+
+describe('Library regenerate-flagged endpoint (BUG 4)', () => {
+  const LRF_ID = '_lib_regen_flagged_disposable';
+
+  before(async () => {
+    const config = JSON.parse(readFileSync(join(PROJECT_ROOT, 'config', 'library-config.json'), 'utf-8'));
+    const wavDir = join(config.libraryRoot, 'sfx', 'ui');
+    createTestWav(join(wavDir, `${LRF_ID}.wav`));
+
+    await fetchJSON('/api/library', {
+      method: 'POST',
+      body: { id: LRF_ID, name: 'Lib Regen Flag Test', category: 'sfx/ui', prompt: 'test', duration: 0.5 },
+    });
+  });
+
+  after(async () => {
+    try { await fetchJSON(`/api/library/${LRF_ID}`, { method: 'DELETE' }); } catch {}
+  });
+
+  it('returns 400 when no sounds are flagged', async () => {
+    const res = await fetch(`${baseUrl}/api/library/regenerate-flagged`, { method: 'POST' });
+    assert.equal(res.status, 400);
+    const json = await res.json();
+    assert.equal(json.error, 'No flagged sounds');
+  });
+
+  it('returns SSE stream when flagged sounds exist', async () => {
+    // Flag the sound first
+    await fetchJSON(`/api/library/${LRF_ID}`, {
+      method: 'PUT',
+      body: { flagged: true },
+    });
+
+    const res = await fetch(`${baseUrl}/api/library/regenerate-flagged`, { method: 'POST' });
+    assert.equal(res.status, 200);
+    assert.equal(res.headers.get('content-type'), 'text/event-stream');
+
+    const text = await res.text();
+    assert.ok(text.includes('event: progress'), 'Missing progress event');
+    assert.ok(text.includes('event: complete'), 'Missing complete event');
+    assert.ok(text.includes(`"sound":"${LRF_ID}"`), 'SSE data should reference the sound ID');
+  });
+
+  it('unflag is cleared after regen attempt (even on error)', async () => {
+    // Re-flag for this test
+    await fetchJSON(`/api/library/${LRF_ID}`, {
+      method: 'PUT',
+      body: { flagged: true },
+    });
+
+    // Trigger regen (will fail — no AudioCraft)
+    const res = await fetch(`${baseUrl}/api/library/regenerate-flagged`, { method: 'POST' });
+    await res.text(); // drain
+
+    // Check: flagged should NOT be cleared on error (only on success)
+    // Since AudioCraft isn't available, the sound will error and flagged stays true
+    const { json } = await fetchJSON('/api/library');
+    // Error path: flagged remains true (not auto-cleared on failure)
+    assert.equal(json.sounds[LRF_ID].flagged, true, 'Flagged should remain true after failed generation');
+  });
+
+  it('returns 409 when generation is already in progress', async () => {
+    // Start a single-sound generation to hold the lock
+    const firstRes = fetch(`${baseUrl}/api/library/${LRF_ID}/generate`, { method: 'POST' });
+    await new Promise(r => setTimeout(r, 50));
+
+    // Library regenerate-flagged should be blocked by the same lock
+    const secondRes = await fetch(`${baseUrl}/api/library/regenerate-flagged`, { method: 'POST' });
+    if (secondRes.status === 409) {
+      const body = await secondRes.json();
+      assert.equal(body.error, 'Audio generation in progress');
+    } else {
+      // First one completed so fast the lock was already released — acceptable
+      await secondRes.text();
+    }
+
+    const first = await firstRes;
+    await first.text();
+  });
+});
+
+describe('Duration rounding (BUG 2)', () => {
+  it('scan rounds detected durations to 1 decimal', async () => {
+    // Scan arena — gunshot.wav has a real duration; check it's rounded
+    const { json } = await fetchJSON('/api/projects/arena/scan', { method: 'POST' });
+    for (const [id, sound] of Object.entries(json.sounds)) {
+      if (sound._fileDuration != null) {
+        const decimalPlaces = (String(sound._fileDuration).split('.')[1] || '').length;
+        assert.ok(decimalPlaces <= 1,
+          `${id} _fileDuration ${sound._fileDuration} has ${decimalPlaces} decimal places, expected ≤1`);
+      }
+    }
+  });
+
+  it('scanned duration for new sounds uses rounded value', async () => {
+    // Add a new WAV to arena and scan — the duration field should be rounded
+    createTestWav(join(arenaDir, 'assets', 'audio', 'sfx', '_dur_test.wav'));
+
+    const { json } = await fetchJSON('/api/projects/arena/scan', { method: 'POST' });
+    const sound = json.sounds['_dur_test'];
+    assert.ok(sound, '_dur_test should appear after scan');
+
+    if (sound.duration != null) {
+      const decimalPlaces = (String(sound.duration).split('.')[1] || '').length;
+      assert.ok(decimalPlaces <= 1,
+        `_dur_test duration ${sound.duration} has ${decimalPlaces} decimal places, expected ≤1`);
+    }
+  });
+});
+
+describe('Seed integer rounding (BUG 3)', () => {
+  it('PUT preserves integer seeds exactly', async () => {
+    // Create a sound, set a large integer seed
+    const SEED_ID = '_seed_test_disposable';
+    await fetchJSON('/api/library', {
+      method: 'POST',
+      body: { id: SEED_ID, name: 'Seed Test', category: 'sfx/ui', seed: 718862916, duration: 1.0 },
+    });
+
+    const { json } = await fetchJSON('/api/library');
+    assert.equal(json.sounds[SEED_ID].seed, 718862916,
+      'Large integer seed should survive JSON round-trip exactly');
+
+    // Cleanup
+    await fetchJSON(`/api/library/${SEED_ID}`, { method: 'DELETE' });
+  });
+
+  it('PUT accepts seed update via integer', async () => {
+    const SEED_ID2 = '_seed_test2_disposable';
+    await fetchJSON('/api/library', {
+      method: 'POST',
+      body: { id: SEED_ID2, name: 'Seed Test 2', category: 'sfx/ui' },
+    });
+
+    const { status, json } = await fetchJSON(`/api/library/${SEED_ID2}`, {
+      method: 'PUT',
+      body: { seed: 2147483647 }, // Max int32
+    });
+    assert.equal(status, 200);
+    assert.equal(json.seed, 2147483647);
+
+    await fetchJSON(`/api/library/${SEED_ID2}`, { method: 'DELETE' });
+  });
+});

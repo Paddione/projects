@@ -397,6 +397,104 @@
       gap: 0.5rem;
     }
 
+    /* Status bar */
+    .status-bar {
+      background: var(--bg-surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0;
+      overflow: hidden;
+      max-height: 0;
+      opacity: 0;
+      transition: max-height 0.3s ease, opacity 0.3s ease, padding 0.3s ease;
+    }
+
+    .status-bar.active {
+      max-height: 80px;
+      opacity: 1;
+      padding: 0.5rem 1.5rem;
+    }
+
+    .status-bar-inner {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .status-indicator {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--cyan);
+      flex-shrink: 0;
+      animation: status-pulse 1.5s ease-in-out infinite;
+    }
+
+    .status-indicator.done { background: var(--green); animation: none; }
+    .status-indicator.error { background: var(--red); animation: none; }
+
+    @keyframes status-pulse {
+      0%, 100% { opacity: 1; box-shadow: 0 0 4px var(--cyan); }
+      50% { opacity: 0.4; box-shadow: none; }
+    }
+
+    .status-text {
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .status-text span { color: var(--text-dim); }
+
+    .status-progress-wrap {
+      flex: 0 0 160px;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .status-progress-track {
+      flex: 1;
+      height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .status-progress-fill {
+      height: 100%;
+      background: var(--cyan);
+      border-radius: 2px;
+      width: 0%;
+      transition: width 0.4s ease;
+    }
+
+    .status-progress-fill.done { background: var(--green); }
+    .status-progress-fill.error { background: var(--red); }
+
+    .status-progress-label {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      white-space: nowrap;
+      min-width: 3rem;
+      text-align: right;
+    }
+
+    .status-elapsed {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
     /* Log panel */
     .log-panel {
       position: fixed;
@@ -425,8 +523,24 @@
       user-select: none;
     }
 
+    .log-header-left {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .log-count {
+      background: var(--border);
+      color: var(--text-dim);
+      padding: 0.1rem 0.4rem;
+      border-radius: 3px;
+      font-size: 0.65rem;
+    }
+
+    .log-count.has-errors { background: var(--red); color: #fff; }
+
     .log-content {
-      max-height: 200px;
+      max-height: 250px;
       overflow-y: auto;
       padding: 0 1.5rem 0.75rem;
       font-family: var(--font-mono);
@@ -439,6 +553,7 @@
     .log-content .warn { color: var(--orange); }
     .log-content .success { color: var(--green); }
     .log-content .dim { color: var(--text-dim); }
+    .log-content .phase-label { color: var(--cyan); }
 
     /* Scrollbar */
     ::-webkit-scrollbar { width: 6px; }
@@ -641,6 +756,20 @@
     </div>
   </header>
 
+  <div id="status-bar" class="status-bar">
+    <div class="status-bar-inner">
+      <div id="status-indicator" class="status-indicator"></div>
+      <div id="status-text" class="status-text"></div>
+      <div class="status-progress-wrap">
+        <div class="status-progress-track">
+          <div id="status-progress-fill" class="status-progress-fill"></div>
+        </div>
+        <div id="status-progress-label" class="status-progress-label"></div>
+      </div>
+      <div id="status-elapsed" class="status-elapsed"></div>
+    </div>
+  </div>
+
   <div id="prereq-warning" hidden></div>
 
   <div class="filter-bar">
@@ -655,7 +784,10 @@
 
   <div id="regen-log" class="log-panel collapsed" hidden>
     <div class="log-header" id="log-toggle">
-      <span>Regeneration Log</span>
+      <div class="log-header-left">
+        <span>Pipeline Log</span>
+        <span id="log-count" class="log-count">0</span>
+      </div>
       <span id="log-toggle-icon">▲</span>
     </div>
     <div class="log-content" id="log-content"></div>
@@ -676,6 +808,163 @@ const audioBuffers = {};
 let activeTab = 'audio';
 let libraryData = null;
 let visualData = null;
+
+// Pipeline status tracking
+const pipeline = {
+  active: false,
+  type: null,        // 'audio-regen' | 'audio-single' | 'visual'
+  phase: null,       // visual phase name or null
+  currentItem: null,
+  currentStatus: null,
+  index: 0,
+  total: 0,
+  succeeded: 0,
+  failed: 0,
+  startedAt: null,
+  elapsedTimer: null,
+  logCount: 0,
+  errorCount: 0,
+};
+
+function setStatusText(parts) {
+  // parts: [{text, dim?}] — build with textContent, using spans for dim segments
+  const el = document.getElementById('status-text');
+  el.replaceChildren();
+  for (const p of parts) {
+    const span = document.createElement('span');
+    span.textContent = p.text;
+    if (!p.dim) span.style.color = 'var(--text)';
+    el.appendChild(span);
+  }
+}
+
+function pipelineStart(type, phase) {
+  pipeline.active = true;
+  pipeline.type = type;
+  pipeline.phase = phase || null;
+  pipeline.currentItem = null;
+  pipeline.currentStatus = null;
+  pipeline.index = 0;
+  pipeline.total = 0;
+  pipeline.succeeded = 0;
+  pipeline.failed = 0;
+  pipeline.startedAt = Date.now();
+  pipeline.logCount = 0;
+  pipeline.errorCount = 0;
+
+  const bar = document.getElementById('status-bar');
+  const indicator = document.getElementById('status-indicator');
+  const fill = document.getElementById('status-progress-fill');
+  indicator.className = 'status-indicator';
+  fill.className = 'status-progress-fill';
+  fill.style.width = '0%';
+  bar.classList.add('active');
+
+  updateStatusText();
+  clearInterval(pipeline.elapsedTimer);
+  pipeline.elapsedTimer = setInterval(updateElapsed, 1000);
+  updateElapsed();
+
+  const logCount = document.getElementById('log-count');
+  logCount.textContent = '0';
+  logCount.classList.remove('has-errors');
+}
+
+function pipelineProgress(item, status, index, total) {
+  pipeline.currentItem = item;
+  pipeline.currentStatus = status;
+  if (index != null) pipeline.index = index;
+  if (total != null) pipeline.total = total;
+
+  const pct = pipeline.total > 0 ? Math.round((pipeline.index / pipeline.total) * 100) : 0;
+  document.getElementById('status-progress-fill').style.width = pct + '%';
+  document.getElementById('status-progress-label').textContent =
+    pipeline.total > 0 ? `${pipeline.index}/${pipeline.total}` : '';
+  updateStatusText();
+}
+
+function pipelineDone(item, index, total) {
+  pipeline.succeeded++;
+  if (index != null) pipeline.index = index;
+  if (total != null) pipeline.total = total;
+
+  const pct = pipeline.total > 0 ? Math.round((pipeline.index / pipeline.total) * 100) : 0;
+  document.getElementById('status-progress-fill').style.width = pct + '%';
+  document.getElementById('status-progress-label').textContent =
+    pipeline.total > 0 ? `${pipeline.index}/${pipeline.total}` : '';
+  updateStatusText();
+}
+
+function pipelineError(item, error, index, total) {
+  pipeline.failed++;
+  pipeline.errorCount++;
+  if (index != null) pipeline.index = index;
+  if (total != null) pipeline.total = total;
+
+  const logCount = document.getElementById('log-count');
+  logCount.classList.add('has-errors');
+  updateStatusText();
+}
+
+function pipelineComplete() {
+  pipeline.active = false;
+  clearInterval(pipeline.elapsedTimer);
+
+  const indicator = document.getElementById('status-indicator');
+  const fill = document.getElementById('status-progress-fill');
+
+  if (pipeline.failed > 0) {
+    indicator.className = 'status-indicator error';
+    fill.classList.add('error');
+  } else {
+    indicator.className = 'status-indicator done';
+    fill.classList.add('done');
+    fill.style.width = '100%';
+  }
+
+  const label = pipeline.type === 'visual' ? 'pipeline' : 'generation';
+  if (pipeline.failed > 0) {
+    setStatusText([
+      { text: label + ' finished — ' },
+      { text: pipeline.succeeded + ' ok, ' + pipeline.failed + ' failed', dim: true },
+    ]);
+  } else {
+    setStatusText([
+      { text: label + ' complete — ' },
+      { text: pipeline.succeeded + ' succeeded', dim: true },
+    ]);
+  }
+
+  // Auto-hide status bar after 8s on success
+  if (pipeline.failed === 0) {
+    setTimeout(() => {
+      if (!pipeline.active) document.getElementById('status-bar').classList.remove('active');
+    }, 8000);
+  }
+}
+
+function updateStatusText() {
+  const typeLabel = pipeline.type === 'visual'
+    ? (pipeline.phase ? pipeline.phase : 'visual')
+    : 'audio';
+  const statusLabel = pipeline.currentStatus || 'starting';
+  const item = pipeline.currentItem || '…';
+  setStatusText([
+    { text: typeLabel + ' ', dim: true },
+    { text: statusLabel + ' ' },
+    { text: item, dim: true },
+  ]);
+}
+
+function updateElapsed() {
+  if (!pipeline.startedAt) return;
+  const secs = Math.floor((Date.now() - pipeline.startedAt) / 1000);
+  const m = Math.floor(secs / 60);
+  const s = secs % 60;
+  document.getElementById('status-elapsed').textContent = m > 0
+    ? `${m}m ${s.toString().padStart(2, '0')}s`
+    : `${s}s`;
+}
 
 // =============================================================================
 // API
@@ -713,6 +1002,7 @@ async function loadProjects() {
 
   currentProject = '__library__';
   select.value = currentProject;
+  document.getElementById('scan-btn').style.display = 'none';
   await loadProjectData();
 }
 
@@ -946,7 +1236,7 @@ function createCard(id, sound) {
   const durInput = document.createElement('input');
   durInput.type = 'number';
   durInput.id = `duration-${id}`;
-  durInput.value = sound.duration;
+  durInput.value = sound.duration != null ? Math.round(sound.duration * 10) / 10 : '';
   durInput.step = '0.1';
   durInput.min = '0.1';
   durLabel.appendChild(durInput);
@@ -1043,7 +1333,7 @@ function renderLibraryView() {
   const filtered = entries.filter(([, s]) => {
     if (activeFilter === 'sfx') return s.category.startsWith('sfx');
     if (activeFilter === 'music') return s.category.startsWith('music');
-    if (activeFilter === 'flagged') return false; // Library sounds don't have flagged state
+    if (activeFilter === 'flagged') return !!s.flagged;
     return true;
   });
 
@@ -1073,11 +1363,71 @@ function renderLibraryView() {
   for (const [id, canvas] of canvases) {
     renderLibraryWaveform(canvas, id);
   }
+
+  // Add to Library form
+  const addHeader = document.createElement('h2');
+  addHeader.className = 'section-header';
+  addHeader.textContent = 'Add to Library';
+  container.appendChild(addHeader);
+
+  const addForm = document.createElement('div');
+  addForm.className = 'add-slot-row';
+  addForm.style.flexWrap = 'wrap';
+
+  const idInput = document.createElement('input');
+  idInput.type = 'text';
+  idInput.placeholder = 'ID (e.g., explosion)';
+  idInput.id = 'new-lib-id';
+  addForm.appendChild(idInput);
+
+  const nameInput = document.createElement('input');
+  nameInput.type = 'text';
+  nameInput.placeholder = 'Display name';
+  nameInput.id = 'new-lib-name';
+  addForm.appendChild(nameInput);
+
+  const catInput = document.createElement('input');
+  catInput.type = 'text';
+  catInput.placeholder = 'Category (e.g., sfx/weapons)';
+  catInput.id = 'new-lib-category';
+  addForm.appendChild(catInput);
+
+  const addBtn = document.createElement('button');
+  addBtn.className = 'btn-primary';
+  addBtn.textContent = 'Add Sound';
+  addBtn.addEventListener('click', async () => {
+    const newId = document.getElementById('new-lib-id').value.trim();
+    const newName = document.getElementById('new-lib-name').value.trim();
+    const newCat = document.getElementById('new-lib-category').value.trim();
+    if (!newId || !newName || !newCat) {
+      appendLog('ID, name, and category are required', 'error');
+      alert('Missing required fields: ID, name, and category are all required.');
+      return;
+    }
+    try {
+      await fetchJSON('/api/library', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: newId, name: newName, category: newCat }),
+      });
+      libraryData = await fetchJSON('/api/library');
+      document.getElementById('new-lib-id').value = '';
+      document.getElementById('new-lib-name').value = '';
+      document.getElementById('new-lib-category').value = '';
+      renderAudio();
+      appendLog(`Added ${newId} to library`, 'success');
+    } catch (err) {
+      appendLog(err.message, 'error');
+    }
+  });
+  addForm.appendChild(addBtn);
+
+  container.appendChild(addForm);
 }
 
 function createLibraryCard(id, sound) {
   const card = document.createElement('div');
-  card.className = 'card';
+  card.className = 'card' + (sound.flagged ? ' flagged' : '');
 
   // Header
   const headerRow = document.createElement('div');
@@ -1101,6 +1451,13 @@ function createLibraryCard(id, sound) {
       projBadge.textContent = proj;
       headerRow.appendChild(projBadge);
     }
+  }
+
+  if (sound.flagged) {
+    const flagBadge = document.createElement('span');
+    flagBadge.className = 'badge badge-flagged';
+    flagBadge.textContent = 'Flagged';
+    headerRow.appendChild(flagBadge);
   }
 
   card.appendChild(headerRow);
@@ -1146,7 +1503,7 @@ function createLibraryCard(id, sound) {
   const durInput = document.createElement('input');
   durInput.type = 'number';
   durInput.id = `lib-duration-${id}`;
-  durInput.value = sound.duration || '';
+  durInput.value = sound.duration != null ? Math.round(sound.duration * 10) / 10 : '';
   durInput.step = '0.1';
   durInput.min = '0.1';
   durLabel.appendChild(durInput);
@@ -1221,6 +1578,24 @@ function createLibraryCard(id, sound) {
   });
   actions.appendChild(saveBtn);
 
+  const flagBtn = document.createElement('button');
+  flagBtn.className = sound.flagged ? 'btn-danger' : '';
+  flagBtn.textContent = sound.flagged ? 'Unflag' : 'Flag for Regen';
+  flagBtn.addEventListener('click', async () => {
+    try {
+      await fetchJSON(`/api/library/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ flagged: !sound.flagged }),
+      });
+      libraryData = await fetchJSON('/api/library');
+      renderAudio();
+    } catch (err) {
+      appendLog(`Flag toggle failed: ${err.message}`, 'error');
+    }
+  });
+  actions.appendChild(flagBtn);
+
   const regenBtn = document.createElement('button');
   regenBtn.className = 'btn-primary';
   regenBtn.textContent = 'Regen';
@@ -1260,12 +1635,20 @@ async function regenerateLibrarySound(id, btn, card, canvas) {
   btn.disabled = true;
   btn.textContent = 'Generating…';
   card.style.borderColor = 'var(--cyan)';
+  pipelineStart('audio-single');
+
+  const logPanel = document.getElementById('regen-log');
+  logPanel.hidden = false;
+  logPanel.classList.remove('collapsed');
+  appendLog(`Generating ${id}...`, 'dim');
 
   try {
     const res = await fetch(`/api/library/${id}/generate`, { method: 'POST' });
 
     if (res.status === 409) {
       btn.textContent = 'Busy';
+      pipelineError(id, 'Already in progress');
+      pipelineComplete();
       setTimeout(() => { btn.disabled = false; btn.textContent = 'Regen'; card.style.borderColor = ''; }, 2000);
       return;
     }
@@ -1289,13 +1672,27 @@ async function regenerateLibrarySound(id, btn, card, canvas) {
         } else if (line.startsWith('data: ')) {
           try {
             const data = JSON.parse(line.slice(6));
-            if (eventType === 'progress') btn.textContent = data.status === 'processing' ? 'Processing…' : 'Generating…';
-            if (eventType === 'done') newSeed = data.seed;
+            if (eventType === 'progress') {
+              btn.textContent = data.status === 'processing' ? 'Processing…' : 'Generating…';
+              pipelineProgress(id, data.status);
+              appendLog(`${data.status} ${id}${data.backend ? ' via ' + data.backend : ''}`, 'dim');
+            }
+            if (eventType === 'done') {
+              newSeed = data.seed;
+              pipelineDone(id);
+              appendLog(`\u2713 ${id} (seed: ${data.seed})`, 'success');
+            }
             if (eventType === 'error') {
+              pipelineError(id, data.error);
+              appendLog(`\u2717 ${id}: ${data.error}`, 'error');
               btn.textContent = 'Failed';
               card.style.borderColor = 'var(--orange)';
               setTimeout(() => { btn.disabled = false; btn.textContent = 'Regen'; card.style.borderColor = ''; }, 3000);
+              pipelineComplete();
               return;
+            }
+            if (eventType === 'complete') {
+              pipelineComplete();
             }
           } catch { /* ignore */ }
         }
@@ -1647,9 +2044,13 @@ async function startRegeneration() {
   logContent.replaceChildren();
   regenBtn.disabled = true;
   regenBtn.textContent = 'Regenerating…';
+  pipelineStart('audio-regen');
 
   try {
-    const res = await fetch(`/api/projects/${currentProject}/regenerate`, { method: 'POST' });
+    const url = currentProject === '__library__'
+      ? '/api/library/regenerate-flagged'
+      : `/api/projects/${currentProject}/regenerate`;
+    const res = await fetch(url, { method: 'POST' });
 
     if (res.status === 409) {
       appendLog('Regeneration already in progress', 'error');
@@ -1700,18 +2101,21 @@ async function startRegeneration() {
 }
 
 function handleSSEEvent(type, data) {
-  const time = new Date().toLocaleTimeString('en-GB', { hour12: false });
   switch (type) {
     case 'progress':
+      pipelineProgress(data.sound, data.status, data.index, data.total);
       appendLog(`[${data.index}/${data.total}] ${data.status} ${data.sound}${data.backend ? ' via ' + data.backend : ''}`, 'dim');
       break;
     case 'done':
-      appendLog(`[${data.index}/${data.total}] ✓ ${data.sound} (seed: ${data.seed}, ${data.duration}s)`, '');
+      pipelineDone(data.sound, data.index, data.total);
+      appendLog(`[${data.index}/${data.total}] ✓ ${data.sound} (seed: ${data.seed}, ${data.duration}s)`, 'success');
       break;
     case 'error':
+      pipelineError(data.sound, data.error, data.index, data.total);
       appendLog(`[${data.index}/${data.total}] ✗ ${data.sound}: ${data.error}`, 'error');
       break;
     case 'complete':
+      pipelineComplete();
       appendLog(`Complete: ${data.succeeded} ok, ${data.failed} failed`, data.failed > 0 ? 'warn' : 'success');
       break;
   }
@@ -1725,6 +2129,11 @@ function appendLog(msg, level) {
   div.textContent = `[${time}] ${msg}`;
   logContent.appendChild(div);
   logContent.scrollTop = logContent.scrollHeight;
+
+  // Update log count badge
+  pipeline.logCount++;
+  const logCountEl = document.getElementById('log-count');
+  logCountEl.textContent = pipeline.logCount;
 }
 
 // =============================================================================
@@ -1929,12 +2338,19 @@ async function startVisualGeneration(assetId, phase) {
   const logContent = document.getElementById('log-content');
   logPanel.hidden = false;
   logPanel.classList.remove('collapsed');
+  logContent.replaceChildren();
+  pipelineStart('visual', phase);
 
   appendLog(`Starting ${phase} for ${assetId}...`, 'dim');
 
   try {
     const res = await fetch(`/api/visual-library/${assetId}/generate/${phase}`, { method: 'POST' });
-    if (res.status === 409) { appendLog('Visual generation already in progress', 'error'); return; }
+    if (res.status === 409) {
+      appendLog('Visual generation already in progress', 'error');
+      pipelineError(assetId, 'Already in progress');
+      pipelineComplete();
+      return;
+    }
 
     const reader = res.body.getReader();
     const decoder = new TextDecoder();
@@ -1952,16 +2368,26 @@ async function startVisualGeneration(assetId, phase) {
         else if (line.startsWith('data: ')) {
           try {
             const data = JSON.parse(line.slice(6));
-            if (eventType === 'progress') appendLog(`[${data.phase}] ${data.status} ${data.asset}`, 'dim');
-            else if (eventType === 'done') appendLog(`[${data.phase}] \u2713 ${data.asset}${data.frameCount ? ` (${data.frameCount} frames)` : ''}`, '');
-            else if (eventType === 'error') appendLog(`[${data.phase}] \u2717 ${data.asset}: ${data.error}`, 'error');
-            else if (eventType === 'complete') appendLog(`Pipeline complete for ${data.asset}`, 'success');
+            if (eventType === 'progress') {
+              pipelineProgress(data.asset, data.status);
+              appendLog(`[${data.phase}] ${data.status} ${data.asset}`, 'dim');
+            } else if (eventType === 'done') {
+              pipelineDone(data.asset);
+              appendLog(`[${data.phase}] \u2713 ${data.asset}${data.frameCount ? ` (${data.frameCount} frames)` : ''}`, 'success');
+            } else if (eventType === 'error') {
+              pipelineError(data.asset, data.error);
+              appendLog(`[${data.phase}] \u2717 ${data.asset}: ${data.error}`, 'error');
+            } else if (eventType === 'complete') {
+              pipelineComplete();
+              appendLog(`Pipeline complete for ${data.asset}`, 'success');
+            }
           } catch {}
         }
       }
     }
   } catch (err) {
     appendLog(err.message, 'error');
+    pipelineComplete();
   }
 
   visualData = await fetchJSON('/api/visual-library');
@@ -1974,9 +2400,9 @@ async function startVisualGeneration(assetId, phase) {
 
 document.getElementById('project-select').addEventListener('change', (e) => {
   currentProject = e.target.value;
-  // Hide scan/regen for library view, show for projects
+  // Hide scan for library view, show for projects; regen always visible for audio tab
   document.getElementById('scan-btn').style.display = currentProject === '__library__' ? 'none' : '';
-  document.getElementById('regen-btn').style.display = currentProject === '__library__' ? 'none' : '';
+  document.getElementById('regen-btn').style.display = activeTab === 'audio' ? '' : 'none';
   loadProjectData();
 });
 
@@ -2008,7 +2434,7 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
     document.getElementById('audio-container').style.display = activeTab === 'audio' ? '' : 'none';
     document.getElementById('visual-container').style.display = activeTab === 'visual' ? '' : 'none';
     const isLibrary = currentProject === '__library__';
-    document.getElementById('regen-btn').style.display = (activeTab === 'audio' && !isLibrary) ? '' : 'none';
+    document.getElementById('regen-btn').style.display = activeTab === 'audio' ? '' : 'none';
     document.getElementById('scan-btn').style.display = (activeTab === 'audio' && !isLibrary) ? '' : 'none';
     document.querySelector('.filter-bar').style.display = activeTab === 'audio' ? '' : 'none';
     if (activeTab === 'audio') renderAudio();

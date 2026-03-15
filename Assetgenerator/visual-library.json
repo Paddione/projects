@@ -1,1 +1,1150 @@
-{ "version": 1, "assets": {} }
+{
+  "version": 1,
+  "assets": {
+    "student": {
+      "id": "student",
+      "name": "Student",
+      "category": "characters",
+      "tags": [
+        "arena"
+      ],
+      "prompt": "",
+      "poses": [
+        "stand",
+        "gun",
+        "machine",
+        "reload",
+        "hold",
+        "silencer"
+      ],
+      "directions": 8,
+      "size": 64,
+      "color": "#00f2ff",
+      "pipeline": {
+        "concept": {
+          "status": "pending"
+        },
+        "model": {
+          "status": "pending"
+        },
+        "render": {
+          "status": "pending"
+        },
+        "pack": {
+          "status": "done",
+          "generatedAt": "2026-03-15T04:40:18.314Z"
+        }
+      },
+      "assignedTo": {
+        "arena": {
+          "atlas": "characters",
+          "syncedAt": "2026-03-15T04:40:18.315Z"
+        }
+      }
+    },
+    "researcher": {
+      "id": "researcher",
+      "name": "Researcher",
+      "category": "characters",
+      "tags": [
+        "arena"
+      ],
+      "prompt": "",
+      "poses": [
+        "stand",
+        "gun",
+        "machine",
+        "reload",
+        "hold",
+        "silencer"
+      ],
+      "directions": 8,
+      "size": 64,
+      "color": "#3eff8b",
+      "pipeline": {
+        "concept": {
+          "status": "pending"
+        },
+        "model": {
+          "status": "pending"
+        },
+        "render": {
+          "status": "pending"
+        },
+        "pack": {
+          "status": "done",
+          "generatedAt": "2026-03-15T04:40:18.342Z"
+        }
+      },
+      "assignedTo": {
+        "arena": {
+          "atlas": "characters",
+          "syncedAt": "2026-03-15T04:40:18.342Z"
+        }
+      }
+    },
+    "professor": {
+      "id": "professor",
+      "name": "Professor",
+      "category": "characters",
+      "tags": [
+        "arena"
+      ],
+      "prompt": "",
+      "poses": [
+        "stand",
+        "gun",
+        "machine",
+        "reload",
+        "hold",
+        "silencer"
+      ],
+      "directions": 8,
+      "size": 64,
+      "color": "#bc13fe",
+      "pipeline": {
+        "concept": {
+          "status": "pending"
+        },
+        "model": {
+          "status": "pending"
+        },
+        "render": {
+          "status": "pending"
+        },
+        "pack": {
+          "status": "done",
+          "generatedAt": "2026-03-15T04:40:18.371Z"
+        }
+      },
+      "assignedTo": {
+        "arena": {
+          "atlas": "characters",
+          "syncedAt": "2026-03-15T04:40:18.371Z"
+        }
+      }
+    },
+    "dean": {
+      "id": "dean",
+      "name": "Dean",
+      "category": "characters",
+      "tags": [
+        "arena"
+      ],
+      "prompt": "",
+      "poses": [
+        "stand",
+        "gun",
+        "machine",
+        "reload",
+        "hold",
+        "silencer"
+      ],
+      "directions": 8,
+      "size": 64,
+      "color": "#ffd700",
+      "pipeline": {
+        "concept": {
+          "status": "pending"
+        },
+        "model": {
+          "status": "pending"
+        },
+        "render": {
+          "status": "pending"
+        },
+        "pack": {
+          "status": "done",
+          "generatedAt": "2026-03-15T04:40:18.403Z"
+        }
+      },
+      "assignedTo": {
+        "arena": {
+          "atlas": "characters",
+          "syncedAt": "2026-03-15T04:40:18.403Z"
+        }
+      }
+    },
+    "librarian": {
+      "id": "librarian",
+      "name": "Librarian",
+      "category": "characters",
+      "tags": [
+        "arena"
+      ],
+      "prompt": "",
+      "poses": [
+        "stand",
+        "gun",
+        "machine",
+        "reload",
+        "hold",
+        "silencer"
+      ],
+      "directions": 8,
+      "size": 64,
+      "color": "#ff6b9d",
+      "pipeline": {
+        "concept": {
+          "status": "pending"
+        },
+        "model": {
+          "status": "pending"
+        },
+        "render": {
+          "status": "pending"
+        },
+        "pack": {
+          "status": "done",
+          "generatedAt": "2026-03-15T04:40:18.431Z"
+        }
+      },
+      "assignedTo": {
+        "arena": {
+          "atlas": "characters",
+          "syncedAt": "2026-03-15T04:40:18.432Z"
+        }
+      }
+    },
+    "projectile": {
+      "id": "projectile",
+      "name": "Projectile",
+      "category": "weapons",
+      "tags": [
+        "arena"
+      ],
+      "prompt": "glowing energy projectile, sci-fi laser bolt, yellow-orange, game asset, transparent background",
+      "poses": [
+        "idle"
+      ],
+      "directions": 1,
+      "size": 32,
+      "color": "#ffffff",
+      "pipeline": {
+        "concept": {
+          "status": "done",
+          "path": "concepts/weapons/projectile.png",
+          "generatedAt": "2026-03-15T04:40:18.448Z"
+        },
+        "model": {
+          "status": "done",
+          "path": "models/weapons/projectile.glb",
+          "generatedAt": "2026-03-15T04:40:18.550Z"
+        },
+        "render": {
+          "status": "done",
+          "frameCount": 1,
+          "generatedAt": "2026-03-15T04:40:18.565Z"
+        },
+        "pack": {
+          "status": "done",
+          "generatedAt": "2026-03-15T04:40:18.589Z"
+        }
+      },
+      "assignedTo": {
+        "arena": {
+          "atlas": "weapons",
+          "syncedAt": "2026-03-15T04:40:18.589Z"
+        }
+      }
+    },
+    "melee_arc": {
+      "id": "melee_arc",
+      "name": "Melee Arc",
+      "category": "weapons",
+      "tags": [
+        "arena"
+      ],
+      "prompt": "sword slash arc effect, energy trail, white-blue glow, game VFX, transparent background",
+      "poses": [
+        "idle"
+      ],
+      "directions": 1,
+      "size": 48,
+      "color": "#ffffff",
+      "pipeline": {
+        "concept": {
+          "status": "done",
+          "path": "concepts/weapons/melee_arc.png",
+          "generatedAt": "2026-03-15T04:40:18.603Z"
+        },
+        "model": {
+          "status": "done",
+          "path": "models/weapons/melee_arc.glb",
+          "generatedAt": "2026-03-15T04:40:18.641Z"
+        },
+        "render": {
+          "status": "pending"
+        },
+        "pack": {
+          "status": "done",
+          "generatedAt": "2026-03-15T04:40:18.668Z"
+        }
+      },
+      "assignedTo": {
+        "arena": {
+          "atlas": "weapons",
+          "syncedAt": "2026-03-15T04:40:18.668Z"
+        }
+      }
+    },
+    "muzzle_flash": {
+      "id": "muzzle_flash",
+      "name": "Muzzle Flash",
+      "category": "weapons",
+      "tags": [
+        "arena"
+      ],
+      "prompt": "muzzle flash effect, bright yellow-white burst, game VFX, transparent background",
+      "poses": [
+        "idle"
+      ],
+      "directions": 1,
+      "size": 32,
+      "color": "#ffffff",
+      "pipeline": {
+        "concept": {
+          "status": "done",
+          "path": "concepts/weapons/muzzle_flash.png",
+          "generatedAt": "2026-03-15T04:40:18.691Z"
+        },
+        "model": {
+          "status": "done",
+          "path": "models/weapons/muzzle_flash.glb",
+          "generatedAt": "2026-03-15T04:40:18.745Z"
+        },
+        "render": {
+          "status": "pending"
+        },
+        "pack": {
+          "status": "done",
+          "generatedAt": "2026-03-15T04:40:18.778Z"
+        }
+      },
+      "assignedTo": {
+        "arena": {
+          "atlas": "weapons",
+          "syncedAt": "2026-03-15T04:40:18.778Z"
+        }
+      }
+    },
+    "health_pack": {
+      "id": "health_pack",
+      "name": "Health Pack",
+      "category": "items",
+      "tags": [
+        "arena"
+      ],
+      "prompt": "low-poly red health pack, glowing cross symbol, game item, isometric view, transparent background",
+      "poses": [
+        "idle"
+      ],
+      "directions": 1,
+      "size": 32,
+      "color": "#ffffff",
+      "pipeline": {
+        "concept": {
+          "status": "done",
+          "path": "concepts/items/health_pack.png",
+          "generatedAt": "2026-03-15T04:40:18.800Z"
+        },
+        "model": {
+          "status": "done",
+          "path": "models/items/health_pack.glb",
+          "generatedAt": "2026-03-15T04:40:18.860Z"
+        },
+        "render": {
+          "status": "done",
+          "frameCount": 1,
+          "generatedAt": "2026-03-15T04:40:18.873Z"
+        },
+        "pack": {
+          "status": "done",
+          "generatedAt": "2026-03-15T04:40:18.894Z"
+        }
+      },
+      "assignedTo": {
+        "arena": {
+          "atlas": "items",
+          "syncedAt": "2026-03-15T04:40:18.894Z"
+        }
+      }
+    },
+    "armor_plate": {
+      "id": "armor_plate",
+      "name": "Armor Plate",
+      "category": "items",
+      "tags": [
+        "arena"
+      ],
+      "prompt": "low-poly blue armor plate pickup, glowing shield icon, game item, isometric view, transparent background",
+      "poses": [
+        "idle"
+      ],
+      "directions": 1,
+      "size": 32,
+      "color": "#ffffff",
+      "pipeline": {
+        "concept": {
+          "status": "done",
+          "path": "concepts/items/armor_plate.png",
+          "generatedAt": "2026-03-15T04:40:18.914Z"
+        },
+        "model": {
+          "status": "done",
+          "path": "models/items/armor_plate.glb",
+          "generatedAt": "2026-03-15T04:40:18.950Z"
+        },
+        "render": {
+          "status": "done",
+          "frameCount": 1,
+          "generatedAt": "2026-03-15T04:40:18.960Z"
+        },
+        "pack": {
+          "status": "done",
+          "generatedAt": "2026-03-15T04:40:18.989Z"
+        }
+      },
+      "assignedTo": {
+        "arena": {
+          "atlas": "items",
+          "syncedAt": "2026-03-15T04:40:18.989Z"
+        }
+      }
+    },
+    "machine_gun": {
+      "id": "machine_gun",
+      "name": "Machine Gun",
+      "category": "items",
+      "tags": [
+        "arena"
+      ],
+      "prompt": "",
+      "poses": [
+        "idle"
+      ],
+      "directions": 1,
+      "size": 64,
+      "color": "#ffffff",
+      "pipeline": {
+        "concept": {
+          "status": "pending"
+        },
+        "model": {
+          "status": "pending"
+        },
+        "render": {
+          "status": "done",
+          "frameCount": 1,
+          "generatedAt": "2026-03-15T04:40:18.999Z"
+        },
+        "pack": {
+          "status": "done",
+          "generatedAt": "2026-03-15T04:40:19.024Z"
+        }
+      },
+      "assignedTo": {
+        "arena": {
+          "atlas": "items",
+          "syncedAt": "2026-03-15T04:40:19.024Z"
+        }
+      }
+    },
+    "floor_01": {
+      "id": "floor_01",
+      "name": "Floor 01",
+      "category": "tiles",
+      "tags": [
+        "arena"
+      ],
+      "prompt": "dark stone floor tile, top-down view, low-poly, seamless, dark navy tone",
+      "poses": [
+        "idle"
+      ],
+      "directions": 1,
+      "size": 32,
+      "color": "#ffffff",
+      "pipeline": {
+        "concept": {
+          "status": "done",
+          "path": "concepts/tiles/floor_01.png",
+          "generatedAt": "2026-03-15T04:40:19.040Z"
+        },
+        "render": {
+          "status": "done",
+          "frameCount": 1,
+          "generatedAt": "2026-03-15T04:40:19.051Z"
+        },
+        "pack": {
+          "status": "done",
+          "generatedAt": "2026-03-15T04:40:19.073Z"
+        }
+      },
+      "assignedTo": {
+        "arena": {
+          "atlas": "tiles",
+          "syncedAt": "2026-03-15T04:40:19.073Z"
+        }
+      }
+    },
+    "floor_02": {
+      "id": "floor_02",
+      "name": "Floor 02",
+      "category": "tiles",
+      "tags": [
+        "arena"
+      ],
+      "prompt": "dark stone floor tile variant, top-down view, low-poly, seamless, slightly cracked",
+      "poses": [
+        "idle"
+      ],
+      "directions": 1,
+      "size": 32,
+      "color": "#ffffff",
+      "pipeline": {
+        "concept": {
+          "status": "done",
+          "path": "concepts/tiles/floor_02.png",
+          "generatedAt": "2026-03-15T04:40:19.090Z"
+        },
+        "render": {
+          "status": "done",
+          "frameCount": 1,
+          "generatedAt": "2026-03-15T04:40:19.103Z"
+        },
+        "pack": {
+          "status": "done",
+          "generatedAt": "2026-03-15T04:40:19.130Z"
+        }
+      },
+      "assignedTo": {
+        "arena": {
+          "atlas": "tiles",
+          "syncedAt": "2026-03-15T04:40:19.130Z"
+        }
+      }
+    },
+    "floor_03": {
+      "id": "floor_03",
+      "name": "Floor 03",
+      "category": "tiles",
+      "tags": [
+        "arena"
+      ],
+      "prompt": "dark stone floor tile variant, top-down view, low-poly, seamless, moss patches",
+      "poses": [
+        "idle"
+      ],
+      "directions": 1,
+      "size": 32,
+      "color": "#ffffff",
+      "pipeline": {
+        "concept": {
+          "status": "done",
+          "path": "concepts/tiles/floor_03.png",
+          "generatedAt": "2026-03-15T04:40:19.145Z"
+        },
+        "render": {
+          "status": "done",
+          "frameCount": 1,
+          "generatedAt": "2026-03-15T04:40:19.157Z"
+        },
+        "pack": {
+          "status": "done",
+          "generatedAt": "2026-03-15T04:40:19.185Z"
+        }
+      },
+      "assignedTo": {
+        "arena": {
+          "atlas": "tiles",
+          "syncedAt": "2026-03-15T04:40:19.185Z"
+        }
+      }
+    },
+    "floor_04": {
+      "id": "floor_04",
+      "name": "Floor 04",
+      "category": "tiles",
+      "tags": [
+        "arena"
+      ],
+      "prompt": "dark stone floor tile variant, top-down view, low-poly, seamless, worn edges",
+      "poses": [
+        "idle"
+      ],
+      "directions": 1,
+      "size": 32,
+      "color": "#ffffff",
+      "pipeline": {
+        "concept": {
+          "status": "done",
+          "path": "concepts/tiles/floor_04.png",
+          "generatedAt": "2026-03-15T04:40:19.198Z"
+        },
+        "render": {
+          "status": "done",
+          "frameCount": 1,
+          "generatedAt": "2026-03-15T04:40:19.209Z"
+        },
+        "pack": {
+          "status": "done",
+          "generatedAt": "2026-03-15T04:40:19.237Z"
+        }
+      },
+      "assignedTo": {
+        "arena": {
+          "atlas": "tiles",
+          "syncedAt": "2026-03-15T04:40:19.237Z"
+        }
+      }
+    },
+    "wall": {
+      "id": "wall",
+      "name": "Wall",
+      "category": "tiles",
+      "tags": [
+        "arena"
+      ],
+      "prompt": "stone wall tile, top-down view, low-poly, dark gray, rough hewn blocks",
+      "poses": [
+        "idle"
+      ],
+      "directions": 1,
+      "size": 32,
+      "color": "#ffffff",
+      "pipeline": {
+        "concept": {
+          "status": "done",
+          "path": "concepts/tiles/wall.png",
+          "generatedAt": "2026-03-15T04:40:19.251Z"
+        },
+        "render": {
+          "status": "done",
+          "frameCount": 1,
+          "generatedAt": "2026-03-15T04:40:19.265Z"
+        },
+        "pack": {
+          "status": "done",
+          "generatedAt": "2026-03-15T04:40:19.290Z"
+        }
+      },
+      "assignedTo": {
+        "arena": {
+          "atlas": "tiles",
+          "syncedAt": "2026-03-15T04:40:19.290Z"
+        }
+      }
+    },
+    "boundary": {
+      "id": "boundary",
+      "name": "Boundary",
+      "category": "tiles",
+      "tags": [
+        "arena"
+      ],
+      "prompt": "boundary wall edge tile, top-down view, low-poly, dark with glowing blue border",
+      "poses": [
+        "idle"
+      ],
+      "directions": 1,
+      "size": 32,
+      "color": "#ffffff",
+      "pipeline": {
+        "concept": {
+          "status": "done",
+          "path": "concepts/tiles/boundary.png",
+          "generatedAt": "2026-03-15T04:40:19.304Z"
+        },
+        "render": {
+          "status": "done",
+          "frameCount": 1,
+          "generatedAt": "2026-03-15T04:40:19.316Z"
+        },
+        "pack": {
+          "status": "done",
+          "generatedAt": "2026-03-15T04:40:19.343Z"
+        }
+      },
+      "assignedTo": {
+        "arena": {
+          "atlas": "tiles",
+          "syncedAt": "2026-03-15T04:40:19.343Z"
+        }
+      }
+    },
+    "zone_overlay": {
+      "id": "zone_overlay",
+      "name": "Zone Overlay",
+      "category": "tiles",
+      "tags": [
+        "arena"
+      ],
+      "prompt": "danger zone overlay tile, translucent red tint, subtle hazard pattern, top-down",
+      "poses": [
+        "idle"
+      ],
+      "directions": 1,
+      "size": 32,
+      "color": "#ffffff",
+      "pipeline": {
+        "concept": {
+          "status": "done",
+          "path": "concepts/tiles/zone_overlay.png",
+          "generatedAt": "2026-03-15T04:40:19.360Z"
+        },
+        "render": {
+          "status": "pending"
+        },
+        "pack": {
+          "status": "done",
+          "generatedAt": "2026-03-15T04:40:19.386Z"
+        }
+      },
+      "assignedTo": {
+        "arena": {
+          "atlas": "tiles",
+          "syncedAt": "2026-03-15T04:40:19.386Z"
+        }
+      }
+    },
+    "building": {
+      "id": "building",
+      "name": "Building",
+      "category": "cover",
+      "tags": [
+        "arena"
+      ],
+      "prompt": "low-poly campus building wall, top-down view, brick facade, academic architecture",
+      "poses": [
+        "idle"
+      ],
+      "directions": 1,
+      "size": 32,
+      "color": "#ffffff",
+      "pipeline": {
+        "concept": {
+          "status": "pending"
+        },
+        "model": {
+          "status": "pending"
+        },
+        "render": {
+          "status": "pending"
+        },
+        "pack": {
+          "status": "done",
+          "generatedAt": "2026-03-15T04:40:19.408Z"
+        }
+      },
+      "assignedTo": {
+        "arena": {
+          "atlas": "cover",
+          "syncedAt": "2026-03-15T04:40:19.408Z"
+        }
+      }
+    },
+    "bench": {
+      "id": "bench",
+      "name": "Bench",
+      "category": "cover",
+      "tags": [
+        "arena"
+      ],
+      "prompt": "low-poly park bench, top-down view, wooden slats, campus outdoor seating",
+      "poses": [
+        "idle"
+      ],
+      "directions": 1,
+      "size": 32,
+      "color": "#ffffff",
+      "pipeline": {
+        "concept": {
+          "status": "pending"
+        },
+        "model": {
+          "status": "pending"
+        },
+        "render": {
+          "status": "pending"
+        },
+        "pack": {
+          "status": "done",
+          "generatedAt": "2026-03-15T04:40:19.437Z"
+        }
+      },
+      "assignedTo": {
+        "arena": {
+          "atlas": "cover",
+          "syncedAt": "2026-03-15T04:40:19.437Z"
+        }
+      }
+    },
+    "fountain": {
+      "id": "fountain",
+      "name": "Fountain",
+      "category": "cover",
+      "tags": [
+        "arena"
+      ],
+      "prompt": "low-poly stone fountain, top-down view, circular base, campus courtyard centerpiece",
+      "poses": [
+        "idle"
+      ],
+      "directions": 1,
+      "size": 32,
+      "color": "#ffffff",
+      "pipeline": {
+        "concept": {
+          "status": "pending"
+        },
+        "model": {
+          "status": "pending"
+        },
+        "render": {
+          "status": "pending"
+        },
+        "pack": {
+          "status": "done",
+          "generatedAt": "2026-03-15T04:40:19.465Z"
+        }
+      },
+      "assignedTo": {
+        "arena": {
+          "atlas": "cover",
+          "syncedAt": "2026-03-15T04:40:19.465Z"
+        }
+      }
+    },
+    "hedge": {
+      "id": "hedge",
+      "name": "Hedge",
+      "category": "cover",
+      "tags": [
+        "arena"
+      ],
+      "prompt": "low-poly trimmed hedge, top-down view, dark green, campus garden border",
+      "poses": [
+        "idle"
+      ],
+      "directions": 1,
+      "size": 32,
+      "color": "#ffffff",
+      "pipeline": {
+        "concept": {
+          "status": "pending"
+        },
+        "model": {
+          "status": "pending"
+        },
+        "render": {
+          "status": "pending"
+        },
+        "pack": {
+          "status": "done",
+          "generatedAt": "2026-03-15T04:40:19.493Z"
+        }
+      },
+      "assignedTo": {
+        "arena": {
+          "atlas": "cover",
+          "syncedAt": "2026-03-15T04:40:19.493Z"
+        }
+      }
+    },
+    "pond": {
+      "id": "pond",
+      "name": "Pond",
+      "category": "cover",
+      "tags": [
+        "arena"
+      ],
+      "prompt": "low-poly ornamental pond, top-down view, blue reflective surface, campus water feature",
+      "poses": [
+        "idle"
+      ],
+      "directions": 1,
+      "size": 32,
+      "color": "#ffffff",
+      "pipeline": {
+        "concept": {
+          "status": "pending"
+        },
+        "model": {
+          "status": "pending"
+        },
+        "render": {
+          "status": "pending"
+        },
+        "pack": {
+          "status": "done",
+          "generatedAt": "2026-03-15T04:40:19.524Z"
+        }
+      },
+      "assignedTo": {
+        "arena": {
+          "atlas": "cover",
+          "syncedAt": "2026-03-15T04:40:19.524Z"
+        }
+      }
+    },
+    "heart_full": {
+      "id": "heart_full",
+      "name": "Heart Full",
+      "category": "ui",
+      "tags": [
+        "arena"
+      ],
+      "prompt": "pixel art red heart icon, full health, game UI",
+      "poses": [
+        "idle"
+      ],
+      "directions": 1,
+      "size": 16,
+      "color": "#ffffff",
+      "pipeline": {
+        "concept": {
+          "status": "done",
+          "path": "concepts/ui/heart_full.png",
+          "generatedAt": "2026-03-15T04:40:19.538Z"
+        },
+        "render": {
+          "status": "done",
+          "frameCount": 1,
+          "generatedAt": "2026-03-15T04:40:19.552Z"
+        },
+        "pack": {
+          "status": "done",
+          "generatedAt": "2026-03-15T04:40:19.615Z"
+        }
+      },
+      "assignedTo": {
+        "arena": {
+          "atlas": "ui",
+          "syncedAt": "2026-03-15T04:40:19.615Z"
+        }
+      }
+    },
+    "heart_empty": {
+      "id": "heart_empty",
+      "name": "Heart Empty",
+      "category": "ui",
+      "tags": [
+        "arena"
+      ],
+      "prompt": "pixel art dark heart icon, empty health, game UI",
+      "poses": [
+        "idle"
+      ],
+      "directions": 1,
+      "size": 16,
+      "color": "#ffffff",
+      "pipeline": {
+        "concept": {
+          "status": "done",
+          "path": "concepts/ui/heart_empty.png",
+          "generatedAt": "2026-03-15T04:40:19.630Z"
+        },
+        "render": {
+          "status": "done",
+          "frameCount": 1,
+          "generatedAt": "2026-03-15T04:40:19.645Z"
+        },
+        "pack": {
+          "status": "done",
+          "generatedAt": "2026-03-15T04:40:19.708Z"
+        }
+      },
+      "assignedTo": {
+        "arena": {
+          "atlas": "ui",
+          "syncedAt": "2026-03-15T04:40:19.708Z"
+        }
+      }
+    },
+    "shield": {
+      "id": "shield",
+      "name": "Shield",
+      "category": "ui",
+      "tags": [
+        "arena"
+      ],
+      "prompt": "pixel art blue shield icon, armor indicator, game UI",
+      "poses": [
+        "idle"
+      ],
+      "directions": 1,
+      "size": 16,
+      "color": "#ffffff",
+      "pipeline": {
+        "concept": {
+          "status": "done",
+          "path": "concepts/ui/shield.png",
+          "generatedAt": "2026-03-15T04:40:19.722Z"
+        },
+        "render": {
+          "status": "done",
+          "frameCount": 1,
+          "generatedAt": "2026-03-15T04:40:19.740Z"
+        },
+        "pack": {
+          "status": "done",
+          "generatedAt": "2026-03-15T04:40:19.802Z"
+        }
+      },
+      "assignedTo": {
+        "arena": {
+          "atlas": "ui",
+          "syncedAt": "2026-03-15T04:40:19.802Z"
+        }
+      }
+    },
+    "gun_icon": {
+      "id": "gun_icon",
+      "name": "Gun Icon",
+      "category": "ui",
+      "tags": [
+        "arena"
+      ],
+      "prompt": "pixel art gun icon, ranged weapon, game UI",
+      "poses": [
+        "idle"
+      ],
+      "directions": 1,
+      "size": 16,
+      "color": "#ffffff",
+      "pipeline": {
+        "concept": {
+          "status": "done",
+          "path": "concepts/ui/gun_icon.png",
+          "generatedAt": "2026-03-15T04:40:19.816Z"
+        },
+        "render": {
+          "status": "done",
+          "frameCount": 1,
+          "generatedAt": "2026-03-15T04:40:19.833Z"
+        },
+        "pack": {
+          "status": "done",
+          "generatedAt": "2026-03-15T04:40:19.887Z"
+        }
+      },
+      "assignedTo": {
+        "arena": {
+          "atlas": "ui",
+          "syncedAt": "2026-03-15T04:40:19.887Z"
+        }
+      }
+    },
+    "melee_icon": {
+      "id": "melee_icon",
+      "name": "Melee Icon",
+      "category": "ui",
+      "tags": [
+        "arena"
+      ],
+      "prompt": "pixel art sword icon, melee weapon, game UI",
+      "poses": [
+        "idle"
+      ],
+      "directions": 1,
+      "size": 16,
+      "color": "#ffffff",
+      "pipeline": {
+        "concept": {
+          "status": "done",
+          "path": "concepts/ui/melee_icon.png",
+          "generatedAt": "2026-03-15T04:40:19.912Z"
+        },
+        "render": {
+          "status": "done",
+          "frameCount": 1,
+          "generatedAt": "2026-03-15T04:40:19.928Z"
+        },
+        "pack": {
+          "status": "done",
+          "generatedAt": "2026-03-15T04:40:19.988Z"
+        }
+      },
+      "assignedTo": {
+        "arena": {
+          "atlas": "ui",
+          "syncedAt": "2026-03-15T04:40:19.988Z"
+        }
+      }
+    },
+    "round_pip_on": {
+      "id": "round_pip_on",
+      "name": "Round Pip On",
+      "category": "ui",
+      "tags": [
+        "arena"
+      ],
+      "prompt": "pixel art glowing pip, round won indicator, game UI",
+      "poses": [
+        "idle"
+      ],
+      "directions": 1,
+      "size": 8,
+      "color": "#ffffff",
+      "pipeline": {
+        "concept": {
+          "status": "done",
+          "path": "concepts/ui/round_pip_on.png",
+          "generatedAt": "2026-03-15T04:40:20.004Z"
+        },
+        "render": {
+          "status": "done",
+          "frameCount": 1,
+          "generatedAt": "2026-03-15T04:40:20.019Z"
+        },
+        "pack": {
+          "status": "done",
+          "generatedAt": "2026-03-15T04:40:20.081Z"
+        }
+      },
+      "assignedTo": {
+        "arena": {
+          "atlas": "ui",
+          "syncedAt": "2026-03-15T04:40:20.081Z"
+        }
+      }
+    },
+    "round_pip_off": {
+      "id": "round_pip_off",
+      "name": "Round Pip Off",
+      "category": "ui",
+      "tags": [
+        "arena"
+      ],
+      "prompt": "pixel art dim pip, round not won indicator, game UI",
+      "poses": [
+        "idle"
+      ],
+      "directions": 1,
+      "size": 8,
+      "color": "#ffffff",
+      "pipeline": {
+        "concept": {
+          "status": "done",
+          "path": "concepts/ui/round_pip_off.png",
+          "generatedAt": "2026-03-15T04:40:20.098Z"
+        },
+        "render": {
+          "status": "done",
+          "frameCount": 1,
+          "generatedAt": "2026-03-15T04:40:20.117Z"
+        },
+        "pack": {
+          "status": "done",
+          "generatedAt": "2026-03-15T04:40:20.172Z"
+        }
+      },
+      "assignedTo": {
+        "arena": {
+          "atlas": "ui",
+          "syncedAt": "2026-03-15T04:40:20.172Z"
+        }
+      }
+    }
+  }
+}
