@@ -578,7 +578,28 @@ initWorkerManager(httpServer);
 httpServer.listen(PORT, async () => {
 ```
 
-- [ ] **Step 3: Add health and worker-status endpoints**
+- [ ] **Step 3: Move library state files to NAS (persistent storage)**
+
+The `library.json` and `visual-library.json` are written to `__dirname` (which is `/app/` in Docker — ephemeral). Move them to the NAS mounts so state survives pod restarts.
+
+In `Assetgenerator/server.js`, replace lines 98-99:
+```js
+const LIBRARY_PATH = join(__dirname, 'library.json');
+const VISUAL_LIBRARY_PATH = join(__dirname, 'visual-library.json');
+```
+With:
+```js
+const config = JSON.parse(readFileSync(join(__dirname, 'config', 'library-config.json'), 'utf-8'));
+const vConfigBoot = JSON.parse(readFileSync(join(__dirname, 'config', 'visual-config.json'), 'utf-8'));
+const LIBRARY_PATH = join(config.libraryRoot, 'library.json');
+const VISUAL_LIBRARY_PATH = join(vConfigBoot.libraryRoot, 'visual-library.json');
+```
+
+This writes `library.json` to `/mnt/pve3a/audio-library/library.json` and `visual-library.json` to `/mnt/pve3a/visual-library/visual-library.json` — both on persistent NAS volumes. The server and the workstation can both access these files.
+
+**Note:** For local dev (where NAS might not be mounted), the `loadLibrary()` / `loadVisualLibrary()` functions already return empty defaults if the file doesn't exist — so this gracefully degrades.
+
+- [ ] **Step 4: Add health and worker-status endpoints**
 
 Before the static serving section (~line 1203), add:
 
@@ -594,21 +615,21 @@ app.get('/api/worker-status', (req, res) => {
 });
 ```
 
-- [ ] **Step 4: Run existing tests**
+- [ ] **Step 5: Run existing tests**
 
 Run: `cd Assetgenerator && node --test test/api.test.js`
 Expected: All tests PASS
 
-- [ ] **Step 5: Smoke test locally**
+- [ ] **Step 6: Smoke test locally**
 
 Run: `cd Assetgenerator && node server.js --project arena`
 Expected: Server starts on port 5200. `curl http://localhost:5200/health` returns `{"status":"ok",...}`. `curl http://localhost:5200/api/worker-status` returns `{"connected":false,...}`.
 
-- [ ] **Step 6: Commit**
+- [ ] **Step 7: Commit**
 
 ```bash
 git add Assetgenerator/server.js
-git commit -m "feat(assetgenerator): wire worker-manager into server, add health + status endpoints"
+git commit -m "feat(assetgenerator): wire worker-manager into server, add health + status endpoints, persist state to NAS"
 ```
 
 ---
@@ -1563,6 +1584,8 @@ spec:
               value: "production"
             - name: PORT
               value: "5200"
+            # Worker-side project root — used to build script paths dispatched
+            # over WebSocket. The server container never resolves these locally.
             - name: ASSETGENERATOR_ROOT
               value: "/home/patrick/projects/Assetgenerator"
           volumeMounts:
