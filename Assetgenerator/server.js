@@ -658,6 +658,458 @@ app.post('/api/library/import', (req, res) => {
 });
 
 // =============================================================================
+// Visual Library Routes
+// =============================================================================
+
+function markDownstreamStale(asset, fromPhase) {
+  const phases = ['concept', 'model', 'render', 'pack'];
+  const startIdx = phases.indexOf(fromPhase) + 1;
+  for (let i = startIdx; i < phases.length; i++) {
+    if (asset.pipeline[phases[i]]) {
+      asset.pipeline[phases[i]].status = 'pending';
+    }
+  }
+}
+
+let visualGenerationInProgress = false;
+
+app.get('/api/visual-library', (req, res) => {
+  res.json(loadVisualLibrary());
+});
+
+app.get('/api/visual-library/:id', (req, res) => {
+  const library = loadVisualLibrary();
+  const asset = library.assets[req.params.id];
+  if (!asset) return res.status(404).json({ error: 'Asset not found' });
+  res.json(asset);
+});
+
+app.get('/api/visual-library/:id/concept', (req, res) => {
+  const library = loadVisualLibrary();
+  const asset = library.assets[req.params.id];
+  if (!asset) return res.status(404).json({ error: 'Asset not found' });
+  if (!asset.pipeline.concept?.path) return res.status(404).json({ error: 'No concept generated' });
+  const vConfig = loadVisualConfig();
+  const filePath = join(vConfig.libraryRoot, asset.pipeline.concept.path);
+  if (!existsSync(filePath)) return res.status(404).json({ error: 'File not found' });
+  res.sendFile(filePath);
+});
+
+app.get('/api/visual-library/:id/model', (req, res) => {
+  const library = loadVisualLibrary();
+  const asset = library.assets[req.params.id];
+  if (!asset) return res.status(404).json({ error: 'Asset not found' });
+  if (!asset.pipeline.model?.path) return res.status(404).json({ error: 'No model generated' });
+  const vConfig = loadVisualConfig();
+  const filePath = join(vConfig.libraryRoot, asset.pipeline.model.path);
+  if (!existsSync(filePath)) return res.status(404).json({ error: 'File not found' });
+  res.sendFile(filePath);
+});
+
+app.get('/api/visual-library/:id/render/:pose/:direction', (req, res) => {
+  const library = loadVisualLibrary();
+  const asset = library.assets[req.params.id];
+  if (!asset) return res.status(404).json({ error: 'Asset not found' });
+  const vConfig = loadVisualConfig();
+  const filePath = join(vConfig.libraryRoot, 'renders', asset.category, asset.id,
+    `${asset.id}-${req.params.pose}-${req.params.direction}.png`);
+  if (!existsSync(filePath)) return res.status(404).json({ error: 'Render not found' });
+  res.sendFile(filePath);
+});
+
+app.get('/api/visual-library/:id/atlas', (req, res) => {
+  const library = loadVisualLibrary();
+  const asset = library.assets[req.params.id];
+  if (!asset) return res.status(404).json({ error: 'Asset not found' });
+  const vConfig = loadVisualConfig();
+  const filePath = join(vConfig.libraryRoot, 'sprites', `${asset.category}.png`);
+  if (!existsSync(filePath)) return res.status(404).json({ error: 'Atlas not found' });
+  res.sendFile(filePath);
+});
+
+app.post('/api/visual-library', (req, res) => {
+  const { id, name, category, tags, prompt, poses, directions, size, color } = req.body;
+  if (!id || !name || !category) return res.status(400).json({ error: 'id, name, category required' });
+  const library = loadVisualLibrary();
+  if (library.assets[id]) return res.status(409).json({ error: 'Asset already exists' });
+  const vConfig = loadVisualConfig();
+  const catConfig = vConfig.categories[category] || {};
+
+  const pipeline = {
+    concept: { status: 'pending' },
+    render: { status: 'pending' },
+    pack: { status: 'pending' },
+  };
+  if (catConfig.has3D !== false) {
+    pipeline.model = { status: 'pending' };
+  }
+
+  library.assets[id] = {
+    id, name, category,
+    tags: tags || [],
+    prompt: prompt || '',
+    poses: poses || catConfig.defaultPoses || ['idle'],
+    directions: directions || catConfig.directions || 1,
+    size: size || catConfig.size || 32,
+    color: color || '#ffffff',
+    pipeline,
+    assignedTo: {},
+  };
+
+  saveVisualLibrary(library);
+  res.status(201).json(library.assets[id]);
+});
+
+app.put('/api/visual-library/:id', (req, res) => {
+  const library = loadVisualLibrary();
+  const asset = library.assets[req.params.id];
+  if (!asset) return res.status(404).json({ error: 'Asset not found' });
+  const allowed = ['name', 'category', 'tags', 'prompt', 'poses', 'directions', 'size', 'color'];
+  for (const key of allowed) {
+    if (req.body[key] !== undefined) asset[key] = req.body[key];
+  }
+  saveVisualLibrary(library);
+  res.json(asset);
+});
+
+app.delete('/api/visual-library/:id', (req, res) => {
+  const library = loadVisualLibrary();
+  const asset = library.assets[req.params.id];
+  if (!asset) return res.status(404).json({ error: 'Asset not found' });
+  const vConfig = loadVisualConfig();
+
+  // Best-effort NAS cleanup
+  const conceptPath = join(vConfig.libraryRoot, 'concepts', asset.category, `${asset.id}.png`);
+  if (existsSync(conceptPath)) unlinkSync(conceptPath);
+  const modelPath = join(vConfig.libraryRoot, 'models', asset.category, `${asset.id}.glb`);
+  if (existsSync(modelPath)) unlinkSync(modelPath);
+
+  delete library.assets[req.params.id];
+  saveVisualLibrary(library);
+  res.json({ deleted: req.params.id });
+});
+
+app.post('/api/visual-library/batch/generate', async (req, res) => {
+  if (visualGenerationInProgress) return res.status(409).json({ error: 'Visual generation in progress' });
+  const { ids, fromPhase } = req.body;
+  if (!ids || !Array.isArray(ids)) return res.status(400).json({ error: 'ids array required' });
+
+  visualGenerationInProgress = true;
+  res.writeHead(200, { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', Connection: 'keep-alive' });
+
+  const library = loadVisualLibrary();
+  const vConfig = loadVisualConfig();
+  let succeeded = 0, failed = 0;
+
+  for (const id of ids) {
+    const asset = library.assets[id];
+    if (!asset) {
+      res.write(`event: error\ndata: ${JSON.stringify({ asset: id, error: 'Not found' })}\n\n`);
+      failed++;
+      continue;
+    }
+
+    const phases = ['concept', 'model', 'render', 'pack'];
+    const startIdx = fromPhase ? phases.indexOf(fromPhase) : 0;
+    const catConfig = vConfig.categories[asset.category] || {};
+    const phasesToRun = phases.slice(startIdx >= 0 ? startIdx : 0)
+      .filter(p => !(p === 'model' && catConfig.has3D === false))
+      .filter(p => asset.pipeline[p]);
+
+    let assetFailed = false;
+    for (const p of phasesToRun) {
+      try {
+        res.write(`event: progress\ndata: ${JSON.stringify({ asset: id, phase: p, status: 'generating' })}\n\n`);
+        const adapterMap = { concept: 'comfyui', model: 'triposr', render: 'blender', pack: 'packer' };
+        const adapterPath = join(__dirname, 'adapters', `${adapterMap[p]}.js`);
+        if (!existsSync(adapterPath)) throw new Error(`Adapter ${adapterMap[p]} not found`);
+
+        const adapter = await import(adapterPath);
+        const result = await adapter.generate({ id, asset, config: vConfig, libraryRoot: vConfig.libraryRoot });
+
+        asset.pipeline[p] = { status: 'done', generatedAt: new Date().toISOString() };
+        if (result.path) asset.pipeline[p].path = result.path;
+        if (result.frameCount) asset.pipeline[p].frameCount = result.frameCount;
+        if (result.backend) asset.pipeline[p].backend = result.backend;
+        saveVisualLibrary(library);
+
+        res.write(`event: done\ndata: ${JSON.stringify({ asset: id, phase: p, ...result })}\n\n`);
+      } catch (err) {
+        asset.pipeline[p] = { status: 'error' };
+        saveVisualLibrary(library);
+        res.write(`event: error\ndata: ${JSON.stringify({ asset: id, phase: p, error: err.message })}\n\n`);
+        assetFailed = true;
+        break;
+      }
+    }
+    if (assetFailed) failed++; else succeeded++;
+  }
+
+  res.write(`event: complete\ndata: ${JSON.stringify({ total: ids.length, succeeded, failed })}\n\n`);
+  res.end();
+  visualGenerationInProgress = false;
+});
+
+app.post('/api/visual-library/import', (req, res) => {
+  const { project } = req.body;
+  if (!project) return res.status(400).json({ error: 'project required' });
+  const proj = loadProject(project);
+  if (!proj) return res.status(404).json({ error: `Project ${project} not found` });
+
+  const library = loadVisualLibrary();
+  const vConfig = loadVisualConfig();
+
+  let manifest;
+  try {
+    manifest = JSON.parse(readFileSync(resolve(__dirname, proj.manifestPath), 'utf-8'));
+  } catch {
+    return res.status(400).json({ error: 'Cannot read manifest' });
+  }
+
+  const imported = [];
+  const arenaRoot = resolve(__dirname, proj.audioRoot, '..');
+
+  const categoryAssets = {
+    characters: manifest.characters || [],
+    weapons: manifest.weapons || [],
+    items: manifest.items || [],
+    tiles: manifest.tiles || [],
+    cover: manifest.cover || [],
+    ui: manifest.ui || [],
+  };
+
+  for (const [category, assets] of Object.entries(categoryAssets)) {
+    const catConfig = vConfig.categories[category] || {};
+
+    for (const asset of assets) {
+      const id = asset.id;
+      if (library.assets[id]) continue;
+
+      const pipeline = {};
+
+      // Concept
+      const conceptSrc = join(arenaRoot, 'concepts', category, `${id}.png`);
+      if (existsSync(conceptSrc)) {
+        const conceptDest = join(vConfig.libraryRoot, 'concepts', category);
+        if (!existsSync(conceptDest)) mkdirSync(conceptDest, { recursive: true });
+        copyFileSync(conceptSrc, join(conceptDest, `${id}.png`));
+        pipeline.concept = { status: 'done', path: `concepts/${category}/${id}.png`, generatedAt: new Date().toISOString() };
+      } else {
+        pipeline.concept = { status: 'pending' };
+      }
+
+      // Model (3D categories only)
+      if (catConfig.has3D !== false) {
+        const modelSrc = join(arenaRoot, 'models', category, `${id}.glb`);
+        if (existsSync(modelSrc)) {
+          const modelDest = join(vConfig.libraryRoot, 'models', category);
+          if (!existsSync(modelDest)) mkdirSync(modelDest, { recursive: true });
+          copyFileSync(modelSrc, join(modelDest, `${id}.glb`));
+          pipeline.model = { status: 'done', path: `models/${category}/${id}.glb`, generatedAt: new Date().toISOString() };
+        } else {
+          pipeline.model = { status: 'pending' };
+        }
+      }
+
+      // Renders
+      const renderSrc = join(arenaRoot, 'renders', category, id);
+      if (existsSync(renderSrc) && statSync(renderSrc).isDirectory()) {
+        const renderDest = join(vConfig.libraryRoot, 'renders', category, id);
+        if (!existsSync(renderDest)) mkdirSync(renderDest, { recursive: true });
+        const files = readdirSync(renderSrc).filter(f => f.endsWith('.png'));
+        for (const f of files) copyFileSync(join(renderSrc, f), join(renderDest, f));
+        pipeline.render = { status: 'done', frameCount: files.length, generatedAt: new Date().toISOString() };
+      } else {
+        pipeline.render = { status: 'pending' };
+      }
+
+      // Pack (check atlas)
+      const atlasSrc = join(arenaRoot, '..', 'frontend', 'public', 'assets', 'sprites', `${category}.png`);
+      if (existsSync(atlasSrc)) {
+        const spritesDest = join(vConfig.libraryRoot, 'sprites');
+        if (!existsSync(spritesDest)) mkdirSync(spritesDest, { recursive: true });
+        for (const ext of ['.png', '.json']) {
+          const src = join(arenaRoot, '..', 'frontend', 'public', 'assets', 'sprites', `${category}${ext}`);
+          if (existsSync(src)) copyFileSync(src, join(spritesDest, `${category}${ext}`));
+        }
+        pipeline.pack = { status: 'done', generatedAt: new Date().toISOString() };
+      } else {
+        pipeline.pack = { status: 'pending' };
+      }
+
+      library.assets[id] = {
+        id,
+        name: asset.name || id.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),
+        category,
+        tags: [project],
+        prompt: asset.prompt || '',
+        poses: asset.poses || catConfig.defaultPoses || ['idle'],
+        directions: catConfig.directions || 1,
+        size: asset.size || catConfig.size || 32,
+        color: asset.color || '#ffffff',
+        pipeline,
+        assignedTo: { [project]: { atlas: category, syncedAt: new Date().toISOString() } },
+      };
+      imported.push(id);
+    }
+  }
+
+  // Copy Blender templates
+  const blendSrc = join(arenaRoot, 'blend');
+  if (existsSync(blendSrc) && statSync(blendSrc).isDirectory()) {
+    const blendDest = join(vConfig.libraryRoot, 'blend');
+    if (!existsSync(blendDest)) mkdirSync(blendDest, { recursive: true });
+    const walkAndCopy = (src, dest) => {
+      for (const entry of readdirSync(src, { withFileTypes: true })) {
+        const srcPath = join(src, entry.name);
+        const destPath = join(dest, entry.name);
+        if (entry.isDirectory()) {
+          if (!existsSync(destPath)) mkdirSync(destPath, { recursive: true });
+          walkAndCopy(srcPath, destPath);
+        } else {
+          copyFileSync(srcPath, destPath);
+        }
+      }
+    };
+    walkAndCopy(blendSrc, blendDest);
+  }
+
+  saveVisualLibrary(library);
+  res.json({ imported, count: imported.length });
+});
+
+app.post('/api/visual-library/:id/generate/:phase', async (req, res) => {
+  if (visualGenerationInProgress) return res.status(409).json({ error: 'Visual generation in progress' });
+  const library = loadVisualLibrary();
+  const asset = library.assets[req.params.id];
+  if (!asset) return res.status(404).json({ error: 'Asset not found' });
+
+  const phase = req.params.phase;
+  const validPhases = ['concept', 'model', 'render', 'pack', 'full'];
+  if (!validPhases.includes(phase)) return res.status(400).json({ error: `Invalid phase: ${phase}` });
+
+  visualGenerationInProgress = true;
+  res.writeHead(200, { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', Connection: 'keep-alive' });
+
+  const vConfig = loadVisualConfig();
+  const catConfig = vConfig.categories[asset.category] || {};
+
+  let phasesToRun;
+  if (phase === 'full') {
+    phasesToRun = ['concept', 'model', 'render', 'pack']
+      .filter(p => asset.pipeline[p] && asset.pipeline[p].status !== 'done');
+  } else {
+    phasesToRun = [phase];
+  }
+  // Skip model for non-3D categories
+  phasesToRun = phasesToRun.filter(p => !(p === 'model' && catConfig.has3D === false));
+
+  for (const p of phasesToRun) {
+    try {
+      res.write(`event: progress\ndata: ${JSON.stringify({ asset: asset.id, phase: p, status: 'generating' })}\n\n`);
+      if (!asset.pipeline[p]) asset.pipeline[p] = {};
+      asset.pipeline[p].status = 'generating';
+
+      const adapterMap = { concept: 'comfyui', model: 'triposr', render: 'blender', pack: 'packer' };
+      const adapterName = adapterMap[p];
+      const adapterPath = join(__dirname, 'adapters', `${adapterName}.js`);
+      if (!existsSync(adapterPath)) throw new Error(`Adapter not found: ${adapterPath}`);
+
+      const adapter = await import(adapterPath);
+      const result = await adapter.generate({ id: asset.id, asset, config: vConfig, libraryRoot: vConfig.libraryRoot });
+
+      asset.pipeline[p].status = 'done';
+      asset.pipeline[p].generatedAt = new Date().toISOString();
+      if (result.path) asset.pipeline[p].path = result.path;
+      if (result.frameCount) asset.pipeline[p].frameCount = result.frameCount;
+      if (result.backend) asset.pipeline[p].backend = result.backend;
+
+      markDownstreamStale(asset, p);
+      saveVisualLibrary(library);
+
+      res.write(`event: done\ndata: ${JSON.stringify({ asset: asset.id, phase: p, ...result })}\n\n`);
+    } catch (err) {
+      asset.pipeline[p].status = 'error';
+      saveVisualLibrary(library);
+      res.write(`event: error\ndata: ${JSON.stringify({ asset: asset.id, phase: p, error: err.message })}\n\n`);
+      break;
+    }
+  }
+
+  res.write(`event: complete\ndata: ${JSON.stringify({ asset: asset.id })}\n\n`);
+  res.end();
+  visualGenerationInProgress = false;
+});
+
+app.post('/api/visual-library/:id/assign', (req, res) => {
+  const { project, atlas } = req.body;
+  if (!project || !atlas) return res.status(400).json({ error: 'project and atlas required' });
+  const library = loadVisualLibrary();
+  const asset = library.assets[req.params.id];
+  if (!asset) return res.status(404).json({ error: 'Asset not found' });
+  const vConfig = loadVisualConfig();
+  const proj = loadProject(project);
+  if (!proj) return res.status(404).json({ error: `Project ${project} not found` });
+
+  const outputRoot = resolve(__dirname, proj.outputRoot);
+  const spritesDir = join(outputRoot, 'sprites');
+  if (!existsSync(spritesDir)) mkdirSync(spritesDir, { recursive: true });
+
+  for (const ext of ['.png', '.json']) {
+    const src = join(vConfig.libraryRoot, 'sprites', `${asset.category}${ext}`);
+    if (existsSync(src)) copyFileSync(src, join(spritesDir, `${asset.category}${ext}`));
+  }
+
+  if (!asset.assignedTo) asset.assignedTo = {};
+  asset.assignedTo[project] = { atlas, syncedAt: new Date().toISOString() };
+  saveVisualLibrary(library);
+  res.json(asset);
+});
+
+app.post('/api/visual-library/:id/unassign', (req, res) => {
+  const { project } = req.body;
+  if (!project) return res.status(400).json({ error: 'project required' });
+  const library = loadVisualLibrary();
+  const asset = library.assets[req.params.id];
+  if (!asset) return res.status(404).json({ error: 'Asset not found' });
+  if (asset.assignedTo?.[project]) {
+    delete asset.assignedTo[project];
+    saveVisualLibrary(library);
+  }
+  res.json(asset);
+});
+
+app.post('/api/projects/:name/sync-visual', (req, res) => {
+  const project = loadProject(req.params.name);
+  if (!project) return res.status(404).json({ error: 'Project not found' });
+  const library = loadVisualLibrary();
+  const vConfig = loadVisualConfig();
+  const synced = [];
+
+  for (const [id, asset] of Object.entries(library.assets)) {
+    const assignment = asset.assignedTo?.[req.params.name];
+    if (!assignment) continue;
+    const packGen = asset.pipeline.pack?.generatedAt;
+    if (packGen && assignment.syncedAt && new Date(packGen) <= new Date(assignment.syncedAt)) continue;
+
+    const outputRoot = resolve(__dirname, project.outputRoot);
+    const spritesDir = join(outputRoot, 'sprites');
+    if (!existsSync(spritesDir)) mkdirSync(spritesDir, { recursive: true });
+
+    for (const ext of ['.png', '.json']) {
+      const src = join(vConfig.libraryRoot, 'sprites', `${asset.category}${ext}`);
+      if (existsSync(src)) copyFileSync(src, join(spritesDir, `${asset.category}${ext}`));
+    }
+
+    assignment.syncedAt = new Date().toISOString();
+    synced.push(id);
+  }
+
+  saveVisualLibrary(library);
+  res.json({ synced, count: synced.length });
+});
+
+// =============================================================================
 // Static serving & startup
 // =============================================================================
 
