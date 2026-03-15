@@ -10,6 +10,8 @@ import {
 } from '@shared/schema';
 import { eq, inArray, isNotNull, and } from 'drizzle-orm';
 import { randomUUID } from 'crypto';
+import path from 'path';
+import fs from 'fs/promises';
 import { resolveInputPath } from '../lib/path-resolver';
 import { syncVideoSidecar } from '../lib/sidecar';
 
@@ -21,10 +23,29 @@ function requireDb(res: Response) {
   return true;
 }
 
+// Resolve the movies_index.json path once at module load
+const MOVIES_DIR = process.env.MOVIES_DIR || path.join(process.cwd(), 'media', 'movies');
+const MOVIES_INDEX_PATH = path.join(path.dirname(MOVIES_DIR), 'movies_index.json');
+
 // Videos
 export async function listVideos(req: Request, res: Response) {
-  if (!requireDb(res)) return;
   const includeIncomplete = req.query.includeIncomplete === 'true';
+
+  // Fast path: serve pre-built movies_index.json for the default query.
+  // This avoids a DB round-trip and gives every user the same library instantly.
+  if (!includeIncomplete) {
+    try {
+      const content = await fs.readFile(MOVIES_INDEX_PATH, 'utf-8');
+      res.setHeader('Content-Type', 'application/json');
+      res.setHeader('X-Source', 'movies-index-file');
+      return res.send(content);
+    } catch {
+      // File missing — fall through to DB query
+    }
+  }
+
+  // Fallback: query DB directly
+  if (!requireDb(res)) return;
 
   let rows;
   if (includeIncomplete) {

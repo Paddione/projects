@@ -1218,9 +1218,15 @@ router.get('/stats', async (req: Request, res: Response) => {
 // Register Job Handlers
 // ============================================================================
 
-// Register movie processing handler
+// Register movie processing handler — regenerate index after each successful process
 jobQueue.registerHandler('process-movie', async (data) => {
-  return await handleMovieProcessing(data, {} as any, db);
+  const result = await handleMovieProcessing(data, {} as any, db);
+  // Rebuild movies_index.json so new movies appear for all users
+  try {
+    const { generateMoviesIndex } = await import('../lib/startup-tasks');
+    await generateMoviesIndex(db);
+  } catch { /* non-fatal */ }
+  return result;
 });
 
 // Register audiobook processing handler (will be implemented)

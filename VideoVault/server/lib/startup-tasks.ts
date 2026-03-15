@@ -1,7 +1,7 @@
 import path from 'path';
 import fs from 'fs/promises';
 import crypto from 'crypto';
-import { eq } from 'drizzle-orm';
+import { eq, and, isNotNull } from 'drizzle-orm';
 import { videos, directoryRoots } from '@shared/schema';
 import { logger } from './logger';
 import { MOVIE_EXTENSIONS, extractMovieMetadata, detectQualityCategories, generateMovieThumbnail } from '../handlers/movie-handler';
@@ -54,7 +54,10 @@ export async function runStartupTasks(db: any): Promise<void> {
   // 4. Index all videos with existing thumbnails into DB (fast — no ffmpeg)
   await autoIndexLibrary(db, MOVIES_DIR);
 
-  // 5. Generate missing thumbnails for flat files (slow — runs last)
+  // 5. Write movies_index.json from DB — serves as the default library for all users
+  await generateMoviesIndex(db, MOVIES_DIR);
+
+  // 6. Generate missing thumbnails for flat files (slow — runs last)
   await generateMissingThumbnails(MOVIES_DIR);
 }
 
@@ -373,6 +376,34 @@ async function autoIndexLibrary(db: any, moviesDir: string): Promise<void> {
     logger.info('[StartupTasks] Auto-index complete', { indexed, skipped, errors });
   } else {
     logger.info('[StartupTasks] Auto-index: library up to date', { skipped });
+  }
+}
+
+/**
+ * Write movies_index.json next to MOVIES_DIR.
+ * Contains all completed videos with thumbnails — same shape as GET /api/videos.
+ * Exported so it can be called after the movie watcher processes new files.
+ */
+export async function generateMoviesIndex(db: any, moviesDir?: string): Promise<void> {
+  if (!db) return;
+  const MOVIES_DIR = moviesDir || process.env.MOVIES_DIR || path.join(process.cwd(), 'media', 'movies');
+  const indexPath = path.join(path.dirname(MOVIES_DIR), 'movies_index.json');
+
+  try {
+    const rows = await db
+      .select()
+      .from(videos)
+      .where(
+        and(
+          isNotNull(videos.thumbnail),
+          eq(videos.processingStatus, 'completed'),
+        ),
+      );
+
+    await fs.writeFile(indexPath, JSON.stringify(rows), 'utf-8');
+    logger.info('[StartupTasks] Generated movies_index.json', { count: rows.length, path: indexPath });
+  } catch (err: any) {
+    logger.warn('[StartupTasks] Failed to generate movies_index.json', { error: err.message });
   }
 }
 
