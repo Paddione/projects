@@ -190,6 +190,16 @@ RootsRegistry.init();
 
   const server = registerRoutes(app);
 
+  // Run startup tasks: auto-index library, process inbox files
+  if (dbInstance && process.env.NODE_ENV !== 'test') {
+    try {
+      const { runStartupTasks } = await import('./lib/startup-tasks');
+      await runStartupTasks(dbInstance);
+    } catch (err) {
+      logger.warn('Startup tasks failed (non-fatal)', { error: (err as Error).message });
+    }
+  }
+
   if (process.env.ENABLE_MOVIE_WATCHER !== '0') {
     const { startMovieWatcher, setMovieWatcherInstance } = await import('./lib/movie-watcher');
     const watcher = startMovieWatcher();

@@ -1,6 +1,7 @@
 import fs from 'fs/promises';
 import path from 'path';
 import { scanMoviesDirectory, cleanupOrphanedThumbnails, cleanupEmptyDirectories } from '../handlers/movie-handler';
+import { drainInbox } from './startup-tasks';
 import { jobQueue } from './job-queue';
 import { logger } from './logger';
 
@@ -183,6 +184,8 @@ export function startMovieWatcher(options: MovieWatcherOptions = {}) {
       if (scanning) return;
       scanning = true;
       try {
+        // Move any new files from 1_inbox/ to movies root before scanning
+        await drainInbox(moviesDir);
         await scanAndQueue();
         scanCount++;
         if (scanCount % cleanupEveryNScans === 0) {

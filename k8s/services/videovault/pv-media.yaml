@@ -5,7 +5,7 @@
 # These PVs mount existing SMB directories directly (not dynamic provisioning)
 # =============================================================================
 
-# Movies PV - mounts //10.10.0.3/SMB-Share/movies directly
+# Movies PV - mounts //10.0.0.11/SDD-Share/movies directly
 apiVersion: v1
 kind: PersistentVolume
 metadata:
@@ -33,7 +33,7 @@ spec:
     driver: smb.csi.k8s.io
     volumeHandle: videovault-movies-pv
     volumeAttributes:
-      source: "//10.10.0.3/SMB-Share/movies"
+      source: "//10.0.0.11/SDD-Share/movies"
     nodeStageSecretRef:
       name: smbcreds
       namespace: korczewski-infra
