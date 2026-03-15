@@ -79,7 +79,7 @@ spec:
             - name: MOVIE_WATCHER_BACKFILL
               value: "1"
             - name: MOVIE_WATCHER_AUTO_ORGANIZE
-              value: "0"
+              value: "1"
             - name: CORS_ORIGINS
               value: "https://videovault.korczewski.de,https://video.korczewski.de"
             - name: TRUST_PROXY
