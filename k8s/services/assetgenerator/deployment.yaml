@@ -1,0 +1,114 @@
+---
+# =============================================================================
+# Assetgenerator Deployment
+# =============================================================================
+# Express server for asset generation orchestration. GPU work dispatched to
+# remote worker via WebSocket; server handles UI, library management, and
+# CPU-only post-processing (ffmpeg).
+# =============================================================================
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: assetgenerator
+  namespace: korczewski-services
+  labels:
+    app: assetgenerator
+    app.kubernetes.io/component: assetgenerator
+    app.kubernetes.io/name: assetgenerator
+    app.kubernetes.io/part-of: korczewski
+    tier: services
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: assetgenerator
+      app.kubernetes.io/component: assetgenerator
+      app.kubernetes.io/part-of: korczewski
+      tier: services
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: assetgenerator
+        app.kubernetes.io/component: assetgenerator
+        app.kubernetes.io/name: assetgenerator
+        app.kubernetes.io/part-of: korczewski
+        tier: services
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+        runAsGroup: 1001
+        fsGroup: 1001
+      nodeSelector:
+        kubernetes.io/arch: amd64
+      containers:
+        - name: assetgenerator
+          image: registry.local:5000/korczewski/assetgenerator:latest
+          imagePullPolicy: Always
+          ports:
+            - name: http
+              containerPort: 5200
+              protocol: TCP
+          env:
+            - name: NODE_ENV
+              value: "production"
+            - name: PORT
+              value: "5200"
+            # Worker-side project root — used to build script paths dispatched
+            # over WebSocket. The server container never resolves these locally.
+            - name: ASSETGENERATOR_ROOT
+              value: "/home/patrick/projects/Assetgenerator"
+          volumeMounts:
+            - name: audio-library
+              mountPath: /mnt/pve3a/audio-library
+            - name: visual-library
+              mountPath: /mnt/pve3a/visual-library
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "500m"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 5200
+            initialDelaySeconds: 10
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 5200
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 5200
+            initialDelaySeconds: 5
+            periodSeconds: 3
+            timeoutSeconds: 5
+            failureThreshold: 10
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+      volumes:
+        - name: audio-library
+          persistentVolumeClaim:
+            claimName: assetgenerator-audio
+        - name: visual-library
+          persistentVolumeClaim:
+            claimName: assetgenerator-visual

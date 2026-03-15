@@ -1,0 +1,32 @@
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: assetgenerator-audio-pv
+  labels:
+    app: assetgenerator
+    type: audio-library
+spec:
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ""
+  csi:
+    driver: smb.csi.k8s.io
+    volumeHandle: assetgenerator-audio
+    volumeAttributes:
+      source: "//10.0.0.11/storage-pve3a/audio-library"
+    nodeStageSecretRef:
+      name: smbcreds
+      namespace: korczewski-infra
+  mountOptions:
+    - dir_mode=0755
+    - file_mode=0644
+    - uid=1001
+    - gid=1001
+    - noperm
+    - mfsymlinks
+    - cache=none
+    - noserverino
