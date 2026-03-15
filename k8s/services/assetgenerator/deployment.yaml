@@ -64,6 +64,12 @@ spec:
             # over WebSocket. The server container never resolves these locally.
             - name: ASSETGENERATOR_ROOT
               value: "/home/patrick/projects/Assetgenerator"
+            - name: GEMINI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: assetgenerator-secrets
+                  key: GEMINI_API_KEY
+                  optional: true
           volumeMounts:
             - name: audio-library
               mountPath: /mnt/pve3a/audio-library

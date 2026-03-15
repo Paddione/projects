@@ -907,14 +907,16 @@ app.post('/api/visual-library/batch/generate', async (req, res) => {
     for (const p of phasesToRun) {
       try {
         res.write(`event: progress\ndata: ${JSON.stringify({ asset: id, phase: p, status: 'generating' })}\n\n`);
-        const adapterMap = { concept: 'comfyui', model: 'triposr', render: 'blender', pack: 'packer' };
-        const adapterPath = join(__dirname, 'adapters', `${adapterMap[p]}.js`);
-        if (!existsSync(adapterPath)) throw new Error(`Adapter ${adapterMap[p]} not found`);
+        const defaultAdapterMap = { concept: 'comfyui', model: 'triposr', render: 'blender', pack: 'packer' };
+        // Allow per-asset backend override for concept phase (e.g., gemini-imagen)
+        const adapterName = (p === 'concept' && asset.conceptBackend) ? asset.conceptBackend : defaultAdapterMap[p];
+        const adapterPath = join(__dirname, 'adapters', `${adapterName}.js`);
+        if (!existsSync(adapterPath)) throw new Error(`Adapter ${adapterName} not found`);
 
         const adapter = await import(adapterPath);
         const result = await adapter.generate({ id, asset, config: vConfig, libraryRoot: vConfig.libraryRoot });
 
-        asset.pipeline[p] = { status: 'done', generatedAt: new Date().toISOString() };
+        asset.pipeline[p] = { status: 'done', generatedAt: new Date().toISOString(), backend: adapterName };
         if (result.path) asset.pipeline[p].path = result.path;
         if (result.frameCount) asset.pipeline[p].frameCount = result.frameCount;
         if (result.backend) asset.pipeline[p].backend = result.backend;
@@ -1105,8 +1107,8 @@ app.post('/api/visual-library/:id/generate/:phase', async (req, res) => {
       if (!asset.pipeline[p]) asset.pipeline[p] = {};
       asset.pipeline[p].status = 'generating';
 
-      const adapterMap = { concept: 'comfyui', model: 'triposr', render: 'blender', pack: 'packer' };
-      const adapterName = adapterMap[p];
+      const defaultAdapterMap = { concept: 'comfyui', model: 'triposr', render: 'blender', pack: 'packer' };
+      const adapterName = (p === 'concept' && asset.conceptBackend) ? asset.conceptBackend : defaultAdapterMap[p];
       const adapterPath = join(__dirname, 'adapters', `${adapterName}.js`);
       if (!existsSync(adapterPath)) throw new Error(`Adapter not found: ${adapterPath}`);
 
