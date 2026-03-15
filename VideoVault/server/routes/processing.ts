@@ -236,7 +236,10 @@ router.post('/movies/rename', async (req: Request, res: Response) => {
       }
     }
 
-    // 5. Update database: delete old records, upsert with deterministic ID
+    // 5. Read existing sidecar to preserve categories across rename
+    const oldSidecar = await readSidecar(newDirPath); // dir already renamed
+
+    // 6. Update database: delete old records, upsert with deterministic ID
     const oldRelPath = path.relative(MOVIES_DIR, resolvedDir);
     const newRelPath = path.relative(MOVIES_DIR, newDirPath);
     const newRelVideoPath = path.join(newRelPath, `${sanitizedNewName}${ext}`);
@@ -261,6 +264,11 @@ router.post('/movies/rename', async (req: Request, res: Response) => {
         const newVideoPath = path.join(newDirPath, `${sanitizedNewName}${ext}`);
         const stat = await fs.stat(newVideoPath);
 
+        // Preserve categories from old sidecar
+        const categories = (oldSidecar?.categories || { age: [], physical: [], ethnicity: [], relationship: [], acts: [], setting: [], quality: [], performer: [] }) as any;
+        const customCategories = (oldSidecar?.customCategories || {}) as any;
+        const metadata = oldSidecar?.metadata || { duration: 0, width: 0, height: 0, bitrate: 0, codec: '', fps: 0, aspectRatio: '' };
+
         // Upsert with the deterministic ID that /movies/index would generate
         await db
           .insert(videos)
@@ -271,9 +279,9 @@ router.post('/movies/rename', async (req: Request, res: Response) => {
             path: newDbPath,
             size: stat.size,
             lastModified: stat.mtime,
-            metadata: { duration: 0, width: 0, height: 0, bitrate: 0, codec: '', fps: 0, aspectRatio: '' },
-            categories: { age: [], physical: [], ethnicity: [], relationship: [], acts: [], setting: [], quality: [], performer: [] },
-            customCategories: {},
+            metadata,
+            categories,
+            customCategories,
             thumbnail: thumbUrl ? { generated: true, dataUrl: thumbUrl, timestamp: new Date().toISOString() } : null,
             rootKey: 'movies',
             processingStatus: thumbUrl ? 'completed' : 'pending',
@@ -286,10 +294,26 @@ router.post('/movies/rename', async (req: Request, res: Response) => {
               path: newDbPath,
               size: stat.size,
               lastModified: stat.mtime,
+              metadata,
+              categories,
+              customCategories,
               thumbnail: thumbUrl ? { generated: true, dataUrl: thumbUrl, timestamp: new Date().toISOString() } : null,
               processingStatus: thumbUrl ? 'completed' : 'pending',
             },
           });
+
+        // Write updated sidecar with new name and ID
+        await writeSidecar(newDirPath, {
+          version: 1,
+          id: newId,
+          filename: `${sanitizedNewName}${ext}`,
+          displayName: sanitizedNewName,
+          size: stat.size,
+          lastModified: stat.mtime.toISOString(),
+          metadata,
+          categories,
+          customCategories,
+        });
       }
     } catch (dbError: any) {
       logger.warn('[Processing] DB update failed during rename (non-fatal)', {
@@ -564,6 +588,13 @@ router.post('/movies/index', async (req: Request, res: Response) => {
 
           const thumbUrl = `/media/movies/${relDir}/Thumbnails/${encodeURIComponent(baseName)}_thumb.jpg`;
 
+          // Read existing sidecar for categories and metadata
+          const sidecar = await readSidecar(dir);
+          const displayName = sidecar?.displayName || baseName;
+          const metadata = sidecar?.metadata || { duration: 0, width: 0, height: 0, bitrate: 0, codec: '', fps: 0, aspectRatio: '' };
+          const categories = (sidecar?.categories || { age: [], physical: [], ethnicity: [], relationship: [], acts: [], setting: [], quality: [], performer: [] }) as any;
+          const customCategories = (sidecar?.customCategories || {}) as any;
+
           // Upsert into videos table
           if (db) {
             const dbPath = `movies/${relVideoPath}`;
@@ -572,30 +603,13 @@ router.post('/movies/index', async (req: Request, res: Response) => {
               .values({
                 id,
                 filename: videoFile.name,
-                displayName: baseName,
+                displayName,
                 path: dbPath,
                 size: stat.size,
                 lastModified: stat.mtime,
-                metadata: {
-                  duration: 0,
-                  width: 0,
-                  height: 0,
-                  bitrate: 0,
-                  codec: '',
-                  fps: 0,
-                  aspectRatio: '',
-                },
-                categories: {
-                  age: [],
-                  physical: [],
-                  ethnicity: [],
-                  relationship: [],
-                  acts: [],
-                  setting: [],
-                  quality: [],
-                  performer: [],
-                },
-                customCategories: {},
+                metadata,
+                categories,
+                customCategories,
                 thumbnail: { generated: true, dataUrl: thumbUrl, timestamp: new Date().toISOString() },
                 rootKey: 'movies',
                 processingStatus: 'completed',
@@ -604,10 +618,13 @@ router.post('/movies/index', async (req: Request, res: Response) => {
                 target: videos.id,
                 set: {
                   filename: videoFile.name,
-                  displayName: baseName,
+                  displayName,
                   path: dbPath,
                   size: stat.size,
                   lastModified: stat.mtime,
+                  metadata,
+                  categories,
+                  customCategories,
                   thumbnail: { generated: true, dataUrl: thumbUrl, timestamp: new Date().toISOString() },
                   processingStatus: 'completed',
                 },

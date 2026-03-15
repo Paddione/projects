@@ -5,7 +5,7 @@ import { eq, and, isNotNull } from 'drizzle-orm';
 import { videos, directoryRoots } from '@shared/schema';
 import { logger } from './logger';
 import { MOVIE_EXTENSIONS, extractMovieMetadata, detectQualityCategories, generateMovieThumbnail } from '../handlers/movie-handler';
-import { readSidecar } from './sidecar';
+import { readSidecar, writeSidecar } from './sidecar';
 import { extractCategoriesFromPath, mergeCategories } from '@shared/category-extractor';
 
 // Track filenames that failed stat (encoding issues on SMB) — warn only once
@@ -359,10 +359,19 @@ async function autoIndexLibrary(db: any, moviesDir: string): Promise<void> {
       const base = mergeCategories(defaultCategories(qualities), extracted);
       const categories = mergeCategories(base, sidecarCategories as any);
 
+      const customCategories = sidecar?.customCategories || {};
       await upsertVideo(db, {
         id, filename: videoFile.name, displayName,
         dbPath: `movies/${relVideoPath}`, stat, metadata, thumbUrl,
-        categories, customCategories: sidecar?.customCategories || {},
+        categories, customCategories,
+      });
+
+      // Write enriched data back to sidecar so it stays in sync
+      await writeSidecar(dir, {
+        version: 1, id,
+        filename: videoFile.name, displayName,
+        size: stat.size, lastModified: stat.mtime.toISOString(),
+        metadata, categories: categories as any, customCategories,
       });
       indexed++;
     } catch (err: any) {

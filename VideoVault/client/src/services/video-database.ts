@@ -291,6 +291,9 @@ export class VideoDatabase {
       };
     });
     this.saveToStorage(updatedVideos);
+    // Sync to server (and sidecar) so displayName changes persist
+    const changed = updatedVideos.find((v) => v.id === videoId);
+    if (changed) void this.syncBulkUpsert([changed]);
     return updatedVideos;
   }
 

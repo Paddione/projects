@@ -24,7 +24,7 @@ export async function renameTagRoute(req: Request, res: Response) {
   // Update videos
   const allVideos = await db.select().from(videos);
   let updatedCount = 0;
-  const changedHddExt: typeof allVideos = [];
+  const changedWithRoot: typeof allVideos = [];
 
   for (const video of allVideos) {
     let changed = false;
@@ -54,12 +54,12 @@ export async function renameTagRoute(req: Request, res: Response) {
         })
         .where(eq(videos.id, video.id));
       updatedCount++;
-      if (video.rootKey === 'hdd-ext') changedHddExt.push(video);
+      if (video.rootKey) changedWithRoot.push(video);
     }
   }
 
-  // Sync sidecars for affected hdd-ext videos
-  for (const video of changedHddExt) {
+  // Sync sidecars for all affected videos with a rootKey
+  for (const video of changedWithRoot) {
     await syncVideoSidecar(video as any);
   }
 
@@ -83,7 +83,7 @@ export async function mergeTagsRoute(req: Request, res: Response) {
 
   const allVideos = await db.select().from(videos);
   let updatedCount = 0;
-  const changedHddExt: typeof allVideos = [];
+  const changedWithRoot: typeof allVideos = [];
 
   for (const video of allVideos) {
     let changed = false;
@@ -117,12 +117,12 @@ export async function mergeTagsRoute(req: Request, res: Response) {
         .set({ categories: cats, customCategories: customCats })
         .where(eq(videos.id, video.id));
       updatedCount++;
-      if (video.rootKey === 'hdd-ext') changedHddExt.push(video);
+      if (video.rootKey) changedWithRoot.push(video);
     }
   }
 
-  // Sync sidecars for affected hdd-ext videos
-  for (const video of changedHddExt) {
+  // Sync sidecars for all affected videos with a rootKey
+  for (const video of changedWithRoot) {
     await syncVideoSidecar(video as any);
   }
 
