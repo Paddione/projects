@@ -40,8 +40,13 @@ export async function runStartupTasks(db: any): Promise<void> {
   await fs.mkdir(inboxDir, { recursive: true }).catch(() => {});
   logger.info('[StartupTasks] Directories ensured', { moviesDir: MOVIES_DIR });
 
-  // 2. Register 'movies' root in DB so indexed videos survive startup cleanup
-  await ensureMoviesRoot(db, MOVIES_DIR);
+  // 2. Register 'movies' root in DB so indexed videos survive startup cleanup.
+  //    Retry briefly — the DB may still be recovering from the startup TRUNCATE.
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const ok = await ensureMoviesRoot(db, MOVIES_DIR);
+    if (ok) break;
+    await new Promise((r) => setTimeout(r, 2000));
+  }
 
   // 3. Drain inbox → move files to MOVIES_DIR root
   await drainInbox(MOVIES_DIR);
@@ -125,8 +130,8 @@ export async function drainInbox(moviesDir: string): Promise<number> {
  * indexed with rootKey='movies' survive the startup cleanup
  * (which deletes videos whose rootKey isn't in the directory_roots table).
  */
-async function ensureMoviesRoot(db: any, moviesDir: string): Promise<void> {
-  if (!db) return;
+async function ensureMoviesRoot(db: any, moviesDir: string): Promise<boolean> {
+  if (!db) return false;
   try {
     await db
       .insert(directoryRoots)
@@ -143,8 +148,10 @@ async function ensureMoviesRoot(db: any, moviesDir: string): Promise<void> {
         },
       });
     logger.info('[StartupTasks] Registered movies root', { rootKey: 'movies', path: moviesDir });
+    return true;
   } catch (err: any) {
-    logger.warn('[StartupTasks] Failed to register movies root', { error: err.message });
+    logger.warn('[StartupTasks] Failed to register movies root (will retry)', { error: err.message });
+    return false;
   }
 }
 
