@@ -2263,6 +2263,31 @@ function createVisualCard(id, asset) {
   controls.appendChild(promptLabel);
   controls.appendChild(promptInput);
 
+  // Concept backend selector
+  const cbRow = document.createElement('div');
+  cbRow.className = 'controls-row';
+  const cbLabel = document.createElement('label');
+  cbLabel.textContent = 'Concept Backend';
+  const cbSelect = document.createElement('select');
+  cbSelect.id = `vcb-${id}`;
+  cbSelect.style.width = '200px';
+  const conceptBackends = [
+    { value: '', label: 'ComfyUI (default, GPU worker)' },
+    { value: 'diffusers', label: 'Diffusers (GPU worker)' },
+    { value: 'gemini-imagen', label: 'Gemini Imagen (cloud API)' },
+    { value: 'siliconflow', label: 'SiliconFlow FLUX (cloud API)' },
+  ];
+  for (const opt of conceptBackends) {
+    const option = document.createElement('option');
+    option.value = opt.value;
+    option.textContent = opt.label;
+    if ((asset.conceptBackend || '') === opt.value) option.selected = true;
+    cbSelect.appendChild(option);
+  }
+  cbLabel.appendChild(cbSelect);
+  cbRow.appendChild(cbLabel);
+  controls.appendChild(cbRow);
+
   const row = document.createElement('div');
   row.className = 'controls-row';
   const posesLabel = document.createElement('label');
@@ -2298,6 +2323,7 @@ function createVisualCard(id, asset) {
       body: JSON.stringify({
         prompt: document.getElementById(`vprompt-${id}`).value,
         poses: document.getElementById(`vposes-${id}`).value.split(',').map(s => s.trim()).filter(Boolean),
+        conceptBackend: document.getElementById(`vcb-${id}`).value || null,
       }),
     });
     card.classList.add('save-flash');

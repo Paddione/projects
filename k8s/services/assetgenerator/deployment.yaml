@@ -70,6 +70,12 @@ spec:
                   name: assetgenerator-secrets
                   key: GEMINI_API_KEY
                   optional: true
+            - name: SILICONFLOW_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: assetgenerator-secrets
+                  key: SILICONFLOW_API_KEY
+                  optional: true
           volumeMounts:
             - name: audio-library
               mountPath: /mnt/pve3a/audio-library
