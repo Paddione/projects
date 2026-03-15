@@ -1,9 +1,9 @@
-import { spawn } from 'node:child_process';
 import { resolve, join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { getWorker } from '../worker-manager.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const SCRIPTS_DIR = resolve(__dirname, '..', 'scripts');
+const SCRIPTS_DIR = resolve(process.env.ASSETGENERATOR_ROOT || resolve(__dirname, '..'), 'scripts');
 
 export async function generate({ id, asset, config, libraryRoot }) {
   const scriptPath = join(SCRIPTS_DIR, 'generate_3d.py');
@@ -18,24 +18,14 @@ export async function generate({ id, asset, config, libraryRoot }) {
     '--output', outputDir,
   ];
 
-  return new Promise((resolvePromise, reject) => {
-    const proc = spawn('python3', args, {
-      cwd: resolve(__dirname, '..'),
-      stdio: ['ignore', 'pipe', 'pipe'],
+  const worker = getWorker();
+  if (worker) {
+    const result = await worker.exec({
+      cmd: 'python3', args, cwd: process.env.ASSETGENERATOR_ROOT || resolve(__dirname, '..'), env: {},
     });
+    if (result.code !== 0) throw new Error(`generate_3d.py exited ${result.code}: ${result.stderr}`);
+    return { status: 'done', path: `models/${asset.category}/${id}.glb`, backend: 'triposr' };
+  }
 
-    let stdout = '';
-    let stderr = '';
-    proc.stdout.on('data', d => { stdout += d.toString(); });
-    proc.stderr.on('data', d => { stderr += d.toString(); });
-
-    proc.on('close', code => {
-      if (code !== 0) return reject(new Error(`generate_3d.py exited ${code}: ${stderr}`));
-      resolvePromise({
-        status: 'done',
-        path: `models/${asset.category}/${id}.glb`,
-        backend: 'triposr',
-      });
-    });
-  });
+  throw new Error('No GPU worker connected. Select a cloud backend or start the worker.');
 }

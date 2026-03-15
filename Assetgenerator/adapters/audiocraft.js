@@ -1,16 +1,18 @@
-import { spawn } from 'node:child_process';
 import { resolve } from 'node:path';
+import { getWorker } from '../worker-manager.js';
 
 /**
- * AudioCraft adapter — spawns the project's generate_audio.py with override flags.
+ * AudioCraft adapter — dispatches generate_audio.py to GPU worker.
  * Captures SEED:<n> from stdout for state tracking.
+ * Worker writes directly to NAS — no local copy needed.
  */
-export async function generate({ id, type, prompt, seed, duration, projectConfig }) {
-  const scriptPath = resolve(projectConfig._basePath, projectConfig.generateScript);
+export async function generate({ id, type, prompt, seed, duration, outputPath, projectConfig }) {
+  const basePath = process.env.ASSETGENERATOR_ROOT || projectConfig._basePath;
+  const scriptPath = resolve(basePath, projectConfig.generateScript);
   const pythonPath = projectConfig.pythonPath
-    ? resolve(projectConfig._basePath, projectConfig.pythonPath)
+    ? resolve(basePath, projectConfig.pythonPath)
     : 'python3';
-  const projectDir = resolve(projectConfig._basePath, projectConfig.audioRoot, '..', '..');
+  const projectDir = resolve(basePath, projectConfig.audioRoot, '..', '..');
 
   const args = [
     scriptPath,
@@ -23,27 +25,18 @@ export async function generate({ id, type, prompt, seed, duration, projectConfig
   if (prompt) args.push('--prompt', prompt);
   if (seed != null) args.push('--seed', String(seed));
   if (duration != null) args.push('--duration', String(duration));
+  if (outputPath) args.push('--output', outputPath);
 
-  return new Promise((resolvePromise, reject) => {
-    const proc = spawn(pythonPath, args, {
-      cwd: projectDir,
-      stdio: ['ignore', 'pipe', 'pipe'],
-    });
+  const worker = getWorker();
+  if (worker) {
+    const result = await worker.exec({ cmd: pythonPath, args, cwd: projectDir, env: {} });
+    if (result.code !== 0) {
+      throw new Error(`generate_audio.py exited ${result.code}: ${result.stderr}`);
+    }
+    const seedMatch = result.stdout.match(/SEED:(\d+)/);
+    const actualSeed = seedMatch ? parseInt(seedMatch[1], 10) : seed;
+    return { seed: actualSeed, stdout: result.stdout, stderr: result.stderr };
+  }
 
-    let stdout = '';
-    let stderr = '';
-    proc.stdout.on('data', (d) => { stdout += d.toString(); });
-    proc.stderr.on('data', (d) => { stderr += d.toString(); });
-
-    proc.on('close', (code) => {
-      if (code !== 0) {
-        return reject(new Error(`generate_audio.py exited ${code}: ${stderr}`));
-      }
-
-      const seedMatch = stdout.match(/SEED:(\d+)/);
-      const actualSeed = seedMatch ? parseInt(seedMatch[1], 10) : seed;
-
-      resolvePromise({ seed: actualSeed, stdout, stderr });
-    });
-  });
+  throw new Error('No GPU worker connected. Select a cloud backend or start the worker.');
 }

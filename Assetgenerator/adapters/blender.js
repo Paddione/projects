@@ -1,10 +1,9 @@
-import { spawn } from 'node:child_process';
 import { resolve, join, dirname } from 'node:path';
-import { existsSync, readdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
+import { getWorker } from '../worker-manager.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const SCRIPTS_DIR = resolve(__dirname, '..', 'scripts');
+const SCRIPTS_DIR = resolve(process.env.ASSETGENERATOR_ROOT || resolve(__dirname, '..'), 'scripts');
 
 const TEMPLATE_MAP = {
   characters: 'character.blend',
@@ -33,31 +32,16 @@ export async function generate({ id, asset, config, libraryRoot }) {
     '--output', outputDir,
   ];
 
-  return new Promise((resolvePromise, reject) => {
-    const proc = spawn(blenderPath, args, {
-      cwd: resolve(__dirname, '..'),
-      stdio: ['ignore', 'pipe', 'pipe'],
-    });
+  const worker = getWorker();
+  if (worker) {
+    const result = await worker.exec({ cmd: blenderPath, args, cwd: process.env.ASSETGENERATOR_ROOT || resolve(__dirname, '..'), env: {} });
+    if (result.code !== 0) throw new Error(`Blender render exited ${result.code}: ${result.stderr.slice(-500)}`);
 
-    let stdout = '';
-    let stderr = '';
-    proc.stdout.on('data', d => { stdout += d.toString(); });
-    proc.stderr.on('data', d => { stderr += d.toString(); });
+    const frameMatch = result.stdout.match(/FRAMES:(\d+)|Rendered (\d+) frames/i);
+    const frameCount = frameMatch ? parseInt(frameMatch[1] || frameMatch[2], 10) : 0;
 
-    proc.on('close', code => {
-      if (code !== 0) return reject(new Error(`Blender render exited ${code}: ${stderr.slice(-500)}`));
+    return { status: 'done', frameCount, backend: 'blender' };
+  }
 
-      const renderDir = join(outputDir, id);
-      let frameCount = 0;
-      if (existsSync(renderDir)) {
-        frameCount = readdirSync(renderDir).filter(f => f.endsWith('.png')).length;
-      }
-
-      resolvePromise({
-        status: 'done',
-        frameCount,
-        backend: 'blender',
-      });
-    });
-  });
+  throw new Error('No GPU worker connected. Select a cloud backend or start the worker.');
 }
