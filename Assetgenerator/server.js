@@ -1,6 +1,6 @@
 import express from 'express';
 import cors from 'cors';
-import { readFileSync, writeFileSync, existsSync, readdirSync, statSync, unlinkSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync, readdirSync, statSync, unlinkSync, copyFileSync, mkdirSync } from 'node:fs';
 import { resolve, join, dirname } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
@@ -89,6 +89,70 @@ function saveProject(project) {
     }
   }
   writeFileSync(join(PROJECTS_DIR, `${name}.json`), JSON.stringify(toSave, null, 2));
+}
+
+// =============================================================================
+// Library state management
+// =============================================================================
+
+const LIBRARY_PATH = join(__dirname, 'library.json');
+const VISUAL_LIBRARY_PATH = join(__dirname, 'visual-library.json');
+const LIBRARY_CONFIG_PATH = join(__dirname, 'config', 'library-config.json');
+const VISUAL_CONFIG_PATH = join(__dirname, 'config', 'visual-config.json');
+
+function loadLibrary() {
+  if (!existsSync(LIBRARY_PATH)) return { version: 1, sounds: {} };
+  return JSON.parse(readFileSync(LIBRARY_PATH, 'utf-8'));
+}
+
+function saveLibrary(library) {
+  writeFileSync(LIBRARY_PATH, JSON.stringify(library, null, 2));
+}
+
+function loadVisualLibrary() {
+  if (!existsSync(VISUAL_LIBRARY_PATH)) return { version: 1, assets: {} };
+  return JSON.parse(readFileSync(VISUAL_LIBRARY_PATH, 'utf-8'));
+}
+
+function saveVisualLibrary(library) {
+  writeFileSync(VISUAL_LIBRARY_PATH, JSON.stringify(library, null, 2));
+}
+
+function loadLibraryConfig() {
+  return JSON.parse(readFileSync(LIBRARY_CONFIG_PATH, 'utf-8'));
+}
+
+function loadVisualConfig() {
+  return JSON.parse(readFileSync(VISUAL_CONFIG_PATH, 'utf-8'));
+}
+
+function processAudioFile(wavPath, outputDir, id, type) {
+  const config = loadLibraryConfig();
+  const lufs = type.startsWith('music') ? config.loudness.music : config.loudness.sfx;
+  const af = `silenceremove=start_periods=1:start_silence=0.1:start_threshold=-50dB,loudnorm=I=${lufs}:TP=-1.5:LRA=11`;
+
+  if (!existsSync(outputDir)) mkdirSync(outputDir, { recursive: true });
+
+  const baseName = id;
+  const oggPath = join(outputDir, `${baseName}.ogg`);
+  execFileSync('ffmpeg', [
+    '-y', '-i', wavPath,
+    '-af', af,
+    '-ar', '44100', '-ac', '1',
+    '-c:a', 'libopus', '-b:a', '96k',
+    oggPath
+  ], { stdio: 'pipe' });
+
+  const mp3Path = join(outputDir, `${baseName}.mp3`);
+  execFileSync('ffmpeg', [
+    '-y', '-i', wavPath,
+    '-af', af,
+    '-ar', '44100', '-ac', '1',
+    '-c:a', 'libmp3lame', '-b:a', '128k',
+    mp3Path
+  ], { stdio: 'pipe' });
+
+  return { oggPath, mp3Path };
 }
 
 // =============================================================================
