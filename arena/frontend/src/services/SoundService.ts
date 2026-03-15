@@ -27,7 +27,7 @@ const SFX_IDS = [
 ] as const;
 
 // All music track IDs
-const MUSIC_IDS = ['lobby', 'battle', 'victory', 'defeat'] as const;
+const MUSIC_IDS = ['lobby', 'battle', 'victory', 'defeat', 'respectisevt'] as const;
 
 type SFXId = (typeof SFX_IDS)[number];
 type MusicId = (typeof MUSIC_IDS)[number];
