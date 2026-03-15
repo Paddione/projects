@@ -489,6 +489,13 @@ body {
   border-radius: var(--radius-lg);
 }
 
+/* On touch devices, shift weapon HUD above the action buttons */
+@media (hover: none) and (pointer: coarse) {
+  .hud-weapon {
+    bottom: calc(90px + env(safe-area-inset-bottom, 0px));
+  }
+}
+
 .weapon-slot {
   display: flex;
   align-items: center;
@@ -529,6 +536,13 @@ body {
   color: var(--color-text-secondary);
   opacity: 0.4;
   margin-left: 4px;
+}
+
+/* Hide keyboard hint on touch devices */
+@media (hover: none) and (pointer: coarse) {
+  .weapon-hint {
+    display: none;
+  }
 }
 
 /* Top-left HUD controls (mute + scale) */
@@ -695,13 +709,14 @@ body {
   pointer-events: none;
 }
 
-/* Action buttons — melee and sprint */
+/* Action buttons — melee, weapon cycle, sprint (centered between joysticks) */
 .touch-action-buttons {
   position: absolute;
   bottom: calc(16px + env(safe-area-inset-bottom, 0px));
-  right: calc(152px + env(safe-area-inset-right, 0px));
+  left: 50%;
+  transform: translateX(-50%);
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   gap: 10px;
   pointer-events: auto;
   touch-action: none;

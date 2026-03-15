@@ -154,6 +154,10 @@ export default function Game() {
         const halfW = window.innerWidth / 2;
         for (let i = 0; i < e.changedTouches.length; i++) {
             const t = e.changedTouches[i];
+            // Skip touches on action buttons — they have their own React handlers
+            const target = t.target as HTMLElement;
+            if (target.closest('.touch-action-buttons')) continue;
+
             if (t.clientX < halfW && !leftStickRef.current.active) {
                 leftStickRef.current = { active: true, startX: t.clientX, startY: t.clientY, dx: 0, dy: 0, touchId: t.identifier };
             } else if (t.clientX >= halfW && !rightStickRef.current.active) {
@@ -1208,7 +1212,7 @@ export default function Game() {
                         />
                     </div>
 
-                    {/* Action buttons — melee + sprint (between the two sticks) */}
+                    {/* Action buttons — melee, sprint, weapon cycle (centered between sticks) */}
                     <div className="touch-action-buttons">
                         <button
                             className={`touch-btn ${meleeOn ? 'active' : ''}`}
@@ -1224,6 +1228,16 @@ export default function Game() {
                             }}
                         >
                             🗡️
+                        </button>
+                        <button
+                            className="touch-btn"
+                            onTouchStart={(e) => {
+                                e.preventDefault();
+                                weaponCycleRef.current = 1;
+                            }}
+                            onTouchEnd={(e) => { e.preventDefault(); }}
+                        >
+                            🔄
                         </button>
                         <button
                             className={`touch-btn ${sprintOn ? 'active' : ''}`}
