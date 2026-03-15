@@ -153,7 +153,7 @@ The `worker.exec()` Promise resolves with `{ stdout, stderr, code }` — the acc
 - `triposr.js` — Returns `{ status: 'done', path, backend }`. GLB written to NAS by script.
 - `blender.js` — Parses frame count from Blender stdout (e.g., `FRAMES:48`). Skips local `readdirSync`. Rendered PNGs written to NAS by Blender.
 
-**Python script change:** `generate_audio.py` needs a `--output` flag to write the WAV directly to a specified path (the NAS). Currently it writes to the project's local audio root. This is a one-line addition to the argparse config.
+**Python script change:** Each project's `generateScript` (e.g., `arena/scripts/generate_audio.py`, referenced via `projects/arena.json`) needs a `--output` flag to write the WAV directly to a specified NAS path. Currently it writes to the project's local audio root. This is a one-line addition to the argparse config. The script path is project-specific — only projects with a `generateScript` configured need the change (currently just Arena).
 
 **Unchanged adapters:**
 - `packer.js` — CPU-only (sprite packing), always runs locally
@@ -311,7 +311,7 @@ New `k8s/scripts/deploy/deploy-assetgenerator.sh` following existing pattern:
 | `Assetgenerator/adapters/triposr.js` | Same routing pattern |
 | `Assetgenerator/adapters/blender.js` | Same routing pattern |
 | `Assetgenerator/index.html` | Worker status indicator in header, disable local backends when no worker |
-| `Assetgenerator/scripts/generate_audio.py` | Add `--output` flag for direct NAS write path |
+| `arena/scripts/generate_audio.py` | Add `--output` flag for direct NAS write path (project-specific script) |
 | `k8s/skaffold.yaml` | Add assetgenerator profile |
 
 ### Unchanged Files
