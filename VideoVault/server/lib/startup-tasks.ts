@@ -6,6 +6,7 @@ import { videos, directoryRoots } from '@shared/schema';
 import { logger } from './logger';
 import { MOVIE_EXTENSIONS, extractMovieMetadata, detectQualityCategories, generateMovieThumbnail } from '../handlers/movie-handler';
 import { readSidecar } from './sidecar';
+import { extractCategoriesFromPath, mergeCategories } from '@shared/category-extractor';
 
 // Track filenames that failed stat (encoding issues on SMB) — warn only once
 const _failedStatNames = new Set<string>();
@@ -289,10 +290,12 @@ async function autoIndexLibrary(db: any, moviesDir: string): Promise<void> {
       } catch { /* proceed without */ }
 
       const qualities = detectQualityCategories(metadata);
+      const extracted = extractCategoriesFromPath(entry.name);
+      const categories = mergeCategories(defaultCategories(qualities), extracted);
       await upsertVideo(db, {
         id, filename: entry.name, displayName: baseName,
         dbPath: `movies/${entry.name}`, stat, metadata, thumbUrl,
-        categories: defaultCategories(qualities), customCategories: {},
+        categories, customCategories: {},
       });
       indexed++;
     } catch (err: any) {
@@ -352,11 +355,10 @@ async function autoIndexLibrary(db: any, moviesDir: string): Promise<void> {
 
       const sidecarCategories = sidecar?.categories || {};
       const qualities = detectQualityCategories(metadata);
-      const categories = {
-        ...defaultCategories(qualities),
-        ...sidecarCategories,
-        quality: [...new Set([...(sidecarCategories.quality || []), ...qualities])],
-      };
+      // Extract from both filename and directory name, then merge with sidecar
+      const extracted = extractCategoriesFromPath(videoFile.name, dirEntry.name);
+      const base = mergeCategories(defaultCategories(qualities), extracted);
+      const categories = mergeCategories(base, sidecarCategories as any);
 
       await upsertVideo(db, {
         id, filename: videoFile.name, displayName,

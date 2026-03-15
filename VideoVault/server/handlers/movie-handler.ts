@@ -5,6 +5,7 @@ import { eq, and } from 'drizzle-orm';
 import { videos, scanState } from '@shared/schema';
 import { logger } from '../lib/logger';
 import { readSidecar, writeSidecar } from '../lib/sidecar';
+import { extractCategoriesFromPath, mergeCategories } from '@shared/category-extractor';
 import type { JobContext } from '../lib/enhanced-job-queue';
 import { v4 as uuidv4 } from 'uuid';
 import crypto from 'crypto';
@@ -378,14 +379,23 @@ export async function handleMovieProcessing(
     const id = movieId || uuidv4();
     const isHddExt = rootKey === 'hdd-ext';
 
-    // For hdd-ext: read sidecar categories (disk is source of truth)
-    let categories: any = { title, year: year?.toString() || '' };
+    // Build categories: extract from filename + merge with sidecar if available
     let customCategories: any = {};
+    const emptyCategories = { age: [] as string[], physical: [] as string[], ethnicity: [] as string[], relationship: [] as string[], acts: [] as string[], setting: [] as string[], quality: [] as string[], performer: [] as string[] };
+    const qualityFromMeta = detectQualityCategories(metadata);
+
+    let categories: any;
     if (isHddExt) {
+      // hdd-ext: sidecar is source of truth
       const sidecar = await readSidecar(movieDir);
-      const defaultCategories = { age: [] as string[], physical: [] as string[], ethnicity: [] as string[], relationship: [] as string[], acts: [] as string[], setting: [] as string[], quality: [] as string[], performer: [] as string[] };
-      categories = sidecar?.categories || defaultCategories;
+      categories = sidecar?.categories || emptyCategories;
       customCategories = sidecar?.customCategories || {};
+    } else {
+      // movies: extract from filename and directory name
+      const dirName = path.basename(path.dirname(finalPath));
+      const extracted = extractCategoriesFromPath(path.basename(finalPath), dirName);
+      categories = mergeCategories(emptyCategories, extracted);
+      categories.quality = [...new Set([...categories.quality, ...qualityFromMeta])];
     }
 
     if (db) {
@@ -431,8 +441,8 @@ export async function handleMovieProcessing(
           },
         });
 
-      // Write sidecar for hdd-ext videos
-      if (isHddExt) {
+      // Write metadata.json sidecar for all processed movies
+      {
         await writeSidecar(movieDir, {
           version: 1,
           id,
