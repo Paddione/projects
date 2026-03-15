@@ -377,6 +377,10 @@ async function autoIndexLibrary(db: any, moviesDir: string): Promise<void> {
         else skipped++;
       } else {
         errors++;
+        // Log first few errors to help diagnose
+        if (errors <= 3) {
+          logger.warn('[StartupTasks] Subdir index error', { error: r.reason?.message || String(r.reason) });
+        }
       }
     }
   }
