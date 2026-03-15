@@ -7,6 +7,7 @@ import type { PlayerState, MapItem } from '../types/game.js';
 // ---------------------------------------------------------------------------
 
 function makePlayer(overrides: Partial<PlayerState> = {}): PlayerState {
+    const pistol = { type: 'pistol' as const, totalAmmo: Infinity, clipAmmo: Infinity, clipSize: Infinity, isReloading: false, reloadStartTime: null };
     return {
         id: 'p1',
         username: 'Alice',
@@ -22,7 +23,14 @@ function makePlayer(overrides: Partial<PlayerState> = {}): PlayerState {
         kills: 0,
         deaths: 0,
         roundsWon: 0,
+        damageDealt: 0,
+        itemsCollected: 0,
         lastMoveDirection: { dx: 0, dy: 0 },
+        weapon: pistol,
+        weapons: [pistol],
+        activeWeaponIndex: 0,
+        lastShotTime: 0,
+        pose: 'stand',
         ...overrides,
     };
 }

@@ -27,6 +27,8 @@ export interface PlayerState {
     itemsCollected: number;     // accumulated across full match
     lastMoveDirection: { dx: number; dy: number };
     weapon: WeaponState;
+    weapons: WeaponState[];     // inventory: [pistol, ...pickups] (max 3)
+    activeWeaponIndex: number;  // index into weapons array
     lastShotTime: number;
     pose: string;
 }
@@ -39,6 +41,7 @@ export interface PlayerInput {
     sprint: boolean;
     pickup: boolean;
     reload: boolean;
+    cycleWeapon: number;                  // 0 = no change, 1 = next, -1 = prev
     timestamp: number;
 }
 

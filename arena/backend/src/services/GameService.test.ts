@@ -84,6 +84,8 @@ function makeInput(overrides: Partial<PlayerInput> = {}): PlayerInput {
         melee: false,
         sprint: false,
         pickup: false,
+        reload: false,
+        cycleWeapon: 0,
         timestamp: Date.now(),
         ...overrides,
     };

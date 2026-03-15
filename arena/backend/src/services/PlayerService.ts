@@ -9,6 +9,8 @@ import type {
 } from '../types/game.js';
 import { WeaponState, PISTOL_DEFAULT, MACHINE_GUN_PICKUP, WEAPON_STATS, RELOAD_DURATION_MS } from '../types/weapon.js';
 
+const MAX_WEAPONS = 3; // pistol + 2 pickups
+
 // Re-import constants
 const DMG = { GUN: 1, MELEE: 99, ZONE: 1 } as const;
 const MAX_HP = 2;
@@ -26,6 +28,7 @@ export class PlayerService {
         spawnX: number,
         spawnY: number
     ): PlayerState {
+        const pistol = { ...PISTOL_DEFAULT };
         return {
             id,
             username,
@@ -44,7 +47,9 @@ export class PlayerService {
             damageDealt: 0,
             itemsCollected: 0,
             lastMoveDirection: { dx: 0, dy: 0 },
-            weapon: { ...PISTOL_DEFAULT },
+            weapon: pistol,
+            weapons: [pistol],
+            activeWeaponIndex: 0,
             lastShotTime: 0,
             pose: 'stand',
         };
@@ -136,7 +141,10 @@ export class PlayerService {
         player.isAlive = true;
         player.isSpectating = false;
         player.lastMoveDirection = { dx: 0, dy: 0 };
-        player.weapon = { ...PISTOL_DEFAULT };
+        const pistol = { ...PISTOL_DEFAULT };
+        player.weapon = pistol;
+        player.weapons = [pistol];
+        player.activeWeaponIndex = 0;
         player.lastShotTime = 0;
         player.pose = 'stand';
     }
@@ -174,7 +182,10 @@ export class PlayerService {
             this.startReload(player);
         }
         if (player.weapon.clipAmmo <= 0 && player.weapon.totalAmmo <= 0) {
-            player.weapon = { ...PISTOL_DEFAULT };
+            // Remove depleted weapon from inventory, switch to pistol
+            player.weapons.splice(player.activeWeaponIndex, 1);
+            player.activeWeaponIndex = 0;
+            player.weapon = player.weapons[0]; // pistol is always at index 0
         }
         return true;
     }
@@ -207,20 +218,51 @@ export class PlayerService {
     }
 
     /**
-     * Pick up a weapon, returning the old weapon (if not pistol) for ground drop
+     * Pick up a weapon into inventory. If inventory full, replaces current active weapon.
+     * Returns the dropped weapon (if any) for ground spawn.
      */
     pickupWeapon(player: PlayerState, itemWeapon: WeaponState): WeaponState | null {
-        const oldWeapon = player.weapon.type !== 'pistol' ? { ...player.weapon } : null;
-        player.weapon = { ...itemWeapon };
+        const newWeapon = { ...itemWeapon };
+
+        if (player.weapons.length < MAX_WEAPONS) {
+            // Inventory has space — add and switch to it
+            player.weapons.push(newWeapon);
+            player.activeWeaponIndex = player.weapons.length - 1;
+            player.weapon = newWeapon;
+            return null;
+        }
+
+        // Inventory full — replace current active weapon (don't replace pistol at index 0)
+        const replaceIndex = player.activeWeaponIndex === 0 ? 1 : player.activeWeaponIndex;
+        const oldWeapon = player.weapons[replaceIndex].type !== 'pistol'
+            ? { ...player.weapons[replaceIndex] } : null;
+        player.weapons[replaceIndex] = newWeapon;
+        player.activeWeaponIndex = replaceIndex;
+        player.weapon = newWeapon;
         return oldWeapon;
     }
 
     /**
-     * Get the weapon to drop on death (null if pistol)
+     * Cycle to next/prev weapon in inventory
+     */
+    cycleWeapon(player: PlayerState, direction: number): void {
+        if (player.weapons.length <= 1) return;
+        let newIndex = player.activeWeaponIndex + direction;
+        if (newIndex < 0) newIndex = player.weapons.length - 1;
+        if (newIndex >= player.weapons.length) newIndex = 0;
+        player.activeWeaponIndex = newIndex;
+        player.weapon = player.weapons[newIndex];
+    }
+
+    /**
+     * Get all non-pistol weapons to drop on death
      */
     getDeathDrop(player: PlayerState): WeaponState | null {
-        if (player.weapon.type === 'pistol') return null;
-        return { ...player.weapon };
+        // Drop the best non-pistol weapon
+        for (const w of player.weapons) {
+            if (w.type !== 'pistol') return { ...w };
+        }
+        return null;
     }
 
     /**

@@ -53,7 +53,7 @@ export default function Game() {
     const [isMuted, setIsMuted] = useState(false);
 
     const {
-        playerId, hp, hasArmor, kills, deaths,
+        playerId, hp, hasArmor, kills, deaths, weaponType,
         killfeed, announcement, currentRound,
         isSpectating, spectatedPlayerId,
         setPlayerState, addKillfeed, setAnnouncement, setRound, setRoundScores,
@@ -72,8 +72,14 @@ export default function Game() {
     // INPUT HANDLING
     // ============================================================================
 
+    const weaponCycleRef = useRef(0); // 0=none, 1=next, -1=prev
+
     const handleKeyDown = useCallback((e: KeyboardEvent) => {
         keysRef.current.add(e.key.toLowerCase());
+        // Q key cycles to next weapon
+        if (e.key.toLowerCase() === 'q') {
+            weaponCycleRef.current = 1;
+        }
     }, []);
 
     const handleKeyUp = useCallback((e: KeyboardEvent) => {
@@ -99,6 +105,11 @@ export default function Game() {
     }, []);
 
     const handleContextMenu = useCallback((e: Event) => e.preventDefault(), []);
+
+    const handleWheel = useCallback((e: WheelEvent) => {
+        e.preventDefault();
+        weaponCycleRef.current = e.deltaY > 0 ? 1 : -1;
+    }, []);
 
     // ============================================================================
     // TOUCH INPUT HANDLERS (dual joystick)
@@ -256,6 +267,9 @@ export default function Game() {
             const melee = isTouchDevice ? meleeActiveRef.current : (mouse.rightDown || keys.has('e'));
             const sprint = isTouchDevice ? sprintActiveRef.current : keys.has('shift');
 
+            const cycleWeapon = weaponCycleRef.current;
+            weaponCycleRef.current = 0; // consume the cycle input
+
             socket.emit('player-input', {
                 matchId,
                 input: {
@@ -264,7 +278,8 @@ export default function Game() {
                     shooting,
                     melee,
                     sprint,
-                    pickup: keys.has('f'),
+                    pickup: false, // auto-pickup on walk-over (server-side)
+                    cycleWeapon,
                     timestamp: Date.now(),
                 },
             });
@@ -470,10 +485,33 @@ export default function Game() {
         }
 
         function renderItems(container: Container, state: any) {
+            const now = Date.now();
             for (const item of state.items || []) {
+                // Animated bob: items float up and down (3px amplitude, 1.5s cycle)
+                const bobOffset = Math.sin(now / 750 + item.x * 0.1) * 3;
+                // Pulsing glow intensity
+                const pulse = 0.3 + Math.sin(now / 300 + item.y * 0.05) * 0.3;
+                // Scale pulse for "breathing" effect
+                const scalePulse = 1.0 + Math.sin(now / 500 + item.x * 0.07) * 0.08;
+
+                const itemColor: Record<string, number> = {
+                    health: 0xef4444,
+                    armor: 0x38bdf8,
+                    machine_gun: 0xfbbf24,
+                    grenade_launcher: 0xf97316,
+                };
+                const glowColor = itemColor[item.type] ?? 0xffffff;
+
+                // Draw glow ring underneath
+                const glow = new Graphics();
+                glow.lineStyle(2, glowColor, pulse);
+                glow.drawCircle(item.x, item.y + bobOffset, 14 * scalePulse);
+                container.addChild(glow);
+
                 if (useSprites) {
                     const assetId = item.type === 'health' ? 'health_pack'
                         : item.type === 'machine_gun' ? 'machine_gun'
+                        : item.type === 'grenade_launcher' ? 'grenade_launcher'
                         : 'armor_plate';
                     const frames = AssetService.getItemAnimation('items', assetId);
                     if (frames.length > 0) {
@@ -481,9 +519,9 @@ export default function Game() {
                             ? new AnimatedSprite(frames)
                             : new Sprite(frames[0]);
                         sprite.anchor.set(0.5);
-                        sprite.position.set(item.x, item.y);
-                        sprite.width = 20;
-                        sprite.height = 20;
+                        sprite.position.set(item.x, item.y + bobOffset);
+                        sprite.width = 20 * scalePulse;
+                        sprite.height = 20 * scalePulse;
                         if (sprite instanceof AnimatedSprite) {
                             sprite.animationSpeed = 0.1;
                             sprite.play();
@@ -495,25 +533,20 @@ export default function Game() {
 
                 // Fallback: procedural items with distinctive shapes
                 const ig = new Graphics();
-                const pulse = 0.3 + Math.sin(Date.now() / 300) * 0.3;
                 const x = item.x;
-                const y = item.y;
+                const y = item.y + bobOffset;
 
                 if (item.type === 'health') {
-                    // Red cross shape
                     ig.beginFill(0x1a0808, 0.6);
-                    ig.drawCircle(x, y, 11);
+                    ig.drawCircle(x, y, 11 * scalePulse);
                     ig.endFill();
                     ig.beginFill(0xef4444);
-                    ig.drawRect(x - 3, y - 9, 6, 18); // vertical bar
-                    ig.drawRect(x - 9, y - 3, 18, 6); // horizontal bar
+                    ig.drawRect(x - 3, y - 9, 6, 18);
+                    ig.drawRect(x - 9, y - 3, 18, 6);
                     ig.endFill();
-                    ig.lineStyle(2, 0xef4444, pulse);
-                    ig.drawCircle(x, y, 13);
                 } else if (item.type === 'armor') {
-                    // Diamond/shield shape with chevron
                     ig.beginFill(0x081a2a, 0.6);
-                    ig.drawCircle(x, y, 11);
+                    ig.drawCircle(x, y, 11 * scalePulse);
                     ig.endFill();
                     ig.beginFill(0x38bdf8);
                     ig.moveTo(x, y - 10);
@@ -522,41 +555,32 @@ export default function Game() {
                     ig.lineTo(x - 8, y);
                     ig.closePath();
                     ig.endFill();
-                    // Inner chevron lines
                     ig.lineStyle(1.5, 0x0a0b1a, 0.8);
                     ig.moveTo(x - 4, y - 2);
                     ig.lineTo(x, y + 3);
                     ig.lineTo(x + 4, y - 2);
-                    ig.lineStyle(2, 0x38bdf8, pulse);
-                    ig.drawCircle(x, y, 13);
                 } else if (item.type === 'machine_gun') {
-                    // Gun silhouette (rectangle + barrel)
                     ig.beginFill(0x1a1808, 0.6);
-                    ig.drawCircle(x, y, 11);
+                    ig.drawCircle(x, y, 11 * scalePulse);
                     ig.endFill();
                     ig.beginFill(0xfbbf24);
-                    ig.drawRect(x - 8, y - 3, 12, 6); // body
-                    ig.drawRect(x + 4, y - 1.5, 6, 3); // barrel
-                    ig.drawRect(x - 4, y + 3, 3, 5); // grip
+                    ig.drawRect(x - 8, y - 3, 12, 6);
+                    ig.drawRect(x + 4, y - 1.5, 6, 3);
+                    ig.drawRect(x - 4, y + 3, 3, 5);
                     ig.endFill();
-                    ig.lineStyle(2, 0xfbbf24, pulse);
-                    ig.drawCircle(x, y, 13);
                 } else if (item.type === 'grenade_launcher') {
-                    // Grenade shape (rounded body + fuse)
                     ig.beginFill(0x1a0c04, 0.6);
-                    ig.drawCircle(x, y, 11);
+                    ig.drawCircle(x, y, 11 * scalePulse);
                     ig.endFill();
                     ig.beginFill(0xf97316);
-                    ig.drawRoundedRect(x - 5, y - 4, 10, 10, 3); // body
+                    ig.drawRoundedRect(x - 5, y - 4, 10, 10, 3);
                     ig.endFill();
                     ig.lineStyle(2, 0xf97316, 0.9);
                     ig.moveTo(x, y - 4);
-                    ig.lineTo(x + 2, y - 8); // fuse stem
+                    ig.lineTo(x + 2, y - 8);
                     ig.beginFill(0xfbbf24);
-                    ig.drawCircle(x + 2, y - 9, 2); // fuse spark
+                    ig.drawCircle(x + 2, y - 9, 2);
                     ig.endFill();
-                    ig.lineStyle(2, 0xf97316, pulse);
-                    ig.drawCircle(x, y, 13);
                 }
                 container.addChild(ig);
             }
@@ -847,6 +871,7 @@ export default function Game() {
         window.addEventListener('mousedown', handleMouseDown);
         window.addEventListener('mouseup', handleMouseUp);
         window.addEventListener('contextmenu', handleContextMenu);
+        window.addEventListener('wheel', handleWheel, { passive: false });
         if (isTouchDevice) {
             window.addEventListener('touchstart', handleTouchStart, { passive: false });
             window.addEventListener('touchmove', handleTouchMove, { passive: false });
@@ -863,6 +888,7 @@ export default function Game() {
             window.removeEventListener('mousedown', handleMouseDown);
             window.removeEventListener('mouseup', handleMouseUp);
             window.removeEventListener('contextmenu', handleContextMenu);
+            window.removeEventListener('wheel', handleWheel);
             if (isTouchDevice) {
                 window.removeEventListener('touchstart', handleTouchStart);
                 window.removeEventListener('touchmove', handleTouchMove);
@@ -894,6 +920,7 @@ export default function Game() {
                     isAlive: me.isAlive,
                     kills: me.kills,
                     deaths: me.deaths,
+                    weaponType: me.weapon?.type || 'pistol',
                 });
             }
         });
@@ -1048,6 +1075,35 @@ export default function Game() {
                             <span className="victim">{entry.victim}</span>
                         </div>
                     ))}
+                </div>
+
+                {/* Weapon Indicator */}
+                <div className="hud-weapon">
+                    {(() => {
+                        const me = gameStateRef.current?.players?.find((p: any) => p.id === playerId);
+                        const weapons: any[] = me?.weapons || [{ type: weaponType }];
+                        const activeIdx = me?.activeWeaponIndex ?? 0;
+                        const weaponIcons: Record<string, string> = {
+                            pistol: '🔫',
+                            machine_gun: '🔫',
+                            grenade_launcher: '💣',
+                        };
+                        const weaponNames: Record<string, string> = {
+                            pistol: 'Pistol',
+                            machine_gun: 'MG',
+                            grenade_launcher: 'GL',
+                        };
+                        return weapons.map((w: any, i: number) => (
+                            <div key={i} className={`weapon-slot ${i === activeIdx ? 'active' : ''}`}>
+                                <span className="weapon-icon">{weaponIcons[w.type] || '?'}</span>
+                                <span className="weapon-name">{weaponNames[w.type] || w.type}</span>
+                                {w.type !== 'pistol' && (
+                                    <span className="weapon-ammo">{w.clipAmmo}/{w.totalAmmo}</span>
+                                )}
+                            </div>
+                        ));
+                    })()}
+                    <div className="weapon-hint">Q / Scroll</div>
                 </div>
 
                 {/* Round Info */}

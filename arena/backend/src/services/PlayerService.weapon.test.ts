@@ -8,6 +8,7 @@ import { PISTOL_DEFAULT, MACHINE_GUN_PICKUP } from '../types/weapon.js';
 // ---------------------------------------------------------------------------
 
 function makePlayer(overrides: Partial<PlayerState> = {}): PlayerState {
+    const pistol = { ...PISTOL_DEFAULT };
     return {
         id: 'p1',
         username: 'Alice',
@@ -23,8 +24,12 @@ function makePlayer(overrides: Partial<PlayerState> = {}): PlayerState {
         kills: 0,
         deaths: 0,
         roundsWon: 0,
+        damageDealt: 0,
+        itemsCollected: 0,
         lastMoveDirection: { dx: 0, dy: 0 },
-        weapon: { ...PISTOL_DEFAULT },
+        weapon: pistol,
+        weapons: [pistol],
+        activeWeaponIndex: 0,
         lastShotTime: 0,
         pose: 'stand',
         ...overrides,

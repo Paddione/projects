@@ -474,6 +474,63 @@ body {
   white-space: nowrap;
 }
 
+.hud-weapon {
+  position: absolute;
+  bottom: calc(var(--space-xl) + env(safe-area-inset-bottom, 0px));
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  padding: 4px 8px;
+  background: rgba(10, 11, 26, 0.85);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+.weapon-slot {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 3px 8px;
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+  opacity: 0.5;
+  transition: opacity 0.15s, border-color 0.15s;
+}
+
+.weapon-slot.active {
+  opacity: 1;
+  border-color: var(--color-primary, #818cf8);
+  background: rgba(129, 140, 248, 0.12);
+}
+
+.weapon-icon {
+  font-size: 1rem;
+}
+
+.weapon-name {
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.weapon-ammo {
+  font-size: 0.65rem;
+  color: var(--color-warning, #fbbf24);
+  font-weight: 600;
+}
+
+.weapon-hint {
+  font-size: 0.55rem;
+  color: var(--color-text-secondary);
+  opacity: 0.4;
+  margin-left: 4px;
+}
+
 .hud-announcement {
   position: absolute;
   top: 40%;

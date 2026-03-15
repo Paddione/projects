@@ -219,9 +219,12 @@ export class GameService {
             this.processMelee(game, player);
         }
 
-        // Item pickup
-        if (input.pickup) {
-            this.processPickup(game, player);
+        // Auto-pickup: collect items by walking over them
+        this.processPickup(game, player);
+
+        // Weapon cycling
+        if (input.cycleWeapon && input.cycleWeapon !== 0) {
+            this.playerService.cycleWeapon(player, input.cycleWeapon);
         }
     }
 
@@ -768,7 +771,7 @@ export class GameService {
                     item.isCollected = true;
                     player.itemsCollected++;
                     this.onItemCollected?.(game.matchId, { itemId: item.id, playerId: player.id });
-                    // If player dropped an old weapon, spawn it
+                    // If inventory was full and a weapon was replaced, drop it
                     if (oldWeapon) {
                         const swapItem: MapItem = {
                             id: uuidv4(),
@@ -781,7 +784,7 @@ export class GameService {
                         };
                         game.items.push(swapItem);
                     }
-                    break;
+                    continue; // Auto-pickup: collect all nearby items
                 }
 
                 const collected = this.playerService.collectItem(player, item);
@@ -791,7 +794,7 @@ export class GameService {
                         itemId: item.id,
                         playerId: player.id,
                     });
-                    break; // Only pick up one item per input
+                    // Auto-pickup: continue collecting nearby items
                 }
             }
         }
