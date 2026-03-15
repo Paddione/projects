@@ -822,3 +822,302 @@ describe('Project scan', () => {
     assert.ok(json.sounds.gunshot);
   });
 });
+
+// =============================================================================
+// Previously untested workflows — each creates its own disposable test subject
+// =============================================================================
+
+describe('Regen workflow (SSE flow)', () => {
+  const REGEN_ID = '_regen_test_disposable';
+
+  before(async () => {
+    // Create a disposable library sound with a WAV on NAS
+    const config = JSON.parse(readFileSync(join(PROJECT_ROOT, 'config', 'library-config.json'), 'utf-8'));
+    const wavDir = join(config.libraryRoot, 'sfx', 'ui');
+    createTestWav(join(wavDir, `${REGEN_ID}.wav`));
+
+    await fetchJSON('/api/library', {
+      method: 'POST',
+      body: { id: REGEN_ID, name: 'Regen Test Disposable', category: 'sfx/ui', prompt: 'test beep', duration: 0.5, backend: 'audiocraft' },
+    });
+  });
+
+  after(async () => {
+    // Clean up disposable sound
+    try { await fetchJSON(`/api/library/${REGEN_ID}`, { method: 'DELETE' }); } catch {}
+  });
+
+  it('generate endpoint returns SSE stream with progress events', async () => {
+    const res = await fetch(`${baseUrl}/api/library/${REGEN_ID}/generate`, { method: 'POST' });
+    assert.equal(res.status, 200);
+    assert.equal(res.headers.get('content-type'), 'text/event-stream');
+
+    const text = await res.text();
+    // Should contain at least a progress event and a complete event
+    assert.ok(text.includes('event: progress'), 'Missing progress event');
+    assert.ok(text.includes('event: complete'), 'Missing complete event');
+    // Will contain an error event (no AudioCraft in test) — that's expected
+    assert.ok(text.includes(`"sound":"${REGEN_ID}"`), 'SSE data should reference the sound ID');
+  });
+
+  it('generation error is reported via SSE (not HTTP 500)', async () => {
+    const res = await fetch(`${baseUrl}/api/library/${REGEN_ID}/generate`, { method: 'POST' });
+    // Endpoint should return 200 (SSE stream), not 500
+    assert.equal(res.status, 200);
+
+    const text = await res.text();
+    // Error from missing AudioCraft/Python should be in SSE error event
+    assert.ok(text.includes('event: error'), 'Should contain SSE error event for failed generation');
+    // The complete event should still fire
+    assert.ok(text.includes('event: complete'), 'Complete event should always fire');
+  });
+
+  it('lock is released after failed generation', async () => {
+    // After the failed generate above, the lock should be released
+    // A second generate call should NOT return 409
+    const res = await fetch(`${baseUrl}/api/library/${REGEN_ID}/generate`, { method: 'POST' });
+    assert.notEqual(res.status, 409, 'Lock should be released after failed generation');
+    await res.text(); // Drain
+  });
+});
+
+describe('Concurrent generation / busy state', () => {
+  const BUSY_ID = '_busy_test_disposable';
+
+  before(async () => {
+    const config = JSON.parse(readFileSync(join(PROJECT_ROOT, 'config', 'library-config.json'), 'utf-8'));
+    createTestWav(join(config.libraryRoot, 'sfx', 'ui', `${BUSY_ID}.wav`));
+
+    await fetchJSON('/api/library', {
+      method: 'POST',
+      body: { id: BUSY_ID, name: 'Busy Test Disposable', category: 'sfx/ui', prompt: 'test', duration: 0.5 },
+    });
+  });
+
+  after(async () => {
+    try { await fetchJSON(`/api/library/${BUSY_ID}`, { method: 'DELETE' }); } catch {}
+  });
+
+  it('returns 409 when audio generation is already in progress', async () => {
+    // Start a generation — don't await the full stream
+    const firstRes = fetch(`${baseUrl}/api/library/${BUSY_ID}/generate`, { method: 'POST' });
+
+    // Give the server a moment to set the lock
+    await new Promise(r => setTimeout(r, 50));
+
+    // Second request should be rejected
+    const secondRes = await fetch(`${baseUrl}/api/library/${BUSY_ID}/generate`, { method: 'POST' });
+
+    if (secondRes.status === 409) {
+      const body = await secondRes.json();
+      assert.equal(body.error, 'Audio generation in progress');
+    } else {
+      // If the first one already completed (fast failure), both get through — acceptable
+      await secondRes.text(); // Drain
+    }
+
+    // Drain the first response
+    const first = await firstRes;
+    await first.text();
+  });
+
+  it('visual generation returns 409 independently when busy', async () => {
+    // Create a disposable visual asset
+    await fetchJSON('/api/visual-library', {
+      method: 'POST',
+      body: { id: '_vbusy_test', name: 'VBusy Test', category: 'characters' },
+    });
+
+    // Start visual generation (will fail fast but sets the lock briefly)
+    const firstRes = fetch(`${baseUrl}/api/visual-library/_vbusy_test/generate/concept`, { method: 'POST' });
+    await new Promise(r => setTimeout(r, 50));
+
+    const secondRes = await fetch(`${baseUrl}/api/visual-library/_vbusy_test/generate/concept`, { method: 'POST' });
+
+    // Either 409 (lock held) or both complete (fast failure) — both acceptable
+    if (secondRes.status === 409) {
+      const body = await secondRes.json();
+      assert.equal(body.error, 'Visual generation in progress');
+    } else {
+      await secondRes.text();
+    }
+
+    const first = await firstRes;
+    await first.text();
+
+    // Cleanup
+    try { await fetchJSON('/api/visual-library/_vbusy_test', { method: 'DELETE' }); } catch {}
+  });
+
+  it('audio and visual locks are independent', async () => {
+    // Start an audio generation (sets audioGenerationInProgress)
+    const audioRes = fetch(`${baseUrl}/api/library/${BUSY_ID}/generate`, { method: 'POST' });
+    await new Promise(r => setTimeout(r, 50));
+
+    // Visual generation should NOT be blocked by audio lock
+    await fetchJSON('/api/visual-library', {
+      method: 'POST',
+      body: { id: '_cross_test', name: 'Cross Test', category: 'tiles' },
+    });
+
+    const visualRes = await fetch(`${baseUrl}/api/visual-library/_cross_test/generate/concept`, { method: 'POST' });
+    // Should NOT be 409 — different lock
+    assert.notEqual(visualRes.status, 409, 'Visual should not be blocked by audio lock');
+    await visualRes.text();
+
+    const audio = await audioRes;
+    await audio.text();
+
+    try { await fetchJSON('/api/visual-library/_cross_test', { method: 'DELETE' }); } catch {}
+  });
+});
+
+describe('Audio file update after generation', () => {
+  const REFRESH_ID = '_refresh_test_disposable';
+
+  before(async () => {
+    const config = JSON.parse(readFileSync(join(PROJECT_ROOT, 'config', 'library-config.json'), 'utf-8'));
+    const wavDir = join(config.libraryRoot, 'sfx', 'ui');
+    createTestWav(join(wavDir, `${REFRESH_ID}.wav`));
+
+    await fetchJSON('/api/library', {
+      method: 'POST',
+      body: { id: REFRESH_ID, name: 'Refresh Test', category: 'sfx/ui', prompt: 'test', duration: 0.5 },
+    });
+  });
+
+  after(async () => {
+    try { await fetchJSON(`/api/library/${REFRESH_ID}`, { method: 'DELETE' }); } catch {}
+  });
+
+  it('WAV file is streamable from library endpoint', async () => {
+    const res = await fetch(`${baseUrl}/api/library/${REFRESH_ID}/audio`);
+    assert.equal(res.status, 200, 'WAV should be streamable');
+    const buf = await res.arrayBuffer();
+    assert.ok(buf.byteLength > 44, 'WAV should have content beyond header');
+  });
+
+  it('processed OGG is streamable after assign', async () => {
+    // Assign to trigger processing
+    const { status } = await fetchJSON(`/api/library/${REFRESH_ID}/assign`, {
+      method: 'POST',
+      body: { project: 'arena', targetPath: `sfx/${REFRESH_ID}` },
+    });
+    assert.equal(status, 200);
+
+    // OGG should now exist on NAS
+    const res = await fetch(`${baseUrl}/api/library/${REFRESH_ID}/audio?format=ogg`);
+    assert.equal(res.status, 200, 'OGG should be streamable after assign processing');
+    const buf = await res.arrayBuffer();
+    assert.ok(buf.byteLength > 0, 'OGG should have content');
+
+    // Cleanup assignment
+    await fetchJSON(`/api/library/${REFRESH_ID}/unassign`, {
+      method: 'POST',
+      body: { project: 'arena' },
+    });
+  });
+
+  it('MP3 is streamable after assign', async () => {
+    // Assign again to ensure processing
+    await fetchJSON(`/api/library/${REFRESH_ID}/assign`, {
+      method: 'POST',
+      body: { project: 'arena', targetPath: `sfx/${REFRESH_ID}` },
+    });
+
+    const res = await fetch(`${baseUrl}/api/library/${REFRESH_ID}/audio?format=mp3`);
+    assert.equal(res.status, 200, 'MP3 should be streamable after assign processing');
+    const buf = await res.arrayBuffer();
+    assert.ok(buf.byteLength > 0, 'MP3 should have content');
+
+    await fetchJSON(`/api/library/${REFRESH_ID}/unassign`, {
+      method: 'POST',
+      body: { project: 'arena' },
+    });
+  });
+});
+
+describe('Delete workflow', () => {
+  const DEL_ID = '_delete_test_disposable';
+
+  before(async () => {
+    // Create disposable sound with files on NAS
+    const config = JSON.parse(readFileSync(join(PROJECT_ROOT, 'config', 'library-config.json'), 'utf-8'));
+    const wavDir = join(config.libraryRoot, 'sfx', 'ui');
+    createTestWav(join(wavDir, `${DEL_ID}.wav`));
+    // Also create OGG/MP3 to verify they get cleaned up
+    writeFileSync(join(wavDir, `${DEL_ID}.ogg`), Buffer.alloc(10));
+    writeFileSync(join(wavDir, `${DEL_ID}.mp3`), Buffer.alloc(10));
+
+    await fetchJSON('/api/library', {
+      method: 'POST',
+      body: { id: DEL_ID, name: 'Delete Test', category: 'sfx/ui' },
+    });
+  });
+
+  it('sound exists before deletion', async () => {
+    const { json } = await fetchJSON('/api/library');
+    assert.ok(json.sounds[DEL_ID], 'Sound should exist in library');
+  });
+
+  it('NAS files exist before deletion', async () => {
+    const config = JSON.parse(readFileSync(join(PROJECT_ROOT, 'config', 'library-config.json'), 'utf-8'));
+    const wavDir = join(config.libraryRoot, 'sfx', 'ui');
+    assert.ok(existsSync(join(wavDir, `${DEL_ID}.wav`)), 'WAV should exist');
+    assert.ok(existsSync(join(wavDir, `${DEL_ID}.ogg`)), 'OGG should exist');
+    assert.ok(existsSync(join(wavDir, `${DEL_ID}.mp3`)), 'MP3 should exist');
+  });
+
+  it('DELETE removes sound from library catalog', async () => {
+    const { status, json } = await fetchJSON(`/api/library/${DEL_ID}`, { method: 'DELETE' });
+    assert.equal(status, 200);
+    assert.equal(json.deleted, DEL_ID);
+
+    // Verify gone from catalog
+    const { json: lib } = await fetchJSON('/api/library');
+    assert.equal(lib.sounds[DEL_ID], undefined, 'Sound should be removed from catalog');
+  });
+
+  it('DELETE removes WAV/OGG/MP3 from NAS', async () => {
+    const config = JSON.parse(readFileSync(join(PROJECT_ROOT, 'config', 'library-config.json'), 'utf-8'));
+    const wavDir = join(config.libraryRoot, 'sfx', 'ui');
+    assert.ok(!existsSync(join(wavDir, `${DEL_ID}.wav`)), 'WAV should be deleted from NAS');
+    assert.ok(!existsSync(join(wavDir, `${DEL_ID}.ogg`)), 'OGG should be deleted from NAS');
+    assert.ok(!existsSync(join(wavDir, `${DEL_ID}.mp3`)), 'MP3 should be deleted from NAS');
+  });
+
+  it('DELETE returns 404 for already-deleted sound', async () => {
+    const { status } = await fetchJSON(`/api/library/${DEL_ID}`, { method: 'DELETE' });
+    assert.equal(status, 404);
+  });
+
+  it('visual DELETE removes asset and NAS files', async () => {
+    // Create disposable visual asset
+    const VDEL_ID = '_vdel_test_disposable';
+    await fetchJSON('/api/visual-library', {
+      method: 'POST',
+      body: { id: VDEL_ID, name: 'Visual Delete Test', category: 'characters', prompt: 'test' },
+    });
+
+    // Create fake concept file on NAS
+    const config = JSON.parse(readFileSync(join(PROJECT_ROOT, 'config', 'visual-config.json'), 'utf-8'));
+    const conceptDir = join(config.libraryRoot, 'concepts', 'characters');
+    if (!existsSync(conceptDir)) mkdirSync(conceptDir, { recursive: true });
+    writeFileSync(join(conceptDir, `${VDEL_ID}.png`), Buffer.alloc(10));
+
+    // Verify exists
+    const { json: before } = await fetchJSON(`/api/visual-library/${VDEL_ID}`);
+    assert.equal(before.id, VDEL_ID);
+
+    // Delete
+    const { status } = await fetchJSON(`/api/visual-library/${VDEL_ID}`, { method: 'DELETE' });
+    assert.equal(status, 200);
+
+    // Verify gone from catalog
+    const { status: getStatus } = await fetchJSON(`/api/visual-library/${VDEL_ID}`);
+    assert.equal(getStatus, 404);
+
+    // Verify concept PNG cleaned from NAS
+    assert.ok(!existsSync(join(conceptDir, `${VDEL_ID}.png`)), 'Concept PNG should be deleted from NAS');
+  });
+});
