@@ -44,11 +44,45 @@ detect_registry
 
 # Build and push images
 if [ "$MANIFESTS_ONLY" = false ]; then
+    # Resolve audio symlinks for Docker build context (Docker can't follow symlinks outside context)
+    AUDIO_SFX="$PROJECT_ROOT/arena/frontend/public/assets/sfx"
+    AUDIO_MUSIC="$PROJECT_ROOT/arena/frontend/public/assets/music"
+    RESOLVED_SYMLINKS=false
+
+    if [ -L "$AUDIO_SFX" ] || [ -L "$AUDIO_MUSIC" ]; then
+        log_info "Resolving audio symlinks for Docker build..."
+        RESOLVED_SYMLINKS=true
+        SFX_TARGET=$(readlink "$AUDIO_SFX" 2>/dev/null || true)
+        MUSIC_TARGET=$(readlink "$AUDIO_MUSIC" 2>/dev/null || true)
+
+        if [ -L "$AUDIO_SFX" ] && [ -d "$SFX_TARGET" ]; then
+            rm "$AUDIO_SFX"
+            cp -r "$SFX_TARGET" "$AUDIO_SFX"
+        fi
+        if [ -L "$AUDIO_MUSIC" ] && [ -d "$MUSIC_TARGET" ]; then
+            rm "$AUDIO_MUSIC"
+            cp -r "$MUSIC_TARGET" "$AUDIO_MUSIC"
+        fi
+    fi
+
     log_info "Building arena-backend..."
     docker build -t "$REGISTRY/arena-backend:latest" -f "$PROJECT_ROOT/arena/backend/Dockerfile" "$PROJECT_ROOT"
 
     log_info "Building arena-frontend..."
     docker build -t "$REGISTRY/arena-frontend:latest" -f "$PROJECT_ROOT/arena/frontend/Dockerfile" "$PROJECT_ROOT"
+
+    # Restore symlinks after build
+    if [ "$RESOLVED_SYMLINKS" = true ]; then
+        log_info "Restoring audio symlinks..."
+        if [ -n "$SFX_TARGET" ]; then
+            rm -rf "$AUDIO_SFX"
+            ln -s "$SFX_TARGET" "$AUDIO_SFX"
+        fi
+        if [ -n "$MUSIC_TARGET" ]; then
+            rm -rf "$AUDIO_MUSIC"
+            ln -s "$MUSIC_TARGET" "$AUDIO_MUSIC"
+        fi
+    fi
 
     log_info "Pushing arena-backend..."
     docker push "$REGISTRY/arena-backend:latest"
