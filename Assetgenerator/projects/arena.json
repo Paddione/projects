@@ -5,5 +5,240 @@
   "processScript": "../arena/scripts/process_audio.sh",
   "generateScript": "../arena/scripts/generate_audio.py",
   "manifestPath": "../arena/assets/manifest.json",
-  "sounds": {}
+  "sounds": {
+    "armor_pickup": {
+      "type": "sfx",
+      "prompt": "armor equip metallic clank, shield activate, video game sound effect",
+      "seed": null,
+      "duration": 0.5,
+      "backend": "default",
+      "flagged": false,
+      "lastGeneratedAt": null,
+      "filePath": "sfx/armor_pickup.wav"
+    },
+    "bullet_impact": {
+      "type": "sfx",
+      "prompt": "laser bullet impact on surface, sci-fi hit, video game sound effect",
+      "seed": null,
+      "duration": 0.3,
+      "backend": "default",
+      "flagged": false,
+      "lastGeneratedAt": null,
+      "filePath": "sfx/bullet_impact.wav"
+    },
+    "footstep_sprint": {
+      "type": "sfx",
+      "prompt": "fast footstep on stone, sprinting pace, video game sound",
+      "seed": null,
+      "duration": 0.2,
+      "backend": "default",
+      "flagged": false,
+      "lastGeneratedAt": null,
+      "filePath": "sfx/footstep_sprint.wav"
+    },
+    "footstep_walk": {
+      "type": "sfx",
+      "prompt": "footstep on stone, single step walking pace, video game sound",
+      "seed": null,
+      "duration": 0.3,
+      "backend": "default",
+      "flagged": false,
+      "lastGeneratedAt": null,
+      "filePath": "sfx/footstep_walk.wav"
+    },
+    "grenade_explode": {
+      "type": "sfx",
+      "prompt": "grenade explosion blast, large boom impact, debris scatter, sci-fi explosion, video game sound effect",
+      "seed": null,
+      "duration": 1.2,
+      "backend": "default",
+      "flagged": false,
+      "lastGeneratedAt": null,
+      "filePath": "sfx/grenade_explode.wav"
+    },
+    "grenade_launch": {
+      "type": "sfx",
+      "prompt": "grenade launcher firing, heavy thunk mechanical release, sci-fi weapon shoot, video game sound effect",
+      "seed": null,
+      "duration": 0.6,
+      "backend": "default",
+      "flagged": false,
+      "lastGeneratedAt": null,
+      "filePath": "sfx/grenade_launch.wav"
+    },
+    "gunshot": {
+      "type": "sfx",
+      "prompt": "sci-fi laser gunshot, short sharp burst, video game sound effect",
+      "seed": null,
+      "duration": 0.5,
+      "backend": "default",
+      "flagged": false,
+      "lastGeneratedAt": null,
+      "filePath": "sfx/gunshot.wav"
+    },
+    "gunshot_new": {
+      "type": "sfx",
+      "prompt": "",
+      "seed": null,
+      "duration": 0.194263,
+      "backend": "default",
+      "flagged": false,
+      "lastGeneratedAt": null,
+      "filePath": "sfx/gunshot_new.wav"
+    },
+    "health_pickup": {
+      "type": "sfx",
+      "prompt": "health pickup sparkle, positive chime, video game sound effect",
+      "seed": null,
+      "duration": 0.5,
+      "backend": "default",
+      "flagged": false,
+      "lastGeneratedAt": null,
+      "filePath": "sfx/health_pickup.wav"
+    },
+    "match_defeat": {
+      "type": "sfx",
+      "prompt": "somber defeat sound, loss, video game sound effect",
+      "seed": null,
+      "duration": 2,
+      "backend": "default",
+      "flagged": false,
+      "lastGeneratedAt": null,
+      "filePath": "sfx/match_defeat.wav"
+    },
+    "match_victory": {
+      "type": "sfx",
+      "prompt": "triumphant victory fanfare, celebration, video game sound effect",
+      "seed": null,
+      "duration": 2,
+      "backend": "default",
+      "flagged": false,
+      "lastGeneratedAt": null,
+      "filePath": "sfx/match_victory.wav"
+    },
+    "melee_swing": {
+      "type": "sfx",
+      "prompt": "sword swing whoosh, fast melee attack, video game sound effect",
+      "seed": null,
+      "duration": 0.4,
+      "backend": "default",
+      "flagged": false,
+      "lastGeneratedAt": null,
+      "filePath": "sfx/melee_swing.wav"
+    },
+    "player_death": {
+      "type": "sfx",
+      "prompt": "character death sound, dramatic collapse, video game sound effect",
+      "seed": null,
+      "duration": 1,
+      "backend": "default",
+      "flagged": false,
+      "lastGeneratedAt": null,
+      "filePath": "sfx/player_death.wav"
+    },
+    "player_hit": {
+      "type": "sfx",
+      "prompt": "character taking damage, flesh impact, video game sound effect",
+      "seed": null,
+      "duration": 0.4,
+      "backend": "default",
+      "flagged": false,
+      "lastGeneratedAt": null,
+      "filePath": "sfx/player_hit.wav"
+    },
+    "round_end": {
+      "type": "sfx",
+      "prompt": "round end gong, resolution chime, video game sound effect",
+      "seed": null,
+      "duration": 1.5,
+      "backend": "default",
+      "flagged": false,
+      "lastGeneratedAt": null,
+      "filePath": "sfx/round_end.wav"
+    },
+    "round_start": {
+      "type": "sfx",
+      "prompt": "battle round start horn, dramatic fanfare, video game sound effect",
+      "seed": null,
+      "duration": 1.5,
+      "backend": "default",
+      "flagged": false,
+      "lastGeneratedAt": null,
+      "filePath": "sfx/round_start.wav"
+    },
+    "zone_tick": {
+      "type": "sfx",
+      "prompt": "zone damage tick, electric zap, recurring pain, video game",
+      "seed": null,
+      "duration": 0.3,
+      "backend": "default",
+      "flagged": false,
+      "lastGeneratedAt": null,
+      "filePath": "sfx/zone_tick.wav"
+    },
+    "zone_warning": {
+      "type": "sfx",
+      "prompt": "danger zone warning alarm, urgent beeping, video game sound effect",
+      "seed": null,
+      "duration": 1,
+      "backend": "default",
+      "flagged": false,
+      "lastGeneratedAt": null,
+      "filePath": "sfx/zone_warning.wav"
+    },
+    "battle": {
+      "type": "music",
+      "prompt": "intense electronic battle music, fast driving tempo, aggressive synths, loopable, video game combat theme",
+      "seed": null,
+      "duration": 90,
+      "backend": "default",
+      "flagged": false,
+      "lastGeneratedAt": null,
+      "filePath": "music/battle.wav",
+      "loop": true
+    },
+    "defeat": {
+      "type": "music",
+      "prompt": "melancholic sci-fi defeat theme, descending minor key synths, somber electronic tones, electronic string pad, sad loss sting, video game, 8 seconds",
+      "seed": null,
+      "duration": 8,
+      "backend": "default",
+      "flagged": false,
+      "lastGeneratedAt": null,
+      "filePath": "music/defeat.wav",
+      "loop": false
+    },
+    "lobby": {
+      "type": "music",
+      "prompt": "ambient atmospheric music, mysterious dark electronic, slow tempo, loopable, video game lobby theme",
+      "seed": null,
+      "duration": 60,
+      "backend": "default",
+      "flagged": false,
+      "lastGeneratedAt": null,
+      "filePath": "music/lobby.wav",
+      "loop": true
+    },
+    "respectisevt": {
+      "type": "music",
+      "prompt": "",
+      "seed": null,
+      "duration": 4.381633,
+      "backend": "default",
+      "flagged": false,
+      "lastGeneratedAt": null,
+      "filePath": "music/respectisevt.wav"
+    },
+    "victory": {
+      "type": "music",
+      "prompt": "triumphant sci-fi victory fanfare, ascending heroic synth melody, bright major key, dynamic crescendo, celebratory energy, video game win sting, 8 seconds",
+      "seed": null,
+      "duration": 8,
+      "backend": "default",
+      "flagged": false,
+      "lastGeneratedAt": null,
+      "filePath": "music/victory.wav",
+      "loop": false
+    }
+  }
 }
