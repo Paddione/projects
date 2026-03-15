@@ -19,6 +19,7 @@ Environment variables (cloud):
 import argparse
 import json
 import os
+import random
 import struct
 import sys
 import time
@@ -167,6 +168,9 @@ def elevenlabs_available() -> bool:
 
 def elevenlabs_generate_sfx(prompt: str, duration: float, output_path: Path) -> bool:
     """Generate SFX using ElevenLabs Sound Effects API."""
+    import subprocess
+    import tempfile
+
     api_key = os.environ.get("ELEVENLABS_API_KEY", "")
 
     payload = json.dumps({
@@ -186,7 +190,21 @@ def elevenlabs_generate_sfx(prompt: str, duration: float, output_path: Path) -> 
     try:
         resp = urllib.request.urlopen(req, timeout=60)
         audio_data = resp.read()
-        output_path.write_bytes(audio_data)
+
+        # ElevenLabs returns MP3 — convert to WAV for consistency
+        with tempfile.NamedTemporaryFile(suffix=".mp3", delete=False) as tmp:
+            tmp.write(audio_data)
+            tmp_path = tmp.name
+
+        result = subprocess.run(
+            ["ffmpeg", "-y", "-i", tmp_path, "-ar", str(SAMPLE_RATE), "-ac", "1", str(output_path)],
+            capture_output=True, text=True
+        )
+        os.unlink(tmp_path)
+
+        if result.returncode != 0:
+            print(f"  [ERROR] ffmpeg conversion failed: {result.stderr}")
+            return False
         return True
     except Exception as e:
         print(f"  [ERROR] ElevenLabs SFX failed: {e}")
@@ -217,7 +235,26 @@ def main():
                         default="auto")
     parser.add_argument("--type", choices=["sfx", "music", "all"], default="all")
     parser.add_argument("--id", help="Only generate this asset ID")
+    parser.add_argument("--prompt", help="Override manifest prompt (requires --id)")
+    parser.add_argument("--seed", type=int, help="Random seed for reproducibility (requires --id)")
+    parser.add_argument("--duration", type=float, help="Override manifest duration in seconds (requires --id)")
+    parser.add_argument("--force", action="store_true", help="Regenerate even if file exists")
     args = parser.parse_args()
+
+    # Apply seed for reproducibility
+    if args.seed is not None:
+        seed = args.seed
+    else:
+        seed = random.randint(0, 2**31 - 1)
+
+    try:
+        import torch
+        torch.manual_seed(seed)
+    except ImportError:
+        pass
+
+    if args.id:
+        print(f"SEED:{seed}")
 
     manifest = load_manifest()
 
@@ -254,12 +291,12 @@ def main():
                 continue
 
             out_path = OUTPUT_SFX / f"{sfx['id']}.wav"
-            if out_path.exists():
+            if out_path.exists() and not args.force:
                 print(f"  [SKIP] {sfx['id']}.wav — already exists")
                 continue
 
-            duration = sfx.get("duration", 1.0)
-            prompt = sfx["prompt"]
+            duration = args.duration if (args.duration and args.id) else sfx.get("duration", 1.0)
+            prompt = args.prompt if (args.prompt and args.id) else sfx["prompt"]
             print(f"  [GEN] {sfx['id']} ({duration}s)")
 
             if sfx_backend == "audiocraft":
@@ -287,12 +324,12 @@ def main():
                 continue
 
             out_path = OUTPUT_MUSIC / f"{track['id']}.wav"
-            if out_path.exists():
+            if out_path.exists() and not args.force:
                 print(f"  [SKIP] {track['id']}.wav — already exists")
                 continue
 
-            duration = track.get("duration", 30)
-            prompt = track["prompt"]
+            duration = args.duration if (args.duration and args.id) else track.get("duration", 30)
+            prompt = args.prompt if (args.prompt and args.id) else track["prompt"]
             print(f"  [GEN] {track['id']} ({duration}s)")
 
             if music_backend == "audiocraft":
