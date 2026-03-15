@@ -34,6 +34,14 @@ export const pool = connectionString
   ? new Pool(buildPoolConfig(connectionString))
   : undefined;
 
+// Prevent unhandled 'error' events from crashing the process.
+// Idle clients in the pool can lose connections (e.g., DB recovery after TRUNCATE).
+if (pool) {
+  pool.on('error', (err) => {
+    console.error('[pg-pool] Unexpected pool error (non-fatal):', err.message);
+  });
+}
+
 export const db = pool ? drizzle(pool) : undefined;
 
 export async function ensureDbReady(): Promise<void> {
