@@ -1263,8 +1263,7 @@ export class GameService {
     }
 
     private startNextRound(game: GameState): void {
-        const enemyNPCs = game.npcs.filter(n => n.type === 'enemy');
-        const npcCount = enemyNPCs.length;
+        const npcCount = game.settings.npcEnemies || 0;
         const totalEntities = game.players.size + npcCount;
         const allSpawns = this.getSpawnPoints(totalEntities, game.map);
 
@@ -1289,24 +1288,8 @@ export class GameService {
             game.zone = this.createInitialZone(game.map);
         }
 
-        // Respawn enemy NPCs with full HP
-        if (npcCount > 0) {
-            const npcSpawns = allSpawns.slice(game.players.size);
-            enemyNPCs.forEach((npc, i) => {
-                if (i < npcSpawns.length) {
-                    npc.x = npcSpawns[i].x * GAME.TILE_SIZE + GAME.TILE_SIZE / 2;
-                    npc.y = npcSpawns[i].y * GAME.TILE_SIZE + GAME.TILE_SIZE / 2;
-                }
-                npc.hp = ENEMY_CONST.HP;
-                npc.state = 'patrol';
-                npc.targetPlayerId = null;
-                npc.patrolTarget = undefined;
-                npc.losLostTime = undefined;
-                npc.lastShotTime = 0;
-                npc.rotation = 0;
-                game.npcs.push(npc);
-            });
-        }
+        // Respawn enemy NPCs from settings (dead NPCs were already removed from array)
+        this.spawnEnemyNPCs(game);
 
         game.currentRound = {
             roundNumber: game.currentRound.roundNumber + 1,

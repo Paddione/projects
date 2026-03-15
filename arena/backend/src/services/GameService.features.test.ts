@@ -732,7 +732,7 @@ describe('Round-End with NPCs', () => {
         expect(roundEndData?.winnerId).toBe('');
     });
 
-    it('should preserve and reset enemy NPCs on startNextRound', () => {
+    it('should respawn enemy NPCs on startNextRound even if all were killed', () => {
         const gs = new GameService(20);
         const lobby = makeLobby(
             [makeLobbyPlayer('1', 'p1'), makeLobbyPlayer('2', 'p2')],
@@ -741,16 +741,13 @@ describe('Round-End with NPCs', () => {
         const matchId = gs.startMatch(lobby);
         const game = (gs as any).activeGames.get(matchId);
 
-        for (const npc of game.npcs) {
-            if (npc.type === 'enemy') {
-                npc.hp = 1;
-                npc.state = 'engage';
-                npc.targetPlayerId = '1';
-            }
-        }
+        // Kill all enemy NPCs (simulates updateProjectiles removing dead NPCs)
+        game.npcs = game.npcs.filter((n: any) => n.type !== 'enemy');
+        expect(game.npcs.filter((n: any) => n.type === 'enemy')).toHaveLength(0);
 
         (gs as any).startNextRound(game);
 
+        // NPCs should be freshly spawned from settings
         const enemyNPCs = game.npcs.filter((n: any) => n.type === 'enemy');
         expect(enemyNPCs).toHaveLength(2);
         for (const npc of enemyNPCs) {
