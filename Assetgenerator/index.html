@@ -1,0 +1,1017 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Assetgenerator — Audio Review</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg-deep: #08080f;
+      --bg-surface: #0e0e1a;
+      --bg-card: #131320;
+      --bg-card-hover: #181830;
+      --border: #1e1e3a;
+      --border-focus: #2a2a5a;
+      --cyan: #00e5ff;
+      --cyan-dim: #00e5ff44;
+      --cyan-glow: #00e5ff22;
+      --orange: #ff6b35;
+      --orange-dim: #ff6b3544;
+      --green: #00ff88;
+      --red: #ff3366;
+      --text: #e0e0f0;
+      --text-dim: #8888aa;
+      --text-muted: #555570;
+      --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+      --font-sans: 'Instrument Sans', system-ui, sans-serif;
+      --radius: 6px;
+    }
+
+    html { font-size: 14px; }
+    body {
+      background: var(--bg-deep);
+      color: var(--text);
+      font-family: var(--font-sans);
+      line-height: 1.5;
+      min-height: 100vh;
+    }
+
+    /* Subtle noise overlay */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 9999;
+    }
+
+    /* Header */
+    header {
+      background: var(--bg-surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0.75rem 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(12px);
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+    }
+
+    .logo {
+      font-family: var(--font-mono);
+      font-weight: 700;
+      font-size: 1.1rem;
+      color: var(--cyan);
+      letter-spacing: -0.02em;
+      text-transform: uppercase;
+    }
+
+    .logo span {
+      color: var(--text-dim);
+      font-weight: 400;
+    }
+
+    .header-controls {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    select, input, textarea {
+      background: var(--bg-deep);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 0.4rem 0.6rem;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    select:focus, input:focus, textarea:focus {
+      border-color: var(--cyan);
+      box-shadow: 0 0 0 2px var(--cyan-glow);
+    }
+
+    select { cursor: pointer; padding-right: 1.5rem; }
+
+    button {
+      background: var(--bg-card);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 0.4rem 0.9rem;
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    button:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--border-focus);
+    }
+
+    button:active { transform: scale(0.97); }
+
+    button:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .btn-primary {
+      background: var(--cyan-dim);
+      border-color: var(--cyan);
+      color: var(--cyan);
+    }
+
+    .btn-primary:hover {
+      background: var(--cyan);
+      color: var(--bg-deep);
+    }
+
+    .btn-danger {
+      background: var(--orange-dim);
+      border-color: var(--orange);
+      color: var(--orange);
+    }
+
+    .btn-danger:hover {
+      background: var(--orange);
+      color: var(--bg-deep);
+    }
+
+    /* Warning bar */
+    .warning-bar {
+      background: #332200;
+      border-bottom: 1px solid #664400;
+      color: #ffaa44;
+      padding: 0.5rem 1.5rem;
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .warning-bar::before { content: '⚠'; }
+
+    /* Filters */
+    .filter-bar {
+      display: flex;
+      gap: 0.25rem;
+      padding: 0.75rem 1.5rem;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg-surface);
+    }
+
+    .filter-btn {
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--text-dim);
+      padding: 0.3rem 0.75rem;
+      font-size: 0.78rem;
+      border-radius: 3px;
+      text-transform: uppercase;
+    }
+
+    .filter-btn:hover { color: var(--text); }
+
+    .filter-btn.active {
+      color: var(--cyan);
+      border-color: var(--cyan-dim);
+      background: var(--cyan-glow);
+    }
+
+    /* Sounds container */
+    #sounds-container {
+      padding: 1rem 1.5rem 6rem;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .section-header {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      margin: 1.5rem 0 0.75rem;
+      padding-bottom: 0.4rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .empty-state {
+      color: var(--text-dim);
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      padding: 3rem;
+      text-align: center;
+    }
+
+    /* Sound card */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem;
+      margin-bottom: 0.5rem;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .card:hover {
+      border-color: var(--border-focus);
+    }
+
+    .card.flagged {
+      border-color: var(--orange);
+      box-shadow: inset 0 0 0 1px var(--orange-dim), 0 0 20px var(--orange-dim);
+    }
+
+    .card.save-flash {
+      border-color: var(--green) !important;
+      box-shadow: 0 0 12px #00ff8833 !important;
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .sound-name {
+      font-family: var(--font-mono);
+      font-weight: 700;
+      font-size: 1rem;
+      color: var(--text);
+    }
+
+    .badge {
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      font-weight: 600;
+      padding: 0.15rem 0.4rem;
+      border-radius: 3px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .badge-type {
+      background: var(--cyan-glow);
+      color: var(--cyan);
+      border: 1px solid var(--cyan-dim);
+    }
+
+    .badge-loop {
+      background: #22004422;
+      color: #aa88ff;
+      border: 1px solid #aa88ff44;
+    }
+
+    .badge-flagged {
+      background: var(--orange-dim);
+      color: var(--orange);
+      border: 1px solid var(--orange);
+      animation: pulse-flag 2s infinite;
+    }
+
+    @keyframes pulse-flag {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.6; }
+    }
+
+    .file-info {
+      margin-left: auto;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    /* Waveform */
+    .waveform-row {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .play-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      padding: 0;
+      flex-shrink: 0;
+      border-color: var(--cyan-dim);
+      color: var(--cyan);
+      line-height: 1;
+    }
+
+    .play-btn:hover {
+      background: var(--cyan);
+      color: var(--bg-deep);
+    }
+
+    .play-btn.playing {
+      background: var(--cyan);
+      color: var(--bg-deep);
+      animation: glow-pulse 1s infinite alternate;
+    }
+
+    @keyframes glow-pulse {
+      from { box-shadow: 0 0 8px var(--cyan-dim); }
+      to { box-shadow: 0 0 16px var(--cyan); }
+    }
+
+    canvas.waveform {
+      flex: 1;
+      height: 48px;
+      border-radius: 4px;
+      cursor: pointer;
+      image-rendering: pixelated;
+    }
+
+    /* Controls */
+    .controls {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .controls label {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .controls textarea {
+      width: 100%;
+      resize: vertical;
+      min-height: 2.5rem;
+      font-size: 0.82rem;
+      line-height: 1.4;
+    }
+
+    .controls-row {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    .controls-row label {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .controls-row input {
+      width: 100px;
+    }
+
+    .controls-row select {
+      min-width: 180px;
+    }
+
+    /* Card actions */
+    .card-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.5rem;
+    }
+
+    /* Log panel */
+    .log-panel {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--bg-surface);
+      border-top: 1px solid var(--border);
+      z-index: 100;
+      transition: transform 0.25s;
+    }
+
+    .log-panel.collapsed .log-content { display: none; }
+
+    .log-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.5rem 1.5rem;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .log-content {
+      max-height: 200px;
+      overflow-y: auto;
+      padding: 0 1.5rem 0.75rem;
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      line-height: 1.6;
+    }
+
+    .log-content div { padding: 0.1rem 0; }
+    .log-content .error { color: var(--red); }
+    .log-content .warn { color: var(--orange); }
+    .log-content .success { color: var(--green); }
+    .log-content .dim { color: var(--text-dim); }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border-focus); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="header-left">
+      <div class="logo">Asset<span>generator</span></div>
+      <label style="display:flex;align-items:center;gap:0.4rem;">
+        <span style="font-family:var(--font-mono);font-size:0.7rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em">Project</span>
+        <select id="project-select"></select>
+      </label>
+    </div>
+    <div class="header-controls">
+      <button id="scan-btn">Scan</button>
+      <button id="regen-btn" class="btn-primary">Regenerate Flagged</button>
+    </div>
+  </header>
+
+  <div id="prereq-warning" hidden></div>
+
+  <div class="filter-bar">
+    <button class="filter-btn active" data-filter="all">All</button>
+    <button class="filter-btn" data-filter="sfx">SFX</button>
+    <button class="filter-btn" data-filter="music">Music</button>
+    <button class="filter-btn" data-filter="flagged">Flagged</button>
+  </div>
+
+  <div id="sounds-container"></div>
+
+  <div id="regen-log" class="log-panel collapsed" hidden>
+    <div class="log-header" id="log-toggle">
+      <span>Regeneration Log</span>
+      <span id="log-toggle-icon">▲</span>
+    </div>
+    <div class="log-content" id="log-content"></div>
+  </div>
+
+<script>
+// =============================================================================
+// State
+// =============================================================================
+
+let currentProject = null;
+let projectData = null;
+let backends = {};
+let activeFilter = 'all';
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+const playingAudio = {};
+const audioBuffers = {};
+
+// =============================================================================
+// API
+// =============================================================================
+
+async function fetchJSON(url, opts) {
+  const res = await fetch(url, opts);
+  if (!res.ok) throw new Error(`${res.status}: ${await res.text()}`);
+  return res.json();
+}
+
+async function loadProjects() {
+  const projects = await fetchJSON('/api/projects');
+  const select = document.getElementById('project-select');
+  select.replaceChildren();
+  for (const p of projects) {
+    const opt = document.createElement('option');
+    opt.value = p;
+    opt.textContent = p;
+    select.appendChild(opt);
+  }
+  if (projects.length > 0) {
+    currentProject = projects[0];
+    select.value = currentProject;
+    await loadProjectData();
+  }
+}
+
+async function loadProjectData() {
+  projectData = await fetchJSON(`/api/projects/${currentProject}`);
+  backends = await fetchJSON('/api/backends');
+  await checkPrerequisites();
+  renderSounds();
+}
+
+async function checkPrerequisites() {
+  const prereqs = await fetchJSON('/api/prerequisites');
+  const el = document.getElementById('prereq-warning');
+  const warnings = [];
+  if (!prereqs.python) warnings.push('Python3 not found');
+  if (!prereqs.ffmpeg) warnings.push('ffmpeg not found');
+  if (!prereqs.cuda) warnings.push('CUDA unavailable — AudioCraft disabled, ElevenLabs still works');
+  if (warnings.length > 0) {
+    el.className = 'warning-bar';
+    el.textContent = warnings.join(' | ');
+    el.hidden = false;
+  } else {
+    el.hidden = true;
+  }
+}
+
+async function doScan() {
+  projectData = await fetchJSON(`/api/projects/${currentProject}/scan`, { method: 'POST' });
+  renderSounds();
+}
+
+async function saveSound(id, fields) {
+  await fetchJSON(`/api/projects/${currentProject}/sounds/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(fields),
+  });
+}
+
+// =============================================================================
+// Waveform & Playback
+// =============================================================================
+
+async function renderWaveform(canvas, soundId) {
+  const ctx = canvas.getContext('2d');
+  const w = canvas.width;
+  const h = canvas.height;
+
+  // Loading state
+  ctx.fillStyle = '#131320';
+  ctx.fillRect(0, 0, w, h);
+  ctx.fillStyle = '#555570';
+  ctx.font = '11px JetBrains Mono, monospace';
+  ctx.fillText('Loading...', 8, h / 2 + 4);
+
+  try {
+    const res = await fetch(`/api/projects/${currentProject}/sounds/${soundId}/audio`);
+    const buffer = await res.arrayBuffer();
+    const audioBuffer = await audioCtx.decodeAudioData(buffer);
+    audioBuffers[soundId] = audioBuffer;
+
+    const data = audioBuffer.getChannelData(0);
+    ctx.clearRect(0, 0, w, h);
+    ctx.fillStyle = '#131320';
+    ctx.fillRect(0, 0, w, h);
+
+    // Draw center line
+    ctx.strokeStyle = '#1e1e3a';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(0, h / 2);
+    ctx.lineTo(w, h / 2);
+    ctx.stroke();
+
+    // Draw waveform with gradient
+    const gradient = ctx.createLinearGradient(0, 0, 0, h);
+    gradient.addColorStop(0, '#00e5ff');
+    gradient.addColorStop(0.5, '#00e5ffcc');
+    gradient.addColorStop(1, '#00e5ff');
+
+    ctx.fillStyle = gradient;
+
+    const step = Math.ceil(data.length / w);
+    for (let i = 0; i < w; i++) {
+      const start = i * step;
+      const end = Math.min(start + step, data.length);
+      let min = 1, max = -1;
+      for (let j = start; j < end; j++) {
+        if (data[j] < min) min = data[j];
+        if (data[j] > max) max = data[j];
+      }
+      const yMin = ((1 + min) / 2) * h;
+      const yMax = ((1 + max) / 2) * h;
+      ctx.fillRect(i, yMax, 1, yMin - yMax || 1);
+    }
+  } catch {
+    ctx.clearRect(0, 0, w, h);
+    ctx.fillStyle = '#131320';
+    ctx.fillRect(0, 0, w, h);
+    ctx.fillStyle = '#ff6b35';
+    ctx.font = '11px JetBrains Mono, monospace';
+    ctx.fillText('Failed to load audio', 8, h / 2 + 4);
+  }
+}
+
+function togglePlay(soundId) {
+  if (playingAudio[soundId]) {
+    playingAudio[soundId].stop();
+    delete playingAudio[soundId];
+    const btn = document.getElementById(`play-${soundId}`);
+    if (btn) btn.classList.remove('playing');
+    return;
+  }
+
+  const buffer = audioBuffers[soundId];
+  if (!buffer) return;
+
+  // Resume audio context if suspended (browser policy)
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+
+  const source = audioCtx.createBufferSource();
+  source.buffer = buffer;
+  source.connect(audioCtx.destination);
+  source.start();
+  playingAudio[soundId] = source;
+
+  const btn = document.getElementById(`play-${soundId}`);
+  if (btn) btn.classList.add('playing');
+
+  source.onended = () => {
+    delete playingAudio[soundId];
+    if (btn) btn.classList.remove('playing');
+  };
+}
+
+// =============================================================================
+// Card Rendering (DOM-based)
+// =============================================================================
+
+function createCard(id, sound) {
+  const card = document.createElement('div');
+  card.className = 'card' + (sound.flagged ? ' flagged' : '');
+  card.dataset.id = id;
+  card.dataset.type = sound.type;
+
+  // Header
+  const headerRow = document.createElement('div');
+  headerRow.className = 'card-header';
+
+  const nameEl = document.createElement('span');
+  nameEl.className = 'sound-name';
+  nameEl.textContent = id;
+  headerRow.appendChild(nameEl);
+
+  const typeBadge = document.createElement('span');
+  typeBadge.className = 'badge badge-type';
+  typeBadge.textContent = sound.type;
+  headerRow.appendChild(typeBadge);
+
+  if (sound.loop !== undefined) {
+    const loopBadge = document.createElement('span');
+    loopBadge.className = 'badge badge-loop';
+    loopBadge.textContent = sound.loop ? 'Loop' : 'One-shot';
+    headerRow.appendChild(loopBadge);
+  }
+
+  if (sound.flagged) {
+    const flagBadge = document.createElement('span');
+    flagBadge.className = 'badge badge-flagged';
+    flagBadge.textContent = 'Flagged';
+    headerRow.appendChild(flagBadge);
+  }
+
+  const fileInfo = document.createElement('span');
+  fileInfo.className = 'file-info';
+  const dur = sound._fileDuration ? sound._fileDuration.toFixed(1) + 's' : '';
+  const size = sound._fileSize ? formatSize(sound._fileSize) : '';
+  fileInfo.textContent = [dur, size].filter(Boolean).join('  ');
+  headerRow.appendChild(fileInfo);
+
+  card.appendChild(headerRow);
+
+  // Waveform row
+  const waveRow = document.createElement('div');
+  waveRow.className = 'waveform-row';
+
+  const playBtn = document.createElement('button');
+  playBtn.className = 'play-btn';
+  playBtn.id = `play-${id}`;
+  playBtn.textContent = '▶';
+  playBtn.addEventListener('click', () => togglePlay(id));
+  waveRow.appendChild(playBtn);
+
+  const canvas = document.createElement('canvas');
+  canvas.className = 'waveform';
+  canvas.width = 700;
+  canvas.height = 48;
+  canvas.id = `waveform-${id}`;
+  canvas.addEventListener('click', () => togglePlay(id));
+  waveRow.appendChild(canvas);
+
+  card.appendChild(waveRow);
+
+  // Controls
+  const controls = document.createElement('div');
+  controls.className = 'controls';
+
+  // Prompt
+  const promptLabel = document.createElement('label');
+  promptLabel.textContent = 'Prompt';
+  const promptInput = document.createElement('textarea');
+  promptInput.id = `prompt-${id}`;
+  promptInput.rows = 2;
+  promptInput.value = sound.prompt || '';
+  controls.appendChild(promptLabel);
+  controls.appendChild(promptInput);
+
+  // Row: duration, seed, backend
+  const row = document.createElement('div');
+  row.className = 'controls-row';
+
+  const durLabel = document.createElement('label');
+  durLabel.textContent = 'Duration (s)';
+  const durInput = document.createElement('input');
+  durInput.type = 'number';
+  durInput.id = `duration-${id}`;
+  durInput.value = sound.duration;
+  durInput.step = '0.1';
+  durInput.min = '0.1';
+  durLabel.appendChild(durInput);
+  row.appendChild(durLabel);
+
+  const seedLabel = document.createElement('label');
+  seedLabel.textContent = 'Seed';
+  const seedInput = document.createElement('input');
+  seedInput.type = 'number';
+  seedInput.id = `seed-${id}`;
+  seedInput.value = sound.seed ?? '';
+  seedInput.placeholder = 'auto';
+  seedLabel.appendChild(seedInput);
+  row.appendChild(seedLabel);
+
+  const backendLabel = document.createElement('label');
+  backendLabel.textContent = 'Backend';
+  const backendSelect = document.createElement('select');
+  backendSelect.id = `backend-${id}`;
+
+  const defaultOpt = document.createElement('option');
+  defaultOpt.value = 'default';
+  defaultOpt.textContent = 'Default (AudioCraft)';
+  defaultOpt.selected = sound.backend === 'default';
+  backendSelect.appendChild(defaultOpt);
+
+  for (const [k, v] of Object.entries(backends)) {
+    const opt = document.createElement('option');
+    opt.value = k;
+    opt.textContent = v.label;
+    opt.selected = sound.backend === k;
+    backendSelect.appendChild(opt);
+  }
+  backendLabel.appendChild(backendSelect);
+  row.appendChild(backendLabel);
+
+  controls.appendChild(row);
+  card.appendChild(controls);
+
+  // Actions
+  const actions = document.createElement('div');
+  actions.className = 'card-actions';
+
+  const saveBtn = document.createElement('button');
+  saveBtn.textContent = 'Save';
+  saveBtn.addEventListener('click', async () => {
+    const fields = {
+      prompt: document.getElementById(`prompt-${id}`).value,
+      duration: parseFloat(document.getElementById(`duration-${id}`).value),
+      seed: document.getElementById(`seed-${id}`).value ? parseInt(document.getElementById(`seed-${id}`).value) : null,
+      backend: document.getElementById(`backend-${id}`).value,
+    };
+    await saveSound(id, fields);
+    card.classList.add('save-flash');
+    setTimeout(() => card.classList.remove('save-flash'), 600);
+  });
+  actions.appendChild(saveBtn);
+
+  const flagBtn = document.createElement('button');
+  flagBtn.className = sound.flagged ? 'btn-danger' : '';
+  flagBtn.textContent = sound.flagged ? 'Unflag' : 'Flag for Regen';
+  flagBtn.addEventListener('click', async () => {
+    await saveSound(id, { flagged: !sound.flagged });
+    await loadProjectData();
+  });
+  actions.appendChild(flagBtn);
+
+  card.appendChild(actions);
+
+  return card;
+}
+
+function renderSounds() {
+  const container = document.getElementById('sounds-container');
+  container.replaceChildren();
+
+  if (!projectData?.sounds || Object.keys(projectData.sounds).length === 0) {
+    const empty = document.createElement('div');
+    empty.className = 'empty-state';
+    empty.textContent = 'No sounds found. Click Scan to discover audio files.';
+    container.appendChild(empty);
+    return;
+  }
+
+  const entries = Object.entries(projectData.sounds);
+  const filtered = entries.filter(([, s]) => {
+    if (activeFilter === 'sfx') return s.type === 'sfx';
+    if (activeFilter === 'music') return s.type === 'music';
+    if (activeFilter === 'flagged') return s.flagged;
+    return true;
+  });
+
+  const sfx = filtered.filter(([, s]) => s.type === 'sfx');
+  const music = filtered.filter(([, s]) => s.type === 'music');
+
+  const canvases = [];
+
+  if (sfx.length > 0 && activeFilter !== 'music') {
+    const header = document.createElement('h2');
+    header.className = 'section-header';
+    header.textContent = `SFX — ${sfx.length} sounds`;
+    container.appendChild(header);
+    for (const [id, s] of sfx) {
+      const card = createCard(id, s);
+      container.appendChild(card);
+      canvases.push([id, card.querySelector('canvas')]);
+    }
+  }
+
+  if (music.length > 0 && activeFilter !== 'sfx') {
+    const header = document.createElement('h2');
+    header.className = 'section-header';
+    header.textContent = `Music — ${music.length} tracks`;
+    container.appendChild(header);
+    for (const [id, s] of music) {
+      const card = createCard(id, s);
+      container.appendChild(card);
+      canvases.push([id, card.querySelector('canvas')]);
+    }
+  }
+
+  // Render waveforms after DOM is populated
+  for (const [id, canvas] of canvases) {
+    renderWaveform(canvas, id);
+  }
+}
+
+function formatSize(bytes) {
+  if (!bytes) return '';
+  if (bytes < 1024) return bytes + 'B';
+  if (bytes < 1048576) return (bytes / 1024).toFixed(0) + 'KB';
+  return (bytes / 1048576).toFixed(1) + 'MB';
+}
+
+// =============================================================================
+// Regeneration (SSE via fetch reader)
+// =============================================================================
+
+async function startRegeneration() {
+  const logPanel = document.getElementById('regen-log');
+  const logContent = document.getElementById('log-content');
+  const regenBtn = document.getElementById('regen-btn');
+
+  logPanel.hidden = false;
+  logPanel.classList.remove('collapsed');
+  logContent.replaceChildren();
+  regenBtn.disabled = true;
+  regenBtn.textContent = 'Regenerating…';
+
+  try {
+    const res = await fetch(`/api/projects/${currentProject}/regenerate`, { method: 'POST' });
+
+    if (res.status === 409) {
+      appendLog('Regeneration already in progress', 'error');
+      regenBtn.disabled = false;
+      regenBtn.textContent = 'Regenerate Flagged';
+      return;
+    }
+
+    if (res.status === 400) {
+      const err = await res.json();
+      appendLog(err.error || 'No flagged sounds', 'warn');
+      regenBtn.disabled = false;
+      regenBtn.textContent = 'Regenerate Flagged';
+      return;
+    }
+
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop();
+
+      let eventType = '';
+      for (const line of lines) {
+        if (line.startsWith('event: ')) {
+          eventType = line.slice(7);
+        } else if (line.startsWith('data: ')) {
+          try {
+            const data = JSON.parse(line.slice(6));
+            handleSSEEvent(eventType, data);
+          } catch { /* ignore parse errors */ }
+        }
+      }
+    }
+  } catch (err) {
+    appendLog(err.message, 'error');
+  }
+
+  regenBtn.disabled = false;
+  regenBtn.textContent = 'Regenerate Flagged';
+  await loadProjectData();
+}
+
+function handleSSEEvent(type, data) {
+  const time = new Date().toLocaleTimeString('en-GB', { hour12: false });
+  switch (type) {
+    case 'progress':
+      appendLog(`[${data.index}/${data.total}] ${data.status} ${data.sound}${data.backend ? ' via ' + data.backend : ''}`, 'dim');
+      break;
+    case 'done':
+      appendLog(`[${data.index}/${data.total}] ✓ ${data.sound} (seed: ${data.seed}, ${data.duration}s)`, '');
+      break;
+    case 'error':
+      appendLog(`[${data.index}/${data.total}] ✗ ${data.sound}: ${data.error}`, 'error');
+      break;
+    case 'complete':
+      appendLog(`Complete: ${data.succeeded} ok, ${data.failed} failed`, data.failed > 0 ? 'warn' : 'success');
+      break;
+  }
+}
+
+function appendLog(msg, level) {
+  const logContent = document.getElementById('log-content');
+  const div = document.createElement('div');
+  if (level) div.className = level;
+  const time = new Date().toLocaleTimeString('en-GB', { hour12: false });
+  div.textContent = `[${time}] ${msg}`;
+  logContent.appendChild(div);
+  logContent.scrollTop = logContent.scrollHeight;
+}
+
+// =============================================================================
+// Event Wiring
+// =============================================================================
+
+document.getElementById('project-select').addEventListener('change', (e) => {
+  currentProject = e.target.value;
+  loadProjectData();
+});
+
+document.getElementById('scan-btn').addEventListener('click', doScan);
+document.getElementById('regen-btn').addEventListener('click', startRegeneration);
+
+document.getElementById('log-toggle').addEventListener('click', () => {
+  const panel = document.getElementById('regen-log');
+  const icon = document.getElementById('log-toggle-icon');
+  panel.classList.toggle('collapsed');
+  icon.textContent = panel.classList.contains('collapsed') ? '▲' : '▼';
+});
+
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    activeFilter = btn.dataset.filter;
+    renderSounds();
+  });
+});
+
+// Init
+document.addEventListener('DOMContentLoaded', loadProjects);
+</script>
+
+</body>
+</html>
