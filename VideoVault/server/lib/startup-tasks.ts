@@ -269,12 +269,6 @@ async function autoIndexLibrary(db: any, moviesDir: string): Promise<void> {
       }
 
       const id = crypto.createHash('sha256').update('movies:' + entry.name).digest('hex').slice(0, 36);
-      const existing = await db.select({ id: videos.id }).from(videos).where(eq(videos.id, id)).limit(1);
-      if (existing.length > 0) {
-        skipped++;
-        continue;
-      }
-
       const videoPath = path.join(moviesDir, entry.name);
       const stat = await fs.stat(videoPath);
       const thumbUrl = `/media/movies/Thumbnails/${encodeURIComponent(baseName)}_thumb.jpg`;
@@ -330,9 +324,6 @@ async function autoIndexLibrary(db: any, moviesDir: string): Promise<void> {
 
       const relVideoPath = path.join(dirEntry.name, videoFile.name);
       const id = crypto.createHash('sha256').update('movies:' + relVideoPath).digest('hex').slice(0, 36);
-
-      const existing = await db.select({ id: videos.id }).from(videos).where(eq(videos.id, id)).limit(1);
-      if (existing.length > 0) { skipped++; continue; }
 
       const videoPath = path.join(dir, videoFile.name);
       const stat = await fs.stat(videoPath);
