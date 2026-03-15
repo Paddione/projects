@@ -13,7 +13,7 @@
 #   --verbose     Show detailed output
 #   --auth        Clean only auth service test data
 #   --l2p         Clean only l2p service test data
-#   --payment     Clean only payment service test data
+#   --shop        Clean only shop service test data
 #
 
 set -e
@@ -26,7 +26,7 @@ DRY_RUN=""
 VERBOSE=""
 CLEAN_AUTH=true
 CLEAN_L2P=true
-CLEAN_PAYMENT=true
+CLEAN_SHOP=true
 
 for arg in "$@"; do
   case $arg in
@@ -39,17 +39,17 @@ for arg in "$@"; do
     --auth)
       CLEAN_AUTH=true
       CLEAN_L2P=false
-      CLEAN_PAYMENT=false
+      CLEAN_SHOP=false
       ;;
     --l2p)
       CLEAN_AUTH=false
       CLEAN_L2P=true
-      CLEAN_PAYMENT=false
+      CLEAN_SHOP=false
       ;;
-    --payment)
+    --shop)
       CLEAN_AUTH=false
       CLEAN_L2P=false
-      CLEAN_PAYMENT=true
+      CLEAN_SHOP=true
       ;;
   esac
 done
@@ -92,13 +92,13 @@ if [ "$CLEAN_L2P" = true ]; then
   echo ""
 fi
 
-# Payment service cleanup
-if [ "$CLEAN_PAYMENT" = true ]; then
+# Shop service cleanup
+if [ "$CLEAN_SHOP" = true ]; then
   echo "----------------------------------------"
-  echo "  Payment Service"
+  echo "  Shop Service"
   echo "----------------------------------------"
-  if [ -f "$PROJECT_ROOT/payment/scripts/cleanup-test-data.ts" ]; then
-    cd "$PROJECT_ROOT/payment"
+  if [ -f "$PROJECT_ROOT/shop/scripts/cleanup-test-data.ts" ]; then
+    cd "$PROJECT_ROOT/shop"
     npx tsx scripts/cleanup-test-data.ts $DRY_RUN $VERBOSE
   else
     echo "  Cleanup script not found, skipping..."
@@ -149,11 +149,11 @@ elif kubectl get pods -n korczewski-infra postgres-0 &> /dev/null; then
       DELETE FROM users WHERE username LIKE 'test_%' OR email LIKE 'test_%' OR email LIKE '%@test.local';
     \"" 2>&1 | grep -v "^Defaulted container" || echo "  l2p_db cleanup skipped (table may not exist)"
 
-    # Clean test data from payment_db if it exists
-    echo "  Cleaning test data from payment_db..."
-    kubectl exec -n korczewski-infra postgres-0 -- bash -c "PGPASSWORD=$PG_PASS psql -U postgres -d payment_db -c \"
+    # Clean test data from shop_db if it exists
+    echo "  Cleaning test data from shop_db..."
+    kubectl exec -n korczewski-infra postgres-0 -- bash -c "PGPASSWORD=$PG_PASS psql -U postgres -d shop_db -c \"
       DELETE FROM users WHERE email LIKE 'test_%' OR email LIKE '%@test.local';
-    \"" 2>&1 | grep -v "^Defaulted container" || echo "  payment_db cleanup skipped (table may not exist)"
+    \"" 2>&1 | grep -v "^Defaulted container" || echo "  shop_db cleanup skipped (table may not exist)"
 
   else
     echo "  [Dry Run] Would clean test data from databases"

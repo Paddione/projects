@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Configuration
-PROJECTS=("l2p" "auth" "VideoVault" "payment")
+PROJECTS=("l2p" "auth" "VideoVault" "shop" "arena")
 project_scripts=("npm run typecheck" "npm run typecheck" "npm run check" "npm run typecheck" "npm run typecheck")
 
 status=0

@@ -113,8 +113,14 @@ ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 # Setup L2P
 setup_node_project "L2P" "$ROOT_DIR/l2p"
 
-# Setup Payment
-setup_node_project "Payment" "$ROOT_DIR/payment"
+# Setup Shop
+setup_node_project "Shop" "$ROOT_DIR/shop"
+
+# Setup Auth
+setup_node_project "Auth" "$ROOT_DIR/auth"
+
+# Setup Arena
+setup_node_project "Arena" "$ROOT_DIR/arena"
 
 # Setup VideoVault
 setup_node_project "VideoVault" "$ROOT_DIR/VideoVault"
@@ -136,12 +142,12 @@ if command -v docker &> /dev/null; then
             cd - > /dev/null
         fi
         
-        # Start Payment database
-        if [ -f "$ROOT_DIR/payment/compose.yaml" ]; then
-            print_info "Starting Payment database..."
-            cd "$ROOT_DIR/payment"
-            docker-compose up -d db
-            print_success "Payment database started"
+        # Start Shop database
+        if [ -f "$ROOT_DIR/shop/compose.yaml" ]; then
+            print_info "Starting Shop database..."
+            cd "$ROOT_DIR/shop"
+            docker compose up -d db
+            print_success "Shop database started"
             cd - > /dev/null
         fi
     fi
@@ -162,8 +168,10 @@ echo "3. Review service-specific setup in each service README.md"
 echo ""
 echo "To start development:"
 echo "  - L2P:        cd l2p && npm run dev"
-echo "  - Payment:    cd payment && npm run dev"
+echo "  - Shop:       cd shop && npm run dev"
 echo "  - VideoVault: cd VideoVault && npm run dev"
+echo "  - Arena:      cd arena && npm run dev"
+echo "  - Auth:       cd auth && npm run dev"
 echo ""
 echo "For more details, see README.md and service docs."
 echo ""

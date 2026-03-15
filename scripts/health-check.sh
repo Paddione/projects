@@ -42,8 +42,9 @@ check_http() {
 }
 
 check_http "Auth" "https://auth.korczewski.de/health"
-check_http "Dashboard" "https://dashboard.korczewski.de" "200|302|401"
 check_http "L2P" "https://l2p.korczewski.de/api/health"
-check_http "Payment" "https://payment.korczewski.de/" "200|302|401"
+check_http "Shop" "https://shop.korczewski.de/" "200|302|401"
 check_http "VideoVault" "https://videovault.korczewski.de/api/health"
+check_http "SOS" "https://sos.korczewski.de/health"
+check_http "Arena" "https://arena.korczewski.de/api/health"
 echo ""

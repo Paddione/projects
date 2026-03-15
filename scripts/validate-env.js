@@ -34,8 +34,8 @@ const SERVICE_CONFIGS = {
         'AUTH_DB_PASSWORD',
         'L2P_DB_USER',
         'L2P_DB_PASSWORD',
-        'PAYMENT_DB_USER',
-        'PAYMENT_DB_PASSWORD',
+        'SHOP_DB_USER',
+        'SHOP_DB_PASSWORD',
         'VIDEOVAULT_DB_USER',
         'VIDEOVAULT_DB_PASSWORD',
       ],
@@ -120,27 +120,27 @@ const SERVICE_CONFIGS = {
     secrets: ['SESSION_SECRET', 'ADMIN_PASS'],
     matchPasswords: ['VIDEOVAULT_DB_PASSWORD'],
   },
-  payment: {
-    name: 'Payment Service',
+  shop: {
+    name: 'Shop Service',
     envFiles: ['.env-dev', '.env-prod'],
     required: {
       '.env-dev': [
         'DATABASE_URL',
-        'PAYMENT_DB_USER',
-        'PAYMENT_DB_PASSWORD',
+        'SHOP_DB_USER',
+        'SHOP_DB_PASSWORD',
         'NEXTAUTH_SECRET',
         'AUTH_SECRET',
       ],
       '.env-prod': [
         'DATABASE_URL',
-        'PAYMENT_DB_USER',
-        'PAYMENT_DB_PASSWORD',
+        'SHOP_DB_USER',
+        'SHOP_DB_PASSWORD',
         'NEXTAUTH_SECRET',
         'AUTH_SECRET',
       ],
     },
     secrets: ['NEXTAUTH_SECRET', 'AUTH_SECRET'],
-    matchPasswords: ['PAYMENT_DB_PASSWORD'],
+    matchPasswords: ['SHOP_DB_PASSWORD'],
   },
 };
 
@@ -305,7 +305,7 @@ function validatePasswordConsistency(results) {
   const passwordMap = {
     AUTH_DB_PASSWORD: 'auth',
     L2P_DB_PASSWORD: 'l2p',
-    PAYMENT_DB_PASSWORD: 'payment',
+    SHOP_DB_PASSWORD: 'shop',
     VIDEOVAULT_DB_PASSWORD: 'VideoVault',
   };
 

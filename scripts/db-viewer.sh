@@ -4,7 +4,7 @@
 # Auth:        5432
 # L2P Prod:    5435
 # L2P Test:    5433
-# Payment:     5436
+# Shop:        5436
 # VideoVault:  5437
 
 RED='\033[0;31m'
@@ -45,9 +45,9 @@ stop_all() {
         cd "$ROOT_DIR/VideoVault" && docker-compose down && cd "$ROOT_DIR"
     fi
     
-    # Payment
-    if [ -d "$ROOT_DIR/payment" ]; then
-        cd "$ROOT_DIR/payment" && docker-compose down && cd "$ROOT_DIR"
+    # Shop
+    if [ -d "$ROOT_DIR/shop" ]; then
+        cd "$ROOT_DIR/shop" && docker compose down && cd "$ROOT_DIR"
     fi
     
     echo -e "${GREEN}All databases stopped and containers removed.${NC}"

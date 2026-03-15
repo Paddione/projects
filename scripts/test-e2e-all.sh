@@ -24,7 +24,7 @@ log_error() { echo -e "${RED}[ERROR]${NC} $1"; }
 log_step() { echo -e "\n${BLUE}========================================${NC}"; echo -e "${BLUE}$1${NC}"; echo -e "${BLUE}========================================${NC}"; }
 
 # Parse arguments
-SERVICES="${1:-all}"   # all, videovault, payment, l2p
+SERVICES="${1:-all}"   # all, videovault, shop, l2p, arena, sos
 
 # Port forward PIDs
 declare -A PORT_FORWARD_PIDS=()
@@ -115,28 +115,50 @@ test_videovault() {
     TEST_RESULTS["videovault"]=$?
 }
 
-# Function to run Payment E2E tests
-test_payment() {
-    log_step "Testing Payment Service"
-    
+# Function to run Shop E2E tests
+test_shop() {
+    log_step "Testing Shop Service"
+
     # Start port forward
-    start_port_forward "payment" 3004 3000 || return 1
-    
-    # Check health (payment might not have /api/health)
-    log_info "Checking if payment service is accessible..."
+    start_port_forward "shop" 3004 3000 || return 1
+
+    # Check health
+    log_info "Checking if shop service is accessible..."
     if curl -s "http://localhost:3004" > /dev/null 2>&1; then
-        log_info "✓ Payment service is accessible"
+        log_info "✓ Shop service is accessible"
     else
-        log_warn "Payment service may not be ready"
+        log_warn "Shop service may not be ready"
     fi
-    
+
     # Run tests
-    cd "$PROJECT_ROOT/payment"
+    cd "$PROJECT_ROOT/shop"
     log_info "Running Playwright tests..."
-    
-    # Payment tests need database - skip for now
-    log_warn "Payment E2E tests require database setup - marking as skipped"
-    TEST_RESULTS["payment"]=0
+
+    # Shop tests need database - skip for now
+    log_warn "Shop E2E tests require database setup - marking as skipped"
+    TEST_RESULTS["shop"]=0
+}
+
+# Function to run Arena E2E tests
+test_arena() {
+    log_step "Testing Arena"
+
+    # Start port forwards for both frontend and backend
+    start_port_forward "arena-frontend" 3008 80 || return 1
+    start_port_forward "arena-backend" 3009 3003 || return 1
+
+    # Check health
+    check_service_health "arena-backend" 3009 "/api/health" || return 1
+
+    # Run tests
+    cd "$PROJECT_ROOT/arena"
+    log_info "Running Playwright tests..."
+
+    BASE_URL="http://localhost:3008" \
+    API_URL="http://localhost:3009" \
+    npx playwright test --config=e2e/playwright.config.ts
+
+    TEST_RESULTS["arena"]=$?
 }
 
 # Function to run L2P E2E tests
@@ -182,7 +204,7 @@ main() {
     
     # Determine which services to test
     if [ "$SERVICES" = "all" ]; then
-        SERVICES_TO_TEST=("videovault" "l2p" "payment")
+        SERVICES_TO_TEST=("videovault" "l2p" "shop" "arena")
     else
         IFS=',' read -ra SERVICES_TO_TEST <<< "$SERVICES"
     fi
@@ -193,8 +215,11 @@ main() {
             videovault)
                 test_videovault || true
                 ;;
-            payment)
-                test_payment || true
+            shop)
+                test_shop || true
+                ;;
+            arena)
+                test_arena || true
                 ;;
             l2p)
                 test_l2p || true
