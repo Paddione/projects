@@ -394,6 +394,270 @@ app.post('/api/projects/:name/regenerate', async (req, res) => {
 });
 
 // =============================================================================
+// Audio Library Routes
+// =============================================================================
+
+app.get('/api/library', (req, res) => {
+  res.json(loadLibrary());
+});
+
+app.get('/api/library/:id/audio', (req, res) => {
+  const library = loadLibrary();
+  const sound = library.sounds[req.params.id];
+  if (!sound) return res.status(404).json({ error: 'Sound not found' });
+  const config = loadLibraryConfig();
+  const format = req.query.format || 'wav';
+  let filePath;
+  if (format === 'wav') {
+    filePath = join(config.libraryRoot, sound.filePath);
+  } else {
+    const base = sound.filePath.replace(/\.wav$/, '');
+    filePath = join(config.libraryRoot, `${base}.${format}`);
+  }
+  if (!existsSync(filePath)) return res.status(404).json({ error: 'Audio file not found' });
+  res.sendFile(filePath);
+});
+
+app.post('/api/library', (req, res) => {
+  const { id, name, category, tags, prompt, seed, duration, backend } = req.body;
+  if (!id || !name || !category) return res.status(400).json({ error: 'id, name, category required' });
+  const library = loadLibrary();
+  if (library.sounds[id]) return res.status(409).json({ error: 'Sound already exists' });
+  library.sounds[id] = {
+    id, name, category,
+    tags: tags || [],
+    prompt: prompt || '',
+    seed: seed || null,
+    duration: duration || null,
+    backend: backend || 'audiocraft',
+    filePath: `${category}/${id}.wav`,
+    createdAt: new Date().toISOString(),
+    assignedTo: {},
+  };
+  saveLibrary(library);
+  res.status(201).json(library.sounds[id]);
+});
+
+app.put('/api/library/:id', (req, res) => {
+  const library = loadLibrary();
+  const sound = library.sounds[req.params.id];
+  if (!sound) return res.status(404).json({ error: 'Sound not found' });
+  const allowed = ['name', 'category', 'tags', 'prompt', 'seed', 'duration', 'backend'];
+  for (const key of allowed) {
+    if (req.body[key] !== undefined) sound[key] = req.body[key];
+  }
+  saveLibrary(library);
+  res.json(sound);
+});
+
+app.delete('/api/library/:id', (req, res) => {
+  const library = loadLibrary();
+  const sound = library.sounds[req.params.id];
+  if (!sound) return res.status(404).json({ error: 'Sound not found' });
+  const config = loadLibraryConfig();
+  const basePath = join(config.libraryRoot, sound.filePath.replace(/\.wav$/, ''));
+  for (const ext of ['.wav', '.ogg', '.mp3']) {
+    const f = basePath + ext;
+    if (existsSync(f)) unlinkSync(f);
+  }
+  delete library.sounds[req.params.id];
+  saveLibrary(library);
+  res.json({ deleted: req.params.id });
+});
+
+app.post('/api/library/:id/assign', (req, res) => {
+  const { project, targetPath } = req.body;
+  if (!project || !targetPath) return res.status(400).json({ error: 'project and targetPath required' });
+  const library = loadLibrary();
+  const sound = library.sounds[req.params.id];
+  if (!sound) return res.status(404).json({ error: 'Sound not found' });
+  const config = loadLibraryConfig();
+  const wavPath = join(config.libraryRoot, sound.filePath);
+  if (!existsSync(wavPath)) return res.status(404).json({ error: 'WAV file not found on NAS' });
+
+  // Ensure processed files exist on NAS
+  const nasDir = dirname(wavPath);
+  const baseName = sound.filePath.replace(/\.wav$/, '');
+  const oggNas = join(config.libraryRoot, `${baseName}.ogg`);
+  const mp3Nas = join(config.libraryRoot, `${baseName}.mp3`);
+  if (!existsSync(oggNas) || !existsSync(mp3Nas)) {
+    try {
+      processAudioFile(wavPath, nasDir, sound.id, sound.category);
+    } catch (err) {
+      return res.status(500).json({ error: `Processing failed: ${err.message}` });
+    }
+  }
+
+  // Copy to project output dir
+  const proj = loadProject(project);
+  if (!proj) return res.status(404).json({ error: `Project ${project} not found` });
+  const outputRoot = resolve(__dirname, proj.outputRoot);
+  for (const ext of ['.ogg', '.mp3']) {
+    const src = join(config.libraryRoot, `${baseName}${ext}`);
+    const dest = join(outputRoot, `${targetPath}${ext}`);
+    const destDir = dirname(dest);
+    if (!existsSync(destDir)) mkdirSync(destDir, { recursive: true });
+    copyFileSync(src, dest);
+  }
+
+  if (!sound.assignedTo) sound.assignedTo = {};
+  sound.assignedTo[project] = { targetPath, syncedAt: new Date().toISOString() };
+  saveLibrary(library);
+  res.json(sound);
+});
+
+app.post('/api/library/:id/unassign', (req, res) => {
+  const { project } = req.body;
+  if (!project) return res.status(400).json({ error: 'project required' });
+  const library = loadLibrary();
+  const sound = library.sounds[req.params.id];
+  if (!sound) return res.status(404).json({ error: 'Sound not found' });
+  if (sound.assignedTo?.[project]) {
+    delete sound.assignedTo[project];
+    saveLibrary(library);
+  }
+  res.json(sound);
+});
+
+app.post('/api/projects/:name/sync', (req, res) => {
+  const project = loadProject(req.params.name);
+  if (!project) return res.status(404).json({ error: 'Project not found' });
+  const library = loadLibrary();
+  const config = loadLibraryConfig();
+  const synced = [];
+  for (const [id, sound] of Object.entries(library.sounds)) {
+    const assignment = sound.assignedTo?.[req.params.name];
+    if (!assignment) continue;
+    if (sound.createdAt && assignment.syncedAt && new Date(sound.createdAt) <= new Date(assignment.syncedAt)) continue;
+    const baseName = sound.filePath.replace(/\.wav$/, '');
+    const outputRoot = resolve(__dirname, project.outputRoot);
+    for (const ext of ['.ogg', '.mp3']) {
+      const src = join(config.libraryRoot, `${baseName}${ext}`);
+      const dest = join(outputRoot, `${assignment.targetPath}${ext}`);
+      if (existsSync(src)) {
+        const destDir = dirname(dest);
+        if (!existsSync(destDir)) mkdirSync(destDir, { recursive: true });
+        copyFileSync(src, dest);
+      }
+    }
+    assignment.syncedAt = new Date().toISOString();
+    synced.push(id);
+  }
+  saveLibrary(library);
+  res.json({ synced, count: synced.length });
+});
+
+let audioGenerationInProgress = false;
+
+app.post('/api/library/:id/generate', async (req, res) => {
+  if (audioGenerationInProgress) return res.status(409).json({ error: 'Audio generation in progress' });
+  const library = loadLibrary();
+  const sound = library.sounds[req.params.id];
+  if (!sound) return res.status(404).json({ error: 'Sound not found' });
+  const config = loadLibraryConfig();
+  audioGenerationInProgress = true;
+
+  res.writeHead(200, { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', Connection: 'keep-alive' });
+
+  try {
+    const backendKey = sound.backend || 'audiocraft';
+    const backends = loadBackends();
+    const adapterName = backends[backendKey]?.adapter || backendKey;
+    const adapterPath = join(__dirname, 'adapters', `${adapterName}.js`);
+    const adapter = await import(adapterPath);
+
+    const wavDir = join(config.libraryRoot, dirname(sound.filePath));
+    if (!existsSync(wavDir)) mkdirSync(wavDir, { recursive: true });
+    const wavPath = join(config.libraryRoot, sound.filePath);
+
+    res.write(`event: progress\ndata: ${JSON.stringify({ sound: req.params.id, status: 'generating', backend: backendKey })}\n\n`);
+
+    const defaultProj = defaultProject ? loadProject(defaultProject) : null;
+    const result = await adapter.generate({
+      id: req.params.id,
+      type: sound.category.startsWith('music') ? 'music' : 'sfx',
+      prompt: sound.prompt,
+      seed: sound.seed,
+      duration: sound.duration,
+      outputPath: wavPath,
+      projectConfig: defaultProj || { _basePath: __dirname },
+    });
+
+    res.write(`event: progress\ndata: ${JSON.stringify({ sound: req.params.id, status: 'processing' })}\n\n`);
+    processAudioFile(wavPath, wavDir, req.params.id, sound.category);
+
+    sound.seed = result.seed;
+    sound.createdAt = new Date().toISOString();
+    saveLibrary(library);
+
+    res.write(`event: done\ndata: ${JSON.stringify({ sound: req.params.id, seed: result.seed })}\n\n`);
+  } catch (err) {
+    res.write(`event: error\ndata: ${JSON.stringify({ sound: req.params.id, error: err.message })}\n\n`);
+  }
+
+  res.write(`event: complete\ndata: ${JSON.stringify({ sound: req.params.id })}\n\n`);
+  res.end();
+  audioGenerationInProgress = false;
+});
+
+app.post('/api/library/import', (req, res) => {
+  const { project } = req.body;
+  if (!project) return res.status(400).json({ error: 'project required' });
+  const proj = loadProject(project);
+  if (!proj) return res.status(404).json({ error: `Project ${project} not found` });
+  const library = loadLibrary();
+  const config = loadLibraryConfig();
+  const imported = [];
+
+  const subcategoryMap = {
+    gunshot: 'sfx/weapons', gunshot_new: 'sfx/weapons', melee_swing: 'sfx/weapons',
+    grenade_launch: 'sfx/weapons', grenade_explode: 'sfx/weapons',
+    footstep_walk: 'sfx/footsteps', footstep_sprint: 'sfx/footsteps',
+    bullet_impact: 'sfx/impacts', player_hit: 'sfx/impacts', player_death: 'sfx/impacts',
+    health_pickup: 'sfx/ui', armor_pickup: 'sfx/ui',
+    match_victory: 'sfx/ui', match_defeat: 'sfx/ui',
+    round_start: 'sfx/ui', round_end: 'sfx/ui',
+    zone_warning: 'sfx/environment', zone_tick: 'sfx/environment',
+    battle: 'music/battle', lobby: 'music/ambient',
+    victory: 'music/stings', defeat: 'music/stings', respectisevt: 'music/stings',
+  };
+
+  const audioRoot = resolve(__dirname, proj.audioRoot);
+
+  for (const [id, sound] of Object.entries(proj.sounds || {})) {
+    if (library.sounds[id]) continue;
+    const category = subcategoryMap[id] || (sound.type === 'music' ? 'music/ambient' : 'sfx/ui');
+    const wavSrc = join(audioRoot, sound.filePath);
+
+    if (existsSync(wavSrc)) {
+      const nasDir = join(config.libraryRoot, category);
+      if (!existsSync(nasDir)) mkdirSync(nasDir, { recursive: true });
+      copyFileSync(wavSrc, join(nasDir, `${id}.wav`));
+
+      library.sounds[id] = {
+        id,
+        name: id.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),
+        category,
+        tags: [project],
+        prompt: sound.prompt || '',
+        seed: sound.seed || null,
+        duration: sound.duration || null,
+        backend: sound.backend === 'default' ? 'audiocraft' : (sound.backend || 'audiocraft'),
+        filePath: `${category}/${id}.wav`,
+        createdAt: sound.lastGeneratedAt || new Date().toISOString(),
+        assignedTo: {
+          [project]: { targetPath: `${sound.type}/${id}`, syncedAt: new Date().toISOString() },
+        },
+      };
+      imported.push(id);
+    }
+  }
+
+  saveLibrary(library);
+  res.json({ imported, count: imported.length });
+});
+
+// =============================================================================
 // Static serving & startup
 // =============================================================================
 
