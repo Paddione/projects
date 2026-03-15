@@ -435,7 +435,7 @@ async function upsertVideo(db: any, v: {
       set: {
         filename: v.filename, displayName: v.displayName,
         path: v.dbPath, size: v.stat.size, lastModified: v.stat.mtime,
-        metadata: v.metadata,
+        metadata: v.metadata, categories: v.categories, customCategories: v.customCategories,
         thumbnail: { generated: true, dataUrl: v.thumbUrl, timestamp: new Date().toISOString() },
         processingStatus: 'completed',
       },
