@@ -11,6 +11,25 @@ import { SoundService } from '../services/SoundService';
 import LoadingScreen from './LoadingScreen';
 
 const TILE_SIZE = 32;
+const TARGET_TILES_VISIBLE = 22; // Design target: map height in tiles
+
+// Scale presets: label shown in UI, scale factor (null = auto-compute)
+export const SCALE_OPTIONS = [
+    { key: 'auto', label: 'Auto' },
+    { key: '1', label: '1× (720p)' },
+    { key: '1.5', label: '1.5× (1080p)' },
+    { key: '2', label: '2× (1440p)' },
+    { key: '3', label: '3× (4K)' },
+] as const;
+
+export function computeScale(setting: string): number {
+    if (setting === 'auto') {
+        // Scale so ~22 tiles fit vertically, matching the default map height
+        const targetHeight = TARGET_TILES_VISIBLE * TILE_SIZE;
+        return Math.max(1, window.innerHeight / targetHeight);
+    }
+    return parseFloat(setting) || 1;
+}
 
 const CHARACTER_COLORS: Record<string, number> = {
     student: 0x00f2ff,
@@ -51,6 +70,18 @@ export default function Game() {
     const [assetsLoaded, setAssetsLoaded] = useState(false);
 
     const [isMuted, setIsMuted] = useState(false);
+
+    // ---- Game scale (zoom) ----
+    const [scaleSetting, setScaleSetting] = useState<string>(
+        () => localStorage.getItem('arena-scale') || 'auto'
+    );
+    const scaleSettingRef = useRef(scaleSetting);
+
+    const handleScaleChange = useCallback((setting: string) => {
+        scaleSettingRef.current = setting;
+        setScaleSetting(setting);
+        localStorage.setItem('arena-scale', setting);
+    }, []);
 
     const {
         playerId, hp, hasArmor, kills, deaths, weaponType,
@@ -296,9 +327,13 @@ export default function Game() {
             const me = state.players?.find((p: any) => p.id === playerId);
             if (!me) return;
 
-            // Camera follows player
-            const cameraX = -me.x + window.innerWidth / 2;
-            const cameraY = -me.y + window.innerHeight / 2;
+            // Apply game scale (zoom)
+            const scale = computeScale(scaleSettingRef.current);
+            worldContainer.scale.set(scale);
+
+            // Camera follows player (adjusted for scale)
+            const cameraX = -me.x * scale + window.innerWidth / 2;
+            const cameraY = -me.y * scale + window.innerHeight / 2;
             worldContainer.position.set(cameraX, cameraY);
 
             // ---- MAP LAYER ----
@@ -1116,28 +1151,29 @@ export default function Game() {
                     <div className="hud-announcement">{announcement}</div>
                 )}
 
-                {/* Mute Button */}
-                <button
-                    onClick={() => {
-                        const nowMuted = SoundService.toggleMute();
-                        setIsMuted(nowMuted);
-                    }}
-                    style={{
-                        position: 'absolute',
-                        top: 'calc(var(--space-xl, 16px) + env(safe-area-inset-top, 0px))',
-                        left: 'var(--space-xl, 16px)',
-                        pointerEvents: 'auto',
-                        background: 'rgba(10, 11, 26, 0.85)',
-                        border: '1px solid var(--color-border, #333)',
-                        borderRadius: '8px',
-                        padding: '6px 10px',
-                        cursor: 'pointer',
-                        fontSize: '1.2rem',
-                        color: 'white',
-                    }}
-                >
-                    {isMuted ? '🔇' : '🔊'}
-                </button>
+                {/* Top-left controls: Mute + Scale */}
+                <div className="hud-top-left">
+                    <button
+                        onClick={() => {
+                            const nowMuted = SoundService.toggleMute();
+                            setIsMuted(nowMuted);
+                        }}
+                        className="hud-icon-btn"
+                    >
+                        {isMuted ? '🔇' : '🔊'}
+                    </button>
+                    <div className="scale-selector">
+                        {SCALE_OPTIONS.map(opt => (
+                            <button
+                                key={opt.key}
+                                onClick={() => handleScaleChange(opt.key)}
+                                className={`scale-btn ${scaleSetting === opt.key ? 'active' : ''}`}
+                            >
+                                {opt.label}
+                            </button>
+                        ))}
+                    </div>
+                </div>
 
                 {/* Spectating Banner */}
                 {isSpectating && (

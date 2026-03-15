@@ -1,15 +1,182 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { computeScale, SCALE_OPTIONS } from './Game';
 
 /**
  * Game Component Tests
  *
  * Tests for game mechanics:
+ * - Game scaling & resolution presets
  * - Touch controls: joystick, weapon display, pickup button
  * - Spectator mode: camera pivot switching
  * - Sound effects: mute toggle, haptics
  */
 
+const TILE_SIZE = 32;
+const TARGET_TILES_VISIBLE = 22;
+
 describe('Game Component', () => {
+    describe('Game Scaling', () => {
+        describe('computeScale', () => {
+            it('returns 1 for 720p auto (22 tiles fit exactly)', () => {
+                // 720 / (22 * 32) = 1.022... → rounds to ~1
+                vi.stubGlobal('innerHeight', 720);
+                const scale = computeScale('auto');
+                expect(scale).toBeCloseTo(720 / (TARGET_TILES_VISIBLE * TILE_SIZE), 2);
+                expect(scale).toBeGreaterThanOrEqual(1);
+                vi.unstubAllGlobals();
+            });
+
+            it('returns ~1.53 for 1080p auto', () => {
+                vi.stubGlobal('innerHeight', 1080);
+                const scale = computeScale('auto');
+                expect(scale).toBeCloseTo(1080 / (TARGET_TILES_VISIBLE * TILE_SIZE), 2);
+                vi.unstubAllGlobals();
+            });
+
+            it('returns ~2.05 for 1440p auto', () => {
+                vi.stubGlobal('innerHeight', 1440);
+                const scale = computeScale('auto');
+                expect(scale).toBeCloseTo(1440 / (TARGET_TILES_VISIBLE * TILE_SIZE), 2);
+                vi.unstubAllGlobals();
+            });
+
+            it('returns ~3.07 for 4K auto', () => {
+                vi.stubGlobal('innerHeight', 2160);
+                const scale = computeScale('auto');
+                expect(scale).toBeCloseTo(2160 / (TARGET_TILES_VISIBLE * TILE_SIZE), 2);
+                vi.unstubAllGlobals();
+            });
+
+            it('never returns below 1 for auto (small screens)', () => {
+                vi.stubGlobal('innerHeight', 400);
+                const scale = computeScale('auto');
+                expect(scale).toBeGreaterThanOrEqual(1);
+                vi.unstubAllGlobals();
+            });
+
+            it('parses numeric preset "1" as scale 1', () => {
+                expect(computeScale('1')).toBe(1);
+            });
+
+            it('parses numeric preset "1.5" as scale 1.5', () => {
+                expect(computeScale('1.5')).toBe(1.5);
+            });
+
+            it('parses numeric preset "2" as scale 2', () => {
+                expect(computeScale('2')).toBe(2);
+            });
+
+            it('parses numeric preset "3" as scale 3', () => {
+                expect(computeScale('3')).toBe(3);
+            });
+
+            it('falls back to 1 for invalid preset', () => {
+                expect(computeScale('garbage')).toBe(1);
+            });
+
+            it('falls back to 1 for empty string', () => {
+                expect(computeScale('')).toBe(1);
+            });
+        });
+
+        describe('Scale Presets', () => {
+            it('has 5 scale options', () => {
+                expect(SCALE_OPTIONS).toHaveLength(5);
+            });
+
+            it('first option is auto', () => {
+                expect(SCALE_OPTIONS[0].key).toBe('auto');
+            });
+
+            it('all options have unique keys', () => {
+                const keys = SCALE_OPTIONS.map(o => o.key);
+                expect(new Set(keys).size).toBe(SCALE_OPTIONS.length);
+            });
+
+            it('non-auto options are valid numbers', () => {
+                const numericOptions = SCALE_OPTIONS.filter(o => o.key !== 'auto');
+                numericOptions.forEach(opt => {
+                    expect(parseFloat(opt.key)).toBeGreaterThan(0);
+                    expect(isNaN(parseFloat(opt.key))).toBe(false);
+                });
+            });
+
+            it('options are ordered from smallest to largest scale', () => {
+                const numericOptions = SCALE_OPTIONS.filter(o => o.key !== 'auto');
+                for (let i = 1; i < numericOptions.length; i++) {
+                    expect(parseFloat(numericOptions[i].key))
+                        .toBeGreaterThan(parseFloat(numericOptions[i - 1].key));
+                }
+            });
+        });
+
+        describe('Camera with Scale', () => {
+            it('centers player at screen center regardless of scale', () => {
+                const playerX = 200;
+                const playerY = 150;
+                const viewportW = 1920;
+                const viewportH = 1080;
+
+                // At scale 1
+                const cam1x = -playerX * 1 + viewportW / 2;
+                const cam1y = -playerY * 1 + viewportH / 2;
+
+                // At scale 2
+                const cam2x = -playerX * 2 + viewportW / 2;
+                const cam2y = -playerY * 2 + viewportH / 2;
+
+                // Player screen position = cam + player * scale = viewportW/2 in both cases
+                expect(cam1x + playerX * 1).toBe(viewportW / 2);
+                expect(cam1y + playerY * 1).toBe(viewportH / 2);
+                expect(cam2x + playerX * 2).toBe(viewportW / 2);
+                expect(cam2y + playerY * 2).toBe(viewportH / 2);
+            });
+
+            it('higher scale shows fewer tiles on screen', () => {
+                const viewportH = 1080;
+                const tilesAt1x = viewportH / (TILE_SIZE * 1);
+                const tilesAt2x = viewportH / (TILE_SIZE * 2);
+                const tilesAt3x = viewportH / (TILE_SIZE * 3);
+
+                expect(tilesAt1x).toBeCloseTo(33.75);
+                expect(tilesAt2x).toBeCloseTo(16.875);
+                expect(tilesAt3x).toBeCloseTo(11.25);
+                expect(tilesAt1x).toBeGreaterThan(tilesAt2x);
+                expect(tilesAt2x).toBeGreaterThan(tilesAt3x);
+            });
+
+            it('auto scale at 1080p shows ~22 tiles vertically', () => {
+                const viewportH = 1080;
+                const scale = viewportH / (TARGET_TILES_VISIBLE * TILE_SIZE);
+                const visibleTiles = viewportH / (TILE_SIZE * scale);
+                expect(visibleTiles).toBeCloseTo(TARGET_TILES_VISIBLE);
+            });
+        });
+
+        describe('Scale Persistence', () => {
+            beforeEach(() => {
+                localStorage.clear();
+            });
+
+            it('defaults to auto when no localStorage value', () => {
+                const setting = localStorage.getItem('arena-scale') || 'auto';
+                expect(setting).toBe('auto');
+            });
+
+            it('reads saved scale from localStorage', () => {
+                localStorage.setItem('arena-scale', '2');
+                const setting = localStorage.getItem('arena-scale') || 'auto';
+                expect(setting).toBe('2');
+            });
+
+            it('persists scale change to localStorage', () => {
+                const newSetting = '1.5';
+                localStorage.setItem('arena-scale', newSetting);
+                expect(localStorage.getItem('arena-scale')).toBe('1.5');
+            });
+        });
+    });
+
     describe('Touch Controls', () => {
         describe('Joystick Input', () => {
             it('detects touch device', () => {
