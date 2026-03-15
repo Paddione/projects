@@ -1197,6 +1197,12 @@ function createLibraryCard(id, sound) {
   });
   actions.appendChild(saveBtn);
 
+  const regenBtn = document.createElement('button');
+  regenBtn.className = 'btn-primary';
+  regenBtn.textContent = 'Regen';
+  regenBtn.addEventListener('click', () => regenerateLibrarySound(id, regenBtn, card, canvas));
+  actions.appendChild(regenBtn);
+
   const delBtn = document.createElement('button');
   delBtn.className = 'btn-danger';
   delBtn.textContent = 'Del';
@@ -1210,6 +1216,89 @@ function createLibraryCard(id, sound) {
 
   card.appendChild(actions);
   return card;
+}
+
+async function regenerateLibrarySound(id, btn, card, canvas) {
+  // Save current settings first
+  const prompt = document.getElementById(`lib-prompt-${id}`)?.value;
+  const duration = parseFloat(document.getElementById(`lib-duration-${id}`)?.value) || null;
+  const seedVal = document.getElementById(`lib-seed-${id}`)?.value;
+  const seed = seedVal ? parseInt(seedVal) : null;
+
+  try {
+    await fetchJSON(`/api/library/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt, duration, seed }),
+    });
+  } catch { /* non-fatal — proceed with generation */ }
+
+  btn.disabled = true;
+  btn.textContent = 'Generating…';
+  card.style.borderColor = 'var(--cyan)';
+
+  try {
+    const res = await fetch(`/api/library/${id}/generate`, { method: 'POST' });
+
+    if (res.status === 409) {
+      btn.textContent = 'Busy';
+      setTimeout(() => { btn.disabled = false; btn.textContent = 'Regen'; card.style.borderColor = ''; }, 2000);
+      return;
+    }
+
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+    let newSeed = null;
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop();
+
+      let eventType = '';
+      for (const line of lines) {
+        if (line.startsWith('event: ')) {
+          eventType = line.slice(7);
+        } else if (line.startsWith('data: ')) {
+          try {
+            const data = JSON.parse(line.slice(6));
+            if (eventType === 'progress') btn.textContent = data.status === 'processing' ? 'Processing…' : 'Generating…';
+            if (eventType === 'done') newSeed = data.seed;
+            if (eventType === 'error') {
+              btn.textContent = 'Failed';
+              card.style.borderColor = 'var(--orange)';
+              setTimeout(() => { btn.disabled = false; btn.textContent = 'Regen'; card.style.borderColor = ''; }, 3000);
+              return;
+            }
+          } catch { /* ignore */ }
+        }
+      }
+    }
+
+    // Update seed display if a new one was returned
+    if (newSeed != null) {
+      const seedInput = document.getElementById(`lib-seed-${id}`);
+      if (seedInput) seedInput.value = newSeed;
+    }
+
+    // Clear cached audio buffer and re-render waveform
+    delete audioBuffers[`lib-${id}`];
+    await renderLibraryWaveform(canvas, id);
+
+    card.classList.add('save-flash');
+    setTimeout(() => card.classList.remove('save-flash'), 600);
+  } catch (err) {
+    btn.textContent = 'Error';
+    card.style.borderColor = 'var(--orange)';
+    setTimeout(() => { card.style.borderColor = ''; }, 3000);
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'Regen';
+  card.style.borderColor = '';
 }
 
 async function renderLibraryWaveform(canvas, soundId) {
