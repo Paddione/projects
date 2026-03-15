@@ -1,0 +1,9 @@
+{
+  "name": "arena",
+  "audioRoot": "../arena/assets/audio",
+  "outputRoot": "../arena/frontend/public/assets",
+  "processScript": "../arena/scripts/process_audio.sh",
+  "generateScript": "../arena/scripts/generate_audio.py",
+  "manifestPath": "../arena/assets/manifest.json",
+  "sounds": {}
+}
