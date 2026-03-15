@@ -239,6 +239,8 @@ def main():
     parser.add_argument("--seed", type=int, help="Random seed for reproducibility (requires --id)")
     parser.add_argument("--duration", type=float, help="Override manifest duration in seconds (requires --id)")
     parser.add_argument("--force", action="store_true", help="Regenerate even if file exists")
+    parser.add_argument("--output", type=str, default=None,
+                        help="Copy generated WAV to this path (for remote worker NAS writes)")
     args = parser.parse_args()
 
     # Apply seed for reproducibility
@@ -310,6 +312,11 @@ def main():
 
             if ok:
                 print(f"    → {out_path}")
+                if args.output and args.id and out_path.exists():
+                    import shutil
+                    os.makedirs(os.path.dirname(args.output), exist_ok=True)
+                    shutil.copy2(str(out_path), args.output)
+                    print(f"    → {args.output} (copied to output)")
 
     # Generate Music
     if args.type in ("music", "all"):
@@ -341,6 +348,11 @@ def main():
 
             if ok:
                 print(f"    → {out_path}")
+                if args.output and args.id and out_path.exists():
+                    import shutil
+                    os.makedirs(os.path.dirname(args.output), exist_ok=True)
+                    shutil.copy2(str(out_path), args.output)
+                    print(f"    → {args.output} (copied to output)")
 
     print(f"\n[DONE] Audio saved to:")
     print(f"  SFX:   {OUTPUT_SFX}")
