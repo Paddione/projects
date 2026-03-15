@@ -1008,9 +1008,7 @@ export default function Game() {
             setRound(data.roundNumber);
             setAnnouncement(`Round ${data.roundNumber} — FIGHT!`);
             SoundService.playSFX('round_start');
-            SoundService.playSting('respectisevt');
-            // Resume battle music after the sting finishes
-            setTimeout(() => SoundService.playMusic('battle', { loop: true, volume: 0.5 }), 4500);
+            SoundService.playMusic('battle', { loop: true, volume: 0.5 });
             setTimeout(() => setAnnouncement(null), 2000);
         });
 
