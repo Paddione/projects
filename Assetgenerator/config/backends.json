@@ -1,0 +1,13 @@
+{
+  "audiocraft": {
+    "label": "AudioCraft (Local)",
+    "enabled": true,
+    "adapter": "audiocraft"
+  },
+  "elevenlabs": {
+    "label": "ElevenLabs (API)",
+    "enabled": true,
+    "adapter": "elevenlabs",
+    "requiresEnv": "ELEVENLABS_API_KEY"
+  }
+}
