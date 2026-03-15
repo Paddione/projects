@@ -21,6 +21,7 @@ interface GameStore {
         shrinkInterval: number;
         itemSpawns: boolean;
         itemSpawnInterval: number;
+        npcEnemies: 0 | 1 | 2 | 3;
     };
 
     // Match state
@@ -75,6 +76,7 @@ export const useGameStore = create<GameStore>((set) => ({
         shrinkInterval: 30,
         itemSpawns: true,
         itemSpawnInterval: 60,
+        npcEnemies: 0,
     },
 
     matchId: null,

@@ -311,6 +311,7 @@ export default function Game() {
             playerLayer.removeChildren();
             labelLayer.removeChildren();
             renderPlayers(playerLayer, labelLayer, state, me);
+            renderEnemyNPCs(playerLayer, labelLayer, state);
 
             // ---- FOOTSTEP AUDIO ----
             handleFootstepAudio(me);
@@ -725,6 +726,77 @@ export default function Game() {
             }
         }
 
+        function renderEnemyNPCs(npcContainer: Container, labelContainer: Container, state: any) {
+            for (const npc of state.npcs || []) {
+                if (npc.type !== 'enemy' || npc.hp <= 0) continue;
+
+                if (useSprites) {
+                    const frames = AssetService.getAnimation('zombie', 'idle', AssetService.angleToDirection(npc.rotation));
+                    if (frames.length > 0) {
+                        const sprite = frames.length > 1
+                            ? new AnimatedSprite(frames)
+                            : new Sprite(frames[0]);
+                        sprite.anchor.set(0.5);
+                        sprite.position.set(npc.x, npc.y);
+                        sprite.width = 28;
+                        sprite.height = 28;
+                        sprite.tint = 0xFF4444;
+                        if (sprite instanceof AnimatedSprite) {
+                            sprite.animationSpeed = 0.05;
+                            sprite.play();
+                        }
+                        npcContainer.addChild(sprite);
+
+                        renderNPCLabel(labelContainer, npc);
+                        continue;
+                    }
+                }
+
+                // Fallback: red circle with direction indicator
+                const ng = new Graphics();
+                ng.beginFill(0xCC3333, 0.9);
+                ng.drawCircle(npc.x, npc.y, 14);
+                ng.endFill();
+                ng.lineStyle(3, 0xFFFFFF, 0.9);
+                ng.moveTo(npc.x, npc.y);
+                ng.lineTo(
+                    npc.x + Math.cos(npc.rotation) * 18,
+                    npc.y + Math.sin(npc.rotation) * 18
+                );
+                if (npc.state === 'engage') {
+                    ng.lineStyle(2, 0xFF6666, 0.8);
+                    ng.drawCircle(npc.x, npc.y, 17);
+                }
+                npcContainer.addChild(ng);
+
+                renderNPCLabel(labelContainer, npc);
+            }
+        }
+
+        function renderNPCLabel(container: Container, npc: any) {
+            const label = new Text(npc.label || 'Bot', {
+                fontFamily: 'monospace',
+                fontSize: 10,
+                fill: 0xFF4444,
+                align: 'center',
+            });
+            label.anchor.set(0.5);
+            label.position.set(npc.x, npc.y - 24);
+            container.addChild(label);
+
+            // HP pips
+            const maxHp = 3;
+            const pipStartX = npc.x - (maxHp * 6) / 2;
+            for (let i = 0; i < maxHp; i++) {
+                const pip = new Graphics();
+                const color = i < npc.hp ? 0xFF4444 : 0x444444;
+                pip.beginFill(color);
+                pip.drawRect(pipStartX + i * 6, npc.y - 32, 4, 4);
+                pip.endFill();
+                container.addChild(pip);
+            }
+        }
+
         function renderPlayerLabel(container: Container, player: any, isMe: boolean) {
             const nameStyle = new TextStyle({
                 fontSize: 10,
@@ -829,17 +901,15 @@ export default function Game() {
             const killer = state?.players?.find((p: any) => p.id === data.killerId);
             const victim = state?.players?.find((p: any) => p.id === data.victimId);
             addKillfeed({
-                killer: killer?.username || data.killerId,
-                victim: victim?.username || data.victimId,
+                killer: data.killerName || killer?.username || data.killerId,
+                victim: data.victimName || victim?.username || data.victimId,
                 weapon: data.weapon,
             });
 
-            // Play death sound
             SoundService.playSFX('player_death');
 
-            // Play weapon-specific sound
             if (data.weapon === 'melee') {
-                SoundService.playSFX('melee_swing');
+                SoundService.playSFX('melee_hit');
             }
         });
 

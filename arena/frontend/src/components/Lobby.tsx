@@ -125,7 +125,17 @@ export default function Lobby() {
         });
     };
 
-    const allReady = players.length >= 2 && players.every((p) => p.isReady);
+    const handleNpcEnemies = (value: 0 | 1 | 2 | 3) => {
+        if (!isHost || !code || !playerId) return;
+        socket.emit('update-settings', {
+            lobbyCode: code,
+            hostId: parseInt(playerId),
+            settings: { npcEnemies: value },
+        });
+    };
+
+    const totalParticipants = players.length + (settings.npcEnemies || 0);
+    const allReady = totalParticipants >= 2 && players.every((p) => p.isReady);
     const me = players.find((p) => p.id === playerId);
 
     if (error) {
@@ -169,7 +179,9 @@ export default function Lobby() {
 
                 {players.length < settings.maxPlayers && (
                     <div className="player-item" style={{ opacity: 0.3, borderStyle: 'dashed' }}>
-                        <span className="player-name">Waiting for player...</span>
+                        <span className="player-name">
+                            Waiting for player...{settings.npcEnemies > 0 ? ' (optional)' : ''}
+                        </span>
                     </div>
                 )}
             </div>
@@ -211,6 +223,22 @@ export default function Lobby() {
                             className={`toggle ${settings.itemSpawns ? 'active' : ''}`}
                             onClick={() => handleSettingToggle('itemSpawns')}
                         />
+                    </div>
+
+                    <div className="setting-row">
+                        <span className="setting-label">NPC Enemies</span>
+                        <div style={{ display: 'flex', gap: 'var(--space-xs)' }}>
+                            {([0, 1, 2, 3] as const).map((n) => (
+                                <button
+                                    key={n}
+                                    className={`btn ${settings.npcEnemies === n ? 'btn-primary' : 'btn-ghost'}`}
+                                    style={{ padding: '6px 14px', fontSize: '0.85rem' }}
+                                    onClick={() => handleNpcEnemies(n)}
+                                >
+                                    {n}
+                                </button>
+                            ))}
+                        </div>
                     </div>
                 </div>
             )}
