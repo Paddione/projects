@@ -18,17 +18,26 @@ const projectFlagIdx = cliArgs.indexOf('--project');
 const defaultProject = projectFlagIdx !== -1 ? cliArgs[projectFlagIdx + 1] : null;
 
 // Prerequisites check
-const prerequisites = { python: false, ffmpeg: false, cuda: false };
+const prerequisites = { python: false, ffmpeg: false, cuda: false, pythonPath: 'python3' };
 
-function checkPrerequisites() {
-  try {
-    execFileSync('python3', ['--version'], { stdio: 'pipe' });
-    prerequisites.python = true;
+function checkPrerequisites(projectPythonPath) {
+  // Use project's venv python if available, fall back to system python3
+  const pythonCandidates = projectPythonPath
+    ? [projectPythonPath, 'python3']
+    : ['python3'];
+
+  for (const py of pythonCandidates) {
     try {
-      const result = execFileSync('python3', ['-c', 'import torch; print(torch.cuda.is_available())'], { stdio: 'pipe' });
-      prerequisites.cuda = result.toString().trim() === 'True';
-    } catch { prerequisites.cuda = false; }
-  } catch { prerequisites.python = false; }
+      execFileSync(py, ['--version'], { stdio: 'pipe' });
+      prerequisites.python = true;
+      prerequisites.pythonPath = py;
+      try {
+        const result = execFileSync(py, ['-c', 'import torch; print(torch.cuda.is_available())'], { stdio: 'pipe' });
+        prerequisites.cuda = result.toString().trim() === 'True';
+      } catch { prerequisites.cuda = false; }
+      break;
+    } catch { /* try next candidate */ }
+  }
 
   try {
     execFileSync('ffmpeg', ['-version'], { stdio: 'pipe' });
@@ -36,6 +45,7 @@ function checkPrerequisites() {
   } catch { prerequisites.ffmpeg = false; }
 }
 
+// Initial check with system python (will re-check with project venv on scan)
 checkPrerequisites();
 
 // =============================================================================
@@ -332,6 +342,13 @@ app.listen(PORT, async () => {
   if (defaultProject) {
     const project = loadProject(defaultProject);
     if (project) {
+      // Re-check prerequisites with project's venv python
+      if (project.pythonPath) {
+        const resolvedPy = resolve(__dirname, project.pythonPath);
+        checkPrerequisites(resolvedPy);
+        console.log(`  Prerequisites (with venv): python=${prerequisites.python} ffmpeg=${prerequisites.ffmpeg} cuda=${prerequisites.cuda}`);
+        console.log(`  Python: ${prerequisites.pythonPath}`);
+      }
       console.log(`  Auto-scanning project: ${defaultProject}`);
       scanProject(project);
     } else {

@@ -4,6 +4,7 @@
   "outputRoot": "../arena/frontend/public/assets",
   "processScript": "../arena/scripts/process_audio.sh",
   "generateScript": "../arena/scripts/generate_audio.py",
+  "pythonPath": "../arena/.venv/bin/python3",
   "manifestPath": "../arena/assets/manifest.json",
   "sounds": {
     "armor_pickup": {
@@ -71,8 +72,8 @@
       "prompt": "sci-fi laser gunshot, short sharp burst, video game sound effect",
       "seed": null,
       "duration": 0.5,
-      "backend": "default",
-      "flagged": false,
+      "backend": "elevenlabs",
+      "flagged": true,
       "lastGeneratedAt": null,
       "filePath": "sfx/gunshot.wav"
     },

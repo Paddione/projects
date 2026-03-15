@@ -7,6 +7,11 @@ import { resolve } from 'node:path';
  */
 export async function generate({ id, type, prompt, seed, duration, projectConfig }) {
   const scriptPath = resolve(projectConfig._basePath, projectConfig.generateScript);
+  const pythonPath = projectConfig.pythonPath
+    ? resolve(projectConfig._basePath, projectConfig.pythonPath)
+    : 'python3';
+  const projectDir = resolve(projectConfig._basePath, projectConfig.audioRoot, '..', '..');
+
   const args = [
     scriptPath,
     '--id', id,
@@ -20,8 +25,8 @@ export async function generate({ id, type, prompt, seed, duration, projectConfig
   if (duration != null) args.push('--duration', String(duration));
 
   return new Promise((resolvePromise, reject) => {
-    const proc = spawn('python3', args, {
-      cwd: resolve(projectConfig._basePath, '..', 'arena'),
+    const proc = spawn(pythonPath, args, {
+      cwd: projectDir,
       stdio: ['ignore', 'pipe', 'pipe'],
     });
 
