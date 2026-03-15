@@ -36,6 +36,8 @@ export function makeLobby(overrides: Partial<Record<string, unknown>> = {}) {
             shrinkInterval: 30,
             itemSpawns: false,
             itemSpawnInterval: 60,
+            mapId: 'campus',
+            mapSize: 1,
         },
         players: [
             {

@@ -11,8 +11,6 @@ import { SoundService } from '../services/SoundService';
 import LoadingScreen from './LoadingScreen';
 
 const TILE_SIZE = 32;
-const MAP_WIDTH = 28;
-const MAP_HEIGHT = 22;
 
 const CHARACTER_COLORS: Record<string, number> = {
     student: 0x00f2ff,
@@ -322,11 +320,13 @@ export default function Game() {
         // ====================================================================
 
         function renderMap(container: Container, state: any) {
+            const mapW = state.map?.width ?? 28;
+            const mapH = state.map?.height ?? 22;
             if (useSprites) {
                 const floorTiles = AssetService.getFloorTiles();
                 if (floorTiles.length > 0) {
-                    for (let ty = 0; ty < MAP_HEIGHT; ty++) {
-                        for (let tx = 0; tx < MAP_WIDTH; tx++) {
+                    for (let ty = 0; ty < mapH; ty++) {
+                        for (let tx = 0; tx < mapW; tx++) {
                             const tileType = state.map?.tiles?.[ty]?.[tx] ?? 0;
                             let texture: Texture | null = null;
                             if (tileType === 1) {
@@ -352,8 +352,8 @@ export default function Game() {
 
             // Fallback: procedural map with tile-type-aware colors
             const g = new Graphics();
-            for (let ty = 0; ty < MAP_HEIGHT; ty++) {
-                for (let tx = 0; tx < MAP_WIDTH; tx++) {
+            for (let ty = 0; ty < mapH; ty++) {
+                for (let tx = 0; tx < mapW; tx++) {
                     const tileType = state.map?.tiles?.[ty]?.[tx] ?? 0;
                     let color: number;
                     if (tileType === 1) {
@@ -371,13 +371,13 @@ export default function Game() {
             }
 
             g.lineStyle(1, 0x222450, 0.3);
-            for (let x = 0; x <= MAP_WIDTH; x++) {
+            for (let x = 0; x <= mapW; x++) {
                 g.moveTo(x * TILE_SIZE, 0);
-                g.lineTo(x * TILE_SIZE, MAP_HEIGHT * TILE_SIZE);
+                g.lineTo(x * TILE_SIZE, mapH * TILE_SIZE);
             }
-            for (let y = 0; y <= MAP_HEIGHT; y++) {
+            for (let y = 0; y <= mapH; y++) {
                 g.moveTo(0, y * TILE_SIZE);
-                g.lineTo(MAP_WIDTH * TILE_SIZE, y * TILE_SIZE);
+                g.lineTo(mapW * TILE_SIZE, y * TILE_SIZE);
             }
             container.addChild(g);
         }
@@ -607,9 +607,11 @@ export default function Game() {
         function renderZone(container: Container, state: any) {
             if (!state.zone?.isActive) return;
 
+            const mapW = state.map?.width ?? 28;
+            const mapH = state.map?.height ?? 22;
             const zg = new Graphics();
             zg.beginFill(0xef4444, 0.1);
-            zg.drawRect(0, 0, MAP_WIDTH * TILE_SIZE, MAP_HEIGHT * TILE_SIZE);
+            zg.drawRect(0, 0, mapW * TILE_SIZE, mapH * TILE_SIZE);
             zg.endFill();
             zg.beginFill(0x000000, 0);
             zg.drawCircle(state.zone.centerX, state.zone.centerY, state.zone.currentRadius);
@@ -944,6 +946,9 @@ export default function Game() {
             setRound(data.roundNumber);
             setAnnouncement(`Round ${data.roundNumber} — FIGHT!`);
             SoundService.playSFX('round_start');
+            SoundService.playSting('respectisevt');
+            // Resume battle music after the sting finishes
+            setTimeout(() => SoundService.playMusic('battle', { loop: true, volume: 0.5 }), 4500);
             setTimeout(() => setAnnouncement(null), 2000);
         });
 

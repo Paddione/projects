@@ -22,6 +22,8 @@ interface GameStore {
         itemSpawns: boolean;
         itemSpawnInterval: number;
         npcEnemies: 0 | 1 | 2 | 3;
+        mapId: 'campus' | 'warehouse' | 'forest';
+        mapSize: 1 | 2 | 3;
     };
 
     // Match state
@@ -77,6 +79,8 @@ export const useGameStore = create<GameStore>((set) => ({
         itemSpawns: true,
         itemSpawnInterval: 60,
         npcEnemies: 0,
+        mapId: 'campus',
+        mapSize: 1,
     },
 
     matchId: null,

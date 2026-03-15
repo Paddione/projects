@@ -53,6 +53,9 @@ describe('Lobby Component', () => {
                 shrinkInterval: 30,
                 itemSpawns: true,
                 itemSpawnInterval: 60,
+                npcEnemies: 0,
+                mapId: 'campus',
+                mapSize: 1,
             },
             lobbyCode: null,
             isInLobby: false,
@@ -169,6 +172,59 @@ describe('Lobby Component', () => {
         useGameStore.setState({ isHost: false });
         renderLobby();
         expect(screen.queryByText(/Match Settings/)).toBeNull();
+    });
+
+    it('shows arena map selector buttons for host', () => {
+        renderLobby();
+        expect(screen.getByText('Campus Courtyard')).toBeTruthy();
+        expect(screen.getByText('Warehouse District')).toBeTruthy();
+        expect(screen.getByText('Forest Clearing')).toBeTruthy();
+    });
+
+    it('emits update-settings with mapId on map button click', () => {
+        renderLobby();
+        fireEvent.click(screen.getByText('Warehouse District'));
+        expect(mockEmit).toHaveBeenCalledWith('update-settings', expect.objectContaining({
+            lobbyCode: 'ABC123',
+            settings: { mapId: 'warehouse' },
+        }));
+    });
+
+    it('shows map size selector buttons for host', () => {
+        renderLobby();
+        expect(screen.getByText('1x')).toBeTruthy();
+        expect(screen.getByText('2x')).toBeTruthy();
+        expect(screen.getByText('3x')).toBeTruthy();
+    });
+
+    it('emits update-settings with mapSize on size button click', () => {
+        renderLobby();
+        fireEvent.click(screen.getByText('2x'));
+        expect(mockEmit).toHaveBeenCalledWith('update-settings', expect.objectContaining({
+            lobbyCode: 'ABC123',
+            settings: { mapSize: 2 },
+        }));
+    });
+
+    it('does not show map selector buttons for non-host', () => {
+        useGameStore.setState({ isHost: false });
+        renderLobby();
+        // Non-host should NOT see the Warehouse/Forest buttons (selector)
+        expect(screen.queryByText('Warehouse District')).toBeNull();
+        expect(screen.queryByText('Forest Clearing')).toBeNull();
+        expect(screen.queryByText('2x')).toBeNull();
+    });
+
+    it('shows map name for non-host players', () => {
+        useGameStore.setState({ isHost: false });
+        renderLobby();
+        // Non-host sees the selected map name as info text
+        expect(screen.getByText('Campus Courtyard')).toBeTruthy();
+    });
+
+    it('shows map description below selector', () => {
+        renderLobby();
+        expect(screen.getByText('Balanced & symmetric')).toBeTruthy();
     });
 
     it('registers and cleans up socket listeners', () => {

@@ -43,6 +43,8 @@ function makeSettings(overrides: Partial<ArenaLobbySettings> = {}): ArenaLobbySe
         itemSpawns: false,
         itemSpawnInterval: 60,
         npcEnemies: 0,
+        mapId: 'campus',
+        mapSize: 1,
         ...overrides,
     };
 }
@@ -268,6 +270,85 @@ describe('GameService', () => {
                 expect(sp.y).toBeGreaterThanOrEqual(0);
                 expect(sp.y).toBeLessThan(GAME.MAP_HEIGHT_TILES);
             }
+        });
+
+        it('generates warehouse map when mapId is warehouse', () => {
+            const lobby = makeLobby(
+                [makeLobbyPlayer('1', 'A'), makeLobbyPlayer('2', 'B')],
+                { mapId: 'warehouse' },
+            );
+            const matchId = service.startMatch(lobby);
+            const state = service.getGameState(matchId)!;
+
+            expect(state.map.width).toBe(GAME.MAP_WIDTH_TILES);
+            expect(state.map.height).toBe(GAME.MAP_HEIGHT_TILES);
+            // Warehouse has internal walls (unlike campus which has only perimeter)
+            expect(state.map.tiles[7][1]).toBe(1); // internal horizontal wall
+        });
+
+        it('generates forest map when mapId is forest', () => {
+            const lobby = makeLobby(
+                [makeLobbyPlayer('1', 'A'), makeLobbyPlayer('2', 'B')],
+                { mapId: 'forest' },
+            );
+            const matchId = service.startMatch(lobby);
+            const state = service.getGameState(matchId)!;
+
+            expect(state.map.width).toBe(GAME.MAP_WIDTH_TILES);
+            expect(state.map.height).toBe(GAME.MAP_HEIGHT_TILES);
+            // Forest has thick 2-tile border
+            expect(state.map.tiles[1][5]).toBe(1);
+        });
+
+        it('scales map to 2x when mapSize is 2', () => {
+            const lobby = makeLobby(
+                [makeLobbyPlayer('1', 'A'), makeLobbyPlayer('2', 'B')],
+                { mapSize: 2 },
+            );
+            const matchId = service.startMatch(lobby);
+            const state = service.getGameState(matchId)!;
+
+            expect(state.map.width).toBe(GAME.MAP_WIDTH_TILES * 2);
+            expect(state.map.height).toBe(GAME.MAP_HEIGHT_TILES * 2);
+            expect(state.map.tiles).toHaveLength(GAME.MAP_HEIGHT_TILES * 2);
+            expect(state.map.tiles[0]).toHaveLength(GAME.MAP_WIDTH_TILES * 2);
+        });
+
+        it('scales map to 3x when mapSize is 3', () => {
+            const lobby = makeLobby(
+                [makeLobbyPlayer('1', 'A'), makeLobbyPlayer('2', 'B')],
+                { mapSize: 3 },
+            );
+            const matchId = service.startMatch(lobby);
+            const state = service.getGameState(matchId)!;
+
+            expect(state.map.width).toBe(GAME.MAP_WIDTH_TILES * 3);
+            expect(state.map.height).toBe(GAME.MAP_HEIGHT_TILES * 3);
+        });
+
+        it('zone radius scales with map size', () => {
+            const lobby = makeLobby(
+                [makeLobbyPlayer('1', 'A'), makeLobbyPlayer('2', 'B')],
+                { mapSize: 2, shrinkingZone: true },
+            );
+            const matchId = service.startMatch(lobby);
+            const state = service.getGameState(matchId)!;
+
+            const expectedRadius = Math.max(
+                GAME.MAP_WIDTH_TILES * 2,
+                GAME.MAP_HEIGHT_TILES * 2,
+            ) * GAME.TILE_SIZE;
+            expect(state.zone!.currentRadius).toBe(expectedRadius);
+            expect(state.zone!.centerX).toBe((GAME.MAP_WIDTH_TILES * 2 * GAME.TILE_SIZE) / 2);
+        });
+
+        it('defaults to campus at 1x when no map settings provided', () => {
+            const lobby = makeLobby([makeLobbyPlayer('1', 'A'), makeLobbyPlayer('2', 'B')]);
+            const matchId = service.startMatch(lobby);
+            const state = service.getGameState(matchId)!;
+
+            expect(state.map.width).toBe(GAME.MAP_WIDTH_TILES);
+            expect(state.map.height).toBe(GAME.MAP_HEIGHT_TILES);
         });
 
         it('player speed constant is 8', () => {

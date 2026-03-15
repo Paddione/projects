@@ -26,6 +26,8 @@ const DEFAULT_SETTINGS: ArenaLobbySettings = {
     itemSpawns: true,
     itemSpawnInterval: 60,
     npcEnemies: 0,
+    mapId: 'campus',
+    mapSize: 1,
 };
 
 export class LobbyService {

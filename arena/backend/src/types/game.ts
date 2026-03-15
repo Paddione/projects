@@ -188,6 +188,8 @@ export interface ArenaLobbySettings {
     itemSpawns: boolean;
     itemSpawnInterval: number;   // seconds between spawns
     npcEnemies: 0 | 1 | 2 | 3;
+    mapId: 'campus' | 'warehouse' | 'forest';
+    mapSize: 1 | 2 | 3;
 }
 
 export interface ArenaPlayer {

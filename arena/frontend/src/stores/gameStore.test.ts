@@ -8,6 +8,9 @@ const initialSettings = {
     shrinkInterval: 30,
     itemSpawns: true,
     itemSpawnInterval: 60,
+    npcEnemies: 0 as const,
+    mapId: 'campus' as const,
+    mapSize: 1 as const,
 };
 
 describe('gameStore', () => {
@@ -80,6 +83,27 @@ describe('gameStore', () => {
             expect(s.settings.shrinkingZone).toBe(true);
             expect(s.settings.maxPlayers).toBe(4); // unchanged
             expect(s.settings.itemSpawns).toBe(true); // unchanged
+        });
+
+        it('setSettings merges mapId without affecting other settings', () => {
+            useGameStore.getState().setSettings({ mapId: 'warehouse' });
+            const s = useGameStore.getState();
+            expect(s.settings.mapId).toBe('warehouse');
+            expect(s.settings.mapSize).toBe(1); // unchanged
+            expect(s.settings.bestOf).toBe(1);  // unchanged
+        });
+
+        it('setSettings merges mapSize without affecting other settings', () => {
+            useGameStore.getState().setSettings({ mapSize: 3 });
+            const s = useGameStore.getState();
+            expect(s.settings.mapSize).toBe(3);
+            expect(s.settings.mapId).toBe('campus'); // unchanged
+        });
+
+        it('defaults include mapId and mapSize', () => {
+            const s = useGameStore.getState();
+            expect(s.settings.mapId).toBe('campus');
+            expect(s.settings.mapSize).toBe(1);
         });
     });
 

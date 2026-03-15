@@ -134,6 +134,30 @@ export default function Lobby() {
         });
     };
 
+    const handleMapId = (value: 'campus' | 'warehouse' | 'forest') => {
+        if (!isHost || !code || !playerId) return;
+        socket.emit('update-settings', {
+            lobbyCode: code,
+            hostId: parseInt(playerId),
+            settings: { mapId: value },
+        });
+    };
+
+    const handleMapSize = (value: 1 | 2 | 3) => {
+        if (!isHost || !code || !playerId) return;
+        socket.emit('update-settings', {
+            lobbyCode: code,
+            hostId: parseInt(playerId),
+            settings: { mapSize: value },
+        });
+    };
+
+    const MAP_OPTIONS = [
+        { id: 'campus' as const, name: 'Campus Courtyard', desc: 'Balanced & symmetric' },
+        { id: 'warehouse' as const, name: 'Warehouse District', desc: 'Tight corridors' },
+        { id: 'forest' as const, name: 'Forest Clearing', desc: 'Open sightlines' },
+    ];
+
     const totalParticipants = players.length + (settings.npcEnemies || 0);
     const allReady = totalParticipants >= 2 && players.every((p) => p.isReady);
     const me = players.find((p) => p.id === playerId);
@@ -193,6 +217,42 @@ export default function Lobby() {
                         ⚙️ Match Settings
                     </h3>
 
+                    <div className="setting-row" style={{ flexDirection: 'column', alignItems: 'stretch', gap: 'var(--space-sm)' }}>
+                        <span className="setting-label">Arena</span>
+                        <div style={{ display: 'flex', gap: 'var(--space-xs)', flexWrap: 'wrap' }}>
+                            {MAP_OPTIONS.map((m) => (
+                                <button
+                                    key={m.id}
+                                    className={`btn ${settings.mapId === m.id ? 'btn-primary' : 'btn-ghost'}`}
+                                    style={{ padding: '6px 12px', fontSize: '0.8rem', flex: '1 1 auto', textAlign: 'center' }}
+                                    onClick={() => handleMapId(m.id)}
+                                    title={m.desc}
+                                >
+                                    {m.name}
+                                </button>
+                            ))}
+                        </div>
+                        <span style={{ color: 'var(--color-text-muted)', fontSize: '0.75rem' }}>
+                            {MAP_OPTIONS.find((m) => m.id === settings.mapId)?.desc}
+                        </span>
+                    </div>
+
+                    <div className="setting-row">
+                        <span className="setting-label">Map Size</span>
+                        <div style={{ display: 'flex', gap: 'var(--space-xs)' }}>
+                            {([1, 2, 3] as const).map((n) => (
+                                <button
+                                    key={n}
+                                    className={`btn ${settings.mapSize === n ? 'btn-primary' : 'btn-ghost'}`}
+                                    style={{ padding: '6px 14px', fontSize: '0.85rem' }}
+                                    onClick={() => handleMapSize(n)}
+                                >
+                                    {n === 1 ? '1x' : n === 2 ? '2x' : '3x'}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
                     <div className="setting-row">
                         <span className="setting-label">Best of</span>
                         <div style={{ display: 'flex', gap: 'var(--space-xs)' }}>
@@ -240,6 +300,16 @@ export default function Lobby() {
                             ))}
                         </div>
                     </div>
+                </div>
+            )}
+
+            {/* Map info for non-host players */}
+            {!isHost && (
+                <div style={{ marginBottom: 'var(--space-xl)', color: 'var(--color-text-secondary)', fontSize: '0.9rem', textAlign: 'center' }}>
+                    <span style={{ fontWeight: 600 }}>
+                        {MAP_OPTIONS.find((m) => m.id === settings.mapId)?.name ?? 'Campus Courtyard'}
+                    </span>
+                    {settings.mapSize > 1 && <span> ({settings.mapSize}x size)</span>}
                 </div>
             )}
 

@@ -387,4 +387,40 @@ test.describe('Lobby page', () => {
         // Still on lobby page
         await expect(page).toHaveURL(/\/lobby\/TEST01/, { timeout: 3000 });
     });
+
+    test('host sees arena map selector with 3 map options', async ({ page }) => {
+        await mockAuth(page, ALICE);
+        await blockSocket(page);
+
+        await page.goto('/');
+        await expect(page.locator('h1')).toContainText('ARENA', { timeout: 8000 });
+
+        await page.route('**/api/lobbies', async (route) => {
+            if (route.request().method() !== 'POST') return route.continue();
+            await route.fulfill({
+                status: 201,
+                contentType: 'application/json',
+                body: JSON.stringify(TEST_LOBBY),
+            });
+        });
+
+        await page.locator('#create-lobby-btn').click();
+        await expect(page).toHaveURL(/\/lobby\/TEST01/, { timeout: 5000 });
+
+        // Inject lobby state so the host settings panel renders
+        await emitFromServer(page, 'join-success', {
+            lobby: TEST_LOBBY,
+            playerId: String(ALICE.userId),
+        });
+
+        // Verify all 3 map buttons are visible
+        await expect(page.getByText('Campus Courtyard')).toBeVisible({ timeout: 5000 });
+        await expect(page.getByText('Warehouse District')).toBeVisible();
+        await expect(page.getByText('Forest Clearing')).toBeVisible();
+
+        // Verify size selector buttons
+        await expect(page.getByText('1x')).toBeVisible();
+        await expect(page.getByText('2x')).toBeVisible();
+        await expect(page.getByText('3x')).toBeVisible();
+    });
 });

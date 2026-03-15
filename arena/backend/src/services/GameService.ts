@@ -18,7 +18,7 @@ import type {
     NPC,
 } from '../types/game.js';
 import { GAME, HP, DAMAGE, NPC_CONST, ENEMY_CONST } from '../types/game.js';
-import { createCampusCourtyard, ITEM_SPAWN_POINTS } from '../maps/campus-courtyard.js';
+import { createMap } from '../maps/index.js';
 import type { WeaponState } from '../types/weapon.js';
 import { WEAPON_STATS, MACHINE_GUN_PICKUP, GRENADE_LAUNCHER_PICKUP } from '../types/weapon.js';
 import { PlayerService } from './PlayerService.js';
@@ -81,7 +81,7 @@ export class GameService {
      */
     startMatch(lobby: ArenaLobby): string {
         const matchId = uuidv4();
-        const map = this.generateMap();
+        const map = this.generateMap(lobby.settings);
         const players = new Map<string, PlayerState>();
 
         // Assign spawn points dynamically based on player count + NPC enemies
@@ -1004,7 +1004,7 @@ export class GameService {
                 x = spawn.x * GAME.TILE_SIZE + GAME.TILE_SIZE / 2;
                 y = spawn.y * GAME.TILE_SIZE + GAME.TILE_SIZE / 2;
             } else {
-                const fallback = ITEM_SPAWN_POINTS[i % ITEM_SPAWN_POINTS.length];
+                const fallback = game.map.itemSpawnPoints[i % game.map.itemSpawnPoints.length];
                 x = fallback.x * GAME.TILE_SIZE + GAME.TILE_SIZE / 2;
                 y = fallback.y * GAME.TILE_SIZE + GAME.TILE_SIZE / 2;
             }
@@ -1461,8 +1461,8 @@ export class GameService {
     // MAP GENERATION
     // ============================================================================
 
-    private generateMap(): GameMap {
-        return createCampusCourtyard();
+    private generateMap(settings: ArenaLobbySettings): GameMap {
+        return createMap(settings.mapId, settings.mapSize);
     }
 
     // ============================================================================
