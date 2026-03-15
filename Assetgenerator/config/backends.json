@@ -1,13 +1,19 @@
 {
   "audiocraft": {
-    "label": "AudioCraft (Local)",
+    "label": "AudioCraft (Local GPU)",
     "enabled": true,
     "adapter": "audiocraft"
   },
   "elevenlabs": {
-    "label": "ElevenLabs (API)",
+    "label": "ElevenLabs (Cloud API)",
     "enabled": true,
     "adapter": "elevenlabs",
     "requiresEnv": "ELEVENLABS_API_KEY"
+  },
+  "suno": {
+    "label": "Suno AI (Cloud API — Music)",
+    "enabled": true,
+    "adapter": "suno",
+    "requiresEnv": "SUNO_API_KEY"
   }
 }
