@@ -241,14 +241,15 @@ app.use('/api/access-requests', authLimiter, csrfProtection, accessRequestsRoute
 // User routes (CSRF on state-changing requests)
 app.use('/api/user', authLimiter, csrfProtection, userRoutes);
 
+// Internal service-to-service routes (no CSRF, no rate limit — NetworkPolicy enforced)
+// Must be mounted BEFORE catch-all /api routes to avoid CSRF middleware blocking POSTs.
+app.use('/api', internalRoutes);
+
 // Profile routes (CSRF on state-changing requests)
 app.use('/api', authLimiter, csrfProtection, profileRoutes);
 
 // Catalog routes (GET is public; POST /purchase uses authenticate inside route)
 app.use('/api', authLimiter, catalogRoutes);
-
-// Internal service-to-service routes (no CSRF, no rate limit — internal only)
-app.use('/api', internalRoutes);
 
 // Serve static frontend files
 // In development (tsx): __dirname = /home/patrick/projects/auth/src
