@@ -1,0 +1,19 @@
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: gpu-waker-scaler
+  namespace: korczewski-services
+spec:
+  scaleTargetRef:
+    name: gpu-waker
+  minReplicaCount: 0
+  maxReplicaCount: 1
+  cooldownPeriod: 300
+  pollingInterval: 30
+  triggers:
+    - type: metrics-api
+      metadata:
+        targetValue: "1"
+        url: "http://assetgenerator.korczewski-services.svc.cluster.local:5200/api/queue-depth"
+        valueLocation: "depth"
+        method: "GET"
