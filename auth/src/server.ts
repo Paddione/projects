@@ -21,6 +21,7 @@ import adminRoutes from './routes/admin.js';
 import accessRequestsRoutes from './routes/access-requests.js';
 import forwardAuthRoutes from './routes/forward-auth.js';
 import healthRoutes from './routes/health.js';
+import internalRoutes from './routes/internal.js';
 import { client } from './config/database.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -245,6 +246,9 @@ app.use('/api', authLimiter, csrfProtection, profileRoutes);
 
 // Catalog routes (GET is public; POST /purchase uses authenticate inside route)
 app.use('/api', authLimiter, catalogRoutes);
+
+// Internal service-to-service routes (no CSRF, no rate limit — internal only)
+app.use('/api', internalRoutes);
 
 // Serve static frontend files
 // In development (tsx): __dirname = /home/patrick/projects/auth/src
