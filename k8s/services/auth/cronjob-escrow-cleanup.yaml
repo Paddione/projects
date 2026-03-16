@@ -24,6 +24,9 @@ spec:
   jobTemplate:
     spec:
       template:
+        metadata:
+          labels:
+            app: escrow-cleanup
         spec:
           restartPolicy: OnFailure
           nodeSelector:

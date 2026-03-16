@@ -54,3 +54,13 @@ spec:
       ports:
         - protocol: TCP
           port: 5500
+
+    # ── Escrow cleanup CronJob (same namespace) ──
+    # Calls POST /api/internal/match/cleanup-expired every minute
+    - from:
+        - podSelector:
+            matchLabels:
+              app: escrow-cleanup
+      ports:
+        - protocol: TCP
+          port: 5500
