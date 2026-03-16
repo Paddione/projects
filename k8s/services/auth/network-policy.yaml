@@ -1,0 +1,56 @@
+---
+# =============================================================================
+# Auth Service NetworkPolicy — Zero-Trust Intranet
+# =============================================================================
+# Replaces INTERNAL_API_KEY app-level auth with network-layer enforcement.
+# Only Traefik (ingress) and approved backend services can reach auth:5500.
+#
+# k3s enforces this via its built-in kube-router network policy controller
+# (active by default unless --disable-network-policy is set).
+# =============================================================================
+
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: auth-ingress-allow
+  namespace: korczewski-services
+  labels:
+    app: auth
+    app.kubernetes.io/name: auth
+    app.kubernetes.io/component: authentication
+    app.kubernetes.io/part-of: korczewski
+spec:
+  podSelector:
+    matchLabels:
+      app: auth
+  policyTypes:
+    - Ingress
+  ingress:
+    # ── Traefik (korczewski-infra namespace) ──
+    # Handles public HTTPS traffic for auth.korczewski.de
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: korczewski-infra
+          podSelector:
+            matchLabels:
+              app: traefik
+      ports:
+        - protocol: TCP
+          port: 5500
+
+    # ── Internal backend services (same namespace) ──
+    # These call /api/internal/* endpoints for XP, Respect, Match Escrow
+    - from:
+        - podSelector:
+            matchLabels:
+              app: l2p-backend
+        - podSelector:
+            matchLabels:
+              app: arena-backend
+        - podSelector:
+            matchLabels:
+              app: shop
+      ports:
+        - protocol: TCP
+          port: 5500

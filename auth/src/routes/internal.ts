@@ -1,7 +1,6 @@
 import crypto from 'crypto';
 import express, { type Request, type Response } from 'express';
 import { z } from 'zod';
-import { internalAuth } from '../middleware/internalAuth.js';
 import { ProfileService } from '../services/ProfileService.js';
 import { RespectService } from '../services/RespectService.js';
 import { db } from '../config/database.js';
@@ -45,7 +44,7 @@ const matchSettleSchema = z.object({
  * POST /api/internal/respect/credit
  * Credit respect to a user's balance (service-to-service only)
  */
-router.post('/internal/respect/credit', internalAuth, async (req: Request, res: Response) => {
+router.post('/internal/respect/credit', async (req: Request, res: Response) => {
   try {
     const { userId, amount, metadata } = respectCreditSchema.parse(req.body);
     const result = await respectService.creditRespect(userId, amount, metadata);
@@ -63,7 +62,7 @@ router.post('/internal/respect/credit', internalAuth, async (req: Request, res: 
  * POST /api/internal/respect/debit
  * Debit respect from a user's balance (service-to-service only)
  */
-router.post('/internal/respect/debit', internalAuth, async (req: Request, res: Response) => {
+router.post('/internal/respect/debit', async (req: Request, res: Response) => {
   try {
     const { userId, amount, metadata } = respectDebitSchema.parse(req.body);
     const result = await respectService.debitRespect(userId, amount, metadata);
@@ -85,7 +84,7 @@ router.post('/internal/respect/debit', internalAuth, async (req: Request, res: R
  * POST /api/internal/xp/award
  * Award XP to a user and recalculate level (service-to-service only)
  */
-router.post('/internal/xp/award', internalAuth, async (req: Request, res: Response) => {
+router.post('/internal/xp/award', async (req: Request, res: Response) => {
   try {
     const { userId, amount } = xpAwardSchema.parse(req.body);
     const updated = await profileService.awardXp(userId, amount);
@@ -103,7 +102,7 @@ router.post('/internal/xp/award', internalAuth, async (req: Request, res: Respon
  * POST /api/internal/match/escrow
  * Create a match escrow record with pending status (service-to-service only)
  */
-router.post('/internal/match/escrow', internalAuth, async (req: Request, res: Response) => {
+router.post('/internal/match/escrow', async (req: Request, res: Response) => {
   try {
     const { playerIds, escrowedXp, matchConfig } = matchEscrowCreateSchema.parse(req.body);
 
@@ -133,7 +132,7 @@ router.post('/internal/match/escrow', internalAuth, async (req: Request, res: Re
  * GET /api/internal/match/escrow/:token
  * Retrieve a match escrow record by token (service-to-service only)
  */
-router.get('/internal/match/escrow/:token', internalAuth, async (req: Request, res: Response) => {
+router.get('/internal/match/escrow/:token', async (req: Request, res: Response) => {
   try {
     const { token } = req.params;
 
@@ -158,7 +157,7 @@ router.get('/internal/match/escrow/:token', internalAuth, async (req: Request, r
  * POST /api/internal/match/settle
  * Settle a match escrow: award XP + Respect to the winner (service-to-service only)
  */
-router.post('/internal/match/settle', internalAuth, async (req: Request, res: Response) => {
+router.post('/internal/match/settle', async (req: Request, res: Response) => {
   try {
     const { token, winnerId } = matchSettleSchema.parse(req.body);
 

@@ -64,11 +64,6 @@ spec:
               value: "http://auth.korczewski-services.svc.cluster.local:5500"
             - name: CORS_ORIGIN
               value: "https://arena.korczewski.de"
-            - name: INTERNAL_API_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: internal-api-key
-                  key: INTERNAL_API_KEY
           resources:
             requests:
               memory: "128Mi"
