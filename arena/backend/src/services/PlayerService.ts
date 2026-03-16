@@ -8,6 +8,7 @@ import type {
     GAME,
 } from '../types/game.js';
 import { WeaponState, PISTOL_DEFAULT, MACHINE_GUN_PICKUP, WEAPON_STATS, RELOAD_DURATION_MS } from '../types/weapon.js';
+import { buildPowerUpData } from '../config/powerUps.js';
 
 const MAX_WEAPONS = 3; // pistol + 2 pickups
 
@@ -27,9 +28,20 @@ export class PlayerService {
         gender: 'male' | 'female',
         characterLevel: number,
         spawnX: number,
-        spawnY: number
+        spawnY: number,
+        powerUpId?: string | null
     ): PlayerState {
         const pistol = { ...PISTOL_DEFAULT };
+        const powerUpData = buildPowerUpData(powerUpId);
+
+        // Apply shield bonus armor at round start
+        const hasArmor = powerUpData ? powerUpData.bonusArmor > 0 : false;
+
+        // Apply fury: set furyEndsAt to 30s from now
+        if (powerUpData && powerUpId === 'power_fury') {
+            powerUpData.furyEndsAt = Date.now() + 30000;
+        }
+
         return {
             id,
             username,
@@ -40,7 +52,7 @@ export class PlayerService {
             y: spawnY,
             rotation: 0,
             hp: MAX_HP,
-            hasArmor: false,
+            hasArmor,
             isAlive: true,
             isSpectating: false,
             kills: 0,
@@ -54,6 +66,8 @@ export class PlayerService {
             activeWeaponIndex: 0,
             lastShotTime: 0,
             pose: 'stand',
+            powerUp: powerUpId ?? null,
+            powerUpData,
         };
     }
 
@@ -139,7 +153,6 @@ export class PlayerService {
         player.y = spawnY;
         player.rotation = 0;
         player.hp = MAX_HP;
-        player.hasArmor = false;
         player.isAlive = true;
         player.isSpectating = false;
         player.lastMoveDirection = { dx: 0, dy: 0 };
@@ -149,6 +162,18 @@ export class PlayerService {
         player.activeWeaponIndex = 0;
         player.lastShotTime = 0;
         player.pose = 'stand';
+
+        // Re-apply power-up effects each round
+        if (player.powerUpData) {
+            // Shield: grant starting armor
+            player.hasArmor = player.powerUpData.bonusArmor > 0;
+            // Fury: reset 30s window for new round
+            if (player.powerUp === 'power_fury') {
+                player.powerUpData.furyEndsAt = Date.now() + 30000;
+            }
+        } else {
+            player.hasArmor = false;
+        }
     }
 
     /**

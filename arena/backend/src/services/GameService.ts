@@ -97,7 +97,8 @@ export class GameService {
                 lobbyPlayer.gender ?? 'male',
                 lobbyPlayer.characterLevel,
                 spawn.x * GAME.TILE_SIZE + GAME.TILE_SIZE / 2,
-                spawn.y * GAME.TILE_SIZE + GAME.TILE_SIZE / 2
+                spawn.y * GAME.TILE_SIZE + GAME.TILE_SIZE / 2,
+                lobbyPlayer.powerUp
             );
             players.set(lobbyPlayer.id, playerState);
         });
@@ -161,14 +162,16 @@ export class GameService {
             return; // Reject input with future timestamp
         }
 
-        // Movement
-        const speed = input.sprint ? GAME.PLAYER_SPEED * GAME.SPRINT_MULTIPLIER : GAME.PLAYER_SPEED;
+        // Movement (Haste power-up multiplies base speed)
+        const hasteMultiplier = player.powerUpData?.speedMultiplier ?? 1;
+        const speed = (input.sprint ? GAME.PLAYER_SPEED * GAME.SPRINT_MULTIPLIER : GAME.PLAYER_SPEED) * hasteMultiplier;
         let dx = input.movement.x * speed;
         let dy = input.movement.y * speed;
 
         // ====== ANTI-CHEAT: Movement clamping ======
         // Max legitimate move: sprint speed along one axis (diagonal is normalized to magnitude 1)
-        const maxDelta = GAME.PLAYER_SPEED * GAME.SPRINT_MULTIPLIER * 1.1;
+        // Account for Haste power-up speed multiplier
+        const maxDelta = GAME.PLAYER_SPEED * GAME.SPRINT_MULTIPLIER * hasteMultiplier * 1.1;
         const movementMagnitude = Math.sqrt(dx * dx + dy * dy);
         if (movementMagnitude > maxDelta) {
             console.warn(`[Anti-Cheat] Excessive movement speed from player ${playerId}: ${movementMagnitude.toFixed(2)} > ${maxDelta.toFixed(2)}`);
@@ -305,6 +308,25 @@ export class GameService {
     }
 
     // ============================================================================
+    // POWER-UP HELPERS
+    // ============================================================================
+
+    /**
+     * Vampiric: heal killer by 15% of max HP on kill.
+     * Max HP is 2 — 15% rounds to restoring 1 HP if below max, or granting armor if at full HP.
+     */
+    private applyVampiricHeal(killer: PlayerState): void {
+        if (!killer.powerUpData || killer.powerUpData.healOnKill <= 0) return;
+        // healOnKill fraction applied to max HP (2): 0.15 × 2 = 0.3 → round up to 1 heal
+        if (killer.hp < 2) {
+            killer.hp = Math.min(2, killer.hp + 1);
+        } else if (!killer.hasArmor) {
+            // At full HP: grant armor as bonus
+            killer.hasArmor = true;
+        }
+    }
+
+    // ============================================================================
     // PROJECTILES
     // ============================================================================
 
@@ -313,6 +335,11 @@ export class GameService {
         const isGrenade = player.weapon.type === 'grenade_launcher';
         const speed = isGrenade ? GAME.PROJECTILE_SPEED * 0.6 : GAME.PROJECTILE_SPEED;
 
+        // Fury power-up: +15% damage for first 30s of each round
+        const baseDamage = isGrenade ? DAMAGE.GRENADE : DAMAGE.GUN;
+        const furyActive = player.powerUpData && player.powerUpData.furyEndsAt > Date.now();
+        const damageMultiplier = furyActive ? player.powerUpData!.damageMultiplier : 1;
+
         const projectile: Projectile = {
             id: uuidv4(),
             ownerId: player.id,
@@ -320,7 +347,7 @@ export class GameService {
             y: player.y,
             velocityX: Math.cos(fireAngle) * speed,
             velocityY: Math.sin(fireAngle) * speed,
-            damage: isGrenade ? DAMAGE.GRENADE : DAMAGE.GUN,
+            damage: baseDamage * damageMultiplier,
             createdAt: Date.now(),
             explosionRadius: isGrenade ? 64 : undefined,
         };
@@ -362,7 +389,11 @@ export class GameService {
                 });
 
                 if (result.died) {
-                    if (attacker) attacker.kills++;
+                    if (attacker) {
+                        attacker.kills++;
+                        // Vampiric: heal killer on kill
+                        this.applyVampiricHeal(attacker);
+                    }
                     this.playerService.makeSpectator(target);
                     game.currentRound.alivePlayers = game.currentRound.alivePlayers.filter((id) => id !== targetId);
 
@@ -495,7 +526,11 @@ export class GameService {
                     });
 
                     if (result.died) {
-                        if (attacker) attacker.kills++;
+                        if (attacker) {
+                            attacker.kills++;
+                            // Vampiric: heal killer on kill
+                            this.applyVampiricHeal(attacker);
+                        }
                         this.playerService.makeSpectator(target);
                         game.currentRound.alivePlayers = game.currentRound.alivePlayers.filter((id) => id !== targetId);
 
@@ -586,6 +621,8 @@ export class GameService {
 
                     if (died) {
                         attacker.kills++;
+                        // Vampiric: heal killer on kill
+                        this.applyVampiricHeal(attacker);
                         this.playerService.makeSpectator(target);
                         game.currentRound.alivePlayers = game.currentRound.alivePlayers.filter((id) => id !== targetId);
 
@@ -657,6 +694,11 @@ export class GameService {
 
         if (accessiblePoints.length < 2) return;
 
+        // Lucky power-up: if any alive player has lootMultiplier > 1, increase spawn rates
+        const hasLucky = Array.from(game.players.values()).some(
+            (p) => p.isAlive && (p.powerUpData?.lootMultiplier ?? 1) > 1
+        );
+
         // Spawn one health and one armor
         const shuffled = [...accessiblePoints].sort(() => Math.random() - 0.5);
 
@@ -689,8 +731,32 @@ export class GameService {
             announcement: '🛡️ Armor spawned!',
         });
 
-        // ~20% chance to spawn grenade launcher at 3rd spawn point
-        if (shuffled.length >= 3 && Math.random() < 0.2) {
+        // Lucky: spawn an extra health + armor pair
+        if (hasLucky && shuffled.length >= 4) {
+            const bonusHealth: MapItem = {
+                id: uuidv4(),
+                type: 'health',
+                x: shuffled[2].x * GAME.TILE_SIZE + GAME.TILE_SIZE / 2,
+                y: shuffled[2].y * GAME.TILE_SIZE + GAME.TILE_SIZE / 2,
+                isCollected: false,
+                spawnedAt: Date.now(),
+            };
+            const bonusArmor: MapItem = {
+                id: uuidv4(),
+                type: 'armor',
+                x: shuffled[3].x * GAME.TILE_SIZE + GAME.TILE_SIZE / 2,
+                y: shuffled[3].y * GAME.TILE_SIZE + GAME.TILE_SIZE / 2,
+                isCollected: false,
+                spawnedAt: Date.now(),
+            };
+            game.items.push(bonusHealth, bonusArmor);
+            this.onItemSpawned?.(game.matchId, { item: bonusHealth, announcement: '💊 Health pack dropped!' });
+            this.onItemSpawned?.(game.matchId, { item: bonusArmor, announcement: '🛡️ Armor spawned!' });
+        }
+
+        // ~20% chance to spawn grenade launcher at 3rd spawn point (bumped to 40% with Lucky)
+        const grenadeChance = hasLucky ? 0.4 : 0.2;
+        if (shuffled.length >= 3 && Math.random() < grenadeChance) {
             const grenadeItem: MapItem = {
                 id: uuidv4(),
                 type: 'grenade_launcher',

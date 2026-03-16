@@ -70,9 +70,10 @@ app.post('/api/lobbies', async (req, res) => {
         if (!user) {
             return res.status(401).json({ error: 'Not authenticated' });
         }
-        // Fetch character/gender from auth service profile
+        // Fetch character/gender/powerUp from auth service profile
         let selectedCharacter: string | undefined;
         let selectedGender: 'male' | 'female' | undefined;
+        let selectedPowerUp: string | null = null;
         const cookie = req.headers.cookie;
         if (cookie) {
             try {
@@ -84,6 +85,7 @@ app.post('/api/lobbies', async (req, res) => {
                     if (profile) {
                         selectedCharacter = profile.selectedCharacter || profile.selected_character;
                         selectedGender = profile.selectedGender || profile.selected_gender;
+                        selectedPowerUp = profile.equippedPowerUp || profile.equipped_power_up || null;
                     }
                 }
             } catch {
@@ -96,6 +98,7 @@ app.post('/api/lobbies', async (req, res) => {
             username: user.username,
             selectedCharacter,
             selectedGender,
+            selectedPowerUp,
             settings: req.body.settings,
         });
         res.status(201).json(lobby);

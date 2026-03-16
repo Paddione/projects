@@ -11,6 +11,7 @@ interface CreateLobbyRequest {
     selectedCharacter?: string;
     selectedGender?: 'male' | 'female';
     characterLevel?: number;
+    selectedPowerUp?: string | null;
     settings?: Partial<ArenaLobbySettings>;
 }
 
@@ -83,6 +84,7 @@ export class LobbyService {
             isHost: true,
             isConnected: true,
             joinedAt: new Date(),
+            powerUp: request.selectedPowerUp ?? null,
         };
 
         const result = await this.db.query(

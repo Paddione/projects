@@ -130,9 +130,10 @@ export class SocketService {
                     // Use authenticated identity, not client-supplied
                     const playerId = String(user.userId);
 
-                    // Fetch character/gender from auth service profile
+                    // Fetch character/gender/powerUp from auth service profile
                     let character = data.player?.character || 'student';
                     let gender: 'male' | 'female' = 'male';
+                    let powerUp: string | null = null;
                     if (socket.data.cookie) {
                         try {
                             const profileRes = await authFetch('/api/profile', {
@@ -143,6 +144,7 @@ export class SocketService {
                                 if (profile) {
                                     character = profile.selectedCharacter || profile.selected_character || character;
                                     gender = profile.selectedGender || profile.selected_gender || 'male';
+                                    powerUp = profile.equippedPowerUp || profile.equipped_power_up || null;
                                 }
                             }
                         } catch {
@@ -160,6 +162,7 @@ export class SocketService {
                             characterLevel: data.player?.characterLevel || 1,
                             isReady: false,
                             isConnected: true,
+                            powerUp,
                         },
                     });
 

@@ -1,4 +1,5 @@
 import type { WeaponState } from './weapon.js';
+import type { PowerUpData } from '../config/powerUps.js';
 
 // ============================================================================
 // Core Game Types for Arena
@@ -32,6 +33,8 @@ export interface PlayerState {
     activeWeaponIndex: number;  // index into weapons array
     lastShotTime: number;
     pose: string;
+    powerUp: string | null;
+    powerUpData: PowerUpData | null;
 }
 
 export interface PlayerInput {
@@ -206,6 +209,7 @@ export interface ArenaPlayer {
     isHost: boolean;
     isConnected: boolean;
     joinedAt: Date;
+    powerUp?: string | null;
 }
 
 export interface ArenaLobby {
