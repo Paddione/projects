@@ -16,3 +16,5 @@ resources:
   - deployment.yaml
   - service.yaml
   - ingressroute.yaml
+  - gpu-waker-deployment.yaml
+  - gpu-waker-scaledobject.yaml

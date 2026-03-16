@@ -264,6 +264,8 @@ profiles:
           context: ..
           docker:
             dockerfile: Assetgenerator/Dockerfile
+        - image: registry.korczewski.de/korczewski/gpu-waker
+          context: ../Assetgenerator/waker
     manifests:
       kustomize:
         paths:

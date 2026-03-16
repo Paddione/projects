@@ -48,6 +48,12 @@ if [ "$MANIFESTS_ONLY" = false ]; then
 
     log_info "Pushing assetgenerator..."
     docker push "$REGISTRY/assetgenerator:latest"
+
+    log_info "Building gpu-waker..."
+    docker build -t "$REGISTRY/gpu-waker:latest" -f "$PROJECT_ROOT/Assetgenerator/waker/Dockerfile" "$PROJECT_ROOT/Assetgenerator/waker"
+
+    log_info "Pushing gpu-waker..."
+    docker push "$REGISTRY/gpu-waker:latest"
 fi
 
 # Apply manifests
