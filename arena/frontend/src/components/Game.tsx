@@ -9,6 +9,8 @@ import { getSocket } from '../services/apiService';
 import { AssetService, type CharacterAnimation } from '../services/AssetService';
 import { SoundService } from '../services/SoundService';
 import LoadingScreen from './LoadingScreen';
+import EmoteWheel, { EMOTE_ICONS } from './EmoteWheel';
+import { getKeybinds } from './KeybindSettings';
 
 const TILE_SIZE = 32;
 const TARGET_TILES_VISIBLE = 22; // Design target: map height in tiles
@@ -72,6 +74,9 @@ export default function Game() {
     const itemSpritesRef = useRef<Map<string, AnimatedSprite | Sprite>>(new Map());
     const footstepTimerRef = useRef(0);
 
+    // Active emote bubbles: playerId -> { emoteId, expiresAt }
+    const activeEmotesRef = useRef<Map<string, { emoteId: string; expiresAt: number }>>(new Map());
+
     const [assetsLoaded, setAssetsLoaded] = useState(false);
 
     const [isMuted, setIsMuted] = useState(false);
@@ -117,6 +122,15 @@ export default function Game() {
             weaponCycleRef.current = 1;
         }
     }, []);
+
+    // Emote hotkey handler — separate so it has access to playerId + socket
+    const handleEmoteHotkey = useCallback((emoteId: string) => {
+        socket.emit('emote', { emoteId });
+        // Show locally immediately (don't wait for server roundtrip)
+        if (playerId) {
+            activeEmotesRef.current.set(playerId, { emoteId, expiresAt: Date.now() + 2000 });
+        }
+    }, [socket, playerId]);
 
     const handleKeyUp = useCallback((e: KeyboardEvent) => {
         keysRef.current.delete(e.key.toLowerCase());
@@ -369,6 +383,9 @@ export default function Game() {
             labelLayer.removeChildren();
             renderPlayers(playerLayer, labelLayer, state, me);
             renderEnemyNPCs(playerLayer, labelLayer, state);
+
+            // ---- EMOTE BUBBLES ----
+            renderEmoteBubbles(labelLayer, state);
 
             // ---- FOOTSTEP AUDIO ----
             handleFootstepAudio(me);
@@ -890,6 +907,49 @@ export default function Game() {
             container.addChild(hpG);
         }
 
+        function renderEmoteBubbles(container: Container, state: any) {
+            const now = Date.now();
+            const emotes = activeEmotesRef.current;
+
+            for (const player of state.players || []) {
+                if (!player.isAlive) continue;
+                const entry = emotes.get(player.id);
+                if (!entry || now > entry.expiresAt) {
+                    emotes.delete(player.id);
+                    continue;
+                }
+
+                const emoji = EMOTE_ICONS[entry.emoteId] ?? '?';
+                const bubbleX = player.x;
+                const bubbleY = player.y - 44; // above the name label
+
+                // Bubble background
+                const bg = new Graphics();
+                bg.beginFill(0x1a1a2e, 0.88);
+                bg.lineStyle(1.5, 0x6366f1, 0.85);
+                bg.drawRoundedRect(bubbleX - 18, bubbleY - 14, 36, 26, 8);
+                bg.endFill();
+                // Speech tail
+                bg.beginFill(0x1a1a2e, 0.88);
+                bg.lineStyle(0);
+                bg.moveTo(bubbleX - 5, bubbleY + 12);
+                bg.lineTo(bubbleX + 5, bubbleY + 12);
+                bg.lineTo(bubbleX, bubbleY + 18);
+                bg.closePath();
+                bg.endFill();
+                container.addChild(bg);
+
+                // Emoji text
+                const emojiText = new Text(emoji, new TextStyle({
+                    fontSize: 14,
+                    fontFamily: 'Apple Color Emoji, Segoe UI Emoji, Noto Color Emoji, sans-serif',
+                }));
+                emojiText.anchor.set(0.5);
+                emojiText.position.set(bubbleX, bubbleY);
+                container.addChild(emojiText);
+            }
+        }
+
         function handleFootstepAudio(me: any) {
             const isMoving = me.lastMoveDirection &&
                 (me.lastMoveDirection.dx !== 0 || me.lastMoveDirection.dy !== 0);
@@ -1047,6 +1107,13 @@ export default function Game() {
             setSpectatedPlayer(data.targetPlayerId);
         });
 
+        socket.on('player-emote', (data: { playerId: string; emoteId: string }) => {
+            activeEmotesRef.current.set(data.playerId, {
+                emoteId: data.emoteId,
+                expiresAt: Date.now() + 2000,
+            });
+        });
+
         return () => {
             socket.off('game-state');
             socket.off('player-killed');
@@ -1058,8 +1125,38 @@ export default function Game() {
             socket.off('zone-shrink');
             socket.off('match-end');
             socket.off('spectate-start');
+            socket.off('player-emote');
         };
     }, [playerId]);
+
+    // ============================================================================
+    // EMOTE HOTKEYS (1-4 slots)
+    // ============================================================================
+
+    // Default equipped emote slots — in future, fetch from auth profile
+    const equippedEmotes: [string, string, string, string] = [
+        'emote_wave', 'emote_gg', 'emote_thumbsup', 'emote_clap',
+    ];
+
+    useEffect(() => {
+        const handleEmoteKey = (e: KeyboardEvent) => {
+            // Ignore if typing in an input or emote wheel is already handling it
+            if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+            const binds = getKeybinds();
+            const key = e.key.toLowerCase();
+            if (key === binds.emote1 && equippedEmotes[0]) {
+                handleEmoteHotkey(equippedEmotes[0]);
+            } else if (key === binds.emote2 && equippedEmotes[1]) {
+                handleEmoteHotkey(equippedEmotes[1]);
+            } else if (key === binds.emote3 && equippedEmotes[2]) {
+                handleEmoteHotkey(equippedEmotes[2]);
+            } else if (key === binds.emote4 && equippedEmotes[3]) {
+                handleEmoteHotkey(equippedEmotes[3]);
+            }
+        };
+        window.addEventListener('keydown', handleEmoteKey);
+        return () => window.removeEventListener('keydown', handleEmoteKey);
+    }, [handleEmoteHotkey]);
 
     // ============================================================================
     // Detect shooting for SFX
@@ -1093,6 +1190,12 @@ export default function Game() {
         <div style={{ width: '100vw', height: '100vh', overflow: 'hidden', cursor: isTouchDevice ? 'default' : 'crosshair' }}>
             {/* PixiJS Canvas */}
             <div ref={canvasRef} style={{ width: '100%', height: '100%' }} />
+
+            {/* Emote Wheel overlay */}
+            <EmoteWheel
+                equippedEmotes={equippedEmotes}
+                onEmote={handleEmoteHotkey}
+            />
 
             {/* HUD Overlay */}
             <div className="hud">

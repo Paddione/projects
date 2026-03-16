@@ -328,6 +328,26 @@ export class SocketService {
                 socket.emit('spectate-start', { targetPlayerId: data.targetPlayerId });
             });
 
+            socket.on('emote', (data: { emoteId: string }) => {
+                const user = this.requireAuth(socket, 'emote');
+                if (!user) return;
+
+                const VALID_EMOTES = new Set([
+                    'emote_wave', 'emote_gg', 'emote_thumbsup', 'emote_clap',
+                    'emote_shrug', 'emote_taunt', 'emote_dance', 'emote_facepalm',
+                ]);
+                if (!VALID_EMOTES.has(data.emoteId)) return;
+
+                const playerId = String(user.userId);
+                const playerInfo = this.connectedPlayers.get(socket.id);
+                if (playerInfo?.matchId) {
+                    // Broadcast to all players in the match room
+                    socket.to(`match:${playerInfo.matchId}`).emit('player-emote', { playerId, emoteId: data.emoteId });
+                } else if (playerInfo?.lobbyCode) {
+                    socket.to(`lobby:${playerInfo.lobbyCode}`).emit('player-emote', { playerId, emoteId: data.emoteId });
+                }
+            });
+
             socket.on('ping', () => {
                 socket.emit('pong' as any);
             });

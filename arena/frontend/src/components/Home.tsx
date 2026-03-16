@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { api } from '../services/apiService';
 import { useGameStore } from '../stores/gameStore';
 import { useAuthStore } from '../stores/authStore';
+import KeybindSettings from './KeybindSettings';
 
 export default function Home() {
     const navigate = useNavigate();
@@ -14,6 +15,7 @@ export default function Home() {
     const [isLoading, setIsLoading] = useState(false);
     const [lobbies, setLobbies] = useState<any[]>([]);
     const [loadingLobbies, setLoadingLobbies] = useState(false);
+    const [keybindOpen, setKeybindOpen] = useState(false);
 
     const handleCreate = async () => {
         setIsLoading(true);
@@ -133,6 +135,14 @@ export default function Home() {
                     Loadout &amp; Store
                 </button>
 
+                <button
+                    className="btn btn-ghost"
+                    onClick={() => setKeybindOpen(true)}
+                    style={{ width: '100%' }}
+                >
+                    Keybind Settings
+                </button>
+
                 {/* Open Lobbies Section */}
                 <div style={{
                     marginTop: 'var(--space-lg)',
@@ -218,6 +228,8 @@ export default function Home() {
                     )}
                 </div>
             </div>
+
+            <KeybindSettings isOpen={keybindOpen} onClose={() => setKeybindOpen(false)} />
         </div>
     );
 }
