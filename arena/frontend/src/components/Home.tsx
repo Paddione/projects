@@ -125,6 +125,14 @@ export default function Home() {
                     View Leaderboard
                 </button>
 
+                <button
+                    className="btn btn-ghost"
+                    onClick={() => navigate('/loadout')}
+                    style={{ width: '100%' }}
+                >
+                    Loadout &amp; Store
+                </button>
+
                 {/* Open Lobbies Section */}
                 <div style={{
                     marginTop: 'var(--space-lg)',
