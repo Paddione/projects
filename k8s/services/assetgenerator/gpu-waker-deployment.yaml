@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gpu-waker
+  namespace: korczewski-services
+spec:
+  replicas: 0  # KEDA manages this
+  selector:
+    matchLabels:
+      app: gpu-waker
+  template:
+    metadata:
+      labels:
+        app: gpu-waker
+    spec:
+      nodeSelector:
+        kubernetes.io/arch: amd64
+      containers:
+        - name: waker
+          image: registry.local:5000/korczewski/gpu-waker:latest
+          imagePullPolicy: Always
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              ssh -o StrictHostKeyChecking=no -i /ssh/id_ed25519 \
+                patrick@10.10.0.3 \
+                "systemctl --user start gpu-worker" &&
+              echo "Worker start signal sent, sleeping until scale-down..." &&
+              sleep infinity
+          resources:
+            requests:
+              memory: 16Mi
+              cpu: 10m
+            limits:
+              memory: 32Mi
+              cpu: 50m
+          volumeMounts:
+            - name: ssh-key
+              mountPath: /ssh
+              readOnly: true
+      volumes:
+        - name: ssh-key
+          secret:
+            secretName: gpu-waker-ssh-key
+            defaultMode: 0400
