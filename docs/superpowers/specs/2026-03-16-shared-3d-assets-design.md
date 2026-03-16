@@ -43,8 +43,7 @@ Assetgenerator Pipeline (extended)
                      ↓
          shared-3d/ (npm local package)
          ├── loader.ts        — GLB + Draco loading, LRU cache
-         ├── animator.ts      — AnimationMixer wrapper, clip management
-         ├── emotes.ts        — Emote system (trigger, blend, queue)
+         ├── animator.ts      — AnimationMixer wrapper, clip management, emote queue/blend
          ├── cameras.ts       — Isometric, presentation, orbit presets
          ├── lighting.ts      — Arena/quiz/lobby lighting rigs
          └── types.ts         — Shared interfaces
@@ -64,24 +63,35 @@ shared-infrastructure/shared/3d/
 ├── src/
 │   ├── index.ts          # Public API
 │   ├── loader.ts         # ModelLoader (GLTFLoader + DRACOLoader + cache)
-│   ├── animator.ts       # AnimationController (mixer, clip mgmt, blending)
-│   ├── emotes.ts         # EmoteSystem (trigger by name, queue, blend)
+│   ├── animator.ts       # AnimationController (mixer, clip mgmt, blending, emote queue)
 │   ├── cameras.ts        # createIsometricCamera, createPresentationCamera, createOrbitCamera
 │   ├── lighting.ts       # createArenaLighting, createQuizLighting, createLobbyLighting
-│   ├── characters.ts     # CharacterManager (load, cache, clone for multiplayer)
+│   ├── characters.ts     # CharacterManager (see Cloning Strategy below)
 │   └── types.ts          # SharedCharacter, AnimationClip, EmoteDefinition, etc.
 ├── assets/
 │   └── animations/       # Shared animation clips (FBX→GLB converted from Mixamo)
-└── dist/                 # Built output
+└── dist/                 # Built output (tsup, ESM + CJS)
 ```
+
+**Build tooling:** `tsup` bundles the package to `dist/` (ESM + CJS). Consumers import from the built output. The `prebuild` script in consumer `package.json` triggers the shared-3d build (same pattern as the existing `error-handling` package in `shared/l2p/`).
 
 **Integration pattern** (same as existing L2P shared modules):
 ```json
 // arena/frontend/package.json
-{ "shared-3d": "file:../../shared-infrastructure/shared/3d" }
+{
+  "shared-3d": "file:../../shared-infrastructure/shared/3d",
+  "scripts": {
+    "prebuild": "npm --prefix ../../shared-infrastructure/shared/3d run build"
+  }
+}
 
 // l2p/frontend/package.json
-{ "shared-3d": "file:../../shared-infrastructure/shared/3d" }
+{
+  "shared-3d": "file:../../shared-infrastructure/shared/3d",
+  "scripts": {
+    "prebuild": "npm --prefix ../../shared-infrastructure/shared/3d run build"
+  }
+}
 ```
 
 ## Component: Assetgenerator Pipeline Extension
@@ -117,26 +127,41 @@ Standard clips per character (mapped to both Arena and L2P needs):
 | `clap` | Emote | Emote (perk cosmetic) | 1.5s | No |
 | `thumbsup` | Emote | Emote (perk cosmetic) | 1.2s | No |
 
-### Mixamo Integration in Assetgenerator
+### Rigging Integration in Assetgenerator
 
 New adapter: `adapters/mixamo.js`
-- Upload GLB mesh to Mixamo auto-rigger API
-- Download rigged FBX
-- Apply animation clips by Mixamo animation IDs
-- Convert FBX → GLB via `gltf-transform` CLI
-- Optimize: Draco mesh compression, quantize animations
-- Store results in `/mnt/pve3a/visual-library/rigged/` and `/animations/`
+
+**Integration method:** Playwright browser automation against the Mixamo web UI (mixamo.com). Mixamo's public REST API was retired, but the web interface remains free and functional. The adapter automates: upload FBX/OBJ → auto-rig → select animations → download FBX.
+
+**Fallback:** If Mixamo automation breaks (UI changes), fall back to Blender Rigify addon with a Python script (`scripts/auto_rig.py`) that adds a humanoid armature and auto-weights. This produces lower-quality rigs but keeps the pipeline unblocked.
+
+**Pipeline integration:** Rig and Animate are new job types dispatched via the existing worker-manager WebSocket queue. The GPU worker spawns `blender --background --python scripts/auto_rig.py` (for Rigify fallback) or `node adapters/mixamo.js` (for Mixamo automation). The Assetgenerator server exposes them as:
+- `POST /api/visual-library/:id/generate/rig` — dispatches rig job
+- `POST /api/visual-library/:id/generate/animate` — dispatches animation job
+
+**Workflow:**
+1. Upload static GLB to Mixamo → receive rigged FBX
+2. Apply animation clips by Mixamo animation IDs → download FBX per clip
+3. Convert FBX → GLB via `gltf-transform` CLI
+4. Optimize: Draco mesh compression, quantize animations
+5. Store results in `/mnt/pve3a/visual-library/rigged/` and `/animations/`
 
 ### visual-config.json Changes
+
+Merged with existing fields (preserving `directions`, `defaultPoses`, `size`, `conceptResolution`, `has3D`):
 
 ```json
 {
   "categories": {
     "characters": {
+      "directions": 8,
+      "defaultPoses": ["stand", "gun", "machine", "reload", "hold", "silencer"],
+      "size": 64,
+      "conceptResolution": 1024,
       "has3D": true,
-      "hasRig": true,          // NEW
-      "hasAnimations": true,   // NEW
-      "animationClips": [      // NEW
+      "hasRig": true,
+      "hasAnimations": true,
+      "animationClips": [
         "idle", "walk", "run", "shoot", "melee", "throw",
         "hit_react", "death", "victory", "defeat",
         "thinking", "celebrate", "wave", "clap", "thumbsup"
@@ -235,16 +260,39 @@ Scene
 - Character poly budget: ~5K tris each (×20 players = 100K)
 - Terrain: single mesh or instanced (1 draw call)
 
+### Coordinate Constants Migration
+
+Changing from `1 tile = 32px` to `1 tile = 1 unit` requires updating frontend constants. The server is unaffected (sends abstract coordinates), but the frontend has hardcoded pixel values:
+
+| Constant | Current (PixiJS) | New (Three.js) | Location |
+|----------|-----------------|----------------|----------|
+| `TILE_SIZE` | 32 (px) | 1.0 (unit) | Game.tsx → GameRenderer |
+| Player sprite size | 28×28 px | Model scale ~0.8 units | renderPlayers → PlayerGroup |
+| Item size | 20×20 px | Model scale ~0.4 units | renderItems → ItemGroup |
+| Joystick radius | 50px (screen) | Unchanged (screen-space) | Input handler |
+| Camera frustum | `22 * 32` px | 22 units | Camera setup |
+
+A conversion constant `WORLD_SCALE = 1/32` bridges server coords to Three.js units: `threeX = serverX * WORLD_SCALE`.
+
 ### Migration Path (PixiJS → Three.js)
 
-The game loop structure stays identical — only the rendering layer changes:
+This is a **big-bang renderer swap**, not an incremental migration. PixiJS (2D canvas) and Three.js (WebGL) cannot share the same canvas, and running both simultaneously doubles GPU memory. The migration strategy:
 
-1. `GameRenderer` class replaces PixiJS `Application`
-2. `renderPlayers()`, `renderMap()`, `renderProjectiles()` etc. become Three.js equivalents
-3. Socket event handling unchanged
-4. Input handling unchanged (keyboard/touch → socket emit)
-5. HUD remains React DOM (HP, score, minimap) overlaid on Three.js canvas
-6. `AssetService` replaced by `shared-3d` `ModelLoader` + `AnimationController`
+1. **New `GameRenderer3D` class** built alongside existing `Game.tsx` (separate file)
+2. **Feature flag** (`use3DRenderer` in gameStore) switches between `<Game />` and `<Game3D />`
+3. **Parallel development**: 3D renderer built and tested while 2D remains in production
+4. **Cutover**: once 3D renderer passes all 91 existing frontend tests + new visual tests, flip the flag and remove PixiJS
+5. **Rollback**: flag can revert to 2D for one release cycle, then PixiJS code is deleted
+
+**Layer-by-layer build order within the 3D renderer:**
+1. Terrain + camera (playable with placeholder cubes)
+2. Player models + animation
+3. Cover objects + items
+4. Projectiles + VFX
+5. Zone overlay + labels (CSS2DRenderer)
+6. HUD integration (React DOM overlay)
+
+Each layer is testable independently. Socket event handling and input handling are unchanged — they feed data to whichever renderer is active.
 
 **Fallback:** If WebGL2 unavailable, show a message (no 2D fallback — modern browsers all support WebGL2).
 
@@ -371,6 +419,17 @@ L2P uses R3F (`@react-three/fiber` + `@react-three/drei`) for declarative 3D sce
 - Character name + level badge overlay
 - Background: gradient matching character color
 
+### Canvas Strategy: One Canvas Per Page
+
+L2P uses **one R3F `<Canvas>` per page** (not one per scene or one global canvas):
+- **GamePage**: single canvas for the quiz character scene
+- **LobbyPage**: single canvas for the lobby room scene
+- **ResultsPage**: single canvas for the podium scene
+
+Only one page is mounted at a time (React Router), so there's never more than one active WebGL context. Scene switching within a page (e.g., quiz → duel in GamePage) swaps the scene content inside the same canvas, not the canvas itself.
+
+This avoids the complexity of a global canvas with portal architecture while keeping GPU usage to one context.
+
 ### Mobile Optimization
 
 L2P 3D scenes degrade gracefully on mobile:
@@ -390,8 +449,11 @@ Characters and animations served as static files from the Assetgenerator server 
 - Arena/L2P dev servers proxy `/assets/3d/*` to file system at `/mnt/pve3a/visual-library/`
 
 **Production (k8s):**
-- Static file server pod with SMB-CSI volume mount
-- URL pattern: `https://assets.korczewski.de/3d/characters/{id}.glb`
+- 3D assets served from the **existing service frontends** (Arena and L2P), not a new hostname
+- Arena: `https://arena.korczewski.de/assets/3d/{id}.glb` — served by nginx from a SMB-CSI volume mount
+- L2P: `https://l2p.korczewski.de/assets/3d/{id}.glb` — same pattern
+- Both point to the same underlying NAS path (`/mnt/pve3a/visual-library/`)
+- No new IngressRoute, TLS cert, or service needed — just a `location /assets/3d/` block in each nginx config
 - CDN-friendly: GLB files have long cache TTL (content-hash in filename)
 - Draco-compressed: ~500KB-1MB per character (down from 2-4MB)
 
@@ -418,12 +480,29 @@ New manifest format for 3D assets (extends existing `arena/assets/manifest.json`
 
 Animation clips can be **shared across characters** (Mixamo animations retarget to any humanoid skeleton). Only character-specific clips (death, victory with unique flair) need per-character files.
 
+### Cloning Strategy (CharacterManager)
+
+When multiple players share the same character type (e.g., 5 warriors in a 20-player Arena match), the `CharacterManager` uses `SkeletonUtils.clone()` from Three.js to create independent instances that share geometry/material GPU buffers but have separate skeletons and AnimationMixers:
+
+```
+CharacterManager.getCharacter(characterId: string): CharacterInstance
+  → If model not loaded: load GLB, cache geometry + material
+  → Clone via SkeletonUtils.clone(cachedModel)
+  → Create new AnimationMixer for the clone
+  → Return { mesh, mixer, playAnimation(name) }
+
+CharacterManager.releaseCharacter(instance): void
+  → Dispose mixer, remove from scene
+  → Geometry/material stay cached (shared)
+```
+
+**LRU cache** holds max 20 unique model geometries (not instances). With 4-5 character types and 20 players, all geometries fit in cache. Instances (clones) are tracked separately and disposed when players leave.
+
 ### Preloading Strategy
 
 1. **Critical path** (loaded before scene renders): character model + idle animation
 2. **Eager** (loaded in background after scene renders): walk, run, shoot, melee
 3. **Lazy** (loaded on demand): emotes, death, victory, hit_react
-4. **LRU cache**: max 20 models in memory, evict least-recently-used
 
 ## Testing Strategy
 
@@ -446,19 +525,19 @@ Animation clips can be **shared across characters** (Mixamo animations retarget 
 
 | Phase | Deliverable | Depends On | Estimate |
 |-------|------------|------------|----------|
-| 1 | `shared-3d` package (loader, animator, cameras, lighting) | — | Foundation |
-| 2 | Assetgenerator: Mixamo rig + animate pipeline | Phase 1 (for testing output) | Pipeline |
-| 3 | Arena: 3D isometric renderer | Phase 1 + 2 (needs animated models) | Largest phase |
-| 4 | L2P: 3D character scenes | Phase 1 + 2 (needs animated models) | |
-| 5 | Shared character selector | Phase 1-4 (polish, shared UI) | Final |
+| 1 | `shared-3d` package (loader, animator, cameras, lighting) | — | Small (foundation library) |
+| 2 | Assetgenerator: Mixamo rig + animate pipeline | Phase 1 (for testing output) | Medium (new adapter + scripts) |
+| 3 | Arena: 3D isometric renderer | Phase 1 + 2 (needs animated models) | Largest (full renderer rewrite) |
+| 4 | L2P: 3D character scenes (quiz, lobby, results, duel) | Phase 1 + 2 (needs animated models) | Large (4 scene types) |
+| 5 | Shared character selector (Arena lobby + L2P profile) | Phase 1-4 (polish, shared UI) | Small (single component) |
 
 Each phase is independently deployable. Phase 3 and 4 can run in parallel once Phase 2 produces animated models.
 
 ## Dependencies (New npm Packages)
 
 ### shared-3d
-- `three` (^0.170)
-- `three-stdlib` (GLTFLoader, DRACOLoader)
+- `three` (^0.170) — GLTFLoader, DRACOLoader imported from `three/addons/` (built-in, no extra package)
+- `tsup` (dev dependency, for building dist/)
 
 ### Arena Frontend (additions)
 - `three` (^0.170)
@@ -481,7 +560,7 @@ Each phase is independently deployable. Phase 3 and 4 can run in parallel once P
 | Mixamo auto-rig fails on stylized models | Animation pipeline blocked | Manual Blender rigging fallback script; test with 1 character first |
 | Arena 60fps not achievable with 20 3D players | Gameplay degradation | Aggressive LOD, instanced rendering, animation LOD (reduce update rate for distant players) |
 | GLB file sizes too large for mobile | Slow load times | Draco compression (~70% reduction), progressive loading (low-poly first), shared animation clips |
-| L2P mobile performance with multiple R3F canvases | Janky quiz experience | Single shared canvas with scene switching, disable 3D on <480px, requestAnimationFrame throttle |
+| L2P mobile performance | Janky quiz experience | One canvas per page (only one active at a time), disable 3D on <480px, halve animation update rate on mobile |
 | Three.js version conflicts between shared-3d and consumers | Build failures | Pin exact Three.js version in shared-3d, consumers use same version |
 
 ## Out of Scope
