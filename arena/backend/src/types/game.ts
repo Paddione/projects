@@ -156,6 +156,7 @@ export interface GameState {
     lastItemSpawnTick: number;
     npcs: NPC[];
     lastNPCSpawnTick: number;
+    escrowToken?: string; // set for private deathmatch matches with bet escrow
 }
 
 // -- NPC --
@@ -249,6 +250,9 @@ export interface ServerToClientEvents {
     'start-game-error': (data: { message: string }) => void;
     'spectate-start': (data: { targetPlayerId: string }) => void;
     'explosion': (data: { x: number; y: number; radius: number }) => void;
+    'private-match-joined': (data: { lobbyCode: string; escrowedXp: number; playerIds: string[] }) => void;
+    'private-match-error': (data: { message: string }) => void;
+    'deathmatch-settled': (data: { winnerId: string; xpAwarded: number; respectAwarded: number; losers: string[] }) => void;
 }
 
 export interface ClientToServerEvents {
@@ -260,6 +264,7 @@ export interface ClientToServerEvents {
     'pickup-item': (data: { matchId: string; itemId: string }) => void;
     'spectate-player': (data: { matchId: string; targetPlayerId: string }) => void;
     'update-settings': (data: { lobbyCode: string; hostId: number; settings: Partial<ArenaLobbySettings> }) => void;
+    'join-private-match': (data: { token: string }) => void;
     'ping': () => void;
 }
 

@@ -12,7 +12,7 @@ import type {
     MatchResult,
 } from '../types/game.js';
 import { config } from '../config/index.js';
-import { authFetch } from '../config/authClient.js';
+import { authFetch, authFetchInternal } from '../config/authClient.js';
 
 interface AuthUser {
     userId: number;
@@ -35,6 +35,7 @@ export class SocketService {
     private connectedPlayers: Map<string, ConnectedPlayer> = new Map(); // socketId -> player info
     private playerToSocket: Map<string, string> = new Map(); // playerId -> socketId
     private inputCounts: Map<string, { count: number; windowStart: number }> = new Map(); // socketId -> input rate tracker
+    private privateMatchEscrows: Map<string, { token: string; expectedPlayerIds: string[]; escrowedXp: number }> = new Map(); // lobbyCode -> escrow info
     private readonly INPUT_LIMIT = 40; // max inputs per second
     private readonly RATE_WINDOW_MS = 1000;
 
@@ -107,6 +108,7 @@ export class SocketService {
             onZoneShrink: (matchId: string, data: unknown) => this.broadcastToMatch(matchId, 'zone-shrink', data),
             onCoverDestroyed: (matchId: string, data: unknown) => this.broadcastToMatch(matchId, 'cover-destroyed', data),
             onExplosion: (matchId: string, data: unknown) => this.broadcastToMatch(matchId, 'explosion', data),
+            onDeathmatchSettled: (matchId: string, data: unknown) => this.broadcastToMatch(matchId, 'deathmatch-settled', data),
         });
 
         this.setupEventHandlers();
@@ -353,6 +355,174 @@ export class SocketService {
 
             socket.on('ping', () => {
                 socket.emit('pong' as any);
+            });
+
+            // -- Private Match (cross-game deathmatch via escrow token) --
+
+            socket.on('join-private-match', async (data: { token: string }) => {
+                const user = this.requireAuth(socket, 'private-match');
+                if (!user) return;
+
+                try {
+                    const playerId = String(user.userId);
+                    const { token } = data;
+
+                    if (!token || typeof token !== 'string' || token.length < 8) {
+                        socket.emit('private-match-error', { message: 'Invalid match token' });
+                        return;
+                    }
+
+                    // Validate token with auth service escrow endpoint
+                    const escrowRes = await authFetchInternal(`/api/internal/match/escrow/${encodeURIComponent(token)}`);
+                    if (!escrowRes.ok) {
+                        const errBody = await escrowRes.json().catch(() => ({})) as Record<string, unknown>;
+                        socket.emit('private-match-error', { message: (errBody.error as string) || 'Invalid or expired match token' });
+                        return;
+                    }
+
+                    const escrow = await escrowRes.json() as { playerIds: string[]; escrowedXp: number; matchConfig?: Record<string, unknown>; status: string };
+
+                    if (escrow.status !== 'pending') {
+                        socket.emit('private-match-error', { message: 'Match has already been played or cancelled' });
+                        return;
+                    }
+
+                    if (!escrow.playerIds.includes(playerId)) {
+                        socket.emit('private-match-error', { message: 'You are not a participant in this match' });
+                        return;
+                    }
+
+                    // Use first 6 chars of token (uppercased) as lobby code
+                    const lobbyCode = token.substring(0, 6).toUpperCase().replace(/[^A-Z0-9]/g, 'X').padEnd(6, '0');
+
+                    // Store or retrieve escrow info for this lobby
+                    if (!this.privateMatchEscrows.has(lobbyCode)) {
+                        this.privateMatchEscrows.set(lobbyCode, {
+                            token,
+                            expectedPlayerIds: escrow.playerIds,
+                            escrowedXp: escrow.escrowedXp,
+                        });
+                    }
+
+                    // Join or create the private lobby
+                    let character = 'student';
+                    let gender: 'male' | 'female' = 'male';
+                    let powerUp: string | null = null;
+                    if (socket.data.cookie) {
+                        try {
+                            const profileRes = await authFetch('/api/profile', {
+                                headers: { cookie: socket.data.cookie },
+                            });
+                            if (profileRes.ok) {
+                                const profile = await profileRes.json();
+                                if (profile) {
+                                    character = profile.selectedCharacter || profile.selected_character || character;
+                                    gender = profile.selectedGender || profile.selected_gender || 'male';
+                                    powerUp = profile.equippedPowerUp || profile.equipped_power_up || null;
+                                }
+                            }
+                        } catch {
+                            // Use defaults
+                        }
+                    }
+
+                    let lobby = await this.lobbyService.getLobbyByCode(lobbyCode);
+
+                    if (!lobby) {
+                        // First player creates the lobby
+                        lobby = await this.lobbyService.createLobbyWithCode(lobbyCode, {
+                            hostId: user.userId,
+                            username: user.username,
+                            selectedCharacter: character,
+                            selectedGender: gender,
+                            characterLevel: 1,
+                            selectedPowerUp: powerUp,
+                            settings: {
+                                maxPlayers: escrow.playerIds.length as 2 | 3 | 4,
+                                bestOf: 1,
+                                shrinkingZone: false,
+                                itemSpawns: false,
+                                npcEnemies: 0,
+                            },
+                        });
+                    } else {
+                        // Subsequent players join the existing lobby
+                        lobby = await this.lobbyService.joinLobby({
+                            lobbyCode,
+                            player: {
+                                id: playerId,
+                                username: user.username,
+                                character,
+                                gender,
+                                characterLevel: 1,
+                                isReady: false,
+                                isConnected: true,
+                                powerUp,
+                            },
+                        });
+                    }
+
+                    this.connectedPlayers.set(socket.id, {
+                        socketId: socket.id,
+                        playerId,
+                        lobbyCode,
+                        matchId: null,
+                    });
+                    this.playerToSocket.set(playerId, socket.id);
+
+                    socket.join(`lobby:${lobbyCode}`);
+                    socket.emit('private-match-joined', {
+                        lobbyCode,
+                        escrowedXp: escrow.escrowedXp,
+                        playerIds: escrow.playerIds,
+                    });
+                    this.io.to(`lobby:${lobbyCode}`).emit('lobby-updated', lobby);
+
+                    // Auto-start when all expected players have joined
+                    const escrowInfo = this.privateMatchEscrows.get(lobbyCode)!;
+                    const joinedIds = lobby.players.map(p => p.id);
+                    const allJoined = escrowInfo.expectedPlayerIds.every(id => joinedIds.includes(id));
+
+                    if (allJoined) {
+                        // Mark all players ready and start
+                        const updatedPlayers = lobby.players.map(p => ({ ...p, isReady: true }));
+                        // Manually start the match (bypass host-only check)
+                        await this.lobbyService.updateLobbyStatus(lobbyCode, 'starting');
+
+                        const readyLobby = { ...lobby, players: updatedPlayers };
+                        const matchId = this.gameService.startMatch(readyLobby, escrowInfo.token);
+
+                        const sockets = await this.io.in(`lobby:${lobbyCode}`).fetchSockets();
+                        for (const s of sockets) {
+                            s.join(`match:${matchId}`);
+                            const pInfo = this.connectedPlayers.get(s.id);
+                            if (pInfo) pInfo.matchId = matchId;
+                        }
+
+                        await this.lobbyService.updateLobbyStatus(lobbyCode, 'playing');
+                        this.privateMatchEscrows.delete(lobbyCode);
+
+                        const gameState = this.gameService.getGameState(matchId);
+                        if (gameState) {
+                            const spawnPositions: Record<string, { x: number; y: number; corner: string }> = {};
+                            for (const [pId, pState] of gameState.players) {
+                                spawnPositions[pId] = { x: pState.x, y: pState.y, corner: 'assigned' };
+                            }
+
+                            this.io.to(`match:${matchId}`).emit('game-starting', { countdown: 3 });
+
+                            setTimeout(() => {
+                                this.io.to(`match:${matchId}`).emit('round-start', {
+                                    roundNumber: 1,
+                                    spawnPositions,
+                                });
+                            }, 3000);
+                        }
+                    }
+                } catch (error) {
+                    console.error('[PrivateMatch] Error:', error);
+                    socket.emit('private-match-error', { message: (error as Error).message });
+                }
             });
 
             // -- Disconnect --

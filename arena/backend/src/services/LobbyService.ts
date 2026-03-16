@@ -64,6 +64,44 @@ export class LobbyService {
     }
 
     /**
+     * Create a new lobby with a specific code (for private matches)
+     */
+    async createLobbyWithCode(code: string, request: CreateLobbyRequest): Promise<ArenaLobby> {
+        const settings: ArenaLobbySettings = {
+            ...DEFAULT_SETTINGS,
+            ...request.settings,
+        };
+
+        const hostPlayer: ArenaPlayer = {
+            id: String(request.hostId),
+            username: request.username,
+            character: request.selectedCharacter || 'student',
+            gender: request.selectedGender || 'male',
+            characterLevel: request.characterLevel || 1,
+            isReady: true,
+            isHost: true,
+            isConnected: true,
+            joinedAt: new Date(),
+            powerUp: request.selectedPowerUp ?? null,
+        };
+
+        const result = await this.db.query(
+            `INSERT INTO lobbies (code, auth_user_id, max_players, settings, players)
+       VALUES ($1, $2, $3, $4, $5)
+       ON CONFLICT (code) DO NOTHING
+       RETURNING *`,
+            [code, request.hostId, settings.maxPlayers, JSON.stringify(settings), JSON.stringify([hostPlayer])]
+        );
+
+        if (result.rowCount === 0) {
+            // Lobby already exists (race condition), fetch it
+            return (await this.findByCode(code))!;
+        }
+
+        return this.formatLobby(result.rows[0]);
+    }
+
+    /**
      * Create a new lobby
      */
     async createLobby(request: CreateLobbyRequest): Promise<ArenaLobby> {

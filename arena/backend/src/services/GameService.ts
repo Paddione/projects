@@ -23,6 +23,7 @@ import type { WeaponState } from '../types/weapon.js';
 import { WEAPON_STATS, MACHINE_GUN_PICKUP, GRENADE_LAUNCHER_PICKUP } from '../types/weapon.js';
 import { PlayerService } from './PlayerService.js';
 import { DatabaseService } from './DatabaseService.js';
+import { authFetchInternal } from '../config/authClient.js';
 
 export class GameService {
     private activeGames: Map<string, GameState> = new Map();
@@ -42,6 +43,7 @@ export class GameService {
     private onZoneShrink?: (matchId: string, data: { zone: ShrinkingZone }) => void;
     private onCoverDestroyed?: (matchId: string, data: { coverId: string }) => void;
     private onExplosion?: (matchId: string, data: { x: number; y: number; radius: number }) => void;
+    private onDeathmatchSettled?: (matchId: string, data: { winnerId: string; xpAwarded: number; respectAwarded: number; losers: string[] }) => void;
 
     constructor(tickRate = 20) {
         this.playerService = new PlayerService();
@@ -63,6 +65,7 @@ export class GameService {
         onZoneShrink: (matchId: string, data: { zone: ShrinkingZone }) => void;
         onCoverDestroyed: (matchId: string, data: { coverId: string }) => void;
         onExplosion: (matchId: string, data: { x: number; y: number; radius: number }) => void;
+        onDeathmatchSettled?: (matchId: string, data: { winnerId: string; xpAwarded: number; respectAwarded: number; losers: string[] }) => void;
     }): void {
         this.onStateUpdate = callbacks.onStateUpdate;
         this.onPlayerHit = callbacks.onPlayerHit;
@@ -74,12 +77,13 @@ export class GameService {
         this.onZoneShrink = callbacks.onZoneShrink;
         this.onCoverDestroyed = callbacks.onCoverDestroyed;
         this.onExplosion = callbacks.onExplosion;
+        this.onDeathmatchSettled = callbacks.onDeathmatchSettled;
     }
 
     /**
      * Start a new match from a lobby
      */
-    startMatch(lobby: ArenaLobby): string {
+    startMatch(lobby: ArenaLobby, escrowToken?: string): string {
         const matchId = uuidv4();
         const map = this.generateMap(lobby.settings);
         const players = new Map<string, PlayerState>();
@@ -125,6 +129,7 @@ export class GameService {
             lastItemSpawnTick: 0,
             npcs: [],
             lastNPCSpawnTick: 0,
+            escrowToken,
         };
 
         this.activeGames.set(matchId, gameState);
@@ -1429,6 +1434,30 @@ export class GameService {
         }
 
         this.onMatchEnd?.(game.matchId, { winnerId, results, dbMatchId });
+
+        // Settle escrow if this was a private deathmatch
+        if (game.escrowToken) {
+            try {
+                const settleRes = await authFetchInternal('/api/internal/match/settle', {
+                    method: 'POST',
+                    body: JSON.stringify({ token: game.escrowToken, winnerId }),
+                });
+                if (settleRes.ok) {
+                    const settlement = await settleRes.json();
+                    const loserIds = Array.from(game.players.keys()).filter(id => id !== winnerId);
+                    this.onDeathmatchSettled?.(game.matchId, {
+                        winnerId,
+                        xpAwarded: settlement.xpAwarded ?? 0,
+                        respectAwarded: settlement.respectAwarded ?? 50,
+                        losers: loserIds,
+                    });
+                } else {
+                    console.error(`[Escrow] Settlement failed for token ${game.escrowToken}: ${settleRes.status}`);
+                }
+            } catch (err) {
+                console.error('[Escrow] Settlement error:', err);
+            }
+        }
 
         // Clean up game state after a delay
         setTimeout(() => {

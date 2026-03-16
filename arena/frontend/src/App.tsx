@@ -7,6 +7,7 @@ import Game from './components/Game';
 import MatchResults from './components/MatchResults';
 import Leaderboard from './components/Leaderboard';
 import LoadoutScreen from './components/LoadoutScreen';
+import PrivateMatch from './components/PrivateMatch';
 import { HelpButton, HelpScreen } from './components/HelpScreen';
 
 export default function App() {
@@ -22,6 +23,7 @@ export default function App() {
                     <Route path="/results/:matchId" element={<MatchResults />} />
                     <Route path="/leaderboard" element={<Leaderboard />} />
                     <Route path="/loadout" element={<LoadoutScreen />} />
+                    <Route path="/match/:token" element={<PrivateMatch />} />
                 </Routes>
                 <HelpButton onClick={() => setHelpOpen(true)} />
                 <HelpScreen isOpen={helpOpen} onClose={() => setHelpOpen(false)} />
