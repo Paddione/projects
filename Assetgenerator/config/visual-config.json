@@ -7,7 +7,14 @@
       "defaultPoses": ["stand", "gun", "machine", "reload", "hold", "silencer"],
       "size": 64,
       "conceptResolution": 1024,
-      "has3D": true
+      "has3D": true,
+      "hasRig": true,
+      "hasAnimations": true,
+      "animationClips": [
+        "idle", "walk", "run", "shoot", "melee", "throw",
+        "hit_react", "death", "victory", "defeat",
+        "thinking", "celebrate", "wave", "clap", "thumbsup"
+      ]
     },
     "weapons": {
       "directions": 1,

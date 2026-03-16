@@ -8,6 +8,8 @@ import { avatarService } from '../services/avatarService'
 import { useLocalization } from '../hooks/useLocalization'
 import { DeathmatchModal, type DeathmatchOfferData } from '../components/DeathmatchModal'
 import { socketService, type SocketEvents } from '../services/socketService'
+import { CharacterCanvas } from '../components/3d/CharacterCanvas'
+import { PodiumScene } from '../components/3d/PodiumScene'
 
 // Component for animated score to experience conversion
 const AnimatedScoreConversion: React.FC<{
@@ -343,6 +345,15 @@ export const ResultsPage: React.FC = () => {
             character={winner.character}
             onAnimationComplete={handleAnimationComplete}
           />
+        </div>
+      )}
+
+      {/* 3D Podium Scene */}
+      {finalPlayers.length > 0 && (
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 'var(--spacing-xl)' }}>
+          <CharacterCanvas width={600} height={280}>
+            <PodiumScene winners={finalPlayers} />
+          </CharacterCanvas>
         </div>
       )}
 

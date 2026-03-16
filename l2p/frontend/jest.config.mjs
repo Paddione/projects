@@ -97,7 +97,11 @@ export default {
 		'^@frontend/(.*)$': '<rootDir>/src/$1',
 		'\\.(css|less|scss|sass)$': 'identity-obj-proxy',
 		'\\.module\\.(css|less|scss|sass)$': 'identity-obj-proxy',
-		'\\.(jpg|jpeg|png|gif|eot|otf|webp|svg|ttf|woff|woff2|mp4|webm|wav|mp3|m4a|aac|oga)$': '<rootDir>/src/__mocks__/fileMock.js'
+		'\\.(jpg|jpeg|png|gif|eot|otf|webp|svg|ttf|woff|woff2|mp4|webm|wav|mp3|m4a|aac|oga)$': '<rootDir>/src/__mocks__/fileMock.js',
+		'^shared-3d$': '<rootDir>/src/__mocks__/shared-3d.js',
+		'^@react-three/fiber$': '<rootDir>/src/__mocks__/@react-three/fiber.js',
+		'^@react-three/drei$': '<rootDir>/src/__mocks__/@react-three/drei.js',
+		'^three/addons/(.*)$': '<rootDir>/src/__mocks__/three-addons.js',
 	},
 	transform: {
     '^.+\\.tsx?$': ['ts-jest', {
@@ -107,7 +111,7 @@ export default {
 		'^.+\\.jsx?$': ['babel-jest']
 	},
 	transformIgnorePatterns: [
-		'node_modules/(?!(react-dropzone|react-router-dom|zustand|@testing-library)/)'
+		'node_modules/(?!(react-dropzone|react-router-dom|zustand|@testing-library|three|@react-three|shared-3d)/)'
 	],
 	testMatch: [
 		'<rootDir>/src/**/__tests__/**/*.(test|spec).(ts|tsx|js)',

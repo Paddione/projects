@@ -124,6 +124,16 @@ class AvatarService {
   }
 
   /**
+   * Get the GLB model path for a user's avatar character.
+   * Returns null if no character is set.
+   */
+  getAvatarModelPath(userCharacter?: string): string | null {
+    const charId = userCharacter || this.userCharacter
+    if (!charId) return null
+    return `/assets/3d/characters/${charId}.glb`
+  }
+
+  /**
    * Get avatar definition by ID
    */
   getAvatarDefinition(avatarId: string): AvatarDefinition | null {

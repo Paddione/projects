@@ -270,6 +270,13 @@ export default defineConfig({
         changeOrigin: true,
         ws: true,
       },
+      '/assets/3d': {
+        target: 'http://localhost:5200',
+        rewrite: (path) => {
+          const match = path.match(/\/assets\/3d\/\w+\/(\w+)\.glb/);
+          return match ? `/api/visual-library/${match[1]}/model` : path;
+        },
+      },
       // Note: Do not proxy '/admin' so React router can handle the admin panel route
     },
   },

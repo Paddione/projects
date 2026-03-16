@@ -999,13 +999,14 @@ app.post('/api/visual-library/batch/generate', async (req, res) => {
     for (const p of phasesToRun) {
       try {
         res.write(`event: progress\ndata: ${JSON.stringify({ asset: id, phase: p, status: 'generating' })}\n\n`);
-        const defaultAdapterMap = { concept: 'comfyui', model: 'triposr', render: 'blender', pack: 'packer' };
+        const defaultAdapterMap = { concept: 'comfyui', model: 'triposr', render: 'blender', pack: 'packer', rig: 'mixamo', animate: 'mixamo' };
         // Allow per-asset backend override for concept phase (e.g., gemini-imagen)
         const adapterName = (p === 'concept' && asset.conceptBackend) ? asset.conceptBackend : defaultAdapterMap[p];
         const adapterPath = join(__dirname, 'adapters', `${adapterName}.js`);
         if (!existsSync(adapterPath)) throw new Error(`Adapter ${adapterName} not found`);
 
         const adapter = await import(adapterPath);
+        asset._currentPhase = p;
         const result = await adapter.generate({ id, asset, config: vConfig, libraryRoot: vConfig.libraryRoot });
 
         asset.pipeline[p] = { status: 'done', generatedAt: new Date().toISOString(), backend: adapterName };
@@ -1174,7 +1175,7 @@ app.post('/api/visual-library/:id/generate/:phase', async (req, res) => {
   if (!asset) return res.status(404).json({ error: 'Asset not found' });
 
   const phase = req.params.phase;
-  const validPhases = ['concept', 'model', 'render', 'pack', 'full'];
+  const validPhases = ['concept', 'model', 'render', 'pack', 'rig', 'animate', 'full'];
   if (!validPhases.includes(phase)) return res.status(400).json({ error: `Invalid phase: ${phase}` });
 
   visualGenerationInProgress = true;
@@ -1199,12 +1200,13 @@ app.post('/api/visual-library/:id/generate/:phase', async (req, res) => {
       if (!asset.pipeline[p]) asset.pipeline[p] = {};
       asset.pipeline[p].status = 'generating';
 
-      const defaultAdapterMap = { concept: 'comfyui', model: 'triposr', render: 'blender', pack: 'packer' };
+      const defaultAdapterMap = { concept: 'comfyui', model: 'triposr', render: 'blender', pack: 'packer', rig: 'mixamo', animate: 'mixamo' };
       const adapterName = (p === 'concept' && asset.conceptBackend) ? asset.conceptBackend : defaultAdapterMap[p];
       const adapterPath = join(__dirname, 'adapters', `${adapterName}.js`);
       if (!existsSync(adapterPath)) throw new Error(`Adapter not found: ${adapterPath}`);
 
       const adapter = await import(adapterPath);
+      asset._currentPhase = p;
       const result = await adapter.generate({ id: asset.id, asset, config: vConfig, libraryRoot: vConfig.libraryRoot });
 
       asset.pipeline[p].status = 'done';
