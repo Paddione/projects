@@ -1,9 +1,9 @@
 /**
- * CharacterPicker3D — 3D character preview for Arena character selection.
+ * CharacterPicker3D — 3D character viewer for Arena lobby.
  *
- * Uses the shared CharacterViewer (Three.js + OrbitControls) to display
- * the currently selected character model. Character buttons are shown as
- * coloured circles beneath the viewer.
+ * Replaces the 2D CharacterPicker with a Three.js viewer showing
+ * the selected character model with orbit controls. Includes gender
+ * toggle that switches between base and _f model variants.
  */
 
 import { useEffect, useRef } from 'react';
@@ -17,17 +17,43 @@ const CHARACTERS = [
     { id: 'tank',    name: 'Tank',    color: '#ffd700' },
 ];
 
+const STORAGE_KEY = 'arena_character';
+
 interface CharacterPicker3DProps {
-    selected: string;
-    onSelect: (characterId: string) => void;
+    selectedCharacter: string;
+    selectedGender: 'male' | 'female';
+    onSelect: (character: string, gender: 'male' | 'female') => void;
+}
+
+export function loadSavedCharacter(): { character: string; gender: 'male' | 'female' } {
+    try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+            const parsed = JSON.parse(saved);
+            if (
+                CHARACTERS.some((c) => c.id === parsed.character) &&
+                (parsed.gender === 'male' || parsed.gender === 'female')
+            ) {
+                return parsed;
+            }
+        }
+    } catch {
+        // ignore
+    }
+    return { character: 'warrior', gender: 'male' };
 }
 
 // Shared ModelLoader — one instance for the lifetime of the page.
 const loader = new ModelLoader();
 
-export default function CharacterPicker3D({ selected, onSelect }: CharacterPicker3DProps) {
+export default function CharacterPicker3D({ selectedCharacter, selectedGender, onSelect }: CharacterPicker3DProps) {
     const containerRef = useRef<HTMLDivElement>(null);
     const viewerRef = useRef<CharacterViewer | null>(null);
+
+    // Persist selection
+    useEffect(() => {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({ character: selectedCharacter, gender: selectedGender }));
+    }, [selectedCharacter, selectedGender]);
 
     // Mount viewer once.
     useEffect(() => {
@@ -48,89 +74,136 @@ export default function CharacterPicker3D({ selected, onSelect }: CharacterPicke
         };
     }, []);
 
-    // Reload model whenever selection changes.
+    // Reload model whenever selection or gender changes.
+    const modelId = selectedGender === 'female' ? `${selectedCharacter}_f` : selectedCharacter;
     useEffect(() => {
         const viewer = viewerRef.current;
         if (!viewer) return;
 
         viewer.loadCharacter({
-            id: selected,
-            modelUrl: `/assets/3d/characters/${selected}.glb`,
+            id: modelId,
+            modelUrl: `/assets/3d/characters/${modelId}.glb`,
             defaultAnimation: 'idle',
         }).catch(() => {
             // Model not yet available — viewer shows empty scene gracefully.
         });
-    }, [selected]);
+    }, [modelId]);
 
     return (
         <div style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: '12px',
+            background: '#1a1a2e',
+            border: '1px solid #2a2a4a',
+            borderRadius: '8px',
+            padding: '12px 16px',
+            marginBottom: '20px',
+            width: '100%',
+            maxWidth: '420px',
         }}>
+            <div style={{
+                fontSize: '0.8rem',
+                color: '#8888aa',
+                textTransform: 'uppercase',
+                letterSpacing: '0.1em',
+                marginBottom: '10px',
+                fontWeight: 600,
+            }}>
+                Character
+            </div>
+
             {/* 3D viewport */}
             <div
                 ref={containerRef}
                 style={{
-                    width: '280px',
-                    height: '280px',
+                    width: '100%',
+                    height: '240px',
                     background: '#0a0a1a',
-                    border: '1px solid #2a2a4a',
-                    borderRadius: '8px',
+                    borderRadius: '6px',
                     overflow: 'hidden',
+                    marginBottom: '12px',
                 }}
             />
 
-            {/* Character selection buttons */}
+            {/* Character grid */}
             <div style={{
                 display: 'flex',
-                gap: '10px',
+                gap: '6px',
                 flexWrap: 'wrap',
-                justifyContent: 'center',
+                marginBottom: '12px',
             }}>
                 {CHARACTERS.map((c) => {
-                    const isSelected = selected === c.id;
+                    const isSelected = selectedCharacter === c.id;
                     return (
                         <button
                             key={c.id}
-                            onClick={() => onSelect(c.id)}
-                            title={c.name}
+                            onClick={() => onSelect(c.id, selectedGender)}
                             style={{
-                                width: '44px',
-                                height: '44px',
-                                borderRadius: '50%',
-                                background: isSelected ? `${c.color}33` : '#0a0a14',
+                                flex: '1 1 auto',
+                                minWidth: '70px',
+                                padding: '8px 6px',
+                                background: isSelected ? `${c.color}22` : '#0a0a14',
                                 border: `2px solid ${isSelected ? c.color : '#2a2a4a'}`,
+                                borderRadius: '6px',
+                                color: isSelected ? c.color : '#8888aa',
                                 cursor: 'pointer',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
+                                fontSize: '0.78rem',
+                                fontWeight: isSelected ? 700 : 500,
+                                fontFamily: 'inherit',
                                 transition: 'all 0.15s ease',
-                                padding: 0,
+                                textAlign: 'center',
                             }}
                         >
                             <div style={{
-                                width: '20px',
-                                height: '20px',
+                                width: '8px',
+                                height: '8px',
                                 borderRadius: '50%',
                                 background: c.color,
-                                boxShadow: isSelected ? `0 0 10px ${c.color}80` : 'none',
+                                margin: '0 auto 4px',
+                                boxShadow: isSelected ? `0 0 8px ${c.color}80` : 'none',
                             }} />
+                            {c.name}
                         </button>
                     );
                 })}
             </div>
 
-            {/* Selected name label */}
+            {/* Gender toggle */}
             <div style={{
-                fontSize: '0.85rem',
-                color: CHARACTERS.find(c => c.id === selected)?.color ?? '#8888aa',
-                fontWeight: 600,
-                letterSpacing: '0.05em',
-                textTransform: 'uppercase',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px',
             }}>
-                {CHARACTERS.find(c => c.id === selected)?.name ?? selected}
+                <span style={{ fontSize: '0.8rem', color: '#8888aa' }}>Gender</span>
+                <div style={{
+                    display: 'flex',
+                    background: '#0a0a14',
+                    borderRadius: '4px',
+                    border: '1px solid #2a2a4a',
+                    overflow: 'hidden',
+                }}>
+                    {(['male', 'female'] as const).map((g) => {
+                        const isActive = selectedGender === g;
+                        return (
+                            <button
+                                key={g}
+                                onClick={() => onSelect(selectedCharacter, g)}
+                                style={{
+                                    padding: '4px 14px',
+                                    background: isActive ? '#00f2ff22' : 'transparent',
+                                    border: 'none',
+                                    color: isActive ? '#00f2ff' : '#666680',
+                                    cursor: 'pointer',
+                                    fontSize: '0.78rem',
+                                    fontWeight: isActive ? 700 : 400,
+                                    fontFamily: 'inherit',
+                                    textTransform: 'capitalize',
+                                    transition: 'all 0.15s ease',
+                                }}
+                            >
+                                {g}
+                            </button>
+                        );
+                    })}
+                </div>
             </div>
         </div>
     );

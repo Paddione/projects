@@ -7,7 +7,7 @@ export default defineConfig({
     test: {
         globals: true,
         environment: 'jsdom',
-        setupFiles: [],
+        setupFiles: ['./src/__mocks__/setup.ts'],
         include: ['src/**/*.test.{ts,tsx}', 'src/__tests__/**/*.{ts,tsx}'],
         exclude: ['node_modules', 'dist'],
         coverage: {
@@ -27,6 +27,7 @@ export default defineConfig({
     resolve: {
         alias: {
             '@': path.resolve(__dirname, './src'),
+            'shared-3d': path.resolve(__dirname, './src/__mocks__/shared-3d.ts'),
         },
     },
 });

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useGameStore } from '../stores/gameStore';
 import { getSocket } from '../services/apiService';
-import CharacterPicker, { loadSavedCharacter } from './CharacterPicker';
+import CharacterPicker, { loadSavedCharacter } from './CharacterPicker3D';
 
 export default function Lobby() {
     const { code } = useParams<{ code: string }>();
