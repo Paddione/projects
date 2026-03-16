@@ -165,6 +165,33 @@ function dispatchNext() {
   }));
 }
 
+export function enqueueJob(payload, { onStdout } = {}) {
+  return new Promise((resolve, reject) => {
+    const job = {
+      jobId: randomUUID(),
+      payload,
+      resolve,
+      reject,
+      stdout: '',
+      stderr: '',
+      onStdout,
+    };
+    jobQueue.push(job);
+    dispatchNext();
+  });
+}
+
+export function getQueueDepth() {
+  const active = worker?.currentJob ? 1 : 0;
+  const pending = jobQueue.length;
+  return {
+    depth: pending + active,
+    pending,
+    active,
+    workerConnected: !!worker,
+  };
+}
+
 export function getWorker() {
   if (!worker) return null;
   return {

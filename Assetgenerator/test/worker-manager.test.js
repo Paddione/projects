@@ -11,7 +11,7 @@ import { describe, it, before, after, beforeEach, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
 import { WebSocket, WebSocketServer } from 'ws';
-import { initWorkerManager, getWorker, getWorkerStatus, shutdownWorkerManager } from '../worker-manager.js';
+import { initWorkerManager, getWorker, getWorkerStatus, shutdownWorkerManager, enqueueJob, getQueueDepth } from '../worker-manager.js';
 
 // Helper: create a minimal HTTP server for testing
 function createTestServer() {
@@ -47,7 +47,7 @@ describe('WorkerManager', () => {
 
   before(async () => {
     ({ server: httpServer, port } = await createTestServer());
-    initWorkerManager(httpServer, { pingInterval: 500, pongTimeout: 200 });
+    initWorkerManager(httpServer, { pingInterval: 500, pongTimeout: 200, reconnectWaitMs: 500 });
   });
 
   after(async () => {
@@ -168,7 +168,8 @@ describe('WorkerManager', () => {
         /disconnect/i
       );
 
-      await new Promise((r) => setTimeout(r, 100));
+      // Wait for reconnect timer to fire and clean up re-queued jobs
+      await new Promise((r) => setTimeout(r, 700));
     });
 
     it('queues second job while first is running', async () => {
@@ -211,6 +212,146 @@ describe('WorkerManager', () => {
       // Use 1500ms for CI safety margin
       await new Promise((r) => setTimeout(r, 1500));
       assert.equal(getWorker(), null);
+
+      ws.close();
+      await new Promise((r) => setTimeout(r, 100));
+    });
+  });
+
+  describe('enqueueJob()', { concurrency: false }, () => {
+    // Ensure previous test's worker is fully disconnected before each test
+    beforeEach(async () => {
+      let retries = 0;
+      while (getWorkerStatus().connected && retries++ < 20) {
+        await new Promise((r) => setTimeout(r, 100));
+      }
+    });
+    it('queues a job even when no worker is connected', async () => {
+      const depth = getQueueDepth();
+      assert.equal(depth.depth, 0);
+
+      const jobPromise = enqueueJob({ cmd: 'echo', args: ['test'], cwd: '/tmp', env: {} });
+      assert.ok(jobPromise instanceof Promise);
+
+      const depthAfter = getQueueDepth();
+      assert.equal(depthAfter.depth, 1);
+      assert.equal(depthAfter.pending, 1);
+      assert.equal(depthAfter.active, 0);
+      assert.equal(depthAfter.workerConnected, false);
+
+      // Connect manually: attach exec handler before register so we catch
+      // the job that dispatchNext() sends synchronously on registration.
+      const ws = await new Promise((resolve, reject) => {
+        const sock = new WebSocket(`ws://127.0.0.1:${port}/ws/worker`);
+        sock.on('open', () => {
+          sock.on('message', (raw) => {
+            const msg = JSON.parse(raw);
+            if (msg.type === 'welcome') {
+              sock.send(JSON.stringify({ type: 'register', hostname: 'test-pc', gpu: 'RTX Test' }));
+              return;
+            }
+            if (msg.type === 'ping') {
+              sock.send(JSON.stringify({ type: 'pong' }));
+              return;
+            }
+            if (msg.type === 'exec') {
+              sock.send(JSON.stringify({ type: 'ack', jobId: msg.jobId }));
+              sock.send(JSON.stringify({ type: 'stdout', jobId: msg.jobId, data: 'output\n' }));
+              sock.send(JSON.stringify({ type: 'exit', jobId: msg.jobId, code: 0 }));
+            }
+          });
+          resolve(sock);
+        });
+        sock.on('error', reject);
+      });
+
+      const result = await jobPromise;
+      assert.equal(result.code, 0);
+      assert.ok(result.stdout.includes('output'));
+
+      ws.close();
+      await new Promise((r) => setTimeout(r, 100));
+    });
+
+    it('dispatches immediately if worker is already connected', async () => {
+      const ws = await connectWorker(port);
+      ws.on('message', (raw) => {
+        const msg = JSON.parse(raw);
+        if (msg.type === 'exec') {
+          ws.send(JSON.stringify({ type: 'ack', jobId: msg.jobId }));
+          ws.send(JSON.stringify({ type: 'exit', jobId: msg.jobId, code: 0 }));
+        }
+      });
+
+      const result = await enqueueJob({ cmd: 'test', args: [], cwd: '/tmp', env: {} });
+      assert.equal(result.code, 0);
+
+      ws.close();
+      await new Promise((r) => setTimeout(r, 100));
+    });
+
+    it('supports onStdout callback', async () => {
+      const ws = await connectWorker(port);
+      ws.on('message', (raw) => {
+        const msg = JSON.parse(raw);
+        if (msg.type === 'exec') {
+          ws.send(JSON.stringify({ type: 'ack', jobId: msg.jobId }));
+          ws.send(JSON.stringify({ type: 'stdout', jobId: msg.jobId, data: 'line1\n' }));
+          ws.send(JSON.stringify({ type: 'stdout', jobId: msg.jobId, data: 'line2\n' }));
+          ws.send(JSON.stringify({ type: 'exit', jobId: msg.jobId, code: 0 }));
+        }
+      });
+
+      const chunks = [];
+      const result = await enqueueJob(
+        { cmd: 'test', args: [], cwd: '/tmp', env: {} },
+        { onStdout: (data) => chunks.push(data) }
+      );
+      assert.equal(result.code, 0);
+      assert.equal(chunks.length, 2);
+      assert.ok(chunks[0].includes('line1'));
+
+      ws.close();
+      await new Promise((r) => setTimeout(r, 100));
+    });
+  });
+
+  describe('getQueueDepth()', () => {
+    it('returns zeros when queue is empty and no worker', () => {
+      const depth = getQueueDepth();
+      assert.equal(depth.depth, 0);
+      assert.equal(depth.pending, 0);
+      assert.equal(depth.active, 0);
+      assert.equal(depth.workerConnected, false);
+    });
+
+    it('shows active=1 when a job is executing', async () => {
+      const ws = await connectWorker(port);
+      let resolveExec;
+      ws.on('message', (raw) => {
+        const msg = JSON.parse(raw);
+        if (msg.type === 'exec') {
+          ws.send(JSON.stringify({ type: 'ack', jobId: msg.jobId }));
+          resolveExec = () => {
+            ws.send(JSON.stringify({ type: 'exit', jobId: msg.jobId, code: 0 }));
+          };
+        }
+      });
+
+      const jobPromise = enqueueJob({ cmd: 'slow', args: [], cwd: '/tmp', env: {} });
+      await new Promise((r) => setTimeout(r, 100));
+
+      const depth = getQueueDepth();
+      assert.equal(depth.active, 1);
+      assert.equal(depth.workerConnected, true);
+
+      resolveExec();
+      await jobPromise;
+
+      const depthAfter = getQueueDepth();
+      assert.equal(depthAfter.depth, 0);
+      assert.equal(depthAfter.pending, 0);
+      assert.equal(depthAfter.active, 0);
 
       ws.close();
       await new Promise((r) => setTimeout(r, 100));
