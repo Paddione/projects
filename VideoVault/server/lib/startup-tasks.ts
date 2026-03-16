@@ -39,7 +39,10 @@ export async function runStartupTasks(db: any): Promise<void> {
   const inboxDir = path.join(MOVIES_DIR, '1_inbox');
   await fs.mkdir(thumbsDir, { recursive: true }).catch(() => {});
   await fs.mkdir(inboxDir, { recursive: true }).catch(() => {});
-  logger.info('[StartupTasks] Directories ensured', { moviesDir: MOVIES_DIR });
+  if (process.env.INBOX_DIR) {
+    await fs.mkdir(process.env.INBOX_DIR, { recursive: true }).catch(() => {});
+  }
+  logger.info('[StartupTasks] Directories ensured', { moviesDir: MOVIES_DIR, inboxDir: process.env.INBOX_DIR || inboxDir });
 
   // 2. Register 'movies' root in DB so indexed videos survive startup cleanup.
   //    Retry briefly — the DB may still be recovering from the startup TRUNCATE.
@@ -78,11 +81,23 @@ export async function runStartupTasks(db: any): Promise<void> {
 }
 
 /**
- * Move all video files from MOVIES_DIR/1_inbox/ into MOVIES_DIR/.
+ * Move all video files from inbox directories into MOVIES_DIR/.
+ * Checks both MOVIES_DIR/1_inbox/ and INBOX_DIR (if set and different).
  * Exported so the movie watcher can call it on each scan cycle too.
  */
 export async function drainInbox(moviesDir: string): Promise<number> {
-  const inboxDir = path.join(moviesDir, '1_inbox');
+  const builtInInbox = path.join(moviesDir, '1_inbox');
+  const externalInbox = process.env.INBOX_DIR;
+
+  let total = 0;
+  total += await drainSingleInbox(builtInInbox, moviesDir);
+  if (externalInbox && path.resolve(externalInbox) !== path.resolve(builtInInbox)) {
+    total += await drainSingleInbox(externalInbox, moviesDir);
+  }
+  return total;
+}
+
+async function drainSingleInbox(inboxDir: string, moviesDir: string): Promise<number> {
 
   let filenames: string[];
   try {

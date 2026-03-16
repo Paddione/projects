@@ -61,7 +61,7 @@ spec:
             - name: PROCESSED_MEDIA_PATH
               value: "/app/media/Processed"
             - name: INBOX_DIR
-              value: "/app/media/Inbox"
+              value: "/app/media/movies/1_inbox"
             - name: PROCESSED_DIR
               value: "/app/media/Processed"
             - name: THUMBNAILS_DIR

@@ -5,6 +5,8 @@ import { drainInbox } from './startup-tasks';
 import { jobQueue } from './job-queue';
 import { logger } from './logger';
 
+const SKIP_DIRS = ['Thumbnails', '1_inbox', '2_processing', '3_complete'];
+
 type MovieWatcherOptions = {
   pollIntervalMs?: number;
   stabilityMs?: number;
@@ -42,7 +44,7 @@ export function startMovieWatcher(options: MovieWatcherOptions = {}) {
 
   const seedKnownFiles = async () => {
     try {
-      const movies = await scanMoviesDirectory(moviesDir, true, ['Thumbnails']);
+      const movies = await scanMoviesDirectory(moviesDir, true, SKIP_DIRS);
       movies.forEach((movie) => knownFiles.add(movie));
       logger.info('[MovieWatcher] Seeded existing movies', {
         directory: moviesDir,
@@ -97,7 +99,7 @@ export function startMovieWatcher(options: MovieWatcherOptions = {}) {
 
   const scanAndQueue = async () => {
     const now = Date.now();
-    const movies = await scanMoviesDirectory(moviesDir, true, ['Thumbnails']);
+    const movies = await scanMoviesDirectory(moviesDir, true, SKIP_DIRS);
     const currentSet = new Set(movies);
 
     for (const moviePath of movies) {
@@ -156,7 +158,7 @@ export function startMovieWatcher(options: MovieWatcherOptions = {}) {
     await seedKnownFiles();
     if (backfillMissingThumbnails) {
       try {
-        const movies = await scanMoviesDirectory(moviesDir, true, ['Thumbnails']);
+        const movies = await scanMoviesDirectory(moviesDir, true, SKIP_DIRS);
         let queued = 0;
 
         for (const moviePath of movies) {
@@ -219,7 +221,7 @@ export function startMovieWatcher(options: MovieWatcherOptions = {}) {
 
   const rescan = async (): Promise<number> => {
     logger.info('[MovieWatcher] Manual rescan triggered');
-    const movies = await scanMoviesDirectory(moviesDir, true, ['Thumbnails']);
+    const movies = await scanMoviesDirectory(moviesDir, true, SKIP_DIRS);
     let queued = 0;
 
     for (const moviePath of movies) {
