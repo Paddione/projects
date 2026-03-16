@@ -83,7 +83,12 @@ spec:
             - name: SMTP_SECURE
               value: "false"
             - name: ALLOWED_ORIGINS
-              value: "https://l2p.korczewski.de,https://auth.korczewski.de,https://shop.korczewski.de,https://videovault.korczewski.de"
+              value: "https://l2p.korczewski.de,https://auth.korczewski.de,https://shop.korczewski.de,https://videovault.korczewski.de,https://arena.korczewski.de"
+            - name: INTERNAL_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: internal-api-key
+                  key: INTERNAL_API_KEY
           resources:
             requests:
               memory: "256Mi"

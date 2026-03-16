@@ -71,6 +71,11 @@ spec:
               value: "true"
             - name: AUTH_SERVICE_URL
               value: "http://auth.korczewski-services.svc.cluster.local:5500"
+            - name: INTERNAL_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: internal-api-key
+                  key: INTERNAL_API_KEY
             - name: DB_SSL
               value: "false"
             - name: LOG_LEVEL

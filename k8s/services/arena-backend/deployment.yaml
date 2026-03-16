@@ -62,6 +62,11 @@ spec:
               value: "postgresql://arena_user:arena_pass@postgres.korczewski-infra.svc.cluster.local:5432/arena_db"
             - name: AUTH_SERVICE_URL
               value: "http://auth.korczewski-services.svc.cluster.local:5500"
+            - name: INTERNAL_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: internal-api-key
+                  key: INTERNAL_API_KEY
             - name: CORS_ORIGIN
               value: "https://arena.korczewski.de"
           resources:
