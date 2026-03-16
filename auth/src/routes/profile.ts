@@ -75,8 +75,18 @@ router.put('/profile/loadout', authenticate, async (req: Request, res: Response)
       return;
     }
 
-    const updates = updateLoadoutSchema.parse(req.body);
-    const updatedLoadout = await profileService.updateLoadout(req.user.userId, updates);
+    const body = updateLoadoutSchema.parse(req.body);
+    // Map camelCase request fields to snake_case Drizzle column names
+    const updates: Record<string, string | undefined> = {};
+    if (body.equippedSkin !== undefined) updates.equipped_skin = body.equippedSkin;
+    if (body.equippedEmote1 !== undefined) updates.equipped_emote_1 = body.equippedEmote1;
+    if (body.equippedEmote2 !== undefined) updates.equipped_emote_2 = body.equippedEmote2;
+    if (body.equippedEmote3 !== undefined) updates.equipped_emote_3 = body.equippedEmote3;
+    if (body.equippedEmote4 !== undefined) updates.equipped_emote_4 = body.equippedEmote4;
+    if (body.equippedTitle !== undefined) updates.equipped_title = body.equippedTitle;
+    if (body.equippedBorder !== undefined) updates.equipped_border = body.equippedBorder;
+    if (body.equippedPowerUp !== undefined) updates.equipped_power_up = body.equippedPowerUp;
+    const updatedLoadout = await profileService.updateLoadout(req.user.userId, updates as any);
     res.status(200).json(updatedLoadout);
   } catch (error) {
     if (error instanceof z.ZodError) {
