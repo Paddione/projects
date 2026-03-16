@@ -9,6 +9,7 @@ interface CreateLobbyRequest {
     hostId: number;
     username: string;
     selectedCharacter?: string;
+    selectedGender?: 'male' | 'female';
     characterLevel?: number;
     settings?: Partial<ArenaLobbySettings>;
 }
@@ -76,6 +77,7 @@ export class LobbyService {
             id: String(request.hostId),
             username: request.username,
             character: request.selectedCharacter || 'student',
+            gender: request.selectedGender || 'male',
             characterLevel: request.characterLevel || 1,
             isReady: false,
             isHost: true,

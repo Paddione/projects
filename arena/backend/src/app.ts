@@ -5,6 +5,7 @@ import { config } from './config/index.js';
 import { DatabaseService } from './services/DatabaseService.js';
 import { LobbyService } from './services/LobbyService.js';
 import { attachAuthUser } from './middleware/auth.js';
+import { authFetch } from './config/authClient.js';
 
 const app = express();
 
@@ -69,9 +70,32 @@ app.post('/api/lobbies', async (req, res) => {
         if (!user) {
             return res.status(401).json({ error: 'Not authenticated' });
         }
+        // Fetch character/gender from auth service profile
+        let selectedCharacter: string | undefined;
+        let selectedGender: 'male' | 'female' | undefined;
+        const cookie = req.headers.cookie;
+        if (cookie) {
+            try {
+                const profileRes = await authFetch('/api/profile', {
+                    headers: { cookie },
+                });
+                if (profileRes.ok) {
+                    const profile = await profileRes.json();
+                    if (profile) {
+                        selectedCharacter = profile.selectedCharacter || profile.selected_character;
+                        selectedGender = profile.selectedGender || profile.selected_gender;
+                    }
+                }
+            } catch {
+                // Auth service unreachable, use defaults
+            }
+        }
+
         const lobby = await lobbyService.createLobby({
             hostId: user.userId,
             username: user.username,
+            selectedCharacter,
+            selectedGender,
             settings: req.body.settings,
         });
         res.status(201).json(lobby);

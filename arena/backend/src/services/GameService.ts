@@ -94,6 +94,7 @@ export class GameService {
                 lobbyPlayer.id,
                 lobbyPlayer.username,
                 lobbyPlayer.character,
+                lobbyPlayer.gender ?? 'male',
                 lobbyPlayer.characterLevel,
                 spawn.x * GAME.TILE_SIZE + GAME.TILE_SIZE / 2,
                 spawn.y * GAME.TILE_SIZE + GAME.TILE_SIZE / 2
