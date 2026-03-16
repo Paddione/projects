@@ -34,6 +34,8 @@ spec:
         app.kubernetes.io/component: authentication
         app.kubernetes.io/part-of: korczewski
         tier: services
+      annotations:
+        secret.reloader.stakater.com/reload: "auth-credentials"
     spec:
       securityContext:
         runAsNonRoot: true

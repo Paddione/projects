@@ -39,6 +39,8 @@ spec:
         app.kubernetes.io/name: assetgenerator
         app.kubernetes.io/part-of: korczewski
         tier: services
+      annotations:
+        secret.reloader.stakater.com/reload: "assetgenerator-secrets"
     spec:
       securityContext:
         runAsNonRoot: true
@@ -55,6 +57,10 @@ spec:
             - name: http
               containerPort: 5200
               protocol: TCP
+          envFrom:
+            - secretRef:
+                name: assetgenerator-secrets
+                optional: true
           env:
             - name: NODE_ENV
               value: "production"
@@ -64,24 +70,6 @@ spec:
             # over WebSocket. The server container never resolves these locally.
             - name: ASSETGENERATOR_ROOT
               value: "/home/patrick/projects/Assetgenerator"
-            - name: GEMINI_API_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: assetgenerator-secrets
-                  key: GEMINI_API_KEY
-                  optional: true
-            - name: SILICONFLOW_API_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: assetgenerator-secrets
-                  key: SILICONFLOW_API_KEY
-                  optional: true
-            - name: SUNO_API_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: assetgenerator-secrets
-                  key: SUNO_API_KEY
-                  optional: true
           volumeMounts:
             - name: audio-library
               mountPath: /mnt/pve3a/audio-library

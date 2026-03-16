@@ -32,6 +32,8 @@ spec:
         app.kubernetes.io/component: media
         app.kubernetes.io/part-of: korczewski
         tier: services
+      annotations:
+        secret.reloader.stakater.com/reload: "videovault-credentials"
     spec:
       securityContext:
         runAsNonRoot: true

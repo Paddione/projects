@@ -81,6 +81,8 @@ manifests:
       - infrastructure/registry
       - infrastructure/smb-csi
       - infrastructure/cert-renewal
+      - infrastructure/external-secrets
+      - infrastructure/reloader
       - services/auth
       - services/l2p-backend
       - services/l2p-frontend
@@ -277,6 +279,8 @@ profiles:
           - infrastructure/registry
           - infrastructure/smb-csi
           - infrastructure/cert-renewal
+          - infrastructure/external-secrets
+          - infrastructure/reloader
       rawYaml:
         - base/namespaces.yaml
 

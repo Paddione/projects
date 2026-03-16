@@ -48,25 +48,17 @@ vault secrets enable -path=secret kv-v2 || true
 
 log_info "Syncing secrets from $ENV_FILE to Vault..."
 
-# We'll group secrets by service based on prefixes or specific names
-# For simplicity, we'll push all to secret/korczewski/global for now,
-# but a better way is to split them.
-
 # Function to push to a specific path
 push_to_vault() {
     local path="$1"
     shift
     local args=("$@")
-    
+
     if [ ${#args[@]} -gt 0 ]; then
         log_info "Pushing to secret/$path..."
         vault kv put "secret/$path" "${args[@]}"
     fi
 }
-
-# Source .env but keep it in a subshell to avoid polluting script env
-# We'll extract variables and format them for vault kv put
-# Format: KEY=VALUE
 
 # Define groups
 POSTGRES=()
@@ -74,16 +66,20 @@ AUTH=()
 L2P=()
 SHOP=()
 VIDEOVAULT=()
+ARENA=()
+ASSETGENERATOR=()
+SMB=()
+IPV64=()
 GLOBAL=()
 
 while IFS='=' read -r key value || [ -n "$key" ]; do
     # Skip comments and empty lines
     [[ "$key" =~ ^#.* ]] && continue
     [[ -z "$key" ]] && continue
-    
+
     # Trim quotes from value
     value=$(echo "$value" | sed -e 's/^"//' -e 's/"$//' -e "s/^'//" -e "s/'$//")
-    
+
     entry="$key=$value"
 
     if [[ "$key" =~ ^POSTGRES_ ]] || [[ "$key" =~ _DB_PASSWORD$ ]]; then
@@ -97,6 +93,18 @@ while IFS='=' read -r key value || [ -n "$key" ]; do
         SHOP+=("$entry")
     elif [[ "$key" =~ ^VIDEO_ ]] || [[ "$key" =~ ^VIDEOVAULT_ ]]; then
         VIDEOVAULT+=("$entry")
+    elif [[ "$key" =~ ^ARENA_ ]]; then
+        stripped="${key#ARENA_}"
+        ARENA+=("$stripped=$value")
+    elif [[ "$key" =~ ^ASSETGENERATOR_ ]]; then
+        stripped="${key#ASSETGENERATOR_}"
+        ASSETGENERATOR+=("$stripped=$value")
+    elif [[ "$key" =~ ^GEMINI_ ]] || [[ "$key" =~ ^SILICONFLOW_ ]] || [[ "$key" =~ ^SUNO_ ]]; then
+        ASSETGENERATOR+=("$entry")
+    elif [[ "$key" =~ ^SMB_ ]]; then
+        SMB+=("$entry")
+    elif [[ "$key" =~ ^IPV64_ ]]; then
+        IPV64+=("$entry")
     else
         GLOBAL+=("$entry")
     fi
@@ -107,6 +115,27 @@ push_to_vault "auth" "${AUTH[@]}"
 push_to_vault "l2p" "${L2P[@]}"
 push_to_vault "shop" "${SHOP[@]}"
 push_to_vault "videovault" "${VIDEOVAULT[@]}"
+push_to_vault "arena" "${ARENA[@]}"
+push_to_vault "assetgenerator" "${ASSETGENERATOR[@]}"
+push_to_vault "smb" "${SMB[@]}"
+push_to_vault "ipv64" "${IPV64[@]}"
 push_to_vault "global" "${GLOBAL[@]}"
 
 log_info "Vault sync complete!"
+
+echo ""
+log_info "=================================================="
+log_info "  ESO will pick up changes within 1 hour."
+log_info "  To force immediate sync:"
+log_info "    kubectl annotate externalsecret <name> -n <namespace> \\"
+log_info "      force-sync=\$(date +%s) --overwrite"
+log_info "    (namespace: korczewski-services for app secrets,"
+log_info "     korczewski-infra for postgres/smb/ipv64)"
+log_info ""
+log_info "  To verify a secret was updated:"
+log_info "    kubectl get secret <name> -n <namespace> \\"
+log_info "      -o jsonpath='{.data}' | base64 -d"
+log_info ""
+log_info "  Stakater Reloader will auto-restart pods when"
+log_info "  secrets change (if installed)."
+log_info "=================================================="

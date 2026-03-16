@@ -38,6 +38,8 @@ spec:
         app.kubernetes.io/name: shop
         app.kubernetes.io/part-of: korczewski
         tier: services
+      annotations:
+        secret.reloader.stakater.com/reload: "shop-credentials"
     spec:
       securityContext:
         runAsNonRoot: true

@@ -37,6 +37,8 @@ spec:
         app.kubernetes.io/component: backend
         app.kubernetes.io/part-of: korczewski
         tier: services
+      annotations:
+        secret.reloader.stakater.com/reload: "l2p-backend-credentials"
     spec:
       securityContext:
         runAsNonRoot: true
