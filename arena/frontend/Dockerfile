@@ -20,6 +20,9 @@ ENV NODE_ENV=production
 ENV VITE_NODE_ENV=${VITE_NODE_ENV}
 
 COPY --chown=nodejs:nodejs arena/frontend/package*.json ./
+# Copy shared-3d package (pre-built dist + package.json for file: dependency resolution)
+COPY --chown=nodejs:nodejs shared-infrastructure/shared/3d/package.json ../shared-infrastructure/shared/3d/package.json
+COPY --chown=nodejs:nodejs shared-infrastructure/shared/3d/dist/ ../shared-infrastructure/shared/3d/dist/
 COPY --chown=nodejs:nodejs arena/frontend/src ./src
 COPY --chown=nodejs:nodejs arena/frontend/public ./public
 COPY --chown=nodejs:nodejs arena/frontend/index.html ./

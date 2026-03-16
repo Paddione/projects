@@ -66,8 +66,11 @@ ARG VITE_APP_ENVIRONMENT=production
 # Copy source code (this layer will be cached if source doesn't change)
 # Copy package.json first if it's different from dependencies stage
 COPY --chown=nodejs:nodejs l2p/frontend/package*.json ./
-# Copy shared design system first
+# Copy shared design system
 COPY --chown=nodejs:nodejs shared-infrastructure/shared/design-system/ ../shared-infrastructure/shared/design-system/
+# Copy shared-3d package (pre-built dist + package.json for file: dependency resolution)
+COPY --chown=nodejs:nodejs shared-infrastructure/shared/3d/package.json ../shared-infrastructure/shared/3d/package.json
+COPY --chown=nodejs:nodejs shared-infrastructure/shared/3d/dist/ ../shared-infrastructure/shared/3d/dist/
 # Copy source files without overwriting node_modules
 COPY --chown=nodejs:nodejs l2p/frontend/src ./src
 COPY --chown=nodejs:nodejs l2p/frontend/public ./public

@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "prebuild": "cd ../../shared-infrastructure/shared/3d && npm run build",
+    "prebuild": "test -d ../../shared-infrastructure/shared/3d/dist || (cd ../../shared-infrastructure/shared/3d && npm run build)",
     "build": "vite build",
     "build:with-tsc-log": "vite build && node ./scripts/tsc-log.mjs",
     "check:test-env": "./scripts/check-test-env.sh",

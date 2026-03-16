@@ -1,2 +1,3 @@
 node_modules/
-dist/
+# dist/ is committed because Docker builds need the pre-built output
+# (Docker context doesn't include tsup/typescript to build from source)

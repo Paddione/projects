@@ -5,7 +5,7 @@
     "type": "module",
     "scripts": {
         "dev": "vite",
-        "prebuild": "npm --prefix ../../shared-infrastructure/shared/3d run build",
+        "prebuild": "test -d ../../shared-infrastructure/shared/3d/dist || npm --prefix ../../shared-infrastructure/shared/3d run build",
         "build": "tsc && vite build",
         "preview": "vite preview",
         "typecheck": "tsc --noEmit",
