@@ -233,6 +233,100 @@ export const accessRequests = authSchema.table('access_requests', {
 }));
 
 // ============================================================================
+// PROFILES TABLE - Player profile (character, gender, respect balance, XP)
+// ============================================================================
+export const profiles = authSchema.table('profiles', {
+  user_id: integer('user_id').primaryKey().references(() => users.id, { onDelete: 'cascade' }),
+  display_name: varchar('display_name', { length: 50 }),
+  selected_character: varchar('selected_character', { length: 50 }).default('student').notNull(),
+  selected_gender: varchar('selected_gender', { length: 10 }).default('male').notNull(),
+  selected_power_up: varchar('selected_power_up', { length: 50 }),
+  respect_balance: integer('respect_balance').default(0).notNull(),
+  xp_total: integer('xp_total').default(0).notNull(),
+  level: integer('level').default(1).notNull(),
+  created_at: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updated_at: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+});
+
+// ============================================================================
+// INVENTORY TABLE - Owned items
+// ============================================================================
+export const inventory = authSchema.table('inventory', {
+  id: serial('id').primaryKey(),
+  user_id: integer('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  item_id: varchar('item_id', { length: 100 }).notNull(),
+  item_type: varchar('item_type', { length: 20 }).notNull(),
+  acquired_at: timestamp('acquired_at', { withTimezone: true }).defaultNow().notNull(),
+  acquisition_source: varchar('acquisition_source', { length: 30 }).notNull(),
+}, (table) => ({
+  userIdIdx: index('idx_inventory_user_id').on(table.user_id),
+  userItemUnique: unique('idx_inventory_user_item').on(table.user_id, table.item_id),
+}));
+
+// ============================================================================
+// LOADOUTS TABLE - Equipped items
+// ============================================================================
+export const loadouts = authSchema.table('loadouts', {
+  user_id: integer('user_id').primaryKey().references(() => users.id, { onDelete: 'cascade' }),
+  equipped_skin: varchar('equipped_skin', { length: 100 }),
+  equipped_emote_1: varchar('equipped_emote_1', { length: 100 }),
+  equipped_emote_2: varchar('equipped_emote_2', { length: 100 }),
+  equipped_emote_3: varchar('equipped_emote_3', { length: 100 }),
+  equipped_emote_4: varchar('equipped_emote_4', { length: 100 }),
+  equipped_title: varchar('equipped_title', { length: 100 }),
+  equipped_border: varchar('equipped_border', { length: 100 }),
+  equipped_power_up: varchar('equipped_power_up', { length: 50 }),
+  updated_at: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+});
+
+// ============================================================================
+// SHOP CATALOG TABLE - Purchasable items
+// ============================================================================
+export const shopCatalog = authSchema.table('shop_catalog', {
+  item_id: varchar('item_id', { length: 100 }).primaryKey(),
+  item_type: varchar('item_type', { length: 20 }).notNull(),
+  name: varchar('name', { length: 100 }).notNull(),
+  description: text('description'),
+  respect_cost: integer('respect_cost').notNull(),
+  unlock_level: integer('unlock_level'),
+  gender: varchar('gender', { length: 10 }),
+  character: varchar('character', { length: 50 }),
+  preview_asset_url: varchar('preview_asset_url', { length: 255 }),
+  active: boolean('active').default(true).notNull(),
+});
+
+// ============================================================================
+// TRANSACTIONS TABLE - Economy audit log
+// ============================================================================
+export const transactions = authSchema.table('transactions', {
+  id: serial('id').primaryKey(),
+  user_id: integer('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  type: varchar('type', { length: 30 }).notNull(),
+  currency: varchar('currency', { length: 10 }).default('respect').notNull(),
+  amount: integer('amount').notNull(),
+  item_id: varchar('item_id', { length: 100 }),
+  metadata: jsonb('metadata'),
+  created_at: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => ({
+  userIdIdx: index('idx_transactions_user_id').on(table.user_id),
+}));
+
+// ============================================================================
+// MATCH ESCROW TABLE - Cross-game match betting
+// ============================================================================
+export const matchEscrow = authSchema.table('match_escrow', {
+  id: serial('id').primaryKey(),
+  token: varchar('token', { length: 64 }).unique().notNull(),
+  player_ids: integer('player_ids').array().notNull(),
+  escrowed_xp: jsonb('escrowed_xp').notNull(),
+  match_config: jsonb('match_config'),
+  status: varchar('status', { length: 20 }).default('pending').notNull(),
+  expires_at: timestamp('expires_at', { withTimezone: true }).notNull(),
+  created_at: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  settled_at: timestamp('settled_at', { withTimezone: true }),
+});
+
+// ============================================================================
 // TYPE EXPORTS for TypeScript
 // ============================================================================
 export type User = typeof users.$inferSelect;
@@ -251,3 +345,13 @@ export type OAuthAuthorizationCode = typeof oauthAuthorizationCodes.$inferSelect
 export type NewOAuthAuthorizationCode = typeof oauthAuthorizationCodes.$inferInsert;
 export type AccessRequest = typeof accessRequests.$inferSelect;
 export type NewAccessRequest = typeof accessRequests.$inferInsert;
+export type ProfileRecord = typeof profiles.$inferSelect;
+export type ProfileInsert = typeof profiles.$inferInsert;
+export type InventoryRecord = typeof inventory.$inferSelect;
+export type InventoryInsert = typeof inventory.$inferInsert;
+export type LoadoutRecord = typeof loadouts.$inferSelect;
+export type LoadoutInsert = typeof loadouts.$inferInsert;
+export type CatalogRecord = typeof shopCatalog.$inferSelect;
+export type TransactionRecord = typeof transactions.$inferSelect;
+export type TransactionInsert = typeof transactions.$inferInsert;
+export type EscrowRecord = typeof matchEscrow.$inferSelect;
