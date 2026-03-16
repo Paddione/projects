@@ -1,5 +1,7 @@
 import React from 'react'
 import styles from '../styles/DuelView.module.css'
+import { CharacterCanvas } from './3d/CharacterCanvas'
+import { DuelArenaScene } from './3d/DuelArenaScene'
 
 interface DuelViewProps {
   currentDuelPair: [string, string] | null
@@ -54,6 +56,21 @@ export const DuelView: React.FC<DuelViewProps> = ({
     <div className={styles.container} data-testid="duel-view">
       {currentDuelPair ? (
         <>
+          {/* 3D duel arena scene */}
+          {(() => {
+            const p1 = getPlayer(currentDuelPair[0])
+            const p2 = getPlayer(currentDuelPair[1])
+            if (p1 && p2) {
+              return (
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.5rem' }}>
+                  <CharacterCanvas width={400} height={160}>
+                    <DuelArenaScene player1={p1} player2={p2} winner={null} />
+                  </CharacterCanvas>
+                </div>
+              )
+            }
+            return null
+          })()}
           <div className={styles.duelArena}>
             {renderPlayerCard(currentDuelPair[0])}
             <div className={styles.vsDivider}>
