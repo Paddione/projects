@@ -73,6 +73,17 @@ async function runMigrations() {
       console.log('Migration 005: Platform tables already exist, skipping.\n');
     }
 
+    // Migration 006: L2P cosmetic perk avatars in shop catalog
+    const cosmeticCheck = await sql`SELECT COUNT(*) as cnt FROM auth.shop_catalog WHERE item_id LIKE 'avatar_%'`;
+    if (parseInt(cosmeticCheck[0].cnt) === 0) {
+      console.log('Running migration 006: L2P cosmetic perks...');
+      const migration006 = readFileSync(join(__dirname, '006_migrate_l2p_cosmetic_perks.sql'), 'utf8');
+      await sql.unsafe(migration006);
+      console.log('✅ Migration 006 complete.\n');
+    } else {
+      console.log('Migration 006: Cosmetic perks already exist, skipping.\n');
+    }
+
     // Always sync app catalog — ensures URLs match codebase on every deploy
     console.log('Syncing app catalog (URLs and metadata)...');
     await sql`
