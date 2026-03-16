@@ -3,11 +3,13 @@ import { fileURLToPath } from 'node:url';
 import { getWorker } from '../worker-manager.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const SCRIPTS_DIR = resolve(process.env.ASSETGENERATOR_ROOT || resolve(__dirname, '..'), 'scripts');
+const PROJECT_ROOT = process.env.ASSETGENERATOR_ROOT || resolve(__dirname, '..');
+const SCRIPTS_DIR = resolve(PROJECT_ROOT, 'scripts');
 
 export async function generate({ id, asset, config, libraryRoot }) {
   const scriptPath = join(SCRIPTS_DIR, 'generate_concepts.py');
   const outputDir = join(libraryRoot, 'concepts', asset.category);
+  const workerPython = join(PROJECT_ROOT, '.venv', 'bin', 'python3');
 
   const args = [
     scriptPath,
@@ -22,7 +24,7 @@ export async function generate({ id, asset, config, libraryRoot }) {
   const worker = getWorker();
   if (worker) {
     const result = await worker.exec({
-      cmd: 'python3', args, cwd: process.env.ASSETGENERATOR_ROOT || resolve(__dirname, '..'), env: {},
+      cmd: workerPython, args, cwd: PROJECT_ROOT, env: {},
     });
     if (result.code !== 0) throw new Error(`generate_concepts.py exited ${result.code}: ${result.stderr}`);
     return { status: 'done', path: `concepts/${asset.category}/${id}.png`, backend: 'comfyui' };

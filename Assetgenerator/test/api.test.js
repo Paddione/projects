@@ -434,7 +434,7 @@ describe('Audio Library Assign/Unassign', () => {
     });
   });
 
-  it('assigns sound to project (processes + copies OGG/MP3)', async () => {
+  it('assigns sound to project (records assignment)', async () => {
     const { status, json } = await fetchJSON('/api/library/test-assign/assign', {
       method: 'POST',
       body: { project: 'arena', targetPath: 'sfx/test-assign' },
@@ -443,16 +443,19 @@ describe('Audio Library Assign/Unassign', () => {
     assert.equal(status, 200);
     assert.ok(json.assignedTo.arena);
     assert.equal(json.assignedTo.arena.targetPath, 'sfx/test-assign');
+    assert.equal(json.assignedTo.arena.syncedAt, null, 'syncedAt should be null before sync');
   });
 
-  it('creates OGG+MP3 on NAS', async () => {
+  it('sync processes WAV and creates OGG+MP3 on NAS', async () => {
+    const { status } = await fetchJSON('/api/projects/arena/sync', { method: 'POST' });
+    assert.equal(status, 200);
     assert.ok(existsSync(join(nasAudioDir, 'sfx', 'ui', 'test-assign.ogg')),
       'OGG not found on NAS');
     assert.ok(existsSync(join(nasAudioDir, 'sfx', 'ui', 'test-assign.mp3')),
       'MP3 not found on NAS');
   });
 
-  it('copies OGG+MP3 to project output dir', async () => {
+  it('sync copies OGG+MP3 to project output dir', async () => {
     const outputRoot = join(arenaDir, 'frontend', 'public', 'assets');
     assert.ok(existsSync(join(outputRoot, 'sfx', 'test-assign.ogg')),
       'OGG not found in project output');
@@ -997,17 +1000,18 @@ describe('Audio file update after generation', () => {
     assert.ok(buf.byteLength > 44, 'WAV should have content beyond header');
   });
 
-  it('processed OGG is streamable after assign', async () => {
-    // Assign to trigger processing
+  it('processed OGG is streamable after assign + sync', async () => {
+    // Assign then sync to trigger processing
     const { status } = await fetchJSON(`/api/library/${REFRESH_ID}/assign`, {
       method: 'POST',
       body: { project: 'arena', targetPath: `sfx/${REFRESH_ID}` },
     });
     assert.equal(status, 200);
+    await fetchJSON('/api/projects/arena/sync', { method: 'POST' });
 
     // OGG should now exist on NAS
     const res = await fetch(`${baseUrl}/api/library/${REFRESH_ID}/audio?format=ogg`);
-    assert.equal(res.status, 200, 'OGG should be streamable after assign processing');
+    assert.equal(res.status, 200, 'OGG should be streamable after sync processing');
     const buf = await res.arrayBuffer();
     assert.ok(buf.byteLength > 0, 'OGG should have content');
 
@@ -1018,15 +1022,16 @@ describe('Audio file update after generation', () => {
     });
   });
 
-  it('MP3 is streamable after assign', async () => {
-    // Assign again to ensure processing
+  it('MP3 is streamable after assign + sync', async () => {
+    // Assign then sync to ensure processing
     await fetchJSON(`/api/library/${REFRESH_ID}/assign`, {
       method: 'POST',
       body: { project: 'arena', targetPath: `sfx/${REFRESH_ID}` },
     });
+    await fetchJSON('/api/projects/arena/sync', { method: 'POST' });
 
     const res = await fetch(`${baseUrl}/api/library/${REFRESH_ID}/audio?format=mp3`);
-    assert.equal(res.status, 200, 'MP3 should be streamable after assign processing');
+    assert.equal(res.status, 200, 'MP3 should be streamable after sync processing');
     const buf = await res.arrayBuffer();
     assert.ok(buf.byteLength > 0, 'MP3 should have content');
 

@@ -7,6 +7,14 @@
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='16' fill='%2308080f'/><path d='M50 18L22 82h12l5-14h22l5 14h12L50 18zm0 22l8 22H42l8-22z' fill='%2300e5ff'/><circle cx='74' cy='30' r='6' fill='%23ff4081'/></svg>">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+    }
+  }
+  </script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -755,6 +763,118 @@
       object-fit: contain;
       background: var(--bg-deep);
       image-rendering: pixelated;
+    }
+
+    /* 3D Model Viewer */
+    .model-viewer-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.85);
+      z-index: 10000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(8px);
+    }
+
+    .model-viewer-panel {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      width: min(90vw, 900px);
+      height: min(80vh, 700px);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: 0 0 60px rgba(0, 229, 255, 0.1);
+    }
+
+    .model-viewer-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.6rem 1rem;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg-card);
+    }
+
+    .model-viewer-title {
+      font-family: var(--font-mono);
+      font-weight: 700;
+      font-size: 0.9rem;
+      color: var(--cyan);
+    }
+
+    .model-viewer-close {
+      width: 28px;
+      height: 28px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      padding: 0;
+      color: var(--text-dim);
+      border-color: transparent;
+      background: transparent;
+    }
+
+    .model-viewer-close:hover {
+      color: var(--red);
+      background: var(--bg-card-hover);
+    }
+
+    .model-viewer-canvas-wrap {
+      flex: 1;
+      position: relative;
+      background: #0a0a14;
+    }
+
+    .model-viewer-canvas-wrap canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    .model-viewer-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.4rem 1rem;
+      border-top: 1px solid var(--border);
+      background: var(--bg-card);
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      color: var(--text-dim);
+    }
+
+    .model-viewer-toolbar button {
+      font-size: 0.7rem;
+      padding: 0.2rem 0.5rem;
+    }
+
+    .model-viewer-loading {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--cyan);
+      font-family: var(--font-mono);
+      font-size: 0.9rem;
+    }
+
+    .btn-view3d {
+      background: var(--bg-card);
+      border: 1px solid #6a5acd88;
+      color: #b0a0ff;
+      font-size: 0.72rem;
+      padding: 0.2rem 0.6rem;
+    }
+    .btn-view3d:hover {
+      background: #6a5acd44;
+      border-color: #b0a0ff;
+      color: #e0d8ff;
     }
 
     /* Audio slot row */
@@ -2280,6 +2400,257 @@ function timeAgo(isoString) {
 }
 
 function renderVisualAssets() {
+  if (currentProject === '__library__') {
+    renderVisualLibraryView();
+  } else {
+    renderVisualProjectSlots();
+  }
+}
+
+function renderVisualProjectSlots() {
+  const container = document.getElementById('visual-container');
+  container.replaceChildren();
+
+  const projectName = currentProject;
+  const allAssets = visualData?.assets ? Object.entries(visualData.assets) : [];
+
+  // Get project's assigned slots from visual library
+  const assignedSlots = [];
+  for (const [id, asset] of allAssets) {
+    const assignment = asset.assignedTo?.[projectName];
+    if (assignment) {
+      assignedSlots.push({ libraryId: id, asset, atlas: assignment.atlas, syncedAt: assignment.syncedAt });
+    }
+  }
+
+  // Group by category (atlas)
+  const byCategory = {};
+  for (const slot of assignedSlots) {
+    const cat = slot.atlas || slot.asset.category;
+    if (!byCategory[cat]) byCategory[cat] = [];
+    byCategory[cat].push(slot);
+  }
+
+  if (assignedSlots.length === 0) {
+    const empty = document.createElement('div');
+    empty.className = 'empty-state';
+    empty.textContent = `No visual assets assigned to ${projectName}. Use the form below to assign assets from the global library.`;
+    container.appendChild(empty);
+  }
+
+  // Render each category section
+  const categoryOrder = ['characters', 'weapons', 'items', 'tiles', 'cover', 'ui'];
+  for (const cat of categoryOrder) {
+    const slots = byCategory[cat];
+    if (!slots || slots.length === 0) continue;
+
+    const header = document.createElement('h2');
+    header.className = 'section-header';
+    header.textContent = `${cat} — ${slots.length} assets`;
+    container.appendChild(header);
+
+    for (const slot of slots) {
+      container.appendChild(createVisualSlotRow(slot, allAssets, projectName));
+    }
+  }
+
+  // Add new visual slot section
+  const addHeader = document.createElement('h2');
+  addHeader.className = 'section-header';
+  addHeader.textContent = 'Add Visual Slot';
+  container.appendChild(addHeader);
+
+  const addRow = document.createElement('div');
+  addRow.className = 'add-slot-row';
+
+  // Category selector for the atlas name
+  const catSelect = document.createElement('select');
+  catSelect.className = 'slot-select';
+  catSelect.id = 'new-vslot-category';
+  const categories = ['characters', 'weapons', 'items', 'tiles', 'cover', 'ui'];
+  for (const cat of categories) {
+    const opt = document.createElement('option');
+    opt.value = cat;
+    opt.textContent = cat;
+    catSelect.appendChild(opt);
+  }
+  addRow.appendChild(catSelect);
+
+  // Asset dropdown (grouped by category, only unassigned to this project)
+  const assetSelect = document.createElement('select');
+  assetSelect.className = 'slot-select';
+  assetSelect.id = 'new-vslot-asset';
+
+  const emptyOpt = document.createElement('option');
+  emptyOpt.value = '';
+  emptyOpt.textContent = 'Select asset from library...';
+  assetSelect.appendChild(emptyOpt);
+
+  const catGroups = {};
+  for (const [id, asset] of allAssets) {
+    // Only show assets not already assigned to this project
+    if (asset.assignedTo?.[projectName]) continue;
+    if (!catGroups[asset.category]) catGroups[asset.category] = [];
+    catGroups[asset.category].push([id, asset]);
+  }
+  for (const [cat, assets] of Object.entries(catGroups).sort(([a], [b]) => a.localeCompare(b))) {
+    const group = document.createElement('optgroup');
+    group.label = cat;
+    for (const [id, asset] of assets) {
+      const opt = document.createElement('option');
+      opt.value = id;
+      opt.textContent = `${asset.name || id}`;
+      group.appendChild(opt);
+    }
+    assetSelect.appendChild(group);
+  }
+
+  // Auto-select category when asset is chosen
+  assetSelect.addEventListener('change', () => {
+    const selectedId = assetSelect.value;
+    if (selectedId) {
+      const selectedAsset = visualData.assets[selectedId];
+      if (selectedAsset) catSelect.value = selectedAsset.category;
+    }
+  });
+
+  addRow.appendChild(assetSelect);
+
+  const addBtn = document.createElement('button');
+  addBtn.className = 'btn-primary';
+  addBtn.textContent = 'Assign';
+  addBtn.addEventListener('click', async () => {
+    const assetId = document.getElementById('new-vslot-asset').value;
+    const atlas = document.getElementById('new-vslot-category').value;
+    if (!assetId) {
+      alert('Select an asset from the library');
+      return;
+    }
+    await fetchJSON(`/api/visual-library/${assetId}/assign`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ project: projectName, atlas }),
+    });
+    visualData = await fetchJSON('/api/visual-library');
+    renderVisualAssets();
+    appendLog(`Assigned ${assetId} → ${projectName}/${atlas}`, 'success');
+  });
+  addRow.appendChild(addBtn);
+
+  container.appendChild(addRow);
+}
+
+function createVisualSlotRow(slot, allAssets, projectName) {
+  const row = document.createElement('div');
+  row.className = 'slot-row';
+
+  // Concept thumbnail
+  const thumb = document.createElement('img');
+  thumb.className = 'slot-thumb';
+  thumb.style.cssText = 'width:32px; height:32px; border-radius:3px; object-fit:cover; margin-right:0.5rem; background:var(--bg-deep);';
+  if (slot.asset.pipeline?.concept?.status === 'done') {
+    thumb.src = `/api/visual-library/${slot.libraryId}/concept?t=${Date.now()}`;
+  } else {
+    thumb.alt = '—';
+    thumb.style.display = 'none';
+  }
+  row.appendChild(thumb);
+
+  // Asset name + atlas badge
+  const nameEl = document.createElement('span');
+  nameEl.className = 'slot-name';
+  nameEl.textContent = slot.asset.name || slot.libraryId;
+  row.appendChild(nameEl);
+
+  // Pipeline status badges
+  const phases = ['concept', 'model', 'render', 'pack'];
+  const statusIcons = { done: '✔', pending: '○', generating: '◐', error: '✗' };
+  const pipeEl = document.createElement('span');
+  pipeEl.style.cssText = 'display:flex; gap:0.2rem; margin:0 0.5rem; font-size:0.75rem;';
+  for (const phase of phases) {
+    const phaseData = slot.asset.pipeline?.[phase];
+    if (!phaseData && phase === 'model') continue;
+    const status = phaseData?.status || 'pending';
+    const badge = document.createElement('span');
+    badge.className = `phase-status ${status}`;
+    badge.style.cssText = 'padding:0.1rem 0.3rem; border-radius:3px; font-size:0.65rem;';
+    badge.textContent = `${statusIcons[status] || '○'}${phase[0].toUpperCase()}`;
+    badge.title = `${phase}: ${status}`;
+    pipeEl.appendChild(badge);
+  }
+  row.appendChild(pipeEl);
+
+  // Swap dropdown (change which library asset fills this slot)
+  const select = document.createElement('select');
+  select.className = 'slot-select';
+
+  const catGroups = {};
+  for (const [id, asset] of allAssets) {
+    if (!catGroups[asset.category]) catGroups[asset.category] = [];
+    catGroups[asset.category].push([id, asset]);
+  }
+  for (const [cat, assets] of Object.entries(catGroups).sort(([a], [b]) => a.localeCompare(b))) {
+    const group = document.createElement('optgroup');
+    group.label = cat;
+    for (const [id, asset] of assets) {
+      const opt = document.createElement('option');
+      opt.value = id;
+      opt.textContent = asset.name || id;
+      opt.selected = id === slot.libraryId;
+      group.appendChild(opt);
+    }
+    select.appendChild(group);
+  }
+
+  select.addEventListener('change', async () => {
+    const newAssetId = select.value;
+    // Unassign old
+    await fetchJSON(`/api/visual-library/${slot.libraryId}/unassign`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ project: projectName }),
+    });
+    // Assign new
+    await fetchJSON(`/api/visual-library/${newAssetId}/assign`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ project: projectName, atlas: slot.atlas }),
+    });
+    visualData = await fetchJSON('/api/visual-library');
+    renderVisualAssets();
+    appendLog(`Changed ${slot.atlas} slot: ${slot.libraryId} → ${newAssetId}`, 'success');
+  });
+  row.appendChild(select);
+
+  // Sync status
+  const status = document.createElement('span');
+  const packGen = slot.asset.pipeline?.pack?.generatedAt;
+  const isSynced = slot.syncedAt && packGen && new Date(slot.syncedAt) >= new Date(packGen);
+  status.className = `slot-status ${isSynced ? 'synced' : 'unsynced'}`;
+  status.textContent = isSynced ? 'synced' : 'stale';
+  row.appendChild(status);
+
+  // Remove button
+  const removeBtn = document.createElement('button');
+  removeBtn.className = 'btn-danger';
+  removeBtn.textContent = '×';
+  removeBtn.style.padding = '0.2rem 0.5rem';
+  removeBtn.addEventListener('click', async () => {
+    await fetchJSON(`/api/visual-library/${slot.libraryId}/unassign`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ project: projectName }),
+    });
+    visualData = await fetchJSON('/api/visual-library');
+    renderVisualAssets();
+    appendLog(`Removed ${slot.libraryId} from ${projectName}`, 'dim');
+  });
+  row.appendChild(removeBtn);
+
+  return row;
+}
+
+function renderVisualLibraryView() {
   const container = document.getElementById('visual-container');
   container.replaceChildren();
 
@@ -2504,6 +2875,14 @@ function createVisualCard(id, asset) {
         phaseDiv.appendChild(img);
       }
 
+      if (phase === 'model') {
+        const viewBtn = document.createElement('button');
+        viewBtn.className = 'btn-view3d';
+        viewBtn.textContent = '\u25B6 View 3D';
+        viewBtn.addEventListener('click', () => window.ModelViewer.open(id, asset.name || id));
+        phaseDiv.appendChild(viewBtn);
+      }
+
       if (phase === 'render' && phaseData?.frameCount > 0) {
         const grid = document.createElement('div');
         grid.className = 'render-grid';
@@ -2592,7 +2971,15 @@ function createVisualCard(id, asset) {
 
   const assignBtn = document.createElement('button');
   assignBtn.textContent = 'Assign';
+  if (currentProject === '__library__') {
+    assignBtn.disabled = true;
+    assignBtn.title = 'Select a project first';
+  }
   assignBtn.addEventListener('click', async () => {
+    if (currentProject === '__library__') {
+      appendLog('Select a project to assign assets', 'warn');
+      return;
+    }
     await fetchJSON(`/api/visual-library/${id}/assign`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -2767,6 +3154,291 @@ async function pollWorkerStatus() {
 }
 pollWorkerStatus();
 setInterval(pollWorkerStatus, 5000);
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+window.ModelViewer = {
+  _overlay: null,
+  _renderer: null,
+  _scene: null,
+  _camera: null,
+  _controls: null,
+  _animId: null,
+  _gridHelper: null,
+
+  open(assetId, assetName) {
+    this.close();
+
+    // Build overlay DOM
+    const overlay = document.createElement('div');
+    overlay.className = 'model-viewer-overlay';
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) this.close(); });
+
+    const panel = document.createElement('div');
+    panel.className = 'model-viewer-panel';
+
+    // Header
+    const header = document.createElement('div');
+    header.className = 'model-viewer-header';
+    const title = document.createElement('span');
+    title.className = 'model-viewer-title';
+    title.textContent = `${assetName || assetId} — 3D Model`;
+    header.appendChild(title);
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'model-viewer-close';
+    closeBtn.innerHTML = '\u2715';
+    closeBtn.addEventListener('click', () => this.close());
+    header.appendChild(closeBtn);
+    panel.appendChild(header);
+
+    // Canvas wrapper
+    const canvasWrap = document.createElement('div');
+    canvasWrap.className = 'model-viewer-canvas-wrap';
+    const loading = document.createElement('div');
+    loading.className = 'model-viewer-loading';
+    loading.textContent = 'Loading model...';
+    canvasWrap.appendChild(loading);
+    panel.appendChild(canvasWrap);
+
+    // Toolbar
+    const toolbar = document.createElement('div');
+    toolbar.className = 'model-viewer-toolbar';
+    const resetBtn = document.createElement('button');
+    resetBtn.textContent = 'Reset Camera';
+    resetBtn.addEventListener('click', () => this._resetCamera());
+    toolbar.appendChild(resetBtn);
+    const wireBtn = document.createElement('button');
+    wireBtn.textContent = 'Wireframe';
+    wireBtn.addEventListener('click', () => this._toggleWireframe());
+    toolbar.appendChild(wireBtn);
+    const gridBtn = document.createElement('button');
+    gridBtn.textContent = 'Grid';
+    gridBtn.addEventListener('click', () => this._toggleGrid());
+    toolbar.appendChild(gridBtn);
+    const isoBtn = document.createElement('button');
+    isoBtn.textContent = 'Isometric (60\u00b0)';
+    isoBtn.title = 'Match Blender render camera angle';
+    isoBtn.addEventListener('click', () => this._setIsometricCamera());
+    toolbar.appendChild(isoBtn);
+    const hint = document.createElement('span');
+    hint.textContent = 'Drag to orbit \u2022 Scroll to zoom \u2022 Right-drag to pan';
+    hint.style.marginLeft = 'auto';
+    toolbar.appendChild(hint);
+    panel.appendChild(toolbar);
+
+    overlay.appendChild(panel);
+    document.body.appendChild(overlay);
+    this._overlay = overlay;
+
+    // Close on Escape
+    this._escHandler = (e) => { if (e.key === 'Escape') this.close(); };
+    document.addEventListener('keydown', this._escHandler);
+
+    // Init Three.js
+    this._initScene(canvasWrap, loading, assetId);
+  },
+
+  _initScene(container, loadingEl, assetId) {
+    const rect = container.getBoundingClientRect();
+    const w = rect.width;
+    const h = rect.height;
+
+    // Renderer
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(w, h);
+    renderer.setClearColor(0x0a0a14, 1);
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.2;
+    container.appendChild(renderer.domElement);
+    this._renderer = renderer;
+
+    // Scene
+    const scene = new THREE.Scene();
+    this._scene = scene;
+
+    // Camera — start at 60° elevation to match Blender template
+    const camera = new THREE.PerspectiveCamera(40, w / h, 0.01, 100);
+    camera.position.set(2, 1.5, 2);
+    this._camera = camera;
+
+    // Controls
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.08;
+    controls.target.set(0, 0.5, 0);
+    controls.update();
+    this._controls = controls;
+
+    // Lighting — 3-point setup matching Blender templates
+    const ambient = new THREE.AmbientLight(0xffffff, 0.4);
+    scene.add(ambient);
+
+    const keyLight = new THREE.DirectionalLight(0xfff0e0, 1.2);
+    keyLight.position.set(3, 4, 2);
+    scene.add(keyLight);
+
+    const fillLight = new THREE.DirectionalLight(0xe0f0ff, 0.6);
+    fillLight.position.set(-2, 2, -1);
+    scene.add(fillLight);
+
+    const rimLight = new THREE.DirectionalLight(0x00e5ff, 0.3);
+    rimLight.position.set(0, 1, -3);
+    scene.add(rimLight);
+
+    // Grid (hidden by default)
+    const grid = new THREE.GridHelper(4, 20, 0x1e1e3a, 0x1e1e3a);
+    grid.visible = false;
+    scene.add(grid);
+    this._gridHelper = grid;
+
+    // Load GLB model
+    const loader = new GLTFLoader();
+    loader.load(
+      `/api/visual-library/${assetId}/model`,
+      (gltf) => {
+        loadingEl.remove();
+        const model = gltf.scene;
+
+        // Enable vertex colors if present (TripoSR models)
+        model.traverse((child) => {
+          if (child.isMesh) {
+            if (child.geometry.attributes.color) {
+              child.material = new THREE.MeshStandardMaterial({
+                vertexColors: true,
+                metalness: 0.1,
+                roughness: 0.7,
+              });
+            }
+            child.castShadow = true;
+          }
+        });
+
+        // Fix orientation: detect tallest axis and rotate to Y-up
+        // Mirrors render_sprites.py normalize_model() logic
+        const rawBox = new THREE.Box3().setFromObject(model);
+        const rawSize = rawBox.getSize(new THREE.Vector3());
+        if (rawSize.z > rawSize.y && rawSize.z > rawSize.x) {
+          // Z-up model (Blender convention) → rotate to Y-up (Three.js)
+          model.rotation.x = -Math.PI / 2;
+        } else if (rawSize.x > rawSize.y && rawSize.x > rawSize.z) {
+          // X-up model → rotate to Y-up
+          model.rotation.z = Math.PI / 2;
+        }
+
+        // Center and scale model to fit view
+        const box = new THREE.Box3().setFromObject(model);
+        const size = box.getSize(new THREE.Vector3());
+        const center = box.getCenter(new THREE.Vector3());
+        const maxDim = Math.max(size.x, size.y, size.z);
+        const scale = 2 / maxDim;
+        model.scale.setScalar(scale);
+        model.position.sub(center.multiplyScalar(scale));
+        model.position.y -= (box.min.y * scale);
+
+        scene.add(model);
+
+        // Adjust controls target to model center
+        const newBox = new THREE.Box3().setFromObject(model);
+        const newCenter = newBox.getCenter(new THREE.Vector3());
+        controls.target.copy(newCenter);
+        controls.update();
+      },
+      (progress) => {
+        if (progress.total > 0) {
+          const pct = Math.round((progress.loaded / progress.total) * 100);
+          loadingEl.textContent = `Loading model... ${pct}%`;
+        }
+      },
+      (error) => {
+        loadingEl.textContent = `Failed to load model: ${error.message || 'Unknown error'}`;
+        loadingEl.style.color = '#ff3366';
+      }
+    );
+
+    // Animation loop
+    const animate = () => {
+      this._animId = requestAnimationFrame(animate);
+      controls.update();
+      renderer.render(scene, camera);
+    };
+    animate();
+
+    // Handle resize
+    this._resizeObs = new ResizeObserver(() => {
+      const r = container.getBoundingClientRect();
+      camera.aspect = r.width / r.height;
+      camera.updateProjectionMatrix();
+      renderer.setSize(r.width, r.height);
+    });
+    this._resizeObs.observe(container);
+  },
+
+  _resetCamera() {
+    if (!this._camera || !this._controls) return;
+    this._camera.position.set(2, 1.5, 2);
+    this._controls.target.set(0, 0.5, 0);
+    this._controls.update();
+  },
+
+  _setIsometricCamera() {
+    if (!this._camera || !this._controls) return;
+    // 60° elevation angle, matching Blender character template
+    const dist = 3;
+    const elev = (60 * Math.PI) / 180;
+    this._camera.position.set(
+      dist * Math.cos(elev) * Math.sin(Math.PI / 4),
+      dist * Math.sin(elev),
+      dist * Math.cos(elev) * Math.cos(Math.PI / 4)
+    );
+    this._controls.target.set(0, 0.5, 0);
+    this._controls.update();
+  },
+
+  _toggleWireframe() {
+    if (!this._scene) return;
+    this._scene.traverse((child) => {
+      if (child.isMesh && child.material) {
+        child.material.wireframe = !child.material.wireframe;
+      }
+    });
+  },
+
+  _toggleGrid() {
+    if (this._gridHelper) this._gridHelper.visible = !this._gridHelper.visible;
+  },
+
+  close() {
+    if (this._animId) cancelAnimationFrame(this._animId);
+    if (this._resizeObs) this._resizeObs.disconnect();
+    if (this._renderer) this._renderer.dispose();
+    if (this._controls) this._controls.dispose();
+    if (this._scene) {
+      this._scene.traverse((child) => {
+        if (child.isMesh) {
+          child.geometry?.dispose();
+          if (child.material) {
+            if (Array.isArray(child.material)) child.material.forEach(m => m.dispose());
+            else child.material.dispose();
+          }
+        }
+      });
+    }
+    if (this._overlay) this._overlay.remove();
+    if (this._escHandler) document.removeEventListener('keydown', this._escHandler);
+    this._overlay = null;
+    this._renderer = null;
+    this._scene = null;
+    this._camera = null;
+    this._controls = null;
+    this._animId = null;
+    this._gridHelper = null;
+  }
+};
 </script>
 
 </body>

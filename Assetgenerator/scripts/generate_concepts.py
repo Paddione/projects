@@ -298,16 +298,6 @@ def main():
         OUTPUT_BASE = Path(args.output)
         OUTPUT_BASE.mkdir(parents=True, exist_ok=True)
 
-    manifest = load_manifest()
-    meta = manifest.get("meta", {})
-
-    # When --id and --prompt are both provided, override the asset's prompt in the manifest
-    if args.id and args.override_prompt:
-        for cat_name in ["characters", "weapons", "items", "tiles", "cover", "ui"]:
-            for asset in manifest.get(cat_name, []):
-                if asset["id"] == args.id:
-                    asset["prompt"] = args.override_prompt
-
     # Determine backend
     backend = args.backend
     if backend == "auto":
@@ -321,6 +311,36 @@ def main():
             print("[ERROR] No generation backend available!")
             print("  Install ComfyUI or: pip install diffusers transformers torch accelerate")
             sys.exit(1)
+
+    # Direct generation: when --id, --prompt, and --category are all provided,
+    # skip manifest lookup and generate directly (used by adapter dispatch)
+    if args.id and args.override_prompt and args.category:
+        asset = {"id": args.id, "prompt": args.override_prompt}
+        w, h = get_resolution(args.category, {})
+        print(f"\n  [GEN] {args.category}/{args.id} ({w}x{h})")
+        out_path = OUTPUT_BASE / f"{args.id}.png"
+        if out_path.exists():
+            print(f"  [SKIP] {args.category}/{args.id} — already exists")
+        elif backend == "comfyui":
+            ok = comfyui_generate(args.comfyui_url, args.override_prompt, out_path, w, h)
+            print(f"\n[DONE] {'Success' if ok else 'Failed'}")
+            sys.exit(0 if ok else 1)
+        else:
+            ok = diffusers_generate(args.override_prompt, out_path, w, h)
+            print(f"\n[DONE] {'Success' if ok else 'Failed'}")
+            sys.exit(0 if ok else 1)
+        sys.exit(0)
+
+    # Manifest-based generation: iterate over all assets in category
+    manifest = load_manifest()
+    meta = manifest.get("meta", {})
+
+    # When --id and --prompt are both provided, override the asset's prompt in the manifest
+    if args.id and args.override_prompt:
+        for cat_name in ["characters", "weapons", "items", "tiles", "cover", "ui"]:
+            for asset in manifest.get(cat_name, []):
+                if asset["id"] == args.id:
+                    asset["prompt"] = args.override_prompt
 
     # Category -> asset list mapping
     categories = {

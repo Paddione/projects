@@ -578,37 +578,12 @@ app.post('/api/library/:id/assign', (req, res) => {
   const library = loadLibrary();
   const sound = library.sounds[req.params.id];
   if (!sound) return res.status(404).json({ error: 'Sound not found' });
-  const config = loadLibraryConfig();
-  const wavPath = join(config.libraryRoot, sound.filePath);
-  if (!existsSync(wavPath)) return res.status(404).json({ error: 'WAV file not found on NAS' });
-
-  // Ensure processed files exist on NAS
-  const nasDir = dirname(wavPath);
-  const baseName = sound.filePath.replace(/\.wav$/, '');
-  const oggNas = join(config.libraryRoot, `${baseName}.ogg`);
-  const mp3Nas = join(config.libraryRoot, `${baseName}.mp3`);
-  if (!existsSync(oggNas) || !existsSync(mp3Nas)) {
-    try {
-      processAudioFile(wavPath, nasDir, sound.id, sound.category);
-    } catch (err) {
-      return res.status(500).json({ error: `Processing failed: ${err.message}` });
-    }
-  }
-
-  // Copy to project output dir
   const proj = loadProject(project);
   if (!proj) return res.status(404).json({ error: `Project ${project} not found` });
-  const outputRoot = resolve(__dirname, proj.outputRoot);
-  for (const ext of ['.ogg', '.mp3']) {
-    const src = join(config.libraryRoot, `${baseName}${ext}`);
-    const dest = join(outputRoot, `${targetPath}${ext}`);
-    const destDir = dirname(dest);
-    if (!existsSync(destDir)) mkdirSync(destDir, { recursive: true });
-    copyFileSync(src, dest);
-  }
 
+  // Record assignment only — file processing and copying happens during sync
   if (!sound.assignedTo) sound.assignedTo = {};
-  sound.assignedTo[project] = { targetPath, syncedAt: new Date().toISOString() };
+  sound.assignedTo[project] = { targetPath, syncedAt: null };
   saveLibrary(library);
   res.json(sound);
 });
@@ -637,6 +612,20 @@ app.post('/api/projects/:name/sync', (req, res) => {
     if (!assignment) continue;
     if (sound.createdAt && assignment.syncedAt && new Date(sound.createdAt) <= new Date(assignment.syncedAt)) continue;
     const baseName = sound.filePath.replace(/\.wav$/, '');
+
+    // Ensure processed files exist on NAS (WAV → OGG/MP3)
+    const wavPath = join(config.libraryRoot, sound.filePath);
+    const oggNas = join(config.libraryRoot, `${baseName}.ogg`);
+    const mp3Nas = join(config.libraryRoot, `${baseName}.mp3`);
+    if (existsSync(wavPath) && (!existsSync(oggNas) || !existsSync(mp3Nas))) {
+      try {
+        processAudioFile(wavPath, dirname(wavPath), id, sound.category);
+      } catch (err) {
+        console.error(`Sync: processing failed for ${id}:`, err.message);
+        continue;
+      }
+    }
+
     const outputRoot = resolve(__dirname, project.outputRoot);
     for (const ext of ['.ogg', '.mp3']) {
       const src = join(config.libraryRoot, `${baseName}${ext}`);
@@ -1247,21 +1236,12 @@ app.post('/api/visual-library/:id/assign', (req, res) => {
   const library = loadVisualLibrary();
   const asset = library.assets[req.params.id];
   if (!asset) return res.status(404).json({ error: 'Asset not found' });
-  const vConfig = loadVisualConfig();
   const proj = loadProject(project);
   if (!proj) return res.status(404).json({ error: `Project ${project} not found` });
 
-  const outputRoot = resolve(__dirname, proj.outputRoot);
-  const spritesDir = join(outputRoot, 'sprites');
-  if (!existsSync(spritesDir)) mkdirSync(spritesDir, { recursive: true });
-
-  for (const ext of ['.png', '.json']) {
-    const src = join(vConfig.libraryRoot, 'sprites', `${asset.category}${ext}`);
-    if (existsSync(src)) copyFileSync(src, join(spritesDir, `${asset.category}${ext}`));
-  }
-
+  // Record assignment only — file copying happens during sync
   if (!asset.assignedTo) asset.assignedTo = {};
-  asset.assignedTo[project] = { atlas, syncedAt: new Date().toISOString() };
+  asset.assignedTo[project] = { atlas, syncedAt: null };
   saveVisualLibrary(library);
   res.json(asset);
 });
@@ -1286,19 +1266,19 @@ app.post('/api/projects/:name/sync-visual', (req, res) => {
   const vConfig = loadVisualConfig();
   const synced = [];
 
+  // Write to NAS exports dir (accessible from container), not project outputRoot
+  const exportDir = join(vConfig.libraryRoot, 'exports', req.params.name, 'sprites');
+  if (!existsSync(exportDir)) mkdirSync(exportDir, { recursive: true });
+
   for (const [id, asset] of Object.entries(library.assets)) {
     const assignment = asset.assignedTo?.[req.params.name];
     if (!assignment) continue;
-    const packGen = asset.pipeline.pack?.generatedAt;
+    const packGen = asset.pipeline?.pack?.generatedAt;
     if (packGen && assignment.syncedAt && new Date(packGen) <= new Date(assignment.syncedAt)) continue;
-
-    const outputRoot = resolve(__dirname, project.outputRoot);
-    const spritesDir = join(outputRoot, 'sprites');
-    if (!existsSync(spritesDir)) mkdirSync(spritesDir, { recursive: true });
 
     for (const ext of ['.png', '.json']) {
       const src = join(vConfig.libraryRoot, 'sprites', `${asset.category}${ext}`);
-      if (existsSync(src)) copyFileSync(src, join(spritesDir, `${asset.category}${ext}`));
+      if (existsSync(src)) copyFileSync(src, join(exportDir, `${asset.category}${ext}`));
     }
 
     assignment.syncedAt = new Date().toISOString();
@@ -1306,7 +1286,7 @@ app.post('/api/projects/:name/sync-visual', (req, res) => {
   }
 
   saveVisualLibrary(library);
-  res.json({ synced, count: synced.length });
+  res.json({ synced, count: synced.length, exportPath: exportDir });
 });
 
 // =============================================================================
