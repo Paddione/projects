@@ -1,0 +1,58 @@
+---
+# =============================================================================
+# Shared Visual Library PV (Read-Only)
+# =============================================================================
+# Provides read-only access to /mnt/pve3a/visual-library for frontend pods
+# serving 3D character models (GLB files) via nginx.
+# Used by: arena-frontend, l2p-frontend
+# =============================================================================
+
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: visual-library-ro-pv
+  labels:
+    type: visual-library
+    access: readonly
+spec:
+  capacity:
+    storage: 50Gi
+  accessModes:
+    - ReadOnlyMany
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ""
+  csi:
+    driver: smb.csi.k8s.io
+    volumeHandle: visual-library-readonly
+    volumeAttributes:
+      source: "//10.0.0.11/storage-pve3a/visual-library"
+    nodeStageSecretRef:
+      name: smbcreds
+      namespace: korczewski-infra
+  mountOptions:
+    - dir_mode=0755
+    - file_mode=0644
+    - uid=1001
+    - gid=1001
+    - noperm
+    - mfsymlinks
+    - cache=none
+    - noserverino
+    - ro
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: visual-library-ro
+  namespace: korczewski-services
+  labels:
+    type: visual-library
+    access: readonly
+spec:
+  accessModes:
+    - ReadOnlyMany
+  storageClassName: ""
+  volumeName: visual-library-ro-pv
+  resources:
+    requests:
+      storage: 50Gi

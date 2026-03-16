@@ -84,8 +84,16 @@ spec:
             periodSeconds: 10
             timeoutSeconds: 3
             failureThreshold: 3
+          volumeMounts:
+            - name: visual-library
+              mountPath: /mnt/pve3a/visual-library
+              readOnly: true
           securityContext:
             allowPrivilegeEscalation: false
             capabilities:
               drop:
                 - ALL
+      volumes:
+        - name: visual-library
+          persistentVolumeClaim:
+            claimName: visual-library-ro

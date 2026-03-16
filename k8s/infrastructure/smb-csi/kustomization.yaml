@@ -5,3 +5,4 @@ resources:
   - storageclass.yaml
   - storageclass-media.yaml
   - pvc-cleanup-cronjob.yaml
+  - pv-visual-library-ro.yaml
