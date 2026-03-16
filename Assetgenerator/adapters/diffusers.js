@@ -1,6 +1,6 @@
 import { resolve, join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { getWorker } from '../worker-manager.js';
+import { enqueueJob } from '../worker-manager.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = process.env.ASSETGENERATOR_ROOT || resolve(__dirname, '..');
@@ -21,14 +21,9 @@ export async function generate({ id, asset, config, libraryRoot }) {
   if (asset.prompt) args.push('--prompt', asset.prompt);
   args.push('--output', outputDir);
 
-  const worker = getWorker();
-  if (worker) {
-    const result = await worker.exec({
-      cmd: workerPython, args, cwd: PROJECT_ROOT, env: {},
-    });
-    if (result.code !== 0) throw new Error(`generate_concepts.py (diffusers) exited ${result.code}: ${result.stderr}`);
-    return { status: 'done', path: `concepts/${asset.category}/${id}.png`, backend: 'diffusers' };
-  }
-
-  throw new Error('No GPU worker connected. Select a cloud backend or start the worker.');
+  const result = await enqueueJob({
+    cmd: workerPython, args, cwd: PROJECT_ROOT, env: {},
+  });
+  if (result.code !== 0) throw new Error(`generate_concepts.py (diffusers) exited ${result.code}: ${result.stderr}`);
+  return { status: 'done', path: `concepts/${asset.category}/${id}.png`, backend: 'diffusers' };
 }

@@ -1,5 +1,5 @@
 import { resolve } from 'node:path';
-import { getWorker } from '../worker-manager.js';
+import { enqueueJob } from '../worker-manager.js';
 
 /**
  * AudioCraft adapter — dispatches generate_audio.py to GPU worker.
@@ -27,16 +27,11 @@ export async function generate({ id, type, prompt, seed, duration, outputPath, p
   if (duration != null) args.push('--duration', String(duration));
   if (outputPath) args.push('--output', outputPath);
 
-  const worker = getWorker();
-  if (worker) {
-    const result = await worker.exec({ cmd: pythonPath, args, cwd: projectDir, env: {} });
-    if (result.code !== 0) {
-      throw new Error(`generate_audio.py exited ${result.code}: ${result.stderr}`);
-    }
-    const seedMatch = result.stdout.match(/SEED:(\d+)/);
-    const actualSeed = seedMatch ? parseInt(seedMatch[1], 10) : seed;
-    return { seed: actualSeed, stdout: result.stdout, stderr: result.stderr };
+  const result = await enqueueJob({ cmd: pythonPath, args, cwd: projectDir, env: {} });
+  if (result.code !== 0) {
+    throw new Error(`generate_audio.py exited ${result.code}: ${result.stderr}`);
   }
-
-  throw new Error('No GPU worker connected. Select a cloud backend or start the worker.');
+  const seedMatch = result.stdout.match(/SEED:(\d+)/);
+  const actualSeed = seedMatch ? parseInt(seedMatch[1], 10) : seed;
+  return { seed: actualSeed, stdout: result.stdout, stderr: result.stderr };
 }

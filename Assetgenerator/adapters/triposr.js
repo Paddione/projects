@@ -1,7 +1,7 @@
 import { resolve, join, dirname } from 'node:path';
 import { existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { getWorker } from '../worker-manager.js';
+import { enqueueJob } from '../worker-manager.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = process.env.ASSETGENERATOR_ROOT || resolve(__dirname, '..');
@@ -23,20 +23,15 @@ export async function generate({ id, asset, config, libraryRoot }) {
     '--output', outputDir,
   ];
 
-  const worker = getWorker();
-  if (worker) {
-    const result = await worker.exec({
-      cmd: workerPython, args, cwd: PROJECT_ROOT, env: {},
-    });
-    if (result.code !== 0) throw new Error(`generate_3d.py exited ${result.code}: ${result.stderr}`);
+  const result = await enqueueJob({
+    cmd: workerPython, args, cwd: PROJECT_ROOT, env: {},
+  });
+  if (result.code !== 0) throw new Error(`generate_3d.py exited ${result.code}: ${result.stderr}`);
 
-    // Verify the output file was actually created on the shared filesystem
-    if (!existsSync(outputPath)) {
-      throw new Error(`generate_3d.py exited 0 but ${outputPath} was not created. Check worker has access to ${libraryRoot}`);
-    }
-
-    return { status: 'done', path: `models/${asset.category}/${id}.glb`, backend: 'triposr' };
+  // Verify the output file was actually created on the shared filesystem
+  if (!existsSync(outputPath)) {
+    throw new Error(`generate_3d.py exited 0 but ${outputPath} was not created. Check worker has access to ${libraryRoot}`);
   }
 
-  throw new Error('No GPU worker connected. Select a cloud backend or start the worker.');
+  return { status: 'done', path: `models/${asset.category}/${id}.glb`, backend: 'triposr' };
 }

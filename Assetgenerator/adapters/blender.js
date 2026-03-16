@@ -1,6 +1,6 @@
 import { resolve, join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { getWorker } from '../worker-manager.js';
+import { enqueueJob } from '../worker-manager.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = process.env.ASSETGENERATOR_ROOT || resolve(__dirname, '..');
@@ -33,20 +33,15 @@ export async function generate({ id, asset, config, libraryRoot }) {
     '--output', outputDir,
   ];
 
-  const worker = getWorker();
-  if (worker) {
-    const result = await worker.exec({ cmd: blenderPath, args, cwd: PROJECT_ROOT, env: {} });
-    if (result.code !== 0) throw new Error(`Blender render exited ${result.code}: ${result.stderr.slice(-500)}`);
+  const result = await enqueueJob({ cmd: blenderPath, args, cwd: PROJECT_ROOT, env: {} });
+  if (result.code !== 0) throw new Error(`Blender render exited ${result.code}: ${result.stderr.slice(-500)}`);
 
-    const frameMatch = result.stdout.match(/FRAMES:(\d+)|Rendered (\d+) frames/i);
-    const frameCount = frameMatch ? parseInt(frameMatch[1] || frameMatch[2], 10) : 0;
+  const frameMatch = result.stdout.match(/FRAMES:(\d+)|Rendered (\d+) frames/i);
+  const frameCount = frameMatch ? parseInt(frameMatch[1] || frameMatch[2], 10) : 0;
 
-    if (frameCount === 0) {
-      throw new Error(`Blender rendered 0 frames for "${id}". Check model exists at ${modelPath}`);
-    }
-
-    return { status: 'done', frameCount, backend: 'blender' };
+  if (frameCount === 0) {
+    throw new Error(`Blender rendered 0 frames for "${id}". Check model exists at ${modelPath}`);
   }
 
-  throw new Error('No GPU worker connected. Select a cloud backend or start the worker.');
+  return { status: 'done', frameCount, backend: 'blender' };
 }
