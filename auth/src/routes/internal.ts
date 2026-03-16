@@ -5,7 +5,7 @@ import { ProfileService } from '../services/ProfileService.js';
 import { RespectService } from '../services/RespectService.js';
 import { db } from '../config/database.js';
 import { matchEscrow } from '../db/schema.js';
-import { eq } from 'drizzle-orm';
+import { eq, and, lt, inArray } from 'drizzle-orm';
 
 const router = express.Router();
 const profileService = new ProfileService();
@@ -210,6 +210,36 @@ router.post('/internal/match/settle', async (req: Request, res: Response) => {
       return;
     }
     res.status(500).json({ error: 'Failed to settle match' });
+  }
+});
+
+/**
+ * POST /api/internal/match/cleanup-expired
+ * Mark expired escrow records as 'expired' so they can no longer be settled.
+ * Designed to be called by a K8s CronJob every minute. Idempotent.
+ */
+router.post('/internal/match/cleanup-expired', async (_req: Request, res: Response) => {
+  try {
+    const now = new Date();
+
+    const expired = await db
+      .update(matchEscrow)
+      .set({ status: 'expired' })
+      .where(
+        and(
+          inArray(matchEscrow.status, ['pending', 'active']),
+          lt(matchEscrow.expires_at, now),
+        )
+      )
+      .returning({ id: matchEscrow.id, token: matchEscrow.token });
+
+    res.status(200).json({
+      cleaned: expired.length,
+      tokens: expired.map((e) => e.token),
+    });
+  } catch (error) {
+    console.error('Escrow cleanup failed:', error);
+    res.status(500).json({ error: 'Failed to clean up expired escrows' });
   }
 });
 

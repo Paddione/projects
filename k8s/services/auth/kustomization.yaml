@@ -21,3 +21,4 @@ resources:
   - service.yaml
   - ingressroute.yaml
   - network-policy.yaml
+  - cronjob-escrow-cleanup.yaml

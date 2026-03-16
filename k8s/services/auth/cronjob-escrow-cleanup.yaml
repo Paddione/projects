@@ -1,0 +1,39 @@
+---
+# =============================================================================
+# Escrow Cleanup CronJob
+# =============================================================================
+# Marks expired match escrow records as 'expired' every minute.
+# Replaces app-level cron — keeps auth service stateless.
+# =============================================================================
+
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: escrow-cleanup
+  namespace: korczewski-services
+  labels:
+    app: auth
+    app.kubernetes.io/name: escrow-cleanup
+    app.kubernetes.io/part-of: korczewski
+    app.kubernetes.io/component: authentication
+spec:
+  schedule: "* * * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          nodeSelector:
+            kubernetes.io/arch: amd64
+          containers:
+            - name: cleanup
+              image: curlimages/curl:latest
+              command:
+                - curl
+                - -sf
+                - -X
+                - POST
+                - http://auth.korczewski-services.svc.cluster.local:5500/api/internal/match/cleanup-expired
