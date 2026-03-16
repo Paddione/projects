@@ -135,6 +135,7 @@ export interface Character {
   emoji: string;
   description: string;
   unlockLevel: number;
+  modelPath?: string;  // path to GLB model
 }
 
 export interface UserProfile {
