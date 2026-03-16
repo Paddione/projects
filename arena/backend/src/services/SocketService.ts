@@ -476,11 +476,12 @@ export class SocketService {
                         escrowedXp: escrow.escrowedXp,
                         playerIds: escrow.playerIds,
                     });
+                    if (!lobby) { socket.emit('private-match-error', { error: 'Failed to create lobby' }); return; }
                     this.io.to(`lobby:${lobbyCode}`).emit('lobby-updated', lobby);
 
                     // Auto-start when all expected players have joined
                     const escrowInfo = this.privateMatchEscrows.get(lobbyCode)!;
-                    const joinedIds = lobby.players.map(p => p.id);
+                    const joinedIds = lobby!.players.map(p => p.id);
                     const allJoined = escrowInfo.expectedPlayerIds.every(id => joinedIds.includes(id));
 
                     if (allJoined) {
