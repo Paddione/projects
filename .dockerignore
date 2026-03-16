@@ -8,8 +8,9 @@ reverse-proxy/
 # Exclude node_modules everywhere
 **/node_modules/
 
-# Exclude build artifacts
+# Exclude build artifacts (except shared-3d dist which is needed by Docker builds)
 **/dist/
+!shared-infrastructure/shared/3d/dist/
 **/build/
 **/coverage/
 **/.next/
