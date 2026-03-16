@@ -126,12 +126,61 @@ def parent_with_auto_weights(mesh_objects, rig):
     bpy.ops.object.parent_set(type='ARMATURE_AUTO')
 
 
-def export_glb(path):
-    """Export the entire scene as GLB."""
+def clean_rig_for_export(rig):
+    """Remove Rigify widget objects and non-deformation bones for glTF export.
+
+    Rigify generates a control rig with IK/FK widgets, helper bones, and WGT-*
+    mesh objects. The glTF exporter crashes on these. We strip everything except
+    deformation bones (DEF-*) which are what actually drive mesh vertices.
+    """
+    # Remove all WGT-* widget mesh objects
+    wgt_objects = [obj for obj in bpy.data.objects if obj.name.startswith('WGT-')]
+    for obj in wgt_objects:
+        bpy.data.objects.remove(obj, do_unlink=True)
+
+    # Enter edit mode on the armature to remove non-deformation bones
+    bpy.context.view_layer.objects.active = rig
+    bpy.ops.object.mode_set(mode='EDIT')
+
+    # Rigify deformation bones are prefixed with "DEF-"
+    # Keep only DEF-* bones and the root bone
+    bones_to_remove = []
+    for bone in rig.data.edit_bones:
+        if not bone.name.startswith('DEF-') and bone.name != 'root':
+            bones_to_remove.append(bone.name)
+
+    for bone_name in bones_to_remove:
+        bone = rig.data.edit_bones.get(bone_name)
+        if bone:
+            rig.data.edit_bones.remove(bone)
+
+    bpy.ops.object.mode_set(mode='OBJECT')
+
+    # Rename DEF- prefix to clean names for runtime
+    bpy.ops.object.mode_set(mode='EDIT')
+    for bone in rig.data.edit_bones:
+        if bone.name.startswith('DEF-'):
+            bone.name = bone.name[4:]  # Strip "DEF-" prefix
+    bpy.ops.object.mode_set(mode='OBJECT')
+
+    print(f'[auto_rig] Cleaned rig: {len(rig.data.bones)} deformation bones remain')
+
+
+def export_glb(path, rig, mesh_objects):
+    """Export only the rig and mesh objects as GLB."""
     os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
+
+    # Select only what we want to export
+    bpy.ops.object.select_all(action='DESELECT')
+    rig.select_set(True)
+    for mesh in mesh_objects:
+        mesh.select_set(True)
+    bpy.context.view_layer.objects.active = rig
+
     bpy.ops.export_scene.gltf(
         filepath=path,
         export_format='GLB',
+        use_selection=True,
         export_animations=True,
         export_skins=True,
         export_apply=False,
@@ -170,8 +219,11 @@ def main():
     print(f'[auto_rig] Parenting mesh to rig with automatic weights...')
     parent_with_auto_weights(mesh_objects, rig)
 
+    print(f'[auto_rig] Cleaning rig for glTF export...')
+    clean_rig_for_export(rig)
+
     print(f'[auto_rig] Exporting to {output_path}...')
-    export_glb(output_path)
+    export_glb(output_path, rig, mesh_objects)
 
     print(f'[auto_rig] Done. Output: {output_path}')
 
