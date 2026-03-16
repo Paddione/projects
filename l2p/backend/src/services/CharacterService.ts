@@ -3,6 +3,7 @@ import { PerksManager, UserPerk } from './PerksManager.js';
 import { GameProfileService, GameProfile } from './GameProfileService.js';
 import { DatabaseService } from './DatabaseService.js';
 import { PerkQueryService } from './PerkQueryService.js';
+import { fetchUserProfile } from '../config/authClient.js';
 
 export interface Character {
   id: string;
@@ -370,7 +371,7 @@ export class CharacterService {
    * Get user's character information including level and progress
    * Supports both OAuth users (game profiles) and legacy users
    */
-  async getUserCharacterInfo(userId: number): Promise<{
+  async getUserCharacterInfo(userId: number, authToken?: string): Promise<{
     character: Character;
     level: number;
     experience: number;
@@ -378,6 +379,35 @@ export class CharacterService {
     availableCharacters: Character[];
   } | null> {
     console.log('[CharacterService] getUserCharacterInfo called for userId:', userId);
+
+    // Try auth service first if token is available
+    if (authToken) {
+      try {
+        const profile = await fetchUserProfile(authToken);
+        if (profile) {
+          const level = profile.level || profile.character_level || 1;
+          const xp = profile.xpTotal || profile.experience_points || 0;
+          const selectedChar = profile.selectedCharacter || profile.selected_character || 'student';
+          const character = this.getCharacterById(selectedChar);
+
+          if (character) {
+            const progress = this.calculateLevelProgress(xp);
+            const availableCharacters = this.getAvailableCharacters(level);
+
+            console.log('[CharacterService] Resolved character info from auth service for userId:', userId);
+            return {
+              character,
+              level,
+              experience: xp,
+              progress,
+              availableCharacters,
+            };
+          }
+        }
+      } catch (error) {
+        console.warn('[CharacterService] Auth service unreachable for profile fetch, falling back to local DB');
+      }
+    }
 
     // Try to get game profile first (OAuth users)
     try {

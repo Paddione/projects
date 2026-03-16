@@ -72,7 +72,8 @@ router.get('/available', authenticate, async (req: Request, res: Response): Prom
       return;
     }
 
-    const userInfo = await characterService.getUserCharacterInfo(userId);
+    const authToken = req.headers.authorization?.replace('Bearer ', '') || (req.cookies as Record<string, string>)?.accessToken;
+    const userInfo = await characterService.getUserCharacterInfo(userId, authToken);
     if (!userInfo) {
       res.status(404).json({
         success: false,
@@ -119,7 +120,8 @@ router.get('/profile', authenticate, async (req: Request, res: Response): Promis
       return;
     }
 
-    const userInfo = await characterService.getUserCharacterInfo(userId);
+    const authToken = req.headers.authorization?.replace('Bearer ', '') || (req.cookies as Record<string, string>)?.accessToken;
+    const userInfo = await characterService.getUserCharacterInfo(userId, authToken);
     if (!userInfo) {
       res.status(404).json({
         success: false,
@@ -186,7 +188,8 @@ router.put('/select', authenticate, async (req: Request, res: Response): Promise
     }
 
     // Get updated character info
-    const userInfo = await characterService.getUserCharacterInfo(userId);
+    const authToken = req.headers.authorization?.replace('Bearer ', '') || (req.cookies as Record<string, string>)?.accessToken;
+    const userInfo = await characterService.getUserCharacterInfo(userId, authToken);
 
     res.json({
       success: true,
