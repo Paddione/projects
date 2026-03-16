@@ -156,4 +156,105 @@ describe('GPU Worker', () => {
     worker.close();
     await new Promise((r) => setTimeout(r, 100));
   });
+
+  describe('idle timeout', () => {
+    it('exits after IDLE_TIMEOUT_MS with no jobs', async () => {
+      const exitPromise = new Promise((resolve) => {
+        const originalExit = process.exit;
+        process.exit = (code) => {
+          process.exit = originalExit;
+          resolve(code);
+        };
+      });
+
+      wss.once('connection', (ws) => {
+        ws.send(JSON.stringify({ type: 'welcome', serverVersion: '1.0' }));
+        ws.on('message', (raw) => {
+          const msg = JSON.parse(raw);
+          if (msg.type === 'register') { /* registered, no jobs sent */ }
+        });
+      });
+
+      const worker = createWorker({
+        url: `ws://127.0.0.1:${port}`,
+        reconnectDelay: 100,
+        idleTimeoutMs: 200,
+      });
+
+      const exitCode = await exitPromise;
+      assert.equal(exitCode, 0);
+      worker.close();
+      await new Promise((r) => setTimeout(r, 100));
+    });
+
+    it('resets idle timer on job completion', async () => {
+      let exitCalled = false;
+      const originalExit = process.exit;
+      process.exit = () => { exitCalled = true; process.exit = originalExit; };
+
+      wss.once('connection', (ws) => {
+        ws.send(JSON.stringify({ type: 'welcome', serverVersion: '1.0' }));
+        ws.on('message', (raw) => {
+          const msg = JSON.parse(raw);
+          if (msg.type === 'register') {
+            setTimeout(() => {
+              ws.send(JSON.stringify({
+                type: 'exec', jobId: 'idle-test', cmd: 'echo', args: ['hi'], cwd: '/tmp', env: {},
+              }));
+            }, 100);
+          }
+          if (msg.type === 'exit') {
+            setTimeout(() => {
+              assert.equal(exitCalled, false, 'Should not have exited — timer was reset');
+              process.exit = originalExit;
+            }, 150);
+          }
+        });
+      });
+
+      const worker = createWorker({
+        url: `ws://127.0.0.1:${port}`,
+        reconnectDelay: 100,
+        idleTimeoutMs: 400,
+      });
+
+      await new Promise((r) => setTimeout(r, 350));
+      worker.close();
+    });
+
+    it('keeps ticking across reconnect cycles', async () => {
+      const exitPromise = new Promise((resolve) => {
+        const originalExit = process.exit;
+        process.exit = (code) => {
+          process.exit = originalExit;
+          resolve(code);
+        };
+      });
+
+      wss.once('connection', (ws) => {
+        ws.send(JSON.stringify({ type: 'welcome', serverVersion: '1.0' }));
+        ws.on('message', (raw) => {
+          const msg = JSON.parse(raw);
+          if (msg.type === 'register') {
+            setTimeout(() => ws.close(), 50);
+          }
+        });
+      });
+
+      wss.once('connection', (ws) => {
+        ws.send(JSON.stringify({ type: 'welcome', serverVersion: '1.0' }));
+      });
+
+      const worker = createWorker({
+        url: `ws://127.0.0.1:${port}`,
+        reconnectDelay: 50,
+        idleTimeoutMs: 300,
+      });
+
+      const exitCode = await exitPromise;
+      assert.equal(exitCode, 0);
+      worker.close();
+      await new Promise((r) => setTimeout(r, 100));
+    });
+  });
 });

@@ -35,6 +35,23 @@ export function createWorker(opts = {}) {
   let closed = false;
   let reconnectTimer = null;
 
+  const idleTimeoutMs = opts.idleTimeoutMs ?? parseInt(process.env.IDLE_TIMEOUT_MS || '0', 10);
+  let idleTimer = null;
+
+  function resetIdleTimer() {
+    if (idleTimeoutMs <= 0) return;
+    clearTimeout(idleTimer);
+    idleTimer = setTimeout(() => {
+      console.log(`Idle timeout (${idleTimeoutMs / 1000}s) reached, shutting down.`);
+      process.exit(0);
+    }, idleTimeoutMs);
+  }
+
+  function clearIdleTimer() {
+    clearTimeout(idleTimer);
+    idleTimer = null;
+  }
+
   function connect() {
     if (closed) return;
     ws = new WebSocket(url);
@@ -54,6 +71,7 @@ export function createWorker(opts = {}) {
           gpu: gpuName,
         }));
         console.log(`Registered as ${hostname()} (${gpuName})`);
+        resetIdleTimer();
         return;
       }
 
@@ -63,6 +81,7 @@ export function createWorker(opts = {}) {
       }
 
       if (msg.type === 'exec') {
+        clearIdleTimer();
         console.log(`Job ${msg.jobId}: ${msg.cmd} ${msg.args.join(' ')}`);
         ws.send(JSON.stringify({ type: 'ack', jobId: msg.jobId }));
 
@@ -90,6 +109,7 @@ export function createWorker(opts = {}) {
             ws.send(JSON.stringify({ type: 'exit', jobId: msg.jobId, code: code ?? 1 }));
           }
           currentProc = null;
+          resetIdleTimer();
         });
 
         currentProc.on('error', (err) => {
@@ -99,6 +119,7 @@ export function createWorker(opts = {}) {
             ws.send(JSON.stringify({ type: 'exit', jobId: msg.jobId, code: 1 }));
           }
           currentProc = null;
+          resetIdleTimer();
         });
 
         return;
@@ -133,6 +154,7 @@ export function createWorker(opts = {}) {
     close() {
       closed = true;
       clearTimeout(reconnectTimer);
+      clearIdleTimer();
       if (currentProc) currentProc.kill('SIGTERM');
       if (ws) ws.close();
     },
