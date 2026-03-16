@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useGameStore } from '../stores/gameStore';
 import { getSocket } from '../services/apiService';
+import CharacterPicker, { loadSavedCharacter } from './CharacterPicker';
 
 export default function Lobby() {
     const { code } = useParams<{ code: string }>();
@@ -16,6 +17,10 @@ export default function Lobby() {
     const [, setIsJoined] = useState(false);
     const [error, setError] = useState('');
 
+    const savedChar = loadSavedCharacter();
+    const [selectedCharacter, setSelectedCharacter] = useState(savedChar.character);
+    const [selectedGender, setSelectedGender] = useState<'male' | 'female'>(savedChar.gender);
+
     useEffect(() => {
         if (!code || !playerId || !username) {
             navigate('/');
@@ -23,12 +28,13 @@ export default function Lobby() {
         }
 
         // Join the lobby via socket
+        const charId = selectedGender === 'female' ? `${selectedCharacter}_f` : selectedCharacter;
         socket.emit('join-lobby', {
             lobbyCode: code,
             player: {
                 id: playerId,
                 username,
-                character: 'student',
+                character: charId,
                 characterLevel: 1,
                 isReady: false,
                 isConnected: true,
@@ -80,6 +86,7 @@ export default function Lobby() {
             socket.off('round-start');
             socket.off('game-state');
         };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [code, playerId, username]);
 
     const handleReady = () => {
@@ -183,6 +190,29 @@ export default function Lobby() {
             <p style={{ color: 'var(--color-text-muted)', margin: 'var(--space-md) 0', fontSize: '0.9rem' }}>
                 Share this code with friends to play
             </p>
+
+            {/* Character Selection */}
+            <CharacterPicker
+                selectedCharacter={selectedCharacter}
+                selectedGender={selectedGender}
+                onSelect={(character, gender) => {
+                    setSelectedCharacter(character);
+                    setSelectedGender(gender);
+                    // Re-emit join with updated character
+                    const charId = gender === 'female' ? `${character}_f` : character;
+                    socket.emit('join-lobby', {
+                        lobbyCode: code,
+                        player: {
+                            id: playerId,
+                            username,
+                            character: charId,
+                            characterLevel: 1,
+                            isReady: false,
+                            isConnected: true,
+                        },
+                    });
+                }}
+            />
 
             {/* Player List */}
             <div className="player-list" style={{ marginBottom: 'var(--space-xl)' }}>
