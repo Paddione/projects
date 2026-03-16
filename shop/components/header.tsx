@@ -18,6 +18,7 @@ export default async function Header() {
 
                 <MobileNav>
                     <Link href="/shop" className="shop-nav-link">Shop</Link>
+                    <Link href="/respect" className="shop-nav-link">Respect</Link>
                     {user ? (
                         <>
                             <Link href="/wallet" className="shop-nav-link">Wallet</Link>

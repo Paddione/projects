@@ -2375,3 +2375,261 @@
   font-size: var(--cv-text-xs);
   color: var(--cv-text-muted);
 }
+
+/* ============================================================================
+   RESPECT STORE
+   ========================================================================= */
+
+.shop-respect-container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: var(--cv-space-8);
+}
+
+.shop-respect-hero {
+  text-align: center;
+  padding: var(--cv-space-12) var(--cv-space-8) var(--cv-space-10);
+}
+
+.shop-respect-title {
+  font-family: var(--cv-font-display);
+  font-size: clamp(var(--cv-text-3xl), 6vw, var(--cv-text-5xl));
+  font-weight: 900;
+  background: linear-gradient(135deg, var(--cv-cyan) 0%, var(--cv-purple) 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: var(--cv-space-4);
+  letter-spacing: -0.02em;
+}
+
+.shop-respect-subtitle {
+  font-size: var(--cv-text-lg);
+  color: var(--cv-text-secondary);
+  max-width: 560px;
+  margin: 0 auto var(--cv-space-6);
+  line-height: 1.6;
+}
+
+.shop-respect-balance-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--cv-space-2);
+  background: var(--cv-glass-2);
+  border: var(--cv-border-width) solid var(--cv-cyan-border);
+  border-radius: var(--cv-radius-full);
+  padding: var(--cv-space-2) var(--cv-space-5);
+  box-shadow: var(--cv-glow-cyan-sm);
+  margin-top: var(--cv-space-2);
+}
+
+.shop-respect-balance-icon {
+  font-size: var(--cv-text-lg);
+}
+
+.shop-respect-balance-value {
+  font-family: var(--cv-font-display);
+  font-size: var(--cv-text-base);
+  font-weight: 700;
+  color: var(--cv-cyan);
+}
+
+.shop-respect-alert {
+  border-radius: var(--cv-radius-lg);
+  padding: var(--cv-space-4) var(--cv-space-6);
+  margin-bottom: var(--cv-space-8);
+  font-weight: 600;
+  font-size: var(--cv-text-sm);
+  text-align: center;
+}
+
+.shop-respect-alert-success {
+  background: rgba(0, 255, 136, 0.1);
+  border: var(--cv-border-width) solid var(--pay-trust-green);
+  color: var(--pay-trust-green);
+}
+
+.shop-respect-alert-cancel {
+  background: rgba(255, 170, 0, 0.1);
+  border: var(--cv-border-width) solid var(--pay-alert-amber);
+  color: var(--pay-alert-amber);
+}
+
+.shop-respect-login-prompt {
+  text-align: center;
+  background: var(--cv-glass-2);
+  border: var(--cv-border-width) solid var(--cv-border-2);
+  border-radius: var(--cv-radius-lg);
+  padding: var(--cv-space-8);
+  margin-bottom: var(--cv-space-8);
+  color: var(--cv-text-secondary);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--cv-space-4);
+}
+
+.shop-respect-packs-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: var(--cv-space-6);
+  margin-bottom: var(--cv-space-10);
+}
+
+.shop-respect-pack-card {
+  position: relative;
+  background: var(--cv-glass-2);
+  border: var(--cv-border-width) solid var(--cv-border-2);
+  border-radius: var(--cv-radius-lg);
+  padding: var(--cv-space-8) var(--cv-space-6);
+  text-align: center;
+  backdrop-filter: var(--cv-glass-blur);
+  transition: all var(--cv-duration-base) var(--cv-ease-smooth);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--cv-space-3);
+}
+
+.shop-respect-pack-card:hover {
+  transform: translateY(-6px);
+  border-color: var(--cv-cyan-border);
+  box-shadow: var(--cv-glow-cyan-md);
+}
+
+.shop-respect-pack-popular {
+  border-color: var(--cv-cyan-border);
+  background: var(--cv-glass-3);
+  box-shadow: var(--cv-glow-cyan-sm);
+}
+
+.shop-respect-popular-badge {
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--cv-gradient-primary);
+  color: var(--cv-void);
+  font-size: var(--cv-text-xs);
+  font-weight: 700;
+  padding: var(--cv-space-1) var(--cv-space-4);
+  border-radius: var(--cv-radius-full);
+  white-space: nowrap;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  box-shadow: var(--cv-glow-cyan-sm);
+}
+
+.shop-respect-pack-icon {
+  font-size: 2.5rem;
+  line-height: 1;
+  margin-bottom: var(--cv-space-1);
+}
+
+.shop-respect-pack-name {
+  font-family: var(--cv-font-display);
+  font-size: var(--cv-text-xl);
+  font-weight: 700;
+  color: var(--cv-text-primary);
+  margin: 0;
+}
+
+.shop-respect-pack-description {
+  font-size: var(--cv-text-sm);
+  color: var(--cv-text-secondary);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.shop-respect-pack-amount {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--cv-space-3) var(--cv-space-6);
+  background: var(--cv-glass-1);
+  border-radius: var(--cv-radius-md);
+  width: 100%;
+  margin: var(--cv-space-1) 0;
+}
+
+.shop-respect-pack-number {
+  font-family: var(--cv-font-display);
+  font-size: var(--cv-text-3xl);
+  font-weight: 900;
+  color: var(--cv-cyan);
+  line-height: 1.1;
+}
+
+.shop-respect-pack-label {
+  font-size: var(--cv-text-xs);
+  font-weight: 600;
+  color: var(--cv-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.shop-respect-pack-price {
+  font-size: var(--cv-text-2xl);
+  font-weight: 700;
+  color: var(--cv-text-primary);
+}
+
+.shop-respect-buy-btn {
+  display: block;
+  width: 100%;
+  background: var(--cv-gradient-primary);
+  color: var(--cv-void);
+  border: none;
+  padding: var(--cv-space-3) var(--cv-space-6);
+  border-radius: var(--cv-radius-md);
+  font-size: var(--cv-text-base);
+  font-weight: 700;
+  cursor: pointer;
+  transition: all var(--cv-duration-fast) var(--cv-ease-smooth);
+  box-shadow: var(--cv-glow-cyan-md);
+  text-decoration: none;
+  text-align: center;
+  margin-top: var(--cv-space-1);
+}
+
+.shop-respect-buy-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: var(--cv-glow-cyan-lg);
+}
+
+.shop-respect-buy-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.shop-respect-buy-btn:focus,
+.shop-respect-buy-btn:focus-visible {
+  outline: 2px solid var(--cv-cyan) !important;
+  outline-offset: 2px !important;
+}
+
+.shop-respect-footer-note {
+  text-align: center;
+  padding: var(--cv-space-6);
+  border-top: var(--cv-border-width) solid var(--cv-border-1);
+  color: var(--cv-text-muted);
+  font-size: var(--cv-text-sm);
+  line-height: 1.6;
+}
+
+@media (max-width: 768px) {
+  .shop-respect-packs-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .shop-respect-packs-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .shop-respect-hero {
+    padding: var(--cv-space-8) var(--cv-space-4) var(--cv-space-6);
+  }
+}
