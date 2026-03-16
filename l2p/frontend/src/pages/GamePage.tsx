@@ -25,6 +25,8 @@ import { useAuthStore } from '../stores/authStore'
 import { useLocalization } from '../hooks/useLocalization'
 import { ttsService } from '../services/ttsService'
 import { useAudioStore } from '../stores/audioStore'
+import { CharacterCanvas } from '../components/3d/CharacterCanvas'
+import { QuizCharacterScene, type QuizAnimation } from '../components/3d/QuizCharacterScene'
 
 export const GamePage: React.FC = () => {
   const { lobbyId } = useParams<{ lobbyId: string }>()
@@ -404,6 +406,15 @@ export const GamePage: React.FC = () => {
   // currentQuestion is guaranteed non-null by early return above
   const question = currentQuestion!
   const currentPlayer = players.find(p => (user?.id ? String(p.id) === String(user.id) : false)) || players.find(p => p.isHost) || players[0]!
+
+  // Derive 3D character animation from answer state
+  const characterAnimation: QuizAnimation = answerFlash === 'correct'
+    ? 'victory'
+    : answerFlash === 'wrong'
+      ? 'hit_react'
+      : hasAnswered
+        ? 'thinking'
+        : 'idle'
   const currentPlayerId = String(currentPlayer.id)
   const { score, multiplier, correctAnswers } = currentPlayer
 
@@ -822,6 +833,15 @@ export const GamePage: React.FC = () => {
         {/* Right Pane: Score + Players (hidden in practice mode) */}
         {!isPractice && (
           <aside className={gameStyles.rightPane} aria-label={t('game.playerOverview')}>
+            {/* 3D character scene — reacts to answer state */}
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 'var(--spacing-sm)' }}>
+              <CharacterCanvas width={140} height={140}>
+                <QuizCharacterScene
+                  characterId={currentPlayer.character || 'student'}
+                  animation={characterAnimation}
+                />
+              </CharacterCanvas>
+            </div>
             <div className={gameStyles.scoreBlock} data-testid="current-score">
               <ScoreDisplay
                 score={score}
