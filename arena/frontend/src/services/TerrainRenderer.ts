@@ -8,7 +8,7 @@ import {
     Color,
     Group,
 } from 'three';
-import { GameRenderer3D, WORLD_SCALE } from './GameRenderer3D';
+import { WORLD_SCALE } from './GameRenderer3D';
 
 const TILE = WORLD_SCALE; // 1 world unit per tile
 

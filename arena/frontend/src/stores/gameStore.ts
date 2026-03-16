@@ -106,7 +106,7 @@ export const useGameStore = create<GameStore>((set) => ({
     killfeed: [],
     announcement: null,
 
-    use3DRenderer: localStorage.getItem('arena_use3d') === 'true',
+    use3DRenderer: typeof window !== 'undefined' && localStorage.getItem('arena_use3d') === 'true',
 
     // Actions
     setLobby: (code, isHost) => set({ lobbyCode: code, isInLobby: true, isHost }),

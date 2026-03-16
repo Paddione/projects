@@ -3,7 +3,6 @@ import {
     WebGLRenderer,
     Group,
     Clock,
-    MathUtils,
 } from 'three';
 import { CSS2DRenderer } from 'three/addons/renderers/CSS2DRenderer.js';
 import {

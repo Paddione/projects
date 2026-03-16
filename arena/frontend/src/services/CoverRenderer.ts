@@ -3,7 +3,6 @@ import {
     BoxGeometry,
     MeshLambertMaterial,
     Mesh,
-    Color,
 } from 'three';
 import { GameRenderer3D, WORLD_SCALE } from './GameRenderer3D';
 
@@ -20,8 +19,6 @@ const COVER_COLORS: Record<string, number> = {
 };
 
 const DEFAULT_COLOR = 0x5a5a7a;
-
-const COVER_GEO = new BoxGeometry(WORLD_SCALE * 28, WORLD_SCALE * 28, WORLD_SCALE * 28);
 
 export class CoverRenderer {
     private readonly group: Group;

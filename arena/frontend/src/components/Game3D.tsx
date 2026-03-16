@@ -9,7 +9,7 @@
  * scene updates and relies on Game.tsx / gameStore for HUD state mutations.
  */
 
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Clock } from 'three';
 import { useGameStore } from '../stores/gameStore';
@@ -24,7 +24,7 @@ import { ZoneRenderer } from '../services/ZoneRenderer';
 import { LabelRenderer } from '../services/LabelRenderer';
 
 export default function Game3D() {
-    const { matchId } = useParams<{ matchId: string }>();
+    useParams<{ matchId: string }>();
     const navigate = useNavigate();
     const containerRef = useRef<HTMLDivElement>(null);
 
@@ -105,7 +105,7 @@ export default function Game3D() {
                     state.map.width ?? 28,
                     state.map.height ?? 22,
                 );
-                coverRef.current?.update(state.map.coverObjects ?? [], delta);
+                coverRef.current?.update(state.map.coverObjects ?? []);
                 terrainBuiltRef.current = true;
             }
 
