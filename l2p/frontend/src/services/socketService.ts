@@ -62,9 +62,16 @@ export interface SocketEvents {
   'perk:answers-eliminated': (data: { eliminatedIndices: number[]; usesRemaining: number }) => void
   'perk:use-error': (data: { message: string }) => void
 
+  // Deathmatch challenge events
+  'deathmatch-offer': (data: { earnedXp: Record<string, number>; timeoutSeconds: number }) => void
+  'deathmatch-accepted': (data: { playerId: string; acceptedCount: number; acceptedPlayerIds: string[] }) => void
+  'deathmatch-start': (data: { matchUrl: string; token: string; expiresAt: string; forPlayerId: string }) => void
+  'deathmatch-cancelled': (data: { reason: string }) => void
+
   // Error events
   'start-game-error': (data: { type: string; message: string }) => void
   'ready-error': (data: { type: string; message: string }) => void
+  'deathmatch-error': (data: { type: string; message: string }) => void
   'error': (data: { message: string }) => void
 }
 

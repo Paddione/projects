@@ -6,6 +6,8 @@ import { useAuthStore } from '../stores/authStore'
 import { useCharacterStore } from '../stores/characterStore'
 import { avatarService } from '../services/avatarService'
 import { useLocalization } from '../hooks/useLocalization'
+import { DeathmatchModal, type DeathmatchOfferData } from '../components/DeathmatchModal'
+import { socketService, type SocketEvents } from '../services/socketService'
 
 // Component for animated score to experience conversion
 const AnimatedScoreConversion: React.FC<{
@@ -176,14 +178,75 @@ const AnimatedScoreConversion: React.FC<{
 
 export const ResultsPage: React.FC = () => {
   const navigate = useNavigate()
-  const { gameResults, totalQuestions } = useGameStore()
+  const { gameResults, totalQuestions, lobbyCode } = useGameStore()
   const { user } = useAuthStore()
   const { progress } = useCharacterStore()
   const { t } = useLocalization()
   const [animationDone, setAnimationDone] = useState(false)
 
+  // Deathmatch challenge state
+  const [deathmatchOffer, setDeathmatchOffer] = useState<DeathmatchOfferData | null>(null)
+  const [deathmatchAcceptedIds, setDeathmatchAcceptedIds] = useState<string[]>([])
+  const deathmatchOfferTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
   const handleAnimationComplete = useCallback(() => {
     setAnimationDone(true)
+  }, [])
+
+  // Wire up deathmatch socket events
+  useEffect(() => {
+    const onOffer: SocketEvents['deathmatch-offer'] = (data) => {
+      // Show modal after 2-second delay so results are visible first
+      deathmatchOfferTimerRef.current = setTimeout(() => {
+        setDeathmatchOffer(data)
+      }, 2000)
+    }
+
+    const onAccepted: SocketEvents['deathmatch-accepted'] = (data) => {
+      setDeathmatchAcceptedIds(data.acceptedPlayerIds)
+    }
+
+    const onStart: SocketEvents['deathmatch-start'] = (data) => {
+      const myId = String(user?.id ?? '')
+      if (data.forPlayerId === myId || !data.forPlayerId) {
+        // Brief "redirecting" message before navigating
+        setTimeout(() => {
+          window.location.href = data.matchUrl
+        }, 1500)
+      }
+    }
+
+    const onCancelled: SocketEvents['deathmatch-cancelled'] = (_data) => {
+      setDeathmatchOffer(null)
+    }
+
+    socketService.on('deathmatch-offer', onOffer)
+    socketService.on('deathmatch-accepted', onAccepted)
+    socketService.on('deathmatch-start', onStart)
+    socketService.on('deathmatch-cancelled', onCancelled)
+
+    return () => {
+      if (deathmatchOfferTimerRef.current) clearTimeout(deathmatchOfferTimerRef.current)
+      socketService.off('deathmatch-offer', onOffer)
+      socketService.off('deathmatch-accepted', onAccepted)
+      socketService.off('deathmatch-start', onStart)
+      socketService.off('deathmatch-cancelled', onCancelled)
+    }
+  }, [user?.id])
+
+  const handleDeathmatchAccept = useCallback(() => {
+    if (!lobbyCode) return
+    socketService.emit('deathmatch-accept', { lobbyCode })
+  }, [lobbyCode])
+
+  const handleDeathmatchDecline = useCallback(() => {
+    if (!lobbyCode) return
+    socketService.emit('deathmatch-decline', { lobbyCode })
+    setDeathmatchOffer(null)
+  }, [lobbyCode])
+
+  const handleDeathmatchClose = useCallback(() => {
+    setDeathmatchOffer(null)
   }, [])
 
   // Use actual game results or fallback to mock data
@@ -456,6 +519,19 @@ export const ResultsPage: React.FC = () => {
           {t('results.backToHome')}
         </button>
       </div>
+
+      {/* Deathmatch Challenge Modal */}
+      {deathmatchOffer && (
+        <DeathmatchModal
+          offer={deathmatchOffer}
+          players={finalPlayers}
+          lobbyCode={lobbyCode ?? ''}
+          acceptedPlayerIds={deathmatchAcceptedIds}
+          onAccept={handleDeathmatchAccept}
+          onDecline={handleDeathmatchDecline}
+          onClose={handleDeathmatchClose}
+        />
+      )}
     </div>
   )
 } 

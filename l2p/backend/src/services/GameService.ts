@@ -8,7 +8,12 @@ import { CharacterService } from './CharacterService.js';
 import { PerkQueryService, DraftPerk } from './PerkQueryService.js';
 import { PerkEffectEngine, GameplayModifiers, ScoreContext } from './PerkEffectEngine.js';
 import { PerksManager } from './PerksManager.js';
+import { authFetchInternal } from '../config/authClient.js';
 import type { AnswerType, AnswerMetadata, EstimationMetadata, OrderingMetadata, MatchingMetadata, FillInBlankMetadata } from '../types/question.js';
+
+const ARENA_BASE_URL = process.env['ARENA_BASE_URL'] || 'https://arena.korczewski.de';
+const DEATHMATCH_TIMEOUT_SECONDS = 60;
+const DEATHMATCH_MIN_PLAYERS = 2;
 
 export type GameMode = 'arcade' | 'practice' | 'fastest_finger' | 'survival' | 'wager' | 'duel';
 
@@ -119,6 +124,15 @@ export class GameService {
   private disconnectGraceTimers: Map<string, NodeJS.Timeout> = new Map();
   private answerLocks: Set<string> = new Set();
   private isTestEnvironment: boolean;
+
+  // Deathmatch challenge state: lobbyCode -> { acceptedPlayerIds, earnedXp, timer }
+  private deathmatchChallenges: Map<string, {
+    earnedXp: Record<string, number>;
+    acceptedPlayerIds: Set<string>;
+    declinedPlayerIds: Set<string>;
+    allPlayerIds: string[];
+    timer: NodeJS.Timeout;
+  }> = new Map();
 
   private getIo() {
     if (typeof this.io === 'undefined' || this.io === null) {
@@ -1679,6 +1693,155 @@ export class GameService {
         levelUp: r.levelUp
       }))
     });
+
+    // Emit deathmatch offer after a short delay so clients have time to render results
+    // Only offered when there are at least 2 players
+    if (gameState.players.length >= DEATHMATCH_MIN_PLAYERS) {
+      const earnedXp: Record<string, number> = {};
+      for (const r of finalResults) {
+        earnedXp[r.id] = r.experienceAwarded;
+      }
+      setTimeout(() => {
+        this.startDeathmatchOffer(gameState.lobbyCode, earnedXp, finalResults.map(r => r.id));
+      }, 2000);
+    }
+  }
+
+  /**
+   * Emit a deathmatch challenge offer to all players in the lobby.
+   * Tracks acceptances and fires when enough players have accepted or timeout expires.
+   */
+  private startDeathmatchOffer(lobbyCode: string, earnedXp: Record<string, number>, allPlayerIds: string[]): void {
+    const timer = setTimeout(() => {
+      this.resolveDeathmatchChallenge(lobbyCode);
+    }, DEATHMATCH_TIMEOUT_SECONDS * 1000);
+
+    this.deathmatchChallenges.set(lobbyCode, {
+      earnedXp,
+      acceptedPlayerIds: new Set(),
+      declinedPlayerIds: new Set(),
+      allPlayerIds,
+      timer
+    });
+
+    this.getIo()?.to(lobbyCode)?.emit('deathmatch-offer', {
+      earnedXp,
+      timeoutSeconds: DEATHMATCH_TIMEOUT_SECONDS
+    });
+
+    console.log(`[Deathmatch] Offer sent to lobby ${lobbyCode} with ${allPlayerIds.length} players`);
+  }
+
+  /**
+   * Record a player's acceptance of the deathmatch challenge.
+   */
+  async handleDeathmatchAccept(lobbyCode: string, playerId: string): Promise<void> {
+    const challenge = this.deathmatchChallenges.get(lobbyCode);
+    if (!challenge) {
+      console.warn(`[Deathmatch] Accept from ${playerId} but no active challenge for lobby ${lobbyCode}`);
+      return;
+    }
+
+    challenge.acceptedPlayerIds.add(playerId);
+    challenge.declinedPlayerIds.delete(playerId);
+
+    // Broadcast updated acceptances to all players in the lobby
+    this.getIo()?.to(lobbyCode)?.emit('deathmatch-accepted', {
+      playerId,
+      acceptedCount: challenge.acceptedPlayerIds.size,
+      acceptedPlayerIds: Array.from(challenge.acceptedPlayerIds)
+    });
+
+    // If all remaining non-declined players have accepted, resolve immediately
+    const pendingPlayers = challenge.allPlayerIds.filter(
+      id => !challenge.acceptedPlayerIds.has(id) && !challenge.declinedPlayerIds.has(id)
+    );
+    if (pendingPlayers.length === 0 && challenge.acceptedPlayerIds.size >= DEATHMATCH_MIN_PLAYERS) {
+      clearTimeout(challenge.timer);
+      await this.resolveDeathmatchChallenge(lobbyCode);
+    }
+  }
+
+  /**
+   * Record a player's decline of the deathmatch challenge.
+   */
+  async handleDeathmatchDecline(lobbyCode: string, playerId: string): Promise<void> {
+    const challenge = this.deathmatchChallenges.get(lobbyCode);
+    if (!challenge) return;
+
+    challenge.declinedPlayerIds.add(playerId);
+    challenge.acceptedPlayerIds.delete(playerId);
+
+    // If everyone has responded and not enough accepted, cancel the challenge
+    const pendingPlayers = challenge.allPlayerIds.filter(
+      id => !challenge.acceptedPlayerIds.has(id) && !challenge.declinedPlayerIds.has(id)
+    );
+    if (pendingPlayers.length === 0) {
+      clearTimeout(challenge.timer);
+      await this.resolveDeathmatchChallenge(lobbyCode);
+    }
+  }
+
+  /**
+   * Resolve the deathmatch challenge: create an escrow if enough players accepted,
+   * then emit deathmatch-start (or deathmatch-cancelled) to all players.
+   */
+  private async resolveDeathmatchChallenge(lobbyCode: string): Promise<void> {
+    const challenge = this.deathmatchChallenges.get(lobbyCode);
+    if (!challenge) return;
+    this.deathmatchChallenges.delete(lobbyCode);
+
+    const acceptedIds = Array.from(challenge.acceptedPlayerIds);
+
+    if (acceptedIds.length < DEATHMATCH_MIN_PLAYERS) {
+      console.log(`[Deathmatch] Not enough acceptances in lobby ${lobbyCode} (${acceptedIds.length}/${DEATHMATCH_MIN_PLAYERS}), cancelling`);
+      this.getIo()?.to(lobbyCode)?.emit('deathmatch-cancelled', {
+        reason: acceptedIds.length === 0 ? 'no_acceptances' : 'not_enough_players'
+      });
+      return;
+    }
+
+    // Build escrowedXp map for accepted players only
+    const escrowedXp: Record<string, number> = {};
+    for (const id of acceptedIds) {
+      escrowedXp[id] = challenge.earnedXp[id] || 0;
+    }
+
+    try {
+      const res = await authFetchInternal('/api/internal/match/escrow', {
+        method: 'POST',
+        body: JSON.stringify({
+          playerIds: acceptedIds,
+          escrowedXp,
+          matchConfig: { source: 'l2p', lobbyCode }
+        })
+      });
+
+      if (!res.ok) {
+        const errText = await res.text().catch(() => 'unknown error');
+        console.error(`[Deathmatch] Escrow creation failed (${res.status}): ${errText}`);
+        this.getIo()?.to(lobbyCode)?.emit('deathmatch-cancelled', { reason: 'escrow_failed' });
+        return;
+      }
+
+      const { token, expiresAt } = await res.json();
+      const matchUrl = `${ARENA_BASE_URL}/match/${token}`;
+
+      // Emit only to accepting players
+      for (const playerId of acceptedIds) {
+        this.getIo()?.to(lobbyCode)?.emit('deathmatch-start', {
+          matchUrl,
+          token,
+          expiresAt,
+          forPlayerId: playerId
+        });
+      }
+
+      console.log(`[Deathmatch] Match started for lobby ${lobbyCode}: ${matchUrl}`);
+    } catch (err) {
+      console.error('[Deathmatch] Error resolving challenge:', err);
+      this.getIo()?.to(lobbyCode)?.emit('deathmatch-cancelled', { reason: 'server_error' });
+    }
   }
 
   /**
