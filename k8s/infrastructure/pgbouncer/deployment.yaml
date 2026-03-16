@@ -1,0 +1,126 @@
+# =============================================================================
+# PgBouncer Deployment
+# =============================================================================
+# Connection pooler between application services and PostgreSQL.
+# Init container generates userlist.txt from postgres-credentials secret,
+# so passwords stay in sync with the database automatically.
+# =============================================================================
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pgbouncer
+  namespace: korczewski-infra
+  labels:
+    app: pgbouncer
+    app.kubernetes.io/name: pgbouncer
+    app.kubernetes.io/component: connection-pooler
+    app.kubernetes.io/part-of: korczewski
+    tier: infrastructure
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pgbouncer
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: pgbouncer
+        app.kubernetes.io/name: pgbouncer
+        app.kubernetes.io/component: connection-pooler
+        app.kubernetes.io/part-of: korczewski
+        tier: infrastructure
+    spec:
+      nodeSelector:
+        kubernetes.io/arch: amd64
+      terminationGracePeriodSeconds: 30
+
+      initContainers:
+        # Generate userlist.txt from postgres-credentials secret
+        - name: generate-userlist
+          image: busybox:1.36
+          command:
+            - sh
+            - -c
+            - |
+              cat > /etc/pgbouncer-auth/userlist.txt <<EOF
+              "auth_user" "$AUTH_DB_PASSWORD"
+              "l2p_user" "$L2P_DB_PASSWORD"
+              "shop_user" "$SHOP_DB_PASSWORD"
+              "videovault_user" "$VIDEOVAULT_DB_PASSWORD"
+              "arena_user" "$ARENA_DB_PASSWORD"
+              "pgbouncer" "$PGBOUNCER_ADMIN_PASSWORD"
+              EOF
+              chown 1001:1001 /etc/pgbouncer-auth/userlist.txt
+              chmod 600 /etc/pgbouncer-auth/userlist.txt
+          envFrom:
+            - secretRef:
+                name: postgres-credentials
+            - secretRef:
+                name: pgbouncer-admin
+          env:
+            # Arena uses hardcoded password in its deployment manifest
+            # TODO: migrate arena to secrets pipeline (generate-secrets.sh)
+            - name: ARENA_DB_PASSWORD
+              value: "arena_pass"
+          volumeMounts:
+            - name: pgbouncer-auth
+              mountPath: /etc/pgbouncer-auth
+
+      containers:
+        - name: pgbouncer
+          image: registry.local:5000/korczewski/pgbouncer:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 5432
+              name: pgbouncer
+              protocol: TCP
+          volumeMounts:
+            - name: pgbouncer-config
+              mountPath: /etc/pgbouncer/pgbouncer.ini
+              subPath: pgbouncer.ini
+              readOnly: true
+            - name: pgbouncer-auth
+              mountPath: /etc/pgbouncer/userlist.txt
+              subPath: userlist.txt
+              readOnly: true
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "50m"
+            limits:
+              memory: "128Mi"
+              cpu: "200m"
+          # PgBouncer health: connect to the admin console
+          readinessProbe:
+            tcpSocket:
+              port: 5432
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+          livenessProbe:
+            tcpSocket:
+              port: 5432
+            initialDelaySeconds: 10
+            periodSeconds: 30
+            timeoutSeconds: 3
+            failureThreshold: 5
+          securityContext:
+            readOnlyRootFilesystem: false
+            runAsNonRoot: true
+            runAsUser: 1001
+
+      volumes:
+        - name: pgbouncer-config
+          configMap:
+            name: pgbouncer-config
+        - name: pgbouncer-auth
+          emptyDir:
+            medium: Memory
+            sizeLimit: 1Mi

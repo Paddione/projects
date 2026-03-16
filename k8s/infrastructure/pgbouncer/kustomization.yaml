@@ -1,0 +1,24 @@
+# =============================================================================
+# PgBouncer Kustomization
+# =============================================================================
+
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+metadata:
+  name: pgbouncer
+
+namespace: korczewski-infra
+
+labels:
+  - pairs:
+      app.kubernetes.io/part-of: korczewski
+      app.kubernetes.io/component: connection-pooler
+      tier: infrastructure
+
+resources:
+  - configmap.yaml
+  - secret.yaml
+  - deployment.yaml
+  - service.yaml
+  - network-policy.yaml

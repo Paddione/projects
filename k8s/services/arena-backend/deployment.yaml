@@ -37,6 +37,8 @@ spec:
         app.kubernetes.io/component: backend
         app.kubernetes.io/part-of: korczewski
         tier: services
+      annotations:
+        secret.reloader.stakater.com/reload: "arena-backend-credentials"
     spec:
       securityContext:
         runAsNonRoot: true
@@ -53,13 +55,14 @@ spec:
             - name: http
               containerPort: 3003
               protocol: TCP
+          envFrom:
+            - secretRef:
+                name: arena-backend-credentials
           env:
             - name: NODE_ENV
               value: "production"
             - name: PORT
               value: "3003"
-            - name: DATABASE_URL
-              value: "postgresql://arena_user:arena_pass@postgres.korczewski-infra.svc.cluster.local:5432/arena_db"
             - name: AUTH_SERVICE_URL
               value: "http://auth.korczewski-services.svc.cluster.local:5500"
             - name: CORS_ORIGIN

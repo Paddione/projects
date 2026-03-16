@@ -120,6 +120,10 @@ deploy_infrastructure() {
     log_step "Step 3c: Deploying PostgreSQL"
     "$SCRIPT_DIR/deploy-postgres.sh"
 
+    # PgBouncer (connection pooler — must come after PostgreSQL)
+    log_step "Step 3d: Deploying PgBouncer"
+    "$SCRIPT_DIR/deploy-pgbouncer.sh"
+
     # Traefik
     log_step "Step 4: Deploying Traefik"
     "$SCRIPT_DIR/deploy-traefik.sh"

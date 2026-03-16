@@ -1,0 +1,72 @@
+# =============================================================================
+# PgBouncer NetworkPolicy
+# =============================================================================
+# Two policies:
+# 1. PgBouncer accepts connections from korczewski-services namespace
+# 2. PostgreSQL only accepts connections from PgBouncer (not directly from services)
+#
+# This enforces the traffic path: services → pgbouncer → postgres
+# k3s enforces via built-in kube-router network policy controller.
+# =============================================================================
+
+---
+# Allow services to connect to PgBouncer on port 5432
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: pgbouncer-ingress-allow
+  namespace: korczewski-infra
+  labels:
+    app: pgbouncer
+    app.kubernetes.io/name: pgbouncer
+    app.kubernetes.io/part-of: korczewski
+spec:
+  podSelector:
+    matchLabels:
+      app: pgbouncer
+  policyTypes:
+    - Ingress
+  ingress:
+    # Application services (korczewski-services namespace)
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: korczewski-services
+      ports:
+        - protocol: TCP
+          port: 5432
+    # Infrastructure services in same namespace (e.g., Vault, monitoring)
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: korczewski-infra
+      ports:
+        - protocol: TCP
+          port: 5432
+
+---
+# Restrict PostgreSQL to only accept connections from PgBouncer
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: postgres-ingress-pgbouncer-only
+  namespace: korczewski-infra
+  labels:
+    app: postgres
+    app.kubernetes.io/name: postgres
+    app.kubernetes.io/part-of: korczewski
+spec:
+  podSelector:
+    matchLabels:
+      app: postgres
+  policyTypes:
+    - Ingress
+  ingress:
+    # Only PgBouncer can reach PostgreSQL
+    - from:
+        - podSelector:
+            matchLabels:
+              app: pgbouncer
+      ports:
+        - protocol: TCP
+          port: 5432

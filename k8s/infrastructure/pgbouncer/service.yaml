@@ -1,0 +1,27 @@
+# =============================================================================
+# PgBouncer Service
+# =============================================================================
+# ClusterIP service exposing PgBouncer on port 5432.
+# Application services connect here instead of directly to PostgreSQL.
+# =============================================================================
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: pgbouncer
+  namespace: korczewski-infra
+  labels:
+    app: pgbouncer
+    app.kubernetes.io/name: pgbouncer
+    app.kubernetes.io/component: connection-pooler
+    app.kubernetes.io/part-of: korczewski
+    tier: infrastructure
+spec:
+  type: ClusterIP
+  selector:
+    app: pgbouncer
+  ports:
+    - name: pgbouncer
+      port: 5432
+      targetPort: 5432
+      protocol: TCP

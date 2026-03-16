@@ -1,15 +1,20 @@
 #!/bin/bash
 # =============================================================================
-# Generate Kubernetes Secrets from Environment Variables
+# [DEPRECATED] Generate Kubernetes Secrets from Environment Variables
 # =============================================================================
-# Reads the root .env file and generates Kubernetes Secret manifests.
-# Secrets are saved to k8s/secrets/ directory (gitignored).
+# DEPRECATED: This script is superseded by the Vault + External Secrets
+# Operator (ESO) pipeline. Use vault-sync.sh to push secrets to Vault, then
+# ESO automatically syncs them to Kubernetes Secrets.
+#
+# Migration path:
+#   1. ./vault-sync.sh              # Push .env to Vault
+#   2. kubectl apply -k infrastructure/external-secrets/  # Deploy ESO config
+#   3. ESO creates K8s Secrets automatically (1h refresh)
+#
+# This script is kept as a fallback for bootstrap scenarios where Vault is
+# not yet running (e.g., fresh cluster setup before Vault is unsealed).
 #
 # Usage: ./generate-secrets.sh [ENV_FILE]
-#
-# Example:
-#   ./generate-secrets.sh                    # Uses ../../.env
-#   ./generate-secrets.sh /path/to/.env      # Custom .env file
 # =============================================================================
 
 set -euo pipefail
@@ -30,6 +35,15 @@ NC='\033[0m'
 log_info() { echo -e "${GREEN}[INFO]${NC} $1"; }
 log_warn() { echo -e "${YELLOW}[WARN]${NC} $1"; }
 log_error() { echo -e "${RED}[ERROR]${NC} $1"; }
+
+echo ""
+log_warn "=================================================="
+log_warn "  DEPRECATED: Use vault-sync.sh + ESO instead."
+log_warn "  This script is kept for bootstrap only."
+log_warn "  Run: ./vault-sync.sh && kubectl apply -k"
+log_warn "        infrastructure/external-secrets/"
+log_warn "=================================================="
+echo ""
 
 # Check .env file exists
 if [ ! -f "$ENV_FILE" ]; then
@@ -57,8 +71,8 @@ get_env() {
     echo "$value"
 }
 
-# K8s service DNS for database connections
-PG_HOST="postgres.korczewski-infra.svc.cluster.local"
+# K8s service DNS for database connections (via PgBouncer)
+PG_HOST="pgbouncer.korczewski-infra.svc.cluster.local"
 
 log_info "Generating secrets..."
 
@@ -191,6 +205,46 @@ stringData:
   RATE_LIMIT_BYPASS_KEY: "$(get_env RATE_LIMIT_BYPASS_KEY)"
 EOF
 log_info "Created videovault-secret.yaml"
+
+# =============================================================================
+# Arena Backend Secret
+# =============================================================================
+ARENA_DB_URL="postgresql://$(get_env ARENA_DB_USER arena_user):$(get_env ARENA_DB_PASSWORD)@${PG_HOST}:5432/arena_db"
+
+cat > "$SECRETS_DIR/arena-backend-secret.yaml" <<EOF
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: arena-backend-credentials
+  namespace: korczewski-services
+  labels:
+    app: arena-backend
+type: Opaque
+stringData:
+  DATABASE_URL: "${ARENA_DB_URL}"
+EOF
+log_info "Created arena-backend-secret.yaml"
+
+# =============================================================================
+# Assetgenerator Secret
+# =============================================================================
+cat > "$SECRETS_DIR/assetgenerator-secret.yaml" <<EOF
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: assetgenerator-secrets
+  namespace: korczewski-services
+  labels:
+    app: assetgenerator
+type: Opaque
+stringData:
+  GEMINI_API_KEY: "$(get_env GEMINI_API_KEY)"
+  SILICONFLOW_API_KEY: "$(get_env SILICONFLOW_API_KEY)"
+  SUNO_API_KEY: "$(get_env SUNO_API_KEY)"
+EOF
+log_info "Created assetgenerator-secret.yaml"
 
 # =============================================================================
 # Traefik Dashboard Auth Secret
