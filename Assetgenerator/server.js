@@ -5,7 +5,7 @@ import { resolve, join, dirname } from 'node:path';
 import { execFileSync, spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { createServer } from 'node:http';
-import { initWorkerManager, getWorkerStatus } from './worker-manager.js';
+import { initWorkerManager, getWorkerStatus, getQueueDepth } from './worker-manager.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -1301,6 +1301,10 @@ app.get('/health', (req, res) => {
 // Worker status endpoint (UI polling)
 app.get('/api/worker-status', (req, res) => {
   res.json(getWorkerStatus());
+});
+
+app.get('/api/queue-depth', (req, res) => {
+  res.json(getQueueDepth());
 });
 
 app.use(express.static(__dirname));

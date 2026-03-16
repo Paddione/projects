@@ -1283,6 +1283,19 @@ describe('Duration rounding (BUG 2)', () => {
   });
 });
 
+describe('Queue depth endpoint', () => {
+  it('GET /api/queue-depth returns depth object', async () => {
+    const res = await fetch(`${baseUrl}/api/queue-depth`);
+    assert.equal(res.status, 200);
+    const data = await res.json();
+    assert.equal(typeof data.depth, 'number');
+    assert.equal(typeof data.pending, 'number');
+    assert.equal(typeof data.active, 'number');
+    assert.equal(typeof data.workerConnected, 'boolean');
+    assert.equal(data.depth, 0);
+  });
+});
+
 describe('Seed integer rounding (BUG 3)', () => {
   it('PUT preserves integer seeds exactly', async () => {
     // Create a sound, set a large integer seed
