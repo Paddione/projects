@@ -98,7 +98,9 @@ The KEDA cooldown and worker idle timeout are intentionally independent. The wak
 1. Add an `enqueueJob(payload)` method to worker-manager that always pushes to `jobQueue` regardless of worker presence. Returns a Promise that resolves when the job completes.
 2. Add a `dispatchNext()` function that checks if a worker is connected AND there are pending jobs, then dispatches the next job. Called both when a job is enqueued and when a worker registers.
 3. Update adapters to call `enqueueJob(payload)` instead of `getWorker().exec(payload)`. Adapters no longer need to check worker presence — they enqueue and await the result.
-4. SSE stream endpoints (`/api/library/:id/generate`, `/api/visual-library/batch/generate`, etc.) should report "waiting for GPU worker..." while a job is queued but no worker is connected, so the UI shows progress.
+4. `enqueueJob(payload, options)` must support the same `onStdout` callback that `worker.exec()` currently accepts. SSE stream endpoints pass `onStdout` for real-time progress — the new API must preserve this. The callback is stored with the queued job and attached when `dispatchNext()` dispatches to the worker.
+5. SSE stream endpoints (`/api/library/:id/generate`, `/api/visual-library/batch/generate`, etc.) should report "waiting for GPU worker..." while a job is queued but no worker is connected, so the UI shows progress.
+6. Export `enqueueJob` and `getQueueDepth` from `worker-manager.js` (alongside existing `initWorkerManager`, `getWorker`, `getWorkerStatus`, `shutdownWorkerManager`).
 
 **Queue depth endpoint:**
 
@@ -345,7 +347,7 @@ Add to resources list:
 ## Security Considerations
 
 - SSH key is scoped to a dedicated ed25519 keypair (not reusing existing keys)
-- The `authorized_keys` entry on `10.10.0.3` can be restricted with `command="systemctl --user start gpu-worker"` to limit what the key can do
+- The `authorized_keys` entry on `10.10.0.3` should be restricted with `command="systemctl --user start gpu-worker"` to limit what the key can do (prevents arbitrary command execution if the key leaks)
 - The waker pod has minimal resources and no privilege escalation
 - Queue depth endpoint is read-only, no authentication needed (internal cluster traffic only)
 
@@ -353,10 +355,10 @@ Add to resources list:
 
 - **WSL2 sleep/shutdown**: If the Windows host sleeps or WSL2 shuts down, SSH from the waker pod will fail. The waker pod enters CrashLoopBackOff while the queue remains non-empty. No progress is made until the machine wakes up and the waker pod retries successfully. Consider monitoring waker pod CrashLoopBackOff events.
 - **Startup latency**: Worst case from job enqueue to worker processing: ~30s KEDA poll + ~5s pod start + ~5s SSH + ~5s worker boot = ~45s. Acceptable for GPU generation jobs (which take 10s-2min each) but not for interactive sub-second use cases.
+- **Waker cannot re-wake a self-exited worker**: The waker pod is fire-and-forget — it SSHs once at startup then `sleep infinity`. If the worker self-exits (idle timeout) while the waker pod is still alive AND a new job arrives in that window, the waker cannot re-trigger the worker. The `RECONNECT_WAIT_MS` (60s) timer in worker-manager will expire and reject the in-flight job. Once the queue empties, KEDA scales the waker to 0, and the next enqueue starts a fresh cycle. This is a narrow race (job must arrive between worker exit and KEDA cooldown) and self-recovers on the next cycle. If this proves problematic in practice, the waker can be changed to a polling loop (`while true; ssh start; sleep 60; done`) instead of `sleep infinity`.
 - **Existing `/api/worker-status` endpoint**: Already exists in `server.js` — no changes needed. Used in E2E verification steps.
 
 ## Future Improvements
 
-- **Restricted SSH command**: Lock down the authorized_keys entry with `command="systemctl --user start gpu-worker"` to limit what the key can do (prevents arbitrary command execution if the key leaks)
 - **Metrics/observability**: Expose KEDA scaling events and worker lifecycle to Grafana
 - **Multiple GPU nodes**: If a second GPU machine is added, extend max replicas and modify worker-manager to accept multiple workers
