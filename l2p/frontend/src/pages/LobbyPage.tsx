@@ -11,6 +11,8 @@ import { apiService } from '../services/apiService'
 import styles from '../styles/App.module.css'
 import { useAudio } from '../hooks/useAudio'
 import { useLocalization } from '../hooks/useLocalization'
+import { CharacterCanvas } from '../components/3d/CharacterCanvas'
+import { LobbyRoomScene } from '../components/3d/LobbyRoomScene'
 
 export const LobbyPage: React.FC = () => {
   const { lobbyId } = useParams<{ lobbyId: string }>()
@@ -27,7 +29,8 @@ export const LobbyPage: React.FC = () => {
     isLoading,
     error,
     setError,
-    setLobbyCode
+    setLobbyCode,
+    players,
   } = useGameStore()
   const { t } = useLocalization()
 
@@ -191,6 +194,18 @@ export const LobbyPage: React.FC = () => {
         </div>
       </div>
       
+      {/* 3D lobby scene — shows players arranged in a semicircle */}
+      {players.length > 0 && (
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 'var(--spacing-md)' }}>
+          <CharacterCanvas width={600} height={200}>
+            <LobbyRoomScene
+              players={players}
+              hostId={players.find((p) => p.isHost)?.id ?? ''}
+            />
+          </CharacterCanvas>
+        </div>
+      )}
+
       <LobbyView />
     </div>
   )
