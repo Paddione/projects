@@ -1256,6 +1256,366 @@
       "color": "#ff6b9d",
       "conceptBackend": "gemini-imagen",
       "pipeline": {}
+    },
+    "student_neon": {
+      "id": "student_neon",
+      "name": "Student Neon",
+      "category": "characters",
+      "tags": [
+        "arena",
+        "skin"
+      ],
+      "prompt": "single front view, male character, glowing neon cyan outlines, cyberpunk style, dark body with bright edge lighting, full body, isometric 3D game character, low poly, solid white background, no text",
+      "poses": [
+        "stand"
+      ],
+      "directions": 8,
+      "size": 64,
+      "color": "#00f2ff",
+      "conceptBackend": "gemini-imagen",
+      "pipeline": {}
+    },
+    "student_formal": {
+      "id": "student_formal",
+      "name": "Student Formal",
+      "category": "characters",
+      "tags": [
+        "arena",
+        "skin"
+      ],
+      "prompt": "single front view, male character, wearing elegant formal attire, black tie suit or evening gown, polished shoes, full body, isometric 3D game character, low poly, solid white background, no text",
+      "poses": [
+        "stand"
+      ],
+      "directions": 8,
+      "size": 64,
+      "color": "#00f2ff",
+      "conceptBackend": "gemini-imagen",
+      "pipeline": {}
+    },
+    "student_f_neon": {
+      "id": "student_f_neon",
+      "name": "Student (F) Neon",
+      "category": "characters",
+      "tags": [
+        "arena",
+        "skin"
+      ],
+      "prompt": "single front view, female character, glowing neon cyan outlines, cyberpunk style, dark body with bright edge lighting, full body, isometric 3D game character, low poly, solid white background, no text",
+      "poses": [
+        "stand"
+      ],
+      "directions": 8,
+      "size": 64,
+      "color": "#00f2ff",
+      "conceptBackend": "gemini-imagen",
+      "pipeline": {}
+    },
+    "student_f_formal": {
+      "id": "student_f_formal",
+      "name": "Student (F) Formal",
+      "category": "characters",
+      "tags": [
+        "arena",
+        "skin"
+      ],
+      "prompt": "single front view, female character, wearing elegant formal attire, black tie suit or evening gown, polished shoes, full body, isometric 3D game character, low poly, solid white background, no text",
+      "poses": [
+        "stand"
+      ],
+      "directions": 8,
+      "size": 64,
+      "color": "#00f2ff",
+      "conceptBackend": "gemini-imagen",
+      "pipeline": {}
+    },
+    "researcher_neon": {
+      "id": "researcher_neon",
+      "name": "Researcher Neon",
+      "category": "characters",
+      "tags": [
+        "arena",
+        "skin"
+      ],
+      "prompt": "single front view, male character, glowing neon cyan outlines, cyberpunk style, dark body with bright edge lighting, full body, isometric 3D game character, low poly, solid white background, no text",
+      "poses": [
+        "stand"
+      ],
+      "directions": 8,
+      "size": 64,
+      "color": "#3eff8b",
+      "conceptBackend": "gemini-imagen",
+      "pipeline": {}
+    },
+    "researcher_formal": {
+      "id": "researcher_formal",
+      "name": "Researcher Formal",
+      "category": "characters",
+      "tags": [
+        "arena",
+        "skin"
+      ],
+      "prompt": "single front view, male character, wearing elegant formal attire, black tie suit or evening gown, polished shoes, full body, isometric 3D game character, low poly, solid white background, no text",
+      "poses": [
+        "stand"
+      ],
+      "directions": 8,
+      "size": 64,
+      "color": "#3eff8b",
+      "conceptBackend": "gemini-imagen",
+      "pipeline": {}
+    },
+    "researcher_f_neon": {
+      "id": "researcher_f_neon",
+      "name": "Researcher (F) Neon",
+      "category": "characters",
+      "tags": [
+        "arena",
+        "skin"
+      ],
+      "prompt": "single front view, female character, glowing neon cyan outlines, cyberpunk style, dark body with bright edge lighting, full body, isometric 3D game character, low poly, solid white background, no text",
+      "poses": [
+        "stand"
+      ],
+      "directions": 8,
+      "size": 64,
+      "color": "#3eff8b",
+      "conceptBackend": "gemini-imagen",
+      "pipeline": {}
+    },
+    "researcher_f_formal": {
+      "id": "researcher_f_formal",
+      "name": "Researcher (F) Formal",
+      "category": "characters",
+      "tags": [
+        "arena",
+        "skin"
+      ],
+      "prompt": "single front view, female character, wearing elegant formal attire, black tie suit or evening gown, polished shoes, full body, isometric 3D game character, low poly, solid white background, no text",
+      "poses": [
+        "stand"
+      ],
+      "directions": 8,
+      "size": 64,
+      "color": "#3eff8b",
+      "conceptBackend": "gemini-imagen",
+      "pipeline": {}
+    },
+    "professor_neon": {
+      "id": "professor_neon",
+      "name": "Professor Neon",
+      "category": "characters",
+      "tags": [
+        "arena",
+        "skin"
+      ],
+      "prompt": "single front view, male character, glowing neon cyan outlines, cyberpunk style, dark body with bright edge lighting, full body, isometric 3D game character, low poly, solid white background, no text",
+      "poses": [
+        "stand"
+      ],
+      "directions": 8,
+      "size": 64,
+      "color": "#bc13fe",
+      "conceptBackend": "gemini-imagen",
+      "pipeline": {}
+    },
+    "professor_formal": {
+      "id": "professor_formal",
+      "name": "Professor Formal",
+      "category": "characters",
+      "tags": [
+        "arena",
+        "skin"
+      ],
+      "prompt": "single front view, male character, wearing elegant formal attire, black tie suit or evening gown, polished shoes, full body, isometric 3D game character, low poly, solid white background, no text",
+      "poses": [
+        "stand"
+      ],
+      "directions": 8,
+      "size": 64,
+      "color": "#bc13fe",
+      "conceptBackend": "gemini-imagen",
+      "pipeline": {}
+    },
+    "professor_f_neon": {
+      "id": "professor_f_neon",
+      "name": "Professor (F) Neon",
+      "category": "characters",
+      "tags": [
+        "arena",
+        "skin"
+      ],
+      "prompt": "single front view, female character, glowing neon cyan outlines, cyberpunk style, dark body with bright edge lighting, full body, isometric 3D game character, low poly, solid white background, no text",
+      "poses": [
+        "stand"
+      ],
+      "directions": 8,
+      "size": 64,
+      "color": "#bc13fe",
+      "conceptBackend": "gemini-imagen",
+      "pipeline": {}
+    },
+    "professor_f_formal": {
+      "id": "professor_f_formal",
+      "name": "Professor (F) Formal",
+      "category": "characters",
+      "tags": [
+        "arena",
+        "skin"
+      ],
+      "prompt": "single front view, female character, wearing elegant formal attire, black tie suit or evening gown, polished shoes, full body, isometric 3D game character, low poly, solid white background, no text",
+      "poses": [
+        "stand"
+      ],
+      "directions": 8,
+      "size": 64,
+      "color": "#bc13fe",
+      "conceptBackend": "gemini-imagen",
+      "pipeline": {}
+    },
+    "dean_neon": {
+      "id": "dean_neon",
+      "name": "Dean Neon",
+      "category": "characters",
+      "tags": [
+        "arena",
+        "skin"
+      ],
+      "prompt": "single front view, male character, glowing neon cyan outlines, cyberpunk style, dark body with bright edge lighting, full body, isometric 3D game character, low poly, solid white background, no text",
+      "poses": [
+        "stand"
+      ],
+      "directions": 8,
+      "size": 64,
+      "color": "#ffd700",
+      "conceptBackend": "gemini-imagen",
+      "pipeline": {}
+    },
+    "dean_formal": {
+      "id": "dean_formal",
+      "name": "Dean Formal",
+      "category": "characters",
+      "tags": [
+        "arena",
+        "skin"
+      ],
+      "prompt": "single front view, male character, wearing elegant formal attire, black tie suit or evening gown, polished shoes, full body, isometric 3D game character, low poly, solid white background, no text",
+      "poses": [
+        "stand"
+      ],
+      "directions": 8,
+      "size": 64,
+      "color": "#ffd700",
+      "conceptBackend": "gemini-imagen",
+      "pipeline": {}
+    },
+    "dean_f_neon": {
+      "id": "dean_f_neon",
+      "name": "Dean (F) Neon",
+      "category": "characters",
+      "tags": [
+        "arena",
+        "skin"
+      ],
+      "prompt": "single front view, female character, glowing neon cyan outlines, cyberpunk style, dark body with bright edge lighting, full body, isometric 3D game character, low poly, solid white background, no text",
+      "poses": [
+        "stand"
+      ],
+      "directions": 8,
+      "size": 64,
+      "color": "#ffd700",
+      "conceptBackend": "gemini-imagen",
+      "pipeline": {}
+    },
+    "dean_f_formal": {
+      "id": "dean_f_formal",
+      "name": "Dean (F) Formal",
+      "category": "characters",
+      "tags": [
+        "arena",
+        "skin"
+      ],
+      "prompt": "single front view, female character, wearing elegant formal attire, black tie suit or evening gown, polished shoes, full body, isometric 3D game character, low poly, solid white background, no text",
+      "poses": [
+        "stand"
+      ],
+      "directions": 8,
+      "size": 64,
+      "color": "#ffd700",
+      "conceptBackend": "gemini-imagen",
+      "pipeline": {}
+    },
+    "librarian_neon": {
+      "id": "librarian_neon",
+      "name": "Librarian Neon",
+      "category": "characters",
+      "tags": [
+        "arena",
+        "skin"
+      ],
+      "prompt": "single front view, male character, glowing neon cyan outlines, cyberpunk style, dark body with bright edge lighting, full body, isometric 3D game character, low poly, solid white background, no text",
+      "poses": [
+        "stand"
+      ],
+      "directions": 8,
+      "size": 64,
+      "color": "#ff6b9d",
+      "conceptBackend": "gemini-imagen",
+      "pipeline": {}
+    },
+    "librarian_formal": {
+      "id": "librarian_formal",
+      "name": "Librarian Formal",
+      "category": "characters",
+      "tags": [
+        "arena",
+        "skin"
+      ],
+      "prompt": "single front view, male character, wearing elegant formal attire, black tie suit or evening gown, polished shoes, full body, isometric 3D game character, low poly, solid white background, no text",
+      "poses": [
+        "stand"
+      ],
+      "directions": 8,
+      "size": 64,
+      "color": "#ff6b9d",
+      "conceptBackend": "gemini-imagen",
+      "pipeline": {}
+    },
+    "librarian_f_neon": {
+      "id": "librarian_f_neon",
+      "name": "Librarian (F) Neon",
+      "category": "characters",
+      "tags": [
+        "arena",
+        "skin"
+      ],
+      "prompt": "single front view, female character, glowing neon cyan outlines, cyberpunk style, dark body with bright edge lighting, full body, isometric 3D game character, low poly, solid white background, no text",
+      "poses": [
+        "stand"
+      ],
+      "directions": 8,
+      "size": 64,
+      "color": "#ff6b9d",
+      "conceptBackend": "gemini-imagen",
+      "pipeline": {}
+    },
+    "librarian_f_formal": {
+      "id": "librarian_f_formal",
+      "name": "Librarian (F) Formal",
+      "category": "characters",
+      "tags": [
+        "arena",
+        "skin"
+      ],
+      "prompt": "single front view, female character, wearing elegant formal attire, black tie suit or evening gown, polished shoes, full body, isometric 3D game character, low poly, solid white background, no text",
+      "poses": [
+        "stand"
+      ],
+      "directions": 8,
+      "size": 64,
+      "color": "#ff6b9d",
+      "conceptBackend": "gemini-imagen",
+      "pipeline": {}
     }
   }
 }

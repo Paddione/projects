@@ -128,6 +128,246 @@
         "silencer"
       ],
       "color": "#ff6b9d"
+    },
+    {
+      "id": "student_neon",
+      "poses": [
+        "stand",
+        "gun",
+        "machine",
+        "reload",
+        "hold",
+        "silencer"
+      ],
+      "color": "#00f2ff"
+    },
+    {
+      "id": "student_formal",
+      "poses": [
+        "stand",
+        "gun",
+        "machine",
+        "reload",
+        "hold",
+        "silencer"
+      ],
+      "color": "#00f2ff"
+    },
+    {
+      "id": "researcher_neon",
+      "poses": [
+        "stand",
+        "gun",
+        "machine",
+        "reload",
+        "hold",
+        "silencer"
+      ],
+      "color": "#3eff8b"
+    },
+    {
+      "id": "researcher_formal",
+      "poses": [
+        "stand",
+        "gun",
+        "machine",
+        "reload",
+        "hold",
+        "silencer"
+      ],
+      "color": "#3eff8b"
+    },
+    {
+      "id": "professor_neon",
+      "poses": [
+        "stand",
+        "gun",
+        "machine",
+        "reload",
+        "hold",
+        "silencer"
+      ],
+      "color": "#bc13fe"
+    },
+    {
+      "id": "professor_formal",
+      "poses": [
+        "stand",
+        "gun",
+        "machine",
+        "reload",
+        "hold",
+        "silencer"
+      ],
+      "color": "#bc13fe"
+    },
+    {
+      "id": "dean_neon",
+      "poses": [
+        "stand",
+        "gun",
+        "machine",
+        "reload",
+        "hold",
+        "silencer"
+      ],
+      "color": "#ffd700"
+    },
+    {
+      "id": "dean_formal",
+      "poses": [
+        "stand",
+        "gun",
+        "machine",
+        "reload",
+        "hold",
+        "silencer"
+      ],
+      "color": "#ffd700"
+    },
+    {
+      "id": "librarian_neon",
+      "poses": [
+        "stand",
+        "gun",
+        "machine",
+        "reload",
+        "hold",
+        "silencer"
+      ],
+      "color": "#ff6b9d"
+    },
+    {
+      "id": "librarian_formal",
+      "poses": [
+        "stand",
+        "gun",
+        "machine",
+        "reload",
+        "hold",
+        "silencer"
+      ],
+      "color": "#ff6b9d"
+    },
+    {
+      "id": "student_f_neon",
+      "poses": [
+        "stand",
+        "gun",
+        "machine",
+        "reload",
+        "hold",
+        "silencer"
+      ],
+      "color": "#00f2ff"
+    },
+    {
+      "id": "student_f_formal",
+      "poses": [
+        "stand",
+        "gun",
+        "machine",
+        "reload",
+        "hold",
+        "silencer"
+      ],
+      "color": "#00f2ff"
+    },
+    {
+      "id": "researcher_f_neon",
+      "poses": [
+        "stand",
+        "gun",
+        "machine",
+        "reload",
+        "hold",
+        "silencer"
+      ],
+      "color": "#3eff8b"
+    },
+    {
+      "id": "researcher_f_formal",
+      "poses": [
+        "stand",
+        "gun",
+        "machine",
+        "reload",
+        "hold",
+        "silencer"
+      ],
+      "color": "#3eff8b"
+    },
+    {
+      "id": "professor_f_neon",
+      "poses": [
+        "stand",
+        "gun",
+        "machine",
+        "reload",
+        "hold",
+        "silencer"
+      ],
+      "color": "#bc13fe"
+    },
+    {
+      "id": "professor_f_formal",
+      "poses": [
+        "stand",
+        "gun",
+        "machine",
+        "reload",
+        "hold",
+        "silencer"
+      ],
+      "color": "#bc13fe"
+    },
+    {
+      "id": "dean_f_neon",
+      "poses": [
+        "stand",
+        "gun",
+        "machine",
+        "reload",
+        "hold",
+        "silencer"
+      ],
+      "color": "#ffd700"
+    },
+    {
+      "id": "dean_f_formal",
+      "poses": [
+        "stand",
+        "gun",
+        "machine",
+        "reload",
+        "hold",
+        "silencer"
+      ],
+      "color": "#ffd700"
+    },
+    {
+      "id": "librarian_f_neon",
+      "poses": [
+        "stand",
+        "gun",
+        "machine",
+        "reload",
+        "hold",
+        "silencer"
+      ],
+      "color": "#ff6b9d"
+    },
+    {
+      "id": "librarian_f_formal",
+      "poses": [
+        "stand",
+        "gun",
+        "machine",
+        "reload",
+        "hold",
+        "silencer"
+      ],
+      "color": "#ff6b9d"
     }
   ],
   "weapons": [
