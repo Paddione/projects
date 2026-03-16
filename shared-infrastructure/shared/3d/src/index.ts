@@ -35,3 +35,7 @@ export {
 // Characters
 export { CharacterManager } from './characters.js';
 export type { CharacterManagerOptions } from './characters.js';
+
+// Viewer
+export { createCharacterViewer } from './viewer.js';
+export type { CharacterViewer } from './viewer.js';
