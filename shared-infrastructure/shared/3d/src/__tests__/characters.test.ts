@@ -58,6 +58,7 @@ vi.mock('../animator.js', () => ({
     addClip: mockAddClip,
     currentAnimation: null,
     clipNames: [],
+    animationMixer: { update: vi.fn() },
   })),
 }));
 
@@ -180,10 +181,16 @@ describe('CharacterManager', () => {
     expect(mockAnimDispose).toHaveBeenCalled();
   });
 
-  it('preloadCharacter delegates to the ModelLoader', async () => {
-    mockPreload.mockResolvedValueOnce(undefined);
+  it('preloadCharacter loads and caches the model', async () => {
+    const model = makeModel('warrior');
+    mockLoad.mockResolvedValueOnce(model);
     await manager.preloadCharacter('warrior', 'warrior.glb');
-    expect(mockPreload).toHaveBeenCalledWith(['warrior.glb']);
+    expect(mockLoad).toHaveBeenCalledWith('warrior.glb');
+
+    // Second call with the same id should NOT trigger another load
+    mockLoad.mockClear();
+    await manager.preloadCharacter('warrior', 'warrior.glb');
+    expect(mockLoad).not.toHaveBeenCalled();
   });
 
   it('dispose clears all instances and disposes the loader', async () => {

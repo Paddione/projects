@@ -27,6 +27,9 @@ export class AnimationController {
     return this._currentAnimation;
   }
 
+  /** Exposes the underlying AnimationMixer for external consumers. */
+  get animationMixer(): AnimationMixer { return this.mixer; }
+
   /** Names of all registered clips. */
   get clipNames(): string[] {
     return Array.from(this.clips.keys());

@@ -53,7 +53,7 @@ export class CharacterManager {
     const instance: CharacterInstance = {
       id,
       mesh: clonedScene,
-      mixer: (animController as any).mixer,
+      mixer: animController.animationMixer,
       playAnimation(name: string, options?: PlayOptions) {
         animController.play(name, options);
       },
@@ -85,9 +85,10 @@ export class CharacterManager {
    * Pre-warm the model cache for a character without creating an instance.
    */
   async preloadCharacter(id: string, modelUrl: string): Promise<void> {
-    await this.loader.preload([modelUrl]);
-    // We don't store in modelCache here because we don't have the parsed model
-    // object yet — ModelLoader.preload only warms the internal GLTF cache.
+    if (!this.modelCache.has(id)) {
+      const model = await this.loader.load(modelUrl);
+      this.modelCache.set(id, { url: modelUrl, model });
+    }
   }
 
   /**
