@@ -12,6 +12,7 @@ function makePlayer(overrides: Partial<PlayerState> = {}): PlayerState {
         id: 'p1',
         username: 'Alice',
         character: 'student',
+        gender: 'female' as const,
         characterLevel: 1,
         x: 100,
         y: 100,
@@ -64,7 +65,7 @@ describe('PlayerService', () => {
 
     describe('createPlayer', () => {
         it('creates a player with correct initial stats', () => {
-            const player = service.createPlayer('id-1', 'Bob', 'student', 3, 50, 80);
+            const player = service.createPlayer('id-1', 'Bob', 'student', 'male', 3, 50, 80);
 
             expect(player.id).toBe('id-1');
             expect(player.username).toBe('Bob');
@@ -84,7 +85,7 @@ describe('PlayerService', () => {
         });
 
         it('places player at the given spawn coordinates', () => {
-            const player = service.createPlayer('p', 'user', 'ninja', 1, 320, 640);
+            const player = service.createPlayer('p', 'user', 'ninja', 'male', 1, 320, 640);
             expect(player.x).toBe(320);
             expect(player.y).toBe(640);
         });

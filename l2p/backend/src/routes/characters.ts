@@ -72,7 +72,8 @@ router.get('/available', authenticate, async (req: Request, res: Response): Prom
       return;
     }
 
-    const userInfo = await characterService.getUserCharacterInfo(userId);
+    const authToken = req.headers.authorization?.replace('Bearer ', '') || (req.cookies as Record<string, string>)?.accessToken;
+    const userInfo = await characterService.getUserCharacterInfo(userId, authToken);
     if (!userInfo) {
       res.status(404).json({
         success: false,
@@ -119,7 +120,8 @@ router.get('/profile', authenticate, async (req: Request, res: Response): Promis
       return;
     }
 
-    const userInfo = await characterService.getUserCharacterInfo(userId);
+    const authToken = req.headers.authorization?.replace('Bearer ', '') || (req.cookies as Record<string, string>)?.accessToken;
+    const userInfo = await characterService.getUserCharacterInfo(userId, authToken);
     if (!userInfo) {
       res.status(404).json({
         success: false,
@@ -173,9 +175,10 @@ router.put('/select', authenticate, async (req: Request, res: Response): Promise
     }
 
     const { characterId } = value;
+    const authToken = req.headers.authorization?.replace('Bearer ', '') || (req.cookies as Record<string, string>)?.accessToken;
 
-    // Update user's character
-    const updatedUser = await characterService.updateCharacter(userId, characterId);
+    // Update user's character (tries auth service first if token available)
+    const updatedUser = await characterService.updateCharacter(userId, characterId, authToken);
     if (!updatedUser) {
       res.status(404).json({
         success: false,
@@ -186,7 +189,7 @@ router.put('/select', authenticate, async (req: Request, res: Response): Promise
     }
 
     // Get updated character info
-    const userInfo = await characterService.getUserCharacterInfo(userId);
+    const userInfo = await characterService.getUserCharacterInfo(userId, authToken);
 
     res.json({
       success: true,
@@ -266,8 +269,8 @@ router.post('/experience/award', authenticate, async (req: Request, res: Respons
 
     const { experiencePoints } = value;
 
-    // Award experience points
-    const result = await characterService.awardExperience(userId, experiencePoints);
+    // Award experience points (use auth service internal API)
+    const result = await characterService.awardExperience(userId, experiencePoints, true);
 
     res.json({
       success: true,

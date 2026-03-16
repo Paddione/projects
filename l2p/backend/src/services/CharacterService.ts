@@ -3,6 +3,7 @@ import { PerksManager, UserPerk } from './PerksManager.js';
 import { GameProfileService, GameProfile } from './GameProfileService.js';
 import { DatabaseService } from './DatabaseService.js';
 import { PerkQueryService } from './PerkQueryService.js';
+import { authFetch, authFetchInternal, fetchUserProfile } from '../config/authClient.js';
 
 export interface Character {
   id: string;
@@ -183,11 +184,43 @@ export class CharacterService {
    * Update user's selected character
    * Supports both OAuth users (game profiles) and legacy users
    */
-  async updateCharacter(userId: number, characterId: string): Promise<User | GameProfile | null> {
+  async updateCharacter(userId: number, characterId: string, authToken?: string): Promise<User | GameProfile | null> {
     // Validate character exists
     const character = this.getCharacterById(characterId);
     if (!character) {
       throw new Error('Invalid character ID');
+    }
+
+    // Try auth service first if token is available
+    if (authToken) {
+      try {
+        const res = await authFetch('/api/profile/character', {
+          method: 'PUT',
+          headers: {
+            'Authorization': `Bearer ${authToken}`,
+            'X-Requested-With': 'XMLHttpRequest',
+          },
+          body: JSON.stringify({ character: characterId, gender: 'male' }),
+        });
+        if (res.ok) {
+          const profile = await res.json();
+          const selectedChar = profile.selectedCharacter || profile.selected_character || characterId;
+          const level = profile.level || profile.character_level || 1;
+          const xp = profile.xpTotal || profile.experience_points || 0;
+          // Return in GameProfile shape so callers handle it uniformly
+          return {
+            authUserId: userId,
+            selectedCharacter: selectedChar,
+            characterLevel: level,
+            experiencePoints: xp,
+            preferences: profile.preferences || {},
+            createdAt: profile.createdAt || new Date(),
+            updatedAt: profile.updatedAt || new Date(),
+          } as GameProfile;
+        }
+      } catch (error) {
+        console.warn('[CharacterService] Auth service unreachable for character update, falling back to local DB');
+      }
     }
 
     // Try to update game profile first (OAuth users)
@@ -244,7 +277,7 @@ export class CharacterService {
    * Award experience points to a user
    * Supports both OAuth users (game profiles) and legacy users
    */
-  async awardExperience(userId: number, experiencePoints: number): Promise<{
+  async awardExperience(userId: number, experiencePoints: number, useInternalApi: boolean = false): Promise<{
     user: User | GameProfile;
     levelUp: boolean;
     newLevel: number;
@@ -253,6 +286,55 @@ export class CharacterService {
     newlyUnlockedPerks: any[];
     pendingDrafts: any[];
   }> {
+    // Try auth service internal endpoint first (server-side calls)
+    if (useInternalApi) {
+      try {
+        const res = await authFetchInternal('/api/internal/xp/award', {
+          method: 'POST',
+          body: JSON.stringify({ userId, amount: experiencePoints }),
+        });
+        if (res.ok) {
+          const profile = await res.json();
+          const oldLevel = profile.oldLevel || profile.old_level || 1;
+          const newLevel = profile.level || profile.character_level || profile.newLevel || 1;
+          const xp = profile.xpTotal || profile.experience_points || 0;
+          const levelUp = newLevel > oldLevel;
+          const progress = this.calculateLevelProgress(xp);
+
+          let newlyUnlockedPerks: any[] = [];
+          const pendingDrafts: any[] = [];
+          if (levelUp) {
+            try {
+              const perkQueryService = PerkQueryService.getInstance();
+              newlyUnlockedPerks = await perkQueryService.getNewlyUnlockedPerks(oldLevel, newLevel);
+            } catch (error) {
+              console.warn('[CharacterService] Failed to get newly unlocked perks after auth XP award:', error);
+            }
+          }
+
+          return {
+            user: {
+              authUserId: userId,
+              selectedCharacter: profile.selectedCharacter || profile.selected_character || 'student',
+              characterLevel: newLevel,
+              experiencePoints: xp,
+              preferences: profile.preferences || {},
+              createdAt: profile.createdAt || new Date(),
+              updatedAt: profile.updatedAt || new Date(),
+            } as GameProfile,
+            levelUp,
+            newLevel,
+            oldLevel,
+            progress,
+            newlyUnlockedPerks,
+            pendingDrafts,
+          };
+        }
+      } catch (error) {
+        console.warn('[CharacterService] Auth service unreachable for XP award, falling back to local DB');
+      }
+    }
+
     // Try to update game profile first (OAuth users)
     try {
       const profile = await this.gameProfileService.getOrCreateProfile(userId);
@@ -370,7 +452,7 @@ export class CharacterService {
    * Get user's character information including level and progress
    * Supports both OAuth users (game profiles) and legacy users
    */
-  async getUserCharacterInfo(userId: number): Promise<{
+  async getUserCharacterInfo(userId: number, authToken?: string): Promise<{
     character: Character;
     level: number;
     experience: number;
@@ -378,6 +460,35 @@ export class CharacterService {
     availableCharacters: Character[];
   } | null> {
     console.log('[CharacterService] getUserCharacterInfo called for userId:', userId);
+
+    // Try auth service first if token is available
+    if (authToken) {
+      try {
+        const profile = await fetchUserProfile(authToken);
+        if (profile) {
+          const level = profile.level || profile.character_level || 1;
+          const xp = profile.xpTotal || profile.experience_points || 0;
+          const selectedChar = profile.selectedCharacter || profile.selected_character || 'student';
+          const character = this.getCharacterById(selectedChar);
+
+          if (character) {
+            const progress = this.calculateLevelProgress(xp);
+            const availableCharacters = this.getAvailableCharacters(level);
+
+            console.log('[CharacterService] Resolved character info from auth service for userId:', userId);
+            return {
+              character,
+              level,
+              experience: xp,
+              progress,
+              availableCharacters,
+            };
+          }
+        }
+      } catch (error) {
+        console.warn('[CharacterService] Auth service unreachable for profile fetch, falling back to local DB');
+      }
+    }
 
     // Try to get game profile first (OAuth users)
     try {

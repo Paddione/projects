@@ -13,6 +13,7 @@ function makePlayer(overrides: Partial<PlayerState> = {}): PlayerState {
         id: 'p1',
         username: 'Alice',
         character: 'student',
+        gender: 'female' as const,
         characterLevel: 1,
         x: 100,
         y: 100,
@@ -48,7 +49,7 @@ describe('PlayerService — Weapon Mechanics', () => {
     });
 
     it('starts with pistol (infinite ammo)', () => {
-        const player = service.createPlayer('id-1', 'Bob', 'student', 3, 50, 80);
+        const player = service.createPlayer('id-1', 'Bob', 'student', 'male', 3, 50, 80);
 
         expect(player.weapon.type).toBe('pistol');
         expect(player.weapon.clipAmmo).toBe(Infinity);

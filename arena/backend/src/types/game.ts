@@ -12,6 +12,7 @@ export interface PlayerState {
     id: string;
     username: string;
     character: string;
+    gender: 'male' | 'female';
     characterLevel: number;
     x: number;
     y: number;
@@ -199,6 +200,7 @@ export interface ArenaPlayer {
     id: string;
     username: string;
     character: string;
+    gender?: 'male' | 'female';
     characterLevel: number;
     isReady: boolean;
     isHost: boolean;

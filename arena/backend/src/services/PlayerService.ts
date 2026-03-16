@@ -24,6 +24,7 @@ export class PlayerService {
         id: string,
         username: string,
         character: string,
+        gender: 'male' | 'female',
         characterLevel: number,
         spawnX: number,
         spawnY: number
@@ -33,6 +34,7 @@ export class PlayerService {
             id,
             username,
             character,
+            gender,
             characterLevel,
             x: spawnX,
             y: spawnY,

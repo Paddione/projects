@@ -12,6 +12,7 @@ import type {
     MatchResult,
 } from '../types/game.js';
 import { config } from '../config/index.js';
+import { authFetch } from '../config/authClient.js';
 
 interface AuthUser {
     userId: number;
@@ -85,6 +86,7 @@ export class SocketService {
                     email: email || '',
                     role: role || 'USER',
                 } as AuthUser;
+                socket.data.cookie = cookie;
 
                 next();
             } catch (err) {
@@ -127,12 +129,34 @@ export class SocketService {
                 try {
                     // Use authenticated identity, not client-supplied
                     const playerId = String(user.userId);
+
+                    // Fetch character/gender from auth service profile
+                    let character = data.player?.character || 'student';
+                    let gender: 'male' | 'female' = 'male';
+                    if (socket.data.cookie) {
+                        try {
+                            const profileRes = await authFetch('/api/profile', {
+                                headers: { cookie: socket.data.cookie },
+                            });
+                            if (profileRes.ok) {
+                                const profile = await profileRes.json();
+                                if (profile) {
+                                    character = profile.selectedCharacter || profile.selected_character || character;
+                                    gender = profile.selectedGender || profile.selected_gender || 'male';
+                                }
+                            }
+                        } catch {
+                            // Auth service unreachable, use defaults/client-provided
+                        }
+                    }
+
                     const lobby = await this.lobbyService.joinLobby({
                         lobbyCode: data.lobbyCode,
                         player: {
                             id: playerId,
                             username: user.username,
-                            character: data.player?.character || 'student',
+                            character,
+                            gender,
                             characterLevel: data.player?.characterLevel || 1,
                             isReady: false,
                             isConnected: true,
