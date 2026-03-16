@@ -128,7 +128,7 @@ spec:
                 - name: IPv64_Token
                   valueFrom:
                     secretKeyRef:
-                      name: cert-renewal-credentials
+                      name: ipv64-credentials
                       key: IPV64_API_KEY
                 - name: ACME_EMAIL
                   value: "patrick@korczewski.de"

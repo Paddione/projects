@@ -15,3 +15,8 @@ resources:
   - config/smb-infra-external-secret.yaml
   - config/smb-services-external-secret.yaml
   - config/ipv64-external-secret.yaml
+  - config/traefik-external-secret.yaml
+  - config/registry-external-secret.yaml
+  - config/tls-external-secret.yaml
+  - config/pgbouncer-external-secret.yaml
+  - config/vault-root-token-external-secret.yaml

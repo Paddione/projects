@@ -68,6 +68,8 @@ SHOP=()
 VIDEOVAULT=()
 ARENA=()
 ASSETGENERATOR=()
+TRAEFIK=()
+REGISTRY=()
 SMB=()
 IPV64=()
 GLOBAL=()
@@ -101,6 +103,10 @@ while IFS='=' read -r key value || [ -n "$key" ]; do
         ASSETGENERATOR+=("$stripped=$value")
     elif [[ "$key" =~ ^GEMINI_ ]] || [[ "$key" =~ ^SILICONFLOW_ ]] || [[ "$key" =~ ^SUNO_ ]]; then
         ASSETGENERATOR+=("$entry")
+    elif [[ "$key" =~ ^TRAEFIK_ ]]; then
+        TRAEFIK+=("$entry")
+    elif [[ "$key" =~ ^REGISTRY_ ]]; then
+        REGISTRY+=("$entry")
     elif [[ "$key" =~ ^SMB_ ]]; then
         SMB+=("$entry")
     elif [[ "$key" =~ ^IPV64_ ]]; then
@@ -117,6 +123,8 @@ push_to_vault "shop" "${SHOP[@]}"
 push_to_vault "videovault" "${VIDEOVAULT[@]}"
 push_to_vault "arena" "${ARENA[@]}"
 push_to_vault "assetgenerator" "${ASSETGENERATOR[@]}"
+push_to_vault "traefik" "${TRAEFIK[@]}"
+push_to_vault "registry" "${REGISTRY[@]}"
 push_to_vault "smb" "${SMB[@]}"
 push_to_vault "ipv64" "${IPV64[@]}"
 push_to_vault "global" "${GLOBAL[@]}"
@@ -130,7 +138,7 @@ log_info "  To force immediate sync:"
 log_info "    kubectl annotate externalsecret <name> -n <namespace> \\"
 log_info "      force-sync=\$(date +%s) --overwrite"
 log_info "    (namespace: korczewski-services for app secrets,"
-log_info "     korczewski-infra for postgres/smb/ipv64)"
+log_info "     korczewski-infra for infra: postgres/traefik/registry/tls/pgbouncer/smb/ipv64)"
 log_info ""
 log_info "  To verify a secret was updated:"
 log_info "    kubectl get secret <name> -n <namespace> \\"
