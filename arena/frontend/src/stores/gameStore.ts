@@ -48,6 +48,9 @@ interface GameStore {
     killfeed: Array<{ killer: string; victim: string; weapon: string; timestamp: number }>;
     announcement: string | null;
 
+    // 3D renderer flag
+    use3DRenderer: boolean;
+
     // Actions
     setLobby: (code: string, isHost: boolean) => void;
     leaveLobby: () => void;
@@ -63,6 +66,7 @@ interface GameStore {
     setRound: (round: number) => void;
     setRoundScores: (scores: Record<string, number>) => void;
     setPlayer: (id: string, username: string) => void;
+    setUse3DRenderer: (value: boolean) => void;
 }
 
 export const useGameStore = create<GameStore>((set) => ({
@@ -102,6 +106,8 @@ export const useGameStore = create<GameStore>((set) => ({
     killfeed: [],
     announcement: null,
 
+    use3DRenderer: localStorage.getItem('arena_use3d') === 'true',
+
     // Actions
     setLobby: (code, isHost) => set({ lobbyCode: code, isInLobby: true, isHost }),
     leaveLobby: () => set({
@@ -131,4 +137,8 @@ export const useGameStore = create<GameStore>((set) => ({
     setRound: (round) => set({ currentRound: round }),
     setRoundScores: (scores) => set({ roundScores: scores }),
     setPlayer: (id, username) => set({ playerId: id, username }),
+    setUse3DRenderer: (value) => {
+        localStorage.setItem('arena_use3d', value ? 'true' : 'false');
+        set({ use3DRenderer: value });
+    },
 }));
