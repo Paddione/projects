@@ -8,35 +8,128 @@
     "item_size": 32,
     "ui_size": 16
   },
-
   "characters": [
     {
       "id": "student",
-      "poses": ["stand", "gun", "machine", "reload", "hold", "silencer"],
+      "poses": [
+        "stand",
+        "gun",
+        "machine",
+        "reload",
+        "hold",
+        "silencer"
+      ],
       "color": "#00f2ff"
     },
     {
       "id": "researcher",
-      "poses": ["stand", "gun", "machine", "reload", "hold", "silencer"],
+      "poses": [
+        "stand",
+        "gun",
+        "machine",
+        "reload",
+        "hold",
+        "silencer"
+      ],
       "color": "#3eff8b"
     },
     {
       "id": "professor",
-      "poses": ["stand", "gun", "machine", "reload", "hold", "silencer"],
+      "poses": [
+        "stand",
+        "gun",
+        "machine",
+        "reload",
+        "hold",
+        "silencer"
+      ],
       "color": "#bc13fe"
     },
     {
       "id": "dean",
-      "poses": ["stand", "gun", "machine", "reload", "hold", "silencer"],
+      "poses": [
+        "stand",
+        "gun",
+        "machine",
+        "reload",
+        "hold",
+        "silencer"
+      ],
       "color": "#ffd700"
     },
     {
       "id": "librarian",
-      "poses": ["stand", "gun", "machine", "reload", "hold", "silencer"],
+      "poses": [
+        "stand",
+        "gun",
+        "machine",
+        "reload",
+        "hold",
+        "silencer"
+      ],
+      "color": "#ff6b9d"
+    },
+    {
+      "id": "student_f",
+      "poses": [
+        "stand",
+        "gun",
+        "machine",
+        "reload",
+        "hold",
+        "silencer"
+      ],
+      "color": "#00f2ff"
+    },
+    {
+      "id": "researcher_f",
+      "poses": [
+        "stand",
+        "gun",
+        "machine",
+        "reload",
+        "hold",
+        "silencer"
+      ],
+      "color": "#3eff8b"
+    },
+    {
+      "id": "professor_f",
+      "poses": [
+        "stand",
+        "gun",
+        "machine",
+        "reload",
+        "hold",
+        "silencer"
+      ],
+      "color": "#bc13fe"
+    },
+    {
+      "id": "dean_f",
+      "poses": [
+        "stand",
+        "gun",
+        "machine",
+        "reload",
+        "hold",
+        "silencer"
+      ],
+      "color": "#ffd700"
+    },
+    {
+      "id": "librarian_f",
+      "poses": [
+        "stand",
+        "gun",
+        "machine",
+        "reload",
+        "hold",
+        "silencer"
+      ],
       "color": "#ff6b9d"
     }
   ],
-
   "weapons": [
     {
       "id": "projectile",
@@ -57,7 +150,6 @@
       "size": 32
     }
   ],
-
   "items": [
     {
       "id": "health_pack",
@@ -77,59 +169,206 @@
       "size": 64
     }
   ],
-
   "tiles": [
-    { "id": "floor_01", "prompt": "dark stone floor tile, top-down view, low-poly, seamless, dark navy tone" },
-    { "id": "floor_02", "prompt": "dark stone floor tile variant, top-down view, low-poly, seamless, slightly cracked" },
-    { "id": "floor_03", "prompt": "dark stone floor tile variant, top-down view, low-poly, seamless, moss patches" },
-    { "id": "floor_04", "prompt": "dark stone floor tile variant, top-down view, low-poly, seamless, worn edges" },
-    { "id": "wall",     "prompt": "stone wall tile, top-down view, low-poly, dark gray, rough hewn blocks" },
-    { "id": "boundary", "prompt": "boundary wall edge tile, top-down view, low-poly, dark with glowing blue border" },
-    { "id": "zone_overlay", "prompt": "danger zone overlay tile, translucent red tint, subtle hazard pattern, top-down" }
+    {
+      "id": "floor_01",
+      "prompt": "dark stone floor tile, top-down view, low-poly, seamless, dark navy tone"
+    },
+    {
+      "id": "floor_02",
+      "prompt": "dark stone floor tile variant, top-down view, low-poly, seamless, slightly cracked"
+    },
+    {
+      "id": "floor_03",
+      "prompt": "dark stone floor tile variant, top-down view, low-poly, seamless, moss patches"
+    },
+    {
+      "id": "floor_04",
+      "prompt": "dark stone floor tile variant, top-down view, low-poly, seamless, worn edges"
+    },
+    {
+      "id": "wall",
+      "prompt": "stone wall tile, top-down view, low-poly, dark gray, rough hewn blocks"
+    },
+    {
+      "id": "boundary",
+      "prompt": "boundary wall edge tile, top-down view, low-poly, dark with glowing blue border"
+    },
+    {
+      "id": "zone_overlay",
+      "prompt": "danger zone overlay tile, translucent red tint, subtle hazard pattern, top-down"
+    }
   ],
-
   "cover": [
-    { "id": "building",  "prompt": "low-poly campus building wall, top-down view, brick facade, academic architecture" },
-    { "id": "bench",     "prompt": "low-poly park bench, top-down view, wooden slats, campus outdoor seating" },
-    { "id": "fountain",  "prompt": "low-poly stone fountain, top-down view, circular base, campus courtyard centerpiece" },
-    { "id": "hedge",     "prompt": "low-poly trimmed hedge, top-down view, dark green, campus garden border" },
-    { "id": "pond",      "prompt": "low-poly ornamental pond, top-down view, blue reflective surface, campus water feature" }
+    {
+      "id": "building",
+      "prompt": "low-poly campus building wall, top-down view, brick facade, academic architecture"
+    },
+    {
+      "id": "bench",
+      "prompt": "low-poly park bench, top-down view, wooden slats, campus outdoor seating"
+    },
+    {
+      "id": "fountain",
+      "prompt": "low-poly stone fountain, top-down view, circular base, campus courtyard centerpiece"
+    },
+    {
+      "id": "hedge",
+      "prompt": "low-poly trimmed hedge, top-down view, dark green, campus garden border"
+    },
+    {
+      "id": "pond",
+      "prompt": "low-poly ornamental pond, top-down view, blue reflective surface, campus water feature"
+    }
   ],
-
   "ui": [
-    { "id": "heart_full",   "prompt": "pixel art red heart icon, full health, game UI",   "size": 16 },
-    { "id": "heart_empty",  "prompt": "pixel art dark heart icon, empty health, game UI",  "size": 16 },
-    { "id": "shield",       "prompt": "pixel art blue shield icon, armor indicator, game UI", "size": 16 },
-    { "id": "gun_icon",     "prompt": "pixel art gun icon, ranged weapon, game UI",        "size": 16 },
-    { "id": "melee_icon",   "prompt": "pixel art sword icon, melee weapon, game UI",       "size": 16 },
-    { "id": "round_pip_on", "prompt": "pixel art glowing pip, round won indicator, game UI", "size": 8 },
-    { "id": "round_pip_off","prompt": "pixel art dim pip, round not won indicator, game UI", "size": 8 }
+    {
+      "id": "heart_full",
+      "prompt": "pixel art red heart icon, full health, game UI",
+      "size": 16
+    },
+    {
+      "id": "heart_empty",
+      "prompt": "pixel art dark heart icon, empty health, game UI",
+      "size": 16
+    },
+    {
+      "id": "shield",
+      "prompt": "pixel art blue shield icon, armor indicator, game UI",
+      "size": 16
+    },
+    {
+      "id": "gun_icon",
+      "prompt": "pixel art gun icon, ranged weapon, game UI",
+      "size": 16
+    },
+    {
+      "id": "melee_icon",
+      "prompt": "pixel art sword icon, melee weapon, game UI",
+      "size": 16
+    },
+    {
+      "id": "round_pip_on",
+      "prompt": "pixel art glowing pip, round won indicator, game UI",
+      "size": 8
+    },
+    {
+      "id": "round_pip_off",
+      "prompt": "pixel art dim pip, round not won indicator, game UI",
+      "size": 8
+    }
   ],
-
   "sfx": [
-    { "id": "gunshot",        "prompt": "sci-fi laser gunshot, short sharp burst, video game sound effect",     "duration": 0.5 },
-    { "id": "melee_swing",    "prompt": "sword swing whoosh, fast melee attack, video game sound effect",       "duration": 0.4 },
-    { "id": "bullet_impact",  "prompt": "laser bullet impact on surface, sci-fi hit, video game sound effect",  "duration": 0.3 },
-    { "id": "player_hit",     "prompt": "character taking damage, flesh impact, video game sound effect",       "duration": 0.4 },
-    { "id": "player_death",   "prompt": "character death sound, dramatic collapse, video game sound effect",    "duration": 1.0 },
-    { "id": "health_pickup",  "prompt": "health pickup sparkle, positive chime, video game sound effect",       "duration": 0.5 },
-    { "id": "armor_pickup",   "prompt": "armor equip metallic clank, shield activate, video game sound effect", "duration": 0.5 },
-    { "id": "round_start",    "prompt": "battle round start horn, dramatic fanfare, video game sound effect",   "duration": 1.5 },
-    { "id": "round_end",      "prompt": "round end gong, resolution chime, video game sound effect",           "duration": 1.5 },
-    { "id": "match_victory",  "prompt": "triumphant victory fanfare, celebration, video game sound effect",     "duration": 2.0 },
-    { "id": "match_defeat",   "prompt": "somber defeat sound, loss, video game sound effect",                   "duration": 2.0 },
-    { "id": "zone_warning",   "prompt": "danger zone warning alarm, urgent beeping, video game sound effect",   "duration": 1.0 },
-    { "id": "zone_tick",      "prompt": "zone damage tick, electric zap, recurring pain, video game",           "duration": 0.3 },
-    { "id": "footstep_walk",  "prompt": "footstep on stone, single step walking pace, video game sound",        "duration": 0.3 },
-    { "id": "footstep_sprint","prompt": "fast footstep on stone, sprinting pace, video game sound",             "duration": 0.2 },
-    { "id": "grenade_launch", "prompt": "grenade launcher firing, heavy thunk mechanical release, sci-fi weapon shoot, video game sound effect", "duration": 0.6 },
-    { "id": "grenade_explode","prompt": "grenade explosion blast, large boom impact, debris scatter, sci-fi explosion, video game sound effect", "duration": 1.2 }
+    {
+      "id": "gunshot",
+      "prompt": "sci-fi laser gunshot, short sharp burst, video game sound effect",
+      "duration": 0.5
+    },
+    {
+      "id": "melee_swing",
+      "prompt": "sword swing whoosh, fast melee attack, video game sound effect",
+      "duration": 0.4
+    },
+    {
+      "id": "bullet_impact",
+      "prompt": "laser bullet impact on surface, sci-fi hit, video game sound effect",
+      "duration": 0.3
+    },
+    {
+      "id": "player_hit",
+      "prompt": "character taking damage, flesh impact, video game sound effect",
+      "duration": 0.4
+    },
+    {
+      "id": "player_death",
+      "prompt": "character death sound, dramatic collapse, video game sound effect",
+      "duration": 1.0
+    },
+    {
+      "id": "health_pickup",
+      "prompt": "health pickup sparkle, positive chime, video game sound effect",
+      "duration": 0.5
+    },
+    {
+      "id": "armor_pickup",
+      "prompt": "armor equip metallic clank, shield activate, video game sound effect",
+      "duration": 0.5
+    },
+    {
+      "id": "round_start",
+      "prompt": "battle round start horn, dramatic fanfare, video game sound effect",
+      "duration": 1.5
+    },
+    {
+      "id": "round_end",
+      "prompt": "round end gong, resolution chime, video game sound effect",
+      "duration": 1.5
+    },
+    {
+      "id": "match_victory",
+      "prompt": "triumphant victory fanfare, celebration, video game sound effect",
+      "duration": 2.0
+    },
+    {
+      "id": "match_defeat",
+      "prompt": "somber defeat sound, loss, video game sound effect",
+      "duration": 2.0
+    },
+    {
+      "id": "zone_warning",
+      "prompt": "danger zone warning alarm, urgent beeping, video game sound effect",
+      "duration": 1.0
+    },
+    {
+      "id": "zone_tick",
+      "prompt": "zone damage tick, electric zap, recurring pain, video game",
+      "duration": 0.3
+    },
+    {
+      "id": "footstep_walk",
+      "prompt": "footstep on stone, single step walking pace, video game sound",
+      "duration": 0.3
+    },
+    {
+      "id": "footstep_sprint",
+      "prompt": "fast footstep on stone, sprinting pace, video game sound",
+      "duration": 0.2
+    },
+    {
+      "id": "grenade_launch",
+      "prompt": "grenade launcher firing, heavy thunk mechanical release, sci-fi weapon shoot, video game sound effect",
+      "duration": 0.6
+    },
+    {
+      "id": "grenade_explode",
+      "prompt": "grenade explosion blast, large boom impact, debris scatter, sci-fi explosion, video game sound effect",
+      "duration": 1.2
+    }
   ],
-
   "music": [
-    { "id": "lobby",   "prompt": "ambient atmospheric music, mysterious dark electronic, slow tempo, loopable, video game lobby theme",       "duration": 60,  "loop": true },
-    { "id": "battle",  "prompt": "intense electronic battle music, fast driving tempo, aggressive synths, loopable, video game combat theme", "duration": 90,  "loop": true },
-    { "id": "victory", "prompt": "triumphant sci-fi victory fanfare, ascending heroic synth melody, bright major key, dynamic crescendo, celebratory energy, video game win sting, 8 seconds",                                "duration": 8,   "loop": false },
-    { "id": "defeat",  "prompt": "melancholic sci-fi defeat theme, descending minor key synths, somber electronic tones, electronic string pad, sad loss sting, video game, 8 seconds",                                 "duration": 8,   "loop": false }
+    {
+      "id": "lobby",
+      "prompt": "ambient atmospheric music, mysterious dark electronic, slow tempo, loopable, video game lobby theme",
+      "duration": 60,
+      "loop": true
+    },
+    {
+      "id": "battle",
+      "prompt": "intense electronic battle music, fast driving tempo, aggressive synths, loopable, video game combat theme",
+      "duration": 90,
+      "loop": true
+    },
+    {
+      "id": "victory",
+      "prompt": "triumphant sci-fi victory fanfare, ascending heroic synth melody, bright major key, dynamic crescendo, celebratory energy, video game win sting, 8 seconds",
+      "duration": 8,
+      "loop": false
+    },
+    {
+      "id": "defeat",
+      "prompt": "melancholic sci-fi defeat theme, descending minor key synths, somber electronic tones, electronic string pad, sad loss sting, video game, 8 seconds",
+      "duration": 8,
+      "loop": false
+    }
   ]
 }

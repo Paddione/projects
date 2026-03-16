@@ -1146,6 +1146,116 @@
           "syncedAt": "2026-03-15T04:40:20.172Z"
         }
       }
+    },
+    "student_f": {
+      "id": "student_f",
+      "name": "Student (Female)",
+      "category": "characters",
+      "tags": [
+        "arena"
+      ],
+      "prompt": "young female university student character, casual hoodie and jeans, ponytail hairstyle, backpack, sneakers, determined expression, low-poly 3D model reference, isometric game sprite, bright cyan accent color, transparent background",
+      "poses": [
+        "stand",
+        "gun",
+        "machine",
+        "reload",
+        "hold",
+        "silencer"
+      ],
+      "directions": 8,
+      "size": 64,
+      "color": "#00f2ff",
+      "conceptBackend": "gemini-imagen",
+      "pipeline": {}
+    },
+    "researcher_f": {
+      "id": "researcher_f",
+      "name": "Researcher (Female)",
+      "category": "characters",
+      "tags": [
+        "arena"
+      ],
+      "prompt": "female research scientist character, lab coat, safety goggles on forehead, clipboard, short curly hair, focused expression, low-poly 3D model reference, isometric game sprite, green accent color, transparent background",
+      "poses": [
+        "stand",
+        "gun",
+        "machine",
+        "reload",
+        "hold",
+        "silencer"
+      ],
+      "directions": 8,
+      "size": 64,
+      "color": "#3eff8b",
+      "conceptBackend": "gemini-imagen",
+      "pipeline": {}
+    },
+    "professor_f": {
+      "id": "professor_f",
+      "name": "Professor (Female)",
+      "category": "characters",
+      "tags": [
+        "arena"
+      ],
+      "prompt": "female university professor character, tweed blazer, reading glasses, professional bun hairstyle, books under arm, authoritative stance, low-poly 3D model reference, isometric game sprite, purple accent color, transparent background",
+      "poses": [
+        "stand",
+        "gun",
+        "machine",
+        "reload",
+        "hold",
+        "silencer"
+      ],
+      "directions": 8,
+      "size": 64,
+      "color": "#bc13fe",
+      "conceptBackend": "gemini-imagen",
+      "pipeline": {}
+    },
+    "dean_f": {
+      "id": "dean_f",
+      "name": "Dean (Female)",
+      "category": "characters",
+      "tags": [
+        "arena"
+      ],
+      "prompt": "female university dean character, formal business suit, pearl necklace, elegant updo hairstyle, commanding presence, low-poly 3D model reference, isometric game sprite, gold accent color, transparent background",
+      "poses": [
+        "stand",
+        "gun",
+        "machine",
+        "reload",
+        "hold",
+        "silencer"
+      ],
+      "directions": 8,
+      "size": 64,
+      "color": "#ffd700",
+      "conceptBackend": "gemini-imagen",
+      "pipeline": {}
+    },
+    "librarian_f": {
+      "id": "librarian_f",
+      "name": "Librarian (Female)",
+      "category": "characters",
+      "tags": [
+        "arena"
+      ],
+      "prompt": "female librarian character, cardigan sweater, vintage glasses, long braided hair, stack of books, gentle expression, low-poly 3D model reference, isometric game sprite, pink accent color, transparent background",
+      "poses": [
+        "stand",
+        "gun",
+        "machine",
+        "reload",
+        "hold",
+        "silencer"
+      ],
+      "directions": 8,
+      "size": 64,
+      "color": "#ff6b9d",
+      "conceptBackend": "gemini-imagen",
+      "pipeline": {}
     }
   }
 }

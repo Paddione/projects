@@ -33,10 +33,15 @@ export function computeScale(setting: string): number {
 
 const CHARACTER_COLORS: Record<string, number> = {
     student: 0x00f2ff,
+    student_f: 0x00f2ff,
     researcher: 0x3eff8b,
+    researcher_f: 0x3eff8b,
     professor: 0xbc13fe,
+    professor_f: 0xbc13fe,
     dean: 0xffd700,
+    dean_f: 0xffd700,
     librarian: 0xff6b9d,
+    librarian_f: 0xff6b9d,
 };
 
 export default function Game() {
