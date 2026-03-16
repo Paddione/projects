@@ -14,6 +14,7 @@ The GPU worker (`Assetgenerator/worker/`) currently runs manually via `start-wor
 - **No database queue**: Assetgenerator uses no database. The job queue is in-memory inside `worker-manager.js` (FIFO array). KEDA's PostgreSQL/Redis triggers cannot be used directly.
 - **Single worker limit**: `worker-manager.js` enforces one WebSocket worker connection at a time (403 on duplicates). Max concurrency is always 1.
 - **Heavy host dependencies**: The worker spawns child processes (Python, Blender, ffmpeg, AudioCraft, TripoSR) that live on the bare metal host — containerizing the full toolchain is not viable.
+- **Jobs not queued without worker**: Currently, adapters call `getWorker()` and bail out if null — jobs are never enqueued when no worker is connected. This must be fixed for autoscaling to work (see Section 1).
 
 ## Architecture
 
@@ -87,9 +88,19 @@ The KEDA cooldown and worker idle timeout are intentionally independent. The wak
 
 ## Detailed Changes
 
-### 1. Queue Depth Endpoint
+### 1. Decouple Job Queuing from Worker Presence + Queue Depth Endpoint
 
-**Files:** `Assetgenerator/server.js`, `Assetgenerator/worker-manager.js`
+**Files:** `Assetgenerator/server.js`, `Assetgenerator/worker-manager.js`, adapters (`adapters/*.js`)
+
+**Critical prerequisite:** Currently, adapters (e.g., `blender.js`, `audiocraft.js`, `triposr.js`) call `getWorker()` and bail out if it returns null. The `worker.exec()` method is the only path that pushes jobs onto `jobQueue`. This means when no worker is connected, jobs are never enqueued, queue depth is always 0, and KEDA never triggers. This must be fixed.
+
+**Refactor the queuing path:**
+1. Add an `enqueueJob(payload)` method to worker-manager that always pushes to `jobQueue` regardless of worker presence. Returns a Promise that resolves when the job completes.
+2. Add a `dispatchNext()` function that checks if a worker is connected AND there are pending jobs, then dispatches the next job. Called both when a job is enqueued and when a worker registers.
+3. Update adapters to call `enqueueJob(payload)` instead of `getWorker().exec(payload)`. Adapters no longer need to check worker presence — they enqueue and await the result.
+4. SSE stream endpoints (`/api/library/:id/generate`, `/api/visual-library/batch/generate`, etc.) should report "waiting for GPU worker..." while a job is queued but no worker is connected, so the UI shows progress.
+
+**Queue depth endpoint:**
 
 Add `getQueueDepth()` method to worker-manager that returns:
 ```json
@@ -108,7 +119,9 @@ Add `getQueueDepth()` method to worker-manager that returns:
 
 Add `GET /api/queue-depth` route in `server.js` that calls `getQueueDepth()` and returns the JSON response.
 
-### 2. Worker Idle Timeout
+**KEDA error handling:** If the Assetgenerator server is down or restarting, KEDA will receive HTTP errors from the endpoint. KEDA treats errors as "no data" and skips the polling interval — it does not scale up or down. This is benign but should be expected during rolling updates.
+
+### 2. Worker Idle Timeout + Reconnect Limit
 
 **File:** `Assetgenerator/worker/index.js`
 
@@ -119,6 +132,12 @@ Add idle timeout logic:
   - Reset on each `exit` message sent (job completed)
   - Clear on each `exec` message received (job started)
 - When timer fires: log message, call `process.exit(0)`
+
+**Critical: Idle timeout must also apply during reconnect cycles.** The current worker reconnects endlessly on WebSocket close (5s delay loop). If the connection drops while idle (e.g., server pod restart), the worker would reconnect forever instead of exiting. Fix:
+- The idle timer must keep ticking across disconnects — do NOT clear it on WebSocket close
+- Only clear the idle timer when a new `exec` message is received (i.e., actual work)
+- If the idle timer fires during a reconnect cycle, exit cleanly (`process.exit(0)`)
+- This means: worker connects → no jobs arrive → 10min passes → exits, even if connection dropped and reconnected in between
 
 ### 3. Systemd User Service
 
@@ -167,14 +186,65 @@ Installs: keda-operator, keda-metrics-apiserver, keda-admission-webhooks, 3 CRDs
 
 **File:** `k8s/services/assetgenerator/gpu-waker-deployment.yaml`
 
-- Image: `alpine:3.20`
-- Replicas: 0 (KEDA-managed)
-- Command: installs openssh-client, SSHs to start gpu-worker, then `sleep infinity`
-- Volume: mounts SSH private key from `gpu-waker-ssh-key` secret at `/ssh/id_ed25519`
-- Resources: 16Mi/10m request, 32Mi/50m limit
-- Node selector: `kubernetes.io/arch: amd64`
+Full manifest:
 
-The `sleep infinity` keeps the pod alive so KEDA can manage its lifecycle via replica count. When KEDA scales to 0, the pod is deleted cleanly.
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gpu-waker
+  namespace: korczewski-services
+spec:
+  replicas: 0  # KEDA manages this
+  selector:
+    matchLabels:
+      app: gpu-waker
+  template:
+    metadata:
+      labels:
+        app: gpu-waker
+    spec:
+      nodeSelector:
+        kubernetes.io/arch: amd64
+      containers:
+        - name: waker
+          image: registry.local:5000/korczewski/gpu-waker:latest
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              ssh -o StrictHostKeyChecking=no -i /ssh/id_ed25519 \
+                patrick@10.10.0.3 \
+                "systemctl --user start gpu-worker" &&
+              echo "Worker start signal sent, sleeping until scale-down..." &&
+              sleep infinity
+          resources:
+            requests:
+              memory: 16Mi
+              cpu: 10m
+            limits:
+              memory: 32Mi
+              cpu: 50m
+          volumeMounts:
+            - name: ssh-key
+              mountPath: /ssh
+              readOnly: true
+      volumes:
+        - name: ssh-key
+          secret:
+            secretName: gpu-waker-ssh-key
+            defaultMode: 0400
+```
+
+**Image:** A custom minimal image (`Assetgenerator/waker/Dockerfile`) based on `alpine:3.20` with `openssh-client` pre-installed. This avoids running `apk add` on every pod startup, which would be slow and fragile (depends on Alpine mirror availability). The image is tiny (~8MB) and built once.
+
+```dockerfile
+FROM alpine:3.20
+RUN apk add --no-cache openssh-client
+```
+
+**`sleep infinity`** keeps the pod alive so KEDA can manage its lifecycle via replica count. When KEDA scales to 0, the pod is deleted cleanly.
+
+**SSH host key:** Uses `-o StrictHostKeyChecking=no` since this is internal LAN traffic to a known host. Alternatively, a `known_hosts` file can be added to the secret for stricter verification.
 
 ### 6. ScaledObject
 
@@ -213,7 +283,22 @@ kubectl create secret generic gpu-waker-ssh-key \
   -n korczewski-services
 ```
 
-### 8. Kustomization Update
+### 8. Waker Dockerfile
+
+**File:** `Assetgenerator/waker/Dockerfile`
+
+```dockerfile
+FROM alpine:3.20
+RUN apk add --no-cache openssh-client
+```
+
+Add to Skaffold (`k8s/skaffold.yaml`) under the `assetgenerator` profile:
+```yaml
+- image: registry.korczewski.de/korczewski/gpu-waker
+  context: ../Assetgenerator/waker
+```
+
+### 9. Kustomization Update
 
 **File:** `k8s/services/assetgenerator/kustomization.yaml`
 
@@ -227,19 +312,26 @@ Add to resources list:
 2. Create SSH keypair and k8s secret
 3. Add public key to `~/.ssh/authorized_keys` on `10.10.0.3`
 4. Set up systemd service on `10.10.0.3` (service file + linger + daemon-reload)
-5. Deploy Assetgenerator server with queue-depth endpoint: `./k8s/scripts/deploy/deploy-assetgenerator.sh`
-6. Apply kustomize manifests (includes waker deployment + ScaledObject)
-7. Verify: trigger a generation job, watch KEDA scale waker, confirm worker starts and connects
+5. Verify SSH connectivity from a test pod: `kubectl run test-ssh --rm -it --image=alpine -- sh -c 'apk add openssh-client && ssh -o StrictHostKeyChecking=no -i /ssh/id_ed25519 patrick@10.10.0.3 echo ok'` (or simpler: verify pod-to-LAN routing works with `ping 10.10.0.3`)
+6. Build and push updated Assetgenerator server image (with queue-depth endpoint + refactored job queuing): `docker build -t registry.korczewski.de/korczewski/assetgenerator:latest . && docker push ...`
+7. Build and push gpu-waker image: `docker build -t registry.korczewski.de/korczewski/gpu-waker:latest Assetgenerator/waker/ && docker push ...`
+8. Apply kustomize manifests (deploys new server image + waker deployment + ScaledObject): `kustomize build k8s/services/assetgenerator | kubectl apply -f -`
+9. Wait for Assetgenerator pod to pass readiness probe (confirms `/api/queue-depth` is live before KEDA starts polling)
+10. Verify: trigger a generation job, watch KEDA scale waker, confirm worker starts and connects
 
 ## Testing Strategy
 
 ### Unit Tests
 - `worker-manager.js`: Test `getQueueDepth()` returns correct counts for empty queue, pending jobs, active job, and mixed states
+- `worker-manager.js`: Test `enqueueJob()` pushes to queue even when no worker is connected
+- `worker-manager.js`: Test `dispatchNext()` dispatches when worker connects with pending jobs
 - `worker/index.js`: Test idle timer starts on welcome, resets on job exit, clears on job exec, fires exit after timeout
+- `worker/index.js`: Test idle timer keeps ticking across WebSocket reconnect cycles
 
 ### Integration Tests
 - Start Assetgenerator server → `GET /api/queue-depth` returns `{"depth": 0, ...}`
-- Enqueue a job → queue depth increments
+- Enqueue a job (no worker connected) → queue depth increments to 1
+- Connect a worker → job dispatches, depth shows active=1
 - Verify KEDA ScaledObject is valid: `kubectl get scaledobject gpu-waker-scaler -n korczewski-services`
 
 ### End-to-End Verification
@@ -257,8 +349,14 @@ Add to resources list:
 - The waker pod has minimal resources and no privilege escalation
 - Queue depth endpoint is read-only, no authentication needed (internal cluster traffic only)
 
+## Known Limitations
+
+- **WSL2 sleep/shutdown**: If the Windows host sleeps or WSL2 shuts down, SSH from the waker pod will fail. The waker pod enters CrashLoopBackOff while the queue remains non-empty. No progress is made until the machine wakes up and the waker pod retries successfully. Consider monitoring waker pod CrashLoopBackOff events.
+- **Startup latency**: Worst case from job enqueue to worker processing: ~30s KEDA poll + ~5s pod start + ~5s SSH + ~5s worker boot = ~45s. Acceptable for GPU generation jobs (which take 10s-2min each) but not for interactive sub-second use cases.
+- **Existing `/api/worker-status` endpoint**: Already exists in `server.js` — no changes needed. Used in E2E verification steps.
+
 ## Future Improvements
 
-- **Restricted SSH command**: Lock down the authorized_keys entry to only allow `systemctl --user start gpu-worker` (prevents arbitrary command execution if the key leaks)
+- **Restricted SSH command**: Lock down the authorized_keys entry with `command="systemctl --user start gpu-worker"` to limit what the key can do (prevents arbitrary command execution if the key leaks)
 - **Metrics/observability**: Expose KEDA scaling events and worker lifecycle to Grafana
 - **Multiple GPU nodes**: If a second GPU machine is added, extend max replicas and modify worker-manager to accept multiple workers
