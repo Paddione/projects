@@ -16,4 +16,3 @@ spec:
         targetValue: "1"
         url: "http://assetgenerator.korczewski-services.svc.cluster.local:5200/api/queue-depth"
         valueLocation: "depth"
-        method: "GET"
