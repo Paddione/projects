@@ -14,6 +14,7 @@ import { correlationId } from './middleware/correlationId.js';
 import authRoutes from './routes/auth.js';
 import userRoutes from './routes/user.js';
 import profileRoutes from './routes/profile.js';
+import catalogRoutes from './routes/catalog.js';
 import oauthRoutes from './routes/oauth.js';
 import appsRoutes from './routes/apps.js';
 import adminRoutes from './routes/admin.js';
@@ -241,6 +242,9 @@ app.use('/api/user', authLimiter, csrfProtection, userRoutes);
 
 // Profile routes (CSRF on state-changing requests)
 app.use('/api', authLimiter, csrfProtection, profileRoutes);
+
+// Catalog routes (GET is public; POST /purchase uses authenticate inside route)
+app.use('/api', authLimiter, catalogRoutes);
 
 // Serve static frontend files
 // In development (tsx): __dirname = /home/patrick/projects/auth/src
