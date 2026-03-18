@@ -11,10 +11,11 @@ import { createCharacterViewer, ModelLoader } from 'shared-3d';
 import type { CharacterViewer } from 'shared-3d';
 
 const CHARACTERS = [
-    { id: 'warrior', name: 'Warrior', color: '#ff4444' },
-    { id: 'rogue',   name: 'Rogue',   color: '#3eff8b' },
-    { id: 'mage',    name: 'Mage',    color: '#bc13fe' },
-    { id: 'tank',    name: 'Tank',    color: '#ffd700' },
+    { id: 'student',    name: 'Student',    color: '#00f2ff' },
+    { id: 'researcher', name: 'Researcher', color: '#3eff8b' },
+    { id: 'professor',  name: 'Professor',  color: '#bc13fe' },
+    { id: 'dean',       name: 'Dean',       color: '#ffd700' },
+    { id: 'librarian',  name: 'Librarian',  color: '#ff6b9d' },
 ];
 
 const STORAGE_KEY = 'arena_character';
@@ -40,7 +41,7 @@ export function loadSavedCharacter(): { character: string; gender: 'male' | 'fem
     } catch {
         // ignore
     }
-    return { character: 'warrior', gender: 'male' };
+    return { character: 'student', gender: 'male' };
 }
 
 // Shared ModelLoader — one instance for the lifetime of the page.
