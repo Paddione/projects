@@ -45,13 +45,13 @@ export class GameRenderer3D {
         this.scene = new Scene();
         this.scene.background = new Color(0x0a0b1a);
 
-        // Camera: isometric with 45° pitch/yaw — frustumSize 12 for closer view
+        // Camera: isometric with steeper pitch for better floor visibility
         const aspect = container.clientWidth / container.clientHeight;
-        const frustumSize = 12;
+        const frustumSize = 10;
         this.camera = createIsometricCamera({
             frustumSize,
             aspect,
-            pitch: 45,
+            pitch: 55,
             yaw: 45,
             distance: 30,
         });

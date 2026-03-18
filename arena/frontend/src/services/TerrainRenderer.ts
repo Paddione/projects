@@ -16,7 +16,7 @@ import { WORLD_SCALE } from './GameRenderer3D';
 
 const TILE = WORLD_SCALE; // 1 world unit per tile
 
-const FLOOR_COLOR = new Color(0x1a3a1a);   // dark green base
+const FLOOR_COLOR = new Color(0x2d5a2d);   // medium green — clearly visible
 const WALL_COLOR = new Color(0x5a5a8a);    // blue-gray walls
 const PATH_COLOR = new Color(0x8a7a5a);    // warm brown paths
 const BOUNDARY_COLOR = 0x334466;           // map edge
