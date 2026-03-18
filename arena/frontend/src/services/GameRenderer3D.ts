@@ -3,6 +3,8 @@ import {
     WebGLRenderer,
     Group,
     Clock,
+    Color,
+    FogExp2,
 } from 'three';
 import { CSS2DRenderer } from 'three/addons/renderers/CSS2DRenderer.js';
 import {
@@ -40,12 +42,14 @@ export class GameRenderer3D {
         this.container = container;
         this.clock = new Clock();
 
-        // Scene
+        // Scene with dark background (not transparent)
         this.scene = new Scene();
+        this.scene.background = new Color(0x0a0b1a);
+        this.scene.fog = new FogExp2(0x0a0b1a, 0.03);
 
-        // Camera: isometric with 45° pitch/yaw
+        // Camera: isometric with 45° pitch/yaw — frustumSize 12 for closer view
         const aspect = container.clientWidth / container.clientHeight;
-        const frustumSize = 20;
+        const frustumSize = 12;
         this.camera = createIsometricCamera({
             frustumSize,
             aspect,
@@ -55,7 +59,7 @@ export class GameRenderer3D {
         });
 
         // WebGL renderer
-        this.renderer = new WebGLRenderer({ antialias: true, alpha: true });
+        this.renderer = new WebGLRenderer({ antialias: true });
         this.renderer.setPixelRatio(window.devicePixelRatio);
         this.renderer.setSize(container.clientWidth, container.clientHeight);
         this.renderer.shadowMap.enabled = true;

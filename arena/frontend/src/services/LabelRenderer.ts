@@ -57,7 +57,7 @@ export class LabelRenderer {
                     'text-shadow: 0 1px 2px #000',
                 ].join(';');
                 const labelObj = new CSS2DObject(el);
-                labelObj.position.set(0, 0.25, 0);
+                labelObj.position.set(0, 2.5, 0);
 
                 // HP element
                 const hpEl = document.createElement('div');
@@ -69,7 +69,7 @@ export class LabelRenderer {
                     'user-select: none',
                 ].join(';');
                 const hpObj = new CSS2DObject(hpEl);
-                hpObj.position.set(0, 0.35, 0);
+                hpObj.position.set(0, 2.7, 0);
 
                 const root = new Object3D();
                 root.add(labelObj, hpObj);

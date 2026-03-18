@@ -12,9 +12,9 @@ import { WORLD_SCALE } from './GameRenderer3D';
 
 const TILE = WORLD_SCALE; // 1 world unit per tile
 
-const FLOOR_COLOR = new Color(0x1a2e1a);
-const WALL_COLOR = new Color(0x2a2a4a);
-const PATH_COLOR = new Color(0x2a2520);
+const FLOOR_COLOR = new Color(0x2a4a2a);
+const WALL_COLOR = new Color(0x3a3a5a);
+const PATH_COLOR = new Color(0x4a3a30);
 
 export class TerrainRenderer {
     private readonly group: Group;
