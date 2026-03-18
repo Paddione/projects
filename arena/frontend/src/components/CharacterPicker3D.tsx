@@ -1,14 +1,11 @@
 /**
- * CharacterPicker3D — 3D character viewer for Arena lobby.
+ * CharacterPicker3D — Character selector for Arena lobby.
  *
- * Replaces the 2D CharacterPicker with a Three.js viewer showing
- * the selected character model with orbit controls. Includes gender
- * toggle that switches between base and _f model variants.
+ * Shows concept art thumbnails for each character with gender toggle.
+ * Concept art served from /assets/concepts/characters/{id}.png (NAS visual-library).
  */
 
-import { useEffect, useRef } from 'react';
-import { createCharacterViewer, ModelLoader } from 'shared-3d';
-import type { CharacterViewer } from 'shared-3d';
+import { useEffect } from 'react';
 
 const CHARACTERS = [
     { id: 'student',    name: 'Student',    color: '#00f2ff' },
@@ -44,51 +41,16 @@ export function loadSavedCharacter(): { character: string; gender: 'male' | 'fem
     return { character: 'student', gender: 'male' };
 }
 
-// Shared ModelLoader — one instance for the lifetime of the page.
-const loader = new ModelLoader();
+function getConceptUrl(characterId: string, gender: 'male' | 'female'): string {
+    const modelId = gender === 'female' ? `${characterId}_f` : characterId;
+    return `/assets/concepts/characters/${modelId}.png`;
+}
 
 export default function CharacterPicker3D({ selectedCharacter, selectedGender, onSelect }: CharacterPicker3DProps) {
-    const containerRef = useRef<HTMLDivElement>(null);
-    const viewerRef = useRef<CharacterViewer | null>(null);
-
     // Persist selection
     useEffect(() => {
         localStorage.setItem(STORAGE_KEY, JSON.stringify({ character: selectedCharacter, gender: selectedGender }));
     }, [selectedCharacter, selectedGender]);
-
-    // Mount viewer once.
-    useEffect(() => {
-        const container = containerRef.current;
-        if (!container) return;
-
-        const viewer = createCharacterViewer(loader);
-        viewer.mount(container);
-        viewerRef.current = viewer;
-
-        const resizeObserver = new ResizeObserver(() => viewer.resize());
-        resizeObserver.observe(container);
-
-        return () => {
-            resizeObserver.disconnect();
-            viewer.dispose();
-            viewerRef.current = null;
-        };
-    }, []);
-
-    // Reload model whenever selection or gender changes.
-    const modelId = selectedGender === 'female' ? `${selectedCharacter}_f` : selectedCharacter;
-    useEffect(() => {
-        const viewer = viewerRef.current;
-        if (!viewer) return;
-
-        viewer.loadCharacter({
-            id: modelId,
-            modelUrl: `/assets/3d/characters/${modelId}.glb`,
-            defaultAnimation: 'idle',
-        }).catch(() => {
-            // Model not yet available — viewer shows empty scene gracefully.
-        });
-    }, [modelId]);
 
     return (
         <div style={{
@@ -111,24 +73,11 @@ export default function CharacterPicker3D({ selectedCharacter, selectedGender, o
                 Character
             </div>
 
-            {/* 3D viewport */}
-            <div
-                ref={containerRef}
-                style={{
-                    width: '100%',
-                    height: '240px',
-                    background: '#0a0a1a',
-                    borderRadius: '6px',
-                    overflow: 'hidden',
-                    marginBottom: '12px',
-                }}
-            />
-
-            {/* Character grid */}
+            {/* Character grid with concept art icons */}
             <div style={{
-                display: 'flex',
-                gap: '6px',
-                flexWrap: 'wrap',
+                display: 'grid',
+                gridTemplateColumns: 'repeat(5, 1fr)',
+                gap: '8px',
                 marginBottom: '12px',
             }}>
                 {CHARACTERS.map((c) => {
@@ -138,30 +87,44 @@ export default function CharacterPicker3D({ selectedCharacter, selectedGender, o
                             key={c.id}
                             onClick={() => onSelect(c.id, selectedGender)}
                             style={{
-                                flex: '1 1 auto',
-                                minWidth: '70px',
-                                padding: '8px 6px',
+                                padding: '6px',
                                 background: isSelected ? `${c.color}22` : '#0a0a14',
                                 border: `2px solid ${isSelected ? c.color : '#2a2a4a'}`,
-                                borderRadius: '6px',
-                                color: isSelected ? c.color : '#8888aa',
+                                borderRadius: '8px',
                                 cursor: 'pointer',
-                                fontSize: '0.78rem',
-                                fontWeight: isSelected ? 700 : 500,
                                 fontFamily: 'inherit',
                                 transition: 'all 0.15s ease',
                                 textAlign: 'center',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                alignItems: 'center',
+                                gap: '4px',
                             }}
                         >
-                            <div style={{
-                                width: '8px',
-                                height: '8px',
-                                borderRadius: '50%',
-                                background: c.color,
-                                margin: '0 auto 4px',
-                                boxShadow: isSelected ? `0 0 8px ${c.color}80` : 'none',
-                            }} />
-                            {c.name}
+                            <img
+                                src={getConceptUrl(c.id, selectedGender)}
+                                alt={c.name}
+                                style={{
+                                    width: '56px',
+                                    height: '56px',
+                                    objectFit: 'cover',
+                                    borderRadius: '6px',
+                                    background: '#0a0a1a',
+                                    border: isSelected ? `1px solid ${c.color}60` : '1px solid transparent',
+                                }}
+                                onError={(e) => {
+                                    // Fallback: hide broken image, show colored dot
+                                    (e.target as HTMLImageElement).style.display = 'none';
+                                }}
+                            />
+                            <span style={{
+                                color: isSelected ? c.color : '#8888aa',
+                                fontSize: '0.68rem',
+                                fontWeight: isSelected ? 700 : 500,
+                                lineHeight: 1.2,
+                            }}>
+                                {c.name}
+                            </span>
                         </button>
                     );
                 })}

@@ -26,6 +26,13 @@ export default defineConfig({
                     return match ? `/api/visual-library/${match[1]}/model` : path;
                 },
             },
+            '/assets/concepts': {
+                target: 'http://localhost:5200',
+                rewrite: (path) => {
+                    const match = path.match(/\/assets\/concepts\/\w+\/(\w+)\.png/);
+                    return match ? `/api/visual-library/${match[1]}/concept` : path;
+                },
+            },
         },
     },
     build: {
