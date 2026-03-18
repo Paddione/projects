@@ -2,6 +2,7 @@ import {
     PlaneGeometry,
     BoxGeometry,
     MeshLambertMaterial,
+    MeshBasicMaterial,
     Mesh,
     InstancedMesh,
     Matrix4,
@@ -16,7 +17,7 @@ import { WORLD_SCALE } from './GameRenderer3D';
 
 const TILE = WORLD_SCALE; // 1 world unit per tile
 
-const FLOOR_COLOR = new Color(0x2d5a2d);   // medium green — clearly visible
+const FLOOR_COLOR = new Color(0x1a3a1a);   // dark green (BasicMaterial = full brightness)
 const WALL_COLOR = new Color(0x5a5a8a);    // blue-gray walls
 const PATH_COLOR = new Color(0x8a7a5a);    // warm brown paths
 const BOUNDARY_COLOR = 0x334466;           // map edge
@@ -38,13 +39,12 @@ export class TerrainRenderer {
         const w = mapW * TILE;
         const h = mapH * TILE;
 
-        // Floor plane — visible green
+        // Floor plane — MeshBasicMaterial so it shows full color (not affected by dim lighting)
         const floorGeo = new PlaneGeometry(w, h);
-        const floorMat = new MeshLambertMaterial({ color: FLOOR_COLOR });
+        const floorMat = new MeshBasicMaterial({ color: FLOOR_COLOR });
         const floor = new Mesh(floorGeo, floorMat);
         floor.rotation.x = -Math.PI / 2;
         floor.position.set(w / 2, -0.01, h / 2);
-        floor.receiveShadow = true;
         this.group.add(floor);
         this.meshes.push(floor);
 
