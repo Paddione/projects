@@ -13,6 +13,8 @@ import { useAudio } from '../hooks/useAudio'
 import { useLocalization } from '../hooks/useLocalization'
 import { CharacterCanvas } from '../components/3d/CharacterCanvas'
 import { LobbyRoomScene } from '../components/3d/LobbyRoomScene'
+import { CharacterSelector3D } from '../components/CharacterSelector3D'
+import { useCharacterStore } from '../stores/characterStore'
 
 export const LobbyPage: React.FC = () => {
   const { lobbyId } = useParams<{ lobbyId: string }>()
@@ -33,6 +35,7 @@ export const LobbyPage: React.FC = () => {
     players,
   } = useGameStore()
   const { t } = useLocalization()
+  const { currentCharacter, updateCharacter } = useCharacterStore()
 
   const hasJoinedRoom = useRef(false)
 
@@ -194,6 +197,14 @@ export const LobbyPage: React.FC = () => {
         </div>
       </div>
       
+      {/* 3D character selector */}
+      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 'var(--spacing-md)' }}>
+        <CharacterSelector3D
+          selectedCharacter={currentCharacter?.id ?? 'student'}
+          onSelect={(characterId) => updateCharacter(characterId)}
+        />
+      </div>
+
       {/* 3D lobby scene — shows players arranged in a semicircle */}
       {players.length > 0 && (
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 'var(--spacing-md)' }}>
