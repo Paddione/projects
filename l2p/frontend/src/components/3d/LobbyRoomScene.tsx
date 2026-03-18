@@ -62,7 +62,7 @@ interface PlayerCharacterProps {
 }
 
 const PlayerCharacter: React.FC<PlayerCharacterProps> = ({ characterId, position, isHost }) => {
-  const url = `/assets/characters/3d/${characterId}.glb`
+  const url = `/assets/3d/characters/${characterId}.glb`
   const gltf = useLoader(GLTFLoader as any, url)
   const groupRef = useRef<THREE.Group>(null)
   const mixerRef = useRef<THREE.AnimationMixer | null>(null)

@@ -232,8 +232,8 @@ export const DuelArenaScene: React.FC<DuelArenaSceneProps> = ({ player1, player2
   const p1IsWinner = winner === null ? null : winner === player1.id
   const p2IsWinner = winner === null ? null : winner === player2.id
 
-  const url1 = `/assets/characters/3d/${player1.character || 'student'}.glb`
-  const url2 = `/assets/characters/3d/${player2.character || 'student'}.glb`
+  const url1 = `/assets/3d/characters/${player1.character || 'student'}.glb`
+  const url2 = `/assets/3d/characters/${player2.character || 'student'}.glb`
 
   return (
     <>

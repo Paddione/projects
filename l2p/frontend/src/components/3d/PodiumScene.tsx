@@ -199,7 +199,7 @@ export const PodiumScene: React.FC<PodiumSceneProps> = ({ winners }) => {
         const cfg = PODIUM_CONFIGS[index]
         if (!cfg) return null
 
-        const characterUrl = `/assets/characters/3d/${player.character || 'student'}.glb`
+        const characterUrl = `/assets/3d/characters/${player.character || 'student'}.glb`
 
         return (
           <React.Fragment key={player.id}>

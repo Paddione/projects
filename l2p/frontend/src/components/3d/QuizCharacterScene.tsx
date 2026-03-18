@@ -15,7 +15,7 @@ interface QuizCharacterSceneProps {
 
 /** Maps character IDs to GLB asset paths. Update when models are available. */
 function getCharacterUrl(characterId: string): string {
-  return `/assets/characters/3d/${characterId}.glb`
+  return `/assets/3d/characters/${characterId}.glb`
 }
 
 /** Maps animation names to GLB clip names (adjust to match actual rig). */
