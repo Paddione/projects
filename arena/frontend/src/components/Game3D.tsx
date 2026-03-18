@@ -6,10 +6,11 @@
  * selects this component over Game.tsx.
  */
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Clock } from 'three';
 import { useGameStore } from '../stores/gameStore';
+import LoadingScreen from './LoadingScreen';
 import { GameRenderer3D } from '../services/GameRenderer3D';
 import { TerrainRenderer } from '../services/TerrainRenderer';
 import { PlayerRenderer } from '../services/PlayerRenderer';
@@ -29,6 +30,9 @@ export default function Game3D() {
   const containerRef = useRef<HTMLDivElement>(null);
 
   const { playerId, isSpectating, spectatedPlayerId, currentRound } = useGameStore();
+
+  const [assetsLoaded, setAssetsLoaded] = useState(false);
+  const handleAssetsLoaded = useCallback(() => setAssetsLoaded(true), []);
 
   // Renderer instances (stable across renders)
   const rendererRef = useRef<GameRenderer3D | null>(null);
@@ -127,6 +131,10 @@ export default function Game3D() {
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  if (!assetsLoaded) {
+    return <LoadingScreen onLoaded={handleAssetsLoaded} />;
+  }
 
   return (
     <div style={{ width: '100vw', height: '100vh', overflow: 'hidden', cursor: input.isTouchDevice ? 'default' : 'crosshair' }}>

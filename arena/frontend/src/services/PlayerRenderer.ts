@@ -75,6 +75,9 @@ export class PlayerRenderer {
                     continue;
                 }
 
+                // Scale character to be visible (models are ~1 unit tall, scale up to ~2 tiles)
+                instance.mesh.scale.setScalar(2.0);
+
                 // Armor ring
                 const armorRing = new Mesh(ARMOR_GEO, ARMOR_MAT.clone());
                 armorRing.rotation.x = Math.PI / 2;
