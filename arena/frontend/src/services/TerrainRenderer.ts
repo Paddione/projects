@@ -17,7 +17,7 @@ import { WORLD_SCALE } from './GameRenderer3D';
 
 const TILE = WORLD_SCALE; // 1 world unit per tile
 
-const FLOOR_COLOR = new Color(0x1a3a1a);   // dark green (BasicMaterial = full brightness)
+const FLOOR_COLOR = new Color(0x1e4a1e);   // green (BasicMaterial = exact color shown)
 const WALL_COLOR = new Color(0x5a5a8a);    // blue-gray walls
 const PATH_COLOR = new Color(0x8a7a5a);    // warm brown paths
 const BOUNDARY_COLOR = 0x334466;           // map edge
@@ -52,11 +52,11 @@ export class TerrainRenderer {
         this.gridHelper = new GridHelper(
             Math.max(w, h),  // size
             Math.max(mapW, mapH),  // divisions
-            0x2a4a2a,  // center line color
-            0x1a3a1a,  // grid color
+            0x3a6a3a,  // center line color
+            0x2a5a2a,  // grid color
         );
-        this.gridHelper.position.set(w / 2, 0.001, h / 2);
-        this.gridHelper.material.opacity = 0.4;
+        this.gridHelper.position.set(w / 2, 0.005, h / 2);
+        this.gridHelper.material.opacity = 0.6;
         this.gridHelper.material.transparent = true;
         this.group.add(this.gridHelper);
 

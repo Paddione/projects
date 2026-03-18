@@ -20,7 +20,7 @@ const ANIM_IDLE = 'idle';
 const ARMOR_GEO = new TorusGeometry(0.5, 0.08, 8, 32);
 const ARMOR_MAT = new MeshLambertMaterial({ color: 0x38bdf8, emissive: 0x1a6a8a });
 const MARKER_GEO = new CircleGeometry(0.8, 24);
-const CAPSULE_GEO = new CapsuleGeometry(0.35, 1.0, 4, 12);
+const CAPSULE_GEO = new CapsuleGeometry(0.4, 1.2, 4, 12);
 
 // Character accent colors
 const CHAR_COLORS: Record<string, number> = {
@@ -95,10 +95,10 @@ export class PlayerRenderer {
                 const capsuleMat = new MeshLambertMaterial({
                     color: charColor,
                     emissive: charColor,
-                    emissiveIntensity: 0.3,
+                    emissiveIntensity: 0.5,
                 });
                 const capsule = new Mesh(CAPSULE_GEO, capsuleMat);
-                capsule.position.y = 0.85;  // stand on ground
+                capsule.position.y = 1.0;  // stand on ground
                 capsule.castShadow = true;
                 container.add(capsule);
 
