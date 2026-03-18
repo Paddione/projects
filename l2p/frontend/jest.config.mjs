@@ -101,6 +101,7 @@ export default {
 		'^shared-3d$': '<rootDir>/src/__mocks__/shared-3d.js',
 		'^@react-three/fiber$': '<rootDir>/src/__mocks__/@react-three/fiber.js',
 		'^@react-three/drei$': '<rootDir>/src/__mocks__/@react-three/drei.js',
+		'^three$': '<rootDir>/src/__mocks__/three.js',
 		'^three/addons/(.*)$': '<rootDir>/src/__mocks__/three-addons.js',
 	},
 	transform: {
