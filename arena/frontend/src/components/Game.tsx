@@ -801,7 +801,6 @@ export default function Game() {
                     input.setSprintOn(input.sprintActiveRef.current);
                 }}
                 onWeaponCycle={() => { input.weaponCycleRef.current = 1; }}
-                leftStickRef={input.leftStickRef}
                 rightStickRef={input.rightStickRef}
                 showScaleSelector={true}
                 scaleSetting={scaleSetting}

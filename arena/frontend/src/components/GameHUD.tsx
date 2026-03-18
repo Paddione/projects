@@ -22,7 +22,6 @@ interface GameHUDProps {
   onMelee: (active: boolean) => void;
   onSprint: () => void;
   onWeaponCycle: () => void;
-  leftStickRef: MutableRefObject<any>;
   rightStickRef: MutableRefObject<any>;
   showScaleSelector?: boolean;
   scaleSetting?: string;
@@ -44,7 +43,6 @@ export function GameHUD({
   onMelee,
   onSprint,
   onWeaponCycle,
-  leftStickRef,
   rightStickRef,
   showScaleSelector = false,
   scaleSetting,

@@ -154,7 +154,6 @@ export default function Game3D() {
           input.setSprintOn(input.sprintActiveRef.current);
         }}
         onWeaponCycle={() => { input.weaponCycleRef.current = 1; }}
-        leftStickRef={input.leftStickRef}
         rightStickRef={input.rightStickRef}
       />
     </div>

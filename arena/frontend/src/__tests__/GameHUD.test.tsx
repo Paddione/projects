@@ -38,7 +38,6 @@ describe('GameHUD', () => {
     onMelee: vi.fn(),
     onSprint: vi.fn(),
     onWeaponCycle: vi.fn(),
-    leftStickRef: { current: { active: false } },
     rightStickRef: { current: { active: false } },
   };
 
