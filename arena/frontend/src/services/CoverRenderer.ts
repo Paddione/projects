@@ -7,18 +7,19 @@ import {
 import { GameRenderer3D, WORLD_SCALE } from './GameRenderer3D';
 
 const COVER_COLORS: Record<string, number> = {
-    wall_cover: 0x4a4a6a,
-    crate: 0x8b6914,
-    pillar: 0x6a6a6a,
-    bush: 0x2d6a2d,
-    water: 0x1a4a8a,
-    fountain: 0x2a6a9a,
-    pond: 0x1a3a6a,
-    hedge: 0x2a5a2a,
-    bench: 0x7a5a3a,
+    wall_cover: 0x6a6a9a,
+    crate: 0xbb8930,
+    pillar: 0x8a8a8a,
+    bush: 0x4a9a4a,
+    water: 0x3a7aba,
+    fountain: 0x4a9aca,
+    pond: 0x3a6a9a,
+    hedge: 0x3a7a3a,
+    bench: 0x9a7a5a,
+    building: 0x6a6a8a,
 };
 
-const DEFAULT_COLOR = 0x5a5a7a;
+const DEFAULT_COLOR = 0x7a7a9a;
 
 export class CoverRenderer {
     private readonly group: Group;

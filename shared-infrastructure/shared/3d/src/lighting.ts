@@ -15,9 +15,9 @@ import type { LightingRig } from './types.js';
  * - Fill (DirectionalLight): bottom-left, no shadows
  */
 export function createArenaLighting(): LightingRig {
-  const ambient = new AmbientLight(0xffffff, 0.4);
+  const ambient = new AmbientLight(0xffffff, 0.7);
 
-  const key = new DirectionalLight(0xfff5e0, 1.2);
+  const key = new DirectionalLight(0xfff5e0, 1.5);
   key.position.set(10, 20, 10);
   key.castShadow = true;
   key.shadow.mapSize.set(1024, 1024);

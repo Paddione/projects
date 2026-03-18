@@ -4,7 +4,6 @@ import {
     Group,
     Clock,
     Color,
-    FogExp2,
 } from 'three';
 import { CSS2DRenderer } from 'three/addons/renderers/CSS2DRenderer.js';
 import {
@@ -42,10 +41,9 @@ export class GameRenderer3D {
         this.container = container;
         this.clock = new Clock();
 
-        // Scene with dark background (not transparent)
+        // Scene with dark background
         this.scene = new Scene();
         this.scene.background = new Color(0x0a0b1a);
-        this.scene.fog = new FogExp2(0x0a0b1a, 0.03);
 
         // Camera: isometric with 45° pitch/yaw — frustumSize 12 for closer view
         const aspect = container.clientWidth / container.clientHeight;

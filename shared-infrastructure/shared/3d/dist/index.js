@@ -239,8 +239,8 @@ import {
   Color
 } from "three";
 function createArenaLighting() {
-  const ambient = new AmbientLight(16777215, 0.4);
-  const key = new DirectionalLight(16774624, 1.2);
+  const ambient = new AmbientLight(16777215, 0.7);
+  const key = new DirectionalLight(16774624, 1.5);
   key.position.set(10, 20, 10);
   key.castShadow = true;
   key.shadow.mapSize.set(1024, 1024);
