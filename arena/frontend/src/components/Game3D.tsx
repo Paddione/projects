@@ -21,6 +21,7 @@ import { ProjectileRenderer } from '../services/ProjectileRenderer';
 import { CoverRenderer } from '../services/CoverRenderer';
 import { ItemRenderer } from '../services/ItemRenderer';
 import { ZoneRenderer } from '../services/ZoneRenderer';
+import { NPCRenderer } from '../services/NPCRenderer';
 import { LabelRenderer } from '../services/LabelRenderer';
 import { useGameSockets } from '../hooks/useGameSockets';
 import { useGameInput } from '../hooks/useGameInput';
@@ -61,6 +62,7 @@ function Game3DInner() {
   const coverRef = useRef<CoverRenderer | null>(null);
   const itemRef = useRef<ItemRenderer | null>(null);
   const zoneRef = useRef<ZoneRenderer | null>(null);
+  const npcRef = useRef<NPCRenderer | null>(null);
   const labelRef = useRef<LabelRenderer | null>(null);
 
   const gameStateRef = useRef<any>(null);
@@ -96,6 +98,7 @@ function Game3DInner() {
     coverRef.current = new CoverRenderer(r.coverGroup);
     itemRef.current = new ItemRenderer(r.itemGroup);
     zoneRef.current = new ZoneRenderer(r.zoneGroup);
+    npcRef.current = new NPCRenderer(r.npcGroup, r.characterManager);
     labelRef.current = new LabelRenderer(r.playerGroup);
 
     const resizeObserver = new ResizeObserver(() => r.resize());
@@ -125,6 +128,7 @@ function Game3DInner() {
       const players = (state.players ?? []).map((p: any) => ({ ...p, isMe: p.id === myId }));
 
       playerRef.current?.update(players, delta);
+      npcRef.current?.update(state.npcs ?? [], delta);
       projectileRef.current?.update(state.projectiles ?? []);
       itemRef.current?.update(state.items ?? [], delta);
       zoneRef.current?.update(state.zone, state.map?.width ?? 28, state.map?.height ?? 22, delta);
@@ -143,6 +147,7 @@ function Game3DInner() {
       coverRef.current?.dispose();
       itemRef.current?.dispose();
       zoneRef.current?.dispose();
+      npcRef.current?.dispose();
       labelRef.current?.dispose();
       r.dispose();
       rendererRef.current = null;
