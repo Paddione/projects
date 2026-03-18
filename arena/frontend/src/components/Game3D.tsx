@@ -4,6 +4,9 @@
  * Full-featured parallel to Game.tsx: same input handling, HUD, sound, and
  * socket events via shared hooks. The `use3DRenderer` flag in gameStore
  * selects this component over Game.tsx.
+ *
+ * Split into Game3D (loading gate) and Game3DInner (actual gameplay) so that
+ * hooks and the renderer only activate after assets are preloaded.
  */
 
 import { useEffect, useRef, useState, useCallback } from 'react';
@@ -24,15 +27,31 @@ import { useGameInput } from '../hooks/useGameInput';
 import { useGameAudio } from '../hooks/useGameAudio';
 import { GameHUD } from './GameHUD';
 
+/**
+ * Outer wrapper: shows LoadingScreen until assets are ready,
+ * then mounts Game3DInner which activates all hooks and the renderer.
+ */
 export default function Game3D() {
+  const [assetsLoaded, setAssetsLoaded] = useState(false);
+  const handleAssetsLoaded = useCallback(() => setAssetsLoaded(true), []);
+
+  if (!assetsLoaded) {
+    return <LoadingScreen onLoaded={handleAssetsLoaded} />;
+  }
+
+  return <Game3DInner />;
+}
+
+/**
+ * Inner component: only mounts after LoadingScreen completes.
+ * All hooks and the Three.js renderer activate here.
+ */
+function Game3DInner() {
   const { matchId } = useParams<{ matchId: string }>();
   const navigate = useNavigate();
   const containerRef = useRef<HTMLDivElement>(null);
 
   const { playerId, isSpectating, spectatedPlayerId, currentRound } = useGameStore();
-
-  const [assetsLoaded, setAssetsLoaded] = useState(false);
-  const handleAssetsLoaded = useCallback(() => setAssetsLoaded(true), []);
 
   // Renderer instances (stable across renders)
   const rendererRef = useRef<GameRenderer3D | null>(null);
@@ -50,14 +69,14 @@ export default function Game3D() {
   const clockRef = useRef(new Clock());
   const activeEmotesRef = useRef<Map<string, { emoteId: string; expiresAt: number }>>(new Map());
 
-  // ---- Shared hooks ----
+  // ---- Shared hooks (only active after assets loaded) ----
   const input = useGameInput({ matchId, playerId, containerRef, gameStateRef });
 
   useGameSockets({ playerId, navigate, gameStateRef, activeEmotesRef });
 
   useGameAudio({ mouseRef: input.mouseRef, keysRef: input.keysRef });
 
-  // Reset terrain when round changes (useGameSockets updates currentRound via store)
+  // Reset terrain when round changes
   useEffect(() => {
     terrainBuiltRef.current = false;
     terrainRef.current?.clear();
@@ -131,10 +150,6 @@ export default function Game3D() {
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  if (!assetsLoaded) {
-    return <LoadingScreen onLoaded={handleAssetsLoaded} />;
-  }
 
   return (
     <div style={{ width: '100vw', height: '100vh', overflow: 'hidden', cursor: input.isTouchDevice ? 'default' : 'crosshair' }}>
