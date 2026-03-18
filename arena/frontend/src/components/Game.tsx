@@ -9,8 +9,11 @@ import { getSocket } from '../services/apiService';
 import { AssetService, type CharacterAnimation } from '../services/AssetService';
 import { SoundService } from '../services/SoundService';
 import LoadingScreen from './LoadingScreen';
-import EmoteWheel, { EMOTE_ICONS } from './EmoteWheel';
-import { getKeybinds } from './KeybindSettings';
+import { EMOTE_ICONS } from './EmoteWheel';
+import { useGameSockets } from '../hooks/useGameSockets';
+import { useGameInput } from '../hooks/useGameInput';
+import { useGameAudio } from '../hooks/useGameAudio';
+import { GameHUD } from './GameHUD';
 
 const TILE_SIZE = 32;
 const TARGET_TILES_VISIBLE = 22; // Design target: map height in tiles
@@ -52,22 +55,6 @@ export default function Game() {
     const canvasRef = useRef<HTMLDivElement>(null);
     const appRef = useRef<Application | null>(null);
     const gameStateRef = useRef<any>(null);
-    const prevStateRef = useRef<any>(null);
-    const keysRef = useRef<Set<string>>(new Set());
-    const mouseRef = useRef({ x: 0, y: 0, down: false, rightDown: false });
-
-    // ---- Touch control state ----
-    // Left joystick: movement   Right joystick: aim + fire
-    const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-    const leftStickRef = useRef({ active: false, startX: 0, startY: 0, dx: 0, dy: 0, touchId: -1 });
-    const rightStickRef = useRef({ active: false, startX: 0, startY: 0, dx: 0, dy: 0, touchId: -1, firing: false });
-    const sprintActiveRef = useRef(false);
-    const meleeActiveRef = useRef(false);
-    // Derived joystick puck offsets for React render (clamped to 40px radius)
-    const [leftPuck, setLeftPuck] = useState({ x: 0, y: 0 });
-    const [rightPuck, setRightPuck] = useState({ x: 0, y: 0 });
-    const [sprintOn, setSprintOn] = useState(false);
-    const [meleeOn, setMeleeOn] = useState(false);
 
     // Track animated sprites for reuse (avoid recreating every frame)
     const playerSpritesRef = useRef<Map<string, AnimatedSprite | Sprite>>(new Map());
@@ -78,8 +65,6 @@ export default function Game() {
     const activeEmotesRef = useRef<Map<string, { emoteId: string; expiresAt: number }>>(new Map());
 
     const [assetsLoaded, setAssetsLoaded] = useState(false);
-
-    const [isMuted, setIsMuted] = useState(false);
 
     // ---- Game scale (zoom) ----
     const [scaleSetting, setScaleSetting] = useState<string>(
@@ -93,143 +78,21 @@ export default function Game() {
         localStorage.setItem('arena-scale', setting);
     }, []);
 
-    const {
-        playerId, hp, hasArmor, kills, deaths, weaponType,
-        killfeed, announcement, currentRound,
-        isSpectating, spectatedPlayerId,
-        setPlayerState, addKillfeed, setAnnouncement, setRound, setRoundScores,
-        setSpectating, setSpectatedPlayer,
-        endMatch,
-    } = useGameStore();
-
-    const socket = getSocket();
+    const { playerId } = useGameStore();
 
     // Expose socket for E2E test helpers (emitFromServer)
+    const socket = getSocket();
     (window as any).__arenaSocket = socket;
 
     const useSprites = AssetService.isLoaded;
 
     // ============================================================================
-    // INPUT HANDLING
+    // SHARED HOOKS
     // ============================================================================
 
-    const weaponCycleRef = useRef(0); // 0=none, 1=next, -1=prev
-
-    const handleKeyDown = useCallback((e: KeyboardEvent) => {
-        keysRef.current.add(e.key.toLowerCase());
-        // Q key cycles to next weapon
-        if (e.key.toLowerCase() === 'q') {
-            weaponCycleRef.current = 1;
-        }
-    }, []);
-
-    // Emote hotkey handler — separate so it has access to playerId + socket
-    const handleEmoteHotkey = useCallback((emoteId: string) => {
-        socket.emit('emote', { emoteId });
-        // Show locally immediately (don't wait for server roundtrip)
-        if (playerId) {
-            activeEmotesRef.current.set(playerId, { emoteId, expiresAt: Date.now() + 2000 });
-        }
-    }, [socket, playerId]);
-
-    const handleKeyUp = useCallback((e: KeyboardEvent) => {
-        keysRef.current.delete(e.key.toLowerCase());
-    }, []);
-
-    const handleMouseMove = useCallback((e: MouseEvent) => {
-        if (canvasRef.current) {
-            const rect = canvasRef.current.getBoundingClientRect();
-            mouseRef.current.x = e.clientX - rect.left;
-            mouseRef.current.y = e.clientY - rect.top;
-        }
-    }, []);
-
-    const handleMouseDown = useCallback((e: MouseEvent) => {
-        if (e.button === 0) mouseRef.current.down = true;
-        if (e.button === 2) mouseRef.current.rightDown = true;
-    }, []);
-
-    const handleMouseUp = useCallback((e: MouseEvent) => {
-        if (e.button === 0) mouseRef.current.down = false;
-        if (e.button === 2) mouseRef.current.rightDown = false;
-    }, []);
-
-    const handleContextMenu = useCallback((e: Event) => e.preventDefault(), []);
-
-    const handleWheel = useCallback((e: WheelEvent) => {
-        e.preventDefault();
-        weaponCycleRef.current = e.deltaY > 0 ? 1 : -1;
-    }, []);
-
-    // ============================================================================
-    // TOUCH INPUT HANDLERS (dual joystick)
-    // ============================================================================
-
-    // Clamp dx/dy to the joystick radius (60px = half of 120px ring)
-    const RADIUS = 50;
-
-    const handleTouchStart = useCallback((e: TouchEvent) => {
-        e.preventDefault();
-        const halfW = window.innerWidth / 2;
-        for (let i = 0; i < e.changedTouches.length; i++) {
-            const t = e.changedTouches[i];
-            // Skip touches on action buttons — they have their own React handlers
-            const target = t.target as HTMLElement;
-            if (target.closest('.touch-action-buttons')) continue;
-
-            if (t.clientX < halfW && !leftStickRef.current.active) {
-                leftStickRef.current = { active: true, startX: t.clientX, startY: t.clientY, dx: 0, dy: 0, touchId: t.identifier };
-            } else if (t.clientX >= halfW && !rightStickRef.current.active) {
-                rightStickRef.current = { active: true, startX: t.clientX, startY: t.clientY, dx: 0, dy: 0, touchId: t.identifier, firing: false };
-                mouseRef.current.down = true;
-            }
-        }
-    }, []);
-
-    const handleTouchMove = useCallback((e: TouchEvent) => {
-        e.preventDefault();
-        for (let i = 0; i < e.changedTouches.length; i++) {
-            const t = e.changedTouches[i];
-            const ls = leftStickRef.current;
-            const rs = rightStickRef.current;
-
-            if (ls.active && t.identifier === ls.touchId) {
-                const rawDx = t.clientX - ls.startX;
-                const rawDy = t.clientY - ls.startY;
-                const dist = Math.sqrt(rawDx * rawDx + rawDy * rawDy);
-                const clamp = Math.min(dist, RADIUS);
-                ls.dx = dist > 0 ? (rawDx / dist) * clamp : 0;
-                ls.dy = dist > 0 ? (rawDy / dist) * clamp : 0;
-                setLeftPuck({ x: ls.dx, y: ls.dy });
-            }
-
-            if (rs.active && t.identifier === rs.touchId) {
-                const rawDx = t.clientX - rs.startX;
-                const rawDy = t.clientY - rs.startY;
-                const dist = Math.sqrt(rawDx * rawDx + rawDy * rawDy);
-                const clamp = Math.min(dist, RADIUS);
-                rs.dx = dist > 0 ? (rawDx / dist) * clamp : 0;
-                rs.dy = dist > 0 ? (rawDy / dist) * clamp : 0;
-                setRightPuck({ x: rs.dx, y: rs.dy });
-            }
-        }
-    }, []);
-
-    const handleTouchEnd = useCallback((e: TouchEvent) => {
-        e.preventDefault();
-        for (let i = 0; i < e.changedTouches.length; i++) {
-            const t = e.changedTouches[i];
-            if (leftStickRef.current.active && t.identifier === leftStickRef.current.touchId) {
-                leftStickRef.current = { active: false, startX: 0, startY: 0, dx: 0, dy: 0, touchId: -1 };
-                setLeftPuck({ x: 0, y: 0 });
-            }
-            if (rightStickRef.current.active && t.identifier === rightStickRef.current.touchId) {
-                rightStickRef.current = { active: false, startX: 0, startY: 0, dx: 0, dy: 0, touchId: -1, firing: false };
-                mouseRef.current.down = false;
-                setRightPuck({ x: 0, y: 0 });
-            }
-        }
-    }, []);
+    const input = useGameInput({ matchId, playerId, containerRef: canvasRef, gameStateRef });
+    useGameSockets({ playerId, navigate, gameStateRef, activeEmotesRef });
+    useGameAudio({ mouseRef: input.mouseRef, keysRef: input.keysRef });
 
     // ============================================================================
     // PIXI SETUP
@@ -269,75 +132,6 @@ export default function Game() {
 
         worldContainer.addChild(mapLayer, itemLayer, projectileLayer, zoneLayer, playerLayer, labelLayer);
         app.stage.addChild(worldContainer);
-
-        // Start music
-        SoundService.playMusic('battle', { loop: true, volume: 0.5 });
-
-        // Input loop — send to server
-        const inputLoop = setInterval(() => {
-            if (!matchId || !playerId) return;
-
-            const keys = keysRef.current;
-            const mouse = mouseRef.current;
-
-            let mx = 0, my = 0;
-
-            if (isTouchDevice && leftStickRef.current.active) {
-                // Left joystick drives movement
-                const { dx, dy } = leftStickRef.current;
-                const dist = Math.sqrt(dx * dx + dy * dy);
-                if (dist > 4) { mx = dx / RADIUS; my = dy / RADIUS; }
-            } else {
-                // Keyboard fallback
-                if (keys.has('w') || keys.has('arrowup')) my = -1;
-                if (keys.has('s') || keys.has('arrowdown')) my = 1;
-                if (keys.has('a') || keys.has('arrowleft')) mx = -1;
-                if (keys.has('d') || keys.has('arrowright')) mx = 1;
-                if (mx !== 0 && my !== 0) {
-                    const len = Math.sqrt(mx * mx + my * my);
-                    mx /= len; my /= len;
-                }
-            }
-
-            let aimAngle = 0;
-            if (isTouchDevice && rightStickRef.current.active) {
-                // Right joystick drives aiming
-                const { dx, dy } = rightStickRef.current;
-                if (Math.sqrt(dx * dx + dy * dy) > 4) {
-                    aimAngle = Math.atan2(dy, dx);
-                }
-            } else {
-                // Mouse aim fallback
-                const state = gameStateRef.current;
-                if (state) {
-                    const me = state.players?.find((p: any) => p.id === playerId);
-                    if (me) {
-                        aimAngle = Math.atan2(mouse.y - window.innerHeight / 2, mouse.x - window.innerWidth / 2);
-                    }
-                }
-            }
-
-            const shooting = isTouchDevice ? (rightStickRef.current.active) : mouse.down;
-            const melee = isTouchDevice ? meleeActiveRef.current : (mouse.rightDown || keys.has('e'));
-            const sprint = isTouchDevice ? sprintActiveRef.current : keys.has('shift');
-
-            const cycleWeapon = weaponCycleRef.current;
-            weaponCycleRef.current = 0; // consume the cycle input
-
-            socket.emit('player-input', {
-                matchId,
-                input: {
-                    movement: { x: mx, y: my },
-                    aimAngle,
-                    shooting,
-                    melee,
-                    sprint,
-                    pickup: false, // auto-pickup on walk-over (server-side)
-                    cycleWeapon,
-                    timestamp: Date.now(),
-                },
-            });
-        }, 50);
 
         // ====================================================================
         // RENDER LOOP
@@ -953,7 +747,7 @@ export default function Game() {
         function handleFootstepAudio(me: any) {
             const isMoving = me.lastMoveDirection &&
                 (me.lastMoveDirection.dx !== 0 || me.lastMoveDirection.dy !== 0);
-            const isSprinting = keysRef.current.has('shift');
+            const isSprinting = input.keysRef.current.has('shift');
 
             if (isMoving && me.isAlive) {
                 footstepTimerRef.current++;
@@ -968,213 +762,14 @@ export default function Game() {
             }
         }
 
-        // Event listeners
-        window.addEventListener('keydown', handleKeyDown);
-        window.addEventListener('keyup', handleKeyUp);
-        window.addEventListener('mousemove', handleMouseMove);
-        window.addEventListener('mousedown', handleMouseDown);
-        window.addEventListener('mouseup', handleMouseUp);
-        window.addEventListener('contextmenu', handleContextMenu);
-        window.addEventListener('wheel', handleWheel, { passive: false });
-        if (isTouchDevice) {
-            window.addEventListener('touchstart', handleTouchStart, { passive: false });
-            window.addEventListener('touchmove', handleTouchMove, { passive: false });
-            window.addEventListener('touchend', handleTouchEnd, { passive: false });
-            window.addEventListener('touchcancel', handleTouchEnd, { passive: false });
-        }
-
         return () => {
-            clearInterval(inputLoop);
             resizeObserver.disconnect();
-            window.removeEventListener('keydown', handleKeyDown);
-            window.removeEventListener('keyup', handleKeyUp);
-            window.removeEventListener('mousemove', handleMouseMove);
-            window.removeEventListener('mousedown', handleMouseDown);
-            window.removeEventListener('mouseup', handleMouseUp);
-            window.removeEventListener('contextmenu', handleContextMenu);
-            window.removeEventListener('wheel', handleWheel);
-            if (isTouchDevice) {
-                window.removeEventListener('touchstart', handleTouchStart);
-                window.removeEventListener('touchmove', handleTouchMove);
-                window.removeEventListener('touchend', handleTouchEnd);
-                window.removeEventListener('touchcancel', handleTouchEnd);
-            }
-            SoundService.stopMusic();
             app.destroy(true);
             appRef.current = null;
             playerSpritesRef.current.clear();
             itemSpritesRef.current.clear();
         };
     }, [matchId, playerId, assetsLoaded]);
-
-    // ============================================================================
-    // SOCKET EVENT HANDLERS
-    // ============================================================================
-
-    useEffect(() => {
-        socket.on('game-state', (state: any) => {
-            prevStateRef.current = gameStateRef.current;
-            gameStateRef.current = state;
-
-            const me = state.players?.find((p: any) => p.id === playerId);
-            if (me) {
-                setPlayerState({
-                    hp: me.hp,
-                    hasArmor: me.hasArmor,
-                    isAlive: me.isAlive,
-                    kills: me.kills,
-                    deaths: me.deaths,
-                    weaponType: me.weapon?.type || 'pistol',
-                });
-            }
-        });
-
-        socket.on('player-killed', (data: any) => {
-            const state = gameStateRef.current;
-            const killer = state?.players?.find((p: any) => p.id === data.killerId);
-            const victim = state?.players?.find((p: any) => p.id === data.victimId);
-            addKillfeed({
-                killer: data.killerName || killer?.username || data.killerId,
-                victim: data.victimName || victim?.username || data.victimId,
-                weapon: data.weapon,
-            });
-
-            SoundService.playSFX('player_death');
-
-            if (data.weapon === 'melee') {
-                SoundService.playSFX('melee_hit');
-            }
-        });
-
-        socket.on('player-hit', (_data: any) => {
-            SoundService.playSFX('player_hit');
-        });
-
-        socket.on('item-spawned', (data: any) => {
-            setAnnouncement(data.announcement);
-            setTimeout(() => setAnnouncement(null), 3000);
-        });
-
-        // Listen for item pickup events
-        socket.on('item-collected', (data: any) => {
-            if (data.type === 'health') {
-                SoundService.playSFX('health_pickup');
-            } else if (data.type === 'armor') {
-                SoundService.playSFX('armor_pickup');
-            }
-        });
-
-        socket.on('round-end', (data: any) => {
-            setRoundScores(data.scores);
-            const state = gameStateRef.current;
-            const winner = state?.players?.find((p: any) => p.id === data.winnerId);
-            setAnnouncement(`🏆 ${winner?.username || 'Unknown'} wins Round ${data.roundNumber}!`);
-            SoundService.playSFX('round_end');
-            setTimeout(() => setAnnouncement(null), 4000);
-        });
-
-        socket.on('round-start', (data: any) => {
-            setRound(data.roundNumber);
-            setAnnouncement(`Round ${data.roundNumber} — FIGHT!`);
-            SoundService.playSFX('round_start');
-            SoundService.playMusic('battle', { loop: true, volume: 0.5 });
-            setTimeout(() => setAnnouncement(null), 2000);
-        });
-
-        socket.on('zone-shrink', () => {
-            SoundService.playSFX('zone_warning');
-        });
-
-        socket.on('match-end', (data: any) => {
-            const winner = data.results?.find((r: any) => r.placement === 1);
-            const isWinner = winner?.playerId === playerId;
-            setAnnouncement(`🎉 ${winner?.username || 'Unknown'} wins the match!`);
-
-            // Play victory/defeat sting
-            SoundService.stopMusic(500);
-            setTimeout(() => {
-                SoundService.playSting(isWinner ? 'victory' : 'defeat');
-            }, 600);
-
-            setTimeout(() => {
-                endMatch();
-                navigate(data.dbMatchId ? `/results/${data.dbMatchId}` : '/');
-            }, 8000);
-        });
-
-        socket.on('spectate-start', (data: any) => {
-            setSpectating(true);
-            setSpectatedPlayer(data.targetPlayerId);
-        });
-
-        socket.on('player-emote', (data: { playerId: string; emoteId: string }) => {
-            activeEmotesRef.current.set(data.playerId, {
-                emoteId: data.emoteId,
-                expiresAt: Date.now() + 2000,
-            });
-        });
-
-        return () => {
-            socket.off('game-state');
-            socket.off('player-killed');
-            socket.off('player-hit');
-            socket.off('item-spawned');
-            socket.off('item-collected');
-            socket.off('round-end');
-            socket.off('round-start');
-            socket.off('zone-shrink');
-            socket.off('match-end');
-            socket.off('spectate-start');
-            socket.off('player-emote');
-        };
-    }, [playerId]);
-
-    // ============================================================================
-    // EMOTE HOTKEYS (1-4 slots)
-    // ============================================================================
-
-    // Default equipped emote slots — in future, fetch from auth profile
-    const equippedEmotes: [string, string, string, string] = [
-        'emote_wave', 'emote_gg', 'emote_thumbsup', 'emote_clap',
-    ];
-
-    useEffect(() => {
-        const handleEmoteKey = (e: KeyboardEvent) => {
-            // Ignore if typing in an input or emote wheel is already handling it
-            if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
-            const binds = getKeybinds();
-            const key = e.key.toLowerCase();
-            if (key === binds.emote1 && equippedEmotes[0]) {
-                handleEmoteHotkey(equippedEmotes[0]);
-            } else if (key === binds.emote2 && equippedEmotes[1]) {
-                handleEmoteHotkey(equippedEmotes[1]);
-            } else if (key === binds.emote3 && equippedEmotes[2]) {
-                handleEmoteHotkey(equippedEmotes[2]);
-            } else if (key === binds.emote4 && equippedEmotes[3]) {
-                handleEmoteHotkey(equippedEmotes[3]);
-            }
-        };
-        window.addEventListener('keydown', handleEmoteKey);
-        return () => window.removeEventListener('keydown', handleEmoteKey);
-    }, [handleEmoteHotkey]);
-
-    // ============================================================================
-    // Detect shooting for SFX
-    // ============================================================================
-
-    useEffect(() => {
-        const shootCheck = setInterval(() => {
-            const mouse = mouseRef.current;
-            if (mouse.down) {
-                SoundService.playSFX('gunshot', { volume: 0.6 });
-            }
-            if (mouse.rightDown || keysRef.current.has('e')) {
-                SoundService.playSFX('melee_swing', { volume: 0.7 });
-            }
-        }, 250); // Throttle to 4/sec to avoid sound spam
-
-        return () => clearInterval(shootCheck);
-    }, []);
 
     // ============================================================================
     // RENDER
@@ -1187,197 +782,31 @@ export default function Game() {
     }
 
     return (
-        <div style={{ width: '100vw', height: '100vh', overflow: 'hidden', cursor: isTouchDevice ? 'default' : 'crosshair' }}>
-            {/* PixiJS Canvas */}
+        <div style={{ width: '100vw', height: '100vh', overflow: 'hidden', cursor: input.isTouchDevice ? 'default' : 'crosshair' }}>
             <div ref={canvasRef} style={{ width: '100%', height: '100%' }} />
-
-            {/* Emote Wheel overlay */}
-            <EmoteWheel
-                equippedEmotes={equippedEmotes}
-                onEmote={handleEmoteHotkey}
+            <GameHUD
+                gameStateRef={gameStateRef}
+                isTouchDevice={input.isTouchDevice}
+                leftPuck={input.leftPuck}
+                rightPuck={input.rightPuck}
+                sprintOn={input.sprintOn}
+                meleeOn={input.meleeOn}
+                onEmote={input.handleEmote}
+                onMelee={(active) => {
+                    input.meleeActiveRef.current = active;
+                    input.setMeleeOn(active);
+                }}
+                onSprint={() => {
+                    input.sprintActiveRef.current = !input.sprintActiveRef.current;
+                    input.setSprintOn(input.sprintActiveRef.current);
+                }}
+                onWeaponCycle={() => { input.weaponCycleRef.current = 1; }}
+                leftStickRef={input.leftStickRef}
+                rightStickRef={input.rightStickRef}
+                showScaleSelector={true}
+                scaleSetting={scaleSetting}
+                onScaleChange={handleScaleChange}
             />
-
-            {/* HUD Overlay */}
-            <div className="hud">
-                {/* Health Display */}
-                <div className="hud-health">
-                    {hasArmor && <div className="hp-icon armor">🛡️</div>}
-                    {[...Array(2)].map((_, i) => (
-                        <div key={i} className={`hp-icon ${i < hp ? 'full' : 'empty'}`}>
-                            {i < hp ? '❤️' : '💔'}
-                        </div>
-                    ))}
-                </div>
-
-                {/* Kill Feed */}
-                <div className="hud-killfeed">
-                    {killfeed.map((entry, i) => (
-                        <div key={entry.timestamp + i} className="killfeed-entry">
-                            <span className="killer">{entry.killer}</span>
-                            {' '}
-                            {entry.weapon === 'melee' ? '🗡️' : entry.weapon === 'zone' ? '☠️' : '🔫'}
-                            {' '}
-                            <span className="victim">{entry.victim}</span>
-                        </div>
-                    ))}
-                </div>
-
-                {/* Weapon Indicator */}
-                <div className="hud-weapon">
-                    {(() => {
-                        const me = gameStateRef.current?.players?.find((p: any) => p.id === playerId);
-                        const weapons: any[] = me?.weapons || [{ type: weaponType }];
-                        const activeIdx = me?.activeWeaponIndex ?? 0;
-                        const weaponIcons: Record<string, string> = {
-                            pistol: '🔫',
-                            machine_gun: '🔫',
-                            grenade_launcher: '💣',
-                        };
-                        const weaponNames: Record<string, string> = {
-                            pistol: 'Pistol',
-                            machine_gun: 'MG',
-                            grenade_launcher: 'GL',
-                        };
-                        return weapons.map((w: any, i: number) => (
-                            <div key={i} className={`weapon-slot ${i === activeIdx ? 'active' : ''}`}>
-                                <span className="weapon-icon">{weaponIcons[w.type] || '?'}</span>
-                                <span className="weapon-name">{weaponNames[w.type] || w.type}</span>
-                                {w.type !== 'pistol' && (
-                                    <span className="weapon-ammo">{w.clipAmmo}/{w.totalAmmo}</span>
-                                )}
-                            </div>
-                        ));
-                    })()}
-                    <div className="weapon-hint">Q / Scroll</div>
-                </div>
-
-                {/* Round Info */}
-                <div className="hud-round">
-                    Round {currentRound} • K: {kills} D: {deaths}
-                </div>
-
-                {/* Announcement */}
-                {announcement && (
-                    <div className="hud-announcement">{announcement}</div>
-                )}
-
-                {/* Top-left controls: Mute + Scale */}
-                <div className="hud-top-left">
-                    <button
-                        onClick={() => {
-                            const nowMuted = SoundService.toggleMute();
-                            setIsMuted(nowMuted);
-                        }}
-                        className="hud-icon-btn"
-                    >
-                        {isMuted ? '🔇' : '🔊'}
-                    </button>
-                    <div className="scale-selector">
-                        {SCALE_OPTIONS.map(opt => (
-                            <button
-                                key={opt.key}
-                                onClick={() => handleScaleChange(opt.key)}
-                                className={`scale-btn ${scaleSetting === opt.key ? 'active' : ''}`}
-                            >
-                                {opt.label}
-                            </button>
-                        ))}
-                    </div>
-                </div>
-
-                {/* Spectating Banner */}
-                {isSpectating && (
-                    <div style={{
-                        position: 'absolute',
-                        bottom: '80px',
-                        left: '50%',
-                        transform: 'translateX(-50%)',
-                        padding: '8px 24px',
-                        background: 'rgba(10, 11, 26, 0.85)',
-                        border: '1px solid var(--color-border)',
-                        borderRadius: 'var(--radius-full)',
-                        color: 'var(--color-text-secondary)',
-                        fontWeight: 600,
-                    }}>
-                        👀 Spectating {gameStateRef.current?.players?.find(
-                            (p: any) => p.id === spectatedPlayerId
-                        )?.username || ''}
-                    </div>
-                )}
-            </div>
-
-            {/* Virtual Joystick Controls — touch devices only */}
-            {isTouchDevice && (
-                <div className="touch-controls">
-                    {/* Left joystick — movement */}
-                    <div className="joystick-zone left">
-                        <div className="joystick-ring" />
-                        <div
-                            className="joystick-puck"
-                            style={{
-                                transform: `translate(calc(-50% + ${leftPuck.x}px), calc(-50% + ${leftPuck.y}px))`,
-                            }}
-                        />
-                    </div>
-
-                    {/* Action buttons — melee, sprint, weapon cycle (centered between sticks) */}
-                    <div className="touch-action-buttons">
-                        <button
-                            className={`touch-btn ${meleeOn ? 'active' : ''}`}
-                            onTouchStart={(e) => {
-                                e.preventDefault();
-                                meleeActiveRef.current = true;
-                                setMeleeOn(true);
-                            }}
-                            onTouchEnd={(e) => {
-                                e.preventDefault();
-                                meleeActiveRef.current = false;
-                                setMeleeOn(false);
-                            }}
-                        >
-                            🗡️
-                        </button>
-                        <button
-                            className="touch-btn"
-                            onTouchStart={(e) => {
-                                e.preventDefault();
-                                weaponCycleRef.current = 1;
-                            }}
-                            onTouchEnd={(e) => { e.preventDefault(); }}
-                        >
-                            🔄
-                        </button>
-                        <button
-                            className={`touch-btn ${sprintOn ? 'active' : ''}`}
-                            onTouchStart={(e) => {
-                                e.preventDefault();
-                                sprintActiveRef.current = !sprintActiveRef.current;
-                                setSprintOn(sprintActiveRef.current);
-                            }}
-                            onTouchEnd={(e) => { e.preventDefault(); }}
-                        >
-                            {sprintOn ? '⚡' : '⇧'}
-                        </button>
-                    </div>
-
-                    {/* Right joystick — aim + fire */}
-                    <div className="joystick-zone right">
-                        <div className="joystick-ring" />
-                        <div
-                            className="joystick-puck"
-                            style={{
-                                transform: `translate(calc(-50% + ${rightPuck.x}px), calc(-50% + ${rightPuck.y}px))`,
-                                background: rightStickRef.current.active
-                                    ? 'rgba(239, 68, 68, 0.45)'
-                                    : 'rgba(255, 255, 255, 0.22)',
-                                borderColor: rightStickRef.current.active
-                                    ? 'rgba(239, 68, 68, 0.9)'
-                                    : 'rgba(255, 255, 255, 0.5)',
-                            }}
-                        />
-                    </div>
-                </div>
-            )}
         </div>
     );
 }
