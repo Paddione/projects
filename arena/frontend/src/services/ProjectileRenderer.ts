@@ -10,9 +10,9 @@ import {
 } from 'three';
 import { GameRenderer3D } from './GameRenderer3D';
 
-const BULLET_MAT = new LineBasicMaterial({ color: 0xffd700 });
-const GRENADE_GEO = new SphereGeometry(0.04, 8, 8);
-const GRENADE_MAT = new MeshLambertMaterial({ color: 0x444444, emissive: 0x222222 });
+const BULLET_MAT = new LineBasicMaterial({ color: 0xffdd44, linewidth: 2 });
+const GRENADE_GEO = new SphereGeometry(0.15, 8, 8);
+const GRENADE_MAT = new MeshLambertMaterial({ color: 0x666666, emissive: 0x884400 });
 
 export class ProjectileRenderer {
     private readonly group: Group;
@@ -51,18 +51,18 @@ export class ProjectileRenderer {
                     this.objects.set(id, mesh);
                     this.group.add(mesh);
                 }
-                mesh.position.set(wx, 0.1, wz);
+                mesh.position.set(wx, 0.4, wz);
             } else {
                 // Bullet: short line in the direction of travel
                 let line = this.objects.get(id) as Line | undefined;
                 if (!line) {
-                    const len = 0.15;
+                    const len = 0.3;
                     const dx = Math.cos(proj.angle) * len;
                     const dz = Math.sin(proj.angle) * len;
                     const geo = new BufferGeometry();
                     geo.setAttribute('position', new Float32BufferAttribute([
-                        -dx, 0.05, -dz,
-                        dx, 0.05, dz,
+                        -dx, 0.5, -dz,
+                        dx, 0.5, dz,
                     ], 3));
                     line = new Line(geo, BULLET_MAT);
                     this.objects.set(id, line);

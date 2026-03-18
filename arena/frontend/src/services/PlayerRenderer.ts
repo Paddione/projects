@@ -2,27 +2,27 @@ import {
     Group,
     TorusGeometry,
     CircleGeometry,
+    CapsuleGeometry,
     MeshLambertMaterial,
     MeshBasicMaterial,
     Mesh,
+    Object3D,
 } from 'three';
 import type { CharacterInstance } from 'shared-3d';
 import { GameRenderer3D } from './GameRenderer3D';
 
 export const MODEL_BASE_URL = '/assets/3d/characters/';
 
-// Map game character names to animation names
 const ANIM_WALK = 'walk';
 const ANIM_IDLE = 'idle';
 
-// Armor ring geometry (shared)
-const ARMOR_GEO = new TorusGeometry(0.06, 0.012, 8, 32);
+// Shared geometry
+const ARMOR_GEO = new TorusGeometry(0.5, 0.08, 8, 32);
 const ARMOR_MAT = new MeshLambertMaterial({ color: 0x38bdf8, emissive: 0x1a6a8a });
+const MARKER_GEO = new CircleGeometry(0.6, 24);
+const CAPSULE_GEO = new CapsuleGeometry(0.25, 0.8, 4, 12);
 
-// Ground marker — colored circle under each player for visibility
-const MARKER_GEO = new CircleGeometry(0.5, 24);
-
-// Character accent colors (match CHARACTER_COLORS in Game.tsx)
+// Character accent colors
 const CHAR_COLORS: Record<string, number> = {
     student: 0x00f2ff, student_f: 0x00f2ff,
     researcher: 0x3eff8b, researcher_f: 0x3eff8b,
@@ -33,9 +33,11 @@ const CHAR_COLORS: Record<string, number> = {
 const DEFAULT_CHAR_COLOR = 0x00f2ff;
 
 interface TrackedPlayer {
-    instance: CharacterInstance;
+    container: Object3D;     // root container for position/rotation
+    instance: CharacterInstance | null;
+    capsule: Mesh;           // always-visible colored capsule
+    marker: Mesh;            // ground circle
     armorRing: Mesh;
-    marker: Mesh;
     currentAnim: string;
 }
 
@@ -64,12 +66,13 @@ export class PlayerRenderer {
     ): Promise<void> {
         const livePlayers = new Set(players.filter((p) => p.isAlive).map((p) => p.id));
 
-        // Remove players who are dead or left
+        // Remove dead/gone players
         for (const [id, tracked] of this.players) {
             if (!livePlayers.has(id)) {
-                this.playerGroup.remove(tracked.instance.mesh);
+                this.playerGroup.remove(tracked.container);
                 this.playerGroup.remove(tracked.marker);
-                tracked.instance.dispose();
+                if (tracked.instance) tracked.instance.dispose();
+                (tracked.capsule.material as MeshLambertMaterial).dispose();
                 (tracked.marker.material as MeshBasicMaterial).dispose();
                 this.players.delete(id);
             }
@@ -83,72 +86,92 @@ export class PlayerRenderer {
 
             if (!tracked) {
                 const charId = player.character || 'student';
-                const modelUrl = `${MODEL_BASE_URL}${charId}.glb`;
-
-                let instance: CharacterInstance;
-                try {
-                    instance = await this.characterManager.getCharacter(player.id, modelUrl);
-                } catch {
-                    // Model not found — skip this player this frame
-                    continue;
-                }
-
-                // Scale character to be visible (models are ~1 unit tall, scale up to ~2 tiles)
-                instance.mesh.scale.setScalar(2.0);
-
-                // Ground marker — colored circle for visibility
                 const charColor = CHAR_COLORS[charId] ?? DEFAULT_CHAR_COLOR;
+
+                // Root container
+                const container = new Object3D();
+
+                // Always-visible colored capsule (player body)
+                const capsuleMat = new MeshLambertMaterial({
+                    color: charColor,
+                    emissive: charColor,
+                    emissiveIntensity: 0.3,
+                });
+                const capsule = new Mesh(CAPSULE_GEO, capsuleMat);
+                capsule.position.y = 0.65;  // stand on ground
+                capsule.castShadow = true;
+                container.add(capsule);
+
+                // Ground marker circle
                 const markerMat = new MeshBasicMaterial({
                     color: charColor,
                     transparent: true,
-                    opacity: 0.5,
+                    opacity: 0.4,
                 });
                 const marker = new Mesh(MARKER_GEO, markerMat);
-                marker.rotation.x = -Math.PI / 2; // lay flat
-                marker.position.y = 0.02; // just above ground
-                this.playerGroup.add(marker);
+                marker.rotation.x = -Math.PI / 2;
+                marker.position.y = 0.02;
 
-                // Armor ring
+                // Armor ring (around capsule waist)
                 const armorRing = new Mesh(ARMOR_GEO, ARMOR_MAT.clone());
                 armorRing.rotation.x = Math.PI / 2;
-                armorRing.position.y = 0.05;
-                instance.mesh.add(armorRing);
+                armorRing.position.y = 0.5;
+                container.add(armorRing);
 
-                tracked = { instance, armorRing, marker, currentAnim: '' };
+                this.playerGroup.add(container);
+                this.playerGroup.add(marker);
+
+                // Try to load 3D model (non-blocking — capsule shows immediately)
+                let instance: CharacterInstance | null = null;
+                const modelUrl = `${MODEL_BASE_URL}${charId}.glb`;
+                this.characterManager.getCharacter(player.id, modelUrl)
+                    .then((inst) => {
+                        instance = inst;
+                        inst.mesh.scale.setScalar(2.0);
+                        container.add(inst.mesh);
+                        // Hide capsule once model loads (if model has visible geometry)
+                        // Keep capsule visible as fallback since models have no animations
+                        capsule.visible = false;
+                    })
+                    .catch(() => {
+                        // Model failed — capsule remains as visual
+                    });
+
+                tracked = { container, instance, capsule, marker, armorRing, currentAnim: '' };
                 this.players.set(player.id, tracked);
-                this.playerGroup.add(instance.mesh);
             }
 
             // Position
             const { wx, wz } = GameRenderer3D.toWorld(player.x, player.y);
-            tracked.instance.mesh.position.set(wx, 0, wz);
+            tracked.container.position.set(wx, 0, wz);
             tracked.marker.position.set(wx, 0.02, wz);
 
-            // Rotation (game rotation is in radians from +X axis in screen space)
-            tracked.instance.mesh.rotation.y = -player.rotation;
+            // Rotation
+            tracked.container.rotation.y = -player.rotation;
 
-            // Animation
-            const isMoving = player.lastMoveDirection &&
-                (player.lastMoveDirection.dx !== 0 || player.lastMoveDirection.dy !== 0);
-            const targetAnim = isMoving ? ANIM_WALK : ANIM_IDLE;
-            if (tracked.currentAnim !== targetAnim) {
-                tracked.instance.playAnimation(targetAnim, { loop: true });
-                tracked.currentAnim = targetAnim;
+            // Animation (if model loaded)
+            if (tracked.instance) {
+                const isMoving = player.lastMoveDirection &&
+                    (player.lastMoveDirection.dx !== 0 || player.lastMoveDirection.dy !== 0);
+                const targetAnim = isMoving ? ANIM_WALK : ANIM_IDLE;
+                if (tracked.currentAnim !== targetAnim) {
+                    tracked.instance.playAnimation(targetAnim, { loop: true });
+                    tracked.currentAnim = targetAnim;
+                }
+                tracked.instance.update(delta);
             }
 
             // Armor ring visibility
             tracked.armorRing.visible = player.hasArmor;
-
-            // Advance animation mixer
-            tracked.instance.update(delta);
         }
     }
 
     dispose(): void {
         for (const tracked of this.players.values()) {
-            this.playerGroup.remove(tracked.instance.mesh);
+            this.playerGroup.remove(tracked.container);
             this.playerGroup.remove(tracked.marker);
-            tracked.instance.dispose();
+            if (tracked.instance) tracked.instance.dispose();
+            (tracked.capsule.material as MeshLambertMaterial).dispose();
             (tracked.marker.material as MeshBasicMaterial).dispose();
         }
         this.players.clear();
