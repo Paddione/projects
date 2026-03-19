@@ -1,5 +1,6 @@
 import {
     Group,
+    Box3,
     CapsuleGeometry,
     CircleGeometry,
     TorusGeometry,
@@ -15,9 +16,9 @@ import type { CharacterInstance } from 'shared-3d';
 export const NPC_MODEL_URL = '/assets/3d/characters/student.glb'; // fallback model for NPCs
 
 // NPC capsule — red-tinted, slightly smaller than players
-const NPC_CAPSULE_GEO = new CapsuleGeometry(0.3, 0.8, 8, 16);
-const NPC_MARKER_GEO = new CircleGeometry(0.7, 24);
-const NPC_ENGAGE_RING_GEO = new TorusGeometry(0.8, 0.06, 8, 32);
+const NPC_CAPSULE_GEO = new CapsuleGeometry(0.18, 0.45, 8, 16);
+const NPC_MARKER_GEO = new CircleGeometry(0.45, 24);
+const NPC_ENGAGE_RING_GEO = new TorusGeometry(0.55, 0.05, 8, 32);
 
 const NPC_COLOR = 0xff4444;        // red
 const NPC_ENGAGE_COLOR = 0xff6666; // bright red when attacking
@@ -88,7 +89,7 @@ export class NPCRenderer {
                     emissiveIntensity: 0.4,
                 });
                 const capsule = new Mesh(NPC_CAPSULE_GEO, capsuleMat);
-                capsule.position.y = 0.85;
+                capsule.position.y = 0.5;
                 capsule.castShadow = true;
                 container.add(capsule);
 
@@ -117,14 +118,14 @@ export class NPCRenderer {
                 const el = document.createElement('div');
                 el.style.cssText = 'font-family:Outfit,monospace;font-size:10px;font-weight:600;white-space:nowrap;pointer-events:none;user-select:none;text-shadow:0 1px 2px #000;color:#ff4444';
                 const labelObj = new CSS2DObject(el);
-                labelObj.position.set(0, 2.3, 0);
+                labelObj.position.set(0, 1.5, 0);
                 container.add(labelObj);
 
                 // HP pips
                 const hpEl = document.createElement('div');
                 hpEl.style.cssText = 'font-family:monospace;font-size:9px;white-space:nowrap;pointer-events:none;user-select:none;color:#ff4444';
                 const hpObj = new CSS2DObject(hpEl);
-                hpObj.position.set(0, 2.5, 0);
+                hpObj.position.set(0, 1.7, 0);
                 container.add(hpObj);
 
                 this.group.add(container);
@@ -144,8 +145,16 @@ export class NPCRenderer {
                         // Wrap in group: model is Z-up, rotate to Y-up
                         const modelWrapper = new Group();
                         modelWrapper.rotation.x = -Math.PI / 2;
-                        modelWrapper.scale.setScalar(2.5);
+                        modelWrapper.scale.setScalar(1.5);
                         modelWrapper.add(inst.mesh);
+
+                        // Compute bounding box after rotation to find model floor
+                        modelWrapper.updateMatrixWorld(true);
+                        const bbox = new Box3().setFromObject(modelWrapper);
+                        const bottomY = bbox.min.y;
+                        // Shift model up so feet sit on Y=0
+                        modelWrapper.position.y = -bottomY;
+
                         container.add(modelWrapper);
                         capsule.visible = false;
                     })

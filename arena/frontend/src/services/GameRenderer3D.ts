@@ -49,7 +49,7 @@ export class GameRenderer3D {
 
         // Camera: isometric with steeper pitch for better floor visibility
         const aspect = container.clientWidth / container.clientHeight;
-        const frustumSize = 10;
+        const frustumSize = 22;
         this.camera = createIsometricCamera({
             frustumSize,
             aspect,

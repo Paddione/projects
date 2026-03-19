@@ -62,7 +62,7 @@ export class ProjectileRenderer {
                     this.objects.set(id, mesh);
                     this.group.add(mesh);
                 }
-                mesh.position.set(wx, 0.5, wz);
+                mesh.position.set(wx, 0.3, wz);
                 // Slow tumble for realism
                 mesh.rotation.x += 0.08;
                 mesh.rotation.z += 0.05;
@@ -75,10 +75,10 @@ export class ProjectileRenderer {
 
                     // Orient capsule (Y-axis) toward travel direction
                     const angle = Number.isFinite(proj.angle) ? proj.angle : 0;
-                    mesh.position.set(wx, 0.5, wz);
+                    mesh.position.set(wx, 0.3, wz);
                     _target.set(
                         wx + Math.cos(angle),
-                        0.5,
+                        0.3,
                         wz + Math.sin(angle),
                     );
                     mesh.lookAt(_target);
@@ -87,7 +87,7 @@ export class ProjectileRenderer {
                     this.objects.set(id, mesh);
                     this.group.add(mesh);
                 }
-                mesh.position.set(wx, 0.5, wz);
+                mesh.position.set(wx, 0.3, wz);
             }
         });
     }

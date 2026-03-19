@@ -1,5 +1,6 @@
 import {
     Group,
+    Box3,
     TorusGeometry,
     CircleGeometry,
     CapsuleGeometry,
@@ -16,11 +17,11 @@ export const MODEL_BASE_URL = '/assets/3d/characters/';
 const ANIM_WALK = 'walk';
 const ANIM_IDLE = 'idle';
 
-// Shared geometry
-const ARMOR_GEO = new TorusGeometry(0.5, 0.08, 8, 32);
+// Shared geometry — sized for zoomed-out view (frustumSize 22)
+const ARMOR_GEO = new TorusGeometry(0.35, 0.06, 8, 32);
 const ARMOR_MAT = new MeshLambertMaterial({ color: 0x38bdf8, emissive: 0x1a6a8a });
-const MARKER_GEO = new CircleGeometry(0.8, 24);
-const CAPSULE_GEO = new CapsuleGeometry(0.35, 0.9, 8, 16);
+const MARKER_GEO = new CircleGeometry(0.5, 24);
+const CAPSULE_GEO = new CapsuleGeometry(0.2, 0.5, 8, 16);
 
 // Character accent colors
 const CHAR_COLORS: Record<string, number> = {
@@ -98,7 +99,7 @@ export class PlayerRenderer {
                     emissiveIntensity: 0.5,
                 });
                 const capsule = new Mesh(CAPSULE_GEO, capsuleMat);
-                capsule.position.y = 1.0;  // stand on ground
+                capsule.position.y = 0.55;  // stand on ground (half capsule height)
                 capsule.castShadow = true;
                 container.add(capsule);
 
@@ -115,7 +116,7 @@ export class PlayerRenderer {
                 // Armor ring (around capsule waist)
                 const armorRing = new Mesh(ARMOR_GEO, ARMOR_MAT.clone());
                 armorRing.rotation.x = Math.PI / 2;
-                armorRing.position.y = 0.5;
+                armorRing.position.y = 0.35;
                 container.add(armorRing);
 
                 this.playerGroup.add(container);
@@ -132,8 +133,16 @@ export class PlayerRenderer {
                         // Wrap in group: model is Z-up, rotate to Y-up
                         const modelWrapper = new Group();
                         modelWrapper.rotation.x = -Math.PI / 2;
-                        modelWrapper.scale.setScalar(2.5);
+                        modelWrapper.scale.setScalar(1.5);
                         modelWrapper.add(inst.mesh);
+
+                        // Compute bounding box after rotation to find model floor
+                        modelWrapper.updateMatrixWorld(true);
+                        const bbox = new Box3().setFromObject(modelWrapper);
+                        const bottomY = bbox.min.y;
+                        // Shift model up so feet sit on Y=0
+                        modelWrapper.position.y = -bottomY;
+
                         container.add(modelWrapper);
                         capsule.visible = false;
                     })
