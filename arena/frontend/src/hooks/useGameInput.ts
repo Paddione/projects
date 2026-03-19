@@ -53,6 +53,8 @@ export function useGameInput({
   const rightStickRef = useRef({ active: false, startX: 0, startY: 0, dx: 0, dy: 0, touchId: -1, firing: false });
   const sprintActiveRef = useRef(false);
   const meleeActiveRef = useRef(false);
+  /** Last valid aim angle from right stick — avoids snapping to 0 in deadzone. */
+  const lastAimAngleRef = useRef(0);
 
   const [leftPuck, setLeftPuck] = useState({ x: 0, y: 0 });
   const [rightPuck, setRightPuck] = useState({ x: 0, y: 0 });
@@ -232,12 +234,22 @@ export function useGameInput({
       }
 
       let aimAngle = 0;
+      // Right stick aim threshold — must drag past deadzone before firing
+      const RIGHT_STICK_DEADZONE = 8;
+      let touchAiming = false;
+
       if (isTouchDevice && rightStickRef.current.active) {
         const { dx, dy } = rightStickRef.current;
-        if (Math.sqrt(dx * dx + dy * dy) > 4) {
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist > RIGHT_STICK_DEADZONE) {
           aimAngle = Math.atan2(dy, dx);
           // Rotate touch aim for isometric view
           if (isoYawRad !== undefined) aimAngle -= isoYawRad;
+          lastAimAngleRef.current = aimAngle;
+          touchAiming = true;
+        } else {
+          // In deadzone — use last known aim but don't fire
+          aimAngle = lastAimAngleRef.current;
         }
       } else if (worldAimAngleRef?.current != null) {
         // 3D mode: use pre-computed world-space aim from raycasting
@@ -252,7 +264,8 @@ export function useGameInput({
         }
       }
 
-      const shooting = isTouchDevice ? rightStickRef.current.active : mouseRef.current.down;
+      // Touch: only fire when stick is actively displaced past deadzone
+      const shooting = isTouchDevice ? touchAiming : mouseRef.current.down;
       const melee = isTouchDevice ? meleeActiveRef.current : (mouseRef.current.rightDown || keysRef.current.has('e'));
       const sprint = isTouchDevice ? sprintActiveRef.current : keysRef.current.has('shift');
       const cycleWeapon = weaponCycleRef.current;
