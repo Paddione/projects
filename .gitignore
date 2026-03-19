@@ -269,3 +269,8 @@ VideoVault/media/
 
 # Generated index files
 VideoVault/movies_index.json
+
+# Root-level debug screenshots and temp files
+/*.png
+/sh.sh
+test-arena-tmp

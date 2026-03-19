@@ -1,0 +1,65 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "L2P Frontend",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "l2p/frontend", "run", "dev"],
+      "port": 3000
+    },
+    {
+      "name": "L2P Backend",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "l2p/backend", "run", "dev"],
+      "port": 3001
+    },
+    {
+      "name": "Arena Frontend",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "arena/frontend", "run", "dev"],
+      "port": 3002
+    },
+    {
+      "name": "Arena Backend",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "arena/backend", "run", "dev"],
+      "port": 3003
+    },
+    {
+      "name": "Shop",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "shop", "run", "dev"],
+      "port": 3004
+    },
+    {
+      "name": "SOS",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "SOS", "run", "dev"],
+      "port": 3005
+    },
+    {
+      "name": "VideoVault",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "VideoVault", "run", "dev"],
+      "port": 5100
+    },
+    {
+      "name": "Auth",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "auth", "run", "dev"],
+      "port": 5500
+    },
+    {
+      "name": "Assetgenerator",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "Assetgenerator", "run", "dev"],
+      "port": 5200
+    },
+    {
+      "name": "Instant Workspace",
+      "runtimeExecutable": "wsl",
+      "runtimeArgs": ["-e", "bash", "-c", "cd /home/patrick/instant-workspace && npm run dev"],
+      "port": 3000
+    }
+  ]
+}
