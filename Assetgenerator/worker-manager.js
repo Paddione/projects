@@ -19,8 +19,8 @@ let pongTimer = null;
 let jobQueue = []; // { jobId, payload, resolve, reject, stdout, stderr }
 
 // Configurable for testing
-let PING_INTERVAL = 30_000;
-let PONG_TIMEOUT = 10_000;
+let PING_INTERVAL = 45_000;
+let PONG_TIMEOUT = 30_000;
 let JOB_RETRY_LIMIT = 2;
 let RECONNECT_WAIT_MS = 60_000;
 

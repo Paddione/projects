@@ -1,9 +1,1 @@
-{
-  "libraryRoot": "/mnt/pve3a/audio-library",
-  "loudness": { "sfx": -16, "music": -20 },
-  "categories": {
-    "sfx": ["weapons", "footsteps", "impacts", "ui", "environment"],
-    "music": ["battle", "ambient", "stings"]
-  },
-  "defaultTags": ["arena", "l2p", "sci-fi", "retro", "ui", "ambient"]
-}
+{"libraryRoot":"/tmp/assetgen-test-zy2ZEc/audio-library","loudness":{"sfx":-16,"music":-20},"categories":{"sfx":["weapons","footsteps","impacts","ui","environment"],"music":["battle","ambient","stings"]},"defaultTags":["arena","test"]}

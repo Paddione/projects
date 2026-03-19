@@ -17,12 +17,14 @@ const DEFAULT_URL = 'wss://assetgen.korczewski.de/ws/worker';
 const DEFAULT_RECONNECT_DELAY = 5000;
 
 function detectGpu() {
-  try {
-    const output = execFileSync('nvidia-smi', ['--query-gpu=name', '--format=csv,noheader'], { encoding: 'utf-8', timeout: 5000 });
-    return output.trim().split('\n')[0] || 'Unknown GPU';
-  } catch {
-    return 'No GPU detected';
+  const candidates = ['nvidia-smi', '/usr/lib/wsl/lib/nvidia-smi'];
+  for (const bin of candidates) {
+    try {
+      const output = execFileSync(bin, ['--query-gpu=name', '--format=csv,noheader'], { encoding: 'utf-8', timeout: 5000 });
+      return output.trim().split('\n')[0] || 'Unknown GPU';
+    } catch { /* try next */ }
   }
+  return 'No GPU detected';
 }
 
 export function createWorker(opts = {}) {
