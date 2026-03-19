@@ -391,12 +391,13 @@ body {
   border-radius: var(--radius-lg);
 }
 
-/* On touch devices, shift health to bottom-center to clear left joystick */
+/* On touch devices, anchor health above the left joystick */
 @media (hover: none) and (pointer: coarse) {
   .hud-health {
-    left: 50%;
-    transform: translateX(-50%);
-    bottom: calc(140px + env(safe-area-inset-bottom, 0px));
+    left: 12px;
+    bottom: calc(150px + env(safe-area-inset-bottom, 0px));
+    padding: var(--space-sm) var(--space-md);
+    font-size: 0.85rem;
   }
 }
 
@@ -493,10 +494,15 @@ body {
   border-radius: var(--radius-lg);
 }
 
-/* On touch devices, shift weapon HUD above the action buttons */
+/* On touch devices, anchor weapon HUD above the right joystick */
 @media (hover: none) and (pointer: coarse) {
   .hud-weapon {
-    bottom: calc(90px + env(safe-area-inset-bottom, 0px));
+    left: auto;
+    right: 12px;
+    bottom: calc(150px + env(safe-area-inset-bottom, 0px));
+    transform: none;
+    padding: 3px 6px;
+    font-size: 0.75rem;
   }
 }
 
@@ -542,10 +548,23 @@ body {
   margin-left: 4px;
 }
 
-/* Hide keyboard hint on touch devices */
+/* Touch device HUD adjustments — compact, edge-anchored */
 @media (hover: none) and (pointer: coarse) {
   .weapon-hint {
     display: none;
+  }
+  .hud-round {
+    padding: var(--space-xs) var(--space-md);
+    font-size: 0.75rem;
+    top: calc(8px + env(safe-area-inset-top, 0px));
+  }
+  .hud-top-left {
+    top: calc(8px + env(safe-area-inset-top, 0px));
+    left: 8px;
+  }
+  .hud-announcement {
+    top: 25%;
+    font-size: 1.3rem;
   }
 }
 
