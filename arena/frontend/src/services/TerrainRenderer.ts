@@ -13,9 +13,7 @@ import {
     LineBasicMaterial,
     LineSegments,
 } from 'three';
-import { WORLD_SCALE } from './GameRenderer3D';
-
-const TILE = WORLD_SCALE; // 1 world unit per tile
+const TILE = 1; // 1 world unit per tile (WORLD_SCALE converts 32px → 1 unit)
 
 const FLOOR_COLOR = new Color(0x1e4a1e);   // green (BasicMaterial = exact color shown)
 const WALL_COLOR = new Color(0x5a5a8a);    // blue-gray walls

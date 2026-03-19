@@ -15,7 +15,7 @@ import type { CharacterInstance } from 'shared-3d';
 export const NPC_MODEL_URL = '/assets/3d/characters/student.glb'; // fallback model for NPCs
 
 // NPC capsule — red-tinted, slightly smaller than players
-const NPC_CAPSULE_GEO = new CapsuleGeometry(0.35, 1.0, 4, 12);
+const NPC_CAPSULE_GEO = new CapsuleGeometry(0.3, 0.8, 8, 16);
 const NPC_MARKER_GEO = new CircleGeometry(0.7, 24);
 const NPC_ENGAGE_RING_GEO = new TorusGeometry(0.8, 0.06, 8, 32);
 
@@ -131,24 +131,27 @@ export class NPCRenderer {
                 this.group.add(marker);
                 this.group.add(engageRing);
 
+                tracked = { container, capsule, marker, engageRing, labelObj, hpObj, el, hpEl, instance: null };
+                this.npcs.set(id, tracked);
+
                 // Try to load 3D model async
                 const modelUrl = npc.character
                     ? `/assets/3d/characters/${npc.character}.glb`
                     : NPC_MODEL_URL;
-                let instance: CharacterInstance | null = null;
                 this.characterManager.getCharacter(`npc-${id}`, modelUrl)
                     .then((inst) => {
-                        instance = inst;
-                        inst.mesh.scale.setScalar(2.0);
-                        container.add(inst.mesh);
+                        tracked!.instance = inst;
+                        // Wrap in group: model is Z-up, rotate to Y-up
+                        const modelWrapper = new Group();
+                        modelWrapper.rotation.x = -Math.PI / 2;
+                        modelWrapper.scale.setScalar(2.5);
+                        modelWrapper.add(inst.mesh);
+                        container.add(modelWrapper);
                         capsule.visible = false;
                     })
                     .catch(() => {
                         // Model failed — capsule stays
                     });
-
-                tracked = { container, capsule, marker, engageRing, labelObj, hpObj, el, hpEl, instance };
-                this.npcs.set(id, tracked);
             }
 
             // Position

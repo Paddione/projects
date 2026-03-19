@@ -20,7 +20,7 @@ const ANIM_IDLE = 'idle';
 const ARMOR_GEO = new TorusGeometry(0.5, 0.08, 8, 32);
 const ARMOR_MAT = new MeshLambertMaterial({ color: 0x38bdf8, emissive: 0x1a6a8a });
 const MARKER_GEO = new CircleGeometry(0.8, 24);
-const CAPSULE_GEO = new CapsuleGeometry(0.4, 1.2, 4, 12);
+const CAPSULE_GEO = new CapsuleGeometry(0.35, 0.9, 8, 16);
 
 // Character accent colors
 const CHAR_COLORS: Record<string, number> = {
@@ -121,24 +121,25 @@ export class PlayerRenderer {
                 this.playerGroup.add(container);
                 this.playerGroup.add(marker);
 
+                tracked = { container, instance: null, capsule, marker, armorRing, currentAnim: '' };
+                this.players.set(player.id, tracked);
+
                 // Try to load 3D model (non-blocking — capsule shows immediately)
-                let instance: CharacterInstance | null = null;
                 const modelUrl = `${MODEL_BASE_URL}${charId}.glb`;
                 this.characterManager.getCharacter(player.id, modelUrl)
                     .then((inst) => {
-                        instance = inst;
-                        inst.mesh.scale.setScalar(2.0);
-                        container.add(inst.mesh);
-                        // Hide capsule once model loads (if model has visible geometry)
-                        // Keep capsule visible as fallback since models have no animations
+                        tracked!.instance = inst;
+                        // Wrap in group: model is Z-up, rotate to Y-up
+                        const modelWrapper = new Group();
+                        modelWrapper.rotation.x = -Math.PI / 2;
+                        modelWrapper.scale.setScalar(2.5);
+                        modelWrapper.add(inst.mesh);
+                        container.add(modelWrapper);
                         capsule.visible = false;
                     })
                     .catch(() => {
                         // Model failed — capsule remains as visual
                     });
-
-                tracked = { container, instance, capsule, marker, armorRing, currentAnim: '' };
-                this.players.set(player.id, tracked);
             }
 
             // Position
