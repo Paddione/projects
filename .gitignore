@@ -274,3 +274,4 @@ VideoVault/movies_index.json
 /*.png
 /sh.sh
 test-arena-tmp
+.claude/worktrees/
