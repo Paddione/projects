@@ -36,6 +36,8 @@ export class GameRenderer3D {
     private readonly lightingRig: LightingRig;
     private readonly container: HTMLElement;
     private readonly clock: Clock;
+    /** Fixed isometric offset — camera position relative to the look-at target. */
+    private readonly cameraOffset: { x: number; y: number; z: number };
 
     constructor(container: HTMLElement) {
         this.container = container;
@@ -98,6 +100,13 @@ export class GameRenderer3D {
 
         // Character manager (shared model cache)
         this.characterManager = new CharacterManager();
+
+        // Store the initial camera offset (isometric position relative to origin)
+        this.cameraOffset = {
+            x: this.camera.position.x,
+            y: this.camera.position.y,
+            z: this.camera.position.z,
+        };
     }
 
     /** Convert pixel-space game coordinates to 3D world units. */
@@ -108,14 +117,10 @@ export class GameRenderer3D {
     /** Move the camera to track a player position (pixel space). */
     updateCamera(playerX: number, playerY: number): void {
         const { wx, wz } = GameRenderer3D.toWorld(playerX, playerY);
-        const offset = this.camera.position.clone().sub(
-            // Camera looks at origin — shift both camera and its target by player pos
-            { x: 0, y: 0, z: 0 } as never,
-        );
         this.camera.position.set(
-            wx + offset.x,
-            offset.y,
-            wz + offset.z,
+            wx + this.cameraOffset.x,
+            this.cameraOffset.y,
+            wz + this.cameraOffset.z,
         );
         this.camera.lookAt(wx, 0, wz);
     }

@@ -75,10 +75,9 @@
 html, body, #root {
   height: 100%;
   width: 100%;
-  overflow: hidden;
-  /* Prevent browser scroll/pan/zoom from intercepting game touches */
-  touch-action: none;
   overscroll-behavior: none;
+  /* overflow/touch-action are NOT set here — lobby pages need scrolling.
+     Game containers (Game.tsx, Game3D.tsx) set overflow:hidden + touch-action:none inline. */
 }
 
 body {
@@ -203,9 +202,14 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   min-height: 100vh;
+  min-height: 100dvh;
   padding: var(--space-xl);
+  padding-top: calc(var(--space-2xl) + env(safe-area-inset-top, 0px));
+  padding-bottom: calc(var(--space-2xl) + env(safe-area-inset-bottom, 0px));
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   background: radial-gradient(ellipse at 50% 0%, rgba(99, 102, 241, 0.08) 0%, transparent 60%),
               var(--color-bg);
 }
@@ -759,17 +763,6 @@ body {
   .lobby-code    { font-size: 1.8rem; letter-spacing: 0.2em; padding: var(--space-sm) var(--space-lg); }
   .player-list, .settings-panel { max-width: 100%; }
   .btn-lg        { padding: 14px 24px; font-size: 1rem; }
-
-  /* Allow .page to scroll on small phones so buttons aren't clipped */
-  .page {
-    overflow-y: auto;
-    touch-action: pan-y;
-    -webkit-overflow-scrolling: touch;
-    min-height: 100dvh;
-    justify-content: flex-start;
-    padding-top: calc(var(--space-2xl) + env(safe-area-inset-top, 0px));
-    padding-bottom: calc(var(--space-2xl) + env(safe-area-inset-bottom, 0px));
-  }
 }
 
 /* Landscape on mobile — reduce vertical spacing so everything fits */

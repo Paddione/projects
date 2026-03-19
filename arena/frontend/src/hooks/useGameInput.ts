@@ -10,6 +10,10 @@ interface UseGameInputOptions {
   playerId: string | null;
   containerRef: RefObject<HTMLDivElement | null>;
   gameStateRef: MutableRefObject<any>;
+  /** Pre-computed world-space aim angle (set by 3D renderer via raycasting). */
+  worldAimAngleRef?: MutableRefObject<number | null>;
+  /** Camera yaw in radians — rotates WASD movement to match isometric view. */
+  isoYawRad?: number;
 }
 
 export interface InputState {
@@ -37,6 +41,8 @@ export function useGameInput({
   playerId,
   containerRef,
   gameStateRef,
+  worldAimAngleRef,
+  isoYawRad,
 }: UseGameInputOptions): InputState {
   const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 
@@ -215,11 +221,29 @@ export function useGameInput({
         }
       }
 
+      // Rotate movement to match isometric camera orientation
+      if (isoYawRad !== undefined && (mx !== 0 || my !== 0)) {
+        const c = Math.cos(-isoYawRad);
+        const s = Math.sin(-isoYawRad);
+        const rmx = c * mx - s * my;
+        const rmy = s * mx + c * my;
+        mx = rmx;
+        my = rmy;
+      }
+
       let aimAngle = 0;
       if (isTouchDevice && rightStickRef.current.active) {
         const { dx, dy } = rightStickRef.current;
-        if (Math.sqrt(dx * dx + dy * dy) > 4) aimAngle = Math.atan2(dy, dx);
+        if (Math.sqrt(dx * dx + dy * dy) > 4) {
+          aimAngle = Math.atan2(dy, dx);
+          // Rotate touch aim for isometric view
+          if (isoYawRad !== undefined) aimAngle -= isoYawRad;
+        }
+      } else if (worldAimAngleRef?.current != null) {
+        // 3D mode: use pre-computed world-space aim from raycasting
+        aimAngle = worldAimAngleRef.current;
       } else {
+        // 2D mode: screen-space aim (player always at screen center)
         const mouse = mouseRef.current;
         const state = gameStateRef.current;
         if (state) {

@@ -782,7 +782,7 @@ export default function Game() {
     }
 
     return (
-        <div style={{ width: '100vw', height: '100vh', overflow: 'hidden', cursor: input.isTouchDevice ? 'default' : 'crosshair' }}>
+        <div style={{ width: '100vw', height: '100vh', overflow: 'hidden', touchAction: 'none', cursor: input.isTouchDevice ? 'default' : 'crosshair' }}>
             <div ref={canvasRef} style={{ width: '100%', height: '100%' }} />
             <GameHUD
                 gameStateRef={gameStateRef}

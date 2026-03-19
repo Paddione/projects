@@ -11,7 +11,7 @@
 
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Clock } from 'three';
+import { Clock, Raycaster, Vector2, Vector3, Plane } from 'three';
 import { useGameStore } from '../stores/gameStore';
 import LoadingScreen from './LoadingScreen';
 import { GameRenderer3D } from '../services/GameRenderer3D';
@@ -52,7 +52,7 @@ function Game3DInner() {
   const navigate = useNavigate();
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const { playerId, isSpectating, spectatedPlayerId, currentRound } = useGameStore();
+  const { playerId, currentRound } = useGameStore();
 
   // Renderer instances (stable across renders)
   const rendererRef = useRef<GameRenderer3D | null>(null);
@@ -71,8 +71,19 @@ function Game3DInner() {
   const clockRef = useRef(new Clock());
   const activeEmotesRef = useRef<Map<string, { emoteId: string; expiresAt: number }>>(new Map());
 
+  // Raycasting for isometric aim (reusable objects to avoid per-frame allocation)
+  const worldAimAngleRef = useRef<number | null>(null);
+  const raycasterRef = useRef(new Raycaster());
+  const ndcRef = useRef(new Vector2());
+  const intersectionRef = useRef(new Vector3());
+  const groundPlane = useRef(new Plane(new Vector3(0, 1, 0), 0));
+
   // ---- Shared hooks (only active after assets loaded) ----
-  const input = useGameInput({ matchId, playerId, containerRef, gameStateRef });
+  const input = useGameInput({
+    matchId, playerId, containerRef, gameStateRef,
+    worldAimAngleRef,
+    isoYawRad: Math.PI / 4,
+  });
 
   useGameSockets({ playerId, navigate, gameStateRef, activeEmotesRef });
 
@@ -111,10 +122,27 @@ function Game3DInner() {
       const state = gameStateRef.current;
       if (!state) { r.render(); return; }
 
-      // Camera follows local player (or spectated player)
+      // Camera follows local player (or spectated player) — read from store to avoid stale closure
+      const { isSpectating, spectatedPlayerId } = useGameStore.getState();
       const trackId = isSpectating && spectatedPlayerId ? spectatedPlayerId : playerId;
       const me = state.players?.find((p: any) => p.id === trackId);
       if (me) r.updateCamera(me.x, me.y);
+
+      // Compute world-space aim angle via raycasting (mouse → ground plane)
+      const mouse = input.mouseRef.current;
+      const containerEl = containerRef.current;
+      if (containerEl && me) {
+        ndcRef.current.set(
+          (mouse.x / containerEl.clientWidth) * 2 - 1,
+          -(mouse.y / containerEl.clientHeight) * 2 + 1,
+        );
+        raycasterRef.current.setFromCamera(ndcRef.current, r.camera);
+        const hit = raycasterRef.current.ray.intersectPlane(groundPlane.current, intersectionRef.current);
+        if (hit) {
+          const { wx, wz } = GameRenderer3D.toWorld(me.x, me.y);
+          worldAimAngleRef.current = Math.atan2(intersectionRef.current.z - wz, intersectionRef.current.x - wx);
+        }
+      }
 
       // Build terrain once when map data is available
       if (!terrainBuiltRef.current && state.map?.tiles) {
@@ -157,7 +185,7 @@ function Game3DInner() {
   }, []);
 
   return (
-    <div style={{ width: '100vw', height: '100vh', overflow: 'hidden', cursor: input.isTouchDevice ? 'default' : 'crosshair' }}>
+    <div style={{ width: '100vw', height: '100vh', overflow: 'hidden', touchAction: 'none', cursor: input.isTouchDevice ? 'default' : 'crosshair' }}>
       {/* Three.js Canvas */}
       <div
         ref={containerRef}
