@@ -8,14 +8,14 @@ import {
     Matrix4,
     Color,
     Group,
-    GridHelper,
     EdgesGeometry,
     LineBasicMaterial,
     LineSegments,
+    BufferGeometry,
+    Float32BufferAttribute,
 } from 'three';
 const TILE = 1; // 1 world unit per tile (WORLD_SCALE converts 32px → 1 unit)
 
-const FLOOR_COLOR = new Color(0x1e4a1e);   // green (BasicMaterial = exact color shown)
 const WALL_COLOR = new Color(0x5a5a8a);    // blue-gray walls
 const PATH_COLOR = new Color(0x8a7a5a);    // warm brown paths
 const BOUNDARY_COLOR = 0x334466;           // map edge
@@ -24,7 +24,6 @@ export class TerrainRenderer {
     private readonly group: Group;
     private readonly meshes: Mesh[] = [];
     private wallMesh: InstancedMesh | null = null;
-    private gridHelper: GridHelper | null = null;
     private boundary: LineSegments | null = null;
 
     constructor(group: Group) {
@@ -37,26 +36,34 @@ export class TerrainRenderer {
         const w = mapW * TILE;
         const h = mapH * TILE;
 
-        // Floor plane — MeshBasicMaterial so it shows full color (not affected by dim lighting)
+        // Neon grid floor — emissive cyan LineSegments
+        const gridLines: number[] = [];
+        for (let x = 0; x <= mapW; x++) {
+            gridLines.push(x * TILE, 0, 0, x * TILE, 0, h);
+        }
+        for (let z = 0; z <= mapH; z++) {
+            gridLines.push(0, 0, z * TILE, w, 0, z * TILE);
+        }
+        const gridGeo = new BufferGeometry();
+        gridGeo.setAttribute('position', new Float32BufferAttribute(new Float32Array(gridLines), 3));
+        const gridMat = new LineBasicMaterial({
+            color: 0x00f2ff,
+            transparent: true,
+            opacity: 0.05,
+        });
+        const gridFloor = new LineSegments(gridGeo, gridMat);
+        gridFloor.position.y = 0.005;
+        this.group.add(gridFloor);
+        this.meshes.push(gridFloor as any);
+
+        // Dark floor underneath
         const floorGeo = new PlaneGeometry(w, h);
-        const floorMat = new MeshBasicMaterial({ color: FLOOR_COLOR });
+        const floorMat = new MeshBasicMaterial({ color: 0x050510 });
         const floor = new Mesh(floorGeo, floorMat);
         floor.rotation.x = -Math.PI / 2;
         floor.position.set(w / 2, -0.01, h / 2);
         this.group.add(floor);
         this.meshes.push(floor);
-
-        // Grid overlay for spatial reference
-        this.gridHelper = new GridHelper(
-            Math.max(w, h),  // size
-            Math.max(mapW, mapH),  // divisions
-            0x3a6a3a,  // center line color
-            0x2a5a2a,  // grid color
-        );
-        this.gridHelper.position.set(w / 2, 0.005, h / 2);
-        this.gridHelper.material.opacity = 0.6;
-        this.gridHelper.material.transparent = true;
-        this.group.add(this.gridHelper);
 
         // Map boundary — bright outline
         const boundaryGeo = new BoxGeometry(w, 0.1, h);
@@ -135,10 +142,6 @@ export class TerrainRenderer {
             (this.wallMesh.material as MeshLambertMaterial).dispose();
             this.group.remove(this.wallMesh);
             this.wallMesh = null;
-        }
-        if (this.gridHelper) {
-            this.group.remove(this.gridHelper);
-            this.gridHelper = null;
         }
         if (this.boundary) {
             this.boundary.geometry.dispose();

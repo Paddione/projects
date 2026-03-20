@@ -16,10 +16,12 @@ import { useGameStore } from '../stores/gameStore';
 import LoadingScreen from './LoadingScreen';
 import { GameRenderer3D, WORLD_SCALE } from '../services/GameRenderer3D';
 import { VFXManager } from '../services/VFXManager';
+import { AtmosphereEffect } from '../services/effects/AtmosphereEffect';
 import { ImpactEffect } from '../services/effects/ImpactEffect';
 import { ExplosionEffect } from '../services/effects/ExplosionEffect';
 import { MuzzleFlashEffect } from '../services/effects/MuzzleFlashEffect';
 import { DeathEffect } from '../services/effects/DeathEffect';
+import { DamageNumber } from '../services/effects/DamageNumber';
 import { TerrainRenderer } from '../services/TerrainRenderer';
 import { PlayerRenderer } from '../services/PlayerRenderer';
 import { ProjectileRenderer } from '../services/ProjectileRenderer';
@@ -70,6 +72,7 @@ function Game3DInner() {
   const npcRef = useRef<NPCRenderer | null>(null);
   const labelRef = useRef<LabelRenderer | null>(null);
   const vfxRef = useRef<VFXManager | null>(null);
+  const atmosphereRef = useRef<AtmosphereEffect | null>(null);
 
   const gameStateRef = useRef<any>(null);
   const terrainBuiltRef = useRef(false);
@@ -101,8 +104,14 @@ function Game3DInner() {
       vfx.addEffect(new ExplosionEffect(vfx.effectGroup, { x: wx, y: 0, z: wz }, data.radius * WORLD_SCALE));
       vfx.triggerShake('explosion');
     },
-    onPlayerHit: () => {
-      vfxRef.current?.triggerShake('hit');
+    onPlayerHit: (data) => {
+      const vfx = vfxRef.current;
+      const r = rendererRef.current;
+      if (!vfx || !r) return;
+      vfx.triggerShake('hit');
+      const { wx, wz } = GameRenderer3D.toWorld(data.x, data.y);
+      const type = data.hasArmor ? 'armor' : 'damage';
+      vfx.addEffect(new DamageNumber(r.scene, { x: wx, y: 1.8, z: wz }, data.damage, type));
     },
   });
 
@@ -124,6 +133,9 @@ function Game3DInner() {
 
     const vfx = new VFXManager(r.scene);
     vfxRef.current = vfx;
+
+    const atmosphere = new AtmosphereEffect(r.scene);
+    atmosphereRef.current = atmosphere;
 
     terrainRef.current = new TerrainRenderer(r.terrainGroup);
     playerRef.current = new PlayerRenderer(r.playerGroup, r.characterManager, {
@@ -198,6 +210,7 @@ function Game3DInner() {
       labelRef.current?.update(players);
 
       vfxRef.current?.update(delta);
+      atmosphereRef.current?.update(delta);
 
       // Apply screen shake
       const shakeOffset = vfxRef.current?.getShakeOffset();
@@ -219,6 +232,7 @@ function Game3DInner() {
       npcRef.current?.dispose();
       labelRef.current?.dispose();
       vfxRef.current?.dispose();
+      atmosphereRef.current?.dispose();
       r.dispose();
       rendererRef.current = null;
       terrainBuiltRef.current = false;
