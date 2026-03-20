@@ -24,12 +24,19 @@ const GRENADE_MAT = new MeshLambertMaterial({
 // Reusable vector for lookAt target
 const _target = new Vector3();
 
+export interface ProjectileCallbacks {
+    onRemoved?: (worldPos: { x: number; y: number; z: number }, type: string) => void;
+    onCreated?: (worldPos: { x: number; y: number; z: number }, angle: number) => void;
+}
+
 export class ProjectileRenderer {
     private readonly group: Group;
     private readonly objects: Map<string | number, Mesh> = new Map();
+    private readonly callbacks: ProjectileCallbacks;
 
-    constructor(group: Group) {
+    constructor(group: Group, callbacks: ProjectileCallbacks = {}) {
         this.group = group;
+        this.callbacks = callbacks;
     }
 
     update(projectiles: Array<{
@@ -44,6 +51,8 @@ export class ProjectileRenderer {
         // Remove stale
         for (const [id, obj] of this.objects) {
             if (!currentIds.has(id)) {
+                const pos = obj.position;
+                this.callbacks.onRemoved?.({ x: pos.x, y: pos.y, z: pos.z }, obj.userData.type ?? 'bullet');
                 this.group.remove(obj);
                 this.objects.delete(id);
             }
@@ -61,6 +70,7 @@ export class ProjectileRenderer {
                     mesh.castShadow = true;
                     this.objects.set(id, mesh);
                     this.group.add(mesh);
+                    mesh.userData.type = 'grenade';
                 }
                 mesh.position.set(wx, 0.3, wz);
                 // Slow tumble for realism
@@ -86,6 +96,8 @@ export class ProjectileRenderer {
 
                     this.objects.set(id, mesh);
                     this.group.add(mesh);
+                    mesh.userData.type = 'bullet';
+                    this.callbacks.onCreated?.({ x: wx, y: 0.3, z: wz }, proj.angle);
                 }
                 mesh.position.set(wx, 0.3, wz);
             }
