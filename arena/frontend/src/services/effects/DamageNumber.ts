@@ -12,7 +12,6 @@ const COLORS = {
 } as const;
 
 export class DamageNumber implements VFXEffect {
-    private readonly scene: Scene;
     private readonly label: CSS2DObject;
     private readonly startY: number;
     private elapsed = 0;
@@ -23,7 +22,6 @@ export class DamageNumber implements VFXEffect {
         amount: number,
         type: 'damage' | 'armor' | 'heal',
     ) {
-        this.scene = scene;
         this.startY = worldPos.y;
 
         const div = document.createElement('div');
