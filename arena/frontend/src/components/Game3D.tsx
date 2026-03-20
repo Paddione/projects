@@ -14,7 +14,11 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Clock, Raycaster, Vector2, Vector3, Plane } from 'three';
 import { useGameStore } from '../stores/gameStore';
 import LoadingScreen from './LoadingScreen';
-import { GameRenderer3D } from '../services/GameRenderer3D';
+import { GameRenderer3D, WORLD_SCALE } from '../services/GameRenderer3D';
+import { VFXManager } from '../services/VFXManager';
+import { ImpactEffect } from '../services/effects/ImpactEffect';
+import { ExplosionEffect } from '../services/effects/ExplosionEffect';
+import { MuzzleFlashEffect } from '../services/effects/MuzzleFlashEffect';
 import { TerrainRenderer } from '../services/TerrainRenderer';
 import { PlayerRenderer } from '../services/PlayerRenderer';
 import { ProjectileRenderer } from '../services/ProjectileRenderer';
@@ -64,6 +68,7 @@ function Game3DInner() {
   const zoneRef = useRef<ZoneRenderer | null>(null);
   const npcRef = useRef<NPCRenderer | null>(null);
   const labelRef = useRef<LabelRenderer | null>(null);
+  const vfxRef = useRef<VFXManager | null>(null);
 
   const gameStateRef = useRef<any>(null);
   const terrainBuiltRef = useRef(false);
@@ -85,7 +90,20 @@ function Game3DInner() {
     isoYawRad: Math.PI / 4,
   });
 
-  useGameSockets({ playerId, navigate, gameStateRef, activeEmotesRef });
+  useGameSockets({
+    playerId, navigate, gameStateRef, activeEmotesRef,
+    onExplosion: (data) => {
+      const vfx = vfxRef.current;
+      const r = rendererRef.current;
+      if (!vfx || !r) return;
+      const { wx, wz } = GameRenderer3D.toWorld(data.x, data.y);
+      vfx.addEffect(new ExplosionEffect(vfx.effectGroup, { x: wx, y: 0, z: wz }, data.radius * WORLD_SCALE));
+      vfx.triggerShake('explosion');
+    },
+    onPlayerHit: () => {
+      vfxRef.current?.triggerShake('hit');
+    },
+  });
 
   useGameAudio({ mouseRef: input.mouseRef, keysRef: input.keysRef });
 
@@ -103,9 +121,21 @@ function Game3DInner() {
     const r = new GameRenderer3D(container);
     rendererRef.current = r;
 
+    const vfx = new VFXManager(r.scene);
+    vfxRef.current = vfx;
+
     terrainRef.current = new TerrainRenderer(r.terrainGroup);
     playerRef.current = new PlayerRenderer(r.playerGroup, r.characterManager);
-    projectileRef.current = new ProjectileRenderer(r.projectileGroup);
+    projectileRef.current = new ProjectileRenderer(r.projectileGroup, {
+      onRemoved: (pos, type) => {
+        if (type !== 'grenade') {
+          vfx.addEffect(new ImpactEffect(vfx.effectGroup, pos));
+        }
+      },
+      onCreated: (pos, angle) => {
+        vfx.addEffect(new MuzzleFlashEffect(vfx.effectGroup, pos, angle));
+      },
+    });
     coverRef.current = new CoverRenderer(r.coverGroup);
     itemRef.current = new ItemRenderer(r.itemGroup);
     zoneRef.current = new ZoneRenderer(r.zoneGroup);
@@ -162,6 +192,12 @@ function Game3DInner() {
       zoneRef.current?.update(state.zone, state.map?.width ?? 28, state.map?.height ?? 22, delta);
       labelRef.current?.update(players);
 
+      vfxRef.current?.update(delta);
+
+      // Apply screen shake
+      const shakeOffset = vfxRef.current?.getShakeOffset();
+      if (shakeOffset) r.applyCameraShake(shakeOffset);
+
       r.render();
     };
     animate();
@@ -177,6 +213,7 @@ function Game3DInner() {
       zoneRef.current?.dispose();
       npcRef.current?.dispose();
       labelRef.current?.dispose();
+      vfxRef.current?.dispose();
       r.dispose();
       rendererRef.current = null;
       terrainBuiltRef.current = false;

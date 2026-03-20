@@ -41,7 +41,7 @@ describe('useGameSockets', () => {
     vi.mocked(getSocket).mockReturnValue(mockSocket as any);
   });
 
-  it('registers all 11 socket event listeners on mount', () => {
+  it('registers all 12 socket event listeners on mount', () => {
     renderHook(() => useGameSockets({
       playerId: 'p1',
       navigate: vi.fn(),
@@ -61,6 +61,7 @@ describe('useGameSockets', () => {
     expect(registeredEvents).toContain('match-end');
     expect(registeredEvents).toContain('spectate-start');
     expect(registeredEvents).toContain('player-emote');
+    expect(registeredEvents).toContain('explosion');
   });
 
   it('cleans up all listeners on unmount', () => {
@@ -76,5 +77,6 @@ describe('useGameSockets', () => {
     expect(removedEvents).toContain('game-state');
     expect(removedEvents).toContain('player-hit');
     expect(removedEvents).toContain('zone-shrink');
+    expect(removedEvents).toContain('explosion');
   });
 });

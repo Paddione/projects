@@ -10,6 +10,8 @@ interface UseGameSocketsOptions {
   navigate: NavigateFunction;
   gameStateRef: MutableRefObject<any>;
   activeEmotesRef: MutableRefObject<Map<string, { emoteId: string; expiresAt: number }>>;
+  onExplosion?: (data: { x: number; y: number; radius: number }) => void;
+  onPlayerHit?: () => void;
 }
 
 export function useGameSockets({
@@ -17,6 +19,8 @@ export function useGameSockets({
   navigate,
   gameStateRef,
   activeEmotesRef,
+  onExplosion,
+  onPlayerHit,
 }: UseGameSocketsOptions) {
   const {
     setPlayerState, addKillfeed, setAnnouncement, setRound, setRoundScores,
@@ -57,6 +61,11 @@ export function useGameSockets({
 
     socket.on('player-hit', () => {
       SoundService.playSFX('player_hit');
+      onPlayerHit?.();
+    });
+
+    socket.on('explosion', (data: { x: number; y: number; radius: number }) => {
+      onExplosion?.(data);
     });
 
     socket.on('item-spawned', (data: any) => {
@@ -126,6 +135,7 @@ export function useGameSockets({
       socket.off('match-end');
       socket.off('spectate-start');
       socket.off('player-emote');
+      socket.off('explosion');
     };
   }, [playerId]);
 }
