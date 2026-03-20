@@ -130,6 +130,8 @@ function Game3DInner() {
 
     const r = new GameRenderer3D(container);
     rendererRef.current = r;
+    const pp = r.initPostProcessing();
+    void pp; // reserved for Task 15 FPS probe
 
     const vfx = new VFXManager(r.scene);
     vfxRef.current = vfx;

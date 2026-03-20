@@ -13,6 +13,7 @@ import {
 } from 'shared-3d';
 import type { OrthographicCamera } from 'three';
 import type { LightingRig } from 'shared-3d';
+import { PostProcessing } from './PostProcessing';
 
 /** Converts tile-based game coordinates (pixels at 32px/tile) to 3D world units. */
 export const WORLD_SCALE = 1 / 32;
@@ -39,6 +40,7 @@ export class GameRenderer3D {
     private readonly clock: Clock;
     /** Fixed isometric offset — camera position relative to the look-at target. */
     private readonly cameraOffset: { x: number; y: number; z: number };
+    private postProcessing: PostProcessing | null = null;
 
     constructor(container: HTMLElement) {
         this.container = container;
@@ -135,6 +137,13 @@ export class GameRenderer3D {
         this.camera.position.z += offset.z;
     }
 
+    /** Initialize post-processing pipeline. */
+    initPostProcessing(): PostProcessing {
+        const pp = new PostProcessing(this.renderer, this.scene, this.camera);
+        this.postProcessing = pp;
+        return pp;
+    }
+
     /** Get the elapsed delta from the internal clock. */
     getDelta(): number {
         return this.clock.getDelta();
@@ -153,11 +162,16 @@ export class GameRenderer3D {
 
         this.renderer.setSize(w, h);
         this.labelRenderer.setSize(w, h);
+        this.postProcessing?.resize(w, h);
     }
 
     /** Render one frame. */
     render(): void {
-        this.renderer.render(this.scene, this.camera);
+        if (this.postProcessing) {
+            this.postProcessing.render();
+        } else {
+            this.renderer.render(this.scene, this.camera);
+        }
         this.labelRenderer.render(this.scene, this.camera);
     }
 
@@ -165,6 +179,7 @@ export class GameRenderer3D {
     dispose(): void {
         this.lightingRig.dispose();
         this.characterManager.dispose();
+        this.postProcessing?.dispose();
         this.renderer.dispose();
 
         if (this.renderer.domElement.parentElement) {
