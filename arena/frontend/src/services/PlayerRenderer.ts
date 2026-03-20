@@ -33,6 +33,10 @@ const CHAR_COLORS: Record<string, number> = {
 };
 const DEFAULT_CHAR_COLOR = 0x00f2ff;
 
+export interface PlayerRendererCallbacks {
+    onPlayerDeath?: (worldPos: { x: number; y: number; z: number }, charColor: number) => void;
+}
+
 interface TrackedPlayer {
     container: Object3D;     // root container for position/rotation
     instance: CharacterInstance | null;
@@ -40,16 +44,23 @@ interface TrackedPlayer {
     marker: Mesh;            // ground circle
     armorRing: Mesh;
     currentAnim: string;
+    charId: string;
 }
 
 export class PlayerRenderer {
     private readonly playerGroup: Group;
     private readonly players: Map<string, TrackedPlayer> = new Map();
     private readonly characterManager: import('shared-3d').CharacterManager;
+    private readonly callbacks: PlayerRendererCallbacks;
 
-    constructor(playerGroup: Group, characterManager: import('shared-3d').CharacterManager) {
+    constructor(
+        playerGroup: Group,
+        characterManager: import('shared-3d').CharacterManager,
+        callbacks: PlayerRendererCallbacks = {},
+    ) {
         this.playerGroup = playerGroup;
         this.characterManager = characterManager;
+        this.callbacks = callbacks;
     }
 
     async update(
@@ -70,6 +81,9 @@ export class PlayerRenderer {
         // Remove dead/gone players
         for (const [id, tracked] of this.players) {
             if (!livePlayers.has(id)) {
+                const charColor = CHAR_COLORS[tracked.charId] ?? DEFAULT_CHAR_COLOR;
+                const pos = tracked.container.position;
+                this.callbacks.onPlayerDeath?.({ x: pos.x, y: pos.y + 0.5, z: pos.z }, charColor);
                 this.playerGroup.remove(tracked.container);
                 this.playerGroup.remove(tracked.marker);
                 if (tracked.instance) tracked.instance.dispose();
@@ -122,7 +136,7 @@ export class PlayerRenderer {
                 this.playerGroup.add(container);
                 this.playerGroup.add(marker);
 
-                tracked = { container, instance: null, capsule, marker, armorRing, currentAnim: '' };
+                tracked = { container, instance: null, capsule, marker, armorRing, currentAnim: '', charId };
                 this.players.set(player.id, tracked);
 
                 // Try to load 3D model (non-blocking — capsule shows immediately)

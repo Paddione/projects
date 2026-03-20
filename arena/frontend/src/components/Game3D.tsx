@@ -19,6 +19,7 @@ import { VFXManager } from '../services/VFXManager';
 import { ImpactEffect } from '../services/effects/ImpactEffect';
 import { ExplosionEffect } from '../services/effects/ExplosionEffect';
 import { MuzzleFlashEffect } from '../services/effects/MuzzleFlashEffect';
+import { DeathEffect } from '../services/effects/DeathEffect';
 import { TerrainRenderer } from '../services/TerrainRenderer';
 import { PlayerRenderer } from '../services/PlayerRenderer';
 import { ProjectileRenderer } from '../services/ProjectileRenderer';
@@ -125,7 +126,11 @@ function Game3DInner() {
     vfxRef.current = vfx;
 
     terrainRef.current = new TerrainRenderer(r.terrainGroup);
-    playerRef.current = new PlayerRenderer(r.playerGroup, r.characterManager);
+    playerRef.current = new PlayerRenderer(r.playerGroup, r.characterManager, {
+      onPlayerDeath: (pos, color) => {
+        vfx.addEffect(new DeathEffect(vfx.effectGroup, pos, color));
+      },
+    });
     projectileRef.current = new ProjectileRenderer(r.projectileGroup, {
       onRemoved: (pos, type) => {
         if (type !== 'grenade') {
