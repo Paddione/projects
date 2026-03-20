@@ -11,7 +11,7 @@ interface UseGameSocketsOptions {
   gameStateRef: MutableRefObject<any>;
   activeEmotesRef: MutableRefObject<Map<string, { emoteId: string; expiresAt: number }>>;
   onExplosion?: (data: { x: number; y: number; radius: number }) => void;
-  onPlayerHit?: () => void;
+  onPlayerHit?: (data: { targetId: string; damage: number; x: number; y: number; hasArmor: boolean }) => void;
 }
 
 export function useGameSockets({
@@ -59,9 +59,9 @@ export function useGameSockets({
       if (data.weapon === 'melee') SoundService.playSFX('melee_hit');
     });
 
-    socket.on('player-hit', () => {
+    socket.on('player-hit', (data: { targetId: string; damage: number; x: number; y: number; hasArmor: boolean }) => {
       SoundService.playSFX('player_hit');
-      onPlayerHit?.();
+      onPlayerHit?.(data);
     });
 
     socket.on('explosion', (data: { x: number; y: number; radius: number }) => {

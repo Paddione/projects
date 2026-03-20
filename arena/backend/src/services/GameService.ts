@@ -34,7 +34,7 @@ export class GameService {
 
     // Callbacks for emitting events
     private onStateUpdate?: (matchId: string, state: SerializedGameState) => void;
-    private onPlayerHit?: (matchId: string, data: { targetId: string; attackerId: string; damage: number; remainingHp: number; hasArmor: boolean }) => void;
+    private onPlayerHit?: (matchId: string, data: { targetId: string; attackerId: string; damage: number; remainingHp: number; hasArmor: boolean; x: number; y: number }) => void;
     private onPlayerKilled?: (matchId: string, data: { victimId: string; killerId: string; weapon: 'gun' | 'melee' | 'zone' | 'zombie' | 'npc'; killerName?: string; victimName?: string }) => void;
     private onItemSpawned?: (matchId: string, data: { item: MapItem; announcement: string }) => void;
     private onItemCollected?: (matchId: string, data: { itemId: string; playerId: string }) => void;
@@ -56,7 +56,7 @@ export class GameService {
      */
     setCallbacks(callbacks: {
         onStateUpdate: (matchId: string, state: SerializedGameState) => void;
-        onPlayerHit: (matchId: string, data: { targetId: string; attackerId: string; damage: number; remainingHp: number; hasArmor: boolean }) => void;
+        onPlayerHit: (matchId: string, data: { targetId: string; attackerId: string; damage: number; remainingHp: number; hasArmor: boolean; x: number; y: number }) => void;
         onPlayerKilled: (matchId: string, data: { victimId: string; killerId: string; weapon: 'gun' | 'melee' | 'zone' | 'zombie' | 'npc'; killerName?: string; victimName?: string }) => void;
         onItemSpawned: (matchId: string, data: { item: MapItem; announcement: string }) => void;
         onItemCollected: (matchId: string, data: { itemId: string; playerId: string }) => void;
@@ -391,6 +391,8 @@ export class GameService {
                     damage: projectile.damage,
                     remainingHp: result.remainingHp,
                     hasArmor: result.hasArmor,
+                    x: target.x,
+                    y: target.y,
                 });
 
                 if (result.died) {
@@ -528,6 +530,8 @@ export class GameService {
                         damage: projectile.damage,
                         remainingHp: result.remainingHp,
                         hasArmor: result.hasArmor,
+                        x: target.x,
+                        y: target.y,
                     });
 
                     if (result.died) {
@@ -994,6 +998,8 @@ export class GameService {
                         damage: NPC_CONST.DAMAGE,
                         remainingHp: result.remainingHp,
                         hasArmor: result.hasArmor,
+                        x: player.x,
+                        y: player.y,
                     });
 
                     if (result.died) {
