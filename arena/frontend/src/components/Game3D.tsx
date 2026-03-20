@@ -34,6 +34,7 @@ import { useGameSockets } from '../hooks/useGameSockets';
 import { useGameInput } from '../hooks/useGameInput';
 import { useGameAudio } from '../hooks/useGameAudio';
 import { GameHUD } from './GameHUD';
+import { QualitySettings } from '../services/QualitySettings';
 
 /**
  * Outer wrapper: shows LoadingScreen until assets are ready,
@@ -131,7 +132,6 @@ function Game3DInner() {
     const r = new GameRenderer3D(container);
     rendererRef.current = r;
     const pp = r.initPostProcessing();
-    void pp; // reserved for Task 15 FPS probe
 
     const vfx = new VFXManager(r.scene);
     vfxRef.current = vfx;
@@ -165,9 +165,28 @@ function Game3DInner() {
     resizeObserver.observe(container);
 
     clockRef.current.start();
+    let frameCount = 0;
+    let fpsAccum = 0;
+    let probeComplete = false;
     const animate = () => {
       rafRef.current = requestAnimationFrame(animate);
       const delta = clockRef.current.getDelta();
+      if (!probeComplete && delta > 0) {
+          frameCount++;
+          fpsAccum += 1 / delta;
+          if (frameCount >= 60) {
+              const avgFps = fpsAccum / frameCount;
+              const currentTier = QualitySettings.current.tier;
+              if (avgFps < 30 && currentTier !== 'low') {
+                  QualitySettings.setTier('low');
+                  pp.applyQuality();
+              } else if (avgFps < 45 && currentTier === 'high') {
+                  QualitySettings.setTier('medium');
+                  pp.applyQuality();
+              }
+              probeComplete = true;
+          }
+      }
       const state = gameStateRef.current;
       if (!state) { r.render(); return; }
 
