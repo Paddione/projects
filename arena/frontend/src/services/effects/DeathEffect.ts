@@ -8,10 +8,9 @@ import {
     Vector3,
 } from 'three';
 import type { VFXEffect } from '../VFXManager';
-import { PARTICLE_SCALE } from '../VFXManager';
+import { QualitySettings } from '../QualitySettings';
 
 const LIFETIME = 0.6;
-const BASE_COUNT = 20;
 
 export class DeathEffect implements VFXEffect {
     private readonly parent: Group;
@@ -22,7 +21,7 @@ export class DeathEffect implements VFXEffect {
 
     constructor(parent: Group, worldPos: { x: number; y: number; z: number }, charColor: number) {
         this.parent = parent;
-        const count = Math.round(BASE_COUNT * PARTICLE_SCALE);
+        const count = QualitySettings.current.deathParticleCount;
         this.positions = new Float32Array(count * 3);
         this.velocities = [];
 

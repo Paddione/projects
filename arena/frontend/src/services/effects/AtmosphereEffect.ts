@@ -7,30 +7,32 @@ import {
     Scene,
     Vector3,
 } from 'three';
-import { PARTICLE_SCALE } from '../VFXManager';
+import { QualitySettings } from '../QualitySettings';
 
-const BASE_DUST_COUNT = 50;
 const DRIFT_SPEED = 0.2;
 const AREA_SIZE = 15;
 
-const isMobile = typeof window !== 'undefined' && (navigator.maxTouchPoints > 0);
-
 export class AtmosphereEffect {
     private readonly scene: Scene;
-    private readonly dustMesh: Points;
+    private readonly dustMesh: Points | null;
     private readonly dustVelocities: Vector3[];
     private readonly dustPositions: Float32Array;
 
     constructor(scene: Scene) {
         this.scene = scene;
 
-        if (!isMobile) {
-            scene.fog = new FogExp2(0x0a0b1a, 0.015);
+        if (QualitySettings.current.fogEnabled) {
+            scene.fog = new FogExp2(0x0a0b1a, QualitySettings.current.fogDensity);
         }
 
-        const count = Math.round(BASE_DUST_COUNT * PARTICLE_SCALE);
+        const count = QualitySettings.current.dustParticleCount;
         this.dustPositions = new Float32Array(count * 3);
         this.dustVelocities = [];
+
+        if (count === 0) {
+            this.dustMesh = null;
+            return;
+        }
 
         for (let i = 0; i < count; i++) {
             this.dustPositions[i * 3] = (Math.random() - 0.5) * AREA_SIZE * 2;
@@ -60,6 +62,8 @@ export class AtmosphereEffect {
     }
 
     update(delta: number): void {
+        if (!this.dustMesh) return;
+
         const posAttr = this.dustMesh.geometry.getAttribute('position');
         const arr = posAttr.array as Float32Array;
 
@@ -76,9 +80,11 @@ export class AtmosphereEffect {
     }
 
     dispose(): void {
-        this.scene.remove(this.dustMesh);
-        this.dustMesh.geometry.dispose();
-        (this.dustMesh.material as PointsMaterial).dispose();
+        if (this.dustMesh) {
+            this.scene.remove(this.dustMesh);
+            this.dustMesh.geometry.dispose();
+            (this.dustMesh.material as PointsMaterial).dispose();
+        }
         this.scene.fog = null;
     }
 }

@@ -8,10 +8,9 @@ import {
     Vector3,
 } from 'three';
 import type { VFXEffect } from '../VFXManager';
-import { PARTICLE_SCALE } from '../VFXManager';
+import { QualitySettings } from '../QualitySettings';
 
 const LIFETIME = 0.3; // 300ms
-const BASE_COUNT = 12;
 const SPEED_MIN = 2;
 const SPEED_MAX = 4;
 const SIZE = 0.05;
@@ -25,7 +24,7 @@ export class ImpactEffect implements VFXEffect {
 
     constructor(parent: Group, worldPos: { x: number; y: number; z: number }) {
         this.parent = parent;
-        const count = Math.round(BASE_COUNT * PARTICLE_SCALE);
+        const count = QualitySettings.current.impactParticleCount;
         this.positions = new Float32Array(count * 3);
         this.velocities = [];
 

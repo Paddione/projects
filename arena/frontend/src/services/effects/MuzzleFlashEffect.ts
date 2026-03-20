@@ -9,11 +9,10 @@ import {
     Vector3,
 } from 'three';
 import type { VFXEffect } from '../VFXManager';
-import { PARTICLE_SCALE } from '../VFXManager';
+import { QualitySettings } from '../QualitySettings';
 
 const LIFETIME = 0.1; // 100ms
 const FLASH_SIZE = 0.3;
-const SPARK_COUNT = 6;
 
 export class MuzzleFlashEffect implements VFXEffect {
     private readonly parent: Group;
@@ -36,7 +35,7 @@ export class MuzzleFlashEffect implements VFXEffect {
         this.flash.position.set(worldPos.x, worldPos.y, worldPos.z);
         parent.add(this.flash);
 
-        const count = Math.round(SPARK_COUNT * PARTICLE_SCALE);
+        const count = QualitySettings.current.muzzleSparkCount;
         this.sparkPositions = new Float32Array(count * 3);
         this.sparkVelocities = [];
 

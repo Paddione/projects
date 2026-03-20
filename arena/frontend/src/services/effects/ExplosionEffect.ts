@@ -11,16 +11,15 @@ import {
     Vector3,
 } from 'three';
 import type { VFXEffect } from '../VFXManager';
-import { PARTICLE_SCALE } from '../VFXManager';
+import { QualitySettings } from '../QualitySettings';
 
 const LIFETIME = 0.6;
 const SHOCKWAVE_DURATION = 0.4;
 const LIGHT_DURATION = 0.2;
-const BASE_PARTICLE_COUNT = 30;
 
 export class ExplosionEffect implements VFXEffect {
     private readonly parent: Group;
-    private readonly shockwave: Mesh;
+    private readonly shockwave: Mesh | null;
     private readonly particles: Points;
     private readonly light: PointLight;
     private readonly velocities: Vector3[];
@@ -32,20 +31,24 @@ export class ExplosionEffect implements VFXEffect {
         this.parent = parent;
         this.targetRadius = radiusWorld;
 
-        // Shockwave ring (torus)
-        const shockGeo = new TorusGeometry(0.01, 0.03, 8, 32);
-        const shockMat = new MeshBasicMaterial({
-            color: 0x00f2ff,
-            transparent: true,
-            opacity: 0.8,
-        });
-        this.shockwave = new Mesh(shockGeo, shockMat);
-        this.shockwave.position.set(worldPos.x, 0.05, worldPos.z);
-        this.shockwave.rotation.x = -Math.PI / 2;
-        parent.add(this.shockwave);
+        // Shockwave ring (torus) — optional based on quality tier
+        if (QualitySettings.current.showShockwave) {
+            const shockGeo = new TorusGeometry(0.01, 0.03, 8, 32);
+            const shockMat = new MeshBasicMaterial({
+                color: 0x00f2ff,
+                transparent: true,
+                opacity: 0.8,
+            });
+            this.shockwave = new Mesh(shockGeo, shockMat);
+            this.shockwave.position.set(worldPos.x, 0.05, worldPos.z);
+            this.shockwave.rotation.x = -Math.PI / 2;
+            parent.add(this.shockwave);
+        } else {
+            this.shockwave = null;
+        }
 
         // Debris particles
-        const count = Math.round(BASE_PARTICLE_COUNT * PARTICLE_SCALE);
+        const count = QualitySettings.current.explosionParticleCount;
         this.positions = new Float32Array(count * 3);
         this.velocities = [];
 
@@ -88,13 +91,15 @@ export class ExplosionEffect implements VFXEffect {
         const t = this.elapsed / LIFETIME;
 
         // Shockwave expansion
-        if (this.elapsed < SHOCKWAVE_DURATION) {
-            const st = this.elapsed / SHOCKWAVE_DURATION;
-            const scale = st * this.targetRadius;
-            this.shockwave.scale.set(scale, scale, 1);
-            (this.shockwave.material as MeshBasicMaterial).opacity = 0.8 * (1 - st);
-        } else {
-            this.shockwave.visible = false;
+        if (this.shockwave) {
+            if (this.elapsed < SHOCKWAVE_DURATION) {
+                const st = this.elapsed / SHOCKWAVE_DURATION;
+                const scale = st * this.targetRadius;
+                this.shockwave.scale.set(scale, scale, 1);
+                (this.shockwave.material as MeshBasicMaterial).opacity = 0.8 * (1 - st);
+            } else {
+                this.shockwave.visible = false;
+            }
         }
 
         // Light decay
@@ -125,11 +130,13 @@ export class ExplosionEffect implements VFXEffect {
     }
 
     dispose(): void {
-        this.parent.remove(this.shockwave);
+        if (this.shockwave) {
+            this.parent.remove(this.shockwave);
+            (this.shockwave.geometry as TorusGeometry).dispose();
+            (this.shockwave.material as MeshBasicMaterial).dispose();
+        }
         this.parent.remove(this.particles);
         this.parent.remove(this.light);
-        (this.shockwave.geometry as TorusGeometry).dispose();
-        (this.shockwave.material as MeshBasicMaterial).dispose();
         this.particles.geometry.dispose();
         (this.particles.material as PointsMaterial).dispose();
         this.light.dispose();

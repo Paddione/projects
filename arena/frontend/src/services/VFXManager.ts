@@ -1,4 +1,5 @@
 import { Group, Scene, Vector3 } from 'three';
+import { QualitySettings } from './QualitySettings';
 
 /** Base interface for all VFX effects. */
 export interface VFXEffect {
@@ -6,10 +7,6 @@ export interface VFXEffect {
     update(delta: number): boolean;
     dispose(): void;
 }
-
-const isMobile = typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
-/** Temporary quality scale — replaced by QualitySettings in Wave 3. */
-export const PARTICLE_SCALE = isMobile ? 0.5 : 1.0;
 
 export class VFXManager {
     readonly effectGroup: Group;
@@ -72,13 +69,13 @@ export class VFXManager {
     }
 
     triggerShake(type: 'hit' | 'explosion'): void {
-        const mobileScale = isMobile ? 0.5 : 1.0;
+        const scale = QualitySettings.current.shakeScale;
         if (type === 'hit') {
-            this.shakeIntensity = 0.15 * mobileScale;
+            this.shakeIntensity = 0.15 * scale;
             this.shakeDuration = 0.2;
             this.shakeType = 'sine';
         } else {
-            this.shakeIntensity = 0.4 * mobileScale;
+            this.shakeIntensity = 0.4 * scale;
             this.shakeDuration = 0.4;
             this.shakeType = 'jitter';
         }
