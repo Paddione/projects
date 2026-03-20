@@ -32,6 +32,7 @@ export class GameRenderer3D {
     readonly playerGroup: Group;
     readonly npcGroup: Group;
     readonly zoneGroup: Group;
+    readonly effectGroup: Group;
 
     private readonly lightingRig: LightingRig;
     private readonly container: HTMLElement;
@@ -87,6 +88,7 @@ export class GameRenderer3D {
         this.playerGroup = new Group();
         this.npcGroup = new Group();
         this.zoneGroup = new Group();
+        this.effectGroup = new Group();
 
         this.scene.add(
             this.terrainGroup,
@@ -96,6 +98,7 @@ export class GameRenderer3D {
             this.playerGroup,
             this.npcGroup,
             this.zoneGroup,
+            this.effectGroup,
         );
 
         // Character manager (shared model cache)
@@ -123,6 +126,13 @@ export class GameRenderer3D {
             wz + this.cameraOffset.z,
         );
         this.camera.lookAt(wx, 0, wz);
+    }
+
+    /** Apply camera shake offset (added to camera position each frame). */
+    applyCameraShake(offset: { x: number; y: number; z: number }): void {
+        this.camera.position.x += offset.x;
+        this.camera.position.y += offset.y;
+        this.camera.position.z += offset.z;
     }
 
     /** Get the elapsed delta from the internal clock. */
