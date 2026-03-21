@@ -191,6 +191,33 @@ app.post('/api/players', async (req, res) => {
             return res.status(401).json({ error: 'Not authenticated' });
         }
         const { selectedCharacter } = req.body;
+
+        // Validate character ownership
+        const baseChar = (selectedCharacter || 'student').replace('_f', '');
+        if (baseChar !== 'student') {
+            try {
+                const profileRes = await authFetch('/api/profile', {
+                    headers: { Cookie: req.headers.cookie || '' },
+                });
+                if (profileRes.ok) {
+                    const profile = await profileRes.json();
+                    const ownedIds = (profile.inventory || [])
+                        .filter((item: any) => item.itemType === 'character')
+                        .map((item: any) => item.itemId.replace('character_', ''));
+                    if (!ownedIds.includes(baseChar)) {
+                        res.status(403).json({ error: 'Character not purchased' });
+                        return;
+                    }
+                } else {
+                    res.status(503).json({ error: 'Cannot verify character ownership' });
+                    return;
+                }
+            } catch {
+                res.status(503).json({ error: 'Cannot verify character ownership' });
+                return;
+            }
+        }
+
         const db = DatabaseService.getInstance();
         const result = await db.query(
             `INSERT INTO players (auth_user_id, username, selected_character)
