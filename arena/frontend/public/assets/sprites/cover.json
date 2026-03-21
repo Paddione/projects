@@ -1,67 +1,19 @@
 {
   "frames": {
-    "bush/bush-00": {
+    "building/building-00": {
       "frame": {
         "x": 2,
         "y": 2,
-        "w": 64,
-        "h": 64
-      },
-      "rotated": false,
-      "trimmed": false,
-      "spriteSourceSize": {
-        "x": 0,
-        "y": 0,
-        "w": 64,
-        "h": 64
-      },
-      "sourceSize": {
-        "w": 64,
-        "h": 64
-      },
-      "pivot": {
-        "x": 0.5,
-        "y": 0.5
-      }
-    },
-    "pillar/pillar-00": {
-      "frame": {
-        "x": 2,
-        "y": 70,
-        "w": 64,
-        "h": 64
-      },
-      "rotated": false,
-      "trimmed": false,
-      "spriteSourceSize": {
-        "x": 0,
-        "y": 0,
-        "w": 64,
-        "h": 64
-      },
-      "sourceSize": {
-        "w": 64,
-        "h": 64
-      },
-      "pivot": {
-        "x": 0.5,
-        "y": 0.5
-      }
-    },
-    "wall_cover/wall_cover-00": {
-      "frame": {
-        "x": 2,
-        "y": 138,
-        "w": 32,
-        "h": 64
+        "w": 38,
+        "h": 55
       },
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 0,
+        "x": 11,
         "y": 0,
-        "w": 32,
-        "h": 64
+        "w": 38,
+        "h": 55
       },
       "sourceSize": {
         "w": 64,
@@ -72,44 +24,92 @@
         "y": 0.5
       }
     },
-    "crate/crate-00": {
+    "hedge/hedge-00": {
       "frame": {
         "x": 2,
-        "y": 206,
-        "w": 46,
-        "h": 39
-      },
-      "rotated": false,
-      "trimmed": true,
-      "spriteSourceSize": {
-        "x": 8,
-        "y": 13,
-        "w": 46,
-        "h": 39
-      },
-      "sourceSize": {
-        "w": 64,
-        "h": 64
-      },
-      "pivot": {
-        "x": 0.5,
-        "y": 0.5
-      }
-    },
-    "water/water-00": {
-      "frame": {
-        "x": 38,
-        "y": 138,
+        "y": 61,
         "w": 30,
-        "h": 30
+        "h": 54
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 18,
+        "y": 0,
+        "w": 30,
+        "h": 54
+      },
+      "sourceSize": {
+        "w": 64,
+        "h": 64
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "fountain/fountain-00": {
+      "frame": {
+        "x": 2,
+        "y": 119,
+        "w": 41,
+        "h": 53
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 12,
+        "y": 0,
+        "w": 41,
+        "h": 53
+      },
+      "sourceSize": {
+        "w": 64,
+        "h": 64
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "pond/pond-00": {
+      "frame": {
+        "x": 36,
+        "y": 61,
+        "w": 35,
+        "h": 52
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 15,
+        "y": 0,
+        "w": 35,
+        "h": 52
+      },
+      "sourceSize": {
+        "w": 64,
+        "h": 64
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "bench/bench-00": {
+      "frame": {
+        "x": 44,
+        "y": 2,
+        "w": 34,
+        "h": 49
       },
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
         "x": 17,
-        "y": 17,
-        "w": 30,
-        "h": 30
+        "y": 0,
+        "w": 34,
+        "h": 49
       },
       "sourceSize": {
         "w": 64,

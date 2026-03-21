@@ -4,20 +4,20 @@
       "frame": {
         "x": 2,
         "y": 2,
-        "w": 512,
-        "h": 512
+        "w": 16,
+        "h": 16
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 512,
-        "h": 512
+        "w": 16,
+        "h": 16
       },
       "sourceSize": {
-        "w": 512,
-        "h": 512
+        "w": 16,
+        "h": 16
       },
       "pivot": {
         "x": 0.5,
@@ -27,21 +27,21 @@
     "heart_empty/heart_empty-00": {
       "frame": {
         "x": 2,
-        "y": 518,
-        "w": 512,
-        "h": 512
+        "y": 22,
+        "w": 16,
+        "h": 16
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 512,
-        "h": 512
+        "w": 16,
+        "h": 16
       },
       "sourceSize": {
-        "w": 512,
-        "h": 512
+        "w": 16,
+        "h": 16
       },
       "pivot": {
         "x": 0.5,
@@ -51,21 +51,21 @@
     "heart_full/heart_full-00": {
       "frame": {
         "x": 2,
-        "y": 1034,
-        "w": 512,
-        "h": 512
+        "y": 42,
+        "w": 16,
+        "h": 16
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 512,
-        "h": 512
+        "w": 16,
+        "h": 16
       },
       "sourceSize": {
-        "w": 512,
-        "h": 512
+        "w": 16,
+        "h": 16
       },
       "pivot": {
         "x": 0.5,
@@ -74,70 +74,22 @@
     },
     "melee_icon/melee_icon-00": {
       "frame": {
-        "x": 518,
-        "y": 2,
-        "w": 512,
-        "h": 512
+        "x": 2,
+        "y": 62,
+        "w": 16,
+        "h": 16
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 512,
-        "h": 512
+        "w": 16,
+        "h": 16
       },
       "sourceSize": {
-        "w": 512,
-        "h": 512
-      },
-      "pivot": {
-        "x": 0.5,
-        "y": 0.5
-      }
-    },
-    "round_pip_off/round_pip_off-00": {
-      "frame": {
-        "x": 1034,
-        "y": 2,
-        "w": 512,
-        "h": 512
-      },
-      "rotated": false,
-      "trimmed": false,
-      "spriteSourceSize": {
-        "x": 0,
-        "y": 0,
-        "w": 512,
-        "h": 512
-      },
-      "sourceSize": {
-        "w": 512,
-        "h": 512
-      },
-      "pivot": {
-        "x": 0.5,
-        "y": 0.5
-      }
-    },
-    "round_pip_on/round_pip_on-00": {
-      "frame": {
-        "x": 518,
-        "y": 518,
-        "w": 512,
-        "h": 512
-      },
-      "rotated": false,
-      "trimmed": false,
-      "spriteSourceSize": {
-        "x": 0,
-        "y": 0,
-        "w": 512,
-        "h": 512
-      },
-      "sourceSize": {
-        "w": 512,
-        "h": 512
+        "w": 16,
+        "h": 16
       },
       "pivot": {
         "x": 0.5,
@@ -146,22 +98,70 @@
     },
     "shield/shield-00": {
       "frame": {
-        "x": 518,
-        "y": 1034,
-        "w": 512,
-        "h": 512
+        "x": 2,
+        "y": 82,
+        "w": 16,
+        "h": 16
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 512,
-        "h": 512
+        "w": 16,
+        "h": 16
       },
       "sourceSize": {
-        "w": 512,
-        "h": 512
+        "w": 16,
+        "h": 16
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "round_pip_off/round_pip_off-00": {
+      "frame": {
+        "x": 2,
+        "y": 102,
+        "w": 8,
+        "h": 8
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 8,
+        "h": 8
+      },
+      "sourceSize": {
+        "w": 8,
+        "h": 8
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "round_pip_on/round_pip_on-00": {
+      "frame": {
+        "x": 2,
+        "y": 114,
+        "w": 8,
+        "h": 8
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 8,
+        "h": 8
+      },
+      "sourceSize": {
+        "w": 8,
+        "h": 8
       },
       "pivot": {
         "x": 0.5,
@@ -175,8 +175,8 @@
     "image": "ui.png",
     "format": "RGBA8888",
     "size": {
-      "w": 2048,
-      "h": 2048
+      "w": 32,
+      "h": 128
     },
     "scale": 1
   }

@@ -160,27 +160,88 @@ async function packCategory(category: string, manifest: Manifest, rendersDir: st
 
     ensureDir(spritesOutputDir);
 
-    for (const result of results) {
-      if (result.name.endsWith('.png')) {
-        const pngPath = path.join(spritesOutputDir, `${category}.png`);
-        fs.writeFileSync(pngPath, result.buffer);
-        console.log(`    → ${pngPath} (${(result.buffer.length / 1024).toFixed(0)}KB)`);
-      } else if (result.name.endsWith('.json')) {
-        // JsonHash output is already PixiJS-compatible, just add animations
-        const packerData = JSON.parse(result.buffer.toString());
-        const animations = addAnimations(packerData.frames || {}, category, manifest);
-        if (Object.keys(animations).length > 0) {
-          packerData.animations = animations;
+    // Separate PNG and JSON results, pairing them by page index
+    const pngResults = results.filter(r => r.name.endsWith('.png'));
+    const jsonResults = results.filter(r => r.name.endsWith('.json'));
+    const pageCount = pngResults.length;
+
+    // PixiJS multi-page spritesheet format:
+    //   Page 0: {category}.json + {category}.png (main, has related_multi_packs)
+    //   Page N: {category}-N.json + {category}-N.png
+    // PixiJS auto-loads related packs when loading the main spritesheet.
+
+    const pageJsonNames: string[] = [];
+    let totalFrames = 0;
+
+    for (let i = 0; i < pageCount; i++) {
+      const pageSuffix = i === 0 ? '' : `-${i}`;
+      const pngName = `${category}${pageSuffix}.png`;
+      const jsonName = `${category}${pageSuffix}.json`;
+      pageJsonNames.push(jsonName);
+
+      // Write PNG
+      const pngPath = path.join(spritesOutputDir, pngName);
+      fs.writeFileSync(pngPath, pngResults[i].buffer);
+      console.log(`    → ${pngPath} (${(pngResults[i].buffer.length / 1024).toFixed(0)}KB)`);
+
+      // Write JSON for this page
+      if (i < jsonResults.length) {
+        const packerData = JSON.parse(jsonResults[i].buffer.toString());
+        const frameCount = Object.keys(packerData.frames || {}).length;
+        totalFrames += frameCount;
+
+        // Add animations only to the main page (page 0)
+        if (i === 0) {
+          // Collect ALL frames across all pages for animation grouping
+          const allFrames: Record<string, any> = {};
+          for (const jr of jsonResults) {
+            const pd = JSON.parse(jr.buffer.toString());
+            Object.assign(allFrames, pd.frames || {});
+          }
+          const animations = addAnimations(allFrames, category, manifest);
+          if (Object.keys(animations).length > 0) {
+            packerData.animations = animations;
+          }
         }
-        // Add image reference for PixiJS Assets loader
+
+        // Set image reference and multi-pack links
         if (packerData.meta) {
-          packerData.meta.image = `${category}.png`;
+          packerData.meta.image = pngName;
+          if (pageCount > 1 && i === 0) {
+            // Main page lists all other pages
+            packerData.meta.related_multi_packs = pageJsonNames.slice(1)
+              .concat(Array.from({ length: pageCount - 1 - i }, (_, j) => `${category}-${j + i + 1}.json`))
+              .filter((v, idx, arr) => arr.indexOf(v) === idx);
+          }
         }
-        const jsonPath = path.join(spritesOutputDir, `${category}.json`);
+
+        const jsonPath = path.join(spritesOutputDir, jsonName);
         fs.writeFileSync(jsonPath, JSON.stringify(packerData, null, 2));
-        console.log(`    → ${jsonPath} (${Object.keys(packerData.frames || {}).length} frames)`);
+        console.log(`    → ${jsonPath} (${frameCount} frames)`);
       }
     }
+
+    // Fix: update main page's related_multi_packs now that we know all page names
+    if (pageCount > 1) {
+      const mainJsonPath = path.join(spritesOutputDir, `${category}.json`);
+      const mainData = JSON.parse(fs.readFileSync(mainJsonPath, 'utf-8'));
+      mainData.meta.related_multi_packs = pageJsonNames.slice(1);
+      // Each sub-page also needs its own image reference
+      fs.writeFileSync(mainJsonPath, JSON.stringify(mainData, null, 2));
+    }
+
+    // Also write per-page JSON image refs for sub-pages
+    for (let i = 1; i < pageCount; i++) {
+      const jsonPath = path.join(spritesOutputDir, pageJsonNames[i]);
+      const data = JSON.parse(fs.readFileSync(jsonPath, 'utf-8'));
+      if (data.meta) {
+        data.meta.image = `${category}-${i}.png`;
+      }
+      fs.writeFileSync(jsonPath, JSON.stringify(data, null, 2));
+    }
+
+    console.log(`    Total: ${totalFrames} frames across ${pageCount} page(s)`);
+
   } catch (err) {
     console.error(`  [ERROR] Packing ${category} failed:`, err);
   }

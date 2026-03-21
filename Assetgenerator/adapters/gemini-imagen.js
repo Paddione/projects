@@ -8,10 +8,22 @@ import https from 'node:https';
  *
  * Requires: GEMINI_API_KEY environment variable
  * Models: imagen-4.0-generate-001 (standard), imagen-4.0-fast-generate-001 (fast)
+ *
+ * Throws RateLimitError on 429/quota exhaustion so the server can fall back
+ * to the next backend in the priority chain.
  */
 
 const API_BASE = 'https://generativelanguage.googleapis.com/v1beta/models';
 const DEFAULT_MODEL = 'imagen-4.0-generate-001';
+
+/** Thrown when Gemini returns 429 or quota-related 403 */
+export class RateLimitError extends Error {
+  constructor(message, statusCode) {
+    super(message);
+    this.name = 'RateLimitError';
+    this.statusCode = statusCode;
+  }
+}
 
 function apiRequest(model, apiKey, body) {
   return new Promise((resolve, reject) => {
@@ -28,6 +40,12 @@ function apiRequest(model, apiKey, body) {
       let data = '';
       res.on('data', (chunk) => { data += chunk; });
       res.on('end', () => {
+        if (res.statusCode === 429) {
+          return reject(new RateLimitError(`Gemini rate limited (429): ${data.slice(0, 300)}`, 429));
+        }
+        if (res.statusCode === 403 && data.includes('quota')) {
+          return reject(new RateLimitError(`Gemini quota exhausted (403): ${data.slice(0, 300)}`, 403));
+        }
         if (res.statusCode !== 200) {
           return reject(new Error(`Imagen API ${res.statusCode}: ${data.slice(0, 500)}`));
         }
@@ -56,13 +74,16 @@ export async function generate({ id, asset, config, libraryRoot }) {
   const outputPath = join(outputDir, `${id}.png`);
 
   const basePrompt = asset.prompt || `${asset.category} game asset: ${id}`;
-  const prompt = `${basePrompt}, no text, no letters, no words, no labels, no watermark, no signature`;
+  // Append 3D style directive and safety suffix
+  const styleDirective = '3D rendered game asset, stylized low-poly 3D model, clean geometry, soft studio lighting, isometric perspective';
+  const safetyClause = 'no text, no letters, no words, no labels, no watermark, no signature';
+  const prompt = `${basePrompt}, ${styleDirective}, ${safetyClause}`;
   const resolution = asset.conceptResolution || 1024;
 
   // Map resolution to Imagen imageSize
   const imageSize = resolution >= 2048 ? '2K' : '1K';
 
-  console.log(`  [Imagen] Generating concept for ${id}: "${prompt.slice(0, 80)}..."`);
+  console.log(`  [Imagen] Generating concept for ${id}: "${prompt.slice(0, 100)}..."`);
 
   const response = await apiRequest(DEFAULT_MODEL, apiKey, {
     instances: [{ prompt }],

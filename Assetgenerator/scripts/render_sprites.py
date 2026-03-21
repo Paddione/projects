@@ -4,9 +4,14 @@ Phase 3: Blender Sprite Rendering
 Imports 3D models (.glb) and renders them as 2D sprite frames from an orthographic
 top-down camera at 60 degree angle, producing individual PNGs for sprite sheet packing.
 
+Supports both static (unrigged) and rigged models. Rigged models get per-pose bone
+rotations applied before rendering, producing visually distinct weapon stances.
+
 Usage:
     blender --background --python render_sprites.py -- [--category CATEGORY] [--id ASSET_ID]
                                                        [--model PATH] [--template PATH] [--output DIR]
+                                                       [--poses stand,gun,machine,reload,hold,silencer]
+                                                       [--force]
 
 Note: Must be run via Blender's Python interpreter. The script uses Blender's bpy module.
 """
@@ -47,6 +52,120 @@ DIRECTIONS = {
     "W":  270,
     "NW": 315,
 }
+
+# ---------------------------------------------------------------------------
+# Pose presets — bone rotation overrides for each weapon stance.
+# Angles are in degrees, applied as local Euler XYZ deltas from rest pose.
+# Bone names match the 21-bone skeleton from simple_rig.py.
+#
+# Convention: X = pitch (forward/back), Y = roll, Z = yaw (left/right)
+# Positive X on arms = raise forward; positive Z on right arm = swing outward
+# ---------------------------------------------------------------------------
+POSE_PRESETS = {
+    "stand": {
+        # Rest pose — no overrides, arms relaxed at sides
+    },
+    "gun": {
+        # Pistol stance: right arm extended forward, left relaxed
+        "upper_arm.R": (-55, 0, -15),
+        "forearm.R":   (-30, 0, 0),
+        "hand.R":      (-10, 0, 0),
+        "upper_arm.L": (-10, 0, 10),
+        "spine":       (-5, 0, 0),
+    },
+    "machine": {
+        # Machine gun: both arms forward gripping weapon, slight lean
+        "upper_arm.R": (-50, 0, -20),
+        "forearm.R":   (-40, 0, 0),
+        "hand.R":      (-15, 0, 0),
+        "upper_arm.L": (-50, 0, 20),
+        "forearm.L":   (-40, 0, 0),
+        "hand.L":      (-15, 0, 0),
+        "spine":       (-8, 0, 0),
+        "chest":       (-5, 0, 0),
+    },
+    "reload": {
+        # Reloading: right arm bent at chest, left hand reaching to magazine
+        "upper_arm.R": (-40, 0, -10),
+        "forearm.R":   (-70, 0, 0),
+        "hand.R":      (-20, 0, 0),
+        "upper_arm.L": (-35, 0, 15),
+        "forearm.L":   (-80, 0, 0),
+        "hand.L":      (-10, 0, 0),
+        "spine":       (-10, 0, 0),
+        "neck":        (-10, 0, 0),
+    },
+    "hold": {
+        # Two-handed weapon hold: arms at mid-level, gripping at waist
+        "upper_arm.R": (-35, 0, -15),
+        "forearm.R":   (-45, 0, 0),
+        "hand.R":      (-10, 0, 0),
+        "upper_arm.L": (-35, 0, 15),
+        "forearm.L":   (-45, 0, 0),
+        "hand.L":      (-10, 0, 0),
+        "spine":       (-5, 0, 0),
+    },
+    "silencer": {
+        # Stealth stance: weapon raised and forward, slight crouch
+        "upper_arm.R": (-60, 0, -10),
+        "forearm.R":   (-25, 0, 0),
+        "hand.R":      (-5, 0, 0),
+        "upper_arm.L": (-30, 0, 15),
+        "forearm.L":   (-50, 0, 0),
+        "hand.L":      (-10, 0, 0),
+        "spine":       (-12, 0, 0),
+        "chest":       (-5, 0, 0),
+        "upper_leg.L": (-8, 0, 0),
+        "upper_leg.R": (-8, 0, 0),
+        "lower_leg.L": (12, 0, 0),
+        "lower_leg.R": (12, 0, 0),
+    },
+}
+
+
+def find_armature(objects):
+    """Find the armature object among imported objects (or their parents)."""
+    for obj in objects:
+        if obj.type == 'ARMATURE':
+            return obj
+    # Check parents — rigged GLBs often have armature as root
+    for obj in bpy.data.objects:
+        if obj.type == 'ARMATURE':
+            return obj
+    return None
+
+
+def apply_pose(armature, pose_name):
+    """Apply bone rotation overrides for the given pose preset.
+
+    Switches the armature to POSE mode, resets all bones to rest,
+    then applies the rotation deltas from POSE_PRESETS.
+    """
+    preset = POSE_PRESETS.get(pose_name, {})
+
+    # Ensure we're working with the armature
+    bpy.context.view_layer.objects.active = armature
+
+    # Reset all pose bones to rest position
+    for pb in armature.pose.bones:
+        pb.rotation_mode = 'XYZ'
+        pb.rotation_euler = (0, 0, 0)
+        pb.location = (0, 0, 0)
+        pb.scale = (1, 1, 1)
+
+    # Apply preset rotations
+    for bone_name, (rx, ry, rz) in preset.items():
+        pb = armature.pose.bones.get(bone_name)
+        if pb:
+            pb.rotation_mode = 'XYZ'
+            pb.rotation_euler = (math.radians(rx), math.radians(ry), math.radians(rz))
+        else:
+            print(f"    [WARN] Bone '{bone_name}' not found in armature")
+
+    # Force dependency graph update so mesh deforms before render
+    bpy.context.view_layer.update()
+    if pose_name != "stand":
+        print(f"    Applied pose: {pose_name} ({len(preset)} bone overrides)")
 
 
 def load_manifest() -> dict:
@@ -193,7 +312,11 @@ def normalize_model(pivot, objects):
 
 
 def link_model_to_template(model_path: Path, position=(0, 0, 0)):
-    """Import a 3D model, apply vertex colors, and normalize to fit camera."""
+    """Import a 3D model, apply vertex colors, and normalize to fit camera.
+
+    Returns (outer_pivot, armature_or_None). If the model has an armature
+    (rigged GLB), the armature is returned so poses can be applied.
+    """
     model_path = Path(model_path)
     if not model_path.exists():
         raise FileNotFoundError(f"Model not found: {model_path}")
@@ -203,41 +326,58 @@ def link_model_to_template(model_path: Path, position=(0, 0, 0)):
 
     # Get the imported objects
     imported = [obj for obj in bpy.context.selected_objects]
-    if imported:
-        # Two-level pivot: inner for orientation/scale, outer for direction rotation
-        # This prevents render_character's rotation from overwriting the orientation fix
-        bpy.ops.object.empty_add(type='PLAIN_AXES', location=position)
-        inner_pivot = bpy.context.object
-        inner_pivot.name = "ModelInnerPivot"
+    if not imported:
+        return None, None
 
+    # Check for armature (rigged model)
+    armature = find_armature(imported)
+    mesh_objects = [obj for obj in imported if obj.type == 'MESH']
+    # Also grab meshes parented to the armature that weren't in selection
+    if armature:
+        for child in armature.children:
+            if child.type == 'MESH' and child not in mesh_objects:
+                mesh_objects.append(child)
+
+    # Two-level pivot: inner for orientation/scale, outer for direction rotation
+    bpy.ops.object.empty_add(type='PLAIN_AXES', location=position)
+    inner_pivot = bpy.context.object
+    inner_pivot.name = "ModelInnerPivot"
+
+    # Parent everything to inner pivot (armature if rigged, else raw meshes)
+    if armature:
+        armature.parent = inner_pivot
+        print(f"  Rigged model: {len(armature.pose.bones)} bones detected")
+    else:
         for obj in imported:
             obj.parent = inner_pivot
 
-        bpy.ops.object.empty_add(type='PLAIN_AXES', location=position)
-        outer_pivot = bpy.context.object
-        outer_pivot.name = "ModelPivot"
-        inner_pivot.parent = outer_pivot
+    bpy.ops.object.empty_add(type='PLAIN_AXES', location=position)
+    outer_pivot = bpy.context.object
+    outer_pivot.name = "ModelPivot"
+    inner_pivot.parent = outer_pivot
 
-        # Apply vertex color material (TripoSR uses vertex colors, not textures)
-        setup_vertex_color_material(imported)
+    # Apply vertex color material (TripoSR uses vertex colors, not textures)
+    setup_vertex_color_material(mesh_objects)
 
-        # Normalize: center, scale, orient to fit camera frame (applied to inner pivot)
-        normalize_model(inner_pivot, imported)
+    # Normalize: center, scale, orient to fit camera frame (applied to inner pivot)
+    normalize_model(inner_pivot, mesh_objects)
 
-        print(f"  Linked model: {model_path.name}")
-        return outer_pivot  # render_character rotates this one
-
-    return None
+    print(f"  Linked model: {model_path.name}")
+    return outer_pivot, armature
 
 
 def clear_model():
-    """Remove all mesh objects and empties (keep camera + lights)."""
+    """Remove all mesh objects, armatures, and empties (keep camera + lights)."""
     keep_types = {'CAMERA', 'LIGHT'}
     bpy.ops.object.select_all(action='DESELECT')
     for obj in bpy.data.objects:
         if obj.type not in keep_types:
             obj.select_set(True)
     bpy.ops.object.delete()
+    # Clean up orphaned armature data blocks
+    for arm in bpy.data.armatures:
+        if arm.users == 0:
+            bpy.data.armatures.remove(arm)
 
 
 
@@ -248,8 +388,12 @@ def render_frame(output_path: Path):
     bpy.ops.render.render(write_still=True)
 
 
-def render_character(char: dict, model_path: Path, template_path=None):
-    """Render all poses for a character across all directions using template."""
+def render_character(char: dict, model_path: Path, template_path=None, force=False):
+    """Render all poses for a character across all directions using template.
+
+    If the model has an armature (rigged), bone rotations from POSE_PRESETS
+    are applied for each pose. Otherwise, all poses render the same static mesh.
+    """
     char_id = char["id"]
     poses = char.get("poses", ["stand"])
     directions = char.get("directions", list(DIRECTIONS.keys()))
@@ -265,23 +409,33 @@ def render_character(char: dict, model_path: Path, template_path=None):
     scene = load_blender_template(tpath)
 
     # Link model to template
-    pivot = link_model_to_template(model_path)
+    pivot, armature = link_model_to_template(model_path)
     if not pivot:
         return
 
+    if armature:
+        print(f"  Posing enabled: {len(armature.pose.bones)} bones")
+    else:
+        print(f"  Static model (no armature) — all poses will look identical")
+
     for pose_name in poses:
+        # Apply pose bones if rigged
+        if armature:
+            apply_pose(armature, pose_name)
+
         for direction in directions:
             angle = DIRECTIONS.get(direction, 0)
 
             # Rotate model to face direction
             pivot.rotation_euler = (0, 0, math.radians(angle))
             pivot.location = (0, 0, 0)
+            bpy.context.view_layer.update()
 
             out_dir = ensure_output_dir("characters", char_id)
             filename = f"{char_id}-{pose_name}-{direction}.png"
             out_path = out_dir / filename
 
-            if not out_path.exists():
+            if force or not out_path.exists():
                 render_frame(out_path)
                 print(f"    {filename}")
 
@@ -303,7 +457,7 @@ def render_static(asset: dict, category: str, model_path: Path, template_path=No
     scene = load_blender_template(tpath)
 
     # Link model to template
-    pivot = link_model_to_template(model_path)
+    pivot, _armature = link_model_to_template(model_path)
     if not pivot:
         return
 
@@ -348,12 +502,15 @@ def main():
     parser.add_argument("--model", help="Model .glb path (overrides default)")
     parser.add_argument("--template", help="Template .blend path (overrides default)")
     parser.add_argument("--output", help="Output directory (overrides default)")
+    parser.add_argument("--poses", help="Comma-separated pose list (default: stand)")
+    parser.add_argument("--force", action="store_true", help="Re-render even if files exist")
     args = parser.parse_args(argv)
 
     global OUTPUT_BASE
     if args.output:
         OUTPUT_BASE = Path(args.output)
 
+    pose_list = args.poses.split(",") if args.poses else None
     frame_count = 0
 
     # Direct mode: --model, --id, and --category are all provided
@@ -364,10 +521,11 @@ def main():
             print(f"  [ERROR] Model not found: {model_path}")
             sys.exit(1)
 
-        asset_stub = {"id": args.id, "poses": ["stand"], "directions": list(DIRECTIONS.keys())}
+        default_poses = pose_list or ["stand", "gun", "machine", "reload", "hold", "silencer"]
+        asset_stub = {"id": args.id, "poses": default_poses, "directions": list(DIRECTIONS.keys())}
 
         if args.category == "characters":
-            render_character(asset_stub, model_path, template_path=args.template)
+            render_character(asset_stub, model_path, template_path=args.template, force=args.force)
             out_dir = OUTPUT_BASE / "characters" / args.id
         else:
             render_static(asset_stub, args.category, model_path, template_path=args.template)
@@ -391,12 +549,14 @@ def main():
         for char in manifest.get("characters", []):
             if args.id and char["id"] != args.id:
                 continue
+            if pose_list:
+                char = {**char, "poses": pose_list}
             if args.model:
                 model_path = Path(args.model)
             else:
                 model_path = MODELS_DIR / "characters" / f"{char['id']}.glb"
             if model_path.exists():
-                render_character(char, model_path, template_path=args.template)
+                render_character(char, model_path, template_path=args.template, force=args.force)
             else:
                 print(f"  [SKIP] No model for character {char['id']}")
 

@@ -1,8 +1,56 @@
 {
   "frames": {
-    "projectile/projectile-00": {
+    "muzzle_flash/muzzle_flash-00": {
       "frame": {
         "x": 2,
+        "y": 2,
+        "w": 64,
+        "h": 54
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 64,
+        "h": 54
+      },
+      "sourceSize": {
+        "w": 64,
+        "h": 64
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "melee_arc/melee_arc-00": {
+      "frame": {
+        "x": 70,
+        "y": 2,
+        "w": 64,
+        "h": 52
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 64,
+        "h": 52
+      },
+      "sourceSize": {
+        "w": 64,
+        "h": 64
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "projectile/projectile-00": {
+      "frame": {
+        "x": 138,
         "y": 2,
         "w": 22,
         "h": 29
@@ -31,14 +79,9 @@
     "image": "weapons.png",
     "format": "RGBA8888",
     "size": {
-      "w": 32,
+      "w": 256,
       "h": 64
     },
     "scale": 1
-  },
-  "animations": {
-    "projectile_idle": [
-      "projectile/projectile-00"
-    ]
   }
 }

@@ -96,10 +96,34 @@
         "y": 0.5
       }
     },
-    "wall/wall-00": {
+    "zone_overlay/zone_overlay-00": {
       "frame": {
         "x": 2,
         "y": 274,
+        "w": 64,
+        "h": 64
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 64,
+        "h": 64
+      },
+      "sourceSize": {
+        "w": 64,
+        "h": 64
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "wall/wall-00": {
+      "frame": {
+        "x": 2,
+        "y": 342,
         "w": 52,
         "h": 52
       },
@@ -123,7 +147,7 @@
     "boundary/boundary-00": {
       "frame": {
         "x": 2,
-        "y": 330,
+        "y": 398,
         "w": 64,
         "h": 37
       },

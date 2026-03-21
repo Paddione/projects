@@ -1,5 +1,6 @@
 import { resolve, join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { existsSync } from 'node:fs';
 import { enqueueJob } from '../worker-manager.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -15,12 +16,15 @@ const TEMPLATE_MAP = {
 };
 
 export async function generate({ id, asset, config, libraryRoot }) {
-  // Paths resolved for the worker machine
   const workerScript = join(PROJECT_ROOT, 'scripts', 'render_sprites.py');
-  const modelPath = join(libraryRoot, 'models', asset.category, `${id}.glb`);
   const templatePath = join(libraryRoot, 'blend', TEMPLATE_MAP[asset.category] || 'character.blend');
   const outputDir = join(libraryRoot, 'renders');
   const blenderPath = config.blenderPath || 'blender';
+
+  // Prefer rigged model for characters (enables per-pose bone rotations)
+  const riggedPath = join(libraryRoot, 'rigged', asset.category, `${id}.glb`);
+  const staticPath = join(libraryRoot, 'models', asset.category, `${id}.glb`);
+  const modelPath = existsSync(riggedPath) ? riggedPath : staticPath;
 
   const args = [
     '--background',
@@ -31,7 +35,18 @@ export async function generate({ id, asset, config, libraryRoot }) {
     '--model', modelPath,
     '--template', templatePath,
     '--output', outputDir,
+    '--force',
   ];
+
+  // Pass poses from asset definition (characters have multiple poses)
+  const poses = asset.poses || config.defaultPoses;
+  if (poses && poses.length > 0) {
+    args.push('--poses', poses.join(','));
+  }
+
+  if (modelPath === riggedPath) {
+    console.log(`  Using rigged model for ${id}`);
+  }
 
   const result = await enqueueJob({ cmd: blenderPath, args, cwd: PROJECT_ROOT, env: {} });
   if (result.code !== 0) throw new Error(`Blender render exited ${result.code}: ${result.stderr.slice(-500)}`);

@@ -4,16 +4,16 @@
       "frame": {
         "x": 2,
         "y": 2,
-        "w": 46,
-        "h": 46
+        "w": 39,
+        "h": 49
       },
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 10,
-        "y": 9,
-        "w": 46,
-        "h": 46
+        "x": 13,
+        "y": 0,
+        "w": 39,
+        "h": 49
       },
       "sourceSize": {
         "w": 64,
@@ -26,8 +26,8 @@
     },
     "armor_plate/armor_plate-00": {
       "frame": {
-        "x": 52,
-        "y": 2,
+        "x": 2,
+        "y": 55,
         "w": 35,
         "h": 34
       },
@@ -50,8 +50,8 @@
     },
     "health_pack/health_pack-00": {
       "frame": {
-        "x": 91,
-        "y": 2,
+        "x": 2,
+        "y": 93,
         "w": 23,
         "h": 22
       },
@@ -79,20 +79,9 @@
     "image": "items.png",
     "format": "RGBA8888",
     "size": {
-      "w": 128,
-      "h": 64
+      "w": 64,
+      "h": 128
     },
     "scale": 1
-  },
-  "animations": {
-    "health_pack_idle": [
-      "health_pack/health_pack-00"
-    ],
-    "armor_plate_idle": [
-      "armor_plate/armor_plate-00"
-    ],
-    "machine_gun_idle": [
-      "machine_gun/machine_gun-00"
-    ]
   }
 }

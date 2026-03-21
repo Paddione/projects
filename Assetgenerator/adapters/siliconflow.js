@@ -75,7 +75,9 @@ export async function generate({ id, asset, config, libraryRoot }) {
   if (!existsSync(outputDir)) mkdirSync(outputDir, { recursive: true });
   const outputPath = join(outputDir, `${id}.png`);
 
-  const prompt = asset.prompt || `${asset.category} game asset: ${id}`;
+  const basePrompt = asset.prompt || `${asset.category} game asset: ${id}`;
+  const styleDirective = '3D rendered game asset, stylized low-poly 3D model, clean geometry, soft studio lighting, isometric perspective';
+  const prompt = `${basePrompt}, ${styleDirective}`;
   const resolution = asset.conceptResolution || 1024;
 
   console.log(`  [SiliconFlow] Generating concept for ${id}: "${prompt.slice(0, 80)}..."`);

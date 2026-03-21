@@ -1,1 +1,2333 @@
-{"version":1,"assets":{}}
+{
+  "version": 1,
+  "assets": {
+    "student": {
+      "id": "student",
+      "name": "Student",
+      "category": "characters",
+      "tags": [
+        "arena"
+      ],
+      "prompt": "young university student character, casual hoodie and jeans, backpack, sneakers, determined expression, low-poly 3D model reference, isometric game sprite, bright cyan accent color, transparent background",
+      "poses": [
+        "stand",
+        "gun",
+        "machine",
+        "reload",
+        "hold",
+        "silencer"
+      ],
+      "directions": 8,
+      "size": 64,
+      "color": "#00f2ff",
+      "conceptBackend": "gemini-imagen",
+      "pipeline": {
+        "concept": {
+          "status": "done",
+          "generatedAt": "2026-03-16T00:41:59.522Z",
+          "path": "concepts/characters/student.png",
+          "backend": "gemini-imagen"
+        },
+        "model": {
+          "status": "done",
+          "generatedAt": "2026-03-16T00:50:57.091Z",
+          "backend": "triposr",
+          "path": "models/characters/student.glb"
+        },
+        "render": {
+          "status": "done",
+          "generatedAt": "2026-03-16T00:55:04.022Z",
+          "backend": "blender",
+          "frameCount": 8
+        },
+        "pack": {
+          "status": "done",
+          "generatedAt": "2026-03-16T00:55:21.625Z",
+          "backend": "packer"
+        }
+      },
+      "assignedTo": {}
+    },
+    "researcher": {
+      "id": "researcher",
+      "name": "Researcher",
+      "category": "characters",
+      "tags": [
+        "arena"
+      ],
+      "prompt": "single full-body male character, university researcher, lab coat over smart casual clothes, safety goggles on forehead, holding tablet, focused expression, mint green accent color, 3D character model reference sheet, A-pose, plain white background, no environment, no shadows, no text",
+      "poses": [
+        "stand",
+        "gun",
+        "machine",
+        "reload",
+        "hold",
+        "silencer"
+      ],
+      "directions": 8,
+      "size": 64,
+      "color": "#3eff8b",
+      "pipeline": {
+        "concept": {
+          "status": "done",
+          "generatedAt": "2026-03-15T22:22:30.355Z",
+          "backend": "gemini-imagen",
+          "path": "concepts/characters/researcher.png"
+        },
+        "model": {
+          "status": "done",
+          "generatedAt": "2026-03-16T00:57:20.145Z",
+          "backend": "triposr",
+          "path": "models/characters/researcher.glb"
+        },
+        "render": {
+          "status": "done",
+          "generatedAt": "2026-03-16T01:00:42.202Z",
+          "backend": "blender",
+          "frameCount": 8
+        },
+        "pack": {
+          "status": "done",
+          "generatedAt": "2026-03-16T01:06:47.717Z",
+          "backend": "packer"
+        }
+      },
+      "assignedTo": {
+        "arena": {
+          "atlas": "characters",
+          "syncedAt": "2026-03-16T05:32:13.795Z"
+        }
+      },
+      "conceptBackend": "gemini-imagen"
+    },
+    "professor": {
+      "id": "professor",
+      "name": "Professor",
+      "category": "characters",
+      "tags": [
+        "arena"
+      ],
+      "prompt": "senior university professor character, tweed jacket with elbow patches, bow tie, glasses, grey hair, authoritative stance, low-poly 3D model reference, isometric game sprite, vivid purple accent color, transparent background",
+      "poses": [
+        "stand",
+        "gun",
+        "machine",
+        "reload",
+        "hold",
+        "silencer"
+      ],
+      "directions": 8,
+      "size": 64,
+      "color": "#bc13fe",
+      "pipeline": {
+        "concept": {
+          "status": "done",
+          "generatedAt": "2026-03-18T19:19:51.742Z",
+          "backend": "gemini-imagen",
+          "path": "concepts/characters/professor.png"
+        },
+        "model": {
+          "status": "done",
+          "path": "models/characters/professor.glb",
+          "generatedAt": "2026-03-21T15:00:00Z"
+        },
+        "render": {
+          "status": "done",
+          "frameCount": 8,
+          "generatedAt": "2026-03-21T15:00:00Z"
+        },
+        "pack": {
+          "status": "done",
+          "generatedAt": "2026-03-21T15:00:00Z"
+        }
+      },
+      "assignedTo": {
+        "arena": {
+          "atlas": "characters",
+          "syncedAt": "2026-03-16T05:32:13.820Z"
+        }
+      },
+      "conceptBackend": "gemini-imagen"
+    },
+    "dean": {
+      "id": "dean",
+      "name": "Dean",
+      "category": "characters",
+      "tags": [
+        "arena"
+      ],
+      "prompt": "single full-body male character, university dean, formal dark tailored suit, gold tie pin, slicked-back silver hair, commanding posture, broad shoulders, gold accent details, 3D character model reference sheet, A-pose, plain white background, no environment, no shadows, no text",
+      "poses": [
+        "stand",
+        "gun",
+        "machine",
+        "reload",
+        "hold",
+        "silencer"
+      ],
+      "directions": 8,
+      "size": 64,
+      "color": "#ffd700",
+      "pipeline": {
+        "concept": {
+          "status": "done",
+          "generatedAt": "2026-03-15T22:51:27.603Z",
+          "backend": "gemini-imagen",
+          "path": "concepts/characters/dean.png"
+        },
+        "model": {
+          "status": "done",
+          "generatedAt": "2026-03-16T01:35:41.592050+00:00",
+          "backend": "triposr",
+          "path": "models/characters/dean.glb"
+        },
+        "render": {
+          "status": "done",
+          "generatedAt": "2026-03-16T01:35:41.592050+00:00",
+          "backend": "blender",
+          "frameCount": 8
+        },
+        "pack": {
+          "status": "done",
+          "generatedAt": "2026-03-16T01:35:41.592050+00:00",
+          "backend": "packer"
+        }
+      },
+      "assignedTo": {
+        "arena": {
+          "atlas": "characters",
+          "syncedAt": "2026-03-16T05:32:13.844Z"
+        }
+      },
+      "conceptBackend": "gemini-imagen"
+    },
+    "librarian": {
+      "id": "librarian",
+      "name": "Librarian",
+      "category": "characters",
+      "tags": [
+        "arena"
+      ],
+      "prompt": "single full-body male character, university librarian, cozy cardigan sweater over collared shirt, reading glasses on chain around neck, book tucked under arm, calm demeanor, coral pink accent color, 3D character model reference sheet, A-pose, plain white background, no environment, no shadows, no text",
+      "poses": [
+        "stand",
+        "gun",
+        "machine",
+        "reload",
+        "hold",
+        "silencer"
+      ],
+      "directions": 8,
+      "size": 64,
+      "color": "#ff6b9d",
+      "pipeline": {
+        "concept": {
+          "status": "done",
+          "generatedAt": "2026-03-18T19:21:37.281Z",
+          "backend": "gemini-imagen",
+          "path": "concepts/characters/librarian.png"
+        },
+        "model": {
+          "status": "done",
+          "path": "models/characters/librarian.glb",
+          "generatedAt": "2026-03-21T15:00:00Z"
+        },
+        "render": {
+          "status": "done",
+          "frameCount": 8,
+          "generatedAt": "2026-03-21T15:00:00Z"
+        },
+        "pack": {
+          "status": "done",
+          "generatedAt": "2026-03-21T15:00:00Z"
+        }
+      },
+      "assignedTo": {},
+      "conceptBackend": "gemini-imagen"
+    },
+    "projectile": {
+      "id": "projectile",
+      "name": "Projectile",
+      "category": "weapons",
+      "tags": [
+        "arena"
+      ],
+      "prompt": "3D rendered glowing energy projectile, sci-fi laser bolt, yellow-orange emissive glow, stylized game VFX, transparent background",
+      "poses": [
+        "idle"
+      ],
+      "directions": 1,
+      "size": 32,
+      "color": "#ffffff",
+      "pipeline": {
+        "concept": {
+          "status": "done",
+          "path": "concepts/weapons/projectile.png",
+          "generatedAt": "2026-03-15T04:40:18.448Z"
+        },
+        "model": {
+          "status": "done",
+          "path": "models/weapons/projectile.glb",
+          "generatedAt": "2026-03-15T04:40:18.550Z"
+        },
+        "render": {
+          "status": "done",
+          "frameCount": 1,
+          "generatedAt": "2026-03-15T04:40:18.565Z"
+        },
+        "pack": {
+          "status": "done",
+          "generatedAt": "2026-03-15T04:40:18.589Z"
+        }
+      },
+      "assignedTo": {
+        "arena": {
+          "atlas": "weapons",
+          "syncedAt": "2026-03-15T04:40:18.589Z"
+        }
+      },
+      "conceptBackend": "gemini-imagen"
+    },
+    "melee_arc": {
+      "id": "melee_arc",
+      "name": "Melee Arc",
+      "category": "weapons",
+      "tags": [
+        "arena"
+      ],
+      "prompt": "3D rendered sword slash arc effect, energy trail with particle sparks, white-blue emissive glow, stylized game VFX, transparent background",
+      "poses": [
+        "idle"
+      ],
+      "directions": 1,
+      "size": 48,
+      "color": "#ffffff",
+      "pipeline": {
+        "concept": {
+          "status": "done",
+          "generatedAt": "2026-03-16T05:30:22.666Z",
+          "backend": "gemini-imagen",
+          "path": "concepts/weapons/melee_arc.png"
+        },
+        "model": {
+          "status": "done",
+          "path": "models/weapons/melee_arc.glb",
+          "generatedAt": "2026-03-21T15:00:00Z"
+        },
+        "render": {
+          "status": "done",
+          "frameCount": 1,
+          "generatedAt": "2026-03-21T15:00:00Z"
+        },
+        "pack": {
+          "status": "done",
+          "generatedAt": "2026-03-21T15:00:00Z"
+        }
+      },
+      "assignedTo": {
+        "arena": {
+          "atlas": "weapons",
+          "syncedAt": "2026-03-15T04:40:18.668Z"
+        }
+      },
+      "conceptBackend": "gemini-imagen"
+    },
+    "muzzle_flash": {
+      "id": "muzzle_flash",
+      "name": "Muzzle Flash",
+      "category": "weapons",
+      "tags": [
+        "arena"
+      ],
+      "prompt": "3D rendered muzzle flash effect, bright yellow-white burst with volumetric sparks, stylized game VFX, transparent background",
+      "poses": [
+        "idle"
+      ],
+      "directions": 1,
+      "size": 32,
+      "color": "#ffffff",
+      "pipeline": {
+        "concept": {
+          "status": "done",
+          "generatedAt": "2026-03-15T21:58:07.710Z",
+          "backend": "gemini-imagen",
+          "path": "concepts/weapons/muzzle_flash.png"
+        },
+        "model": {
+          "status": "done",
+          "generatedAt": "2026-03-16T01:35:41.592050+00:00",
+          "backend": "triposr",
+          "path": "models/weapons/muzzle_flash.glb"
+        },
+        "render": {
+          "status": "done",
+          "generatedAt": "2026-03-16T01:35:41.592050+00:00",
+          "backend": "blender",
+          "frameCount": 1
+        },
+        "pack": {
+          "status": "done",
+          "generatedAt": "2026-03-15T04:40:18.778Z"
+        }
+      },
+      "assignedTo": {
+        "arena": {
+          "atlas": "weapons",
+          "syncedAt": "2026-03-15T04:40:18.778Z"
+        }
+      },
+      "conceptBackend": "gemini-imagen"
+    },
+    "health_pack": {
+      "id": "health_pack",
+      "name": "Health Pack",
+      "category": "items",
+      "tags": [
+        "arena"
+      ],
+      "prompt": "3D rendered red health pack with glowing cross symbol, stylized game item, clean geometry, soft studio lighting, isometric view, transparent background",
+      "poses": [
+        "idle"
+      ],
+      "directions": 1,
+      "size": 32,
+      "color": "#ffffff",
+      "pipeline": {
+        "concept": {
+          "status": "done",
+          "path": "concepts/items/health_pack.png",
+          "generatedAt": "2026-03-15T04:40:18.800Z"
+        },
+        "model": {
+          "status": "done",
+          "path": "models/items/health_pack.glb",
+          "generatedAt": "2026-03-15T04:40:18.860Z"
+        },
+        "render": {
+          "status": "done",
+          "frameCount": 1,
+          "generatedAt": "2026-03-15T04:40:18.873Z"
+        },
+        "pack": {
+          "status": "done",
+          "generatedAt": "2026-03-15T04:40:18.894Z"
+        }
+      },
+      "assignedTo": {
+        "arena": {
+          "atlas": "items",
+          "syncedAt": "2026-03-15T04:40:18.894Z"
+        }
+      },
+      "conceptBackend": "gemini-imagen"
+    },
+    "armor_plate": {
+      "id": "armor_plate",
+      "name": "Armor Plate",
+      "category": "items",
+      "tags": [
+        "arena"
+      ],
+      "prompt": "3D rendered blue armor plate pickup with glowing shield icon, stylized game item, clean geometry, soft studio lighting, isometric view, transparent background",
+      "poses": [
+        "idle"
+      ],
+      "directions": 1,
+      "size": 32,
+      "color": "#ffffff",
+      "pipeline": {
+        "concept": {
+          "status": "done",
+          "path": "concepts/items/armor_plate.png",
+          "generatedAt": "2026-03-15T04:40:18.914Z"
+        },
+        "model": {
+          "status": "done",
+          "path": "models/items/armor_plate.glb",
+          "generatedAt": "2026-03-15T04:40:18.950Z"
+        },
+        "render": {
+          "status": "done",
+          "frameCount": 1,
+          "generatedAt": "2026-03-15T04:40:18.960Z"
+        },
+        "pack": {
+          "status": "done",
+          "generatedAt": "2026-03-15T04:40:18.989Z"
+        }
+      },
+      "assignedTo": {
+        "arena": {
+          "atlas": "items",
+          "syncedAt": "2026-03-15T04:40:18.989Z"
+        }
+      },
+      "conceptBackend": "gemini-imagen"
+    },
+    "machine_gun": {
+      "id": "machine_gun",
+      "name": "Machine Gun",
+      "category": "items",
+      "tags": [
+        "arena"
+      ],
+      "prompt": "3D rendered machine gun pickup, sci-fi automatic weapon with glowing ammo indicator, stylized game item, clean geometry, soft studio lighting, isometric view, transparent background",
+      "poses": [
+        "idle"
+      ],
+      "directions": 1,
+      "size": 64,
+      "color": "#ffffff",
+      "pipeline": {
+        "concept": {
+          "status": "done",
+          "generatedAt": "2026-03-15T21:52:11.321Z",
+          "backend": "gemini-imagen",
+          "path": "concepts/items/machine_gun.png"
+        },
+        "model": {
+          "status": "done",
+          "generatedAt": "2026-03-15T21:52:14.762Z",
+          "backend": "triposr",
+          "path": "models/items/machine_gun.glb"
+        },
+        "render": {
+          "status": "done",
+          "generatedAt": "2026-03-15T21:52:15.773Z",
+          "backend": "blender",
+          "frameCount": 1
+        },
+        "pack": {
+          "status": "done",
+          "generatedAt": "2026-03-15T21:52:18.458Z",
+          "backend": "packer"
+        }
+      },
+      "assignedTo": {
+        "arena": {
+          "atlas": "items",
+          "syncedAt": "2026-03-16T05:32:13.897Z"
+        }
+      },
+      "conceptBackend": "gemini-imagen"
+    },
+    "floor_01": {
+      "id": "floor_01",
+      "name": "Floor 01",
+      "category": "tiles",
+      "tags": [
+        "arena"
+      ],
+      "prompt": "3D rendered dark stone floor tile, top-down view, PBR textured, seamless tileable, dark navy tone",
+      "poses": [
+        "idle"
+      ],
+      "directions": 1,
+      "size": 32,
+      "color": "#ffffff",
+      "pipeline": {
+        "concept": {
+          "status": "done",
+          "path": "concepts/tiles/floor_01.png",
+          "generatedAt": "2026-03-15T04:40:19.040Z"
+        },
+        "render": {
+          "status": "done",
+          "frameCount": 1,
+          "generatedAt": "2026-03-15T04:40:19.051Z"
+        },
+        "pack": {
+          "status": "done",
+          "generatedAt": "2026-03-15T04:40:19.073Z"
+        }
+      },
+      "assignedTo": {
+        "arena": {
+          "atlas": "tiles",
+          "syncedAt": "2026-03-15T04:40:19.073Z"
+        }
+      },
+      "conceptBackend": "gemini-imagen"
+    },
+    "floor_02": {
+      "id": "floor_02",
+      "name": "Floor 02",
+      "category": "tiles",
+      "tags": [
+        "arena"
+      ],
+      "prompt": "3D rendered dark stone floor tile variant, top-down view, PBR textured, seamless tileable, slightly cracked surface",
+      "poses": [
+        "idle"
+      ],
+      "directions": 1,
+      "size": 32,
+      "color": "#ffffff",
+      "pipeline": {
+        "concept": {
+          "status": "done",
+          "path": "concepts/tiles/floor_02.png",
+          "generatedAt": "2026-03-15T04:40:19.090Z"
+        },
+        "render": {
+          "status": "done",
+          "frameCount": 1,
+          "generatedAt": "2026-03-15T04:40:19.103Z"
+        },
+        "pack": {
+          "status": "done",
+          "generatedAt": "2026-03-15T04:40:19.130Z"
+        }
+      },
+      "assignedTo": {
+        "arena": {
+          "atlas": "tiles",
+          "syncedAt": "2026-03-15T04:40:19.130Z"
+        }
+      },
+      "conceptBackend": "gemini-imagen"
+    },
+    "floor_03": {
+      "id": "floor_03",
+      "name": "Floor 03",
+      "category": "tiles",
+      "tags": [
+        "arena"
+      ],
+      "prompt": "3D rendered dark stone floor tile variant, top-down view, PBR textured, seamless tileable, moss patches",
+      "poses": [
+        "idle"
+      ],
+      "directions": 1,
+      "size": 32,
+      "color": "#ffffff",
+      "pipeline": {
+        "concept": {
+          "status": "done",
+          "path": "concepts/tiles/floor_03.png",
+          "generatedAt": "2026-03-15T04:40:19.145Z"
+        },
+        "render": {
+          "status": "done",
+          "frameCount": 1,
+          "generatedAt": "2026-03-15T04:40:19.157Z"
+        },
+        "pack": {
+          "status": "done",
+          "generatedAt": "2026-03-15T04:40:19.185Z"
+        }
+      },
+      "assignedTo": {
+        "arena": {
+          "atlas": "tiles",
+          "syncedAt": "2026-03-15T04:40:19.185Z"
+        }
+      },
+      "conceptBackend": "gemini-imagen"
+    },
+    "floor_04": {
+      "id": "floor_04",
+      "name": "Floor 04",
+      "category": "tiles",
+      "tags": [
+        "arena"
+      ],
+      "prompt": "3D rendered dark stone floor tile variant, top-down view, PBR textured, seamless tileable, worn edges",
+      "poses": [
+        "idle"
+      ],
+      "directions": 1,
+      "size": 32,
+      "color": "#ffffff",
+      "pipeline": {
+        "concept": {
+          "status": "done",
+          "path": "concepts/tiles/floor_04.png",
+          "generatedAt": "2026-03-15T04:40:19.198Z"
+        },
+        "render": {
+          "status": "done",
+          "frameCount": 1,
+          "generatedAt": "2026-03-15T04:40:19.209Z"
+        },
+        "pack": {
+          "status": "done",
+          "generatedAt": "2026-03-15T04:40:19.237Z"
+        }
+      },
+      "assignedTo": {
+        "arena": {
+          "atlas": "tiles",
+          "syncedAt": "2026-03-15T04:40:19.237Z"
+        }
+      },
+      "conceptBackend": "gemini-imagen"
+    },
+    "wall": {
+      "id": "wall",
+      "name": "Wall",
+      "category": "tiles",
+      "tags": [
+        "arena"
+      ],
+      "prompt": "3D rendered stone wall tile, top-down view, PBR textured, dark gray, rough hewn blocks with depth",
+      "poses": [
+        "idle"
+      ],
+      "directions": 1,
+      "size": 32,
+      "color": "#ffffff",
+      "pipeline": {
+        "concept": {
+          "status": "done",
+          "path": "concepts/tiles/wall.png",
+          "generatedAt": "2026-03-15T04:40:19.251Z"
+        },
+        "render": {
+          "status": "done",
+          "frameCount": 1,
+          "generatedAt": "2026-03-15T04:40:19.265Z"
+        },
+        "pack": {
+          "status": "done",
+          "generatedAt": "2026-03-15T04:40:19.290Z"
+        }
+      },
+      "assignedTo": {
+        "arena": {
+          "atlas": "tiles",
+          "syncedAt": "2026-03-15T04:40:19.290Z"
+        }
+      },
+      "conceptBackend": "gemini-imagen"
+    },
+    "boundary": {
+      "id": "boundary",
+      "name": "Boundary",
+      "category": "tiles",
+      "tags": [
+        "arena"
+      ],
+      "prompt": "3D rendered boundary wall edge tile, top-down view, PBR textured, dark surface with glowing blue emissive border",
+      "poses": [
+        "idle"
+      ],
+      "directions": 1,
+      "size": 32,
+      "color": "#ffffff",
+      "pipeline": {
+        "concept": {
+          "status": "done",
+          "path": "concepts/tiles/boundary.png",
+          "generatedAt": "2026-03-15T04:40:19.304Z"
+        },
+        "render": {
+          "status": "done",
+          "frameCount": 1,
+          "generatedAt": "2026-03-15T04:40:19.316Z"
+        },
+        "pack": {
+          "status": "done",
+          "generatedAt": "2026-03-15T04:40:19.343Z"
+        }
+      },
+      "assignedTo": {
+        "arena": {
+          "atlas": "tiles",
+          "syncedAt": "2026-03-15T04:40:19.343Z"
+        }
+      },
+      "conceptBackend": "gemini-imagen"
+    },
+    "zone_overlay": {
+      "id": "zone_overlay",
+      "name": "Zone Overlay",
+      "category": "tiles",
+      "tags": [
+        "arena"
+      ],
+      "prompt": "danger zone overlay tile, translucent red tint, subtle hazard pattern, top-down",
+      "poses": [
+        "idle"
+      ],
+      "directions": 1,
+      "size": 32,
+      "color": "#ffffff",
+      "pipeline": {
+        "concept": {
+          "status": "done",
+          "generatedAt": "2026-03-16T02:04:29.220Z",
+          "backend": "gemini-imagen",
+          "path": "concepts/tiles/zone_overlay.png"
+        },
+        "render": {
+          "status": "done",
+          "frameCount": 1,
+          "generatedAt": "2026-03-21T15:00:00Z"
+        },
+        "pack": {
+          "status": "done",
+          "generatedAt": "2026-03-21T15:00:00Z"
+        }
+      },
+      "assignedTo": {
+        "arena": {
+          "atlas": "tiles",
+          "syncedAt": "2026-03-16T05:32:13.921Z"
+        }
+      },
+      "conceptBackend": "gemini-imagen"
+    },
+    "building": {
+      "id": "building",
+      "name": "Building",
+      "category": "cover",
+      "tags": [
+        "arena"
+      ],
+      "prompt": "3D rendered campus building wall section, isometric view, brick facade with PBR materials, academic architecture, clean geometry",
+      "poses": [
+        "idle"
+      ],
+      "directions": 1,
+      "size": 32,
+      "color": "#ffffff",
+      "pipeline": {
+        "concept": {
+          "status": "done",
+          "generatedAt": "2026-03-15T21:52:30.189Z",
+          "backend": "gemini-imagen",
+          "path": "concepts/cover/building.png"
+        },
+        "model": {
+          "status": "done",
+          "generatedAt": "2026-03-15T21:52:56.615Z",
+          "backend": "triposr",
+          "path": "models/cover/building.glb"
+        },
+        "render": {
+          "status": "done",
+          "generatedAt": "2026-03-15T21:53:08.283Z",
+          "backend": "blender",
+          "frameCount": 1
+        },
+        "pack": {
+          "status": "done",
+          "generatedAt": "2026-03-15T21:53:10.855Z",
+          "backend": "packer"
+        }
+      },
+      "assignedTo": {
+        "arena": {
+          "atlas": "cover",
+          "syncedAt": "2026-03-16T05:32:13.945Z"
+        }
+      },
+      "conceptBackend": "gemini-imagen"
+    },
+    "bench": {
+      "id": "bench",
+      "name": "Bench",
+      "category": "cover",
+      "tags": [
+        "arena"
+      ],
+      "prompt": "3D rendered park bench, isometric view, wooden slats with PBR wood material, campus outdoor seating, clean geometry",
+      "poses": [
+        "idle"
+      ],
+      "directions": 1,
+      "size": 32,
+      "color": "#ffffff",
+      "pipeline": {
+        "concept": {
+          "status": "done",
+          "generatedAt": "2026-03-15T21:53:18.911Z",
+          "backend": "gemini-imagen",
+          "path": "concepts/cover/bench.png"
+        },
+        "model": {
+          "status": "done",
+          "generatedAt": "2026-03-15T21:53:46.971Z",
+          "backend": "triposr",
+          "path": "models/cover/bench.glb"
+        },
+        "render": {
+          "status": "done",
+          "generatedAt": "2026-03-15T21:53:47.836Z",
+          "backend": "blender",
+          "frameCount": 1
+        },
+        "pack": {
+          "status": "done",
+          "generatedAt": "2026-03-15T21:53:50.265Z",
+          "backend": "packer"
+        }
+      },
+      "assignedTo": {
+        "arena": {
+          "atlas": "cover",
+          "syncedAt": "2026-03-16T05:32:13.971Z"
+        }
+      },
+      "conceptBackend": "gemini-imagen"
+    },
+    "fountain": {
+      "id": "fountain",
+      "name": "Fountain",
+      "category": "cover",
+      "tags": [
+        "arena"
+      ],
+      "prompt": "3D rendered stone fountain, isometric view, circular base with water effect, campus courtyard centerpiece, clean geometry, PBR materials",
+      "poses": [
+        "idle"
+      ],
+      "directions": 1,
+      "size": 32,
+      "color": "#ffffff",
+      "pipeline": {
+        "concept": {
+          "status": "done",
+          "generatedAt": "2026-03-15T21:53:58.298Z",
+          "backend": "gemini-imagen",
+          "path": "concepts/cover/fountain.png"
+        },
+        "model": {
+          "status": "done",
+          "generatedAt": "2026-03-15T21:54:01.619Z",
+          "backend": "triposr",
+          "path": "models/cover/fountain.glb"
+        },
+        "render": {
+          "status": "done",
+          "generatedAt": "2026-03-15T21:54:02.506Z",
+          "backend": "blender",
+          "frameCount": 1
+        },
+        "pack": {
+          "status": "done",
+          "generatedAt": "2026-03-15T21:54:04.968Z",
+          "backend": "packer"
+        }
+      },
+      "assignedTo": {
+        "arena": {
+          "atlas": "cover",
+          "syncedAt": "2026-03-16T05:32:13.998Z"
+        }
+      },
+      "conceptBackend": "gemini-imagen"
+    },
+    "hedge": {
+      "id": "hedge",
+      "name": "Hedge",
+      "category": "cover",
+      "tags": [
+        "arena"
+      ],
+      "prompt": "3D rendered trimmed hedge, isometric view, dark green foliage with volumetric depth, campus garden border, clean geometry",
+      "poses": [
+        "idle"
+      ],
+      "directions": 1,
+      "size": 32,
+      "color": "#ffffff",
+      "pipeline": {
+        "concept": {
+          "status": "done",
+          "generatedAt": "2026-03-15T21:54:18.673Z",
+          "backend": "gemini-imagen",
+          "path": "concepts/cover/hedge.png"
+        },
+        "model": {
+          "status": "done",
+          "generatedAt": "2026-03-15T21:54:46.796Z",
+          "backend": "triposr",
+          "path": "models/cover/hedge.glb"
+        },
+        "render": {
+          "status": "done",
+          "generatedAt": "2026-03-15T21:54:47.699Z",
+          "backend": "blender",
+          "frameCount": 1
+        },
+        "pack": {
+          "status": "done",
+          "generatedAt": "2026-03-15T21:54:50.218Z",
+          "backend": "packer"
+        }
+      },
+      "assignedTo": {
+        "arena": {
+          "atlas": "cover",
+          "syncedAt": "2026-03-16T05:32:14.023Z"
+        }
+      },
+      "conceptBackend": "gemini-imagen"
+    },
+    "pond": {
+      "id": "pond",
+      "name": "Pond",
+      "category": "cover",
+      "tags": [
+        "arena"
+      ],
+      "prompt": "3D rendered ornamental pond, isometric view, blue reflective water surface with caustics, campus water feature, clean geometry",
+      "poses": [
+        "idle"
+      ],
+      "directions": 1,
+      "size": 32,
+      "color": "#ffffff",
+      "pipeline": {
+        "concept": {
+          "status": "done",
+          "generatedAt": "2026-03-15T21:55:06.719Z",
+          "backend": "gemini-imagen",
+          "path": "concepts/cover/pond.png"
+        },
+        "model": {
+          "status": "done",
+          "generatedAt": "2026-03-15T21:55:55.806Z",
+          "backend": "triposr",
+          "path": "models/cover/pond.glb"
+        },
+        "render": {
+          "status": "done",
+          "generatedAt": "2026-03-15T21:55:56.680Z",
+          "backend": "blender",
+          "frameCount": 1
+        },
+        "pack": {
+          "status": "done",
+          "generatedAt": "2026-03-15T21:55:59.206Z",
+          "backend": "packer"
+        }
+      },
+      "assignedTo": {
+        "arena": {
+          "atlas": "cover",
+          "syncedAt": "2026-03-16T05:32:14.049Z"
+        }
+      },
+      "conceptBackend": "gemini-imagen"
+    },
+    "heart_full": {
+      "id": "heart_full",
+      "name": "Heart Full",
+      "category": "ui",
+      "tags": [
+        "arena"
+      ],
+      "prompt": "stylized 3D red heart icon, full health indicator, glossy surface, soft glow, game UI, transparent background",
+      "poses": [
+        "idle"
+      ],
+      "directions": 1,
+      "size": 16,
+      "color": "#ffffff",
+      "pipeline": {
+        "concept": {
+          "status": "done",
+          "path": "concepts/ui/heart_full.png",
+          "generatedAt": "2026-03-15T04:40:19.538Z"
+        },
+        "render": {
+          "status": "done",
+          "frameCount": 1,
+          "generatedAt": "2026-03-15T04:40:19.552Z"
+        },
+        "pack": {
+          "status": "done",
+          "generatedAt": "2026-03-15T04:40:19.615Z"
+        }
+      },
+      "assignedTo": {
+        "arena": {
+          "atlas": "ui",
+          "syncedAt": "2026-03-15T04:40:19.615Z"
+        }
+      },
+      "conceptBackend": "gemini-imagen"
+    },
+    "heart_empty": {
+      "id": "heart_empty",
+      "name": "Heart Empty",
+      "category": "ui",
+      "tags": [
+        "arena"
+      ],
+      "prompt": "stylized 3D dark heart icon, empty health indicator, matte surface, desaturated, game UI, transparent background",
+      "poses": [
+        "idle"
+      ],
+      "directions": 1,
+      "size": 16,
+      "color": "#ffffff",
+      "pipeline": {
+        "concept": {
+          "status": "done",
+          "path": "concepts/ui/heart_empty.png",
+          "generatedAt": "2026-03-15T04:40:19.630Z"
+        },
+        "render": {
+          "status": "done",
+          "frameCount": 1,
+          "generatedAt": "2026-03-15T04:40:19.645Z"
+        },
+        "pack": {
+          "status": "done",
+          "generatedAt": "2026-03-15T04:40:19.708Z"
+        }
+      },
+      "assignedTo": {
+        "arena": {
+          "atlas": "ui",
+          "syncedAt": "2026-03-15T04:40:19.708Z"
+        }
+      },
+      "conceptBackend": "gemini-imagen"
+    },
+    "shield": {
+      "id": "shield",
+      "name": "Shield",
+      "category": "ui",
+      "tags": [
+        "arena"
+      ],
+      "prompt": "stylized 3D blue shield icon, armor indicator, metallic surface with emissive edge, game UI, transparent background",
+      "poses": [
+        "idle"
+      ],
+      "directions": 1,
+      "size": 16,
+      "color": "#ffffff",
+      "pipeline": {
+        "concept": {
+          "status": "done",
+          "path": "concepts/ui/shield.png",
+          "generatedAt": "2026-03-15T04:40:19.722Z"
+        },
+        "render": {
+          "status": "done",
+          "frameCount": 1,
+          "generatedAt": "2026-03-15T04:40:19.740Z"
+        },
+        "pack": {
+          "status": "done",
+          "generatedAt": "2026-03-15T04:40:19.802Z"
+        }
+      },
+      "assignedTo": {
+        "arena": {
+          "atlas": "ui",
+          "syncedAt": "2026-03-15T04:40:19.802Z"
+        }
+      },
+      "conceptBackend": "gemini-imagen"
+    },
+    "gun_icon": {
+      "id": "gun_icon",
+      "name": "Gun Icon",
+      "category": "ui",
+      "tags": [
+        "arena"
+      ],
+      "prompt": "stylized 3D gun icon, ranged weapon indicator, clean silhouette, game UI, transparent background",
+      "poses": [
+        "idle"
+      ],
+      "directions": 1,
+      "size": 16,
+      "color": "#ffffff",
+      "pipeline": {
+        "concept": {
+          "status": "done",
+          "path": "concepts/ui/gun_icon.png",
+          "generatedAt": "2026-03-15T04:40:19.816Z"
+        },
+        "render": {
+          "status": "done",
+          "frameCount": 1,
+          "generatedAt": "2026-03-15T04:40:19.833Z"
+        },
+        "pack": {
+          "status": "done",
+          "generatedAt": "2026-03-15T04:40:19.887Z"
+        }
+      },
+      "assignedTo": {
+        "arena": {
+          "atlas": "ui",
+          "syncedAt": "2026-03-15T04:40:19.887Z"
+        }
+      },
+      "conceptBackend": "gemini-imagen"
+    },
+    "melee_icon": {
+      "id": "melee_icon",
+      "name": "Melee Icon",
+      "category": "ui",
+      "tags": [
+        "arena"
+      ],
+      "prompt": "stylized 3D sword icon, melee weapon indicator, metallic blade with glow, game UI, transparent background",
+      "poses": [
+        "idle"
+      ],
+      "directions": 1,
+      "size": 16,
+      "color": "#ffffff",
+      "pipeline": {
+        "concept": {
+          "status": "done",
+          "path": "concepts/ui/melee_icon.png",
+          "generatedAt": "2026-03-15T04:40:19.912Z"
+        },
+        "render": {
+          "status": "done",
+          "frameCount": 1,
+          "generatedAt": "2026-03-15T04:40:19.928Z"
+        },
+        "pack": {
+          "status": "done",
+          "generatedAt": "2026-03-15T04:40:19.988Z"
+        }
+      },
+      "assignedTo": {
+        "arena": {
+          "atlas": "ui",
+          "syncedAt": "2026-03-15T04:40:19.988Z"
+        }
+      },
+      "conceptBackend": "gemini-imagen"
+    },
+    "round_pip_on": {
+      "id": "round_pip_on",
+      "name": "Round Pip On",
+      "category": "ui",
+      "tags": [
+        "arena"
+      ],
+      "prompt": "stylized 3D glowing circular pip, round won indicator, emissive cyan glow, game UI, transparent background",
+      "poses": [
+        "idle"
+      ],
+      "directions": 1,
+      "size": 8,
+      "color": "#ffffff",
+      "pipeline": {
+        "concept": {
+          "status": "done",
+          "path": "concepts/ui/round_pip_on.png",
+          "generatedAt": "2026-03-15T04:40:20.004Z"
+        },
+        "render": {
+          "status": "done",
+          "frameCount": 1,
+          "generatedAt": "2026-03-15T04:40:20.019Z"
+        },
+        "pack": {
+          "status": "done",
+          "generatedAt": "2026-03-15T04:40:20.081Z"
+        }
+      },
+      "assignedTo": {
+        "arena": {
+          "atlas": "ui",
+          "syncedAt": "2026-03-15T04:40:20.081Z"
+        }
+      },
+      "conceptBackend": "gemini-imagen"
+    },
+    "round_pip_off": {
+      "id": "round_pip_off",
+      "name": "Round Pip Off",
+      "category": "ui",
+      "tags": [
+        "arena"
+      ],
+      "prompt": "stylized 3D dim circular pip, round not won indicator, dark matte surface, game UI, transparent background",
+      "poses": [
+        "idle"
+      ],
+      "directions": 1,
+      "size": 8,
+      "color": "#ffffff",
+      "pipeline": {
+        "concept": {
+          "status": "done",
+          "path": "concepts/ui/round_pip_off.png",
+          "generatedAt": "2026-03-15T04:40:20.098Z"
+        },
+        "render": {
+          "status": "done",
+          "frameCount": 1,
+          "generatedAt": "2026-03-15T04:40:20.117Z"
+        },
+        "pack": {
+          "status": "done",
+          "generatedAt": "2026-03-15T04:40:20.172Z"
+        }
+      },
+      "assignedTo": {
+        "arena": {
+          "atlas": "ui",
+          "syncedAt": "2026-03-15T04:40:20.172Z"
+        }
+      },
+      "conceptBackend": "gemini-imagen"
+    },
+    "student_f": {
+      "id": "student_f",
+      "name": "Student (Female)",
+      "category": "characters",
+      "tags": [
+        "arena"
+      ],
+      "prompt": "young female university student character, casual hoodie and jeans, ponytail hairstyle, backpack, sneakers, determined expression, low-poly 3D model reference, isometric game sprite, bright cyan accent color, transparent background",
+      "poses": [
+        "stand",
+        "gun",
+        "machine",
+        "reload",
+        "hold",
+        "silencer"
+      ],
+      "directions": 8,
+      "size": 64,
+      "color": "#00f2ff",
+      "conceptBackend": "gemini-imagen",
+      "pipeline": {
+        "concept": {
+          "status": "done",
+          "generatedAt": "2026-03-16T09:56:48.801Z",
+          "path": "concepts/characters/student_f.png",
+          "backend": "gemini-imagen"
+        },
+        "model": {
+          "status": "done",
+          "generatedAt": "2026-03-16T09:57:16.170Z",
+          "path": "models/characters/student_f.glb",
+          "backend": "triposr"
+        },
+        "render": {
+          "status": "done",
+          "generatedAt": "2026-03-16T10:03:10.422Z",
+          "frameCount": 8,
+          "backend": "blender"
+        },
+        "pack": {
+          "status": "done",
+          "generatedAt": "2026-03-16T10:21:32.386Z",
+          "backend": "packer"
+        }
+      }
+    },
+    "researcher_f": {
+      "id": "researcher_f",
+      "name": "Researcher (Female)",
+      "category": "characters",
+      "tags": [
+        "arena"
+      ],
+      "prompt": "single full-body female character, research scientist, lab coat over blouse, safety goggles on forehead, clipboard in hand, determined expression, mint green accent color, 3D character model reference sheet, A-pose, plain white background, no environment, no shadows, no text",
+      "poses": [
+        "stand",
+        "gun",
+        "machine",
+        "reload",
+        "hold",
+        "silencer"
+      ],
+      "directions": 8,
+      "size": 64,
+      "color": "#3eff8b",
+      "conceptBackend": "gemini-imagen",
+      "pipeline": {
+        "concept": {
+          "status": "done",
+          "generatedAt": "2026-03-16T09:56:09.763Z",
+          "path": "concepts/characters/researcher_f.png",
+          "backend": "gemini-imagen"
+        },
+        "model": {
+          "status": "done",
+          "generatedAt": "2026-03-16T09:56:20.235Z",
+          "path": "models/characters/researcher_f.glb",
+          "backend": "triposr"
+        },
+        "render": {
+          "status": "done",
+          "generatedAt": "2026-03-16T10:05:56.564Z",
+          "frameCount": 8,
+          "backend": "blender"
+        },
+        "pack": {
+          "status": "done",
+          "generatedAt": "2026-03-16T10:21:33.799Z",
+          "backend": "packer"
+        }
+      }
+    },
+    "professor_f": {
+      "id": "professor_f",
+      "name": "Professor (Female)",
+      "category": "characters",
+      "tags": [
+        "arena"
+      ],
+      "prompt": "female university professor character, tweed blazer, reading glasses, professional bun hairstyle, books under arm, authoritative stance, low-poly 3D model reference, isometric game sprite, purple accent color, transparent background",
+      "poses": [
+        "stand",
+        "gun",
+        "machine",
+        "reload",
+        "hold",
+        "silencer"
+      ],
+      "directions": 8,
+      "size": 64,
+      "color": "#bc13fe",
+      "conceptBackend": "gemini-imagen",
+      "pipeline": {
+        "concept": {
+          "status": "done",
+          "generatedAt": "2026-03-16T09:46:41.256Z",
+          "path": "concepts/characters/professor_f.png",
+          "backend": "gemini-imagen"
+        },
+        "model": {
+          "status": "done",
+          "generatedAt": "2026-03-16T09:50:04.449Z",
+          "path": "models/characters/professor_f.glb",
+          "backend": "triposr"
+        },
+        "render": {
+          "status": "done",
+          "generatedAt": "2026-03-16T10:12:07.596Z",
+          "frameCount": 8,
+          "backend": "blender"
+        },
+        "pack": {
+          "status": "done",
+          "generatedAt": "2026-03-16T10:21:35.227Z",
+          "backend": "packer"
+        }
+      }
+    },
+    "dean_f": {
+      "id": "dean_f",
+      "name": "Dean (Female)",
+      "category": "characters",
+      "tags": [
+        "arena"
+      ],
+      "prompt": "single full-body female character, university dean, formal business suit, pearl necklace, elegant updo hairstyle, confident posture, gold accent details, 3D character model reference sheet, A-pose, plain white background, no environment, no shadows, no text",
+      "poses": [
+        "stand",
+        "gun",
+        "machine",
+        "reload",
+        "hold",
+        "silencer"
+      ],
+      "directions": 8,
+      "size": 64,
+      "color": "#ffd700",
+      "conceptBackend": "gemini-imagen",
+      "pipeline": {
+        "concept": {
+          "status": "done",
+          "generatedAt": "2026-03-16T09:48:25.190Z",
+          "path": "concepts/characters/dean_f.png",
+          "backend": "gemini-imagen"
+        },
+        "model": {
+          "status": "done",
+          "generatedAt": "2026-03-16T09:50:22.079Z",
+          "path": "models/characters/dean_f.glb",
+          "backend": "triposr"
+        },
+        "render": {
+          "status": "done",
+          "generatedAt": "2026-03-16T10:19:29.619Z",
+          "frameCount": 8,
+          "backend": "blender"
+        },
+        "pack": {
+          "status": "done",
+          "generatedAt": "2026-03-16T10:21:36.678Z",
+          "backend": "packer"
+        }
+      }
+    },
+    "librarian_f": {
+      "id": "librarian_f",
+      "name": "Librarian (Female)",
+      "category": "characters",
+      "tags": [
+        "arena"
+      ],
+      "prompt": "single full-body female character, university librarian, cardigan sweater, vintage round glasses, long braided hair, warm expression, coral pink accent color, 3D character model reference sheet, A-pose, plain white background, no environment, no shadows, no text",
+      "poses": [
+        "stand",
+        "gun",
+        "machine",
+        "reload",
+        "hold",
+        "silencer"
+      ],
+      "directions": 8,
+      "size": 64,
+      "color": "#ff6b9d",
+      "conceptBackend": "gemini-imagen",
+      "pipeline": {
+        "concept": {
+          "status": "done",
+          "generatedAt": "2026-03-16T09:47:00.888Z",
+          "path": "concepts/characters/librarian_f.png",
+          "backend": "gemini-imagen"
+        },
+        "model": {
+          "status": "done",
+          "generatedAt": "2026-03-16T09:50:36.995Z",
+          "path": "models/characters/librarian_f.glb",
+          "backend": "triposr"
+        },
+        "render": {
+          "status": "done",
+          "generatedAt": "2026-03-16T10:20:59.823Z",
+          "frameCount": 8,
+          "backend": "blender"
+        },
+        "pack": {
+          "status": "done",
+          "generatedAt": "2026-03-16T10:21:38.123Z",
+          "backend": "packer"
+        }
+      }
+    },
+    "student_neon": {
+      "id": "student_neon",
+      "name": "Student Neon",
+      "category": "characters",
+      "tags": [
+        "arena",
+        "skin"
+      ],
+      "prompt": "single front view, male character, glowing neon cyan outlines, cyberpunk style, dark body with bright edge lighting, full body, isometric 3D game character, low poly, solid white background, no text",
+      "poses": [
+        "stand"
+      ],
+      "directions": 8,
+      "size": 64,
+      "color": "#00f2ff",
+      "conceptBackend": "gemini-imagen",
+      "pipeline": {
+        "concept": {
+          "status": "done",
+          "generatedAt": "2026-03-16T11:11:16.164Z",
+          "path": "concepts/characters/student_neon.png",
+          "backend": "gemini-imagen"
+        },
+        "model": {
+          "status": "done",
+          "generatedAt": "2026-03-16T11:13:58.224Z",
+          "path": "models/characters/student_neon.glb",
+          "backend": "triposr"
+        },
+        "render": {
+          "status": "done",
+          "generatedAt": "2026-03-16T11:28:03.313Z",
+          "frameCount": 8,
+          "backend": "blender"
+        },
+        "pack": {
+          "status": "done",
+          "generatedAt": "2026-03-16T12:07:40.135Z",
+          "backend": "packer"
+        }
+      }
+    },
+    "student_formal": {
+      "id": "student_formal",
+      "name": "Student Formal",
+      "category": "characters",
+      "tags": [
+        "arena",
+        "skin"
+      ],
+      "prompt": "single front view, male character, wearing elegant formal attire, black tie suit or evening gown, polished shoes, full body, isometric 3D game character, low poly, solid white background, no text",
+      "poses": [
+        "stand"
+      ],
+      "directions": 8,
+      "size": 64,
+      "color": "#00f2ff",
+      "conceptBackend": "gemini-imagen",
+      "pipeline": {
+        "concept": {
+          "status": "done",
+          "generatedAt": "2026-03-16T11:11:21.673Z",
+          "path": "concepts/characters/student_formal.png",
+          "backend": "gemini-imagen"
+        },
+        "model": {
+          "status": "done",
+          "generatedAt": "2026-03-16T11:14:23.171Z",
+          "path": "models/characters/student_formal.glb",
+          "backend": "triposr"
+        },
+        "render": {
+          "status": "done",
+          "generatedAt": "2026-03-16T11:30:14.163Z",
+          "frameCount": 8,
+          "backend": "blender"
+        },
+        "pack": {
+          "status": "done",
+          "generatedAt": "2026-03-21T15:00:00Z"
+        }
+      }
+    },
+    "student_f_neon": {
+      "id": "student_f_neon",
+      "name": "Student (F) Neon",
+      "category": "characters",
+      "tags": [
+        "arena",
+        "skin"
+      ],
+      "prompt": "single front view, female character, glowing neon cyan outlines, cyberpunk style, dark body with bright edge lighting, full body, isometric 3D game character, low poly, solid white background, no text",
+      "poses": [
+        "stand"
+      ],
+      "directions": 8,
+      "size": 64,
+      "color": "#00f2ff",
+      "conceptBackend": "gemini-imagen",
+      "pipeline": {
+        "concept": {
+          "status": "done",
+          "generatedAt": "2026-03-16T11:11:28.486Z",
+          "path": "concepts/characters/student_f_neon.png",
+          "backend": "gemini-imagen"
+        },
+        "model": {
+          "status": "done",
+          "generatedAt": "2026-03-16T11:14:47.435Z",
+          "path": "models/characters/student_f_neon.glb",
+          "backend": "triposr"
+        },
+        "render": {
+          "status": "done",
+          "generatedAt": "2026-03-16T11:33:31.845Z",
+          "frameCount": 8,
+          "backend": "blender"
+        },
+        "pack": {
+          "status": "done",
+          "generatedAt": "2026-03-21T15:00:00Z"
+        }
+      }
+    },
+    "student_f_formal": {
+      "id": "student_f_formal",
+      "name": "Student (F) Formal",
+      "category": "characters",
+      "tags": [
+        "arena",
+        "skin"
+      ],
+      "prompt": "single front view, female character, wearing elegant formal attire, black tie suit or evening gown, polished shoes, full body, isometric 3D game character, low poly, solid white background, no text",
+      "poses": [
+        "stand"
+      ],
+      "directions": 8,
+      "size": 64,
+      "color": "#00f2ff",
+      "conceptBackend": "gemini-imagen",
+      "pipeline": {
+        "concept": {
+          "status": "done",
+          "generatedAt": "2026-03-16T11:11:36.113Z",
+          "path": "concepts/characters/student_f_formal.png",
+          "backend": "gemini-imagen"
+        },
+        "model": {
+          "status": "done",
+          "generatedAt": "2026-03-16T11:15:10.697Z",
+          "path": "models/characters/student_f_formal.glb",
+          "backend": "triposr"
+        },
+        "render": {
+          "status": "done",
+          "generatedAt": "2026-03-16T11:37:11.200Z",
+          "frameCount": 8,
+          "backend": "blender"
+        },
+        "pack": {
+          "status": "done",
+          "generatedAt": "2026-03-21T15:00:00Z"
+        }
+      }
+    },
+    "researcher_neon": {
+      "id": "researcher_neon",
+      "name": "Researcher Neon",
+      "category": "characters",
+      "tags": [
+        "arena",
+        "skin"
+      ],
+      "prompt": "single front view, male character, glowing neon cyan outlines, cyberpunk style, dark body with bright edge lighting, full body, isometric 3D game character, low poly, solid white background, no text, 3D character model reference sheet, A-pose, plain white background, no environment, no shadows, no text, no watermark",
+      "poses": [
+        "stand"
+      ],
+      "directions": 8,
+      "size": 64,
+      "color": "#3eff8b",
+      "conceptBackend": "gemini-imagen",
+      "pipeline": {
+        "concept": {
+          "status": "done",
+          "generatedAt": "2026-03-16T11:11:42.808Z",
+          "path": "concepts/characters/researcher_neon.png",
+          "backend": "gemini-imagen"
+        },
+        "model": {
+          "status": "done",
+          "generatedAt": "2026-03-16T11:15:32.569Z",
+          "path": "models/characters/researcher_neon.glb",
+          "backend": "triposr"
+        },
+        "render": {
+          "status": "done",
+          "generatedAt": "2026-03-16T11:43:20.991Z",
+          "frameCount": 8,
+          "backend": "blender"
+        },
+        "pack": {
+          "status": "done",
+          "generatedAt": "2026-03-21T15:00:00Z"
+        }
+      }
+    },
+    "researcher_formal": {
+      "id": "researcher_formal",
+      "name": "Researcher Formal",
+      "category": "characters",
+      "tags": [
+        "arena",
+        "skin"
+      ],
+      "prompt": "single front view, male character, wearing elegant formal attire, black tie suit or evening gown, polished shoes, full body, isometric 3D game character, low poly, solid white background, no text, 3D character model reference sheet, A-pose, plain white background, no environment, no shadows, no text, no watermark",
+      "poses": [
+        "stand"
+      ],
+      "directions": 8,
+      "size": 64,
+      "color": "#3eff8b",
+      "conceptBackend": "gemini-imagen",
+      "pipeline": {
+        "concept": {
+          "status": "done",
+          "generatedAt": "2026-03-16T11:11:48.518Z",
+          "path": "concepts/characters/researcher_formal.png",
+          "backend": "gemini-imagen"
+        },
+        "model": {
+          "status": "done",
+          "generatedAt": "2026-03-16T11:16:01.629Z",
+          "path": "models/characters/researcher_formal.glb",
+          "backend": "triposr"
+        },
+        "render": {
+          "status": "done",
+          "generatedAt": "2026-03-16T11:46:04.154Z",
+          "frameCount": 8,
+          "backend": "blender"
+        },
+        "pack": {
+          "status": "done",
+          "generatedAt": "2026-03-21T15:00:00Z"
+        }
+      }
+    },
+    "researcher_f_neon": {
+      "id": "researcher_f_neon",
+      "name": "Researcher (F) Neon",
+      "category": "characters",
+      "tags": [
+        "arena",
+        "skin"
+      ],
+      "prompt": "single front view, female character, glowing neon cyan outlines, cyberpunk style, dark body with bright edge lighting, full body, isometric 3D game character, low poly, solid white background, no text, 3D character model reference sheet, A-pose, plain white background, no environment, no shadows, no text, no watermark",
+      "poses": [
+        "stand"
+      ],
+      "directions": 8,
+      "size": 64,
+      "color": "#3eff8b",
+      "conceptBackend": "gemini-imagen",
+      "pipeline": {
+        "concept": {
+          "status": "done",
+          "generatedAt": "2026-03-16T11:11:53.560Z",
+          "path": "concepts/characters/researcher_f_neon.png",
+          "backend": "gemini-imagen"
+        },
+        "model": {
+          "status": "done",
+          "generatedAt": "2026-03-16T11:16:32.891Z",
+          "path": "models/characters/researcher_f_neon.glb",
+          "backend": "triposr"
+        },
+        "render": {
+          "status": "done",
+          "generatedAt": "2026-03-16T11:47:22.199Z",
+          "frameCount": 8,
+          "backend": "blender"
+        },
+        "pack": {
+          "status": "done",
+          "generatedAt": "2026-03-21T15:00:00Z"
+        }
+      }
+    },
+    "researcher_f_formal": {
+      "id": "researcher_f_formal",
+      "name": "Researcher (F) Formal",
+      "category": "characters",
+      "tags": [
+        "arena",
+        "skin"
+      ],
+      "prompt": "single front view, female character, wearing elegant formal attire, black tie suit or evening gown, polished shoes, full body, isometric 3D game character, low poly, solid white background, no text, 3D character model reference sheet, A-pose, plain white background, no environment, no shadows, no text, no watermark",
+      "poses": [
+        "stand"
+      ],
+      "directions": 8,
+      "size": 64,
+      "color": "#3eff8b",
+      "conceptBackend": "gemini-imagen",
+      "pipeline": {
+        "concept": {
+          "status": "done",
+          "generatedAt": "2026-03-16T11:11:58.820Z",
+          "path": "concepts/characters/researcher_f_formal.png",
+          "backend": "gemini-imagen"
+        },
+        "model": {
+          "status": "done",
+          "generatedAt": "2026-03-16T11:17:01.930Z",
+          "path": "models/characters/researcher_f_formal.glb",
+          "backend": "triposr"
+        },
+        "render": {
+          "status": "done",
+          "generatedAt": "2026-03-16T11:48:28.954Z",
+          "frameCount": 8,
+          "backend": "blender"
+        },
+        "pack": {
+          "status": "done",
+          "generatedAt": "2026-03-21T15:00:00Z"
+        }
+      }
+    },
+    "professor_neon": {
+      "id": "professor_neon",
+      "name": "Professor Neon",
+      "category": "characters",
+      "tags": [
+        "arena",
+        "skin"
+      ],
+      "prompt": "single front view, male character, glowing neon cyan outlines, cyberpunk style, dark body with bright edge lighting, full body, isometric 3D game character, low poly, solid white background, no text",
+      "poses": [
+        "stand"
+      ],
+      "directions": 8,
+      "size": 64,
+      "color": "#bc13fe",
+      "conceptBackend": "gemini-imagen",
+      "pipeline": {
+        "concept": {
+          "status": "done",
+          "generatedAt": "2026-03-16T11:12:06.896Z",
+          "path": "concepts/characters/professor_neon.png",
+          "backend": "gemini-imagen"
+        },
+        "model": {
+          "status": "done",
+          "generatedAt": "2026-03-16T11:17:27.903Z",
+          "path": "models/characters/professor_neon.glb",
+          "backend": "triposr"
+        },
+        "render": {
+          "status": "done",
+          "generatedAt": "2026-03-16T11:49:35.827Z",
+          "frameCount": 8,
+          "backend": "blender"
+        },
+        "pack": {
+          "status": "done",
+          "generatedAt": "2026-03-21T15:00:00Z"
+        }
+      }
+    },
+    "professor_formal": {
+      "id": "professor_formal",
+      "name": "Professor Formal",
+      "category": "characters",
+      "tags": [
+        "arena",
+        "skin"
+      ],
+      "prompt": "single front view, male character, wearing elegant formal attire, black tie suit or evening gown, polished shoes, full body, isometric 3D game character, low poly, solid white background, no text",
+      "poses": [
+        "stand"
+      ],
+      "directions": 8,
+      "size": 64,
+      "color": "#bc13fe",
+      "conceptBackend": "gemini-imagen",
+      "pipeline": {
+        "concept": {
+          "status": "done",
+          "generatedAt": "2026-03-16T11:12:13.545Z",
+          "path": "concepts/characters/professor_formal.png",
+          "backend": "gemini-imagen"
+        },
+        "model": {
+          "status": "done",
+          "generatedAt": "2026-03-16T11:17:56.234Z",
+          "path": "models/characters/professor_formal.glb",
+          "backend": "triposr"
+        },
+        "render": {
+          "status": "done",
+          "generatedAt": "2026-03-16T11:50:55.984Z",
+          "frameCount": 8,
+          "backend": "blender"
+        },
+        "pack": {
+          "status": "done",
+          "generatedAt": "2026-03-21T15:00:00Z"
+        }
+      }
+    },
+    "professor_f_neon": {
+      "id": "professor_f_neon",
+      "name": "Professor (F) Neon",
+      "category": "characters",
+      "tags": [
+        "arena",
+        "skin"
+      ],
+      "prompt": "single front view, female character, glowing neon cyan outlines, cyberpunk style, dark body with bright edge lighting, full body, isometric 3D game character, low poly, solid white background, no text",
+      "poses": [
+        "stand"
+      ],
+      "directions": 8,
+      "size": 64,
+      "color": "#bc13fe",
+      "conceptBackend": "gemini-imagen",
+      "pipeline": {
+        "concept": {
+          "status": "done",
+          "generatedAt": "2026-03-16T11:12:18.600Z",
+          "path": "concepts/characters/professor_f_neon.png",
+          "backend": "gemini-imagen"
+        },
+        "model": {
+          "status": "done",
+          "generatedAt": "2026-03-16T11:18:27.409Z",
+          "path": "models/characters/professor_f_neon.glb",
+          "backend": "triposr"
+        },
+        "render": {
+          "status": "done",
+          "generatedAt": "2026-03-16T11:53:25.371Z",
+          "frameCount": 8,
+          "backend": "blender"
+        },
+        "pack": {
+          "status": "done",
+          "generatedAt": "2026-03-21T15:00:00Z"
+        }
+      }
+    },
+    "professor_f_formal": {
+      "id": "professor_f_formal",
+      "name": "Professor (F) Formal",
+      "category": "characters",
+      "tags": [
+        "arena",
+        "skin"
+      ],
+      "prompt": "single front view, female character, wearing elegant formal attire, black tie suit or evening gown, polished shoes, full body, isometric 3D game character, low poly, solid white background, no text",
+      "poses": [
+        "stand"
+      ],
+      "directions": 8,
+      "size": 64,
+      "color": "#bc13fe",
+      "conceptBackend": "gemini-imagen",
+      "pipeline": {
+        "concept": {
+          "status": "done",
+          "generatedAt": "2026-03-16T11:12:23.409Z",
+          "path": "concepts/characters/professor_f_formal.png",
+          "backend": "gemini-imagen"
+        },
+        "model": {
+          "status": "done",
+          "generatedAt": "2026-03-16T11:19:00.187Z",
+          "path": "models/characters/professor_f_formal.glb",
+          "backend": "triposr"
+        },
+        "render": {
+          "status": "done",
+          "frameCount": 8,
+          "generatedAt": "2026-03-21T15:00:00Z"
+        },
+        "pack": {
+          "status": "done",
+          "generatedAt": "2026-03-21T15:00:00Z"
+        }
+      }
+    },
+    "dean_neon": {
+      "id": "dean_neon",
+      "name": "Dean Neon",
+      "category": "characters",
+      "tags": [
+        "arena",
+        "skin"
+      ],
+      "prompt": "single front view, male character, glowing neon cyan outlines, cyberpunk style, dark body with bright edge lighting, full body, isometric 3D game character, low poly, solid white background, no text, 3D character model reference sheet, A-pose, plain white background, no environment, no shadows, no text, no watermark",
+      "poses": [
+        "stand"
+      ],
+      "directions": 8,
+      "size": 64,
+      "color": "#ffd700",
+      "conceptBackend": "gemini-imagen",
+      "pipeline": {
+        "concept": {
+          "status": "done",
+          "generatedAt": "2026-03-16T11:12:37.266Z",
+          "path": "concepts/characters/dean_neon.png",
+          "backend": "gemini-imagen"
+        },
+        "model": {
+          "status": "done",
+          "generatedAt": "2026-03-16T11:19:46.572Z",
+          "path": "models/characters/dean_neon.glb",
+          "backend": "triposr"
+        },
+        "render": {
+          "status": "done",
+          "generatedAt": "2026-03-16T12:02:09.222Z",
+          "frameCount": 8,
+          "backend": "blender"
+        },
+        "pack": {
+          "status": "done",
+          "generatedAt": "2026-03-21T15:00:00Z"
+        }
+      }
+    },
+    "dean_formal": {
+      "id": "dean_formal",
+      "name": "Dean Formal",
+      "category": "characters",
+      "tags": [
+        "arena",
+        "skin"
+      ],
+      "prompt": "single front view, male character, wearing elegant formal attire, black tie suit or evening gown, polished shoes, full body, isometric 3D game character, low poly, solid white background, no text, 3D character model reference sheet, A-pose, plain white background, no environment, no shadows, no text, no watermark",
+      "poses": [
+        "stand"
+      ],
+      "directions": 8,
+      "size": 64,
+      "color": "#ffd700",
+      "conceptBackend": "gemini-imagen",
+      "pipeline": {
+        "concept": {
+          "status": "done",
+          "generatedAt": "2026-03-16T11:12:47.721Z",
+          "path": "concepts/characters/dean_formal.png",
+          "backend": "gemini-imagen"
+        },
+        "model": {
+          "status": "done",
+          "generatedAt": "2026-03-16T11:20:27.717Z",
+          "path": "models/characters/dean_formal.glb",
+          "backend": "triposr"
+        },
+        "render": {
+          "status": "done",
+          "generatedAt": "2026-03-16T11:59:46.618Z",
+          "frameCount": 8,
+          "backend": "blender"
+        },
+        "pack": {
+          "status": "done",
+          "generatedAt": "2026-03-21T15:00:00Z"
+        }
+      }
+    },
+    "dean_f_neon": {
+      "id": "dean_f_neon",
+      "name": "Dean (F) Neon",
+      "category": "characters",
+      "tags": [
+        "arena",
+        "skin"
+      ],
+      "prompt": "single front view, female character, glowing neon cyan outlines, cyberpunk style, dark body with bright edge lighting, full body, isometric 3D game character, low poly, solid white background, no text, 3D character model reference sheet, A-pose, plain white background, no environment, no shadows, no text, no watermark",
+      "poses": [
+        "stand"
+      ],
+      "directions": 8,
+      "size": 64,
+      "color": "#ffd700",
+      "conceptBackend": "gemini-imagen",
+      "pipeline": {
+        "concept": {
+          "status": "done",
+          "generatedAt": "2026-03-16T11:12:54.464Z",
+          "path": "concepts/characters/dean_f_neon.png",
+          "backend": "gemini-imagen"
+        },
+        "model": {
+          "status": "done",
+          "generatedAt": "2026-03-16T11:21:12.038Z",
+          "path": "models/characters/dean_f_neon.glb",
+          "backend": "triposr"
+        },
+        "render": {
+          "status": "done",
+          "generatedAt": "2026-03-16T11:57:46.332Z",
+          "frameCount": 8,
+          "backend": "blender"
+        },
+        "pack": {
+          "status": "done",
+          "generatedAt": "2026-03-21T15:00:00Z"
+        }
+      }
+    },
+    "dean_f_formal": {
+      "id": "dean_f_formal",
+      "name": "Dean (F) Formal",
+      "category": "characters",
+      "tags": [
+        "arena",
+        "skin"
+      ],
+      "prompt": "single front view, female character, wearing elegant formal attire, black tie suit or evening gown, polished shoes, full body, isometric 3D game character, low poly, solid white background, no text, 3D character model reference sheet, A-pose, plain white background, no environment, no shadows, no text, no watermark",
+      "poses": [
+        "stand"
+      ],
+      "directions": 8,
+      "size": 64,
+      "color": "#ffd700",
+      "conceptBackend": "gemini-imagen",
+      "pipeline": {
+        "concept": {
+          "status": "done",
+          "generatedAt": "2026-03-16T11:13:00.076Z",
+          "path": "concepts/characters/dean_f_formal.png",
+          "backend": "gemini-imagen"
+        },
+        "model": {
+          "status": "done",
+          "generatedAt": "2026-03-16T11:22:00.117Z",
+          "path": "models/characters/dean_f_formal.glb",
+          "backend": "triposr"
+        },
+        "render": {
+          "status": "done",
+          "generatedAt": "2026-03-16T11:56:06.305Z",
+          "frameCount": 8,
+          "backend": "blender"
+        },
+        "pack": {
+          "status": "done",
+          "generatedAt": "2026-03-21T15:00:00Z"
+        }
+      }
+    },
+    "librarian_neon": {
+      "id": "librarian_neon",
+      "name": "Librarian Neon",
+      "category": "characters",
+      "tags": [
+        "arena",
+        "skin"
+      ],
+      "prompt": "single front view, male character, glowing neon cyan outlines, cyberpunk style, dark body with bright edge lighting, full body, isometric 3D game character, low poly, solid white background, no text, 3D character model reference sheet, A-pose, plain white background, no environment, no shadows, no text, no watermark",
+      "poses": [
+        "stand"
+      ],
+      "directions": 8,
+      "size": 64,
+      "color": "#ff6b9d",
+      "conceptBackend": "gemini-imagen",
+      "pipeline": {
+        "concept": {
+          "status": "done",
+          "generatedAt": "2026-03-16T11:13:07.480Z",
+          "path": "concepts/characters/librarian_neon.png",
+          "backend": "gemini-imagen"
+        },
+        "model": {
+          "status": "done",
+          "generatedAt": "2026-03-16T11:22:41.152Z",
+          "path": "models/characters/librarian_neon.glb",
+          "backend": "triposr"
+        },
+        "render": {
+          "status": "done",
+          "generatedAt": "2026-03-16T12:07:26.043Z",
+          "frameCount": 8,
+          "backend": "blender"
+        },
+        "pack": {
+          "status": "done",
+          "generatedAt": "2026-03-21T15:00:00Z"
+        }
+      }
+    },
+    "librarian_formal": {
+      "id": "librarian_formal",
+      "name": "Librarian Formal",
+      "category": "characters",
+      "tags": [
+        "arena",
+        "skin"
+      ],
+      "prompt": "single front view, male character, wearing elegant formal attire, black tie suit or evening gown, polished shoes, full body, isometric 3D game character, low poly, solid white background, no text, 3D character model reference sheet, A-pose, plain white background, no environment, no shadows, no text, no watermark",
+      "poses": [
+        "stand"
+      ],
+      "directions": 8,
+      "size": 64,
+      "color": "#ff6b9d",
+      "conceptBackend": "gemini-imagen",
+      "pipeline": {
+        "concept": {
+          "status": "done",
+          "generatedAt": "2026-03-16T11:13:11.722Z",
+          "path": "concepts/characters/librarian_formal.png",
+          "backend": "gemini-imagen"
+        },
+        "model": {
+          "status": "done",
+          "generatedAt": "2026-03-16T11:23:16.906Z",
+          "path": "models/characters/librarian_formal.glb",
+          "backend": "triposr"
+        },
+        "render": {
+          "status": "done",
+          "generatedAt": "2026-03-16T12:05:52.044Z",
+          "frameCount": 8,
+          "backend": "blender"
+        },
+        "pack": {
+          "status": "done",
+          "generatedAt": "2026-03-21T15:00:00Z"
+        }
+      }
+    },
+    "librarian_f_neon": {
+      "id": "librarian_f_neon",
+      "name": "Librarian (F) Neon",
+      "category": "characters",
+      "tags": [
+        "arena",
+        "skin"
+      ],
+      "prompt": "single front view, female character, glowing neon cyan outlines, cyberpunk style, dark body with bright edge lighting, full body, isometric 3D game character, low poly, solid white background, no text, 3D character model reference sheet, A-pose, plain white background, no environment, no shadows, no text, no watermark",
+      "poses": [
+        "stand"
+      ],
+      "directions": 8,
+      "size": 64,
+      "color": "#ff6b9d",
+      "conceptBackend": "gemini-imagen",
+      "pipeline": {
+        "concept": {
+          "status": "done",
+          "generatedAt": "2026-03-16T11:13:17.710Z",
+          "path": "concepts/characters/librarian_f_neon.png",
+          "backend": "gemini-imagen"
+        },
+        "model": {
+          "status": "done",
+          "generatedAt": "2026-03-16T11:23:50.676Z",
+          "path": "models/characters/librarian_f_neon.glb",
+          "backend": "triposr"
+        },
+        "render": {
+          "status": "done",
+          "generatedAt": "2026-03-16T12:04:49.447Z",
+          "frameCount": 8,
+          "backend": "blender"
+        },
+        "pack": {
+          "status": "done",
+          "generatedAt": "2026-03-21T15:00:00Z"
+        }
+      }
+    },
+    "librarian_f_formal": {
+      "id": "librarian_f_formal",
+      "name": "Librarian (F) Formal",
+      "category": "characters",
+      "tags": [
+        "arena",
+        "skin"
+      ],
+      "prompt": "single front view, female character, wearing elegant formal attire, black tie suit or evening gown, polished shoes, full body, isometric 3D game character, low poly, solid white background, no text, 3D character model reference sheet, A-pose, plain white background, no environment, no shadows, no text, no watermark",
+      "poses": [
+        "stand"
+      ],
+      "directions": 8,
+      "size": 64,
+      "color": "#ff6b9d",
+      "conceptBackend": "gemini-imagen",
+      "pipeline": {
+        "concept": {
+          "status": "done",
+          "generatedAt": "2026-03-16T11:13:22.315Z",
+          "path": "concepts/characters/librarian_f_formal.png",
+          "backend": "gemini-imagen"
+        },
+        "model": {
+          "status": "done",
+          "generatedAt": "2026-03-16T11:24:27.913Z",
+          "path": "models/characters/librarian_f_formal.glb",
+          "backend": "triposr"
+        },
+        "render": {
+          "status": "done",
+          "generatedAt": "2026-03-16T12:03:14.405Z",
+          "frameCount": 8,
+          "backend": "blender"
+        },
+        "pack": {
+          "status": "done",
+          "generatedAt": "2026-03-21T15:00:00Z"
+        }
+      }
+    }
+  }
+}

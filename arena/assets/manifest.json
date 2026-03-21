@@ -1,7 +1,7 @@
 {
   "meta": {
     "version": "1.0.0",
-    "style": "low-poly stylized isometric",
+    "style": "stylized 3D isometric",
     "camera_angle": 60,
     "tile_size": 32,
     "character_size": 64,
@@ -373,19 +373,19 @@
   "weapons": [
     {
       "id": "projectile",
-      "prompt": "glowing energy projectile, sci-fi laser bolt, yellow-orange, game asset, transparent background",
+      "prompt": "3D rendered glowing energy projectile, sci-fi laser bolt, yellow-orange emissive glow, stylized game VFX, transparent background",
       "frames": 2,
       "size": 32
     },
     {
       "id": "melee_arc",
-      "prompt": "sword slash arc effect, energy trail, white-blue glow, game VFX, transparent background",
+      "prompt": "3D rendered sword slash arc effect, energy trail with particle sparks, white-blue emissive glow, stylized game VFX, transparent background",
       "frames": 3,
       "size": 48
     },
     {
       "id": "muzzle_flash",
-      "prompt": "muzzle flash effect, bright yellow-white burst, game VFX, transparent background",
+      "prompt": "3D rendered muzzle flash effect, bright yellow-white burst with volumetric sparks, stylized game VFX, transparent background",
       "frames": 4,
       "size": 32
     }
@@ -393,46 +393,47 @@
   "items": [
     {
       "id": "health_pack",
-      "prompt": "low-poly red health pack, glowing cross symbol, game item, isometric view, transparent background",
+      "prompt": "3D rendered red health pack with glowing cross symbol, stylized game item, clean geometry, soft studio lighting, isometric view, transparent background",
       "frames": 1,
       "size": 32
     },
     {
       "id": "armor_plate",
-      "prompt": "low-poly blue armor plate pickup, glowing shield icon, game item, isometric view, transparent background",
+      "prompt": "3D rendered blue armor plate pickup with glowing shield icon, stylized game item, clean geometry, soft studio lighting, isometric view, transparent background",
       "frames": 1,
       "size": 32
     },
     {
       "id": "machine_gun",
       "frames": 1,
-      "size": 64
+      "size": 64,
+      "prompt": "3D rendered machine gun pickup, sci-fi automatic weapon with glowing ammo indicator, stylized game item, clean geometry, soft studio lighting, isometric view, transparent background"
     }
   ],
   "tiles": [
     {
       "id": "floor_01",
-      "prompt": "dark stone floor tile, top-down view, low-poly, seamless, dark navy tone"
+      "prompt": "3D rendered dark stone floor tile, top-down view, PBR textured, seamless tileable, dark navy tone"
     },
     {
       "id": "floor_02",
-      "prompt": "dark stone floor tile variant, top-down view, low-poly, seamless, slightly cracked"
+      "prompt": "3D rendered dark stone floor tile variant, top-down view, PBR textured, seamless tileable, slightly cracked surface"
     },
     {
       "id": "floor_03",
-      "prompt": "dark stone floor tile variant, top-down view, low-poly, seamless, moss patches"
+      "prompt": "3D rendered dark stone floor tile variant, top-down view, PBR textured, seamless tileable, moss patches"
     },
     {
       "id": "floor_04",
-      "prompt": "dark stone floor tile variant, top-down view, low-poly, seamless, worn edges"
+      "prompt": "3D rendered dark stone floor tile variant, top-down view, PBR textured, seamless tileable, worn edges"
     },
     {
       "id": "wall",
-      "prompt": "stone wall tile, top-down view, low-poly, dark gray, rough hewn blocks"
+      "prompt": "3D rendered stone wall tile, top-down view, PBR textured, dark gray, rough hewn blocks with depth"
     },
     {
       "id": "boundary",
-      "prompt": "boundary wall edge tile, top-down view, low-poly, dark with glowing blue border"
+      "prompt": "3D rendered boundary wall edge tile, top-down view, PBR textured, dark surface with glowing blue emissive border"
     },
     {
       "id": "zone_overlay",
@@ -442,59 +443,59 @@
   "cover": [
     {
       "id": "building",
-      "prompt": "low-poly campus building wall, top-down view, brick facade, academic architecture"
+      "prompt": "3D rendered campus building wall section, isometric view, brick facade with PBR materials, academic architecture, clean geometry"
     },
     {
       "id": "bench",
-      "prompt": "low-poly park bench, top-down view, wooden slats, campus outdoor seating"
+      "prompt": "3D rendered park bench, isometric view, wooden slats with PBR wood material, campus outdoor seating, clean geometry"
     },
     {
       "id": "fountain",
-      "prompt": "low-poly stone fountain, top-down view, circular base, campus courtyard centerpiece"
+      "prompt": "3D rendered stone fountain, isometric view, circular base with water effect, campus courtyard centerpiece, clean geometry, PBR materials"
     },
     {
       "id": "hedge",
-      "prompt": "low-poly trimmed hedge, top-down view, dark green, campus garden border"
+      "prompt": "3D rendered trimmed hedge, isometric view, dark green foliage with volumetric depth, campus garden border, clean geometry"
     },
     {
       "id": "pond",
-      "prompt": "low-poly ornamental pond, top-down view, blue reflective surface, campus water feature"
+      "prompt": "3D rendered ornamental pond, isometric view, blue reflective water surface with caustics, campus water feature, clean geometry"
     }
   ],
   "ui": [
     {
       "id": "heart_full",
-      "prompt": "pixel art red heart icon, full health, game UI",
+      "prompt": "stylized 3D red heart icon, full health indicator, glossy surface, soft glow, game UI, transparent background",
       "size": 16
     },
     {
       "id": "heart_empty",
-      "prompt": "pixel art dark heart icon, empty health, game UI",
+      "prompt": "stylized 3D dark heart icon, empty health indicator, matte surface, desaturated, game UI, transparent background",
       "size": 16
     },
     {
       "id": "shield",
-      "prompt": "pixel art blue shield icon, armor indicator, game UI",
+      "prompt": "stylized 3D blue shield icon, armor indicator, metallic surface with emissive edge, game UI, transparent background",
       "size": 16
     },
     {
       "id": "gun_icon",
-      "prompt": "pixel art gun icon, ranged weapon, game UI",
+      "prompt": "stylized 3D gun icon, ranged weapon indicator, clean silhouette, game UI, transparent background",
       "size": 16
     },
     {
       "id": "melee_icon",
-      "prompt": "pixel art sword icon, melee weapon, game UI",
+      "prompt": "stylized 3D sword icon, melee weapon indicator, metallic blade with glow, game UI, transparent background",
       "size": 16
     },
     {
       "id": "round_pip_on",
-      "prompt": "pixel art glowing pip, round won indicator, game UI",
+      "prompt": "stylized 3D glowing circular pip, round won indicator, emissive cyan glow, game UI, transparent background",
       "size": 8
     },
     {
       "id": "round_pip_off",
-      "prompt": "pixel art dim pip, round not won indicator, game UI",
+      "prompt": "stylized 3D dim circular pip, round not won indicator, dark matte surface, game UI, transparent background",
       "size": 8
     }
   ],

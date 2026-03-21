@@ -1,10 +1,10 @@
 {
   "name": "arena",
-  "audioRoot": "../test-arena-tmp/assets/audio",
-  "outputRoot": "../test-arena-tmp/frontend/public/assets",
+  "audioRoot": "../arena/assets/audio",
+  "outputRoot": "../arena/frontend/public/assets",
   "processScript": null,
   "generateScript": null,
-  "manifestPath": "../test-arena-tmp/assets/manifest.json",
+  "manifestPath": "../arena/assets/manifest.json",
   "sounds": {
     "gunshot": {
       "type": "sfx",

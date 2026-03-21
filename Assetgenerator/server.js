@@ -828,6 +828,53 @@ function markDownstreamStale(asset, fromPhase) {
 
 let visualGenerationInProgress = false;
 
+// Track which concept backends are rate-limited for the current batch run
+let _rateLimitedBackends = new Set();
+
+/**
+ * Try generating a concept using the priority chain of backends.
+ * If a backend throws a RateLimitError, mark it as exhausted and try the next.
+ * Returns { result, adapterName } on success.
+ */
+async function generateConceptWithFallback({ id, asset, vConfig, onFallback }) {
+  const configPriority = vConfig.conceptBackendPriority || ['gemini-imagen', 'siliconflow', 'comfyui'];
+  let backends;
+  if (asset.conceptBackend) {
+    backends = [asset.conceptBackend, ...configPriority.filter(b => b !== asset.conceptBackend)];
+  } else {
+    backends = [...configPriority];
+  }
+
+  const available = backends.filter(b => !_rateLimitedBackends.has(b));
+  if (available.length === 0) {
+    _rateLimitedBackends.clear();
+    available.push(...backends);
+  }
+
+  let lastError;
+  for (const backendName of available) {
+    const adapterPath = join(__dirname, 'adapters', `${backendName}.js`);
+    if (!existsSync(adapterPath)) continue;
+
+    try {
+      const adapter = await import(adapterPath);
+      const result = await adapter.generate({ id, asset, config: vConfig, libraryRoot: vConfig.libraryRoot });
+      return { result, adapterName: backendName };
+    } catch (err) {
+      if (err.name === 'RateLimitError') {
+        _rateLimitedBackends.add(backendName);
+        console.log(`  [Fallback] ${backendName} rate-limited, trying next backend...`);
+        if (onFallback) onFallback(backendName, err.message);
+        lastError = err;
+        continue;
+      }
+      throw err;
+    }
+  }
+
+  throw lastError || new Error('All concept backends exhausted (rate-limited)');
+}
+
 app.get('/api/visual-library', (req, res) => {
   res.json(loadVisualLibrary());
 });
@@ -974,6 +1021,7 @@ app.post('/api/visual-library/batch/generate', async (req, res) => {
   if (!ids || !Array.isArray(ids)) return res.status(400).json({ error: 'ids array required' });
 
   visualGenerationInProgress = true;
+  _rateLimitedBackends.clear();
   res.writeHead(200, { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', Connection: 'keep-alive' });
 
   const library = loadVisualLibrary();
@@ -999,15 +1047,29 @@ app.post('/api/visual-library/batch/generate', async (req, res) => {
     for (const p of phasesToRun) {
       try {
         res.write(`event: progress\ndata: ${JSON.stringify({ asset: id, phase: p, status: 'generating' })}\n\n`);
-        const defaultAdapterMap = { concept: 'comfyui', model: 'triposr', render: 'blender', pack: 'packer', rig: 'mixamo', animate: 'mixamo' };
-        // Allow per-asset backend override for concept phase (e.g., gemini-imagen)
-        const adapterName = (p === 'concept' && asset.conceptBackend) ? asset.conceptBackend : defaultAdapterMap[p];
-        const adapterPath = join(__dirname, 'adapters', `${adapterName}.js`);
-        if (!existsSync(adapterPath)) throw new Error(`Adapter ${adapterName} not found`);
-
-        const adapter = await import(adapterPath);
         asset._currentPhase = p;
-        const result = await adapter.generate({ id, asset, config: vConfig, libraryRoot: vConfig.libraryRoot });
+
+        let result, adapterName;
+
+        if (p === 'concept') {
+          // Use fallback chain for concept generation (Gemini → SiliconFlow → ComfyUI)
+          const fallbackResult = await generateConceptWithFallback({
+            id, asset, vConfig,
+            onFallback: (backend, reason) => {
+              res.write(`event: fallback\ndata: ${JSON.stringify({ asset: id, phase: p, from: backend, reason })}\n\n`);
+            },
+          });
+          result = fallbackResult.result;
+          adapterName = fallbackResult.adapterName;
+        } else {
+          const defaultAdapterMap = { model: 'triposr', render: 'blender', pack: 'packer', rig: 'mixamo', animate: 'mixamo' };
+          adapterName = defaultAdapterMap[p];
+          const adapterPath = join(__dirname, 'adapters', `${adapterName}.js`);
+          if (!existsSync(adapterPath)) throw new Error(`Adapter ${adapterName} not found`);
+
+          const adapter = await import(adapterPath);
+          result = await adapter.generate({ id, asset, config: vConfig, libraryRoot: vConfig.libraryRoot });
+        }
 
         asset.pipeline[p] = { status: 'done', generatedAt: new Date().toISOString(), backend: adapterName };
         if (result.path) asset.pipeline[p].path = result.path;
@@ -1015,7 +1077,7 @@ app.post('/api/visual-library/batch/generate', async (req, res) => {
         if (result.backend) asset.pipeline[p].backend = result.backend;
         saveVisualLibrary(library);
 
-        res.write(`event: done\ndata: ${JSON.stringify({ asset: id, phase: p, ...result })}\n\n`);
+        res.write(`event: done\ndata: ${JSON.stringify({ asset: id, phase: p, ...result, backend: adapterName })}\n\n`);
       } catch (err) {
         asset.pipeline[p] = { status: 'error' };
         saveVisualLibrary(library);
@@ -1125,6 +1187,7 @@ app.post('/api/visual-library/import', (req, res) => {
         category,
         tags: [project],
         prompt: asset.prompt || '',
+        conceptBackend: 'gemini-imagen',
         poses: asset.poses || catConfig.defaultPoses || ['idle'],
         directions: catConfig.directions || 1,
         size: asset.size || catConfig.size || 32,
@@ -1194,31 +1257,45 @@ app.post('/api/visual-library/:id/generate/:phase', async (req, res) => {
   // Skip model for non-3D categories
   phasesToRun = phasesToRun.filter(p => !(p === 'model' && catConfig.has3D === false));
 
+  _rateLimitedBackends.clear();
   for (const p of phasesToRun) {
     try {
       res.write(`event: progress\ndata: ${JSON.stringify({ asset: asset.id, phase: p, status: 'generating' })}\n\n`);
       if (!asset.pipeline[p]) asset.pipeline[p] = {};
       asset.pipeline[p].status = 'generating';
-
-      const defaultAdapterMap = { concept: 'comfyui', model: 'triposr', render: 'blender', pack: 'packer', rig: 'mixamo', animate: 'mixamo' };
-      const adapterName = (p === 'concept' && asset.conceptBackend) ? asset.conceptBackend : defaultAdapterMap[p];
-      const adapterPath = join(__dirname, 'adapters', `${adapterName}.js`);
-      if (!existsSync(adapterPath)) throw new Error(`Adapter not found: ${adapterPath}`);
-
-      const adapter = await import(adapterPath);
       asset._currentPhase = p;
-      const result = await adapter.generate({ id: asset.id, asset, config: vConfig, libraryRoot: vConfig.libraryRoot });
+
+      let result, adapterName;
+
+      if (p === 'concept') {
+        const fallbackResult = await generateConceptWithFallback({
+          id: asset.id, asset, vConfig,
+          onFallback: (backend, reason) => {
+            res.write(`event: fallback\ndata: ${JSON.stringify({ asset: asset.id, phase: p, from: backend, reason })}\n\n`);
+          },
+        });
+        result = fallbackResult.result;
+        adapterName = fallbackResult.adapterName;
+      } else {
+        const defaultAdapterMap = { model: 'triposr', render: 'blender', pack: 'packer', rig: 'mixamo', animate: 'mixamo' };
+        adapterName = defaultAdapterMap[p];
+        const adapterPath = join(__dirname, 'adapters', `${adapterName}.js`);
+        if (!existsSync(adapterPath)) throw new Error(`Adapter not found: ${adapterPath}`);
+
+        const adapter = await import(adapterPath);
+        result = await adapter.generate({ id: asset.id, asset, config: vConfig, libraryRoot: vConfig.libraryRoot });
+      }
 
       asset.pipeline[p].status = 'done';
       asset.pipeline[p].generatedAt = new Date().toISOString();
+      asset.pipeline[p].backend = adapterName;
       if (result.path) asset.pipeline[p].path = result.path;
       if (result.frameCount) asset.pipeline[p].frameCount = result.frameCount;
-      if (result.backend) asset.pipeline[p].backend = result.backend;
 
       markDownstreamStale(asset, p);
       saveVisualLibrary(library);
 
-      res.write(`event: done\ndata: ${JSON.stringify({ asset: asset.id, phase: p, ...result })}\n\n`);
+      res.write(`event: done\ndata: ${JSON.stringify({ asset: asset.id, phase: p, ...result, backend: adapterName })}\n\n`);
     } catch (err) {
       asset.pipeline[p].status = 'error';
       saveVisualLibrary(library);
