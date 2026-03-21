@@ -39,6 +39,6 @@ describe('useGameAudio', () => {
       keysRef: { current: new Set() },
     }));
     vi.advanceTimersByTime(300);
-    expect(SoundService.playSFX).toHaveBeenCalledWith('gunshot', { volume: 0.6 });
+    expect(SoundService.playSFX).toHaveBeenCalledWith('gunshot', { volume: 0.35 });
   });
 });

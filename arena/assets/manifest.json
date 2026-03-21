@@ -502,88 +502,88 @@
   "sfx": [
     {
       "id": "gunshot",
-      "prompt": "sci-fi laser gunshot, short sharp burst, video game sound effect",
-      "duration": 0.5
-    },
-    {
-      "id": "melee_swing",
-      "prompt": "sword swing whoosh, fast melee attack, video game sound effect",
-      "duration": 0.4
-    },
-    {
-      "id": "bullet_impact",
-      "prompt": "laser bullet impact on surface, sci-fi hit, video game sound effect",
+      "prompt": "suppressed pistol shot, silenced weapon pew, soft muffled thud with subtle high-end click, low volume quiet firearm, video game sound effect",
       "duration": 0.3
     },
     {
+      "id": "melee_swing",
+      "prompt": "soft blade whoosh through air, gentle swift melee swipe, light breeze-like sweep, understated video game sound effect",
+      "duration": 0.3
+    },
+    {
+      "id": "bullet_impact",
+      "prompt": "muffled bullet hitting soft surface, dampened thud impact, quiet ricochet, understated video game sound effect",
+      "duration": 0.2
+    },
+    {
       "id": "player_hit",
-      "prompt": "character taking damage, flesh impact, video game sound effect",
-      "duration": 0.4
+      "prompt": "soft padded impact, muffled body hit, gentle dull thump, quiet low-frequency, video game sound effect",
+      "duration": 0.3
     },
     {
       "id": "player_death",
-      "prompt": "character death sound, dramatic collapse, video game sound effect",
-      "duration": 1.0
+      "prompt": "soft electronic fade-out tone, gentle descending hum, quiet digital dissolve, understated video game death sound",
+      "duration": 0.8
     },
     {
       "id": "health_pickup",
-      "prompt": "health pickup sparkle, positive chime, video game sound effect",
-      "duration": 0.5
+      "prompt": "gentle soft chime, warm crystalline ding, quiet positive notification, soothing video game pickup sound",
+      "duration": 0.4
     },
     {
       "id": "armor_pickup",
-      "prompt": "armor equip metallic clank, shield activate, video game sound effect",
-      "duration": 0.5
+      "prompt": "soft metallic shimmer, gentle shield activation hum, quiet low resonance click, soothing video game equip sound",
+      "duration": 0.4
     },
     {
       "id": "round_start",
-      "prompt": "battle round start horn, dramatic fanfare, video game sound effect",
+      "prompt": "soft electronic readiness tone, gentle ascending synth pulse, calm but alerting, understated video game round start",
       "duration": 1.5
     },
     {
       "id": "round_end",
-      "prompt": "round end gong, resolution chime, video game sound effect",
+      "prompt": "gentle resolution chime, soft bell with warm reverb, quiet closing tone, understated video game round end",
       "duration": 1.5
     },
     {
       "id": "match_victory",
-      "prompt": "triumphant victory fanfare, celebration, video game sound effect",
+      "prompt": "warm triumphant melody, gentle ascending synth chords, soft celebratory chime, understated video game victory sting",
       "duration": 2.0
     },
     {
       "id": "match_defeat",
-      "prompt": "somber defeat sound, loss, video game sound effect",
+      "prompt": "gentle melancholic tone, soft descending minor chord, warm but sad synth pad, quiet video game defeat sting",
       "duration": 2.0
     },
     {
       "id": "zone_warning",
-      "prompt": "danger zone warning alarm, urgent beeping, video game sound effect",
+      "prompt": "soft pulsing low hum, gentle warning tone, muffled rhythmic pulse, non-harsh alert, quiet video game zone warning",
       "duration": 1.0
     },
     {
       "id": "zone_tick",
-      "prompt": "zone damage tick, electric zap, recurring pain, video game",
+      "prompt": "quiet soft electric crackle, gentle static tick, subtle low buzz, understated recurring damage, video game",
       "duration": 0.3
     },
     {
       "id": "footstep_walk",
-      "prompt": "footstep on stone, single step walking pace, video game sound",
-      "duration": 0.3
-    },
-    {
-      "id": "footstep_sprint",
-      "prompt": "fast footstep on stone, sprinting pace, video game sound",
+      "prompt": "very soft muffled footstep on carpet, barely audible padded step, quiet dampened walking sound, gentle video game footstep",
       "duration": 0.2
     },
     {
+      "id": "footstep_sprint",
+      "prompt": "soft muffled fast footstep on carpet, light padded running step, quiet dampened sprinting sound, gentle video game footstep",
+      "duration": 0.15
+    },
+    {
       "id": "grenade_launch",
-      "prompt": "grenade launcher firing, heavy thunk mechanical release, sci-fi weapon shoot, video game sound effect",
-      "duration": 0.6
+      "prompt": "muffled launcher thump, soft pneumatic release, dampened mechanical pop, quiet heavy weapon fire, video game sound effect",
+      "duration": 0.5
     },
     {
       "id": "grenade_explode",
-      "prompt": "grenade explosion blast, large boom impact, debris scatter, sci-fi explosion, video game sound effect",
-      "duration": 1.2
+      "prompt": "muffled distant explosion, dampened low boom with soft rumble, bass-heavy but quiet blast, understated video game explosion",
+      "duration": 1.0
     }
   ],
   "music": [

@@ -17,10 +17,10 @@ export function useGameAudio({ mouseRef, keysRef }: UseGameAudioOptions) {
   useEffect(() => {
     const shootCheck = setInterval(() => {
       if (mouseRef.current.down) {
-        SoundService.playSFX('gunshot', { volume: 0.6 });
+        SoundService.playSFX('gunshot', { volume: 0.35 });
       }
       if (mouseRef.current.rightDown || keysRef.current.has('e')) {
-        SoundService.playSFX('melee_swing', { volume: 0.7 });
+        SoundService.playSFX('melee_swing', { volume: 0.4 });
       }
     }, 250);
     return () => clearInterval(shootCheck);

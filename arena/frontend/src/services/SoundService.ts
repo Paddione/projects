@@ -44,10 +44,10 @@ class SoundServiceImpl {
     private currentMusic: { id: string; howl: Howl } | null = null;
     private loaded = false;
 
-    // Volume settings (0-1)
-    private masterVolume = 1.0;
-    private sfxVolume = 0.8;
-    private musicVolume = 0.4;
+    // Volume settings (0-1) — kept low for ear comfort
+    private masterVolume = 0.7;
+    private sfxVolume = 0.5;
+    private musicVolume = 0.35;
     private muted = false;
 
     get isLoaded(): boolean {
@@ -131,7 +131,7 @@ class SoundServiceImpl {
         const id = sprinting ? 'footstep_sprint' : 'footstep_walk';
         // Slight random pitch for variety
         const rate = 0.9 + Math.random() * 0.2;
-        this.playSFX(id, { rate, volume: 0.5 });
+        this.playSFX(id, { rate, volume: 0.25 });
     }
 
     // =========================================================================
