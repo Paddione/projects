@@ -83,10 +83,29 @@ router.get('/available', authenticate, async (req: Request, res: Response): Prom
       return;
     }
 
+    // Fetch ownership from auth
+    let ownedIds: string[] = [];
+    if (authToken) {
+      try {
+        const { fetchUserProfile } = await import('../config/authClient.js');
+        const profileRes = await fetchUserProfile(authToken);
+        if (profileRes?.inventory) {
+          ownedIds = profileRes.inventory
+            .filter((item: any) => item.itemType === 'character' || item.item_type === 'character')
+            .map((item: any) => (item.itemId || item.item_id || '').replace('character_', ''));
+        }
+      } catch {
+        // Auth unreachable — only student owned
+      }
+    }
+
+    const annotatedCharacters = characterService.getCharactersWithOwnership(ownedIds);
+
     res.json({
       success: true,
       data: {
         availableCharacters: userInfo.availableCharacters,
+        charactersWithOwnership: annotatedCharacters,
         currentCharacter: userInfo.character,
         level: userInfo.level,
         experience: userInfo.experience,
@@ -212,11 +231,20 @@ router.put('/select', authenticate, async (req: Request, res: Response): Promise
         return;
       }
       
-      if (error.message.includes('Character requires level')) {
+      if (error.message.includes('Cannot verify character ownership')) {
+        res.status(503).json({
+          success: false,
+          error: 'Service unavailable',
+          message: 'Cannot verify character ownership. Try again later.'
+        });
+        return;
+      }
+
+      if (error.message.includes('Character not purchased')) {
         res.status(403).json({
           success: false,
           error: 'Character locked',
-          message: error.message
+          message: 'Character not purchased'
         });
         return;
       }

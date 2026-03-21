@@ -36,61 +36,61 @@ export class CharacterService {
 
   // University-themed characters
   private readonly characters: Character[] = [
-    { 
-      id: 'professor', 
-      name: 'Professor', 
+    {
+      id: 'professor',
+      name: 'Professor',
       emoji: '👨‍🏫',
       description: 'Wise and knowledgeable academic',
-      unlockLevel: 10
+      unlockLevel: 1
     },
-    { 
-      id: 'student', 
-      name: 'Student', 
+    {
+      id: 'student',
+      name: 'Student',
       emoji: '👨‍🎓',
       description: 'Eager learner ready for challenges',
       unlockLevel: 1
     },
-    { 
-      id: 'librarian', 
-      name: 'Librarian', 
+    {
+      id: 'librarian',
+      name: 'Librarian',
       emoji: '👩‍💼',
       description: 'Organized keeper of knowledge',
-      unlockLevel: 20
+      unlockLevel: 1
     },
-    { 
-      id: 'researcher', 
-      name: 'Researcher', 
+    {
+      id: 'researcher',
+      name: 'Researcher',
       emoji: '👨‍🔬',
       description: 'Curious explorer of new ideas',
-      unlockLevel: 30
+      unlockLevel: 1
     },
-    { 
-      id: 'dean', 
-      name: 'Dean', 
+    {
+      id: 'dean',
+      name: 'Dean',
       emoji: '👩‍⚖️',
       description: 'Distinguished academic leader',
-      unlockLevel: 40
+      unlockLevel: 1
     },
-    { 
-      id: 'graduate', 
-      name: 'Graduate', 
+    {
+      id: 'graduate',
+      name: 'Graduate',
       emoji: '🎓',
       description: 'Accomplished scholar',
-      unlockLevel: 50
+      unlockLevel: 1
     },
-    { 
-      id: 'lab_assistant', 
-      name: 'Lab Assistant', 
+    {
+      id: 'lab_assistant',
+      name: 'Lab Assistant',
       emoji: '👨‍🔬',
       description: 'Hands-on experimenter',
-      unlockLevel: 60
+      unlockLevel: 1
     },
-    { 
-      id: 'teaching_assistant', 
-      name: 'Teaching Assistant', 
+    {
+      id: 'teaching_assistant',
+      name: 'Teaching Assistant',
       emoji: '👩‍🏫',
       description: 'Supportive mentor and guide',
-      unlockLevel: 70
+      unlockLevel: 1
     }
   ];
 
@@ -120,6 +120,18 @@ export class CharacterService {
    */
   getAvailableCharacters(userLevel: number): Character[] {
     return this.characters.filter(char => char.unlockLevel <= userLevel);
+  }
+
+  /**
+   * Get all characters annotated with ownership state.
+   * Student is always owned. Others require inventory entry.
+   */
+  getCharactersWithOwnership(ownedCharacterIds: string[] = []): (Character & { owned: boolean; respectCost: number })[] {
+    return this.characters.map(char => ({
+      ...char,
+      owned: char.id === 'student' || ownedCharacterIds.includes(char.id),
+      respectCost: char.id === 'student' ? 0 : 500,
+    }));
   }
 
   /**
@@ -227,9 +239,9 @@ export class CharacterService {
     try {
       const profile = await this.gameProfileService.getOrCreateProfile(userId);
 
-      // Check if character is unlocked for user's level
-      if (character.unlockLevel > profile.characterLevel) {
-        throw new Error(`Character requires level ${character.unlockLevel} to unlock`);
+      // Auth service is unreachable — only student is safe to select
+      if (characterId !== 'student') {
+        throw new Error('Cannot verify character ownership');
       }
 
       // Update profile with new character
@@ -261,9 +273,9 @@ export class CharacterService {
         throw new Error('User not found');
       }
 
-      // Check if character is unlocked for user's level
-      if (character.unlockLevel > user.character_level) {
-        throw new Error(`Character requires level ${character.unlockLevel} to unlock`);
+      // Auth service is unreachable — only student is safe to select
+      if (characterId !== 'student') {
+        throw new Error('Cannot verify character ownership');
       }
 
       // Update user's selected character
