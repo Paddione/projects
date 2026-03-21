@@ -2,7 +2,7 @@ import { db } from '../config/database.js';
 import { profiles, loadouts, inventory } from '../db/schema.js';
 import type { ProfileRecord, LoadoutRecord, LoadoutInsert, InventoryRecord } from '../db/schema.js';
 import type { ProfileWithLoadout } from '../types/platform.js';
-import { eq, sql } from 'drizzle-orm';
+import { eq, sql, and } from 'drizzle-orm';
 
 export class ProfileService {
   /**
@@ -52,6 +52,22 @@ export class ProfileService {
   async updateCharacter(userId: number, character: string, gender: string): Promise<ProfileRecord> {
     // Ensure profile exists
     await this.getOrCreateProfile(userId);
+
+    // Ownership check: student is always free, others require purchase
+    if (character !== 'student') {
+      const owned = await db
+        .select({ id: inventory.id })
+        .from(inventory)
+        .where(and(
+          eq(inventory.user_id, userId),
+          eq(inventory.item_id, `character_${character}`),
+        ))
+        .limit(1);
+
+      if (owned.length === 0) {
+        throw new Error('Character not purchased');
+      }
+    }
 
     const [updated] = await db
       .update(profiles)
