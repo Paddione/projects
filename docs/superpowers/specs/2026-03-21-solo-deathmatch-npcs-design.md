@@ -16,9 +16,10 @@ After a single-player L2P game, the player has no option to enter an Arena death
 | Stakes | Solo player risks earned L2P XP |
 | NPC count | Player chooses 1, 2, or 3 in ResultsPage |
 | Respect reward | Scaled: 1 NPC = 25, 2 NPCs = 50, 3 NPCs = 100 |
-| Win outcome | Keep XP + earn scaled Respect |
-| Lose outcome | XP forfeited (destroyed), 0 Respect |
+| Win outcome | Earn escrowed XP amount (fresh award) + scaled Respect |
+| Lose outcome | 0 XP awarded, 0 Respect. Escrowed XP never awarded. |
 | Infrastructure | Reuses existing escrow system with `matchConfig.solo` + `matchConfig.npcCount` |
+| XP timing | L2P does NOT award XP before deathmatch. XP is held in escrow metadata and only awarded on win via settlement. |
 | Arena match | Auto-starts when solo player joins (no waiting), NPCs configured from escrow |
 | UX | Same ResultsPage popup as multiplayer, with added NPC count picker |
 
@@ -60,10 +61,10 @@ Arena: GET /api/internal/match/escrow/{token}
 Match plays out (player vs 2 NPCs)
     |
     +-- WIN --> POST /api/internal/match/settle { token, winnerId: userId }
-    |             → Return 200 XP + award 50 Respect
+    |             → Award 200 XP (from escrow) + 50 Respect
     |
     +-- LOSE --> POST /api/internal/match/settle { token, winnerId: null }
-                  → Forfeit 200 XP (destroyed) + 0 Respect
+                  → 0 XP awarded, 0 Respect. Escrow marked settled.
 ```
 
 ## Service Changes
@@ -72,28 +73,40 @@ Match plays out (player vs 2 NPCs)
 
 **Remove 2-player minimum for deathmatch offer:**
 
-Currently `startDeathmatchOffer()` only fires when `≥2 players` finish. Change the condition to fire for `≥1 player`.
+Currently `startDeathmatchOffer()` only fires when `≥2 players` finish (line ~1699). Change the condition to fire for `≥1 player`.
 
 **Add `solo` flag to deathmatch-offer event:**
 
-When only 1 player finished the game, emit `deathmatch-offer` with `solo: true`. The event payload becomes:
+When only 1 player finished the game, emit `deathmatch-offer` with `solo: true`. The current event payload at line 1727 is `{ earnedXp, timeoutSeconds }`. Update to:
 ```typescript
 {
-  earnedXp: number,
-  solo: boolean,        // NEW: true when 1 player
-  playerIds: string[],
+  earnedXp: Record<string, number>,  // existing
+  timeoutSeconds: number,            // existing
+  solo: boolean,                     // NEW: true when 1 player
 }
 ```
 
+**Update `DeathmatchOfferData` types:**
+
+The frontend type at `DeathmatchModal.tsx` line 5 and `socketService.ts` line 66 must both be updated to include `solo: boolean`.
+
 **Accept NPC count from solo player:**
 
-The `deathmatch-accept` event currently just signals acceptance. For solo mode, it includes `npcCount`:
+The `deathmatch-accept` handler in `SocketService.ts` line 257 currently receives `{ lobbyCode: string }`. Update to accept optional `npcCount`:
 ```typescript
-// Client emits:
-socket.emit('deathmatch-accept', { npcCount: 2 })
+{ lobbyCode: string, npcCount?: 1 | 2 | 3 }
 ```
 
-The handler reads `npcCount` from the event data (default to 2 if missing for backward compat).
+`GameService.handleDeathmatchAccept()` (line 1738) currently takes `(lobbyCode, playerId)`. Add `npcCount` parameter:
+```typescript
+handleDeathmatchAccept(lobbyCode: string, playerId: string, npcCount?: 1 | 2 | 3)
+```
+
+Store `npcCount` in the `deathmatchChallenges` map entry (line 129) — add `npcCount?: number` to the challenge state.
+
+**Validate npcCount:**
+
+Server-side validate `npcCount` is in `[1, 2, 3]`. Reject invalid values.
 
 **Pass NPC count into escrow matchConfig:**
 
@@ -109,9 +122,17 @@ matchConfig: {
 
 **Auto-resolve for solo:**
 
-When `solo: true`, skip the 60-second wait for other players. Resolve immediately after the solo player accepts.
+When `solo: true`, skip the 60-second wait for other players. Also skip the `DEATHMATCH_MIN_PLAYERS` check at line 1796 in `resolveDeathmatchChallenge()` — that gate currently requires `acceptedIds.length >= 2`. For solo mode, 1 accepted player is sufficient.
 
-### 2. L2P Frontend — ResultsPage.tsx
+**Defer XP award:**
+
+When the player accepts a deathmatch, L2P must NOT award the earned XP via `CharacterService.awardExperience()`. The XP amount is recorded in the escrow only. If the player declines, XP is awarded normally. This requires checking whether a deathmatch was accepted before calling `awardExperience` in `ScoringService.savePlayerResult()` (line ~248).
+
+### 2. L2P Frontend — ResultsPage.tsx / DeathmatchModal.tsx
+
+**Update `DeathmatchOfferData` interface:**
+
+In `DeathmatchModal.tsx` (line 5), add `solo: boolean` to the interface. In `socketService.ts` (line 66), update the socket event type to match.
 
 **Modified offer UI for solo games:**
 
@@ -126,7 +147,7 @@ When `deathmatch-offer` has `solo: true`, show:
 
 **Accept emits NPC count:**
 
-Clicking an NPC button emits `deathmatch-accept` with `{ npcCount: 1|2|3 }`.
+Clicking an NPC button emits `deathmatch-accept` with `{ lobbyCode, npcCount: 1|2|3 }`.
 
 **Existing multiplayer offer unchanged:**
 
@@ -136,10 +157,11 @@ When `solo: false` (or absent), the existing Accept/Decline UI works as before. 
 
 **Read solo config from escrow:**
 
-In the `join-private-match` handler, after fetching the escrow:
+In the `join-private-match` handler, after fetching the escrow. Note: the DB column is `match_config` (snake_case) — verify whether Drizzle returns it as `match_config` or `matchConfig`. Use the correct key:
 ```typescript
-const isSolo = escrow.matchConfig?.solo === true;
-const npcCount = escrow.matchConfig?.npcCount || 2;
+const config = escrow.match_config || escrow.matchConfig || {};
+const isSolo = config.solo === true;
+const npcCount = config.npcCount || 2;
 ```
 
 **Auto-configure lobby for solo:**
@@ -151,6 +173,14 @@ if (isSolo) {
 }
 ```
 
+**Update `maxPlayers` type for solo:**
+
+The `ArenaLobbySettings.maxPlayers` type in `types/game.ts` line 192 is `2 | 3 | 4`. For solo matches, we need to allow `1`. Either:
+- Widen the type to `1 | 2 | 3 | 4`
+- Or set `maxPlayers = 2` for solo matches (1 human + NPCs don't count as players)
+
+Recommendation: Set `maxPlayers = 2` for solo matches since NPCs are managed separately from the players array. This avoids a type change.
+
 **Skip waiting for other players:**
 
 Currently the private match handler waits for all `expectedPlayerIds` to join. When `isSolo`, start the match immediately once the single player joins — don't wait for anyone else.
@@ -161,9 +191,16 @@ The ownership validation added in the earlier character gating feature works for
 
 ### 4. Auth — internal.ts (Settlement)
 
+**Update `matchSettleSchema` to allow null winnerId:**
+
+The current Zod schema at line 40 validates `winnerId: z.number().int().positive()`. Update to:
+```typescript
+winnerId: z.number().int().positive().nullable(),
+```
+
 **Scaled Respect by NPC count:**
 
-In the `POST /api/internal/match/settle` handler, read `npcCount` from the escrow's `matchConfig`:
+In the `POST /api/internal/match/settle` handler, read `npcCount` from the escrow's `match_config` (snake_case DB column):
 ```typescript
 const npcCount = escrow.match_config?.npcCount;
 let respectAmount = 50; // default for multiplayer
@@ -175,10 +212,10 @@ if (npcCount !== undefined) {
 
 **Forfeit path (winnerId: null):**
 
-Currently settlement always expects a valid `winnerId`. Add handling for `winnerId: null`:
+Add handling for `winnerId === null` before the existing winner logic:
 ```typescript
-if (!winnerId) {
-  // Forfeit: mark escrow settled, do NOT return XP, award 0 Respect
+if (winnerId === null) {
+  // Forfeit: mark escrow settled, award nothing
   await tx.update(matchEscrow)
     .set({ status: 'settled', settled_at: new Date() })
     .where(eq(matchEscrow.token, token));
@@ -187,29 +224,40 @@ if (!winnerId) {
 }
 ```
 
-The escrowed XP is simply not returned — it's effectively destroyed. The player's auth profile XP was already debited when the escrow was created (the XP was "locked away").
+**XP is never debited at escrow creation.** The escrow system records XP amounts as metadata only — it does not debit XP from profiles. Therefore:
+- **Win:** Settlement awards escrowed XP to the winner via `ProfileService.awardXp()` (same as multiplayer)
+- **Forfeit:** Settlement does nothing — XP was never awarded in the first place. L2P deferred the XP award when the deathmatch was accepted (see Section 1).
+
+This means the "gambit" works because L2P withholds XP until settlement, not because auth debits it.
 
 **Backward compatibility:**
 
 - Multiplayer matches (no `npcCount` in config) → 50 Respect as before
-- `winnerId` is still required for multiplayer matches
 - `winnerId: null` only valid when `matchConfig.solo === true`
+- Existing multiplayer settlement unchanged
+
+**winnerId type coercion:**
+
+The Arena backend currently passes `winnerId` which may be a string. The auth schema expects a number. Verify the Arena settle call converts to integer. If not, add `parseInt()` in the Arena settle call or accept `z.union([z.number(), z.string().transform(Number)])` in the schema.
 
 ### 5. Arena Backend — GameService.ts (Loss Detection)
 
-**Solo loss = all rounds lost:**
+**Solo loss = all humans dead:**
 
-The existing `endMatchWithResults()` determines a winner. When the solo player dies in all rounds (NPCs win), `winnerId` will be an NPC ID (not a real user). The match end logic needs to:
-- Detect that the winner is an NPC (not in `escrow.playerIds`)
-- Call settle with `winnerId: null` (forfeit)
+When all human players die, `checkRoundEnd` (line 1314) sets `winnerId = ''` (empty string), not an NPC ID. The match end logic needs to detect this:
 
 ```typescript
 // In endMatchWithResults, after determining winnerId:
 if (game.escrowToken) {
-  const isHumanWinner = game.players.some(p => p.id === winnerId);
-  await settleMatch(game.escrowToken, isHumanWinner ? winnerId : null);
+  // winnerId is '' when all humans die (NPCs win)
+  const isHumanWinner = winnerId !== '' && game.players.some(p => p.id === winnerId);
+  await settleMatch(game.escrowToken, isHumanWinner ? parseInt(winnerId) : null);
 }
 ```
+
+**Player disconnect during solo match:**
+
+If the solo player disconnects mid-match, treat it as a forfeit. The existing disconnect handler should end the match — ensure it calls settle with `winnerId: null` when the escrow has `solo: true`.
 
 ## Testing Strategy
 
@@ -240,14 +288,18 @@ if (game.escrowToken) {
 ## Files to Create/Modify
 
 ### L2P Backend
-- **Modify:** `l2p/backend/src/services/GameService.ts` (remove 2-player min, solo flag, npcCount in escrow, auto-resolve)
+- **Modify:** `l2p/backend/src/services/GameService.ts` (remove 2-player min, solo flag, npcCount in escrow, auto-resolve, defer XP)
+- **Modify:** `l2p/backend/src/services/SocketService.ts` (accept npcCount in deathmatch-accept handler)
+- **Modify:** `l2p/backend/src/services/ScoringService.ts` (defer XP award when deathmatch accepted)
 
 ### L2P Frontend
 - **Modify:** `l2p/frontend/src/pages/ResultsPage.tsx` (NPC picker UI for solo offers)
+- **Modify:** `l2p/frontend/src/components/DeathmatchModal.tsx` (update DeathmatchOfferData interface)
+- **Modify:** `l2p/frontend/src/services/socketService.ts` (update socket event type for solo flag)
 
 ### Arena Backend
 - **Modify:** `arena/backend/src/services/SocketService.ts` (read solo/npcCount from escrow, auto-start, configure NPCs)
-- **Modify:** `arena/backend/src/services/GameService.ts` (detect NPC winner → forfeit settlement)
+- **Modify:** `arena/backend/src/services/GameService.ts` (detect NPC winner → forfeit settlement, disconnect handling)
 
 ### Auth
-- **Modify:** `auth/src/routes/internal.ts` (scaled Respect, forfeit path for winnerId: null)
+- **Modify:** `auth/src/routes/internal.ts` (update matchSettleSchema for nullable winnerId, scaled Respect, forfeit path)
