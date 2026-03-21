@@ -25,6 +25,7 @@
 | File | Action | Responsibility |
 |------|--------|---------------|
 | `l2p/backend/src/services/GameService.ts` | Modify | Solo offer, npcCount in challenge state + escrow, bypass min-player gates |
+| `l2p/backend/src/services/ScoringService.ts` | Modify | Defer XP award when deathmatch is accepted |
 | `l2p/backend/src/services/SocketService.ts` | Modify | Accept npcCount in deathmatch-accept handler |
 | `l2p/frontend/src/pages/ResultsPage.tsx` | Modify | NPC picker UI for solo offers |
 
@@ -426,7 +427,28 @@ matchConfig: {
 }
 ```
 
-- [ ] **Step 8: Update SocketService to pass npcCount**
+- [ ] **Step 8: Defer XP award in ScoringService when deathmatch accepted**
+
+In `l2p/backend/src/services/ScoringService.ts`, find `savePlayerResult()` (around line 248) where it calls `CharacterService.awardExperience()`. The method already has a `skipExperienceAward` flag. The GameService needs to set this flag when a deathmatch is accepted.
+
+In `GameService.ts`, after `resolveDeathmatchChallenge` successfully creates the escrow, set a flag on the game session or emit an event that tells ScoringService to skip XP award for the accepted players. The simplest approach:
+
+- Add a `deathmatchAccepted: Set<string>` to the GameService instance (track which lobby's players accepted)
+- In `resolveDeathmatchChallenge`, after successful escrow creation, add all accepted player IDs to this set
+- Expose a method `isDeathmatchAccepted(playerId: string): boolean`
+- In ScoringService, check this before awarding XP:
+
+```typescript
+// In ScoringService.savePlayerResult, before awardExperience call:
+const skipXp = this.gameService?.isDeathmatchAccepted?.(userId.toString()) ?? false;
+if (!skipXp) {
+    await this.characterService.awardExperience(userId, finalScore, true);
+}
+```
+
+Note: XP for deathmatch-accepted players is held in the escrow and awarded by auth on settlement.
+
+- [ ] **Step 9: Update SocketService to pass npcCount**
 
 In `SocketService.ts` line 257, update the data type:
 ```typescript
@@ -438,17 +460,17 @@ In `handleDeathmatchAccept` at line 876, pass npcCount:
 await this.gameService.handleDeathmatchAccept(lobbyCode, userId, data.npcCount as 1 | 2 | 3 | undefined);
 ```
 
-- [ ] **Step 9: Verify L2P backend builds**
+- [ ] **Step 10: Verify L2P backend builds**
 
 ```bash
 cd /home/patrick/projects/l2p/backend && npx tsc --noEmit
 ```
 
-- [ ] **Step 10: Commit**
+- [ ] **Step 11: Commit**
 
 ```bash
-cd /home/patrick/projects && git add l2p/backend/src/services/GameService.ts l2p/backend/src/services/SocketService.ts
-git commit -m "feat(l2p): solo deathmatch offer with NPC count, bypass min-player gates"
+cd /home/patrick/projects && git add l2p/backend/src/services/GameService.ts l2p/backend/src/services/SocketService.ts l2p/backend/src/services/ScoringService.ts
+git commit -m "feat(l2p): solo deathmatch offer with NPC count, bypass min-player gates, defer XP"
 ```
 
 ---
