@@ -21,7 +21,10 @@ interface CharacterState {
   // Loading states
   isLoading: boolean
   isUpdating: boolean
-  
+  ownedCharacters: string[]
+  respectBalance: number
+  purchaseCharacter: (characterId: string) => Promise<{ success: boolean; error?: string }>
+
   // Actions
   loadCharacters: () => Promise<void>
   loadCharacterProfile: () => Promise<void>
@@ -44,6 +47,8 @@ export const useCharacterStore = create<CharacterState>((set, _get) => ({
   progress: null,
   isLoading: false,
   isUpdating: false,
+  ownedCharacters: ['student'],
+  respectBalance: 0,
 
   // Load all available characters
   loadCharacters: async () => {
@@ -80,6 +85,22 @@ export const useCharacterStore = create<CharacterState>((set, _get) => ({
           experience: profile.experience,
           progress: profile.progress
         })
+
+        // Fetch character ownership from auth service
+        try {
+          const authUrl = (window as any).__IMPORT_META_ENV__?.VITE_AUTH_SERVICE_URL || import.meta.env.VITE_AUTH_SERVICE_URL || '';
+          if (authUrl) {
+            const catalogRes = await fetch(`${authUrl}/api/catalog/characters`, { credentials: 'include' });
+            if (catalogRes.ok) {
+              const catalog = await catalogRes.json();
+              const owned = ['student', ...catalog.ownedCharacterIds.map((id: string) => id.replace('character_', ''))];
+              set({ ownedCharacters: owned, respectBalance: catalog.respectBalance });
+            }
+          }
+        } catch (e) {
+          console.warn('Failed to fetch character ownership, defaulting to student only');
+          set({ ownedCharacters: ['student'], respectBalance: 0 });
+        }
       } else {
         console.error('Failed to load character profile:', response.error)
       }
@@ -152,6 +173,30 @@ export const useCharacterStore = create<CharacterState>((set, _get) => ({
     }
   },
 
+  // Purchase a character from the auth service catalog
+  purchaseCharacter: async (characterId: string) => {
+    try {
+      const authUrl = (window as any).__IMPORT_META_ENV__?.VITE_AUTH_SERVICE_URL || import.meta.env.VITE_AUTH_SERVICE_URL || '';
+      const res = await fetch(`${authUrl}/api/catalog/purchase`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ itemId: `character_${characterId}` }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        set((state) => ({
+          ownedCharacters: [...state.ownedCharacters, characterId],
+          respectBalance: data.newBalance,
+        }));
+        return { success: true };
+      }
+      return { success: false, error: data.error || 'Purchase failed' };
+    } catch {
+      return { success: false, error: 'Network error' };
+    }
+  },
+
   // Reset store state
   reset: () => {
     set({
@@ -162,7 +207,9 @@ export const useCharacterStore = create<CharacterState>((set, _get) => ({
       experience: 0,
       progress: null,
       isLoading: false,
-      isUpdating: false
+      isUpdating: false,
+      ownedCharacters: ['student'],
+      respectBalance: 0,
     })
   }
 }))
@@ -174,4 +221,6 @@ export const useCharacterExperience = () => useCharacterStore(state => state.exp
 export const useCharacterProgress = () => useCharacterStore(state => state.progress)
 export const useAvailableCharacters = () => useCharacterStore(state => state.availableCharacters)
 export const useCharacterLoading = () => useCharacterStore(state => state.isLoading)
-export const useCharacterUpdating = () => useCharacterStore(state => state.isUpdating) 
+export const useCharacterUpdating = () => useCharacterStore(state => state.isUpdating)
+export const useOwnedCharacters = () => useCharacterStore(state => state.ownedCharacters)
+export const useRespectBalance = () => useCharacterStore(state => state.respectBalance)
