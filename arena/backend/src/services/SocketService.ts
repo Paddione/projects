@@ -402,6 +402,9 @@ export class SocketService {
                         return;
                     }
 
+                    const isSolo = escrow.matchConfig?.solo === true;
+                    const escrowNpcCount = (escrow.matchConfig?.npcCount as number) || 2;
+
                     // Use first 6 chars of token (uppercased) as lobby code
                     const lobbyCode = token.substring(0, 6).toUpperCase().replace(/[^A-Z0-9]/g, 'X').padEnd(6, '0');
 
@@ -458,11 +461,11 @@ export class SocketService {
                             characterLevel: 1,
                             selectedPowerUp: powerUp,
                             settings: {
-                                maxPlayers: escrow.playerIds.length as 2 | 3 | 4,
+                                maxPlayers: (isSolo ? 2 : escrow.playerIds.length) as 2 | 3 | 4,
                                 bestOf: 1,
                                 shrinkingZone: false,
                                 itemSpawns: false,
-                                npcEnemies: 0,
+                                npcEnemies: isSolo ? escrowNpcCount as 0 | 1 | 2 | 3 : 0,
                             },
                         });
                     } else {
@@ -504,7 +507,7 @@ export class SocketService {
                     const joinedIds = lobby!.players.map(p => p.id);
                     const allJoined = escrowInfo.expectedPlayerIds.every(id => joinedIds.includes(id));
 
-                    if (allJoined) {
+                    if (isSolo || allJoined) {
                         // Mark all players ready and start
                         const updatedPlayers = lobby.players.map(p => ({ ...p, isReady: true }));
                         // Manually start the match (bypass host-only check)
@@ -570,6 +573,19 @@ export class SocketService {
                         }
                     } catch (error) {
                         console.error('Error handling disconnect lobby leave:', error);
+                    }
+                }
+
+                // If player was in an active match, check for solo forfeit
+                if (playerInfo?.matchId) {
+                    const game = this.gameService.getGameState(playerInfo.matchId);
+                    if (game?.escrowToken) {
+                        // Check if any human players remain connected
+                        const remainingHumans = Array.from(game.players.keys())
+                            .filter(id => id !== playerInfo.playerId && this.playerToSocket.has(id));
+                        if (remainingHumans.length === 0) {
+                            await this.gameService.forfeitMatch(playerInfo.matchId);
+                        }
                     }
                 }
 

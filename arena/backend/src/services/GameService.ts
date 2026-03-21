@@ -43,7 +43,7 @@ export class GameService {
     private onZoneShrink?: (matchId: string, data: { zone: ShrinkingZone }) => void;
     private onCoverDestroyed?: (matchId: string, data: { coverId: string }) => void;
     private onExplosion?: (matchId: string, data: { x: number; y: number; radius: number }) => void;
-    private onDeathmatchSettled?: (matchId: string, data: { winnerId: string; xpAwarded: number; respectAwarded: number; losers: string[] }) => void;
+    private onDeathmatchSettled?: (matchId: string, data: { winnerId: string | null; xpAwarded: number; respectAwarded: number; losers: string[]; forfeited?: boolean }) => void;
 
     constructor(tickRate = 20) {
         this.playerService = new PlayerService();
@@ -65,7 +65,7 @@ export class GameService {
         onZoneShrink: (matchId: string, data: { zone: ShrinkingZone }) => void;
         onCoverDestroyed: (matchId: string, data: { coverId: string }) => void;
         onExplosion: (matchId: string, data: { x: number; y: number; radius: number }) => void;
-        onDeathmatchSettled?: (matchId: string, data: { winnerId: string; xpAwarded: number; respectAwarded: number; losers: string[] }) => void;
+        onDeathmatchSettled?: (matchId: string, data: { winnerId: string | null; xpAwarded: number; respectAwarded: number; losers: string[]; forfeited?: boolean }) => void;
     }): void {
         this.onStateUpdate = callbacks.onStateUpdate;
         this.onPlayerHit = callbacks.onPlayerHit;
@@ -1444,18 +1444,23 @@ export class GameService {
         // Settle escrow if this was a private deathmatch
         if (game.escrowToken) {
             try {
+                // winnerId is '' when all humans die (NPCs win)
+                const isHumanWinner = winnerId !== '' && game.players.has(winnerId);
+                const settleWinnerId = isHumanWinner ? parseInt(winnerId) : null;
+
                 const settleRes = await authFetchInternal('/api/internal/match/settle', {
                     method: 'POST',
-                    body: JSON.stringify({ token: game.escrowToken, winnerId: winnerId ? parseInt(winnerId) : null }),
+                    body: JSON.stringify({ token: game.escrowToken, winnerId: settleWinnerId }),
                 });
                 if (settleRes.ok) {
                     const settlement = await settleRes.json();
                     const loserIds = Array.from(game.players.keys()).filter(id => id !== winnerId);
                     this.onDeathmatchSettled?.(game.matchId, {
-                        winnerId,
+                        winnerId: isHumanWinner ? winnerId : null,
                         xpAwarded: settlement.xpAwarded ?? 0,
-                        respectAwarded: settlement.respectAwarded ?? 50,
+                        respectAwarded: settlement.respectAwarded ?? 0,
                         losers: loserIds,
+                        forfeited: settlement.forfeited ?? false,
                     });
                 } else {
                     console.error(`[Escrow] Settlement failed for token ${game.escrowToken}: ${settleRes.status}`);
@@ -1469,6 +1474,32 @@ export class GameService {
         setTimeout(() => {
             this.activeGames.delete(game.matchId);
         }, 30000);
+    }
+
+    /**
+     * Forfeit a match (e.g., solo player disconnected). Settles escrow with no winner.
+     */
+    async forfeitMatch(matchId: string): Promise<void> {
+        const game = this.activeGames.get(matchId);
+        if (!game || !game.escrowToken) return;
+
+        try {
+            await authFetchInternal('/api/internal/match/settle', {
+                method: 'POST',
+                body: JSON.stringify({ token: game.escrowToken, winnerId: null }),
+            });
+            console.log(`[Escrow] Match ${matchId} forfeited`);
+        } catch (err) {
+            console.error('[Escrow] Forfeit error:', err);
+        }
+
+        // Clean up game state
+        const interval = this.gameIntervals.get(matchId);
+        if (interval) {
+            clearInterval(interval);
+            this.gameIntervals.delete(matchId);
+        }
+        this.activeGames.delete(matchId);
     }
 
     // ============================================================================
