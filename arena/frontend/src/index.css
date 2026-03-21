@@ -589,6 +589,90 @@ body {
   color: white;
 }
 
+/* Volume Control */
+.volume-control {
+  position: relative;
+  pointer-events: auto;
+}
+
+.volume-popup {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  background: rgba(10, 11, 26, 0.95);
+  border: 1px solid rgba(0, 242, 255, 0.3);
+  border-radius: 8px;
+  padding: 12px;
+  min-width: 200px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  backdrop-filter: blur(8px);
+  z-index: 20;
+}
+
+.volume-mute-btn {
+  background: rgba(0, 242, 255, 0.1);
+  border: 1px solid rgba(0, 242, 255, 0.25);
+  color: #00f2ff;
+  border-radius: 4px;
+  padding: 6px 10px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+.volume-slider-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: default;
+}
+
+.volume-label {
+  color: #ccc;
+  font-size: 0.8rem;
+  width: 48px;
+  flex-shrink: 0;
+}
+
+.volume-slider {
+  flex: 1;
+  height: 4px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 2px;
+  outline: none;
+}
+
+.volume-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #00f2ff;
+  cursor: pointer;
+  border: none;
+}
+
+.volume-slider::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #00f2ff;
+  cursor: pointer;
+  border: none;
+}
+
+.volume-value {
+  color: #00f2ff;
+  font-size: 0.75rem;
+  width: 28px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
 .scale-selector {
   display: flex;
   gap: 2px;

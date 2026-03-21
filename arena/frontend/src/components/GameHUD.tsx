@@ -1,8 +1,8 @@
-import { useState, useCallback, type MutableRefObject } from 'react';
+import { useState, type MutableRefObject } from 'react';
 import { useGameStore } from '../stores/gameStore';
-import { SoundService } from '../services/SoundService';
 import EmoteWheel from './EmoteWheel';
 import { SettingsPanel } from './SettingsPanel';
+import { VolumeControl } from './VolumeControl';
 
 export const SCALE_OPTIONS = [
   { key: 'auto', label: 'Auto' },
@@ -55,13 +55,7 @@ export function GameHUD({
     isSpectating, spectatedPlayerId,
   } = useGameStore();
 
-  const [isMuted, setIsMuted] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
-
-  const toggleMute = useCallback(() => {
-    const nowMuted = SoundService.toggleMute();
-    setIsMuted(nowMuted);
-  }, []);
 
   return (
     <>
@@ -122,9 +116,7 @@ export function GameHUD({
 
         {/* Top-left controls */}
         <div className="hud-top-left">
-          <button onClick={toggleMute} className="hud-icon-btn">
-            {isMuted ? '🔇' : '🔊'}
-          </button>
+          <VolumeControl />
           {showScaleSelector && scaleSetting && onScaleChange && (
             <div className="scale-selector">
               {SCALE_OPTIONS.map(opt => (
