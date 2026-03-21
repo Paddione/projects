@@ -118,9 +118,10 @@ async function drainSingleInbox(inboxDir: string, moviesDir: string): Promise<nu
     const dest = path.join(moviesDir, name);
 
     // Verify it's actually a file
+    let srcStat;
     try {
-      const stat = await fs.stat(src);
-      if (!stat.isFile()) continue;
+      srcStat = await fs.stat(src);
+      if (!srcStat.isFile()) continue;
     } catch {
       if (!_failedStatNames.has(name)) {
         _failedStatNames.add(name);
@@ -129,11 +130,21 @@ async function drainSingleInbox(inboxDir: string, moviesDir: string): Promise<nu
       continue;
     }
 
-    // Skip if already exists at destination
+    // If destination already exists, check whether it's the same file (same size).
+    // If so, remove the inbox copy (it's a leftover duplicate, e.g. from SMB re-sync).
+    // If sizes differ, skip to avoid overwriting a different file.
     try {
-      await fs.access(dest);
-      continue; // silently skip duplicates
-    } catch { /* good — doesn't exist */ }
+      const destStat = await fs.stat(dest);
+      if (destStat.size === srcStat.size) {
+        try {
+          await fs.unlink(src);
+          logger.info(`[StartupTasks] Inbox cleanup: removed duplicate ${name} (same size as destination)`);
+        } catch (unlinkErr: any) {
+          logger.warn(`[StartupTasks] Inbox cleanup: failed to remove duplicate ${name}`, { error: unlinkErr.message });
+        }
+      }
+      continue;
+    } catch { /* good — doesn't exist at destination */ }
 
     try {
       await fs.rename(src, dest);

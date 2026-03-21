@@ -76,15 +76,15 @@ npm run db:push                # Apply Drizzle schema to Postgres
 
 **Production** runs on **k3s** (lightweight Kubernetes). Do not use Docker Compose for production.
 
-**Use Skaffold for code changes** (builds images + deploys):
+**Deploy with shell scripts** (build + push + restart):
 ```bash
-cd ../../k8s && skaffold run -p videovault   # Build + deploy VideoVault
-cd ../../k8s && skaffold run                 # Build + deploy everything
+../../k8s/scripts/deploy/deploy-videovault.sh                # Build, push, deploy
+../../k8s/scripts/deploy/deploy-videovault.sh --manifests-only  # Manifest-only (config changes)
 ```
 
-Shell scripts only apply manifests (no image rebuild):
+**Or use Skaffold** (alternative, requires defaultRepo — not usable from WSL2):
 ```bash
-../../k8s/scripts/deploy/deploy-videovault.sh  # Manifest-only (config changes)
+cd ../../k8s && skaffold run -p videovault   # Build + deploy VideoVault
 ```
 
 K8s manifests: `k8s/services/videovault/`. Skaffold config: `k8s/skaffold.yaml`. Full deployment guide: `k8s/README.md`.
