@@ -16,7 +16,7 @@ L2P has 8 university-themed characters gated by XP level; Arena has 5 of the sam
 | Gating mechanism | Respect purchase only (500 each), replaces L2P's level-based unlocking |
 | Roster | Unified 8 characters across L2P and Arena |
 | Source of truth | Auth service `inventory` table (`item_type: 'character'`) |
-| Purchase flow | In-picker confirmation → auth `POST /api/shop/purchase` → atomic debit + inventory |
+| Purchase flow | In-picker confirmation → auth `POST /api/catalog/purchase` (existing endpoint) → atomic debit + inventory |
 | Locked UX | Greyed out with lock icon + "500 ⭐" price badge; click opens purchase confirmation |
 | Existing players | Grandfather currently-selected character only (not all level-unlockable ones) |
 | New Arena characters | graduate, lab_assistant, teaching_assistant added with placeholder art |
@@ -47,7 +47,7 @@ The auth service's existing `shop_catalog` + `inventory` + `RespectService` infr
 │         │ ◀────────────────────────────────── │          │
 │         │   { characters[], owned[], balance }  │          │
 │         │                                       │          │
-│         │     POST /api/shop/purchase           │          │
+│         │     POST /api/catalog/purchase          │          │
 │         │ ──────────────────────────────────▶   │          │
 │         │   { itemId: 'character_dean' }        │          │
 │         │ ◀────────────────────────────────── │          │
@@ -66,7 +66,7 @@ The auth service's existing `shop_catalog` + `inventory` + `RespectService` infr
 2. Frontend calls `GET /api/catalog/characters` → returns all 7 purchasable characters + user's owned character IDs + Respect balance
 3. UI renders: owned = normal, unowned = greyed + lock + "500 ⭐"
 4. Player clicks locked character → confirmation modal: "Purchase [Name] for 500 Respect? (Balance: X)"
-5. On confirm → `POST /api/shop/purchase { itemId: 'character_<id>' }`
+5. On confirm → `POST /api/catalog/purchase { itemId: 'character_<id>' }`
 6. Auth service `RespectService.purchaseItem()`:
    - Validates item exists in `shop_catalog` and is active
    - Validates user doesn't already own it (409 if duplicate)
@@ -114,7 +114,17 @@ itemType: 'skin' | 'emote' | 'title' | 'border' | 'power_up';
 itemType: 'skin' | 'emote' | 'title' | 'border' | 'power_up' | 'character';
 ```
 
-The cast in `ProfileService.getProfileWithLoadout()` (line 142) must also include `'character'` in the union.
+Also extend `InventoryItem.acquisitionSource` to include `'migration'`:
+
+```typescript
+// Before
+acquisitionSource: 'respect_purchase' | 'stripe' | 'achievement' | 'level_unlock';
+
+// After
+acquisitionSource: 'respect_purchase' | 'stripe' | 'achievement' | 'level_unlock' | 'migration';
+```
+
+The cast in `ProfileService.getProfileWithLoadout()` (line 142) must also include `'character'` and `'migration'` in the respective unions.
 
 ## Auth Service Unavailability (Fallback Behavior)
 
@@ -128,7 +138,22 @@ This is a deliberate trade-off: brief unavailability restricts character choice 
 
 ## Rate Limiting
 
-`POST /api/shop/purchase` must use `express-rate-limit` consistent with the project's standard pattern. Suggested: 10 requests per minute per user (character purchases are infrequent).
+`POST /api/catalog/purchase` should have rate limiting (10 req/min per user) added if not already present, consistent with the project's standard pattern.
+
+## ID Convention
+
+Catalog item IDs use the `character_` prefix (e.g., `character_professor`). Game-side character IDs are bare (e.g., `professor`). The mapping is:
+
+- **Catalog/inventory side:** `character_<id>` — used in `shop_catalog.item_id`, `inventory.item_id`, purchase requests, `ownedCharacterIds` response
+- **Game side:** bare `<id>` — used in character pickers, `selected_character` columns, lobby state, sprite references
+
+**Frontends must strip the `character_` prefix** when comparing catalog ownership against the game character roster. Helper: `ownedIds.map(id => id.replace('character_', ''))`.
+
+**Backends add the prefix** when checking ownership: `inventory.item_id = 'character_' + selectedCharacter`.
+
+## Gender and Character Ownership
+
+Purchasing a character unlocks **all gender variants**. The `gender` field on `shop_catalog` is irrelevant for character items (set to NULL). Gender selection remains a separate toggle (male/female) in both L2P and Arena character pickers — it is not gated by purchase. Arena's `_f` suffix convention (e.g., `student_f`) is a display-layer concern, not an ownership concern.
 
 ## Cross-Tab / Cross-Game Sync
 
@@ -159,9 +184,9 @@ VALUES
 ON CONFLICT (item_id) DO NOTHING;
 ```
 
-**New route — `GET /api/catalog/characters`:**
+**New route — `GET /api/catalog/characters` (added to existing `auth/src/routes/catalog.ts`):**
 
-Returns character catalog entries + user's owned character IDs (from inventory where `item_type = 'character'`). Requires authentication. If the user has no profile yet, auto-creates one via `getOrCreateProfile()` and returns empty `ownedCharacterIds` with 0 balance.
+Returns character catalog entries + user's owned character IDs (from inventory where `item_type = 'character'`). Note: the existing `GET /api/catalog` is public (no auth), but this route requires `authenticate` middleware explicitly applied to the route handler (not the router globally). If the user has no profile yet, auto-creates one via `getOrCreateProfile()` and returns empty `ownedCharacterIds` with 0 balance.
 
 Response shape:
 ```json
@@ -175,14 +200,9 @@ Response shape:
 }
 ```
 
-**New route — `POST /api/shop/purchase`:**
+**Existing route — `POST /api/catalog/purchase` (in `auth/src/routes/catalog.ts`):**
 
-User-facing purchase endpoint. Authenticates via session/JWT. Delegates to the existing `RespectService.purchaseItem()` method (which already handles validation, atomic debit, inventory insert, and transaction logging). No new service logic needed — only a new HTTP route exposing the existing method.
-
-Request: `{ itemId: "character_professor" }`
-Response: `{ success: true, item: {...}, newBalance: 750 }` or error
-
-Rate limited: 10 req/min per user.
+This endpoint already exists and delegates to `RespectService.purchaseItem()`. No new purchase route needed — both L2P and Arena frontends call this existing endpoint. Add rate limiting (10 req/min per user) to this route if not already present.
 
 **Modify `ProfileService.updateCharacter()`:**
 
@@ -244,7 +264,7 @@ Add ownership check before updating `selected_character`. If `character !== 'stu
 - Add 3 new characters (graduate, lab_assistant, teaching_assistant) with placeholder thumbnails
 - Fetch owned characters from auth profile
 - Same locked/unlocked pattern as L2P: greyed + lock + price, click to purchase
-- Purchase via auth `POST /api/shop/purchase`
+- Purchase via auth `POST /api/catalog/purchase`
 
 **`Lobby.tsx`:**
 - On mount, if saved localStorage character is not owned and not `student` → reset to `student`
@@ -266,7 +286,7 @@ SELECT
   p.user_id,
   'character_' || p.selected_character,
   'character',
-  'level_unlock'
+  'migration'
 FROM auth.profiles p
 WHERE p.selected_character != 'student'
   AND p.selected_character IS NOT NULL
@@ -324,11 +344,9 @@ Alternatively, run both SQL migrations if the script has access to both database
 
 ### Auth Service
 - **Create:** `auth/src/migrations/YYYYMMDD_seed_character_catalog.sql`
-- **Create:** `auth/src/routes/catalog.ts` (new `GET /api/catalog/characters` route)
-- **Create:** `auth/src/routes/shop.ts` (new `POST /api/shop/purchase` route)
-- **Modify:** `auth/src/types/platform.ts` (add `'character'` to `InventoryItem.itemType` union)
-- **Modify:** `auth/src/services/ProfileService.ts` (add ownership check in `updateCharacter`, update itemType cast on line 142)
-- **Modify:** `auth/src/app.ts` or route index (register new routes)
+- **Modify:** `auth/src/routes/catalog.ts` (add `GET /api/catalog/characters` route, add rate limiting to purchase route)
+- **Modify:** `auth/src/types/platform.ts` (add `'character'` to `InventoryItem.itemType`, add `'migration'` to `acquisitionSource`)
+- **Modify:** `auth/src/services/ProfileService.ts` (add ownership check in `updateCharacter`, update type casts on line 142)
 
 ### L2P Backend
 - **Modify:** `l2p/backend/src/services/CharacterService.ts` (remove level gating, add ownership annotation)
