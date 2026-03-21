@@ -37,7 +37,7 @@ const matchEscrowCreateSchema = z.object({
 
 const matchSettleSchema = z.object({
   token: z.string().min(1),
-  winnerId: z.number().int().positive(),
+  winnerId: z.number().int().positive().nullable(),
 });
 
 /**
@@ -147,7 +147,18 @@ router.get('/internal/match/escrow/:token', async (req: Request, res: Response) 
       return;
     }
 
-    res.status(200).json(rows[0]);
+    const row = rows[0];
+    res.status(200).json({
+      id: row.id,
+      token: row.token,
+      playerIds: row.player_ids,
+      escrowedXp: row.escrowed_xp,
+      matchConfig: row.match_config,
+      status: row.status,
+      expiresAt: row.expires_at,
+      createdAt: row.created_at,
+      settledAt: row.settled_at,
+    });
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch match escrow' });
   }
@@ -180,6 +191,23 @@ router.post('/internal/match/settle', async (req: Request, res: Response) => {
       return;
     }
 
+    if (winnerId === null) {
+      // Forfeit: mark escrow settled, award nothing
+      await db
+        .update(matchEscrow)
+        .set({ status: 'settled', settled_at: new Date() })
+        .where(eq(matchEscrow.token, token));
+
+      res.status(200).json({
+        settled: true,
+        winnerId: null,
+        xpAwarded: 0,
+        respectAwarded: 0,
+        forfeited: true,
+      });
+      return;
+    }
+
     // Mark escrow as settled
     await db
       .update(matchEscrow)
@@ -189,11 +217,14 @@ router.post('/internal/match/settle', async (req: Request, res: Response) => {
     // Calculate total escrowed XP for all players
     const escrowedXp = escrow.escrowed_xp as Record<string, number>;
     const totalXp = Object.values(escrowedXp).reduce((sum, xp) => sum + xp, 0);
-    const flatRespect = 50;
+    const matchConfig = escrow.match_config as Record<string, unknown> | null;
+    const npcCount = matchConfig?.npcCount as number | undefined;
+    const respectMap: Record<number, number> = { 1: 25, 2: 50, 3: 100 };
+    const respectAmount = npcCount !== undefined ? (respectMap[npcCount] ?? 50) : 50;
 
     // Award XP and Respect to winner
     await profileService.awardXp(winnerId, totalXp);
-    await respectService.creditRespect(winnerId, flatRespect, {
+    await respectService.creditRespect(winnerId, respectAmount, {
       reason: 'match_win',
       matchToken: token,
     });
@@ -202,7 +233,7 @@ router.post('/internal/match/settle', async (req: Request, res: Response) => {
       settled: true,
       winnerId,
       xpAwarded: totalXp,
-      respectAwarded: flatRespect,
+      respectAwarded: respectAmount,
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
