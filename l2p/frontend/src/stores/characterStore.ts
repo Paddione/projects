@@ -88,7 +88,7 @@ export const useCharacterStore = create<CharacterState>((set, _get) => ({
 
         // Fetch character ownership from auth service
         try {
-          const authUrl = (window as any).__IMPORT_META_ENV__?.VITE_AUTH_SERVICE_URL || import.meta.env.VITE_AUTH_SERVICE_URL || '';
+          const authUrl = (window as any).__IMPORT_META_ENV__?.VITE_AUTH_SERVICE_URL || import.meta.env['VITE_AUTH_SERVICE_URL'] || '';
           if (authUrl) {
             const catalogRes = await fetch(`${authUrl}/api/catalog/characters`, { credentials: 'include' });
             if (catalogRes.ok) {
@@ -176,7 +176,7 @@ export const useCharacterStore = create<CharacterState>((set, _get) => ({
   // Purchase a character from the auth service catalog
   purchaseCharacter: async (characterId: string) => {
     try {
-      const authUrl = (window as any).__IMPORT_META_ENV__?.VITE_AUTH_SERVICE_URL || import.meta.env.VITE_AUTH_SERVICE_URL || '';
+      const authUrl = (window as any).__IMPORT_META_ENV__?.VITE_AUTH_SERVICE_URL || import.meta.env['VITE_AUTH_SERVICE_URL'] || '';
       const res = await fetch(`${authUrl}/api/catalog/purchase`, {
         method: 'POST',
         credentials: 'include',
