@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useGameStore } from '../stores/gameStore';
-import { getSocket } from '../services/apiService';
+import { getSocket, api } from '../services/apiService';
 import CharacterPicker, { loadSavedCharacter } from './CharacterPicker3D';
 
 export default function Lobby() {
@@ -20,6 +20,49 @@ export default function Lobby() {
     const savedChar = loadSavedCharacter();
     const [selectedCharacter, setSelectedCharacter] = useState(savedChar.character);
     const [selectedGender, setSelectedGender] = useState<'male' | 'female'>(savedChar.gender);
+    const [ownedCharacters, setOwnedCharacters] = useState<string[]>(['student']);
+    const [respectBalance, setRespectBalance] = useState(0);
+
+    useEffect(() => {
+        const authUrl = api.getAuthServiceUrl();
+        if (!authUrl) return;
+        fetch(`${authUrl}/api/catalog/characters`, { credentials: 'include' })
+            .then(res => res.ok ? res.json() : null)
+            .then(data => {
+                if (data) {
+                    setOwnedCharacters(['student', ...data.ownedCharacterIds.map((id: string) => id.replace('character_', ''))]);
+                    setRespectBalance(data.respectBalance);
+                }
+            })
+            .catch(() => { /* keep default student-only */ });
+    }, []);
+
+    useEffect(() => {
+        if (ownedCharacters.length > 1 && !ownedCharacters.includes(selectedCharacter)) {
+            setSelectedCharacter('student');
+        }
+    }, [ownedCharacters, selectedCharacter]);
+
+    const handlePurchase = async (characterId: string): Promise<boolean> => {
+        try {
+            const authUrl = api.getAuthServiceUrl();
+            if (!authUrl) return false;
+            const res = await fetch(`${authUrl}/api/catalog/purchase`, {
+                method: 'POST',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ itemId: `character_${characterId}` }),
+            });
+            const data = await res.json();
+            if (res.ok && data.success) {
+                setOwnedCharacters(prev => [...prev, characterId]);
+                setRespectBalance(data.newBalance);
+                setSelectedCharacter(characterId);
+                return true;
+            }
+            return false;
+        } catch { return false; }
+    };
 
     useEffect(() => {
         if (!code || !playerId || !username) {
@@ -212,6 +255,9 @@ export default function Lobby() {
                         },
                     });
                 }}
+                ownedCharacters={ownedCharacters}
+                respectBalance={respectBalance}
+                onPurchase={handlePurchase}
             />
 
             {/* Player List */}

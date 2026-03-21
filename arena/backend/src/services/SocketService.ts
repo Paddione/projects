@@ -147,6 +147,16 @@ export class SocketService {
                                     character = profile.selectedCharacter || profile.selected_character || character;
                                     gender = profile.selectedGender || profile.selected_gender || 'male';
                                     powerUp = profile.equippedPowerUp || profile.equipped_power_up || null;
+
+                                    // Validate character ownership
+                                    const ownedCharacterIds = (profile?.inventory || [])
+                                        .filter((item: any) => item.itemType === 'character' || item.item_type === 'character')
+                                        .map((item: any) => (item.itemId || item.item_id || '').replace('character_', ''));
+                                    const baseCharacter = character.replace('_f', '');
+                                    if (baseCharacter !== 'student' && !ownedCharacterIds.includes(baseCharacter)) {
+                                        console.warn(`[SocketService] Player ${playerId} attempted unowned character ${baseCharacter}, falling back to student`);
+                                        character = gender === 'female' ? 'student_f' : 'student';
+                                    }
                                 }
                             }
                         } catch {
@@ -419,6 +429,16 @@ export class SocketService {
                                     character = profile.selectedCharacter || profile.selected_character || character;
                                     gender = profile.selectedGender || profile.selected_gender || 'male';
                                     powerUp = profile.equippedPowerUp || profile.equipped_power_up || null;
+
+                                    // Validate character ownership
+                                    const ownedCharacterIds = (profile?.inventory || [])
+                                        .filter((item: any) => item.itemType === 'character' || item.item_type === 'character')
+                                        .map((item: any) => (item.itemId || item.item_id || '').replace('character_', ''));
+                                    const baseCharacter = character.replace('_f', '');
+                                    if (baseCharacter !== 'student' && !ownedCharacterIds.includes(baseCharacter)) {
+                                        console.warn(`[SocketService] Player ${playerId} attempted unowned character ${baseCharacter}, falling back to student`);
+                                        character = gender === 'female' ? 'student_f' : 'student';
+                                    }
                                 }
                             }
                         } catch {
