@@ -397,7 +397,7 @@ export class SocketService {
                         return;
                     }
 
-                    if (!escrow.playerIds.includes(playerId)) {
+                    if (!escrow.playerIds.map(String).includes(playerId)) {
                         socket.emit('private-match-error', { message: 'You are not a participant in this match' });
                         return;
                     }

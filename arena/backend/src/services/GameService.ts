@@ -1446,7 +1446,7 @@ export class GameService {
             try {
                 const settleRes = await authFetchInternal('/api/internal/match/settle', {
                     method: 'POST',
-                    body: JSON.stringify({ token: game.escrowToken, winnerId }),
+                    body: JSON.stringify({ token: game.escrowToken, winnerId: winnerId ? parseInt(winnerId) : null }),
                 });
                 if (settleRes.ok) {
                     const settlement = await settleRes.json();
