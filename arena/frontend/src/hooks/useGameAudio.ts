@@ -8,9 +8,8 @@ interface UseGameAudioOptions {
 }
 
 export function useGameAudio({ mouseRef, keysRef }: UseGameAudioOptions) {
-  // Start/stop battle music
+  // Stop music on unmount (music is started by round-start socket event)
   useEffect(() => {
-    SoundService.playMusic('battle', { loop: true, volume: 0.5 });
     return () => { SoundService.stopMusic(); };
   }, []);
 

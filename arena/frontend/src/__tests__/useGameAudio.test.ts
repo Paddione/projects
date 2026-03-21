@@ -15,12 +15,12 @@ describe('useGameAudio', () => {
   beforeEach(() => { vi.useFakeTimers(); vi.clearAllMocks(); });
   afterEach(() => { vi.useRealTimers(); });
 
-  it('starts battle music on mount', () => {
+  it('does not start battle music on mount (round-start event handles it)', () => {
     renderHook(() => useGameAudio({
       mouseRef: { current: { down: false, rightDown: false } },
       keysRef: { current: new Set() },
     }));
-    expect(SoundService.playMusic).toHaveBeenCalledWith('battle', { loop: true, volume: 0.5 });
+    expect(SoundService.playMusic).not.toHaveBeenCalled();
   });
 
   it('stops music on unmount', () => {

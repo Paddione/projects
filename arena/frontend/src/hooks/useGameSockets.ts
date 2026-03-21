@@ -56,7 +56,7 @@ export function useGameSockets({
         weapon: data.weapon,
       });
       SoundService.playSFX('player_death');
-      if (data.weapon === 'melee') SoundService.playSFX('melee_hit');
+      if (data.weapon === 'melee') SoundService.playSFX('melee_swing');
     });
 
     socket.on('player-hit', (data: { targetId: string; damage: number; x: number; y: number; hasArmor: boolean }) => {

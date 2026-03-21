@@ -37,7 +37,7 @@ export class GameService {
     private onPlayerHit?: (matchId: string, data: { targetId: string; attackerId: string; damage: number; remainingHp: number; hasArmor: boolean; x: number; y: number }) => void;
     private onPlayerKilled?: (matchId: string, data: { victimId: string; killerId: string; weapon: 'gun' | 'melee' | 'zone' | 'zombie' | 'npc'; killerName?: string; victimName?: string }) => void;
     private onItemSpawned?: (matchId: string, data: { item: MapItem; announcement: string }) => void;
-    private onItemCollected?: (matchId: string, data: { itemId: string; playerId: string }) => void;
+    private onItemCollected?: (matchId: string, data: { itemId: string; playerId: string; type: string }) => void;
     private onRoundEnd?: (matchId: string, data: { roundNumber: number; winnerId: string; scores: Record<string, number> }) => void;
     private onMatchEnd?: (matchId: string, data: { winnerId: string; results: MatchResult[]; dbMatchId?: number }) => void;
     private onZoneShrink?: (matchId: string, data: { zone: ShrinkingZone }) => void;
@@ -59,7 +59,7 @@ export class GameService {
         onPlayerHit: (matchId: string, data: { targetId: string; attackerId: string; damage: number; remainingHp: number; hasArmor: boolean; x: number; y: number }) => void;
         onPlayerKilled: (matchId: string, data: { victimId: string; killerId: string; weapon: 'gun' | 'melee' | 'zone' | 'zombie' | 'npc'; killerName?: string; victimName?: string }) => void;
         onItemSpawned: (matchId: string, data: { item: MapItem; announcement: string }) => void;
-        onItemCollected: (matchId: string, data: { itemId: string; playerId: string }) => void;
+        onItemCollected: (matchId: string, data: { itemId: string; playerId: string; type: string }) => void;
         onRoundEnd: (matchId: string, data: { roundNumber: number; winnerId: string; scores: Record<string, number> }) => void;
         onMatchEnd: (matchId: string, data: { winnerId: string; results: MatchResult[]; dbMatchId?: number }) => void;
         onZoneShrink: (matchId: string, data: { zone: ShrinkingZone }) => void;
@@ -846,7 +846,7 @@ export class GameService {
                     const oldWeapon = this.playerService.pickupWeapon(player, item.weaponState);
                     item.isCollected = true;
                     player.itemsCollected++;
-                    this.onItemCollected?.(game.matchId, { itemId: item.id, playerId: player.id });
+                    this.onItemCollected?.(game.matchId, { itemId: item.id, playerId: player.id, type: item.type });
                     // If inventory was full and a weapon was replaced, drop it
                     if (oldWeapon) {
                         const swapItem: MapItem = {
@@ -869,6 +869,7 @@ export class GameService {
                     this.onItemCollected?.(game.matchId, {
                         itemId: item.id,
                         playerId: player.id,
+                        type: item.type,
                     });
                     // Auto-pickup: continue collecting nearby items
                 }

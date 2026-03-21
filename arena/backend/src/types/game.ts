@@ -242,7 +242,7 @@ export interface ServerToClientEvents {
     'player-hit': (data: { targetId: string; attackerId: string; damage: number; remainingHp: number; hasArmor: boolean; x: number; y: number }) => void;
     'player-killed': (data: { victimId: string; killerId: string; weapon: 'gun' | 'melee' | 'zone' | 'zombie' | 'npc'; killerName?: string; victimName?: string }) => void;
     'item-spawned': (data: { item: MapItem; announcement: string }) => void;
-    'item-collected': (data: { itemId: string; playerId: string }) => void;
+    'item-collected': (data: { itemId: string; playerId: string; type: string }) => void;
     'round-end': (data: { roundNumber: number; winnerId: string; scores: Record<string, number> }) => void;
     'match-end': (data: { winnerId: string; results: MatchResult[]; dbMatchId?: number }) => void;
     'zone-shrink': (data: { zone: ShrinkingZone }) => void;
