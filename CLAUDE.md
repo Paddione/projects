@@ -362,6 +362,7 @@ Dev stack runs in `korczewski-dev` namespace, parallel to production. Deploy wit
 - Do not add dependencies or change infrastructure without explicit approval
 - Run the smallest relevant test suite for your change
 - Update existing docs rather than creating new ones
+- **Update Obsidian vault** (`shared-infrastructure/SMB-Share/Obsidian/`) when implementing new features or changing existing ones — keep service docs, architecture diagrams, and infrastructure docs in sync with code changes
 - Always deploy changes to k3s after committing (don't leave changes undeployed)
 - **Deploy with shell scripts** (`deploy-l2p.sh`, `deploy-changed.sh --committed`, etc.) — they build, push, and restart automatically
 - After deploying, verify with `deploy-tracker.sh status` that the SHA was recorded
