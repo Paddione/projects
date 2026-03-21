@@ -381,16 +381,16 @@ if (characterId !== 'student') {
 }
 ```
 
-- [ ] **Step 3: Update getAvailableCharacters to accept ownership list**
+- [ ] **Step 3: Add getCharactersWithOwnership method (keep old method for backward compat)**
 
-Change the method signature and logic (line 121):
+Rather than changing the existing `getAvailableCharacters(userLevel)` signature (which is called in 3+ places by `getUserCharacterInfo` and tests), add a **new** method:
 
 ```typescript
 /**
  * Get all characters annotated with ownership state.
  * Student is always owned. Others require inventory entry.
  */
-getAvailableCharacters(ownedCharacterIds: string[] = []): (Character & { owned: boolean; respectCost: number })[] {
+getCharactersWithOwnership(ownedCharacterIds: string[] = []): (Character & { owned: boolean; respectCost: number })[] {
   return this.characters.map(char => ({
     ...char,
     owned: char.id === 'student' || ownedCharacterIds.includes(char.id),
@@ -399,17 +399,20 @@ getAvailableCharacters(ownedCharacterIds: string[] = []): (Character & { owned: 
 }
 ```
 
-- [ ] **Step 4: Update GET /api/characters/available route to fetch inventory**
+The old `getAvailableCharacters(userLevel)` stays unchanged — it's still used by `getUserCharacterInfo` and existing tests. The level check is harmless since all `unlockLevel` values are now `1`.
 
-In `routes/characters.ts` (lines 63-105), modify the `/available` handler to fetch the user's auth inventory and pass owned IDs to `getAvailableCharacters`. Use `fetchUserProfile` from authClient:
+- [ ] **Step 4: Update GET /api/characters/available route to include ownership**
+
+In `routes/characters.ts` (lines 63-105), modify the `/available` handler to also fetch the user's auth inventory and include ownership annotation in the response. Use `fetchUserProfile` from authClient:
 
 ```typescript
-// After getting authToken and userInfo, fetch inventory from auth
+// After getting authToken and userInfo, fetch ownership from auth
 let ownedIds: string[] = [];
 try {
+  const { fetchUserProfile } = await import('../config/authClient.js');
   const profileRes = await fetchUserProfile(authToken);
-  if (profileRes) {
-    ownedIds = (profileRes.inventory || [])
+  if (profileRes?.inventory) {
+    ownedIds = profileRes.inventory
       .filter((item: any) => item.itemType === 'character' || item.item_type === 'character')
       .map((item: any) => (item.itemId || item.item_id || '').replace('character_', ''));
   }
@@ -417,10 +420,24 @@ try {
   // Auth unreachable — only student owned
 }
 
-const annotatedCharacters = characterService.getAvailableCharacters(ownedIds);
+const annotatedCharacters = characterService.getCharactersWithOwnership(ownedIds);
 ```
 
-Update the response to include the annotated characters with ownership info.
+Update the response to include `annotatedCharacters` alongside the existing `availableCharacters` field (for backward compat):
+
+```typescript
+res.json({
+  success: true,
+  data: {
+    availableCharacters: userInfo.availableCharacters,
+    charactersWithOwnership: annotatedCharacters,  // NEW: includes owned + respectCost
+    currentCharacter: userInfo.character,
+    level: userInfo.level,
+    experience: userInfo.experience,
+    progress: userInfo.progress
+  },
+});
+```
 
 - [ ] **Step 5: Update error handling in routes/characters.ts**
 
@@ -938,15 +955,15 @@ git commit -m "feat(arena): add character ownership guard in lobby + backend val
 
 - [ ] **Step 1: Add ownership check to POST /api/players**
 
-In `app.ts`, find the `POST /api/players` handler that saves `selectedCharacter`. Before writing to the database, validate ownership by checking the auth profile:
+In `app.ts`, find the `POST /api/players` handler that saves `selectedCharacter`. The file already imports `authFetch` from `./config/authClient.js` (line 8) and uses it to fetch profiles (line 80). Before writing to the database, validate ownership:
 
 ```typescript
 // When selectedCharacter is provided and is not 'student':
 const baseChar = (selectedCharacter || 'student').replace('_f', '');
 if (baseChar !== 'student') {
-    // Fetch auth profile to check inventory
+    // Use existing authFetch (already imported in app.ts line 8)
     try {
-        const profileRes = await fetch(`${AUTH_SERVICE_URL}/api/profile`, {
+        const profileRes = await authFetch('/api/profile', {
             headers: { Cookie: req.headers.cookie || '' },
         });
         if (profileRes.ok) {
@@ -958,7 +975,6 @@ if (baseChar !== 'student') {
                 return res.status(403).json({ error: 'Character not purchased' });
             }
         } else {
-            // Auth unreachable — only allow student
             return res.status(503).json({ error: 'Cannot verify character ownership' });
         }
     } catch {
