@@ -2246,7 +2246,8 @@ function createSlotRow(slot, libSounds, projectName) {
 
   // Sync status
   const status = document.createElement('span');
-  const isSynced = slot.syncedAt && slot.sound.createdAt && new Date(slot.syncedAt) >= new Date(slot.sound.createdAt);
+  const soundTime = slot.sound.lastModifiedAt || slot.sound.createdAt;
+  const isSynced = slot.syncedAt && soundTime && new Date(slot.syncedAt) >= new Date(soundTime);
   status.className = `slot-status ${isSynced ? 'synced' : 'unsynced'}`;
   status.textContent = isSynced ? 'synced' : 'stale';
   row.appendChild(status);

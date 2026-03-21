@@ -5,37 +5,5 @@
   "processScript": null,
   "generateScript": null,
   "manifestPath": "../arena/assets/manifest.json",
-  "sounds": {
-    "gunshot": {
-      "type": "sfx",
-      "prompt": "laser gunshot",
-      "seed": 12345,
-      "duration": 0.5,
-      "backend": "default",
-      "flagged": false,
-      "lastGeneratedAt": "2026-03-15T03:00:00Z",
-      "filePath": "sfx/gunshot.wav"
-    },
-    "melee_swing": {
-      "type": "sfx",
-      "prompt": "sword swing",
-      "seed": null,
-      "duration": 0.4,
-      "backend": "default",
-      "flagged": false,
-      "lastGeneratedAt": null,
-      "filePath": "sfx/melee_swing.wav"
-    },
-    "battle": {
-      "type": "music",
-      "prompt": "battle music",
-      "seed": null,
-      "duration": 90,
-      "backend": "default",
-      "flagged": false,
-      "lastGeneratedAt": null,
-      "filePath": "music/battle.wav",
-      "loop": true
-    }
-  }
+  "sounds": {}
 }

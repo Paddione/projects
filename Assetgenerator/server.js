@@ -610,11 +610,16 @@ app.post('/api/projects/:name/sync', (req, res) => {
   for (const [id, sound] of Object.entries(library.sounds)) {
     const assignment = sound.assignedTo?.[req.params.name];
     if (!assignment) continue;
-    if (sound.createdAt && assignment.syncedAt && new Date(sound.createdAt) <= new Date(assignment.syncedAt)) continue;
     const baseName = sound.filePath.replace(/\.wav$/, '');
+    // Use WAV file mtime (not createdAt) to detect changes — audio can be
+    // reprocessed/replaced without updating the library entry's createdAt.
+    const wavPath = join(config.libraryRoot, sound.filePath);
+    if (assignment.syncedAt && existsSync(wavPath)) {
+      const wavMtime = statSync(wavPath).mtime;
+      if (wavMtime <= new Date(assignment.syncedAt)) continue;
+    }
 
     // Ensure processed files exist on NAS (WAV → OGG/MP3)
-    const wavPath = join(config.libraryRoot, sound.filePath);
     const oggNas = join(config.libraryRoot, `${baseName}.ogg`);
     const mp3Nas = join(config.libraryRoot, `${baseName}.mp3`);
     if (existsSync(wavPath) && (!existsSync(oggNas) || !existsSync(mp3Nas))) {
@@ -683,7 +688,8 @@ app.post('/api/library/:id/generate', async (req, res) => {
     processAudioFile(wavPath, wavDir, req.params.id, sound.category);
 
     sound.seed = result.seed != null ? Math.round(result.seed) : null;
-    sound.createdAt = new Date().toISOString();
+    sound.lastModifiedAt = new Date().toISOString();
+    sound.createdAt = sound.createdAt || sound.lastModifiedAt;
     saveLibrary(library);
 
     res.write(`event: done\ndata: ${JSON.stringify({ sound: req.params.id, seed: result.seed != null ? Math.round(result.seed) : null })}\n\n`);
@@ -738,7 +744,8 @@ app.post('/api/library/regenerate-flagged', async (req, res) => {
 
       const updatedLib = loadLibrary();
       updatedLib.sounds[id].seed = result.seed != null ? Math.round(result.seed) : null;
-      updatedLib.sounds[id].createdAt = new Date().toISOString();
+      updatedLib.sounds[id].lastModifiedAt = new Date().toISOString();
+      updatedLib.sounds[id].createdAt = updatedLib.sounds[id].createdAt || updatedLib.sounds[id].lastModifiedAt;
       updatedLib.sounds[id].flagged = false;
       saveLibrary(updatedLib);
 
