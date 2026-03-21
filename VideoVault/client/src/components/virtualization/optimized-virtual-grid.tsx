@@ -20,6 +20,7 @@ interface OptimizedVirtualGridProps {
   onMove?: (video: Video) => void;
   onDelete?: (video: Video) => void;
   onRemoveCategory?: (videoId: string, categoryType: string, categoryValue: string) => void;
+  onUpdateCategories?: (videoId: string, categories: Partial<{ categories: any; customCategories: any }>) => void;
   isSelected?: (videoId: string) => boolean;
   onSelectionChange?: (videoId: string, selected: boolean) => void;
   showSelection?: boolean;
@@ -33,7 +34,8 @@ const MemoizedVideoCard = React.memo(VideoCard, (prevProps, nextProps) => {
     prevProps.video.id === nextProps.video.id &&
     prevProps.isSelected === nextProps.isSelected &&
     prevProps.showSelection === nextProps.showSelection &&
-    prevProps.isVisible === nextProps.isVisible
+    prevProps.isVisible === nextProps.isVisible &&
+    JSON.stringify(prevProps.video.categories) === JSON.stringify(nextProps.video.categories)
   );
 });
 
@@ -54,6 +56,7 @@ export function OptimizedVirtualGrid({
   onMove,
   onDelete,
   onRemoveCategory,
+  onUpdateCategories,
   isSelected,
   onSelectionChange,
   showSelection,
@@ -111,6 +114,7 @@ export function OptimizedVirtualGrid({
       onMove,
       onDelete,
       onRemoveCategory,
+      onUpdateCategories,
       isSelected,
       onSelectionChange,
       showSelection,
@@ -132,6 +136,7 @@ export function OptimizedVirtualGrid({
       onMove,
       onDelete,
       onRemoveCategory,
+      onUpdateCategories,
       isSelected,
       onSelectionChange,
       showSelection,
@@ -185,6 +190,7 @@ export function OptimizedVirtualGrid({
               onMove={data.onMove}
               onDelete={data.onDelete}
               onRemoveCategory={data.onRemoveCategory}
+              onUpdateCategories={data.onUpdateCategories}
               isSelected={data.isSelected ? data.isSelected(video.id) : false}
               onSelectionChange={data.onSelectionChange}
               showSelection={data.showSelection}

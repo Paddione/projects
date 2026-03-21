@@ -48,6 +48,7 @@ interface MainContentProps {
   onChangeSort?: (sort: { field: SortField; direction: SortDirection }) => void;
   onRequestMove?: (video: Video) => void;
   onRemoveCategory?: (videoId: string, categoryType: string, categoryValue: string) => void;
+  onUpdateCategories?: (videoId: string, categories: Partial<{ categories: any; customCategories: any }>) => void;
   onAdvancedFiltersChange?: (filters: AdvancedFilters) => void;
   advancedFilters?: AdvancedFilters;
   // Bulk ops callbacks wired by parent
@@ -78,6 +79,7 @@ export function MainContent({
   onChangeSort,
   onRequestMove,
   onRemoveCategory,
+  onUpdateCategories,
   onAdvancedFiltersChange,
   advancedFilters,
   onOpenBatchRename,
@@ -630,6 +632,7 @@ export function MainContent({
               onMove={onRequestMove}
               onDelete={onDeleteFile}
               onRemoveCategory={onRemoveCategory}
+              onUpdateCategories={onUpdateCategories}
               isSelected={(videoId) => selectedVideoIds.has(videoId)}
               onSelectionChange={handleVideoSelectionChange}
               showSelection={showSelection}
@@ -674,6 +677,7 @@ export function MainContent({
                             : undefined
                         }
                         onRemoveCategory={onRemoveCategory}
+                        onUpdateCategories={onUpdateCategories}
                         isSelected={selectedVideoIds.has(video.id)}
                         onSelectionChange={handleVideoSelectionChange}
                         showSelection={showSelection}
@@ -719,6 +723,7 @@ export function MainContent({
                       : undefined
                   }
                   onRemoveCategory={onRemoveCategory}
+                  onUpdateCategories={onUpdateCategories}
                   isSelected={selectedVideoIds.has(video.id)}
                   onSelectionChange={handleVideoSelectionChange}
                   showSelection={showSelection}

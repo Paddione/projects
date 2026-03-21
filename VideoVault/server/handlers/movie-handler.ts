@@ -93,15 +93,30 @@ export function parseMovieFilename(filename: string): { title: string; year?: nu
 }
 
 /**
- * Generate organized folder path for a movie
- * Format: Title (Year)/ or Title/ if no year
+ * Generate organized folder path for a movie.
+ * Format: Title (Year)/ or Title/ if no year.
+ * Truncates to MAX_DIR_NAME_LENGTH on a word boundary to keep paths short.
+ * Full title is preserved in metadata.json and displayName.
  */
+const MAX_DIR_NAME_LENGTH = 60;
+
 export function generateOrganizedPath(title: string, year?: number): string {
   const sanitizedTitle = title.replace(/[<>:"/\\|?*]/g, '').trim();
-  if (year) {
-    return `${sanitizedTitle} (${year})`;
+  const suffix = year ? ` (${year})` : '';
+  const maxTitleLen = MAX_DIR_NAME_LENGTH - suffix.length;
+
+  let truncated = sanitizedTitle;
+  if (truncated.length > maxTitleLen) {
+    // Truncate on word boundary
+    truncated = truncated.slice(0, maxTitleLen);
+    const lastSpace = truncated.lastIndexOf(' ');
+    if (lastSpace > maxTitleLen * 0.5) {
+      truncated = truncated.slice(0, lastSpace);
+    }
+    truncated = truncated.replace(/[\s\-_.,]+$/, '');
   }
-  return sanitizedTitle;
+
+  return `${truncated}${suffix}`;
 }
 
 /**
