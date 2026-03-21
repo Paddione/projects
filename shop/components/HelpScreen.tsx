@@ -42,15 +42,13 @@ const content: Record<Lang, {
         items: [
           'View all past orders on the Orders page.',
           'Each order shows status, items, total amount, and date.',
-          'Order details include receipts and tracking information.',
         ],
       },
       {
         heading: 'Appointments',
         items: [
-          'Schedule appointments from the Appointments page.',
-          'View upcoming and past appointments.',
-          'Cancel an appointment if needed.',
+          'View your upcoming and past appointments on the Appointments page.',
+          'Each appointment shows the service name, date, time, and status.',
         ],
       },
       {
@@ -58,8 +56,8 @@ const content: Record<Lang, {
         items: [
           'Admin users can access the Admin panel from the navigation.',
           'Manage products: create, edit, and delete products.',
-          'Manage users: view, edit roles, and deactivate accounts.',
-          'Manage bookings: view and modify all appointments.',
+          'Manage users: view registered users and their wallet balances.',
+          'Manage bookings: view and cancel confirmed appointments.',
         ],
       },
       {
@@ -106,15 +104,13 @@ const content: Record<Lang, {
         items: [
           'Sieh dir alle vergangenen Bestellungen auf der Bestellseite an.',
           'Jede Bestellung zeigt Status, Artikel, Gesamtbetrag und Datum.',
-          'Bestelldetails enthalten Quittungen und Tracking-Informationen.',
         ],
       },
       {
         heading: 'Termine',
         items: [
-          'Plane Termine ueber die Termine-Seite.',
-          'Sieh dir bevorstehende und vergangene Termine an.',
-          'Storniere einen Termin bei Bedarf.',
+          'Sieh dir deine bevorstehenden und vergangenen Termine auf der Termine-Seite an.',
+          'Jeder Termin zeigt den Servicenamen, Datum, Uhrzeit und Status.',
         ],
       },
       {
@@ -122,8 +118,8 @@ const content: Record<Lang, {
         items: [
           'Admin-Benutzer koennen ueber die Navigation auf den Admin-Bereich zugreifen.',
           'Produkte verwalten: erstellen, bearbeiten und loeschen.',
-          'Benutzer verwalten: ansehen, Rollen aendern und Konten deaktivieren.',
-          'Buchungen verwalten: alle Termine einsehen und aendern.',
+          'Benutzer verwalten: registrierte Benutzer und deren Wallet-Guthaben einsehen.',
+          'Buchungen verwalten: alle Termine einsehen und bestaetigte Termine stornieren.',
         ],
       },
       {

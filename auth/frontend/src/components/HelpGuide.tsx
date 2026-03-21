@@ -50,7 +50,7 @@ const helpContent: Record<string, PageHelp> = {
       },
       {
         title: 'E-Mail-Bestätigung',
-        description: 'Nach der Registrierung erhältst du eine E-Mail mit einem Bestätigungslink. Klicke darauf, um dein Konto zu aktivieren.',
+        description: 'Nach der Registrierung wird automatisch eine E-Mail mit einem Bestätigungslink gesendet. Klicke darauf, um dein Konto zu aktivieren. Ohne Bestätigung kannst du dich nicht anmelden.',
       },
     ],
   },
@@ -84,7 +84,7 @@ const helpContent: Record<string, PageHelp> = {
     sections: [
       {
         title: 'Zugangsanfragen',
-        description: 'Im Tab "Access Requests" siehst du offene Anfragen von Benutzern. Klicke auf "Review", um eine Anfrage zu genehmigen oder abzulehnen.',
+        description: 'Im Tab "Access Requests" siehst du offene Anfragen von Benutzern. Klicke auf "Review", um eine Anfrage zu genehmigen oder abzulehnen. Du kannst dabei optional eine Antwort-Nachricht hinterlassen.',
       },
       {
         title: 'Benutzer verwalten',
@@ -96,7 +96,7 @@ const helpContent: Record<string, PageHelp> = {
       },
       {
         title: 'Benutzer bearbeiten',
-        description: 'Im Editor kannst du Rolle, Kontostatus, L2P-Charakter-Einstellungen und App-Zugangsrechte ändern.',
+        description: 'Im Editor kannst du Rolle, Kontostatus, fehlgeschlagene Anmeldeversuche, L2P-Charakter-Einstellungen und App-Zugangsrechte ändern. Benutzer können auch dauerhaft gelöscht werden.',
       },
     ],
   },

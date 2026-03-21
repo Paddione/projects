@@ -1,12 +1,14 @@
 import { useState, useEffect, useRef } from 'react';
 
-type HelpSection = 'howToPlay' | 'controls' | 'weapons' | 'mechanics' | 'lobby' | 'spectator';
+type HelpSection = 'howToPlay' | 'controls' | 'weapons' | 'mechanics' | 'characters' | 'progression' | 'lobby' | 'spectator';
 
 const SECTIONS: { key: HelpSection; icon: string; label: string }[] = [
     { key: 'howToPlay', icon: '\u{1F3AE}', label: 'How to Play' },
     { key: 'controls', icon: '\u{2328}\u{FE0F}', label: 'Controls' },
     { key: 'weapons', icon: '\u{1F52B}', label: 'Weapons' },
     { key: 'mechanics', icon: '\u{2699}\u{FE0F}', label: 'Game Mechanics' },
+    { key: 'characters', icon: '\u{1F9D1}', label: 'Characters' },
+    { key: 'progression', icon: '\u{1F4C8}', label: 'Progression' },
     { key: 'lobby', icon: '\u{1F465}', label: 'Lobby' },
     { key: 'spectator', icon: '\u{1F440}', label: 'Spectator' },
 ];
@@ -148,6 +150,49 @@ function MechanicsSection() {
     );
 }
 
+function CharactersSection() {
+    return (
+        <div className="help-section">
+            <h3>Character Selection</h3>
+            <ul className="help-list">
+                <li>Choose your character before joining a match from the home screen.</li>
+                <li>8 characters available: Student, Researcher, Professor, Dean, Librarian, Graduate, Lab Assistant, and Teaching Assistant.</li>
+                <li>Each character can be played as male or female.</li>
+            </ul>
+
+            <h3>Unlocking Characters</h3>
+            <ul className="help-list">
+                <li>Some characters are locked and must be purchased with Respect.</li>
+                <li>Locked characters show a cost of 500 Respect.</li>
+                <li>Once purchased, a character is permanently unlocked on your account.</li>
+            </ul>
+        </div>
+    );
+}
+
+function ProgressionSection() {
+    return (
+        <div className="help-section">
+            <h3>Respect & XP</h3>
+            <ul className="help-list">
+                <li>Earn Respect and XP at the end of each match based on your performance.</li>
+                <li>Respect is the currency used to unlock characters and cosmetics.</li>
+                <li>XP contributes to your character level progression.</li>
+            </ul>
+
+            <h3>Leaderboard & Stats</h3>
+            <ul className="help-list">
+                <li>Track your kills, deaths, K/D ratio, and win rate on the leaderboard.</li>
+                <li>Stats are updated after every match.</li>
+                <li>Compete with other players for the top ranks.</li>
+            </ul>
+
+            <h3>Loadout</h3>
+            <p>Access your loadout from the home screen to customize your character and view your unlocked items.</p>
+        </div>
+    );
+}
+
 function LobbySection() {
     return (
         <div className="help-section">
@@ -255,6 +300,8 @@ export function HelpScreen({ isOpen, onClose }: HelpScreenProps) {
                         {activeSection === 'controls' && <ControlsSection />}
                         {activeSection === 'weapons' && <WeaponsSection />}
                         {activeSection === 'mechanics' && <MechanicsSection />}
+                        {activeSection === 'characters' && <CharactersSection />}
+                        {activeSection === 'progression' && <ProgressionSection />}
                         {activeSection === 'lobby' && <LobbySection />}
                         {activeSection === 'spectator' && <SpectatorSection />}
                     </div>
