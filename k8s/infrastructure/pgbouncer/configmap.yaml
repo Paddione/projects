@@ -24,6 +24,9 @@ data:
     ; Session mode required — all services use prepared statements
     pool_mode = session
 
+    ; Allow Prisma/ORMs to set search_path on connect (rejected by default)
+    ignore_startup_parameters = extra_float_digits,search_path
+
     ; Connection limits
     max_client_conn = 200
     default_pool_size = 20
