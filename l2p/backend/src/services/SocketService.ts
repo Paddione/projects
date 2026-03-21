@@ -254,7 +254,7 @@ export class SocketService {
       });
 
       // Deathmatch challenge events
-      socket.on('deathmatch-accept', (data: { lobbyCode: string }) => {
+      socket.on('deathmatch-accept', (data: { lobbyCode: string; npcCount?: number }) => {
         if (!this.checkRateLimit(socket.id, 'deathmatch-accept', 3, 10000)) {
           socket.emit('deathmatch-error', { type: 'RATE_LIMITED', message: 'Too many requests, please wait' });
           return;
@@ -865,15 +865,15 @@ export class SocketService {
     this.io.to(socketId).emit(event, data);
   }
 
-  private async handleDeathmatchAccept(socket: Socket, data: { lobbyCode: string }): Promise<void> {
+  private async handleDeathmatchAccept(socket: Socket, data: { lobbyCode: string; npcCount?: number }): Promise<void> {
     try {
       const userId = this.requireAuth(socket, 'deathmatch');
       if (!userId) return;
 
-      const { lobbyCode } = data;
-      RequestLogger.logSocketEvent(socket.id, 'deathmatch-accept', { lobbyCode, userId });
+      const { lobbyCode, npcCount } = data;
+      RequestLogger.logSocketEvent(socket.id, 'deathmatch-accept', { lobbyCode, userId, npcCount });
 
-      await this.gameService.handleDeathmatchAccept(lobbyCode, userId);
+      await this.gameService.handleDeathmatchAccept(lobbyCode, userId, npcCount as 1 | 2 | 3 | undefined);
     } catch (error) {
       console.error('Error handling deathmatch accept:', error);
       socket.emit('deathmatch-error', { type: 'SERVER_ERROR', message: 'Failed to process acceptance' });

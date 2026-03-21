@@ -132,6 +132,8 @@ export class GameService {
     declinedPlayerIds: Set<string>;
     allPlayerIds: string[];
     timer: NodeJS.Timeout;
+    solo: boolean;
+    npcCount: number | undefined;
   }> = new Map();
 
   private getIo() {
@@ -1695,8 +1697,8 @@ export class GameService {
     });
 
     // Emit deathmatch offer after a short delay so clients have time to render results
-    // Only offered when there are at least 2 players
-    if (gameState.players.length >= DEATHMATCH_MIN_PLAYERS) {
+    // Offered to 1+ players (solo with NPCs is allowed)
+    if (gameState.players.length >= 1) {
       const earnedXp: Record<string, number> = {};
       for (const r of finalResults) {
         earnedXp[r.id] = r.experienceAwarded;
@@ -1721,12 +1723,15 @@ export class GameService {
       acceptedPlayerIds: new Set(),
       declinedPlayerIds: new Set(),
       allPlayerIds,
-      timer
+      timer,
+      solo: allPlayerIds.length === 1,
+      npcCount: undefined
     });
 
     this.getIo()?.to(lobbyCode)?.emit('deathmatch-offer', {
       earnedXp,
-      timeoutSeconds: DEATHMATCH_TIMEOUT_SECONDS
+      timeoutSeconds: DEATHMATCH_TIMEOUT_SECONDS,
+      solo: allPlayerIds.length === 1
     });
 
     console.log(`[Deathmatch] Offer sent to lobby ${lobbyCode} with ${allPlayerIds.length} players`);
@@ -1735,7 +1740,7 @@ export class GameService {
   /**
    * Record a player's acceptance of the deathmatch challenge.
    */
-  async handleDeathmatchAccept(lobbyCode: string, playerId: string): Promise<void> {
+  async handleDeathmatchAccept(lobbyCode: string, playerId: string, npcCount?: 1 | 2 | 3): Promise<void> {
     const challenge = this.deathmatchChallenges.get(lobbyCode);
     if (!challenge) {
       console.warn(`[Deathmatch] Accept from ${playerId} but no active challenge for lobby ${lobbyCode}`);
@@ -1744,6 +1749,10 @@ export class GameService {
 
     challenge.acceptedPlayerIds.add(playerId);
     challenge.declinedPlayerIds.delete(playerId);
+
+    if (npcCount && [1, 2, 3].includes(npcCount)) {
+      challenge.npcCount = npcCount;
+    }
 
     // Broadcast updated acceptances to all players in the lobby
     this.getIo()?.to(lobbyCode)?.emit('deathmatch-accepted', {
@@ -1756,7 +1765,7 @@ export class GameService {
     const pendingPlayers = challenge.allPlayerIds.filter(
       id => !challenge.acceptedPlayerIds.has(id) && !challenge.declinedPlayerIds.has(id)
     );
-    if (pendingPlayers.length === 0 && challenge.acceptedPlayerIds.size >= DEATHMATCH_MIN_PLAYERS) {
+    if (pendingPlayers.length === 0 && (challenge.solo || challenge.acceptedPlayerIds.size >= DEATHMATCH_MIN_PLAYERS)) {
       clearTimeout(challenge.timer);
       await this.resolveDeathmatchChallenge(lobbyCode);
     }
@@ -1789,11 +1798,13 @@ export class GameService {
   private async resolveDeathmatchChallenge(lobbyCode: string): Promise<void> {
     const challenge = this.deathmatchChallenges.get(lobbyCode);
     if (!challenge) return;
+    const isSolo = challenge.solo;
+    const challengeNpcCount = challenge.npcCount;
     this.deathmatchChallenges.delete(lobbyCode);
 
     const acceptedIds = Array.from(challenge.acceptedPlayerIds);
 
-    if (acceptedIds.length < DEATHMATCH_MIN_PLAYERS) {
+    if (!isSolo && acceptedIds.length < DEATHMATCH_MIN_PLAYERS) {
       console.log(`[Deathmatch] Not enough acceptances in lobby ${lobbyCode} (${acceptedIds.length}/${DEATHMATCH_MIN_PLAYERS}), cancelling`);
       this.getIo()?.to(lobbyCode)?.emit('deathmatch-cancelled', {
         reason: acceptedIds.length === 0 ? 'no_acceptances' : 'not_enough_players'
@@ -1813,7 +1824,7 @@ export class GameService {
         body: JSON.stringify({
           playerIds: acceptedIds,
           escrowedXp,
-          matchConfig: { source: 'l2p', lobbyCode }
+          matchConfig: { source: 'l2p', lobbyCode, solo: isSolo, npcCount: challengeNpcCount }
         })
       });
 
