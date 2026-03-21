@@ -11,6 +11,7 @@ if (typeof globalThis.ResizeObserver === 'undefined') {
 // TextureFactory (and any future canvas-based services) can run under vitest.
 const _origGetContext = HTMLCanvasElement.prototype.getContext;
 HTMLCanvasElement.prototype.getContext = function (
+    this: HTMLCanvasElement,
     contextId: string,
     ...args: any[]
 ): any {
@@ -61,5 +62,5 @@ HTMLCanvasElement.prototype.getContext = function (
         };
         return ctx as CanvasRenderingContext2D;
     }
-    return _origGetContext.call(this, contextId as any, ...args);
+    return _origGetContext.call(this as HTMLCanvasElement, contextId as any, ...args);
 } as typeof HTMLCanvasElement.prototype.getContext;
