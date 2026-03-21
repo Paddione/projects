@@ -239,7 +239,7 @@ export interface ServerToClientEvents {
     'game-starting': (data: { countdown: number }) => void;
     'round-start': (data: { roundNumber: number; spawnPositions: Record<string, SpawnPoint> }) => void;
     'game-state': (state: SerializedGameState) => void;
-    'player-hit': (data: { targetId: string; attackerId: string; damage: number; remainingHp: number; hasArmor: boolean }) => void;
+    'player-hit': (data: { targetId: string; attackerId: string; damage: number; remainingHp: number; hasArmor: boolean; x: number; y: number }) => void;
     'player-killed': (data: { victimId: string; killerId: string; weapon: 'gun' | 'melee' | 'zone' | 'zombie' | 'npc'; killerName?: string; victimName?: string }) => void;
     'item-spawned': (data: { item: MapItem; announcement: string }) => void;
     'item-collected': (data: { itemId: string; playerId: string }) => void;

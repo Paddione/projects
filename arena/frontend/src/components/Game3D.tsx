@@ -14,7 +14,14 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Clock, Raycaster, Vector2, Vector3, Plane } from 'three';
 import { useGameStore } from '../stores/gameStore';
 import LoadingScreen from './LoadingScreen';
-import { GameRenderer3D } from '../services/GameRenderer3D';
+import { GameRenderer3D, WORLD_SCALE } from '../services/GameRenderer3D';
+import { VFXManager } from '../services/VFXManager';
+import { AtmosphereEffect } from '../services/effects/AtmosphereEffect';
+import { ImpactEffect } from '../services/effects/ImpactEffect';
+import { ExplosionEffect } from '../services/effects/ExplosionEffect';
+import { MuzzleFlashEffect } from '../services/effects/MuzzleFlashEffect';
+import { DeathEffect } from '../services/effects/DeathEffect';
+import { DamageNumber } from '../services/effects/DamageNumber';
 import { TerrainRenderer } from '../services/TerrainRenderer';
 import { PlayerRenderer } from '../services/PlayerRenderer';
 import { ProjectileRenderer } from '../services/ProjectileRenderer';
@@ -27,6 +34,7 @@ import { useGameSockets } from '../hooks/useGameSockets';
 import { useGameInput } from '../hooks/useGameInput';
 import { useGameAudio } from '../hooks/useGameAudio';
 import { GameHUD } from './GameHUD';
+import { QualitySettings } from '../services/QualitySettings';
 
 /**
  * Outer wrapper: shows LoadingScreen until assets are ready,
@@ -64,6 +72,8 @@ function Game3DInner() {
   const zoneRef = useRef<ZoneRenderer | null>(null);
   const npcRef = useRef<NPCRenderer | null>(null);
   const labelRef = useRef<LabelRenderer | null>(null);
+  const vfxRef = useRef<VFXManager | null>(null);
+  const atmosphereRef = useRef<AtmosphereEffect | null>(null);
 
   const gameStateRef = useRef<any>(null);
   const terrainBuiltRef = useRef(false);
@@ -85,7 +95,26 @@ function Game3DInner() {
     isoYawRad: Math.PI / 4,
   });
 
-  useGameSockets({ playerId, navigate, gameStateRef, activeEmotesRef });
+  useGameSockets({
+    playerId, navigate, gameStateRef, activeEmotesRef,
+    onExplosion: (data) => {
+      const vfx = vfxRef.current;
+      const r = rendererRef.current;
+      if (!vfx || !r) return;
+      const { wx, wz } = GameRenderer3D.toWorld(data.x, data.y);
+      vfx.addEffect(new ExplosionEffect(vfx.effectGroup, { x: wx, y: 0, z: wz }, data.radius * WORLD_SCALE));
+      vfx.triggerShake('explosion');
+    },
+    onPlayerHit: (data) => {
+      const vfx = vfxRef.current;
+      const r = rendererRef.current;
+      if (!vfx || !r) return;
+      vfx.triggerShake('hit');
+      const { wx, wz } = GameRenderer3D.toWorld(data.x, data.y);
+      const type = data.hasArmor ? 'armor' : 'damage';
+      vfx.addEffect(new DamageNumber(r.scene, { x: wx, y: 1.8, z: wz }, data.damage, type));
+    },
+  });
 
   useGameAudio({ mouseRef: input.mouseRef, keysRef: input.keysRef });
 
@@ -102,10 +131,30 @@ function Game3DInner() {
 
     const r = new GameRenderer3D(container);
     rendererRef.current = r;
+    const pp = r.initPostProcessing();
+
+    const vfx = new VFXManager(r.scene);
+    vfxRef.current = vfx;
+
+    const atmosphere = new AtmosphereEffect(r.scene);
+    atmosphereRef.current = atmosphere;
 
     terrainRef.current = new TerrainRenderer(r.terrainGroup);
-    playerRef.current = new PlayerRenderer(r.playerGroup, r.characterManager);
-    projectileRef.current = new ProjectileRenderer(r.projectileGroup);
+    playerRef.current = new PlayerRenderer(r.playerGroup, r.characterManager, {
+      onPlayerDeath: (pos, color) => {
+        vfx.addEffect(new DeathEffect(vfx.effectGroup, pos, color));
+      },
+    });
+    projectileRef.current = new ProjectileRenderer(r.projectileGroup, {
+      onRemoved: (pos, type) => {
+        if (type !== 'grenade') {
+          vfx.addEffect(new ImpactEffect(vfx.effectGroup, pos));
+        }
+      },
+      onCreated: (pos, angle) => {
+        vfx.addEffect(new MuzzleFlashEffect(vfx.effectGroup, pos, angle));
+      },
+    });
     coverRef.current = new CoverRenderer(r.coverGroup);
     itemRef.current = new ItemRenderer(r.itemGroup);
     zoneRef.current = new ZoneRenderer(r.zoneGroup);
@@ -116,9 +165,28 @@ function Game3DInner() {
     resizeObserver.observe(container);
 
     clockRef.current.start();
+    let frameCount = 0;
+    let fpsAccum = 0;
+    let probeComplete = false;
     const animate = () => {
       rafRef.current = requestAnimationFrame(animate);
       const delta = clockRef.current.getDelta();
+      if (!probeComplete && delta > 0) {
+          frameCount++;
+          fpsAccum += 1 / delta;
+          if (frameCount >= 60) {
+              const avgFps = fpsAccum / frameCount;
+              const currentTier = QualitySettings.current.tier;
+              if (avgFps < 30 && currentTier !== 'low') {
+                  QualitySettings.setTier('low');
+                  pp.applyQuality();
+              } else if (avgFps < 45 && currentTier === 'high') {
+                  QualitySettings.setTier('medium');
+                  pp.applyQuality();
+              }
+              probeComplete = true;
+          }
+      }
       const state = gameStateRef.current;
       if (!state) { r.render(); return; }
 
@@ -162,6 +230,13 @@ function Game3DInner() {
       zoneRef.current?.update(state.zone, state.map?.width ?? 28, state.map?.height ?? 22, delta);
       labelRef.current?.update(players);
 
+      vfxRef.current?.update(delta);
+      atmosphereRef.current?.update(delta);
+
+      // Apply screen shake
+      const shakeOffset = vfxRef.current?.getShakeOffset();
+      if (shakeOffset) r.applyCameraShake(shakeOffset);
+
       r.render();
     };
     animate();
@@ -177,6 +252,8 @@ function Game3DInner() {
       zoneRef.current?.dispose();
       npcRef.current?.dispose();
       labelRef.current?.dispose();
+      vfxRef.current?.dispose();
+      atmosphereRef.current?.dispose();
       r.dispose();
       rendererRef.current = null;
       terrainBuiltRef.current = false;

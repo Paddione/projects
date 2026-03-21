@@ -2,6 +2,7 @@ import { useState, useCallback, type MutableRefObject } from 'react';
 import { useGameStore } from '../stores/gameStore';
 import { SoundService } from '../services/SoundService';
 import EmoteWheel from './EmoteWheel';
+import { SettingsPanel } from './SettingsPanel';
 
 export const SCALE_OPTIONS = [
   { key: 'auto', label: 'Auto' },
@@ -55,6 +56,7 @@ export function GameHUD({
   } = useGameStore();
 
   const [isMuted, setIsMuted] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
 
   const toggleMute = useCallback(() => {
     const nowMuted = SoundService.toggleMute();
@@ -137,6 +139,31 @@ export function GameHUD({
             </div>
           )}
         </div>
+
+        {/* Settings Gear Button */}
+        <button
+          onClick={() => setShowSettings(!showSettings)}
+          style={{
+            position: 'absolute',
+            top: 8,
+            right: 8,
+            background: 'rgba(10, 11, 26, 0.7)',
+            border: '1px solid rgba(0, 242, 255, 0.3)',
+            color: '#00f2ff',
+            borderRadius: 4,
+            padding: '4px 8px',
+            cursor: 'pointer',
+            fontSize: 18,
+            zIndex: 10,
+          }}
+        >
+          ⚙
+        </button>
+        {showSettings && (
+          <div style={{ position: 'absolute', top: 36, right: 8, zIndex: 10 }}>
+            <SettingsPanel onClose={() => setShowSettings(false)} />
+          </div>
+        )}
 
         {/* Spectating Banner */}
         {isSpectating && (
