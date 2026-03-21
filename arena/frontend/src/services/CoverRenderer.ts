@@ -99,6 +99,46 @@ export class CoverRenderer {
         mesh.castShadow = true;
         mesh.receiveShadow = true;
 
+        // Type-specific extras
+        if (cover.type === 'fountain') {
+            const radius = Math.max(w, h) / 2;
+
+            // Water top face — translucent blue circle
+            const topGeo = new CircleGeometry(radius * 0.95, 24);
+            const topMat = new MeshStandardMaterial({
+                map: this.factory.getFountainTop(),
+                transparent: true,
+                opacity: 0.7,
+                emissive: 0x0044aa,
+                emissiveIntensity: 0.5,
+            });
+            const topMesh = new Mesh(topGeo, topMat);
+            topMesh.rotation.x = -Math.PI / 2;
+            topMesh.position.y = h * 0.3;
+            mesh.add(topMesh);
+
+            // Center pillar
+            const pillarRadius = radius * 0.15;
+            const pillarGeo = new CylinderGeometry(pillarRadius, pillarRadius, h, 8);
+            const pillarMat = new MeshStandardMaterial({
+                color: 0x3a3a5a,
+                metalness: 0.4,
+                roughness: 0.7,
+            });
+            const pillarMesh = new Mesh(pillarGeo, pillarMat);
+            pillarMesh.position.y = h * 0.2;
+            pillarMesh.castShadow = true;
+            mesh.add(pillarMesh);
+        }
+
+        if (cover.type === 'hedge') {
+            // Organic scale jitter ±5% (seeded, deterministic per id)
+            let s = seed | 0;
+            const jitter = () => { s = (s * 1664525 + 1013904223) | 0; return (s >>> 0) / 4294967296; };
+            mesh.scale.x *= 0.95 + jitter() * 0.1;
+            mesh.scale.z *= 0.95 + jitter() * 0.1;
+        }
+
         // Edge glow
         const edgeColor = EDGE_COLORS[cover.type] ?? DEFAULT_EDGE_COLOR;
         const edges = new EdgesGeometry(geometry);
