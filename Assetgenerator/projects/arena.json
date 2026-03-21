@@ -1,7 +1,7 @@
 {
   "name": "arena",
   "audioRoot": "../arena/assets/audio",
-  "outputRoot": "../arena/frontend/public/assets",
+  "outputRoot": "/mnt/pve3a/audio-library/exports/arena",
   "processScript": null,
   "generateScript": null,
   "manifestPath": "../arena/assets/manifest.json",
