@@ -139,7 +139,7 @@ function Game3DInner() {
     const atmosphere = new AtmosphereEffect(r.scene);
     atmosphereRef.current = atmosphere;
 
-    terrainRef.current = new TerrainRenderer(r.terrainGroup);
+    terrainRef.current = new TerrainRenderer(r.terrainGroup, r.textureFactory);
     playerRef.current = new PlayerRenderer(r.playerGroup, r.characterManager, {
       onPlayerDeath: (pos, color) => {
         vfx.addEffect(new DeathEffect(vfx.effectGroup, pos, color));
@@ -155,7 +155,7 @@ function Game3DInner() {
         vfx.addEffect(new MuzzleFlashEffect(vfx.effectGroup, pos, angle));
       },
     });
-    coverRef.current = new CoverRenderer(r.coverGroup);
+    coverRef.current = new CoverRenderer(r.coverGroup, r.textureFactory);
     itemRef.current = new ItemRenderer(r.itemGroup);
     zoneRef.current = new ZoneRenderer(r.zoneGroup);
     npcRef.current = new NPCRenderer(r.npcGroup, r.characterManager);

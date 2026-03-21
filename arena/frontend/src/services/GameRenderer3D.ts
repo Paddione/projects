@@ -14,6 +14,7 @@ import {
 import type { OrthographicCamera } from 'three';
 import type { LightingRig } from 'shared-3d';
 import { PostProcessing } from './PostProcessing';
+import { TextureFactory } from './TextureFactory';
 
 /** Converts tile-based game coordinates (pixels at 32px/tile) to 3D world units. */
 export const WORLD_SCALE = 1 / 32;
@@ -24,6 +25,7 @@ export class GameRenderer3D {
     readonly labelRenderer: CSS2DRenderer;
     readonly camera: OrthographicCamera;
     readonly characterManager: CharacterManager;
+    readonly textureFactory: TextureFactory;
 
     // Layer groups — add objects to these to get correct draw order
     readonly terrainGroup: Group;
@@ -106,6 +108,9 @@ export class GameRenderer3D {
         // Character manager (shared model cache)
         this.characterManager = new CharacterManager();
 
+        // Procedural texture factory for 3D environment
+        this.textureFactory = new TextureFactory();
+
         // Store the initial camera offset (isometric position relative to origin)
         this.cameraOffset = {
             x: this.camera.position.x,
@@ -177,6 +182,7 @@ export class GameRenderer3D {
 
     /** Clean up all GPU resources. */
     dispose(): void {
+        this.textureFactory.dispose();
         this.lightingRig.dispose();
         this.characterManager.dispose();
         this.postProcessing?.dispose();
