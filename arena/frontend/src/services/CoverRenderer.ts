@@ -1,54 +1,63 @@
+// arena/frontend/src/services/CoverRenderer.ts
 import {
     Group,
     BoxGeometry,
-    MeshLambertMaterial,
+    CylinderGeometry,
+    SphereGeometry,
+    CircleGeometry,
+    MeshStandardMaterial,
+    LineBasicMaterial,
+    EdgesGeometry,
+    LineSegments,
     Mesh,
 } from 'three';
 import { GameRenderer3D, WORLD_SCALE } from './GameRenderer3D';
+import type { TextureFactory } from './TextureFactory';
 
-const COVER_COLORS: Record<string, number> = {
-    wall_cover: 0x6a6a9a,
-    crate: 0xbb8930,
-    pillar: 0x8a8a8a,
-    bush: 0x4a9a4a,
-    water: 0x3a7aba,
-    fountain: 0x4a9aca,
-    pond: 0x3a6a9a,
-    hedge: 0x3a7a3a,
-    bench: 0x9a7a5a,
-    building: 0x6a6a8a,
+interface CoverData {
+    id?: string | number;
+    x: number;
+    y: number;
+    type: string;
+    hp: number;
+    width?: number;
+    height?: number;
+}
+
+/** Neon edge glow color per cover type. */
+const EDGE_COLORS: Record<string, number> = {
+    building: 0x00f2ff,
+    fountain: 0x00aaff,
+    hedge: 0x00ff66,
+    pond: 0x0088cc,
+    bench: 0x00f2ff,
 };
 
-const DEFAULT_COLOR = 0x7a7a9a;
+const DEFAULT_EDGE_COLOR = 0x00f2ff;
 
 export class CoverRenderer {
     private readonly group: Group;
-    private readonly objects: Map<string | number, Mesh> = new Map();
+    private readonly factory: TextureFactory;
+    private readonly objects = new Map<string | number, Mesh>();
+    private readonly hpTracker = new Map<string | number, number>();
 
-    constructor(group: Group) {
+    constructor(group: Group, factory: TextureFactory) {
         this.group = group;
+        this.factory = factory;
     }
 
-    update(coverObjects: Array<{
-        id?: string | number;
-        x: number;
-        y: number;
-        type: string;
-        hp: number;
-        width?: number;
-        height?: number;
-    }>): void {
+    update(coverObjects: CoverData[]): void {
+        // hp !== 0 (not hp > 0): indestructible covers have hp=-1, which must render.
+        // The old code used hp > 0, which excluded hp=-1 from the ID set — covers were
+        // re-created every frame then immediately removed. This fixes that bug.
         const currentIds = new Set(
-            coverObjects.filter((c) => c.hp > 0).map((c, i) => c.id ?? i),
+            coverObjects.filter((c) => c.hp !== 0).map((c, i) => c.id ?? i),
         );
 
         // Remove destroyed / gone
         for (const [id, mesh] of this.objects) {
             if (!currentIds.has(id)) {
-                this.group.remove(mesh);
-                mesh.geometry.dispose();
-                (mesh.material as MeshLambertMaterial).dispose();
-                this.objects.delete(id);
+                this.removeMesh(id, mesh);
             }
         }
 
@@ -58,29 +67,150 @@ export class CoverRenderer {
             const { wx, wz } = GameRenderer3D.toWorld(cover.x, cover.y);
 
             let mesh = this.objects.get(id);
+
+            // Check if bench HP changed → regenerate texture
+            if (mesh && cover.type === 'bench') {
+                const prevHp = this.hpTracker.get(id);
+                if (prevHp !== undefined && prevHp !== cover.hp) {
+                    this.removeMesh(id, mesh);
+                    mesh = undefined;
+                }
+            }
+
             if (!mesh) {
-                const w = (cover.width ?? 28) * WORLD_SCALE;
-                const h = (cover.height ?? 28) * WORLD_SCALE;
-                const geo = new BoxGeometry(w, h, w);
-                const color = COVER_COLORS[cover.type] ?? DEFAULT_COLOR;
-                const mat = new MeshLambertMaterial({ color });
-                mesh = new Mesh(geo, mat);
-                mesh.castShadow = true;
-                mesh.receiveShadow = true;
+                mesh = this.createMesh(cover, id);
                 this.objects.set(id, mesh);
                 this.group.add(mesh);
             }
 
-            mesh.position.set(wx, WORLD_SCALE * 14, wz);
+            this.hpTracker.set(id, cover.hp);
+            const yOffset = this.getYOffset(cover);
+            mesh.position.set(wx, yOffset, wz);
         });
     }
 
-    dispose(): void {
-        for (const mesh of this.objects.values()) {
-            this.group.remove(mesh);
-            mesh.geometry.dispose();
-            (mesh.material as MeshLambertMaterial).dispose();
+    private createMesh(cover: CoverData, id: string | number): Mesh {
+        const w = (cover.width ?? 28) * WORLD_SCALE;
+        const h = (cover.height ?? 28) * WORLD_SCALE;
+        const seed = typeof id === 'number' ? id : id.charCodeAt(0);
+
+        const { geometry, material } = this.buildGeometryAndMaterial(cover.type, w, h, seed, cover.hp);
+        const mesh = new Mesh(geometry, material);
+        mesh.castShadow = true;
+        mesh.receiveShadow = true;
+
+        // Edge glow
+        const edgeColor = EDGE_COLORS[cover.type] ?? DEFAULT_EDGE_COLOR;
+        const edges = new EdgesGeometry(geometry);
+        const edgeMat = new LineBasicMaterial({
+            color: edgeColor,
+            transparent: true,
+            opacity: 0.6,
+        });
+        const edgeLine = new LineSegments(edges, edgeMat);
+        edgeLine.scale.multiplyScalar(1.005); // slight offset to avoid z-fighting
+        mesh.add(edgeLine);
+
+        return mesh;
+    }
+
+    private buildGeometryAndMaterial(
+        type: string, w: number, h: number, seed: number, hp: number,
+    ): { geometry: BoxGeometry | CylinderGeometry | SphereGeometry | CircleGeometry; material: MeshStandardMaterial } {
+        switch (type) {
+            case 'fountain': {
+                const radius = Math.max(w, h) / 2;
+                const geometry = new CylinderGeometry(radius, radius, h * 0.6, 16, 1, true);
+                const material = new MeshStandardMaterial({
+                    map: this.factory.getFountainSide(),
+                    metalness: 0.2,
+                    roughness: 0.8,
+                    emissive: 0x001122,
+                    emissiveIntensity: 0.3,
+                });
+                return { geometry, material };
+            }
+            case 'hedge': {
+                const radius = Math.max(w, h) / 2;
+                const geometry = new SphereGeometry(radius, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2);
+                const material = new MeshStandardMaterial({
+                    map: this.factory.getHedge(seed),
+                    metalness: 0.0,
+                    roughness: 0.95,
+                    emissive: 0x001a00,
+                    emissiveIntensity: 0.2,
+                });
+                return { geometry, material };
+            }
+            case 'pond': {
+                const radius = Math.max(w, h) / 2;
+                const geometry = new CircleGeometry(radius, 24);
+                geometry.rotateX(-Math.PI / 2);
+                const material = new MeshStandardMaterial({
+                    map: this.factory.getPond(),
+                    transparent: true,
+                    opacity: 0.85,
+                    metalness: 0.1,
+                    roughness: 0.3,
+                    emissive: 0x001133,
+                    emissiveIntensity: 0.4,
+                });
+                return { geometry, material };
+            }
+            case 'bench': {
+                const benchH = h / 3;
+                const geometry = new BoxGeometry(w, benchH, w);
+                const material = new MeshStandardMaterial({
+                    map: this.factory.getBench(hp),
+                    metalness: 0.3,
+                    roughness: 0.8,
+                    emissive: 0x000000,
+                });
+                return { geometry, material };
+            }
+            default: {
+                // building (and any unknown type)
+                const geometry = new BoxGeometry(w, h, w);
+                const material = new MeshStandardMaterial({
+                    map: this.factory.getBuilding(seed),
+                    metalness: 0.5,
+                    roughness: 0.6,
+                    emissive: 0x050520,
+                    emissiveIntensity: 0.2,
+                });
+                return { geometry, material };
+            }
         }
-        this.objects.clear();
+    }
+
+    private getYOffset(cover: CoverData): number {
+        const h = (cover.height ?? 28) * WORLD_SCALE;
+        switch (cover.type) {
+            case 'pond': return 0.01;
+            case 'bench': return (h / 3) / 2;
+            case 'fountain': return (h * 0.6) / 2;
+            case 'hedge': return 0;
+            default: return h / 2;
+        }
+    }
+
+    private removeMesh(id: string | number, mesh: Mesh): void {
+        this.group.remove(mesh);
+        mesh.geometry.dispose();
+        (mesh.material as MeshStandardMaterial).dispose();
+        for (const child of mesh.children) {
+            if (child instanceof LineSegments) {
+                child.geometry.dispose();
+                (child.material as LineBasicMaterial).dispose();
+            }
+        }
+        this.objects.delete(id);
+        this.hpTracker.delete(id);
+    }
+
+    dispose(): void {
+        for (const [id, mesh] of this.objects) {
+            this.removeMesh(id, mesh);
+        }
     }
 }
