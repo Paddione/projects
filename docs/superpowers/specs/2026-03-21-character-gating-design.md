@@ -124,7 +124,7 @@ acquisitionSource: 'respect_purchase' | 'stripe' | 'achievement' | 'level_unlock
 acquisitionSource: 'respect_purchase' | 'stripe' | 'achievement' | 'level_unlock' | 'migration';
 ```
 
-The cast in `ProfileService.getProfileWithLoadout()` (line 142) must also include `'character'` and `'migration'` in the respective unions.
+The casts in `ProfileService.getProfileWithLoadout()` must also be updated: line 142 (`itemType` cast — add `'character'`) and line 144 (`acquisitionSource` cast — add `'migration'`).
 
 ## Auth Service Unavailability (Fallback Behavior)
 
@@ -299,7 +299,7 @@ L2P connects to `l2p_db`, not `auth_db`, so this cannot be a direct SQL cross-DB
 
 1. Reads L2P `user_game_profiles` for rows where `selected_character != 'student'`
 2. For each row, maps `auth_user_id` to the auth service
-3. Calls auth's `POST /api/internal/respect/grant-item` (or direct DB insert if run with auth DB access) to insert inventory entries
+3. Inserts inventory entries via direct DB access (run from a pod with auth DB connection string). Note: no existing internal endpoint inserts inventory rows — `POST /api/internal/respect/credit` only credits balance. Direct DB insert is the simplest approach for a one-time migration.
 4. Logs results for audit
 
 Alternatively, run both SQL migrations if the script has access to both databases (e.g., run from a pod with both connection strings). The auth-side migration covers most users; the L2P migration is a safety net for any unsynced profiles.
@@ -346,7 +346,7 @@ Alternatively, run both SQL migrations if the script has access to both database
 - **Create:** `auth/src/migrations/YYYYMMDD_seed_character_catalog.sql`
 - **Modify:** `auth/src/routes/catalog.ts` (add `GET /api/catalog/characters` route, add rate limiting to purchase route)
 - **Modify:** `auth/src/types/platform.ts` (add `'character'` to `InventoryItem.itemType`, add `'migration'` to `acquisitionSource`)
-- **Modify:** `auth/src/services/ProfileService.ts` (add ownership check in `updateCharacter`, update type casts on line 142)
+- **Modify:** `auth/src/services/ProfileService.ts` (add ownership check in `updateCharacter`, update type casts on lines 142 + 144)
 
 ### L2P Backend
 - **Modify:** `l2p/backend/src/services/CharacterService.ts` (remove level gating, add ownership annotation)
