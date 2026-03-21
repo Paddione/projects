@@ -60,6 +60,10 @@ router.put('/profile/character', authenticate, async (req: Request, res: Respons
       res.status(400).json({ error: 'Validation failed', details: error.errors });
       return;
     }
+    if (error instanceof Error && error.message === 'Character not purchased') {
+      res.status(403).json({ error: 'Character not purchased' });
+      return;
+    }
     res.status(500).json({ error: 'Failed to update character' });
   }
 });
