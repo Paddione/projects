@@ -6,7 +6,7 @@
 
 ## Problem
 
-All characters in both L2P and Arena are freely available (L2P gates by XP level, Arena has no gating). We want only the Student character to be free, with all others purchasable using Respect currency (500 Respect each). This creates a cross-game progression incentive and gives the Respect economy more purpose.
+L2P has 8 university-themed characters gated by XP level; Arena has 5 of the same characters (student, researcher, professor, dean, librarian) with no gating at all. We want only the Student character to be free, with all others purchasable using Respect currency (500 Respect each). The 3 characters currently exclusive to L2P (graduate, lab_assistant, teaching_assistant) will be added to Arena's roster with placeholder art. This creates a cross-game progression incentive and gives the Respect economy more purpose.
 
 ## Decisions
 
@@ -102,9 +102,45 @@ if character != 'student':
 store character in lobby state
 ```
 
+## Type System Changes
+
+The `InventoryItem.itemType` union in `auth/src/types/platform.ts` must be extended to include `'character'`:
+
+```typescript
+// Before
+itemType: 'skin' | 'emote' | 'title' | 'border' | 'power_up';
+
+// After
+itemType: 'skin' | 'emote' | 'title' | 'border' | 'power_up' | 'character';
+```
+
+The cast in `ProfileService.getProfileWithLoadout()` (line 142) must also include `'character'` in the union.
+
+## Auth Service Unavailability (Fallback Behavior)
+
+When L2P or Arena cannot reach the auth service during character selection or catalog fetch:
+
+- **Character picker (frontend):** Show only `student` as available. Display a banner: "Unable to load character inventory. Try again later." No purchases possible.
+- **Character selection (L2P backend):** L2P's `CharacterService.updateCharacter()` has 3 code paths — (1) auth service via `authFetch`, (2) local `user_game_profiles`, (3) legacy `users` table. **All three paths** must enforce the ownership check. If auth is unreachable, allow selection of `student` only; reject all other characters with 503 "Cannot verify character ownership."
+- **Lobby join (Arena backend):** If auth profile fetch fails, fall back to `student`. Do not allow unverified character selection.
+
+This is a deliberate trade-off: brief unavailability restricts character choice rather than allowing potential bypasses.
+
+## Rate Limiting
+
+`POST /api/shop/purchase` must use `express-rate-limit` consistent with the project's standard pattern. Suggested: 10 requests per minute per user (character purchases are infrequent).
+
+## Cross-Tab / Cross-Game Sync
+
+If a player purchases a character in L2P and has Arena open in another tab, Arena won't know about the purchase until the next `GET /api/catalog/characters` call (on mount or character picker open). No real-time sync needed — character pickers are not long-lived views, and a page refresh or re-opening the picker will fetch fresh data.
+
 ## Service Changes
 
 ### 1. Auth Service
+
+**Type changes — `auth/src/types/platform.ts`:**
+- Add `'character'` to `InventoryItem.itemType` union
+- Update cast in `ProfileService.getProfileWithLoadout()` line 142
 
 **Database — Seed `shop_catalog`:**
 
@@ -125,7 +161,7 @@ ON CONFLICT (item_id) DO NOTHING;
 
 **New route — `GET /api/catalog/characters`:**
 
-Returns character catalog entries + user's owned character IDs (from inventory where `item_type = 'character'`). Requires authentication.
+Returns character catalog entries + user's owned character IDs (from inventory where `item_type = 'character'`). Requires authentication. If the user has no profile yet, auto-creates one via `getOrCreateProfile()` and returns empty `ownedCharacterIds` with 0 balance.
 
 Response shape:
 ```json
@@ -141,10 +177,12 @@ Response shape:
 
 **New route — `POST /api/shop/purchase`:**
 
-User-facing purchase endpoint. Authenticates via session/JWT. Delegates to `RespectService.purchaseItem()`.
+User-facing purchase endpoint. Authenticates via session/JWT. Delegates to the existing `RespectService.purchaseItem()` method (which already handles validation, atomic debit, inventory insert, and transaction logging). No new service logic needed — only a new HTTP route exposing the existing method.
 
 Request: `{ itemId: "character_professor" }`
 Response: `{ success: true, item: {...}, newBalance: 750 }` or error
+
+Rate limited: 10 req/min per user.
 
 **Modify `ProfileService.updateCharacter()`:**
 
@@ -164,14 +202,17 @@ Add ownership check before updating `selected_character`. If `character !== 'stu
 - Return full roster with ownership state
 
 **`PUT /api/characters/select` route:**
-- Replace level check with ownership check
+- Replace level check with ownership check across **all three code paths** in `CharacterService.updateCharacter()`: (1) auth service via `authFetch`, (2) local `user_game_profiles`, (3) legacy `users` table
 - If character is not `student` and not in user's auth inventory → 403 "Character not purchased"
+- If auth service is unreachable → 503 "Cannot verify character ownership" (except for `student`)
 
 ### 3. Arena Backend
 
-**`LobbyService.ts` — `join-lobby` handler:**
+**`SocketService.ts` — `join-lobby` handler (NOT `LobbyService.ts`):**
+- The socket handler that processes `join-lobby` events and fetches auth profiles lives in `SocketService.ts` (lines 134-149, 406-421)
 - After fetching auth profile (already done for character selection), check inventory
 - If requested character is not `student` and not in inventory → emit `join-error`, use `student` as fallback
+- If auth profile fetch fails → use `student` as fallback
 
 **`app.ts` — `POST /api/players`:**
 - When saving `selectedCharacter`, validate ownership same as lobby join
@@ -233,9 +274,15 @@ ON CONFLICT (user_id, item_id) DO NOTHING;
 ```
 
 **L2P migration (if auth profiles lag behind L2P profiles):**
-- Query L2P `user_game_profiles` for `selected_character != 'student'`
-- For each, ensure auth inventory has the corresponding character entry
-- This handles the case where a user selected a character in L2P but the auth profile hasn't synced
+
+L2P connects to `l2p_db`, not `auth_db`, so this cannot be a direct SQL cross-DB query. Instead, implement as a one-time Node.js migration script that:
+
+1. Reads L2P `user_game_profiles` for rows where `selected_character != 'student'`
+2. For each row, maps `auth_user_id` to the auth service
+3. Calls auth's `POST /api/internal/respect/grant-item` (or direct DB insert if run with auth DB access) to insert inventory entries
+4. Logs results for audit
+
+Alternatively, run both SQL migrations if the script has access to both databases (e.g., run from a pod with both connection strings). The auth-side migration covers most users; the L2P migration is a safety net for any unsynced profiles.
 
 ### Rationale
 
@@ -279,7 +326,8 @@ ON CONFLICT (user_id, item_id) DO NOTHING;
 - **Create:** `auth/src/migrations/YYYYMMDD_seed_character_catalog.sql`
 - **Create:** `auth/src/routes/catalog.ts` (new `GET /api/catalog/characters` route)
 - **Create:** `auth/src/routes/shop.ts` (new `POST /api/shop/purchase` route)
-- **Modify:** `auth/src/services/ProfileService.ts` (add ownership check in `updateCharacter`)
+- **Modify:** `auth/src/types/platform.ts` (add `'character'` to `InventoryItem.itemType` union)
+- **Modify:** `auth/src/services/ProfileService.ts` (add ownership check in `updateCharacter`, update itemType cast on line 142)
 - **Modify:** `auth/src/app.ts` or route index (register new routes)
 
 ### L2P Backend
@@ -287,7 +335,7 @@ ON CONFLICT (user_id, item_id) DO NOTHING;
 - **Modify:** `l2p/backend/src/routes/characters.ts` (ownership check on select, inventory-aware available endpoint)
 
 ### Arena Backend
-- **Modify:** `arena/backend/src/services/LobbyService.ts` (ownership validation on join)
+- **Modify:** `arena/backend/src/services/SocketService.ts` (ownership validation on `join-lobby` socket event)
 - **Modify:** `arena/backend/src/app.ts` (ownership validation on player profile update)
 
 ### L2P Frontend
@@ -301,3 +349,8 @@ ON CONFLICT (user_id, item_id) DO NOTHING;
 
 ### Migration
 - **Create:** `auth/src/migrations/YYYYMMDD_grandfather_character_ownership.sql`
+- **Create:** `l2p/backend/scripts/migrate-character-ownership.ts` (optional: L2P→auth inventory sync script)
+
+## Known Pre-Existing Issue
+
+`RespectService.debitRespect()` (line 79) logs transactions with type `'respect_earned'` even for debits. This is a pre-existing bug — `purchaseItem()` correctly uses `'item_purchase'`, so character purchases are not affected. This spec does not introduce any direct `debitRespect()` calls.
