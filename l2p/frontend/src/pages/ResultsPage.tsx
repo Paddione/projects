@@ -236,9 +236,9 @@ export const ResultsPage: React.FC = () => {
     }
   }, [user?.id])
 
-  const handleDeathmatchAccept = useCallback(() => {
+  const handleDeathmatchAccept = useCallback((npcCount?: number) => {
     if (!lobbyCode) return
-    socketService.emit('deathmatch-accept', { lobbyCode })
+    socketService.emit('deathmatch-accept', { lobbyCode, npcCount })
   }, [lobbyCode])
 
   const handleDeathmatchDecline = useCallback(() => {

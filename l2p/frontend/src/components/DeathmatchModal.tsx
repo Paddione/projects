@@ -5,6 +5,7 @@ import type { GameResult } from '../stores/gameStore'
 export interface DeathmatchOfferData {
   earnedXp: Record<string, number>
   timeoutSeconds: number
+  solo?: boolean
 }
 
 interface DeathmatchModalProps {
@@ -12,7 +13,7 @@ interface DeathmatchModalProps {
   players: GameResult[]
   lobbyCode: string
   acceptedPlayerIds: string[]
-  onAccept: () => void
+  onAccept: (npcCount?: number) => void
   onDecline: () => void
   onClose: () => void
 }
@@ -59,11 +60,11 @@ export const DeathmatchModal: React.FC<DeathmatchModalProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [timeLeft])
 
-  const handleAccept = useCallback(() => {
+  const handleAccept = useCallback((npcCount?: number) => {
     if (responded) return
     setResponded(true)
     if (timerRef.current) clearInterval(timerRef.current)
-    onAccept()
+    onAccept(npcCount)
   }, [responded, onAccept])
 
   const handleDecline = useCallback(() => {
@@ -216,46 +217,100 @@ export const DeathmatchModal: React.FC<DeathmatchModalProps> = ({
 
             {/* Action buttons */}
             {!responded ? (
-              <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
-                <button
-                  onClick={handleAccept}
-                  data-testid="deathmatch-accept-btn"
-                  style={{
-                    padding: '0.75rem 2rem',
-                    backgroundColor: 'var(--primary-color, #7c3aed)',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '8px',
-                    fontSize: '1rem',
-                    fontWeight: 'bold',
-                    cursor: 'pointer',
-                    transition: 'transform 0.1s, box-shadow 0.1s',
-                    boxShadow: '0 0 12px rgba(124, 58, 237, 0.4)'
-                  }}
-                  onMouseEnter={e => (e.currentTarget.style.transform = 'scale(1.05)')}
-                  onMouseLeave={e => (e.currentTarget.style.transform = 'scale(1)')}
-                >
-                  ⚔️ Accept
-                </button>
-                <button
-                  onClick={handleDecline}
-                  data-testid="deathmatch-decline-btn"
-                  style={{
-                    padding: '0.75rem 2rem',
-                    backgroundColor: 'transparent',
-                    color: 'var(--text-secondary)',
-                    border: '1px solid var(--border-color, #333)',
-                    borderRadius: '8px',
-                    fontSize: '1rem',
-                    cursor: 'pointer',
-                    transition: 'border-color 0.2s'
-                  }}
-                  onMouseEnter={e => (e.currentTarget.style.borderColor = 'var(--text-secondary)')}
-                  onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--border-color, #333)')}
-                >
-                  Decline
-                </button>
-              </div>
+              offer.solo ? (
+                /* Solo mode: NPC count picker */
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', margin: '0 0 4px', textAlign: 'center' }}>
+                    Win to keep XP + earn Respect. Lose and forfeit your XP.
+                  </p>
+                  {[
+                    { count: 1, respect: 25 },
+                    { count: 2, respect: 50 },
+                    { count: 3, respect: 100 },
+                  ].map(({ count, respect }) => (
+                    <button
+                      key={count}
+                      onClick={() => handleAccept(count)}
+                      data-testid={`deathmatch-npc-${count}-btn`}
+                      style={{
+                        padding: '12px 16px',
+                        background: '#1a3a1a',
+                        border: '1px solid #3eff8b',
+                        borderRadius: '8px',
+                        color: '#3eff8b',
+                        cursor: 'pointer',
+                        fontSize: '0.95rem',
+                        fontWeight: 600,
+                        textAlign: 'center',
+                      }}
+                      onMouseEnter={e => (e.currentTarget.style.background = '#1f4a1f')}
+                      onMouseLeave={e => (e.currentTarget.style.background = '#1a3a1a')}
+                    >
+                      vs {count} NPC{count > 1 ? 's' : ''} — {respect} ⭐ Respect
+                    </button>
+                  ))}
+                  <button
+                    onClick={handleDecline}
+                    data-testid="deathmatch-decline-btn"
+                    style={{
+                      padding: '10px 16px',
+                      background: '#2a2a2a',
+                      border: '1px solid #444',
+                      borderRadius: '8px',
+                      color: '#888',
+                      cursor: 'pointer',
+                      fontSize: '0.9rem',
+                      marginTop: '4px',
+                    }}
+                    onMouseEnter={e => (e.currentTarget.style.borderColor = '#666')}
+                    onMouseLeave={e => (e.currentTarget.style.borderColor = '#444')}
+                  >
+                    Decline — Keep XP
+                  </button>
+                </div>
+              ) : (
+                /* Multiplayer mode: standard Accept/Decline */
+                <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
+                  <button
+                    onClick={() => handleAccept()}
+                    data-testid="deathmatch-accept-btn"
+                    style={{
+                      padding: '0.75rem 2rem',
+                      backgroundColor: 'var(--primary-color, #7c3aed)',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '8px',
+                      fontSize: '1rem',
+                      fontWeight: 'bold',
+                      cursor: 'pointer',
+                      transition: 'transform 0.1s, box-shadow 0.1s',
+                      boxShadow: '0 0 12px rgba(124, 58, 237, 0.4)'
+                    }}
+                    onMouseEnter={e => (e.currentTarget.style.transform = 'scale(1.05)')}
+                    onMouseLeave={e => (e.currentTarget.style.transform = 'scale(1)')}
+                  >
+                    ⚔️ Accept
+                  </button>
+                  <button
+                    onClick={handleDecline}
+                    data-testid="deathmatch-decline-btn"
+                    style={{
+                      padding: '0.75rem 2rem',
+                      backgroundColor: 'transparent',
+                      color: 'var(--text-secondary)',
+                      border: '1px solid var(--border-color, #333)',
+                      borderRadius: '8px',
+                      fontSize: '1rem',
+                      cursor: 'pointer',
+                      transition: 'border-color 0.2s'
+                    }}
+                    onMouseEnter={e => (e.currentTarget.style.borderColor = 'var(--text-secondary)')}
+                    onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--border-color, #333)')}
+                  >
+                    Decline
+                  </button>
+                </div>
+              )
             ) : (
               <div style={{
                 padding: '0.75rem',
