@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { api } from '../services/apiService';
+import { useAuthStore } from '../stores/authStore';
 
 interface MatchResultData {
     winnerId: string;
@@ -23,11 +24,21 @@ interface MatchResultData {
 export default function MatchResults() {
     const { matchId } = useParams<{ matchId: string }>();
     const navigate = useNavigate();
+    const location = useLocation();
+    const user = useAuthStore((s) => s.user);
     const [results, setResults] = useState<MatchResultData | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
+        // Check for fallback results passed via navigation state (when DB save failed)
+        const fallback = (location.state as any)?.fallbackResults;
+        if (fallback) {
+            setResults(fallback as MatchResultData);
+            setLoading(false);
+            return;
+        }
+
         const fetchResults = async () => {
             try {
                 if (!matchId) {
@@ -45,7 +56,7 @@ export default function MatchResults() {
         };
 
         fetchResults();
-    }, [matchId]);
+    }, [matchId, location.state]);
 
     if (loading) {
         return (
@@ -73,13 +84,14 @@ export default function MatchResults() {
         );
     }
 
-    const winner = results.results[0];
-    const isWin = winner?.placement === 1;
+    const currentPlayerId = user ? String(user.userId) : null;
+    const isDraw = !results.winnerId;
+    const isWin = !isDraw && currentPlayerId === results.winnerId;
     const levelUpPlayers = results.results.filter((r) => (r.levelAfter ?? 1) > (r.levelBefore ?? 1));
 
     return (
         <div className="match-results">
-            <div className={`results-container ${isWin ? 'victory' : 'defeat'}`}>
+            <div className={`results-container ${isDraw ? 'draw' : isWin ? 'victory' : 'defeat'}`}>
                 {levelUpPlayers.length > 0 && (
                     <div className="level-up-section">
                         {levelUpPlayers.map((player) => (
@@ -99,7 +111,7 @@ export default function MatchResults() {
                 )}
 
                 <h1 className="results-title">
-                    {isWin ? '🏆 VICTORY' : '💀 DEFEAT'}
+                    {isDraw ? '⚔️ DRAW' : isWin ? '🏆 VICTORY' : '💀 DEFEAT'}
                 </h1>
 
                 {/* Podium */}

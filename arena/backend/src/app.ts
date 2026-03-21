@@ -226,11 +226,51 @@ app.get('/api/matches', async (req, res) => {
 app.get('/api/matches/:id/results', async (req, res) => {
     try {
         const db = DatabaseService.getInstance();
-        const result = await db.query(
-            'SELECT * FROM match_results WHERE match_id = $1 ORDER BY placement ASC',
-            [parseInt(req.params.id)]
+        const matchId = parseInt(req.params.id);
+
+        // Fetch match metadata (for winnerId)
+        const matchRow = await db.query(
+            `SELECT m.id, p.auth_user_id as winner_auth_id
+             FROM matches m
+             LEFT JOIN players p ON m.winner_id = p.id
+             WHERE m.id = $1`,
+            [matchId]
         );
-        res.json(result.rows);
+        if (matchRow.rows.length === 0) {
+            res.status(404).json({ error: 'Match not found' });
+            return;
+        }
+
+        // Fetch results with camelCase aliases
+        const result = await db.query(
+            `SELECT
+                p.auth_user_id AS "playerId",
+                mr.username,
+                mr.character_name AS "character",
+                mr.kills,
+                mr.deaths,
+                mr.damage_dealt AS "damageDealt",
+                mr.items_collected AS "itemsCollected",
+                mr.rounds_won AS "roundsWon",
+                mr.placement,
+                mr.experience_gained AS "experienceGained",
+                mr.level_before AS "levelBefore",
+                mr.level_after AS "levelAfter"
+             FROM match_results mr
+             JOIN players p ON mr.player_id = p.id
+             WHERE mr.match_id = $1
+             ORDER BY mr.placement ASC`,
+            [matchId]
+        );
+
+        const winnerAuthId = matchRow.rows[0].winner_auth_id;
+        res.json({
+            winnerId: winnerAuthId ? String(winnerAuthId) : '',
+            results: result.rows.map(row => ({
+                ...row,
+                playerId: String(row.playerId),
+            })),
+        });
     } catch (error) {
         res.status(500).json({ error: (error as Error).message });
     }

@@ -101,13 +101,22 @@ export function useGameSockets({
 
     socket.on('match-end', (data: any) => {
       const winner = data.results?.find((r: any) => r.placement === 1);
-      const isWinner = winner?.playerId === playerId;
-      setAnnouncement(`🎉 ${winner?.username || 'Unknown'} wins the match!`);
+      const isDraw = !data.winnerId;
+      const isWinner = !isDraw && winner?.playerId === playerId;
+      setAnnouncement(isDraw
+        ? '⚔️ Draw — no winner this match!'
+        : `🎉 ${winner?.username || 'Unknown'} wins the match!`
+      );
       SoundService.stopMusic(500);
       setTimeout(() => SoundService.playSting(isWinner ? 'victory' : 'defeat'), 600);
       setTimeout(() => {
         endMatch();
-        navigate(data.dbMatchId ? `/results/${data.dbMatchId}` : '/');
+        if (data.dbMatchId) {
+          navigate(`/results/${data.dbMatchId}`);
+        } else {
+          // DB save failed — pass results via navigation state as fallback
+          navigate('/results/0', { state: { fallbackResults: data } });
+        }
       }, 8000);
     });
 
