@@ -3,7 +3,7 @@
   "audioRoot": "../arena/assets/audio",
   "outputRoot": "/mnt/pve3a/audio-library/exports/arena",
   "processScript": null,
-  "generateScript": null,
+  "generateScript": "../arena/scripts/generate_audio.py",
   "manifestPath": "../arena/assets/manifest.json",
   "sounds": {}
 }

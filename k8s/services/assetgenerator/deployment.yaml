@@ -53,6 +53,7 @@ spec:
         - name: assetgenerator
           image: registry.local:5000/korczewski/assetgenerator:latest
           imagePullPolicy: Always
+          args: ["--project", "arena"]
           ports:
             - name: http
               containerPort: 5200
