@@ -15,9 +15,9 @@ export interface InventoryItem {
   id: number;
   userId: number;
   itemId: string;
-  itemType: 'skin' | 'emote' | 'title' | 'border' | 'power_up';
+  itemType: 'skin' | 'emote' | 'title' | 'border' | 'power_up' | 'character';
   acquiredAt: Date;
-  acquisitionSource: 'respect_purchase' | 'stripe' | 'achievement' | 'level_unlock';
+  acquisitionSource: 'respect_purchase' | 'stripe' | 'achievement' | 'level_unlock' | 'migration';
 }
 
 export interface Loadout {

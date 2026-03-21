@@ -139,9 +139,9 @@ export class ProfileService {
         id: row.id,
         userId: row.user_id,
         itemId: row.item_id,
-        itemType: row.item_type as 'skin' | 'emote' | 'title' | 'border' | 'power_up',
+        itemType: row.item_type as 'skin' | 'emote' | 'title' | 'border' | 'power_up' | 'character',
         acquiredAt: row.acquired_at,
-        acquisitionSource: row.acquisition_source as 'respect_purchase' | 'stripe' | 'achievement' | 'level_unlock',
+        acquisitionSource: row.acquisition_source as 'respect_purchase' | 'stripe' | 'achievement' | 'level_unlock' | 'migration',
       })),
     };
   }
