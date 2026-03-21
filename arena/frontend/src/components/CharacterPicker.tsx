@@ -1,11 +1,14 @@
 import { useEffect } from 'react';
 
 const CHARACTERS = [
-    { id: 'student', name: 'Student', color: '#00f2ff' },
-    { id: 'researcher', name: 'Researcher', color: '#3eff8b' },
-    { id: 'professor', name: 'Professor', color: '#bc13fe' },
-    { id: 'dean', name: 'Dean', color: '#ffd700' },
-    { id: 'librarian', name: 'Librarian', color: '#ff6b9d' },
+    { id: 'student',              name: 'Student',     color: '#00f2ff' },
+    { id: 'researcher',           name: 'Researcher',  color: '#3eff8b' },
+    { id: 'professor',            name: 'Professor',   color: '#bc13fe' },
+    { id: 'dean',                 name: 'Dean',        color: '#ffd700' },
+    { id: 'librarian',            name: 'Librarian',   color: '#ff6b9d' },
+    { id: 'graduate',             name: 'Graduate',    color: '#ff8c42' },
+    { id: 'lab_assistant',        name: 'Lab Asst.',   color: '#42f5d1' },
+    { id: 'teaching_assistant',   name: 'TA',          color: '#f542e0' },
 ];
 
 const STORAGE_KEY = 'arena_character';
@@ -14,6 +17,9 @@ interface CharacterPickerProps {
     selectedCharacter: string;
     selectedGender: 'male' | 'female';
     onSelect: (character: string, gender: 'male' | 'female') => void;
+    ownedCharacters?: string[];
+    respectBalance?: number;
+    onPurchase?: (characterId: string) => Promise<boolean>;
 }
 
 export function loadSavedCharacter(): { character: string; gender: 'male' | 'female' } {
@@ -34,7 +40,7 @@ export function loadSavedCharacter(): { character: string; gender: 'male' | 'fem
     return { character: 'student', gender: 'male' };
 }
 
-export default function CharacterPicker({ selectedCharacter, selectedGender, onSelect }: CharacterPickerProps) {
+export default function CharacterPicker({ selectedCharacter, selectedGender, onSelect, ownedCharacters, respectBalance, onPurchase }: CharacterPickerProps) {
     // Persist selection
     useEffect(() => {
         localStorage.setItem(STORAGE_KEY, JSON.stringify({ character: selectedCharacter, gender: selectedGender }));
@@ -63,20 +69,27 @@ export default function CharacterPicker({ selectedCharacter, selectedGender, onS
 
             {/* Character grid */}
             <div style={{
-                display: 'flex',
+                display: 'grid',
+                gridTemplateColumns: 'repeat(4, 1fr)',
                 gap: '6px',
-                flexWrap: 'wrap',
                 marginBottom: '12px',
             }}>
                 {CHARACTERS.map((c) => {
                     const isSelected = selectedCharacter === c.id;
+                    const isOwned = !ownedCharacters || ownedCharacters.includes(c.id);
                     return (
                         <button
                             key={c.id}
-                            onClick={() => onSelect(c.id, selectedGender)}
+                            onClick={() => {
+                                if (!isOwned && onPurchase) {
+                                    if (confirm(`Purchase ${c.name} for 500 Respect? (Balance: ${respectBalance ?? 0})`)) {
+                                        onPurchase(c.id);
+                                    }
+                                    return;
+                                }
+                                onSelect(c.id, selectedGender);
+                            }}
                             style={{
-                                flex: '1 1 auto',
-                                minWidth: '70px',
                                 padding: '8px 6px',
                                 background: isSelected ? `${c.color}22` : '#0a0a14',
                                 border: `2px solid ${isSelected ? c.color : '#2a2a4a'}`,
@@ -87,7 +100,8 @@ export default function CharacterPicker({ selectedCharacter, selectedGender, onS
                                 fontWeight: isSelected ? 700 : 500,
                                 fontFamily: 'inherit',
                                 transition: 'all 0.15s ease',
-                                textAlign: 'center',
+                                textAlign: 'center' as const,
+                                opacity: isOwned ? 1 : 0.4,
                             }}
                         >
                             <div style={{
@@ -99,6 +113,9 @@ export default function CharacterPicker({ selectedCharacter, selectedGender, onS
                                 boxShadow: isSelected ? `0 0 8px ${c.color}80` : 'none',
                             }} />
                             {c.name}
+                            {!isOwned && (
+                                <div style={{ fontSize: '0.6rem', color: '#ffd700', marginTop: '2px' }}>🔒 500</div>
+                            )}
                         </button>
                     );
                 })}

@@ -8,11 +8,14 @@
 import { useEffect } from 'react';
 
 const CHARACTERS = [
-    { id: 'student',    name: 'Student',    color: '#00f2ff' },
-    { id: 'researcher', name: 'Researcher', color: '#3eff8b' },
-    { id: 'professor',  name: 'Professor',  color: '#bc13fe' },
-    { id: 'dean',       name: 'Dean',       color: '#ffd700' },
-    { id: 'librarian',  name: 'Librarian',  color: '#ff6b9d' },
+    { id: 'student',              name: 'Student',     color: '#00f2ff' },
+    { id: 'researcher',           name: 'Researcher',  color: '#3eff8b' },
+    { id: 'professor',            name: 'Professor',   color: '#bc13fe' },
+    { id: 'dean',                 name: 'Dean',        color: '#ffd700' },
+    { id: 'librarian',            name: 'Librarian',   color: '#ff6b9d' },
+    { id: 'graduate',             name: 'Graduate',    color: '#ff8c42' },
+    { id: 'lab_assistant',        name: 'Lab Asst.',   color: '#42f5d1' },
+    { id: 'teaching_assistant',   name: 'TA',          color: '#f542e0' },
 ];
 
 const STORAGE_KEY = 'arena_character';
@@ -21,6 +24,9 @@ interface CharacterPicker3DProps {
     selectedCharacter: string;
     selectedGender: 'male' | 'female';
     onSelect: (character: string, gender: 'male' | 'female') => void;
+    ownedCharacters?: string[];
+    respectBalance?: number;
+    onPurchase?: (characterId: string) => Promise<boolean>;
 }
 
 export function loadSavedCharacter(): { character: string; gender: 'male' | 'female' } {
@@ -46,7 +52,7 @@ function getConceptUrl(characterId: string, gender: 'male' | 'female'): string {
     return `/assets/concepts/characters/${modelId}.png`;
 }
 
-export default function CharacterPicker3D({ selectedCharacter, selectedGender, onSelect }: CharacterPicker3DProps) {
+export default function CharacterPicker3D({ selectedCharacter, selectedGender, onSelect, ownedCharacters, respectBalance, onPurchase }: CharacterPicker3DProps) {
     // Persist selection
     useEffect(() => {
         localStorage.setItem(STORAGE_KEY, JSON.stringify({ character: selectedCharacter, gender: selectedGender }));
@@ -76,16 +82,26 @@ export default function CharacterPicker3D({ selectedCharacter, selectedGender, o
             {/* Character grid with concept art icons */}
             <div style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(5, 1fr)',
+                gridTemplateColumns: 'repeat(4, 1fr)',
                 gap: '8px',
                 marginBottom: '12px',
             }}>
                 {CHARACTERS.map((c) => {
                     const isSelected = selectedCharacter === c.id;
+                    const isOwned = !ownedCharacters || ownedCharacters.includes(c.id);
+
                     return (
                         <button
                             key={c.id}
-                            onClick={() => onSelect(c.id, selectedGender)}
+                            onClick={() => {
+                                if (!isOwned && onPurchase) {
+                                    if (confirm(`Purchase ${c.name} for 500 Respect? (Balance: ${respectBalance ?? 0})`)) {
+                                        onPurchase(c.id);
+                                    }
+                                    return;
+                                }
+                                onSelect(c.id, selectedGender);
+                            }}
                             style={{
                                 padding: '6px',
                                 background: isSelected ? `${c.color}22` : '#0a0a14',
@@ -94,11 +110,12 @@ export default function CharacterPicker3D({ selectedCharacter, selectedGender, o
                                 cursor: 'pointer',
                                 fontFamily: 'inherit',
                                 transition: 'all 0.15s ease',
-                                textAlign: 'center',
+                                textAlign: 'center' as const,
                                 display: 'flex',
-                                flexDirection: 'column',
+                                flexDirection: 'column' as const,
                                 alignItems: 'center',
                                 gap: '4px',
+                                opacity: isOwned ? 1 : 0.4,
                             }}
                         >
                             <img
@@ -107,13 +124,12 @@ export default function CharacterPicker3D({ selectedCharacter, selectedGender, o
                                 style={{
                                     width: '56px',
                                     height: '56px',
-                                    objectFit: 'cover',
+                                    objectFit: 'cover' as const,
                                     borderRadius: '6px',
                                     background: '#0a0a1a',
                                     border: isSelected ? `1px solid ${c.color}60` : '1px solid transparent',
                                 }}
                                 onError={(e) => {
-                                    // Fallback: hide broken image, show colored dot
                                     (e.target as HTMLImageElement).style.display = 'none';
                                 }}
                             />
@@ -125,6 +141,9 @@ export default function CharacterPicker3D({ selectedCharacter, selectedGender, o
                             }}>
                                 {c.name}
                             </span>
+                            {!isOwned && (
+                                <span style={{ fontSize: '0.6rem', color: '#ffd700' }}>🔒 500</span>
+                            )}
                         </button>
                     );
                 })}
