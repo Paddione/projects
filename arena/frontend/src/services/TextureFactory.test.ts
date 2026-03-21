@@ -58,11 +58,12 @@ describe('TextureFactory', () => {
         });
 
         it('dispose clears all cached textures', () => {
-            factory.getBuilding(1);
+            const before = factory.getBuilding(1);
             factory.getFountainSide();
             factory.dispose();
-            const fresh = factory.getBuilding(1);
-            expect(fresh).toBeInstanceOf(CanvasTexture);
+            const after = factory.getBuilding(1);
+            expect(after).toBeInstanceOf(CanvasTexture);
+            expect(after).not.toBe(before);
         });
     });
 });
