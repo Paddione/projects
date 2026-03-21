@@ -180,7 +180,7 @@ export const useCharacterStore = create<CharacterState>((set, _get) => ({
       const res = await fetch(`${authUrl}/api/catalog/purchase`, {
         method: 'POST',
         credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
         body: JSON.stringify({ itemId: `character_${characterId}` }),
       });
       const data = await res.json();
