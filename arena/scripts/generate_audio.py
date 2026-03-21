@@ -173,9 +173,11 @@ def elevenlabs_generate_sfx(prompt: str, duration: float, output_path: Path) -> 
 
     api_key = os.environ.get("ELEVENLABS_API_KEY", "")
 
+    # ElevenLabs requires minimum ~0.5s duration; request longer and trim after
+    api_duration = max(duration, 0.5)
     payload = json.dumps({
         "text": prompt,
-        "duration_seconds": duration,
+        "duration_seconds": api_duration,
     }).encode()
 
     req = urllib.request.Request(
@@ -196,8 +198,10 @@ def elevenlabs_generate_sfx(prompt: str, duration: float, output_path: Path) -> 
             tmp.write(audio_data)
             tmp_path = tmp.name
 
+        # Trim to requested duration (API may have generated longer)
+        trim_args = ["-t", str(duration)] if api_duration > duration else []
         result = subprocess.run(
-            ["ffmpeg", "-y", "-i", tmp_path, "-ar", str(SAMPLE_RATE), "-ac", "1", str(output_path)],
+            ["ffmpeg", "-y", "-i", tmp_path] + trim_args + ["-ar", str(SAMPLE_RATE), "-ac", "1", str(output_path)],
             capture_output=True, text=True
         )
         os.unlink(tmp_path)
