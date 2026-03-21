@@ -66,4 +66,30 @@ describe('TextureFactory', () => {
             expect(after).not.toBe(before);
         });
     });
+
+    describe('terrain textures', () => {
+        it('getWallAtlas returns a CanvasTexture', () => {
+            expect(factory.getWallAtlas()).toBeInstanceOf(CanvasTexture);
+        });
+
+        it('getWallAtlas is cached (same instance on repeat call)', () => {
+            expect(factory.getWallAtlas()).toBe(factory.getWallAtlas());
+        });
+
+        it('getPathAtlas returns a CanvasTexture', () => {
+            expect(factory.getPathAtlas()).toBeInstanceOf(CanvasTexture);
+        });
+
+        it('getFloor returns a CanvasTexture with correct dimensions', () => {
+            const tex = factory.getFloor(28, 22);
+            expect(tex).toBeInstanceOf(CanvasTexture);
+        });
+
+        it('getFloor caps canvas at 2048', () => {
+            const tex = factory.getFloor(200, 200);
+            expect(tex).toBeInstanceOf(CanvasTexture);
+            expect(tex.image.width).toBeLessThanOrEqual(2048);
+            expect(tex.image.height).toBeLessThanOrEqual(2048);
+        });
+    });
 });
