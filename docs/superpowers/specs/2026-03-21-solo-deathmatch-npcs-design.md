@@ -67,6 +67,22 @@ Match plays out (player vs 2 NPCs)
                   → 0 XP awarded, 0 Respect. Escrow marked settled.
 ```
 
+## Pre-Existing Bugs to Fix
+
+These bugs exist in the current multiplayer deathmatch flow and must be fixed for both solo and multiplayer to work correctly.
+
+### Bug 1: Arena SocketService uses camelCase but GET escrow returns snake_case
+
+`SocketService.ts:393` casts the escrow response as `{ playerIds, escrowedXp, matchConfig }` but the auth GET endpoint returns raw DB column names: `player_ids`, `escrowed_xp`, `match_config`. Fix: update Arena's cast to use snake_case, or add camelCase mapping in the auth GET endpoint. **Recommendation:** Add camelCase mapping in auth's GET `/api/internal/match/escrow/:token` response (consistent with other auth endpoints that return camelCase).
+
+### Bug 2: Arena uses string player IDs but escrow stores integer arrays
+
+`escrow.playerIds.includes(playerId)` fails because `playerIds` contains numbers (from `z.array(z.number())`) but Arena's `playerId` is a string. Fix: convert to number before comparison: `escrow.playerIds.includes(Number(playerId))`.
+
+### Bug 3: Arena sends string winnerId but auth expects number
+
+`GameService.ts:1449` sends `winnerId` as a string in the settle call, but `matchSettleSchema` expects `z.number()`. Fix: use `parseInt(winnerId)` in the Arena settle call. This is the single prescribed approach (no alternatives).
+
 ## Service Changes
 
 ### 1. L2P Backend — GameService.ts
@@ -122,7 +138,11 @@ matchConfig: {
 
 **Auto-resolve for solo:**
 
-When `solo: true`, skip the 60-second wait for other players. Also skip the `DEATHMATCH_MIN_PLAYERS` check at line 1796 in `resolveDeathmatchChallenge()` — that gate currently requires `acceptedIds.length >= 2`. For solo mode, 1 accepted player is sufficient.
+When `solo: true`, skip the 60-second wait for other players. Two `DEATHMATCH_MIN_PLAYERS` gates need bypassing for solo:
+
+1. **In `handleDeathmatchAccept()` (line ~1759):** The early-resolve path checks `challenge.acceptedPlayerIds.size >= DEATHMATCH_MIN_PLAYERS`. For solo, 1 acceptance should trigger immediate resolution. Bypass this gate when `solo: true`.
+
+2. **In `resolveDeathmatchChallenge()` (line ~1796):** Also checks `acceptedIds.length >= DEATHMATCH_MIN_PLAYERS`. Same bypass needed for solo.
 
 **Defer XP award:**
 
@@ -138,7 +158,7 @@ In `DeathmatchModal.tsx` (line 5), add `solo: boolean` to the interface. In `soc
 
 When `deathmatch-offer` has `solo: true`, show:
 - Heading: "Gambit your XP in Arena vs NPCs?"
-- XP at stake: "You're risking {earnedXp} XP"
+- XP at stake: "You're risking {xpAmount} XP" — extract from `earnedXp` Record: `const xpAmount = Object.values(earnedXp)[0]`
 - NPC count picker with reward preview:
   - Button: "1 NPC — 25 Respect"
   - Button: "2 NPCs — 50 Respect"
@@ -238,7 +258,7 @@ This means the "gambit" works because L2P withholds XP until settlement, not bec
 
 **winnerId type coercion:**
 
-The Arena backend currently passes `winnerId` which may be a string. The auth schema expects a number. Verify the Arena settle call converts to integer. If not, add `parseInt()` in the Arena settle call or accept `z.union([z.number(), z.string().transform(Number)])` in the schema.
+Arena must call `parseInt(winnerId)` before sending to the settle endpoint (see Pre-Existing Bug 3). This applies to both solo and multiplayer paths.
 
 ### 5. Arena Backend — GameService.ts (Loss Detection)
 
@@ -257,7 +277,17 @@ if (game.escrowToken) {
 
 **Player disconnect during solo match:**
 
-If the solo player disconnects mid-match, treat it as a forfeit. The existing disconnect handler should end the match — ensure it calls settle with `winnerId: null` when the escrow has `solo: true`.
+If the solo player disconnects mid-match, treat it as a forfeit. The current disconnect handler (`SocketService.ts:551-578`) only handles lobby leave — it does not handle active match disconnects. Add a new method `GameService.forfeitMatch(gameId: string)` that:
+1. Checks if the game has an `escrowToken`
+2. Calls settle with `winnerId: null`
+3. Ends the game
+
+The disconnect handler should call `forfeitMatch` when:
+- The disconnecting player is in an active game (not just a lobby)
+- The game has `matchConfig.solo === true` in its escrow
+- No human players remain connected
+
+For multiplayer escrow matches, the existing behavior (remaining player wins) already works.
 
 ## Testing Strategy
 
@@ -302,4 +332,4 @@ If the solo player disconnects mid-match, treat it as a forfeit. The existing di
 - **Modify:** `arena/backend/src/services/GameService.ts` (detect NPC winner → forfeit settlement, disconnect handling)
 
 ### Auth
-- **Modify:** `auth/src/routes/internal.ts` (update matchSettleSchema for nullable winnerId, scaled Respect, forfeit path)
+- **Modify:** `auth/src/routes/internal.ts` (update matchSettleSchema for nullable winnerId, scaled Respect, forfeit path, camelCase GET escrow response)
