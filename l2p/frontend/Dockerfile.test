@@ -51,8 +51,7 @@ COPY --chown=nodejs:nodejs package*.json ./
 # Copy configuration files
 COPY --chown=nodejs:nodejs vite.config.ts ./
 COPY --chown=nodejs:nodejs tsconfig*.json ./
-COPY --chown=nodejs:nodejs jest.config.mjs ./
-COPY --chown=nodejs:nodejs playwright.config.ts ./
+COPY --chown=nodejs:nodejs vitest.config.ts ./
 
 # Copy source code and public assets
 COPY --chown=nodejs:nodejs src ./src
