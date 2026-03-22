@@ -1,6 +1,6 @@
 import { db } from '../config/database.js';
 import { oauthAuthorizationCodes } from '../db/schema.js';
-import { eq, lt } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import type { AuthorizationCodeData } from '../types/oauth.js';
 import crypto from 'crypto';
 
@@ -101,68 +101,4 @@ export class OAuthCodeService {
     }
   }
 
-  /**
-   * Clean up expired authorization codes
-   * Should be called periodically (e.g., via cron job)
-   */
-  async cleanupExpiredCodes(): Promise<number> {
-    try {
-      const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
-
-      await db
-        .delete(oauthAuthorizationCodes)
-        .where(lt(oauthAuthorizationCodes.expires_at, oneDayAgo));
-
-      // Note: Drizzle doesn't return affected rows count in the same way
-      // This is a best-effort cleanup
-      return 0;
-    } catch (error) {
-      console.error('Error cleaning up expired codes:', error);
-      return 0;
-    }
-  }
-
-  /**
-   * Revoke all codes for a specific user
-   * Useful for logout or account deactivation
-   */
-  async revokeUserCodes(userId: number): Promise<void> {
-    try {
-      await db
-        .delete(oauthAuthorizationCodes)
-        .where(eq(oauthAuthorizationCodes.user_id, userId));
-    } catch (error) {
-      console.error('Error revoking user codes:', error);
-    }
-  }
-
-  /**
-   * Check if a code exists and is valid (without consuming it)
-   * Useful for debugging
-   */
-  async isCodeValid(code: string): Promise<boolean> {
-    try {
-      const authCode = await db
-        .select()
-        .from(oauthAuthorizationCodes)
-        .where(eq(oauthAuthorizationCodes.code, code))
-        .limit(1);
-
-      if (authCode.length === 0) {
-        return false;
-      }
-
-      const codeRecord = authCode[0];
-
-      // Check if used or expired
-      if (codeRecord.used_at !== null || new Date() > new Date(codeRecord.expires_at)) {
-        return false;
-      }
-
-      return true;
-    } catch (error) {
-      console.error('Error checking code validity:', error);
-      return false;
-    }
-  }
 }

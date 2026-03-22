@@ -1,7 +1,7 @@
 import jwt from 'jsonwebtoken';
 import { db } from '../config/database.js';
 import { tokenBlacklist } from '../db/schema.js';
-import { eq, lt } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import type { TokenPayload, AuthTokens } from '../types/auth.js';
 import type { User } from '../db/schema.js';
 
@@ -141,15 +141,6 @@ export class TokenService {
       .limit(1);
 
     return result.length > 0;
-  }
-
-  /**
-   * Clean up expired tokens from blacklist
-   */
-  async cleanupExpiredTokens(): Promise<void> {
-    await db
-      .delete(tokenBlacklist)
-      .where(lt(tokenBlacklist.expires_at, new Date()));
   }
 
   /**

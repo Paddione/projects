@@ -151,6 +151,8 @@ stringData:
   SMTP_USER: "$(get_env SMTP_USER)"
   SMTP_PASS: "$(get_env SMTP_PASS)"
   SMTP_FROM: "$(get_env SMTP_FROM)"
+  OAUTH_CLIENT_ID: "$(get_env L2P_OAUTH_CLIENT_ID l2p_client_prod)"
+  OAUTH_CLIENT_SECRET: "$(get_env L2P_OAUTH_CLIENT_SECRET)"
   RATE_LIMIT_BYPASS_KEY: "$(get_env RATE_LIMIT_BYPASS_KEY)"
 EOF
 log_info "Created l2p-backend-secret.yaml"
@@ -223,6 +225,7 @@ metadata:
 type: Opaque
 stringData:
   DATABASE_URL: "${ARENA_DB_URL}"
+  ELEVENLABS_API_KEY: "$(get_env ELEVENLABS_API_KEY)"
 EOF
 log_info "Created arena-backend-secret.yaml"
 

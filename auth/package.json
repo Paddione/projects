@@ -48,7 +48,6 @@
     "passport-google-oauth20": "^2.0.0",
     "pg": "^8.11.3",
     "postgres": "^3.4.3",
-    "validator": "^13.11.0",
     "zod": "^3.22.4"
   },
   "devDependencies": {
@@ -64,7 +63,6 @@
     "@types/passport": "^1.0.17",
     "@types/passport-google-oauth20": "^2.0.17",
     "@types/pg": "^8.10.9",
-    "@types/validator": "^13.11.7",
     "@typescript-eslint/eslint-plugin": "^8.52.0",
     "@typescript-eslint/parser": "^8.52.0",
     "@vitest/coverage-v8": "^4.1.0",

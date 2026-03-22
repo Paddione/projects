@@ -151,16 +151,4 @@ export class OAuthClientService {
     }
   }
 
-  /**
-   * Get client by client_id (for internal use)
-   */
-  async getClient(clientId: string) {
-    const client = await db
-      .select()
-      .from(oauthClients)
-      .where(eq(oauthClients.client_id, clientId))
-      .limit(1);
-
-    return client.length > 0 ? client[0] : null;
-  }
 }

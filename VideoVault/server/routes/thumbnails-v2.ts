@@ -4,7 +4,7 @@ import fs from 'fs/promises';
 import { eq, and } from 'drizzle-orm';
 import { thumbnails } from '@shared/schema';
 import { logger } from '../lib/logger';
-import { asyncHandler } from '../lib/asyncHandler';
+import { asyncHandler } from '../middleware/async-error-handler';
 
 const router = Router();
 

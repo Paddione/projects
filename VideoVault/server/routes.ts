@@ -35,7 +35,7 @@ import {
 import { dbHealth } from './routes/db';
 import { getSetting, setSetting, deleteSetting } from './routes/settings';
 import rateLimit from 'express-rate-limit';
-import { asyncHandler } from './lib/asyncHandler';
+import { asyncHandler } from './middleware/async-error-handler';
 import { generateThumbnailRoute } from './routes/thumbnails';
 import { computeHashes, getDuplicates, ignoreDuplicateRoute } from './routes/duplicates';
 import {

@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+# Pre-commit hook: enforces repo safety rules
+# Install: ln -sf ../../.github/hooks/pre-commit .git/hooks/pre-commit
+
+set -euo pipefail
+
+ERRORS=0
+
+# --- Rule 1: Block .env files (secrets) ---
+ENV_FILES=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.env($|\.|-)' | grep -v '\.env\.example' || true)
+if [[ -n "$ENV_FILES" ]]; then
+  echo "ERROR: Refusing to commit .env file(s) containing secrets:"
+  echo "$ENV_FILES" | sed 's/^/  /'
+  echo "  -> Update .env.example instead, or use k8s secret manifests."
+  ERRORS=1
+fi
+
+# --- Rule 2: Block credential/key files ---
+CRED_FILES=$(git diff --cached --name-only --diff-filter=ACM | grep -iE '\.(pem|key|p12|pfx|credentials\.json)$' || true)
+if [[ -n "$CRED_FILES" ]]; then
+  echo "ERROR: Refusing to commit credential/key file(s):"
+  echo "$CRED_FILES" | sed 's/^/  /'
+  ERRORS=1
+fi
+
+# --- Rule 3: Warn if lockfiles are missing for changed packages ---
+CHANGED_PKGJSON=$(git diff --cached --name-only --diff-filter=ACM | grep 'package\.json$' || true)
+if [[ -n "$CHANGED_PKGJSON" ]]; then
+  for pkg in $CHANGED_PKGJSON; do
+    DIR=$(dirname "$pkg")
+    LOCKFILE="$DIR/package-lock.json"
+    if ! git diff --cached --name-only | grep -q "^${LOCKFILE}$"; then
+      echo "WARNING: $pkg changed but $LOCKFILE is not staged. Run npm install and stage the lockfile."
+    fi
+  done
+fi
+
+if [[ "$ERRORS" -ne 0 ]]; then
+  echo ""
+  echo "Commit blocked. Fix the issues above or use --no-verify to bypass (not recommended)."
+  exit 1
+fi
