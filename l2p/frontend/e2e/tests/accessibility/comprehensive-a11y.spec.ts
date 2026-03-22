@@ -5,8 +5,8 @@
  */
 
 import { test, expect, Browser } from '@playwright/test';
-import { AccessibilityTestFramework } from '../../../../../shared-infrastructure/shared/l2p/test-config/dist/AccessibilityTestFramework.js';
-import { TestConfigManager } from '../../../../../shared-infrastructure/shared/l2p/test-config/dist/TestConfigManager.js';
+import { AccessibilityTestFramework } from '../../../../packages/test-config/dist/AccessibilityTestFramework.js';
+import { TestConfigManager } from '../../../../packages/test-config/dist/TestConfigManager.js';
 
 test.describe('Comprehensive Accessibility Tests', () => {
   let accessibilityFramework: AccessibilityTestFramework;

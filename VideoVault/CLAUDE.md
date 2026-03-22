@@ -130,9 +130,7 @@ server/
   lib/                     # Server utilities
   routes.ts                # Route registration
 
-shared-infrastructure/shared/videovault/
-  errors.ts                # Error codes and schemas
-  api.ts                   # API payload schemas (Zod)
+# Note: shared-infrastructure/ symlink is legacy (target no longer exists)
 
 e2e/
   playwright/              # Playwright E2E specs
@@ -165,7 +163,7 @@ import { ErrorCodes } from '@shared/errors';
 
 Configured in `tsconfig.json` (paths), `vite.config.ts` (resolve.alias), and `vitest.config.ts` (resolve.alias + test stubs).
 
-`VideoVault/shared-infrastructure` is a symlink to `../shared-infrastructure`. Docker mounts it into `/app/shared-infrastructure`.
+> **Note**: `VideoVault/shared-infrastructure` is a legacy broken symlink (target no longer exists).
 
 ## Testing Strategy
 
@@ -269,4 +267,4 @@ Required: `DATABASE_URL` (optional, enables Postgres), `SESSION_SECRET` (32-char
 4. **Postgres passwords**: Alphanumeric only
 5. **Coverage thresholds**: Check `vitest.config.ts` before adding code to covered files
 6. **Centralized state**: Route through `useVideoManager`, not direct service imports in components
-7. **Shared symlink**: `shared-infrastructure` must exist for builds to work
+7. **Legacy symlink**: `shared-infrastructure` is a broken symlink (may need cleanup)

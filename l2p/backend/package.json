@@ -20,7 +20,7 @@
     "dev": "tsx watch src/server.ts",
     "dev:nonblocking": "tsx src/server.ts",
     "dev:tsx": "tsx watch src/server.ts",
-    "prebuild": "npm --prefix ../../shared-infrastructure/shared/l2p/error-handling install --legacy-peer-deps && npm --prefix ../../shared-infrastructure/shared/l2p/error-handling run build",
+    "prebuild": "npm --prefix ../packages/error-handling install --legacy-peer-deps && npm --prefix ../packages/error-handling run build",
     "start": "node dist/server.js",
     "test": "vitest run",
     "test:with-db": "npm run --prefix .. test:setup:db && npm run test",
@@ -51,7 +51,7 @@
     "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",
     "dotenv": "^16.0.3",
-    "error-handling": "file:../../shared-infrastructure/shared/l2p/error-handling",
+    "error-handling": "file:../packages/error-handling",
     "express": "^4.18.2",
     "express-rate-limit": "^6.7.0",
     "helmet": "^6.1.5",
@@ -68,7 +68,7 @@
     "prom-client": "^15.1.1",
     "socket.io": "^4.8.1",
     "socket.io-client": "^4.6.1",
-    "test-config": "file:../../shared-infrastructure/shared/l2p/test-config"
+    "test-config": "file:../packages/test-config"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",

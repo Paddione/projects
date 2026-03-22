@@ -5,7 +5,7 @@
 German-language mental health companion app. A single-page HTML prototype wrapped in a lightweight Express server for static serving. No database, no authentication — the simplest service in the monorepo.
 
 **Documentation references:**
-- [README.md](README.md) -- Quick start, commands
+- This file -- Quick start, commands
 - [docs/services/sos.md](../docs/services/sos.md) -- Service details
 - [docs/guides/deployment.md](../docs/guides/deployment.md) -- Deployment to k3s
 

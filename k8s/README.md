@@ -62,13 +62,22 @@ k8s/
 │   └── utils/            # Secret generation, validation, backup
 ├── base/                 # Base resources (namespaces)
 ├── infrastructure/       # Infrastructure components (see infrastructure/README.md)
+│   ├── cert-renewal/     # TLS certificate renewal automation
+│   ├── external-routes/  # IngressRoutes for external services
+│   ├── external-secrets/ # Vault → K8s Secret sync
+│   ├── kube-vip/         # API VIP + Service LB
+│   ├── pgbouncer/        # PostgreSQL connection pooler
 │   ├── postgres/         # PostgreSQL StatefulSet
+│   ├── registry/         # Private Docker registry
+│   ├── reloader/         # Pod restart on config changes
+│   ├── smb-csi/          # SMB/CIFS storage class
 │   ├── traefik/          # Traefik deployment + middlewares
-│   └── smb-csi/          # SMB/CIFS storage class
+│   └── vault/            # HashiCorp Vault
 ├── services/             # Application services (see services/README.md)
-│   ├── auth/             # Auth service manifests
 │   ├── arena-backend/    # Arena backend manifests
 │   ├── arena-frontend/   # Arena frontend manifests
+│   ├── assetgenerator/   # Assetgenerator + GPU worker manifests
+│   ├── auth/             # Auth service manifests
 │   ├── l2p-backend/      # L2P backend manifests
 │   ├── l2p-frontend/     # L2P frontend manifests
 │   ├── shop/             # Shop service manifests
@@ -107,12 +116,15 @@ skaffold run --profile=prod
 ```bash
 # Deploy individual services
 ./scripts/deploy/deploy-postgres.sh
-kubectl apply -k infrastructure/smb-csi
+./scripts/deploy/deploy-smb-csi.sh
 ./scripts/deploy/deploy-traefik.sh
 ./scripts/deploy/deploy-auth.sh
 ./scripts/deploy/deploy-l2p.sh
+./scripts/deploy/deploy-arena.sh
 ./scripts/deploy/deploy-shop.sh
 ./scripts/deploy/deploy-videovault.sh
+./scripts/deploy/deploy-sos.sh
+./scripts/deploy/deploy-assetgenerator.sh
 ```
 
 ## Deployment Order
@@ -132,6 +144,7 @@ Services must be deployed in this order due to dependencies:
 11. **Shop** - Depends on PostgreSQL, Auth
 12. **VideoVault** - Depends on PostgreSQL, SMB
 13. **SOS** - No dependencies (static HTML)
+14. **Assetgenerator** - Depends on GPU worker, NAS storage
 
 ## Configuration
 
@@ -336,6 +349,7 @@ The L2P frontend image is environment-agnostic — URLs are injected at containe
 | Shop | 3000 | /api/health/live | shop.korczewski.de |
 | VideoVault | 5000 | /api/health/public | videovault.korczewski.de, video.korczewski.de |
 | SOS | 3005 | /health/live | sos.korczewski.de |
+| Assetgenerator | 5200 | /api/health | assetgen.korczewski.de |
 | PostgreSQL | 5432 | pg_isready | (internal) |
 | Traefik Dashboard | 8080 | /ping | traefik.korczewski.de |
 

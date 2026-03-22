@@ -38,15 +38,12 @@ jobs:
               - 'arena/**'
             l2p:
               - 'l2p/**'
-              - 'shared-infrastructure/shared/design-system/**'
-              - 'shared-infrastructure/shared/l2p/**'
             auth:
               - 'auth/**'
             shop:
               - 'shop/**'
             videovault:
               - 'VideoVault/**'
-              - 'shared-infrastructure/shared/videovault/**'
             sos:
               - 'SOS/**'
             assetgenerator:

@@ -4,11 +4,8 @@ import path from "path";
 import fs from "fs";
 import runtimeErrorOverlay from "@replit/vite-plugin-runtime-error-modal";
 
-// Prefer a local symlinked shared-infrastructure (for node_modules resolution).
-// Fall back to the repo root shared-infrastructure when the symlink isn't present.
-const sharedRootLocal = path.resolve(import.meta.dirname, "shared-infrastructure", "shared");
-const sharedRootExternal = path.resolve(import.meta.dirname, "..", "shared-infrastructure", "shared");
-const sharedRoot = fs.existsSync(sharedRootLocal) ? sharedRootLocal : sharedRootExternal;
+// Shared modules are now inlined in shared/
+const sharedRoot = path.resolve(import.meta.dirname, "shared");
 
 export default defineConfig({
   plugins: [

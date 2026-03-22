@@ -60,15 +60,15 @@ Each service has its own README.md and CLAUDE.md:
 
 | Service | README | CLAUDE.md | Deep Dive |
 |---------|--------|-----------|-----------|
-| Arena | [arena/README.md](arena/README.md) | [arena/CLAUDE.md](arena/CLAUDE.md) | [docs/services/arena.md](docs/services/arena.md) |
+| Arena | -- | [arena/CLAUDE.md](arena/CLAUDE.md) | [docs/services/arena.md](docs/services/arena.md) |
 | L2P | [l2p/README.md](l2p/README.md) | [l2p/CLAUDE.md](l2p/CLAUDE.md) | [docs/services/l2p.md](docs/services/l2p.md) |
 | VideoVault | [VideoVault/README.md](VideoVault/README.md) | [VideoVault/CLAUDE.md](VideoVault/CLAUDE.md) | [docs/services/videovault.md](docs/services/videovault.md) |
 | Shop | [shop/README.md](shop/README.md) | -- | [docs/services/shop.md](docs/services/shop.md) |
 | Auth | [auth/README.md](auth/README.md) | -- | [docs/services/auth.md](docs/services/auth.md) |
-| SOS | [SOS/README.md](SOS/README.md) | [SOS/CLAUDE.md](SOS/CLAUDE.md) | [docs/services/sos.md](docs/services/sos.md) |
-| Assetgenerator | [Assetgenerator/README.md](Assetgenerator/README.md) | [Assetgenerator/CLAUDE.md](Assetgenerator/CLAUDE.md) | [docs/services/assetgenerator.md](docs/services/assetgenerator.md) |
+| SOS | -- | [SOS/CLAUDE.md](SOS/CLAUDE.md) | [docs/services/sos.md](docs/services/sos.md) |
+| Assetgenerator | -- | [Assetgenerator/CLAUDE.md](Assetgenerator/CLAUDE.md) | [docs/services/assetgenerator.md](docs/services/assetgenerator.md) |
 
-Infrastructure: [k8s/README.md](k8s/README.md), [shared-infrastructure/README.md](shared-infrastructure/README.md), [SMB-Symlinks/README.md](SMB-Symlinks/README.md)
+Infrastructure: [k8s/README.md](k8s/README.md), [DB/](DB/) (PostgreSQL init), [SMB-Symlinks/README.md](SMB-Symlinks/README.md)
 
 Architecture diagrams and operational runbooks: [Obsidian vault](SMB-Symlinks/storage-pve3a/Obsidian/)
 

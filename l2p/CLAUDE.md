@@ -7,7 +7,7 @@ Guidance for Claude Code when working in the l2p project.
 Learn2Play (L2P) is a multiplayer quiz platform: React 18 + Vite frontend, Express + Socket.io backend, PostgreSQL via Drizzle ORM. Workspace monorepo with `frontend/` and `backend/` packages.
 
 **Documentation references:**
-- [README.md](README.md) -- Quick start, environment setup, testing guide, architecture overview
+- [README.md](README.md) -- Quick start, architecture overview
 - [docs/services/l2p.md](../docs/services/l2p.md) -- Deep dive: dual-auth, perk system, Socket.io events
 - [docs/guides/testing.md](../docs/guides/testing.md) -- Shared testing patterns and CI
 - [docs/guides/deployment.md](../docs/guides/deployment.md) -- Deployment to k3s
@@ -159,7 +159,7 @@ l2p/
 └── package.json                 # Workspace root
 ```
 
-Shared utilities: `../shared-infrastructure/shared/l2p/` (error-handling, test-config, test-utils).
+> **Note**: Former shared utilities in `../shared-infrastructure/shared/l2p/` have been consolidated. That directory no longer exists.
 
 ## Architecture
 
@@ -192,6 +192,7 @@ Shared utilities: `../shared-infrastructure/shared/l2p/` (error-handling, test-c
 | OAuthService | OAuth integration with centralized auth service |
 | GameProfileService | OAuth user game profile CRUD |
 | CleanupService | Periodic cleanup of inactive lobbies |
+| CategoryService | Question category management |
 
 ### Frontend Patterns
 
@@ -348,4 +349,4 @@ Perks use a draft system where players pick perks from random pools at level-up:
 - `scripts/rebuild.sh`, `scripts/test-runner.sh`, `scripts/deploy.sh`
 - `backend/src/cli/database.ts` — DB CLI tool
 - `frontend/e2e/playwright.config.ts` — E2E config
-- `../shared-infrastructure/shared/l2p/test-config/test-config.yml`
+- `backend/src/cli/database.ts` — DB CLI tool

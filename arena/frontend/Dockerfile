@@ -20,10 +20,8 @@ ENV NODE_ENV=production
 ENV VITE_NODE_ENV=${VITE_NODE_ENV}
 
 COPY --chown=nodejs:nodejs arena/frontend/package*.json ./
-# Copy shared-3d package and create symlink so it resolves three from app's node_modules
-COPY --chown=nodejs:nodejs shared-infrastructure/shared/3d/package.json ../shared-infrastructure/shared/3d/package.json
-COPY --chown=nodejs:nodejs shared-infrastructure/shared/3d/dist/ ../shared-infrastructure/shared/3d/dist/
-RUN ln -s /app/node_modules ../shared-infrastructure/shared/3d/node_modules
+# Copy shared-3d local package (inlined in packages/)
+COPY --chown=nodejs:nodejs arena/frontend/packages/shared-3d/ ./packages/shared-3d/
 COPY --chown=nodejs:nodejs arena/frontend/src ./src
 COPY --chown=nodejs:nodejs arena/frontend/public ./public
 # Replace broken symlinks (audio dirs point to /mnt/pve3a which doesn't exist in container)

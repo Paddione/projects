@@ -330,9 +330,7 @@ The browser is the primary data store:
 
 ### Shared Types and Errors
 
-Error codes and payload types live in `shared-infrastructure/shared/videovault/errors.ts`. API schemas (Zod) are in `shared-infrastructure/shared/videovault/api.ts`. Import from `@shared/errors` rather than redefining locally.
-
-`VideoVault/shared-infrastructure` is a symlink to `../shared-infrastructure`. Docker mounts it into `/app/shared-infrastructure` for builds.
+Error codes and payload types use `@shared/errors` imports. The `VideoVault/shared-infrastructure` symlink is a legacy broken link (target `../shared-infrastructure` no longer exists).
 
 ### Tailwind CSS
 

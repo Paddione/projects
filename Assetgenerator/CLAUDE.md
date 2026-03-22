@@ -5,7 +5,7 @@
 Multi-phase AI asset generation service for Arena and L2P. Express API + WebSocket server orchestrating audio and visual asset generation across local GPU and cloud backends. No database — JSON state files + NAS storage.
 
 **Documentation references:**
-- [README.md](README.md) -- Quick start, commands
+- This file -- Quick start, commands
 - [docs/services/assetgenerator.md](../docs/services/assetgenerator.md) -- Deep dive: GPU worker, pipelines, API
 - [docs/guides/deployment.md](../docs/guides/deployment.md) -- Deployment to k3s
 

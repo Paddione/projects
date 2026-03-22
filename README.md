@@ -18,8 +18,9 @@ Monorepo containing independent full-stack applications sharing centralized Post
 
 | Component | Description | Docs |
 |-----------|-------------|------|
-| [shared-infrastructure](shared-infrastructure/) | Centralized PostgreSQL, shared libraries | [README](shared-infrastructure/README.md) |
+| [DB](DB/) | Centralized PostgreSQL init and management scripts | — |
 | [k8s](k8s/) | Kubernetes manifests and deploy scripts | [README](k8s/README.md) |
+| [SMB-Symlinks](SMB-Symlinks/) | SMB share symlinks for NAS storage | [README](SMB-Symlinks/README.md) |
 
 ## Production URLs
 
@@ -50,8 +51,8 @@ Detailed documentation lives in [`docs/`](docs/README.md):
 # 1. Clone and install
 npm run install:all
 
-# 2. Start shared PostgreSQL
-cd shared-infrastructure && docker-compose up -d && cd ..
+# 2. Start PostgreSQL (see DB/ for init scripts)
+# Production uses k8s StatefulSet; local dev uses existing PostgreSQL instance
 
 # 3. Start any service
 npm run dev:l2p          # L2P frontend + backend
