@@ -2,6 +2,8 @@
 
 A multiplayer quiz platform with real-time gameplay, built with React, Express, Socket.io, and PostgreSQL.
 
+> **See also:** [Deep dive](../docs/services/l2p.md) | [Architecture](../docs/architecture/overview.md) | [Deployment](../docs/guides/deployment.md) | [Testing](../docs/guides/testing.md) | [Environment Variables](../docs/guides/environment-variables.md) | [Root README](../README.md)
+
 ## Features
 
 - Real-time multiplayer quiz games via Socket.io

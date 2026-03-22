@@ -2,6 +2,8 @@
 
 Unified authentication service for the monorepo. Provides JWT-based auth, session handling, Google OAuth, password reset, and email verification.
 
+> **See also:** [Deep dive](../docs/services/auth.md) | [Architecture](../docs/architecture/overview.md) | [Deployment](../docs/guides/deployment.md) | [Testing](../docs/guides/testing.md) | [Environment Variables](../docs/guides/environment-variables.md) | [Root README](../README.md)
+
 ## Quick Start
 
 ```bash

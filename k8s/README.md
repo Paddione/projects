@@ -2,6 +2,8 @@
 
 Kubernetes deployment manifests and scripts for the Korczewski monorepo services.
 
+> **See also:** [Kubernetes](../docs/infrastructure/kubernetes.md) | [Deployment Guide](../docs/guides/deployment.md) | [Secrets](../docs/infrastructure/secrets.md) | [PXE Boot](../docs/infrastructure/pxe-boot.md) | [Registry](../docs/infrastructure/registry.md) | [Root README](../README.md)
+
 ## Overview
 
 This directory contains everything needed to deploy the full Korczewski stack to a k3s Kubernetes cluster:

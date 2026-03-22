@@ -2,6 +2,8 @@
 
 Next.js 16 shop platform with Stripe integration, NextAuth v5 authentication, and Prisma ORM.
 
+> **See also:** [Deep dive](../docs/services/shop.md) | [Architecture](../docs/architecture/overview.md) | [Deployment](../docs/guides/deployment.md) | [Testing](../docs/guides/testing.md) | [Environment Variables](../docs/guides/environment-variables.md) | [Root README](../README.md)
+
 ## Overview
 
 - **Framework**: Next.js 16 (App Router)

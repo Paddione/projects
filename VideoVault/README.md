@@ -2,6 +2,8 @@
 
 A client-first video management application with advanced filtering, bulk operations, and professional-grade organization features. Built with privacy-first local storage and modern web APIs.
 
+> **See also:** [Deep dive](../docs/services/videovault.md) | [Architecture](../docs/architecture/overview.md) | [Deployment](../docs/guides/deployment.md) | [Testing](../docs/guides/testing.md) | [Environment Variables](../docs/guides/environment-variables.md) | [Root README](../README.md)
+
 ## Features
 
 - **Directory Scanning** with progress tracking, cancellation, and drag-and-drop import

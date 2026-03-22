@@ -4,20 +4,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Repository Overview
 
-Patrick's Projects is a monorepo containing independent full-stack applications sharing centralized PostgreSQL infrastructure. Each service operates independently but connects to a shared database instance.
+Patrick's Projects is a monorepo containing independent full-stack applications sharing centralized PostgreSQL infrastructure. See [README.md](README.md) for the full service table, production URLs, and quick start.
 
-| Project | Stack | Ports |
-|---------|-------|-------|
-| arena | React, PixiJS, Vite, Express, Socket.io, Drizzle ORM | 3002, 3003 |
-| l2p | React, Express, Socket.io, Drizzle ORM | 3000, 3001 |
-| VideoVault | React, Vite, File System Access API, Express | 5100/5000 |
-| SOS | Express, Static HTML | 3005 |
-| shop | Next.js 16, Prisma, Stripe | 3004 |
-| auth | Express, Passport.js, JWT/OAuth | 5500 |
-| openclaw | Node.js, WhatsApp/Telegram Bot, AI Media Pipeline | (Docker on 10.10.0.4) |
-| shared-infrastructure | PostgreSQL, shared design system | 5432 |
-| Assetgenerator | Express, Vanilla JS SPA | 5200 |
-| Obsidian | Obsidian vault (Markdown, Dataview, Templater), on SMB share | — |
+Detailed documentation lives in [`docs/`](docs/README.md):
+- **[Architecture](docs/architecture/)** -- System design, networking, database, storage
+- **[Guides](docs/guides/)** -- Getting started, testing, deployment, environment variables
+- **[Infrastructure](docs/infrastructure/)** -- Kubernetes, CI/CD, registry, secrets, PXE boot
+- **[Services](docs/services/)** -- Per-service deep dives (only what's unique to each)
 
 ## Common Commands
 
@@ -26,7 +19,7 @@ Patrick's Projects is a monorepo containing independent full-stack applications 
 ```bash
 # Development
 npm run dev:all              # Start all services concurrently
-npm run dev:arena             # Arena frontend + backend
+npm run dev:arena            # Arena frontend + backend
 npm run dev:l2p              # L2P frontend + backend
 npm run dev:videovault       # VideoVault dev server
 npm run dev:shop             # Shop dev server
@@ -38,66 +31,11 @@ npm run test:all             # Run all test suites
 npm run typecheck:all        # Type check all projects
 npm run validate:env         # Validate environment files
 
-# Deployment (k8s) - shell scripts (build + push + deploy)
-./k8s/scripts/deploy/deploy-all.sh           # Full stack: build, push, deploy all services
-./k8s/scripts/deploy/deploy-arena.sh          # Arena: build, push, restart (backend + frontend)
-./k8s/scripts/deploy/deploy-l2p.sh           # L2P: build, push, restart (backend + frontend)
-./k8s/scripts/deploy/deploy-auth.sh          # Auth: build, push, restart
-./k8s/scripts/deploy/deploy-shop.sh          # Shop: build, push, restart
-./k8s/scripts/deploy/deploy-videovault.sh    # VideoVault: build, push, restart
-./k8s/scripts/deploy/deploy-sos.sh          # SOS: build, push, restart
-./k8s/scripts/deploy/deploy-changed.sh       # Auto-detect and redeploy uncommitted changes
-./k8s/scripts/deploy/deploy-changed.sh --committed  # Deploy committed-but-undeployed changes
-./k8s/scripts/deploy/deploy-all.sh --manifests-only  # Apply manifests only (no image rebuild)
-
-# Deployment utilities
-./k8s/scripts/cluster/k3d-create.sh          # Create local k3d cluster
-./k8s/scripts/utils/generate-secrets.sh      # Generate secrets from root .env
-./k8s/scripts/utils/validate-cluster.sh      # Validate cluster health
-./k8s/scripts/utils/deploy-tracker.sh status # Check which services have undeployed commits
-
-# Skaffold (alternative — requires defaultRepo config, not usable from WSL2)
-cd k8s && skaffold dev -p dev                 # Dev stack (korczewski-dev namespace, dev-*.korczewski.de)
-cd k8s && skaffold delete -p dev              # Tear down dev stack
-
-# Multi-node cluster (production - 6 bare-metal nodes)
-./k8s/scripts/cluster/bootstrap-cluster.sh   # Full cluster bootstrap (SSH to all nodes)
-./k8s/scripts/cluster/node-prerequisites.sh  # Prepare Ubuntu node for k3s
-./k8s/scripts/deploy/deploy-kube-vip.sh      # Deploy kube-vip (API VIP + Service LB)
-./k8s/scripts/deploy/deploy-smb-csi.sh       # Install SMB-CSI driver via Helm
-./k8s/scripts/cluster/setup-registry.sh      # Deploy private registry + configure nodes
-
-# PXE Boot Server (on 10.10.0.4 - ubuntu-laptop)
-./k8s/scripts/pxe/sync-secrets.sh                              # Push secrets + deploy key to PXE server
-ssh patrick@10.10.0.4 '/srv/pxe/scripts/update-iso.sh'        # Download/update Ubuntu 24.04 ISOs
-ssh patrick@10.10.0.4 'sudo /srv/pxe/scripts/setup-pxe.sh'    # Re-run PXE setup (idempotent)
-```
-
-### Project-Specific Commands
-
-**l2p** (from `l2p/` directory):
-```bash
-npm run dev:frontend         # Port 3000
-npm run dev:backend          # Port 3001
-npm run test:unit            # Unit tests (requires NODE_OPTIONS=--experimental-vm-modules)
-npm run test:integration     # Integration tests (uses port 5433 test DB)
-npm run test:e2e             # Playwright E2E
-npm run db:migrate           # Run migrations
-```
-
-**VideoVault** (from `VideoVault/` directory):
-```bash
-npm run dev                  # Port 5100
-npm run docker:dev           # Docker with hot reload (port 5000)
-npm run test:all             # 6-stage test pipeline
-npm run docker:pw:all        # Playwright E2E in Docker
-```
-
-**shop** (from `shop/` directory):
-```bash
-npm run dev                  # Port 3004
-npm run test                 # Vitest tests
-npm run test:e2e             # Playwright E2E
+# Deployment (k8s) - see docs/guides/deployment.md for full reference
+./k8s/scripts/deploy/deploy-all.sh
+./k8s/scripts/deploy/deploy-changed.sh
+./k8s/scripts/deploy/deploy-changed.sh --committed
+./k8s/scripts/utils/deploy-tracker.sh status
 ```
 
 ### Running Single Tests
@@ -116,208 +54,73 @@ cd VideoVault && npx vitest run client/src/services/filter-engine.test.ts
 cd shop && npx vitest run test/some.test.ts
 ```
 
-## Architecture
+## Project-Specific Documentation
 
-### Service Architecture
+Each service has its own README.md and CLAUDE.md:
 
-Each service follows a three-layer architecture:
-- **Routes**: HTTP/WebSocket endpoints
-- **Services**: Business logic
-- **Repositories**: Data access (Drizzle ORM or Prisma)
+| Service | README | CLAUDE.md | Deep Dive |
+|---------|--------|-----------|-----------|
+| Arena | [arena/README.md](arena/README.md) | [arena/CLAUDE.md](arena/CLAUDE.md) | [docs/services/arena.md](docs/services/arena.md) |
+| L2P | [l2p/README.md](l2p/README.md) | [l2p/CLAUDE.md](l2p/CLAUDE.md) | [docs/services/l2p.md](docs/services/l2p.md) |
+| VideoVault | [VideoVault/README.md](VideoVault/README.md) | [VideoVault/CLAUDE.md](VideoVault/CLAUDE.md) | [docs/services/videovault.md](docs/services/videovault.md) |
+| Shop | [shop/README.md](shop/README.md) | -- | [docs/services/shop.md](docs/services/shop.md) |
+| Auth | [auth/README.md](auth/README.md) | -- | [docs/services/auth.md](docs/services/auth.md) |
+| SOS | [SOS/README.md](SOS/README.md) | [SOS/CLAUDE.md](SOS/CLAUDE.md) | [docs/services/sos.md](docs/services/sos.md) |
+| Assetgenerator | [Assetgenerator/README.md](Assetgenerator/README.md) | [Assetgenerator/CLAUDE.md](Assetgenerator/CLAUDE.md) | [docs/services/assetgenerator.md](docs/services/assetgenerator.md) |
+
+Infrastructure: [k8s/README.md](k8s/README.md), [shared-infrastructure/README.md](shared-infrastructure/README.md)
+
+Architecture diagrams and operational runbooks: [Obsidian vault](shared-infrastructure/SMB-Share/Obsidian/)
+
+**Read the relevant project CLAUDE.md before making changes.** Consult `docs/` for cross-service architecture and shared patterns.
+
+## Architecture Quick Reference
+
+For details see [docs/architecture/overview.md](docs/architecture/overview.md).
+
+### Three-Layer Backend
+
+All services: Routes (HTTP/WebSocket) → Services (business logic) → Repositories (Drizzle/Prisma).
 
 ### Centralized PostgreSQL
 
-All services connect to a single PostgreSQL instance with isolated databases:
-- `arena_db` - Arena battle royale game
-- `l2p_db` - L2P quiz platform
-- `videovault_db` - VideoVault (optional persistence)
-- `shop_db` - Shop service
-- `auth_db` - Auth service
+All services connect to a single PostgreSQL instance with isolated databases. See [docs/architecture/database.md](docs/architecture/database.md).
 
-Start shared infrastructure via Kubernetes manifests in `k8s/infrastructure/`.
+### Real-Time (Socket.io)
 
-### Real-Time Architecture (l2p)
+L2P and Arena use Socket.io for multiplayer. See service-specific docs for event lists.
 
-L2P uses Socket.io for multiplayer functionality:
-- Backend: `SocketService.ts` manages WebSocket connections
-- Frontend: `socket.io-client` in service layer
-- Client events: `join-lobby`, `leave-lobby`, `player-ready`, `start-game`, `submit-answer`, `perk:pick`, `perk:dump`
-- Server events: `lobby-updated`, `game-started`, `question-started`, `join-success`, `join-error`, `*-error`
+### Authentication
 
-### Authentication (Dual-Auth Pattern)
+- **Auth service**: Unified JWT/OAuth provider. See [docs/services/auth.md](docs/services/auth.md).
+- **L2P dual-auth**: Two auth layers (apiService + Zustand) must stay in sync. See [docs/services/l2p.md](docs/services/l2p.md).
+- **Shop**: NextAuth v5 with auth service integration.
 
-L2P has two auth layers that must stay in sync:
-- **apiService** (localStorage): `auth_token`, `user_data` — used for HTTP requests
-- **Zustand authStore**: `user`, `token` — used for React component rendering
-- **AuthGuard** bridges the two — must call BOTH `setUser()` AND `setToken()` for all auth paths
-- Session-cookie auth (unified auth mode) uses `setToken('session')` as a sentinel value
+### Frontend Runtime Config (L2P, Arena)
 
-### API Response Convention
+Same Docker image works across all environments via runtime env injection. See [docs/guides/environment-variables.md](docs/guides/environment-variables.md#frontend-runtime-config-l2p-arena).
 
-Backend returns raw PostgreSQL column names (**snake_case**: `host_id`, `selected_character`). Frontend TypeScript types use **camelCase**. Always check the actual API response shape when accessing fields.
+## Testing Constraints
 
-### Observability & Security Standards
+For full testing reference see [docs/guides/testing.md](docs/guides/testing.md).
 
-- **Cross-Service Tracing**: Auth and VideoVault use a dual-header pattern (`x-request-id` and `x-correlation-id`) to trace requests across services.
-- **Rate Limiting**: APIs use `express-rate-limit`. A standard `X-RateLimit-Warning: true` header is added when remaining requests drop below 20% of the limit. 429 Too Many Requests responses include a standardized `Retry-After` header.
-- **Test Data**: VideoVault's `/fixtures` path is gated and only accessible when `NODE_ENV !== 'production'`.
+### Critical Rules
 
-### Client-First Architecture (VideoVault)
-
-VideoVault uses the browser as primary data store:
-- localStorage for video metadata
-- File System Access API for file handles (Chromium only)
-- Session-based handles (lost on reload, rescan required)
-
-### Documentation Vault (Obsidian)
-
-The `shared-infrastructure/SMB-Share/Obsidian/` directory is an Obsidian knowledge vault serving as the high-level architecture and operations reference:
-- **Core pages**: `Home.md`, `Architecture.md`, `Services.md`, `Infrastructure.md`, `Operations.md`
-- **Service docs**: `services/{L2P,Auth,Shop,VideoVault}.md`
-- **Infrastructure docs**: `infrastructure/{PostgreSQL,Traefik,SMB-CSI}.md`
-- **Assets**: 10 SVG architecture diagrams in `assets/`
-- **Plugins**: Dataview, Templater, obsidian-git
-- **Theme**: Custom Cybervault CSS (cyan/dark aesthetic)
-
-The Obsidian vault documents Kubernetes manifest locations, environment variable mappings, deployment procedures, and service dependencies. Use service templates in `shared-infrastructure/SMB-Share/Obsidian/.obsidian/templates/` when adding new service documentation.
-
-### Frontend Runtime Config (L2P)
-
-The L2P frontend uses **runtime environment injection** instead of build-time `ARG`s. The same Docker image works across all environments (production, dev):
-- `docker-entrypoint.sh` writes `env-config.js` from K8s env vars at container startup
-- `env-config.js` sets `window.__IMPORT_META_ENV__` before React loads
-- `import-meta.ts` reads the global, providing env values to `apiService`, `socketService`, etc.
-- In local dev (`vite dev`), Vite resolves `import.meta.env` from `.env.development` as usual
-
-### CI/CD Pipeline
-
-Root-level GitHub Actions CI at `.github/workflows/ci.yml`:
-- **Path-based filtering**: Only runs jobs for changed services (via `dorny/paths-filter`)
-- **Per-service jobs**: L2P (typecheck + unit + integration tests), Auth (typecheck + unit tests), Shop (unit tests), VideoVault (typecheck + unit tests + build)
-- **Reproducible installs**: All jobs use `npm ci` with committed lockfiles (not `npm install`)
-- **Integration tests**: L2P backend has a dedicated job with PostgreSQL 16 service container
-- **Docker validation**: Builds all Dockerfiles (including auth) without pushing (master only, GHA layer caching)
-- **K8s validation**: `kustomize build` on all manifests to catch syntax errors
-- **CI status badge**: `ci-status` job aggregates all results — use for branch protection
-- **Deployment stays manual**: Private registry not reachable from GitHub runners
-- **Node versions**: L2P (22), Auth (20), Shop (20), VideoVault (20)
-
-### Deployment Tracking
-
-`k8s/scripts/utils/deploy-tracker.sh` records which git SHA is deployed per service in a ConfigMap (`deploy-state` in `korczewski-infra`):
-- `deploy-tracker.sh status` — overview of all services with undeployed commit counts
-- `deploy-tracker.sh diff <service>` — show commits since last deploy
-- `deploy-tracker.sh set <service>` — record current HEAD as deployed (called automatically by `deploy-changed.sh` and `deploy-all.sh`)
-- `deploy-changed.sh --committed` — detect and deploy committed-but-undeployed changes
-
-### Network Configuration
-
-- `traefik-public` - External routing network
-- `l2p-network` - Internal service network
-- Services connect to `shared-postgres:5432`
-
-### Multi-Node Cluster (Production)
-
-Production uses 6 bare-metal Ubuntu 24.04 nodes (3 CP + 3 workers) with:
-- **kube-vip**: API VIP at 10.10.0.20, Service LB range 10.10.0.40/28
-- **Private registry**: In-cluster at `registry.local:5000` (HTTP), external at `registry.korczewski.de` (HTTPS + basic auth via Traefik)
-- **Skaffold**: Pushes images to registry (`push: true`, `defaultRepo: registry.local:5000`)
-- **Manual push from WSL2**: `docker login registry.korczewski.de && docker push registry.korczewski.de/korczewski/<service>:latest`
-- **imagePullPolicy: Always** on all service deployments
-- **No hostPort** on Traefik — uses LoadBalancer service via kube-vip
-
-See `shared-infrastructure/SMB-Share/Obsidian/infrastructure/Kubernetes.md` for full multi-node setup guide.
-
-### PXE Boot Server (Node Provisioning)
-
-A PXE boot server on `10.10.0.4` (ubuntu-laptop) auto-provisions new cluster nodes:
-- **dnsmasq** in proxy mode — provides PXE boot options without replacing FritzBox DHCP
-- **nginx** on port 8080 — serves Ubuntu ISOs, autoinstall config, k8s secrets, deploy key
-- **Multi-arch**: Detects amd64/arm64 via DHCP option 93, serves architecture-specific GRUB + kernel
-- **Autoinstall** creates user `patrick`, SSH key, passwordless sudo, all k3s prerequisites, clones git repo, fetches secrets
-- **Storage auto-discovery**: Extra drives (non-boot NVMe, SATA, USB) are formatted ext4 and shared via SMB (`<hostname>-<device>-<size>`)
-- **Cluster-ready nodes**: PXE provisions OS only — `bootstrap-cluster.sh` handles k3s join
-- Config files: `k8s/scripts/pxe/` (dnsmasq.conf, nginx-pxe.conf, user-data, grub.cfg, setup-pxe.sh)
+1. **L2P ESM flag**: ALL Jest tests need `NODE_OPTIONS=--experimental-vm-modules`
+2. **L2P test DB isolation**: Integration tests use port 5433. Never test against production (5432).
+3. **VideoVault test stubs**: Enhanced services stubbed in `vitest.config.ts`. Single-threaded execution.
+4. **VideoVault coverage**: Per-file thresholds (85-95%) enforced.
 
 ## Environment Configuration
 
-### Environment Separation
-
-Three environments with distinct config sources:
-- **Local dev (npm)**: Uses `.env.development` files per-project (e.g., `l2p/frontend/.env.development`)
-- **Cluster dev (skaffold)**: Uses kustomize overlay patches (`k8s/overlays/development/`)
-- **Production**: Uses K8s secrets + deployment env vars
-
-> **Note**: L2P frontend URLs (`VITE_API_URL`, `VITE_SOCKET_URL`, `VITE_AUTH_SERVICE_URL`) are injected at container startup via `docker-entrypoint.sh`, not baked at build time. The same image works for both production and dev environments.
-
-> **Note**: The `l2p/.env` symlink to root `.env` has been removed. L2P frontend dev vars are now in `l2p/frontend/.env.development`.
-
-### File Structure
-
-```
-.env.example      # Template
-.env-dev          # Development (gitignored)
-.env-prod         # Production (gitignored)
-```
+For full reference see [docs/guides/environment-variables.md](docs/guides/environment-variables.md).
 
 ### Critical Rules
 
 1. **Never commit** `.env-dev` or `.env-prod`
 2. **Alphanumeric-only** database passwords (avoid Docker escaping issues)
 3. Secrets must be **unique per environment**
-
-### Secret Generation
-
-```bash
-# JWT/session secrets
-openssl rand -hex 32
-
-# Alphanumeric DB passwords
-openssl rand -base64 32 | tr -dc 'A-Za-z0-9' | head -c 32
-```
-
-### Required Variables (per service)
-
-All services need:
-- `DATABASE_URL` pointing to `shared-postgres:5432/<service>_db`
-- `JWT_SECRET` or `SESSION_SECRET` (32-char hex minimum)
-- Service-specific ports and URLs
-
-## Testing Constraints
-
-### l2p
-
-**ALWAYS use `NODE_OPTIONS=--experimental-vm-modules`** for Jest tests (ESM modules).
-
-Integration tests use separate database on **port 5433** (production on 5432).
-
-Integration tests require `--forceExit --detectOpenHandles` flags for cleanup.
-
-### VideoVault
-
-**Test configuration** (`vitest.config.ts`):
-- Enhanced services stubbed to avoid FlexSearch/WebCodecs dependencies
-- Single-threaded execution (`singleThread: true`)
-- Per-file coverage thresholds (85-95% for core services)
-
-**Path aliases required**:
-```typescript
-import { VideoDatabase } from '@/services/video-database';
-import { ErrorCodes } from '@shared/errors';
-```
-
-## Project-Specific Documentation
-
-Each major project has its own CLAUDE.md with detailed guidance:
-- `arena/CLAUDE.md` - Game architecture, PixiJS rendering, Socket.io events, asset pipeline
-- `l2p/CLAUDE.md` - Backend/frontend architecture, Socket.io patterns, test setup
-- `VideoVault/CLAUDE.md` - Client-first architecture, service patterns, test stubs
-- `SOS/CLAUDE.md` - Static HTML wrapper, health endpoints, minimal Express server
-
-Architecture diagrams and operational runbooks live in the Obsidian vault:
-- `shared-infrastructure/SMB-Share/Obsidian/` - High-level architecture, service docs, infrastructure docs, deployment procedures
-
-Read the relevant project CLAUDE.md before making changes. Consult the Obsidian vault for cross-service architecture and deployment context.
+4. **Lockfiles are committed** — include `package-lock.json` changes with dependency updates
 
 ## Multi-Agent Coordination
 
@@ -331,28 +134,6 @@ When multiple agents work simultaneously:
 - Skaffold / Docker operations (rebuild/restart)
 - Database migrations
 - Dependency updates
-
-## Production URLs
-
-- **Arena**: https://arena.korczewski.de
-- **Auth**: https://auth.korczewski.de
-- **L2P**: https://l2p.korczewski.de
-- **Shop**: https://shop.korczewski.de
-- **VideoVault**: https://videovault.korczewski.de (alias: https://video.korczewski.de)
-- **SOS**: https://sos.korczewski.de
-- **Registry**: https://registry.korczewski.de (Docker registry, basic auth)
-- **Traefik**: https://traefik.korczewski.de
-
-## Development URLs (Cluster Dev Stack)
-
-- **Arena**: https://dev-arena.korczewski.de
-- **Auth**: https://dev-auth.korczewski.de
-- **L2P**: https://dev-l2p.korczewski.de
-- **Shop**: https://dev-shop.korczewski.de
-- **VideoVault**: https://dev-videovault.korczewski.de
-- **SOS**: https://dev-sos.korczewski.de
-
-Dev stack runs in `korczewski-dev` namespace, parallel to production. Deploy with `cd k8s && skaffold dev -p dev`.
 
 ## Feature Implementation Workflow
 
@@ -387,7 +168,7 @@ After the user answers a question, **immediately continue implementation**. Do n
 1. **Implement** — Write the feature code
 2. **Test** — Write unit + e2e tests for ALL new/changed code. Run unit and integration tests. Fix until green.
 3. **Deploy** — Deploy to k3s production via `./k8s/scripts/deploy/deploy-<service>.sh`. Run e2e tests against production. Fix and redeploy until green.
-4. **Document** — MANDATORY: Update Obsidian vault (`shared-infrastructure/SMB-Share/Obsidian/`) — service docs, architecture, infrastructure as applicable. Update CLAUDE.md with any changes to endpoints, commands, or config. Do NOT skip Obsidian.
+4. **Document** — MANDATORY: Update Obsidian vault (`shared-infrastructure/SMB-Share/Obsidian/`) — service docs, architecture, infrastructure as applicable. Update relevant docs in `docs/` for cross-service changes. Do NOT skip Obsidian.
 5. **Ship** — `git commit` with descriptive message including all changes (implementation, tests, docs), `git push`.
 
 ## Change Discipline
@@ -398,9 +179,7 @@ After the user answers a question, **immediately continue implementation**. Do n
 - Do not add dependencies or change infrastructure without explicit approval
 - Run the smallest relevant test suite for your change
 - Update existing docs rather than creating new ones
-- **Update Obsidian vault** (`shared-infrastructure/SMB-Share/Obsidian/`) when implementing new features or changing existing ones — keep service docs, architecture diagrams, and infrastructure docs in sync with code changes
+- **Update Obsidian vault** when implementing new features or changing existing ones
 - Always deploy changes to k3s after committing (don't leave changes undeployed)
-- **Deploy with shell scripts** (`deploy-l2p.sh`, `deploy-changed.sh --committed`, etc.) — they build, push, and restart automatically
+- **Deploy with shell scripts** — they build, push, and restart automatically
 - After deploying, verify with `deploy-tracker.sh status` that the SHA was recorded
-- Use `deploy-changed.sh --committed` to catch any committed-but-undeployed services
-- **Lockfiles are committed** — when adding/updating dependencies, ensure `package-lock.json` changes are included in the commit

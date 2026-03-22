@@ -2,6 +2,8 @@
 
 Centralized PostgreSQL instance and shared assets for all services in the monorepo.
 
+> **See also:** [Database Architecture](../docs/architecture/database.md) | [Storage](../docs/architecture/storage.md) | [Environment Variables](../docs/guides/environment-variables.md) | [Secrets](../docs/infrastructure/secrets.md) | [Root README](../README.md)
+
 ## Overview
 
 A single PostgreSQL container (`shared-postgres`) provides isolated databases and users:

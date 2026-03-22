@@ -6,6 +6,13 @@ Guidance for Claude Code when working in the l2p project.
 
 Learn2Play (L2P) is a multiplayer quiz platform: React 18 + Vite frontend, Express + Socket.io backend, PostgreSQL via Drizzle ORM. Workspace monorepo with `frontend/` and `backend/` packages.
 
+**Documentation references:**
+- [README.md](README.md) -- Quick start, environment setup, testing guide, architecture overview
+- [docs/services/l2p.md](../docs/services/l2p.md) -- Deep dive: dual-auth, perk system, Socket.io events
+- [docs/guides/testing.md](../docs/guides/testing.md) -- Shared testing patterns and CI
+- [docs/guides/deployment.md](../docs/guides/deployment.md) -- Deployment to k3s
+- [docs/architecture/database.md](../docs/architecture/database.md) -- Shared PostgreSQL setup
+
 ## Commands
 
 ### Development

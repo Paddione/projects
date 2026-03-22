@@ -8,6 +8,13 @@ VideoVault is a client-first video management app. The browser is the primary da
 
 **Key constraint**: Chromium-based browsers only for File System Access API. File handles are session-based and lost on reload.
 
+**Documentation references:**
+- [README.md](README.md) -- Quick start, environment setup, testing guide, architecture, API reference
+- [docs/services/videovault.md](../docs/services/videovault.md) -- Deep dive: client-first architecture, core services
+- [docs/guides/testing.md](../docs/guides/testing.md) -- Shared testing patterns and CI
+- [docs/guides/deployment.md](../docs/guides/deployment.md) -- Deployment to k3s
+- [docs/architecture/database.md](../docs/architecture/database.md) -- Shared PostgreSQL setup
+
 ## Commands
 
 ### Development
