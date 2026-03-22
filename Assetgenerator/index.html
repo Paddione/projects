@@ -3297,10 +3297,10 @@ window.ModelViewer = {
     scene.add(grid);
     this._gridHelper = grid;
 
-    // Load GLB model
+    // Load GLB model (cache-bust with timestamp to always fetch latest)
     const loader = new GLTFLoader();
     loader.load(
-      `/api/visual-library/${assetId}/model`,
+      `/api/visual-library/${assetId}/model?t=${Date.now()}`,
       (gltf) => {
         loadingEl.remove();
         const model = gltf.scene;

@@ -901,6 +901,7 @@ app.get('/api/visual-library/:id/concept', (req, res) => {
   const vConfig = loadVisualConfig();
   const filePath = join(vConfig.libraryRoot, asset.pipeline.concept.path);
   if (!existsSync(filePath)) return res.status(404).json({ error: 'File not found' });
+  res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
   res.sendFile(filePath);
 });
 
@@ -912,6 +913,7 @@ app.get('/api/visual-library/:id/model', (req, res) => {
   const vConfig = loadVisualConfig();
   const filePath = join(vConfig.libraryRoot, asset.pipeline.model.path);
   if (!existsSync(filePath)) return res.status(404).json({ error: 'File not found' });
+  res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
   res.sendFile(filePath);
 });
 
@@ -923,6 +925,7 @@ app.get('/api/visual-library/:id/render/:pose/:direction', (req, res) => {
   const filePath = join(vConfig.libraryRoot, 'renders', asset.category, asset.id,
     `${asset.id}-${req.params.pose}-${req.params.direction}.png`);
   if (!existsSync(filePath)) return res.status(404).json({ error: 'Render not found' });
+  res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
   res.sendFile(filePath);
 });
 
@@ -934,6 +937,7 @@ app.get('/api/visual-library/:id/render-frame/:filename', (req, res) => {
   const vConfig = loadVisualConfig();
   const filePath = join(vConfig.libraryRoot, 'renders', asset.category, asset.id, req.params.filename);
   if (!existsSync(filePath)) return res.status(404).json({ error: 'Frame not found' });
+  res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
   res.sendFile(filePath);
 });
 
