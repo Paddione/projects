@@ -5,7 +5,15 @@
 # Reads unrigged models from models/characters/ and outputs to rigged/characters/
 # Uses simple_rig.py for fast 21-bone humanoid skeleton generation.
 
-LIBRARY_ROOT="${1:-/mnt/pve3a/visual-library}"
+FORCE=false
+LIBRARY_ROOT=""
+for arg in "$@"; do
+  case "$arg" in
+    --force) FORCE=true ;;
+    *) [ -z "$LIBRARY_ROOT" ] && LIBRARY_ROOT="$arg" ;;
+  esac
+done
+LIBRARY_ROOT="${LIBRARY_ROOT:-/mnt/pve3a/visual-library}"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 MODELS_DIR="$LIBRARY_ROOT/models/characters"
 RIGGED_DIR="$LIBRARY_ROOT/rigged/characters"
@@ -23,8 +31,8 @@ for model in "$MODELS_DIR"/*.glb; do
   output="$RIGGED_DIR/$name"
   total=$((total + 1))
 
-  if [ -f "$output" ]; then
-    echo "[SKIP] $name (already rigged)"
+  if [ -f "$output" ] && [ "$FORCE" = false ]; then
+    echo "[SKIP] $name (already rigged, use --force to overwrite)"
     skipped=$((skipped + 1))
     continue
   fi

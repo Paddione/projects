@@ -442,7 +442,7 @@ def render_character(char: dict, model_path: Path, template_path=None, force=Fal
     clear_model()
 
 
-def render_static(asset: dict, category: str, model_path: Path, template_path=None):
+def render_static(asset: dict, category: str, model_path: Path, template_path=None, force=False):
     """Render a static or simple-animation asset using appropriate template."""
     asset_id = asset["id"]
     num_frames = asset.get("frames", 1)
@@ -466,7 +466,7 @@ def render_static(asset: dict, category: str, model_path: Path, template_path=No
         filename = f"{asset_id}-{frame_idx:02d}.png"
         out_path = out_dir / filename
 
-        if out_path.exists():
+        if not force and out_path.exists():
             continue
 
         # Subtle idle animation (rotation or pulse)
@@ -528,7 +528,7 @@ def main():
             render_character(asset_stub, model_path, template_path=args.template, force=args.force)
             out_dir = OUTPUT_BASE / "characters" / args.id
         else:
-            render_static(asset_stub, args.category, model_path, template_path=args.template)
+            render_static(asset_stub, args.category, model_path, template_path=args.template, force=args.force)
             out_dir = OUTPUT_BASE / args.category / args.id
 
         # Count rendered frames
@@ -572,7 +572,7 @@ def main():
             else:
                 model_path = MODELS_DIR / cat / f"{asset['id']}.glb"
             if model_path.exists():
-                render_static(asset, cat, model_path, template_path=args.template)
+                render_static(asset, cat, model_path, template_path=args.template, force=args.force)
             else:
                 print(f"  [SKIP] No model for {cat}/{asset['id']}")
 
