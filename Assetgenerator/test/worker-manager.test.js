@@ -4,11 +4,10 @@
  * Tests the server-side WebSocket manager that handles GPU worker connections.
  * Uses mock WebSocket servers — no real worker or GPU needed.
  *
- * Run: cd Assetgenerator && node --test test/worker-manager.test.js
+ * Run: cd Assetgenerator && npx vitest run test/worker-manager.test.js
  */
 
-import { describe, it, before, after, beforeEach, afterEach } from 'node:test';
-import assert from 'node:assert/strict';
+import { describe, it, beforeAll, afterAll, beforeEach, expect } from 'vitest';
 import { createServer } from 'node:http';
 import { WebSocket, WebSocketServer } from 'ws';
 import { initWorkerManager, getWorker, getWorkerStatus, shutdownWorkerManager, enqueueJob, getQueueDepth } from '../worker-manager.js';
@@ -32,7 +31,7 @@ function connectWorker(port) {
       // Wait for welcome, then register
       ws.once('message', (raw) => {
         const msg = JSON.parse(raw);
-        assert.equal(msg.type, 'welcome');
+        expect(msg.type).toBe('welcome');
         ws.send(JSON.stringify({ type: 'register', hostname: 'test-pc', gpu: 'RTX Test' }));
         // Give server time to process register
         setTimeout(() => resolve(ws), 50);
@@ -45,12 +44,12 @@ function connectWorker(port) {
 describe('WorkerManager', () => {
   let httpServer, port;
 
-  before(async () => {
+  beforeAll(async () => {
     ({ server: httpServer, port } = await createTestServer());
     initWorkerManager(httpServer, { pingInterval: 500, pongTimeout: 200, reconnectWaitMs: 500 });
   });
 
-  after(async () => {
+  afterAll(async () => {
     shutdownWorkerManager();
     await new Promise((resolve) => httpServer.close(resolve));
   });
@@ -58,20 +57,20 @@ describe('WorkerManager', () => {
   describe('connection lifecycle', () => {
     it('getWorker() returns null when no worker connected', () => {
       const worker = getWorker();
-      assert.equal(worker, null);
+      expect(worker).toBe(null);
     });
 
     it('getWorkerStatus() shows disconnected when no worker', () => {
       const status = getWorkerStatus();
-      assert.equal(status.connected, false);
-      assert.equal(status.hostname, null);
-      assert.equal(status.gpu, null);
+      expect(status.connected).toBe(false);
+      expect(status.hostname).toBe(null);
+      expect(status.gpu).toBe(null);
     });
 
     it('getWorker() returns truthy after worker connects and registers', async () => {
       const ws = await connectWorker(port);
       const worker = getWorker();
-      assert.ok(worker);
+      expect(worker).toBeTruthy();
       ws.close();
       await new Promise((r) => setTimeout(r, 100));
     });
@@ -79,19 +78,19 @@ describe('WorkerManager', () => {
     it('getWorkerStatus() shows connected with hostname and gpu', async () => {
       const ws = await connectWorker(port);
       const status = getWorkerStatus();
-      assert.equal(status.connected, true);
-      assert.equal(status.hostname, 'test-pc');
-      assert.equal(status.gpu, 'RTX Test');
+      expect(status.connected).toBe(true);
+      expect(status.hostname).toBe('test-pc');
+      expect(status.gpu).toBe('RTX Test');
       ws.close();
       await new Promise((r) => setTimeout(r, 100));
     });
 
     it('getWorker() returns null after worker disconnects', async () => {
       const ws = await connectWorker(port);
-      assert.ok(getWorker());
+      expect(getWorker()).toBeTruthy();
       ws.close();
       await new Promise((r) => setTimeout(r, 100));
-      assert.equal(getWorker(), null);
+      expect(getWorker()).toBe(null);
     });
 
     it('rejects second worker connection', async () => {
@@ -103,7 +102,7 @@ describe('WorkerManager', () => {
         ws2.on('error', () => {}); // suppress unhandled error
         ws2.on('close', (code) => resolve(code));
       });
-      assert.ok([1006, 1005].includes(result), `Expected 1006 or 1005, got ${result}`);
+      expect([1006, 1005].includes(result)).toBeTruthy();
       ws1.close();
       await new Promise((r) => setTimeout(r, 100));
     });
@@ -124,8 +123,8 @@ describe('WorkerManager', () => {
 
       const worker = getWorker();
       const result = await worker.exec({ cmd: 'echo', args: ['hello'], cwd: '/tmp', env: {} });
-      assert.equal(result.code, 0);
-      assert.ok(result.stdout.includes('SEED:12345'));
+      expect(result.code).toBe(0);
+      expect(result.stdout.includes('SEED:12345')).toBeTruthy();
 
       ws.close();
       await new Promise((r) => setTimeout(r, 100));
@@ -145,7 +144,7 @@ describe('WorkerManager', () => {
 
       const worker = getWorker();
       const result = await worker.exec({ cmd: 'test', args: [], cwd: '/tmp', env: {} });
-      assert.ok(result.stderr.includes('warning: something'));
+      expect(result.stderr.includes('warning: something')).toBeTruthy();
 
       ws.close();
       await new Promise((r) => setTimeout(r, 100));
@@ -163,10 +162,9 @@ describe('WorkerManager', () => {
       });
 
       const worker = getWorker();
-      await assert.rejects(
-        () => worker.exec({ cmd: 'test', args: [], cwd: '/tmp', env: {} }),
-        /disconnect/i
-      );
+      await expect(
+        () => worker.exec({ cmd: 'test', args: [], cwd: '/tmp', env: {} })
+      ).rejects.toThrow(/disconnect/i);
 
       // Wait for reconnect timer to fire and clean up re-queued jobs
       await new Promise((r) => setTimeout(r, 700));
@@ -193,9 +191,9 @@ describe('WorkerManager', () => {
         worker.exec({ cmd: 'job2', args: [], cwd: '/tmp', env: {} }),
       ]);
 
-      assert.equal(r1.code, 0);
-      assert.equal(r2.code, 0);
-      assert.equal(jobOrder.length, 2);
+      expect(r1.code).toBe(0);
+      expect(r2.code).toBe(0);
+      expect(jobOrder.length).toBe(2);
 
       ws.close();
       await new Promise((r) => setTimeout(r, 100));
@@ -205,20 +203,20 @@ describe('WorkerManager', () => {
   describe('heartbeat', () => {
     it('marks worker disconnected on missed pong', async () => {
       const ws = await connectWorker(port);
-      assert.ok(getWorker());
+      expect(getWorker()).toBeTruthy();
 
       // Don't respond to pings — wait for timeout
       // pingInterval=500ms, pongTimeout=200ms → disconnect at ~700ms
       // Use 1500ms for CI safety margin
       await new Promise((r) => setTimeout(r, 1500));
-      assert.equal(getWorker(), null);
+      expect(getWorker()).toBe(null);
 
       ws.close();
       await new Promise((r) => setTimeout(r, 100));
     });
   });
 
-  describe('enqueueJob()', { concurrency: false }, () => {
+  describe('enqueueJob()', () => {
     // Ensure previous test's worker is fully disconnected before each test
     beforeEach(async () => {
       let retries = 0;
@@ -228,16 +226,16 @@ describe('WorkerManager', () => {
     });
     it('queues a job even when no worker is connected', async () => {
       const depth = getQueueDepth();
-      assert.equal(depth.depth, 0);
+      expect(depth.depth).toBe(0);
 
       const jobPromise = enqueueJob({ cmd: 'echo', args: ['test'], cwd: '/tmp', env: {} });
-      assert.ok(jobPromise instanceof Promise);
+      expect(jobPromise instanceof Promise).toBeTruthy();
 
       const depthAfter = getQueueDepth();
-      assert.equal(depthAfter.depth, 1);
-      assert.equal(depthAfter.pending, 1);
-      assert.equal(depthAfter.active, 0);
-      assert.equal(depthAfter.workerConnected, false);
+      expect(depthAfter.depth).toBe(1);
+      expect(depthAfter.pending).toBe(1);
+      expect(depthAfter.active).toBe(0);
+      expect(depthAfter.workerConnected).toBe(false);
 
       // Connect manually: attach exec handler before register so we catch
       // the job that dispatchNext() sends synchronously on registration.
@@ -266,8 +264,8 @@ describe('WorkerManager', () => {
       });
 
       const result = await jobPromise;
-      assert.equal(result.code, 0);
-      assert.ok(result.stdout.includes('output'));
+      expect(result.code).toBe(0);
+      expect(result.stdout.includes('output')).toBeTruthy();
 
       ws.close();
       await new Promise((r) => setTimeout(r, 100));
@@ -284,7 +282,7 @@ describe('WorkerManager', () => {
       });
 
       const result = await enqueueJob({ cmd: 'test', args: [], cwd: '/tmp', env: {} });
-      assert.equal(result.code, 0);
+      expect(result.code).toBe(0);
 
       ws.close();
       await new Promise((r) => setTimeout(r, 100));
@@ -307,9 +305,9 @@ describe('WorkerManager', () => {
         { cmd: 'test', args: [], cwd: '/tmp', env: {} },
         { onStdout: (data) => chunks.push(data) }
       );
-      assert.equal(result.code, 0);
-      assert.equal(chunks.length, 2);
-      assert.ok(chunks[0].includes('line1'));
+      expect(result.code).toBe(0);
+      expect(chunks.length).toBe(2);
+      expect(chunks[0].includes('line1')).toBeTruthy();
 
       ws.close();
       await new Promise((r) => setTimeout(r, 100));
@@ -319,10 +317,10 @@ describe('WorkerManager', () => {
   describe('getQueueDepth()', () => {
     it('returns zeros when queue is empty and no worker', () => {
       const depth = getQueueDepth();
-      assert.equal(depth.depth, 0);
-      assert.equal(depth.pending, 0);
-      assert.equal(depth.active, 0);
-      assert.equal(depth.workerConnected, false);
+      expect(depth.depth).toBe(0);
+      expect(depth.pending).toBe(0);
+      expect(depth.active).toBe(0);
+      expect(depth.workerConnected).toBe(false);
     });
 
     it('shows active=1 when a job is executing', async () => {
@@ -342,16 +340,16 @@ describe('WorkerManager', () => {
       await new Promise((r) => setTimeout(r, 100));
 
       const depth = getQueueDepth();
-      assert.equal(depth.active, 1);
-      assert.equal(depth.workerConnected, true);
+      expect(depth.active).toBe(1);
+      expect(depth.workerConnected).toBe(true);
 
       resolveExec();
       await jobPromise;
 
       const depthAfter = getQueueDepth();
-      assert.equal(depthAfter.depth, 0);
-      assert.equal(depthAfter.pending, 0);
-      assert.equal(depthAfter.active, 0);
+      expect(depthAfter.depth).toBe(0);
+      expect(depthAfter.pending).toBe(0);
+      expect(depthAfter.active).toBe(0);
 
       ws.close();
       await new Promise((r) => setTimeout(r, 100));

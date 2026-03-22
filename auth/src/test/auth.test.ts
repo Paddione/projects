@@ -7,7 +7,7 @@
  * - No test data persists between tests
  */
 
-import { describe, it, expect, beforeEach, afterEach, beforeAll, afterAll } from '@jest/globals';
+import { describe, it, expect, beforeEach, afterEach, beforeAll, afterAll } from 'vitest';
 import {
   createTestUser,
   createTestAdmin,

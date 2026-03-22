@@ -1,7 +1,7 @@
-import { describe, it, expect, jest } from '@jest/globals';
+import { describe, it, expect, vi } from 'vitest';
 
 // Mock database module to avoid needing a real DB connection
-jest.unstable_mockModule('../config/database.js', () => ({
+vi.mock('../config/database.js', () => ({
   db: {},
   sql: {},
 }));

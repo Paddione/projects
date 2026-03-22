@@ -1,4 +1,4 @@
-import { describe, it, expect, afterEach } from '@jest/globals';
+import { describe, it, expect, afterEach } from 'vitest';
 import { deleteTestUsers } from './test-utils.js';
 import { db } from '../config/database.js';
 import { apps, userAppAccess } from '../db/schema.js';
