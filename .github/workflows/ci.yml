@@ -285,22 +285,27 @@ jobs:
     needs: changes
     if: needs.changes.outputs.arena == 'true'
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: arena
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: '22'
 
       - name: Install dependencies
         run: npm ci
 
       - name: Build arena
-        run: cd arena && npm run build:all
+        run: npm run build:all
+
+      - name: Install Playwright
+        run: npx playwright install --with-deps chromium
 
       - name: Run asset coverage tests
-        run: cd arena && npx playwright test e2e/assets.spec.ts
+        run: npx playwright test e2e/assets.spec.ts
 
       - name: Upload test results
         if: always()
