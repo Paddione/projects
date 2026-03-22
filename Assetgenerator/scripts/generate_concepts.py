@@ -37,8 +37,8 @@ NEGATIVE_PROMPT = (
     "realistic photo, photorealistic, noisy, grainy"
 )
 
-# Style suffix appended to all prompts for consistency
-STYLE_SUFFIX = ", low-poly 3D render, stylized, clean edges, solid colors, game asset sheet, white background"
+# Style suffix removed — asset prompts already contain full style direction
+STYLE_SUFFIX = ""
 
 
 def load_manifest() -> dict:
