@@ -16,17 +16,18 @@ export interface ExtractedCategories {
 
 const CATEGORY_PATTERNS: Record<string, string[]> = {
   age: [
-    'teen', '18yo', '19yo', 'young', 'mature', 'milf', 'cougar', 'older',
-    'granny', 'college', 'middle aged', 'babe', 'old young',
+    'teen', 'teenager', '18yo', '19yo', 'young', 'mature', 'milf', 'cougar', 'older',
+    'granny', 'college', 'middle aged', 'babe', 'old young', 'innocent',
   ],
   physical: [
-    'blonde', 'brunette', 'redhead', 'petite', 'busty', 'big tits',
+    'blonde', 'blond', 'brunette', 'redhead', 'petite', 'busty', 'big tits',
     'small tits', 'skinny', 'curvy', 'thick', 'slim', 'tall', 'short',
     'athletic', 'chubby', 'natural', 'fake', 'pierced', 'tattooed',
     'hairy', 'shaved', 'bald', 'muscular', 'fit', 'big ass', 'small ass',
     'long hair', 'short hair', 'tiny', 'beautiful', 'beauty', 'cute',
     'sexy', 'huge', 'tight', 'glasses', 'braces', 'stockings',
     'lingerie', 'latex', 'leather', 'nylon', 'pantyhose',
+    'gorgeous', 'hottie', 'big cock', 'big dick',
   ],
   ethnicity: [
     'asian', 'russian', 'italian', 'british', 'japanese', 'chinese',
@@ -34,17 +35,23 @@ const CATEGORY_PATTERNS: Record<string, string[]> = {
     'thai', 'vietnamese', 'filipina', 'brazilian', 'colombian', 'mexican',
     'german', 'french', 'spanish', 'czech', 'hungarian', 'african',
     'middle eastern', 'mixed', 'deutsches',
+    'polish', 'swedish', 'dutch', 'turkish', 'persian', 'arab',
+    'moroccan', 'puerto rican', 'australian', 'canadian',
+    'ukrainian', 'romanian', 'portuguese', 'greek',
   ],
   relationship: [
     'step', 'stepsis', 'stepmom', 'stepdad', 'stepson', 'stepdaughter',
     'step-mom', 'step-dad', 'step-sister', 'step-brother', 'stepsister',
+    'stepfather',
     'mom', 'dad', 'sister', 'brother', 'gf', 'girlfriend', 'wife',
     'husband', 'stranger', 'neighbor', 'boss', 'teacher', 'student',
     'babysitter', 'roommate', 'ex', 'friend', 'coworker', 'landlord',
     'couple', 'daughter', 'daddy',
+    'maid', 'secretary', 'model', 'pornstar', 'nurse', 'doctor',
+    'nanny', 'tutor', 'intern', 'escort', 'masseuse',
   ],
   acts: [
-    'anal', 'oral', 'creampie', 'facial', 'dp', 'gangbang', 'threesome',
+    'anal', 'oral', 'creampie', 'creampied', 'facial', 'dp', 'gangbang', 'threesome',
     'solo', 'masturbation', 'fingering', 'squirting', 'orgasm',
     'blowjob', 'handjob', 'footjob', 'deepthroat', 'rimming', 'bdsm',
     'bondage', 'roleplay', 'pov', 'missionary', 'doggy', 'cowgirl',
@@ -54,14 +61,20 @@ const CATEGORY_PATTERNS: Record<string, string[]> = {
     'double penetration', 'swallow', 'cum swap', 'hardcore',
     'submissive', 'compilation', 'striptease', 'strip', 'cosplay',
     'bukkake', 'bukakke',
+    'riding', 'sucking', 'licking', 'choking', 'gagging', 'spanking',
+    'pegging', 'fisting', 'titfuck', 'cumshot', 'piss',
+    'seduce', 'cheating', 'taboo', 'caught', 'sharing', 'swap', 'bang',
   ],
   setting: [
-    'hotel', 'bedroom', 'bathroom', 'kitchen', 'office', 'outdoor',
+    'hotel', 'motel', 'bedroom', 'bathroom', 'kitchen', 'office', 'outdoor',
     'car', 'public', 'beach', 'pool', 'shower', 'amateur', 'homemade',
     'studio', 'gym', 'garden', 'balcony', 'sauna', 'jacuzzi',
     'classroom', 'hospital', 'dungeon', 'yacht', 'camping', 'van',
     'dressing room', 'indoor', 'morning', 'webcam', 'cam',
     'behind the scenes',
+    'school', 'party', 'couch', 'stairs', 'laundry', 'garage',
+    'forest', 'park', 'spa', 'resort', 'bus', 'taxi', 'prison',
+    'locker room',
   ],
   quality: ['4k', 'hd', '1080p', '720p', '480p', 'uhd', 'fhd', '8k', '2k', '60fps', 'vr', 'hdr'],
 };
@@ -113,6 +126,20 @@ export function extractCategoriesFromFilename(filename: string): ExtractedCatego
   if (categories.age.includes('old young')) {
     categories.age = categories.age.filter(e => e !== 'old young');
     if (!categories.age.includes('old/young')) categories.age.push('old/young');
+  }
+
+  // Normalize variants to canonical form
+  const VARIANT_MAP: Record<string, { type: keyof ExtractedCategories; canonical: string }> = {
+    'blond': { type: 'physical', canonical: 'blonde' },
+    'creampied': { type: 'acts', canonical: 'creampie' },
+    'bukakke': { type: 'acts', canonical: 'bukkake' },
+    'teenager': { type: 'age', canonical: 'teen' },
+  };
+  for (const [variant, { type, canonical }] of Object.entries(VARIANT_MAP)) {
+    if (categories[type].includes(variant)) {
+      categories[type] = categories[type].filter(e => e !== variant);
+      if (!categories[type].includes(canonical)) categories[type].push(canonical);
+    }
   }
 
   return categories;
