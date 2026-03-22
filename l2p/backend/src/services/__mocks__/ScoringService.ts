@@ -1,4 +1,4 @@
-import { jest } from 'vitest';
+import { vi } from 'vitest';
 
 const scoringStore: Record<string, any> = {
   calculateScore: vi.fn(),

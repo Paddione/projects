@@ -1,4 +1,4 @@
-import { jest } from 'vitest';
+import { vi } from 'vitest';
 
 // Manual mock for DatabaseService to support tests that import the class directly
 export class DatabaseService {

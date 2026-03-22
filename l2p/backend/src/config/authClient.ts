@@ -1,4 +1,4 @@
-const AUTH_SERVICE_URL = process.env.AUTH_SERVICE_URL || 'http://localhost:5500';
+const AUTH_SERVICE_URL = process.env['AUTH_SERVICE_URL'] || 'http://localhost:5500';
 
 export async function authFetch(path: string, options: RequestInit = {}): Promise<Response> {
   const url = `${AUTH_SERVICE_URL}${path}`;

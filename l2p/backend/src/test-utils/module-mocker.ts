@@ -1,4 +1,4 @@
-import { jest } from '@jest/globals';
+import { vi } from 'vitest';
 
 /**
  * A simple module mocker for Jest that works with ESM modules
@@ -29,7 +29,7 @@ export class ModuleMocker {
       ...implementation,
     };
     
-    jest.unstable_mockModule(modulePath, () => Promise.resolve(mock));
+    vi.mock(modulePath, () => mock);
     this.mocks.set(modulePath, mock);
     
     return mock;
@@ -40,8 +40,8 @@ export class ModuleMocker {
    */
   public resetAllMocks(): void {
     this.mocks.clear();
-    jest.restoreAllMocks();
-    jest.resetModules();
+    vi.restoreAllMocks();
+    vi.resetModules();
   }
   
   /**
@@ -49,7 +49,7 @@ export class ModuleMocker {
    */
   public clearAllMocks(): void {
     this.mocks.clear();
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   }
   
   /**

@@ -1,14 +1,14 @@
-import { jest } from '@jest/globals';
+import { vi } from 'vitest';
 
-// Re-export jest for convenience
-export { jest };
+// Re-export vi for convenience
+export { vi };
 
 // Helper to wait for promises to resolve
 export const flushPromises = () => new Promise(setImmediate);
 
 // Helper to mock timers and advance time
 export const advanceTimersByTime = (ms: number) => {
-  jest.advanceTimersByTime(ms);
+  vi.advanceTimersByTime(ms);
   return flushPromises();
 };
 
@@ -24,22 +24,22 @@ export const createMockRequest = (overrides: any = {}) => ({
 // Helper to create a mock response
 export const createMockResponse = () => {
   const res: any = {};
-  res.status = jest.fn().mockReturnValue(res);
-  res.json = jest.fn().mockReturnValue(res);
-  res.send = jest.fn().mockReturnValue(res);
-  res.set = jest.fn().mockReturnValue(res);
-  res.cookie = jest.fn().mockReturnValue(res);
-  res.clearCookie = jest.fn().mockReturnValue(res);
+  res.status = vi.fn().mockReturnValue(res);
+  res.json = vi.fn().mockReturnValue(res);
+  res.send = vi.fn().mockReturnValue(res);
+  res.set = vi.fn().mockReturnValue(res);
+  res.cookie = vi.fn().mockReturnValue(res);
+  res.clearCookie = vi.fn().mockReturnValue(res);
   return res;
 };
 
 // Helper to create a mock next function
-export const createMockNext = () => jest.fn();
+export const createMockNext = () => vi.fn();
 
 // Helper to reset all mocks between tests
 export const resetAllMocks = () => {
-  jest.clearAllMocks();
-  jest.resetModules();
+  vi.clearAllMocks();
+  vi.resetModules();
 };
 
 // Export mock data

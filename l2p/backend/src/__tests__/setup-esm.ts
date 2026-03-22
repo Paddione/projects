@@ -1,5 +1,5 @@
 // Ensure Jest globals are available in ESM tests without changing test files
-import { jest as jestGlobals, expect as expectGlobals, describe, test, it, beforeAll, afterAll, beforeEach, afterEach } from '@jest/globals';
+import { vi as jestGlobals, expect as expectGlobals, describe, test, it, beforeAll, afterAll, beforeEach, afterEach } from 'vitest';
 import { createRequire } from 'module';
 
 // Attach commonly-used globals

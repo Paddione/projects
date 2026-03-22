@@ -1,5 +1,5 @@
 // Runs database migrations once before integration tests
-import { beforeAll } from '@jest/globals';
+import { beforeAll } from 'vitest';
 import { DatabaseService } from '../../services/DatabaseService.js';
 import { MigrationService } from '../../services/MigrationService.js';
 

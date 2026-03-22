@@ -1,4 +1,4 @@
-import { jest } from 'vitest';
+import { vi } from 'vitest';
 import { QueryResultRow } from 'pg';
 
 // Create a mock implementation of BaseRepository

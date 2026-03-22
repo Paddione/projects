@@ -1,4 +1,4 @@
-import { jest } from 'vitest';
+import { vi } from 'vitest';
 
 // Manual Jest mock for LobbyService class
 const singletonStore: Record<string, any> = {};
