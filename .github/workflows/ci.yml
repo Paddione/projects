@@ -82,8 +82,6 @@ jobs:
 
       - name: Unit tests (backend)
         run: npm run test:unit:backend
-        env:
-          NODE_OPTIONS: --experimental-vm-modules
 
   # ---------------------------------------------------------------------------
   # L2P: Integration Tests (with PostgreSQL service container)
@@ -122,7 +120,6 @@ jobs:
       - name: Run integration tests
         run: cd backend && npm run test:integration:ci
         env:
-          NODE_OPTIONS: --experimental-vm-modules
           TEST_DATABASE_URL: postgresql://l2p_user:ci_test_password_l2p@localhost:5432/l2p_test_db
 
   # ---------------------------------------------------------------------------
