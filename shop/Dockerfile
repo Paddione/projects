@@ -14,8 +14,6 @@ RUN npm install --legacy-peer-deps
 FROM base AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
-# Copy shared design system
-COPY shared-infrastructure/shared/design-system ../shared-infrastructure/shared/design-system
 COPY shop/. .
 
 # Adjust schema in container if needed, but better to edit file

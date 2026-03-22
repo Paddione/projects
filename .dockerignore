@@ -10,7 +10,8 @@ reverse-proxy/
 
 # Exclude build artifacts (except shared-3d dist which is needed by Docker builds)
 **/dist/
-!shared-infrastructure/shared/3d/dist/
+!arena/frontend/packages/shared-3d/dist/
+!l2p/frontend/packages/shared-3d/dist/
 **/build/
 **/coverage/
 **/.next/
