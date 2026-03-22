@@ -557,6 +557,9 @@ export function MainContent({
                   <DropdownMenuRadioItem value="categoryCount">
                     Category count
                   </DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="unassignedCount">
+                    Unassigned types
+                  </DropdownMenuRadioItem>
                 </DropdownMenuRadioGroup>
                 <DropdownMenuSeparator />
                 <DropdownMenuLabel>Direction</DropdownMenuLabel>
