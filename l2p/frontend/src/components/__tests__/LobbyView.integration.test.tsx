@@ -5,32 +5,32 @@ import { useGameStore } from '../../stores/gameStore'
 import { socketService } from '../../services/socketService'
 
 // Mock the dependencies
-jest.mock('../../stores/gameStore')
-jest.mock('../../services/socketService', () => ({
+vi.mock('../../stores/gameStore')
+vi.mock('../../services/socketService', () => ({
     socketService: {
-        setReady: jest.fn(),
-        updateQuestionSets: jest.fn(),
-        startGame: jest.fn(),
+        setReady: vi.fn(),
+        updateQuestionSets: vi.fn(),
+        startGame: vi.fn(),
     }
 }))
-jest.mock('../../services/apiService', () => ({
+vi.mock('../../services/apiService', () => ({
     apiService: {
-        getCurrentUser: jest.fn().mockReturnValue({ id: 'user-1' }),
+        getCurrentUser: vi.fn().mockReturnValue({ id: 'user-1' }),
     }
 }))
-jest.mock('../../services/navigationService', () => ({
+vi.mock('../../services/navigationService', () => ({
     navigationService: {
-        navigateToQuestionSets: jest.fn(),
+        navigateToQuestionSets: vi.fn(),
     }
 }))
 
 // Mock QuestionSetSelector to keep it simple
-jest.mock('../QuestionSetSelector', () => ({
+vi.mock('../QuestionSetSelector', () => ({
     QuestionSetSelector: () => <div data-testid="question-set-selector">Selector Mock</div>
 }))
 
 // Mock PlayerGrid
-jest.mock('../PlayerGrid', () => ({
+vi.mock('../PlayerGrid', () => ({
     PlayerGrid: () => <div data-testid="player-grid">Player Grid Mock</div>
 }))
 
@@ -41,7 +41,7 @@ describe('LobbyView Improved', () => {
     ]
 
     beforeEach(() => {
-        (useGameStore as unknown as jest.Mock).mockReturnValue({
+        (useGameStore as unknown as vi.Mock).mockReturnValue({
             lobbyCode: 'LOBBY-123',
             isHost: true,
             players: mockPlayers,

@@ -1,15 +1,13 @@
-// Jest setup file - globals are injected automatically with injectGlobals: true
-
-// Load .env.test file for test environment
+// Vitest setup - replaces jest.setup.mjs and jest.setup.timeout.mjs
 import { config } from 'dotenv';
+import path from 'path';
 import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
 
 const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+const __dirname = path.dirname(__filename);
 
 // Load test environment variables
-config({ path: join(__dirname, '.env.test') });
+config({ path: path.join(__dirname, '.env.test') });
 
 // Override environment variables for unit tests without clobbering explicit config
 process.env.NODE_ENV = process.env.NODE_ENV || 'test';
@@ -24,7 +22,6 @@ if (useProdDb) {
     'postgresql://l2p_user:06752fc9637d5fe896cd88b858d2cf2eff112de5cf4769e69927009f5d45d581@localhost:5432/l2p_db';
   process.env.TEST_DATABASE_URL = process.env.TEST_DATABASE_URL || process.env.DATABASE_URL;
 
-  // Database configuration for tests using production database
   process.env.DB_HOST = process.env.DB_HOST || 'localhost';
   process.env.DB_PORT = process.env.DB_PORT || '5432';
   process.env.DB_NAME = process.env.DB_NAME || 'l2p_db';
@@ -33,7 +30,6 @@ if (useProdDb) {
     process.env.DB_PASSWORD || '06752fc9637d5fe896cd88b858d2cf2eff112de5cf4769e69927009f5d45d581';
   process.env.DB_SSL = process.env.DB_SSL || 'false';
 
-  // Test database configuration (same as production for this setup)
   process.env.TEST_DB_HOST = process.env.TEST_DB_HOST || process.env.DB_HOST;
   process.env.TEST_DB_PORT = process.env.TEST_DB_PORT || process.env.DB_PORT;
   process.env.TEST_DB_NAME = process.env.TEST_DB_NAME || process.env.DB_NAME;
@@ -41,5 +37,5 @@ if (useProdDb) {
   process.env.TEST_DB_PASSWORD = process.env.TEST_DB_PASSWORD || process.env.DB_PASSWORD;
 
   console.log('Unit test setup: Using PRODUCTION DATABASE:', process.env.DATABASE_URL);
-  console.warn('⚠️  WARNING: Tests are using PRODUCTION database. Test data will be cleaned up after tests.');
+  console.warn('WARNING: Tests are using PRODUCTION database. Test data will be cleaned up after tests.');
 }

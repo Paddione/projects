@@ -25,5 +25,5 @@ module.exports = {
   env: mockEnv,
   url: 'http://localhost:3000',
   hot: undefined,
-  glob: jest.fn()
+  glob: () => Promise.resolve({})
 };

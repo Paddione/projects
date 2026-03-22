@@ -3,7 +3,7 @@ import { render, screen } from '@testing-library/react'
 import { DemoPage } from '../DemoPage'
 
 // Mock child components
-jest.mock('../LoadingSpinner', () => ({
+vi.mock('../LoadingSpinner', () => ({
   LoadingSpinner: () => <div data-testid="loading-spinner">Loading</div>
 }))
 
@@ -20,33 +20,33 @@ interface MockPlayer {
   isConnected: boolean
 }
 
-jest.mock('../PlayerGrid', () => ({
+vi.mock('../PlayerGrid', () => ({
   PlayerGrid: ({ players }: { players: MockPlayer[] }) => (
     <div data-testid="player-grid">Players: {players.length}</div>
   )
 }))
 
-jest.mock('../Timer', () => ({
+vi.mock('../Timer', () => ({
   Timer: ({ timeRemaining }: { timeRemaining: number }) => (
     <div data-testid="timer">Time: {timeRemaining}</div>
   )
 }))
 
-jest.mock('../ScoreDisplay', () => ({
+vi.mock('../ScoreDisplay', () => ({
   ScoreDisplay: ({ score, multiplier }: { score: number; multiplier: number }) => (
     <div data-testid="score-display">Score: {score} x{multiplier}</div>
   )
 }))
 
-jest.mock('../GameInterface', () => ({
+vi.mock('../GameInterface', () => ({
   GameInterface: () => <div data-testid="game-interface">Game Interface</div>
 }))
 
-jest.mock('../LobbyView', () => ({
+vi.mock('../LobbyView', () => ({
   LobbyView: () => <div data-testid="lobby-view">Lobby View</div>
 }))
 
-jest.mock('../ConnectionStatus', () => ({
+vi.mock('../ConnectionStatus', () => ({
   ConnectionStatus: ({ status }: { status: string }) => (
     <div data-testid="connection-status">Status: {status}</div>
   )

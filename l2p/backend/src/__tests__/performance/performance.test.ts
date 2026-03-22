@@ -3,7 +3,7 @@
  * Comprehensive performance testing for API endpoints and services
  */
 
-import { describe, beforeAll, afterAll, it, expect } from '@jest/globals';
+import { describe, beforeAll, afterAll, it, expect } from 'vitest';
 import TestConfigManager from 'test-config/TestConfigManager';
 import PerformanceTestFramework from 'test-config/PerformanceTestFramework';
 

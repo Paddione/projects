@@ -1,13 +1,13 @@
-import { jest } from '@jest/globals';
+import { vi } from 'vitest';
 import { UserRepository, User, CreateUserData, UpdateUserData } from '../UserRepository';
 import { BaseRepository } from '../BaseRepository';
 import { DatabaseService } from '../../services/DatabaseService';
 
 // Mock the DatabaseService
-jest.mock('../../services/DatabaseService');
+vi.mock('../../services/DatabaseService');
 
 // Mock the BaseRepository
-jest.mock('../BaseRepository');
+vi.mock('../BaseRepository');
 
 describe('UserRepository', () => {
   let userRepository: UserRepository;
@@ -76,18 +76,18 @@ describe('UserRepository', () => {
 
   beforeEach(() => {
     // Clear all mocks
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     // Mock database connection and query methods
     mockDb = {
-      query: jest.fn()
+      query: vi.fn()
     };
 
     // Set global database service for BaseRepository.getDb() to find
     (globalThis as any).__DB_SERVICE__ = mockDb;
 
     // Mock the DatabaseService.getInstance method as fallback
-    (DatabaseService.getInstance as jest.Mock).mockReturnValue(mockDb);
+    (DatabaseService.getInstance as vi.Mock).mockReturnValue(mockDb);
 
     // Create UserRepository instance
     userRepository = new UserRepository();
@@ -96,30 +96,30 @@ describe('UserRepository', () => {
     (userRepository as any).db = mockDb;
 
     // Mock the getDb method directly to ensure it returns our mock
-    jest.spyOn(userRepository as any, 'getDb').mockReturnValue(mockDb);
+    vi.spyOn(userRepository as any, 'getDb').mockReturnValue(mockDb);
     
     // Mock BaseRepository methods to use the mockDb
-    jest.spyOn(BaseRepository.prototype as any, 'findById').mockImplementation(async (...args: any[]) => {
+    vi.spyOn(BaseRepository.prototype as any, 'findById').mockImplementation(async (...args: any[]) => {
       const [table, id] = args;
       const result = await mockDb.query(`SELECT * FROM ${table} WHERE id = $1`, [id]);
       return result.rows[0] || null;
     });
-    jest.spyOn(BaseRepository.prototype as any, 'create').mockImplementation(async (...args: any[]) => {
+    vi.spyOn(BaseRepository.prototype as any, 'create').mockImplementation(async (...args: any[]) => {
       const [table, data] = args;
       const result = await mockDb.query('INSERT INTO ' + table, Object.values(data));
       return result.rows[0] || {};
     });
-    jest.spyOn(BaseRepository.prototype as any, 'update').mockImplementation(async (...args: any[]) => {
+    vi.spyOn(BaseRepository.prototype as any, 'update').mockImplementation(async (...args: any[]) => {
       const [table, id, data] = args;
       const result = await mockDb.query(`UPDATE ${table} SET data WHERE id = $1`, [id]);
       return result.rows[0] || null;
     });
-    jest.spyOn(BaseRepository.prototype as any, 'delete').mockImplementation(async (...args: any[]) => {
+    vi.spyOn(BaseRepository.prototype as any, 'delete').mockImplementation(async (...args: any[]) => {
       const [table, id] = args;
       const result = await mockDb.query(`DELETE FROM ${table} WHERE id = $1`, [id]);
       return result.rowCount > 0;
     });
-    jest.spyOn(BaseRepository.prototype as any, 'findAll').mockImplementation(async (...args: any[]) => {
+    vi.spyOn(BaseRepository.prototype as any, 'findAll').mockImplementation(async (...args: any[]) => {
       const [table, limit, offset] = args;
       let query = `SELECT * FROM ${table}`;
       const params: any[] = [];
@@ -134,12 +134,12 @@ describe('UserRepository', () => {
       const result = await mockDb.query(query, params);
       return result.rows || [];
     });
-    jest.spyOn(BaseRepository.prototype as any, 'exists').mockImplementation(async (...args: any[]) => {
+    vi.spyOn(BaseRepository.prototype as any, 'exists').mockImplementation(async (...args: any[]) => {
       const [table, field, value] = args;
       const result = await mockDb.query(`SELECT 1 FROM ${table} WHERE ${field} = $1 LIMIT 1`, [value]);
       return result.rows.length > 0;
     });
-    jest.spyOn(BaseRepository.prototype as any, 'count').mockImplementation(async (...args: any[]) => {
+    vi.spyOn(BaseRepository.prototype as any, 'count').mockImplementation(async (...args: any[]) => {
       const [table, whereClause, params] = args;
       let query = `SELECT COUNT(*) as count FROM ${table}`;
       if (whereClause) {
@@ -154,7 +154,7 @@ describe('UserRepository', () => {
     // Clean up the global mock after each test
     delete (globalThis as any).__DB_SERVICE__;
     // Reset the DatabaseService mock
-    (DatabaseService.getInstance as jest.Mock).mockReset();
+    (DatabaseService.getInstance as vi.Mock).mockReset();
   });
 
   describe('Constructor and Initialization', () => {
@@ -172,7 +172,7 @@ describe('UserRepository', () => {
     describe('findUserById', () => {
       it('should find user by ID successfully', async () => {
         // Mock the BaseRepository findById method
-        const mockFindById = jest.spyOn(BaseRepository.prototype as any, 'findById');
+        const mockFindById = vi.spyOn(BaseRepository.prototype as any, 'findById');
         mockFindById.mockResolvedValue(mockUser);
 
         const result = await userRepository.findUserById(1);
@@ -183,7 +183,7 @@ describe('UserRepository', () => {
 
       it('should return null when user not found', async () => {
         // Mock the BaseRepository findById method
-        const mockFindById = jest.spyOn(BaseRepository.prototype as any, 'findById');
+        const mockFindById = vi.spyOn(BaseRepository.prototype as any, 'findById');
         mockFindById.mockResolvedValue(null);
 
         const result = await userRepository.findUserById(999);
@@ -194,7 +194,7 @@ describe('UserRepository', () => {
 
       it('should handle database errors', async () => {
         // Mock the BaseRepository findById method to throw an error
-        const mockFindById = jest.spyOn(BaseRepository.prototype as any, 'findById');
+        const mockFindById = vi.spyOn(BaseRepository.prototype as any, 'findById');
         mockFindById.mockRejectedValue(new Error('Database connection failed'));
 
         await expect(userRepository.findUserById(1)).rejects.toThrow('Database connection failed');

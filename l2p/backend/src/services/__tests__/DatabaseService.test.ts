@@ -1,30 +1,30 @@
-import { describe, beforeEach, afterEach, it, expect, jest } from '@jest/globals';
+import { describe, beforeEach, afterEach, it, expect, vi } from 'vitest';
 import type { PoolClient, QueryResult } from 'pg';
 import type { DatabaseConfig, DatabaseService as DatabaseServiceType } from '../DatabaseService';
 
 // Mock pg module using CommonJS-compatible Jest mocking
-jest.mock('pg', () => {
+vi.mock('pg', () => {
   const defaultClient = {
-    query: jest.fn(),
-    release: jest.fn(),
-    connect: jest.fn(),
-    end: jest.fn()
+    query: vi.fn(),
+    release: vi.fn(),
+    connect: vi.fn(),
+    end: vi.fn()
   };
 
   const mockPool = {
-    query: jest.fn(),
-    connect: jest.fn(),
-    end: jest.fn(),
-    on: jest.fn(),
-    removeListener: jest.fn(),
+    query: vi.fn(),
+    connect: vi.fn(),
+    end: vi.fn(),
+    on: vi.fn(),
+    removeListener: vi.fn(),
     totalCount: 0,
     idleCount: 0,
     waitingCount: 0
   };
 
   return {
-    Pool: jest.fn(() => mockPool),
-    Client: jest.fn(() => defaultClient)
+    Pool: vi.fn().mockImplementation(function() { return mockPool; }),
+    Client: vi.fn().mockImplementation(function() { return defaultClient; })
   };
 });
 
@@ -33,19 +33,19 @@ import { DatabaseService, DatabaseError } from '../DatabaseService';
 
 describe('DatabaseService', () => {
   interface MockClient {
-    query: jest.MockedFunction<() => Promise<{ rows: unknown[]; rowCount: number; command: string; oid: number; fields: unknown[] }>>;
-    release: jest.MockedFunction<() => void>;
-    on: jest.MockedFunction<(event: string, handler: () => void) => void>;
-    removeListener: jest.MockedFunction<(event: string, handler: () => void) => void>;
-    connect: jest.MockedFunction<() => Promise<void>>;
-    end: jest.MockedFunction<() => Promise<void>>;
+    query: vi.MockedFunction<() => Promise<{ rows: unknown[]; rowCount: number; command: string; oid: number; fields: unknown[] }>>;
+    release: vi.MockedFunction<() => void>;
+    on: vi.MockedFunction<(event: string, handler: () => void) => void>;
+    removeListener: vi.MockedFunction<(event: string, handler: () => void) => void>;
+    connect: vi.MockedFunction<() => Promise<void>>;
+    end: vi.MockedFunction<() => Promise<void>>;
   }
 
   interface MockPool {
-    connect: jest.MockedFunction<() => Promise<MockClient>>;
-    query: jest.MockedFunction<() => Promise<{ rows: unknown[]; rowCount: number }>>;
-    end: jest.MockedFunction<() => Promise<void>>;
-    on: jest.MockedFunction<(event: string, handler: () => void) => void>;
+    connect: vi.MockedFunction<() => Promise<MockClient>>;
+    query: vi.MockedFunction<() => Promise<{ rows: unknown[]; rowCount: number }>>;
+    end: vi.MockedFunction<() => Promise<void>>;
+    on: vi.MockedFunction<(event: string, handler: () => void) => void>;
     totalCount: number;
     idleCount: number;
     waitingCount: number;
@@ -67,26 +67,26 @@ describe('DatabaseService', () => {
     process.env.DB_POOL_MIN = '2';
 
     // Clear all mocks
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     // Create mock client
     mockClient = {
-      query: jest.fn(),
-      release: jest.fn(),
-      on: jest.fn(),
-      removeListener: jest.fn(),
-      connect: jest.fn(),
-      end: jest.fn()
+      query: vi.fn(),
+      release: vi.fn(),
+      on: vi.fn(),
+      removeListener: vi.fn(),
+      connect: vi.fn(),
+      end: vi.fn()
     };
 
     // Setup mock pool - get the constructor mock and configure it
-    const PoolMock = Pool as unknown as jest.MockedClass<any>;
-    PoolMock.mockImplementation(() => {
+    const PoolMock = Pool as unknown as vi.MockedClass<any>;
+    PoolMock.mockImplementation(function() {
       mockPool = {
-        connect: (jest.fn() as any).mockResolvedValue(mockClient),
-        query: (jest.fn() as any).mockResolvedValue({ rows: [], rowCount: 0 }),
-        end: (jest.fn() as any).mockResolvedValue(undefined),
-        on: (jest.fn() as any).mockImplementation(() => { }),
+        connect: (vi.fn() as any).mockResolvedValue(mockClient),
+        query: (vi.fn() as any).mockResolvedValue({ rows: [], rowCount: 0 }),
+        end: (vi.fn() as any).mockResolvedValue(undefined),
+        on: (vi.fn() as any).mockImplementation(() => { }),
         totalCount: 5,
         idleCount: 3,
         waitingCount: 0
@@ -136,7 +136,7 @@ describe('DatabaseService', () => {
   describe('Configuration Parsing', () => {
     it('should parse TEST_DATABASE_URL correctly', () => {
       // Clear previous mocks and reset environment
-      jest.clearAllMocks();
+      vi.clearAllMocks();
       process.env.NODE_ENV = 'test';
       process.env.TEST_DATABASE_URL = 'postgresql://user:pass@host:5432/dbname';
 
@@ -155,7 +155,7 @@ describe('DatabaseService', () => {
 
     it('should fall back to test environment defaults when TEST_DATABASE_URL is invalid', () => {
       // Clear previous mocks and reset environment
-      jest.clearAllMocks();
+      vi.clearAllMocks();
       process.env.NODE_ENV = 'test';
       process.env.TEST_DATABASE_URL = 'invalid-url';
       process.env.TEST_DB_HOST = 'fallback-host';
@@ -179,7 +179,7 @@ describe('DatabaseService', () => {
 
     it('should use default values when environment variables are not set', () => {
       // Clear previous mocks and reset environment
-      jest.clearAllMocks();
+      vi.clearAllMocks();
       delete process.env.TEST_DATABASE_URL;
       delete process.env.TEST_DB_HOST;
       delete process.env.TEST_DB_PORT;
@@ -223,7 +223,7 @@ describe('DatabaseService', () => {
 
     it('should configure connection pool settings', () => {
       // Clear previous mocks and reset environment
-      jest.clearAllMocks();
+      vi.clearAllMocks();
       // In test environment, it uses hardcoded pool settings
       process.env.NODE_ENV = 'test';
 
@@ -289,7 +289,7 @@ describe('DatabaseService', () => {
       expect(errorHandler).toBeDefined();
 
       // Mock testConnection for reconnection attempt
-      const testConnectionSpy = jest.spyOn(databaseService, 'testConnection').mockResolvedValue(true);
+      const testConnectionSpy = vi.spyOn(databaseService, 'testConnection').mockResolvedValue(true);
 
       // Simulate error event
       const error = new Error('Pool error');
@@ -338,7 +338,7 @@ describe('DatabaseService', () => {
     });
 
     it('should log slow queries', async () => {
-      const consoleSpy = jest.spyOn(console, 'warn').mockImplementation(() => { });
+      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => { });
 
       // Mock slow query (> 200ms default threshold)
       mockClient.query.mockImplementation(() =>
@@ -477,7 +477,7 @@ describe('DatabaseService', () => {
 
   describe('Transaction Handling', () => {
     it('should execute transaction successfully', async () => {
-      const mockCallback = jest.fn().mockResolvedValue('transaction result');
+      const mockCallback = vi.fn().mockResolvedValue('transaction result');
 
       const result = await databaseService.transaction(mockCallback);
 
@@ -491,7 +491,7 @@ describe('DatabaseService', () => {
 
     it('should rollback transaction on error', async () => {
       const transactionError = new Error('Transaction failed');
-      const mockCallback = jest.fn().mockRejectedValue(transactionError);
+      const mockCallback = vi.fn().mockRejectedValue(transactionError);
 
       await expect(databaseService.transaction(mockCallback)).rejects.toThrow('Transaction failed');
 
@@ -503,7 +503,7 @@ describe('DatabaseService', () => {
 
     it('should release client even when BEGIN fails', async () => {
       mockClient.query.mockRejectedValueOnce(new Error('BEGIN failed'));
-      const mockCallback = jest.fn();
+      const mockCallback = vi.fn();
 
       await expect(databaseService.transaction(mockCallback)).rejects.toThrow('BEGIN failed');
 
@@ -512,7 +512,7 @@ describe('DatabaseService', () => {
     });
 
     it('should release client even when COMMIT fails', async () => {
-      const mockCallback = jest.fn().mockResolvedValue('result');
+      const mockCallback = vi.fn().mockResolvedValue('result');
       mockClient.query
         .mockResolvedValueOnce({}) // BEGIN
         .mockRejectedValueOnce(new Error('COMMIT failed')); // COMMIT
@@ -525,7 +525,7 @@ describe('DatabaseService', () => {
     it('should release client even when ROLLBACK fails', async () => {
       const transactionError = new Error('Transaction failed');
       const rollbackError = new Error('ROLLBACK failed');
-      const mockCallback = jest.fn().mockRejectedValue(transactionError);
+      const mockCallback = vi.fn().mockRejectedValue(transactionError);
 
       mockClient.query
         .mockResolvedValueOnce({}) // BEGIN
@@ -537,7 +537,7 @@ describe('DatabaseService', () => {
     });
 
     it('should handle nested transaction operations', async () => {
-      const mockCallback = jest.fn().mockImplementation(async (client) => {
+      const mockCallback = vi.fn().mockImplementation(async (client) => {
         await client.query('INSERT INTO users (name) VALUES ($1)', ['user1']);
         await client.query('INSERT INTO posts (title, user_id) VALUES ($1, $2)', ['post1', 1]);
         return 'nested operations complete';
@@ -599,7 +599,7 @@ describe('DatabaseService', () => {
   describe('Error Recovery', () => {
     it('should attempt reconnection on pool error', (done) => {
       const errorHandler = mockPool.on.mock.calls.find((call: any) => call[0] === 'error')?.[1];
-      const testConnectionSpy = jest.spyOn(databaseService, 'testConnection').mockResolvedValue(true);
+      const testConnectionSpy = vi.spyOn(databaseService, 'testConnection').mockResolvedValue(true);
 
       // Simulate pool error
       const poolError = new Error('Connection lost');
@@ -617,7 +617,7 @@ describe('DatabaseService', () => {
 
     it('should retry reconnection on failure', (done) => {
       const errorHandler = mockPool.on.mock.calls.find((call: any) => call[0] === 'error')?.[1];
-      const testConnectionSpy = jest.spyOn(databaseService, 'testConnection')
+      const testConnectionSpy = vi.spyOn(databaseService, 'testConnection')
         .mockRejectedValueOnce(new Error('Reconnection failed'))
         .mockResolvedValueOnce(true);
 

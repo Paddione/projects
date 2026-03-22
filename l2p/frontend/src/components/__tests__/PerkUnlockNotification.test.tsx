@@ -1,11 +1,10 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import '@testing-library/jest-dom';
 
 // Mock avatarService — return null for SVG path so component falls back to getAvatarEmoji.
-// Using plain functions (not jest.fn()) because resetMocks:true in jest config
+// Using plain functions (not vi.fn()) because resetMocks:true in jest config
 // clears mock implementations between tests.
-jest.mock('../../services/avatarService', () => {
+vi.mock('../../services/avatarService', () => {
   const emojis: Record<string, string> = {
     student: '👨‍🎓',
     professor: '👨‍🏫',
@@ -30,10 +29,10 @@ import { PerkUnlockNotification } from '../PerkUnlockNotification';
 import { PerkUnlockNotification as PerkUnlockNotificationType } from '../../stores/gameStore';
 
 // Mock timers
-jest.useFakeTimers();
+vi.useFakeTimers();
 
 describe('PerkUnlockNotification', () => {
-  const mockOnClose = jest.fn();
+  const mockOnClose = vi.fn();
 
   const mockNotification: PerkUnlockNotificationType = {
     playerId: 'test-player',
@@ -80,12 +79,12 @@ describe('PerkUnlockNotification', () => {
   };
 
   beforeEach(() => {
-    jest.clearAllMocks();
-    jest.clearAllTimers();
+    vi.clearAllMocks();
+    vi.clearAllTimers();
   });
 
   afterEach(() => {
-    jest.runOnlyPendingTimers();
+    vi.runOnlyPendingTimers();
   });
 
   it('should render notification with correct content', () => {
@@ -179,7 +178,7 @@ describe('PerkUnlockNotification', () => {
     fireEvent.click(closeButton);
 
     // Should call onClose after animation delay
-    jest.advanceTimersByTime(500);
+    vi.advanceTimersByTime(500);
     expect(mockOnClose).toHaveBeenCalledTimes(1);
   });
 
@@ -190,10 +189,10 @@ describe('PerkUnlockNotification', () => {
     expect(mockOnClose).not.toHaveBeenCalled();
 
     // Fast forward 6 seconds (auto-close timer)
-    jest.advanceTimersByTime(6000);
+    vi.advanceTimersByTime(6000);
 
     // Should start fade out animation
-    jest.advanceTimersByTime(500);
+    vi.advanceTimersByTime(500);
 
     expect(mockOnClose).toHaveBeenCalledTimes(1);
   });
@@ -314,12 +313,12 @@ describe('PerkUnlockNotification', () => {
     const { unmount } = render(<PerkUnlockNotification notification={mockNotification} onClose={mockOnClose} />);
 
     // Get number of pending timers
-    const pendingTimersBefore = jest.getTimerCount();
+    const pendingTimersBefore = vi.getTimerCount();
 
     unmount();
 
     // Should clean up timers
-    const pendingTimersAfter = jest.getTimerCount();
+    const pendingTimersAfter = vi.getTimerCount();
     expect(pendingTimersAfter).toBeLessThanOrEqual(pendingTimersBefore);
   });
 });

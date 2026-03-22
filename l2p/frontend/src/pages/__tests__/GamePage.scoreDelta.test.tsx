@@ -1,34 +1,33 @@
 import React from 'react'
 import { render, screen } from '@testing-library/react'
-import '@testing-library/jest-dom'
 import { useGameStore } from '../../stores/gameStore'
 import { useAuthStore } from '../../stores/authStore'
 
 // Mock socketService to capture the answer-received handler
-const mockOn = jest.fn()
-const mockOff = jest.fn()
-jest.mock('../../services/socketService', () => ({
+const mockOn = vi.fn()
+const mockOff = vi.fn()
+vi.mock('../../services/socketService', () => ({
   socketService: {
-    isConnected: jest.fn(() => true),
-    connect: jest.fn(),
+    isConnected: vi.fn(() => true),
+    connect: vi.fn(),
     on: (...args: any[]) => mockOn(...args),
     off: (...args: any[]) => mockOff(...args),
-    submitAnswer: jest.fn(),
+    submitAnswer: vi.fn(),
   }
 }))
 
 // Mock react-router-dom hooks used in GamePage
-jest.mock('react-router-dom', () => ({
+vi.mock('react-router-dom', () => ({
   useParams: () => ({ lobbyId: 'ABC123' }),
-  useNavigate: () => jest.fn(),
+  useNavigate: () => vi.fn(),
 }))
 
 import { GamePage } from '../GamePage'
 
 describe('GamePage scoreDelta animation', () => {
   beforeEach(() => {
-    jest.useFakeTimers()
-    jest.clearAllMocks()
+    vi.useFakeTimers()
+    vi.clearAllMocks()
     useGameStore.getState().resetGame()
     useAuthStore.getState().clearAuth()
 
@@ -46,8 +45,8 @@ describe('GamePage scoreDelta animation', () => {
   })
 
   afterEach(() => {
-    jest.runOnlyPendingTimers()
-    jest.useRealTimers()
+    vi.runOnlyPendingTimers()
+    vi.useRealTimers()
   })
 
   it('shows +scoreDelta when answer-received fires for current user', () => {
@@ -66,7 +65,7 @@ describe('GamePage scoreDelta animation', () => {
     expect(badges.length).toBeGreaterThanOrEqual(1)
 
     // Advance timers to clear the badge
-    jest.advanceTimersByTime(2000)
+    vi.advanceTimersByTime(2000)
   })
 })
 

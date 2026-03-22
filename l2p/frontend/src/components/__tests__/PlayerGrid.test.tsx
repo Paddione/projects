@@ -2,22 +2,22 @@ import React from 'react'
 import { render, screen, act } from '@testing-library/react'
 
 // Mock services that use import.meta
-jest.mock('../../services/apiService', () => ({
+vi.mock('../../services/apiService', () => ({
   apiService: {
-    getQuestionSets: jest.fn(),
-    getLobby: jest.fn(),
-    isAuthenticated: jest.fn(),
+    getQuestionSets: vi.fn(),
+    getLobby: vi.fn(),
+    isAuthenticated: vi.fn(),
     // Add other methods as needed
   }
 }));
 
-jest.mock('../../services/socketService', () => ({
+vi.mock('../../services/socketService', () => ({
   socketService: {
-    connect: jest.fn(),
-    disconnect: jest.fn(),
-    emit: jest.fn(),
-    on: jest.fn(),
-    off: jest.fn(),
+    connect: vi.fn(),
+    disconnect: vi.fn(),
+    emit: vi.fn(),
+    on: vi.fn(),
+    off: vi.fn(),
     // Add other methods as needed
   }
 }));

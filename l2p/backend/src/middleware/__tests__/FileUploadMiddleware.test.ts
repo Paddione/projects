@@ -11,19 +11,19 @@ import {
   validateFileUpload,
   cleanupUploadedFiles
 } from '../fileUpload.js';
-import { describe, beforeEach, afterEach, it, expect, jest } from '@jest/globals';
+import { describe, beforeEach, afterEach, it, expect, vi } from 'vitest';
 
 // Mock multer
-jest.mock('multer', () => {
+vi.mock('multer', () => {
   const mockUpload = {
-    single: jest.fn().mockReturnValue(jest.fn()),
-    array: jest.fn().mockReturnValue(jest.fn())
+    single: vi.fn().mockReturnValue(vi.fn()),
+    array: vi.fn().mockReturnValue(vi.fn())
   };
   
-  const mockMulter = jest.fn().mockReturnValue(mockUpload) as any;
-  mockMulter.diskStorage = jest.fn().mockReturnValue({
-    destination: jest.fn(),
-    filename: jest.fn()
+  const mockMulter = vi.fn().mockReturnValue(mockUpload) as any;
+  mockMulter.diskStorage = vi.fn().mockReturnValue({
+    destination: vi.fn(),
+    filename: vi.fn()
   });
   
   // Mock MulterError class
@@ -37,31 +37,31 @@ jest.mock('multer', () => {
   }
   
   mockMulter.MulterError = MockMulterError;
-  mockMulter.single = jest.fn().mockReturnValue(mockUpload);
-  mockMulter.array = jest.fn().mockReturnValue(mockUpload);
+  mockMulter.single = vi.fn().mockReturnValue(mockUpload);
+  mockMulter.array = vi.fn().mockReturnValue(mockUpload);
   
-  return mockMulter;
+  return { default: mockMulter, MulterError: MockMulterError };
 });
 
-// Do not use static jest.mock for fs in ESM; we'll spy on methods in beforeEach
+// Do not use static vi.mock for fs in ESM; we'll spy on methods in beforeEach
 
 // Do not statically mock path in ESM; we'll spy on methods in beforeEach
 
 describe('FileUploadMiddleware', () => {
   let mockRequest: Partial<Request>;
   let mockResponse: Partial<Response>;
-  let mockNext: jest.MockedFunction<NextFunction>;
-  let mockMulter: jest.Mocked<typeof multer>;
-  let existsSyncMock: jest.MockedFunction<typeof fs.existsSync>;
-  let mkdirSyncMock: jest.MockedFunction<typeof fs.mkdirSync>;
-  let unlinkSyncMock: jest.MockedFunction<typeof fs.unlinkSync>;
-  let pathJoinMock: jest.MockedFunction<typeof path.join>;
-  let pathExtnameMock: jest.MockedFunction<typeof path.extname>;
-  let pathBasenameMock: jest.MockedFunction<typeof path.basename>;
+  let mockNext: vi.MockedFunction<NextFunction>;
+  let mockMulter: vi.Mocked<typeof multer>;
+  let existsSyncMock: vi.MockedFunction<typeof fs.existsSync>;
+  let mkdirSyncMock: vi.MockedFunction<typeof fs.mkdirSync>;
+  let unlinkSyncMock: vi.MockedFunction<typeof fs.unlinkSync>;
+  let pathJoinMock: vi.MockedFunction<typeof path.join>;
+  let pathExtnameMock: vi.MockedFunction<typeof path.extname>;
+  let pathBasenameMock: vi.MockedFunction<typeof path.basename>;
 
   beforeEach(() => {
     // Clear all mocks
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     // Create mock request
     mockRequest = {
@@ -72,31 +72,31 @@ describe('FileUploadMiddleware', () => {
 
     // Create mock response
     mockResponse = {
-      status: jest.fn().mockReturnThis() as any,
-      json: jest.fn().mockReturnThis() as any,
-      send: jest.fn().mockReturnThis() as any
+      status: vi.fn().mockReturnThis() as any,
+      json: vi.fn().mockReturnThis() as any,
+      send: vi.fn().mockReturnThis() as any
     };
 
     // Create mock next function
-    mockNext = jest.fn() as unknown as jest.MockedFunction<NextFunction>;
+    mockNext = vi.fn() as unknown as vi.MockedFunction<NextFunction>;
 
-    // Mock multer (already mocked in jest.mock)
-    mockMulter = multer as jest.Mocked<typeof multer>;
+    // Mock multer (already mocked in vi.mock)
+    mockMulter = multer as vi.Mocked<typeof multer>;
 
-    // Ensure fs methods are jest.fn via spies under ESM with strong typing
-    existsSyncMock = jest.spyOn(fs, 'existsSync') as jest.MockedFunction<typeof fs.existsSync>;
-    mkdirSyncMock = jest.spyOn(fs, 'mkdirSync') as jest.MockedFunction<typeof fs.mkdirSync>;
-    unlinkSyncMock = jest.spyOn(fs, 'unlinkSync') as jest.MockedFunction<typeof fs.unlinkSync>;
+    // Ensure fs methods are vi.fn via spies under ESM with strong typing
+    existsSyncMock = vi.spyOn(fs, 'existsSync') as vi.MockedFunction<typeof fs.existsSync>;
+    mkdirSyncMock = vi.spyOn(fs, 'mkdirSync') as vi.MockedFunction<typeof fs.mkdirSync>;
+    unlinkSyncMock = vi.spyOn(fs, 'unlinkSync') as vi.MockedFunction<typeof fs.unlinkSync>;
 
     // Mock fs functions
     existsSyncMock.mockReturnValue(true);
     mkdirSyncMock.mockImplementation(() => {});
     unlinkSyncMock.mockImplementation(() => {});
 
-    // Ensure path methods are jest.fn via spies under ESM with strong typing
-    pathJoinMock = jest.spyOn(path, 'join') as jest.MockedFunction<typeof path.join>;
-    pathExtnameMock = jest.spyOn(path, 'extname') as jest.MockedFunction<typeof path.extname>;
-    pathBasenameMock = jest.spyOn(path, 'basename') as jest.MockedFunction<typeof path.basename>;
+    // Ensure path methods are vi.fn via spies under ESM with strong typing
+    pathJoinMock = vi.spyOn(path, 'join') as vi.MockedFunction<typeof path.join>;
+    pathExtnameMock = vi.spyOn(path, 'extname') as vi.MockedFunction<typeof path.extname>;
+    pathBasenameMock = vi.spyOn(path, 'basename') as vi.MockedFunction<typeof path.basename>;
 
     // Mock path functions
     pathJoinMock.mockReturnValue('/test/uploads');
@@ -341,7 +341,7 @@ describe('FileUploadMiddleware', () => {
 
       // Simulate successful response
       mockResponse.statusCode = 200;
-      (mockResponse.send as jest.Mock)('Success');
+      (mockResponse.send as vi.Mock)('Success');
 
       expect(mockNext).toHaveBeenCalled();
       expect(fs.unlinkSync).not.toHaveBeenCalled();
@@ -368,7 +368,7 @@ describe('FileUploadMiddleware', () => {
 
       // Simulate error response
       mockResponse.statusCode = 400;
-      (mockResponse.send as jest.Mock)('Error');
+      (mockResponse.send as vi.Mock)('Error');
 
       expect(mockNext).toHaveBeenCalled();
       expect(fs.unlinkSync).toHaveBeenCalledWith('/uploads/test.pdf');
@@ -408,7 +408,7 @@ describe('FileUploadMiddleware', () => {
 
       // Simulate error response
       mockResponse.statusCode = 500;
-      (mockResponse.send as jest.Mock)('Error');
+      (mockResponse.send as vi.Mock)('Error');
 
       expect(mockNext).toHaveBeenCalled();
       expect(fs.unlinkSync).toHaveBeenCalledWith('/uploads/test1.pdf');
@@ -430,9 +430,9 @@ describe('FileUploadMiddleware', () => {
 
       // Mock console.error to avoid noise in tests
       const originalConsoleError = console.error;
-      console.error = jest.fn();
+      console.error = vi.fn();
 
-      (fs.unlinkSync as jest.Mock).mockImplementation(() => {
+      (fs.unlinkSync as vi.Mock).mockImplementation(() => {
         throw new Error('File not found');
       });
 
@@ -444,7 +444,7 @@ describe('FileUploadMiddleware', () => {
 
       // Simulate error response
       mockResponse.statusCode = 400;
-      (mockResponse.send as jest.Mock)('Error');
+      (mockResponse.send as vi.Mock)('Error');
 
       expect(mockNext).toHaveBeenCalled();
       expect(console.error).toHaveBeenCalledWith('Error cleaning up file:', expect.any(Error));
@@ -475,7 +475,7 @@ describe('FileUploadMiddleware', () => {
 
       // Simulate error response
       mockResponse.statusCode = 400;
-      (mockResponse.send as jest.Mock)('Error');
+      (mockResponse.send as vi.Mock)('Error');
 
       expect(mockNext).toHaveBeenCalled();
       expect(fs.unlinkSync).not.toHaveBeenCalled();
@@ -494,7 +494,7 @@ describe('FileUploadMiddleware', () => {
         buffer: Buffer.from('test')
       } as Express.Multer.File;
 
-      (fs.existsSync as jest.Mock).mockReturnValue(false);
+      (fs.existsSync as vi.Mock).mockReturnValue(false);
 
       cleanupUploadedFiles(
         mockRequest as Request,
@@ -504,7 +504,7 @@ describe('FileUploadMiddleware', () => {
 
       // Simulate error response
       mockResponse.statusCode = 400;
-      (mockResponse.send as jest.Mock)('Error');
+      (mockResponse.send as vi.Mock)('Error');
 
       expect(mockNext).toHaveBeenCalled();
       expect(fs.unlinkSync).not.toHaveBeenCalled();
@@ -552,7 +552,7 @@ describe('FileUploadMiddleware', () => {
 
       maliciousFiles.forEach(filename => {
         // Mock path.extname to return the last extension
-        (path.extname as jest.Mock).mockReturnValue('.exe');
+        (path.extname as vi.Mock).mockReturnValue('.exe');
         const ext = path.extname(filename).toLowerCase();
         const allowedTypes = ['.md', '.pdf', '.docx', '.html'];
         expect(allowedTypes).not.toContain(ext);

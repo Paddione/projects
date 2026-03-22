@@ -1,11 +1,11 @@
-import { jest } from '@jest/globals';
+import { jest } from 'vitest';
 
 export class UserRepository {
   constructor() {
     return new Proxy(this as any, {
       get(target, prop: string) {
         if (!(prop in target)) {
-          target[prop] = jest.fn();
+          target[prop] = vi.fn();
         }
         return target[prop];
       }

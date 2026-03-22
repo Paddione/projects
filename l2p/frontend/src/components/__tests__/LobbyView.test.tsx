@@ -1,39 +1,38 @@
 import React from 'react'
-import { describe, it, expect, beforeEach, jest } from '@jest/globals'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import '@testing-library/jest-dom/jest-globals'
 import { LobbyView } from '../LobbyView'
 import { useGameStore } from '../../stores/gameStore'
 import { socketService } from '../../services/socketService'
 
-jest.mock('../../stores/gameStore')
+vi.mock('../../stores/gameStore')
 
-jest.mock('../../services/socketService', () => ({
+vi.mock('../../services/socketService', () => ({
   socketService: {
-    setReady: jest.fn(),
-    startGame: jest.fn(),
-    updateQuestionSets: jest.fn(),
+    setReady: vi.fn(),
+    startGame: vi.fn(),
+    updateQuestionSets: vi.fn(),
   },
 }))
 
-jest.mock('../../services/navigationService', () => ({
+vi.mock('../../services/navigationService', () => ({
   navigationService: {
-    navigateToQuestionSets: jest.fn(),
+    navigateToQuestionSets: vi.fn(),
   },
 }))
 
-jest.mock('../../services/apiService', () => ({
+vi.mock('../../services/apiService', () => ({
   apiService: {
-    getCurrentUser: jest.fn(),
+    getCurrentUser: vi.fn(),
   },
 }))
 
-jest.mock('../PlayerGrid', () => ({
+vi.mock('../PlayerGrid', () => ({
   PlayerGrid: () => <div data-testid="player-grid" />,
 }))
 
-jest.mock('../QuestionSetSelector', () => ({
+vi.mock('../QuestionSetSelector', () => ({
   QuestionSetSelector: () => <div data-testid="question-set-selector" />,
 }))
 
@@ -50,8 +49,8 @@ const baseStoreState = {
 
 describe('LobbyView', () => {
   beforeEach(() => {
-    jest.clearAllMocks()
-    jest.mocked(useGameStore).mockReturnValue(baseStoreState as any)
+    vi.clearAllMocks()
+    vi.mocked(useGameStore).mockReturnValue(baseStoreState as any)
   })
 
   it('renders lobby metadata and sections', () => {
@@ -74,7 +73,7 @@ describe('LobbyView', () => {
 
   it('shows host controls and starts game when enabled', async () => {
     const user = userEvent.setup()
-    jest.mocked(useGameStore).mockReturnValue({
+    vi.mocked(useGameStore).mockReturnValue({
       ...baseStoreState,
       isHost: true,
       players: [
@@ -101,7 +100,7 @@ describe('LobbyView', () => {
 
   it('copies the lobby code when clicked', async () => {
     const user = userEvent.setup()
-    const writeText = jest.fn((_text: string) => Promise.resolve())
+    const writeText = vi.fn((_text: string) => Promise.resolve())
     Object.defineProperty(navigator, 'clipboard', {
       value: { writeText },
       writable: true,

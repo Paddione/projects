@@ -1,15 +1,15 @@
-import { describe, beforeAll, beforeEach, it, expect, jest } from '@jest/globals';
+import { describe, beforeAll, beforeEach, it, expect, vi } from 'vitest';
 
 // Mock fs module
 const mockFs = {
-  existsSync: jest.fn(),
-  mkdirSync: jest.fn(),
-  unlinkSync: jest.fn(),
-  statSync: jest.fn(),
-  readFileSync: jest.fn()
+  existsSync: vi.fn(),
+  mkdirSync: vi.fn(),
+  unlinkSync: vi.fn(),
+  statSync: vi.fn(),
+  readFileSync: vi.fn()
 };
 
-jest.mock('fs', () => ({
+vi.mock('fs', () => ({
   __esModule: true,
   default: mockFs,
   ...mockFs
@@ -17,12 +17,12 @@ jest.mock('fs', () => ({
 
 // Mock path module
 const mockPath = {
-  extname: jest.fn(),
-  basename: jest.fn(),
-  join: jest.fn()
+  extname: vi.fn(),
+  basename: vi.fn(),
+  join: vi.fn()
 };
 
-jest.mock('path', () => ({
+vi.mock('path', () => ({
   __esModule: true,
   default: mockPath,
   ...mockPath
@@ -36,10 +36,10 @@ type PdfParseResult = {
 
 // Mock pdf-parse to prevent loading the actual 35MB module during tests
 // This must be done before defining mockParsePdf to avoid hoisting issues
-let mockParsePdf: jest.MockedFunction<(buffer: Buffer) => Promise<PdfParseResult>>;
+let mockParsePdf: vi.MockedFunction<(buffer: Buffer) => Promise<PdfParseResult>>;
 
-jest.mock('pdf-parse', () => {
-  const mockFn = jest.fn() as any;
+vi.mock('pdf-parse', () => {
+  const mockFn = vi.fn() as any;
   return {
     __esModule: true,
     default: mockFn
@@ -48,28 +48,28 @@ jest.mock('pdf-parse', () => {
 
 // Mock mammoth
 const mockMammoth = {
-  extractRawText: jest.fn() as jest.MockedFunction<(args: { buffer: Buffer }) => Promise<{ value: string; messages: string[] }>>
+  extractRawText: vi.fn() as vi.MockedFunction<(args: { buffer: Buffer }) => Promise<{ value: string; messages: string[] }>>
 };
 
-jest.mock('mammoth', () => ({
+vi.mock('mammoth', () => ({
   __esModule: true,
   extractRawText: mockMammoth.extractRawText
 }));
 
 // Mock marked
 const mockMarked = {
-  parse: jest.fn((markdown: string) => `<p>${markdown}</p>`)
+  parse: vi.fn((markdown: string) => `<p>${markdown}</p>`)
 };
 
-jest.mock('marked', () => ({
+vi.mock('marked', () => ({
   __esModule: true,
   marked: mockMarked
 }));
 
 // Mock JSDOM for HTML processing
-const mockJSDOM = jest.fn();
+const mockJSDOM = vi.fn();
 
-jest.mock('jsdom', () => ({
+vi.mock('jsdom', () => ({
   JSDOM: mockJSDOM
 }));
 
@@ -91,14 +91,14 @@ describe('FileProcessingService', () => {
   let mockOriginalName: string;
 
   // Mock references
-  let mockExistsSync: jest.MockedFunction<typeof mockFs.existsSync>;
-  let mockStatSync: jest.MockedFunction<typeof mockFs.statSync>;
-  let mockReadFileSync: jest.MockedFunction<typeof mockFs.readFileSync>;
-  let mockMkdirSync: jest.MockedFunction<typeof mockFs.mkdirSync>;
-  let mockUnlinkSync: jest.MockedFunction<typeof mockFs.unlinkSync>;
-  let mockExtname: jest.MockedFunction<typeof mockPath.extname>;
-  let mockBasename: jest.MockedFunction<typeof mockPath.basename>;
-  let mockJoin: jest.MockedFunction<typeof mockPath.join>;
+  let mockExistsSync: vi.MockedFunction<typeof mockFs.existsSync>;
+  let mockStatSync: vi.MockedFunction<typeof mockFs.statSync>;
+  let mockReadFileSync: vi.MockedFunction<typeof mockFs.readFileSync>;
+  let mockMkdirSync: vi.MockedFunction<typeof mockFs.mkdirSync>;
+  let mockUnlinkSync: vi.MockedFunction<typeof mockFs.unlinkSync>;
+  let mockExtname: vi.MockedFunction<typeof mockPath.extname>;
+  let mockBasename: vi.MockedFunction<typeof mockPath.basename>;
+  let mockJoin: vi.MockedFunction<typeof mockPath.join>;
 
   beforeEach(() => {
     fileProcessingService = new FileProcessingService();
@@ -106,7 +106,7 @@ describe('FileProcessingService', () => {
     mockOriginalName = 'test-document.pdf';
 
     // Reset all mocks
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     // Get mock references from the mockFs object
     mockExistsSync = mockFs.existsSync as any;
@@ -132,17 +132,19 @@ describe('FileProcessingService', () => {
       value: 'Test DOCX Content',
       messages: []
     });
-    mockJSDOM.mockImplementation(() => ({
-      window: {
-        document: {
-          title: '',
-          body: {
-            textContent: 'Test HTML Content'
-          },
-          querySelectorAll: jest.fn(() => [])
+    mockJSDOM.mockImplementation(function() {
+      return {
+        window: {
+          document: {
+            title: '',
+            body: {
+              textContent: 'Test HTML Content'
+            },
+            querySelectorAll: vi.fn(() => [])
+          }
         }
-      }
-    }));
+      };
+    });
 
     // Set default return values for fs mocks
     mockExistsSync.mockReturnValue(true);

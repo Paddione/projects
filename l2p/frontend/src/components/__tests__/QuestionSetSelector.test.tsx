@@ -1,23 +1,22 @@
 import React from 'react'
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
-import '@testing-library/jest-dom'
 import { useGameStore } from '../../stores/gameStore'
 import { apiService } from '../../services/apiService'
 
-jest.mock('../../services/apiService', () => ({
+vi.mock('../../services/apiService', () => ({
   apiService: {
-    getAvailableQuestionSets: jest.fn(),
-    getLobbyQuestionSetInfo: jest.fn(),
+    getAvailableQuestionSets: vi.fn(),
+    getLobbyQuestionSetInfo: vi.fn(),
   }
 }))
 
-jest.mock('../../stores/gameStore')
+vi.mock('../../stores/gameStore')
 
-jest.mock('../../styles/QuestionSetSelector.module.css', () =>
+vi.mock('../../styles/QuestionSetSelector.module.css', () =>
   new Proxy({}, { get: (_, name) => name })
 )
 
-jest.mock('../../hooks/useLocalization', () => ({
+vi.mock('../../hooks/useLocalization', () => ({
   useLocalization: () => ({
     t: (key: string) => key,
   }),
@@ -25,8 +24,8 @@ jest.mock('../../hooks/useLocalization', () => ({
 
 import { QuestionSetSelector } from '../QuestionSetSelector'
 
-const mockApi = apiService as jest.Mocked<typeof apiService>
-const mockUseGameStore = useGameStore as unknown as jest.Mock & { getState: jest.Mock }
+const mockApi = apiService as vi.Mocked<typeof apiService>
+const mockUseGameStore = useGameStore as unknown as vi.Mock & { getState: vi.Mock }
 
 const mockQuestionSets = [
   {
@@ -79,11 +78,11 @@ function setupGameStoreMock(overrides: Record<string, unknown> = {}) {
   const state = {
     lobbyCode: 'ABC123',
     isHost: true,
-    setQuestionSetInfo: jest.fn(),
+    setQuestionSetInfo: vi.fn(),
     ...overrides,
   }
   mockUseGameStore.mockReturnValue(state)
-  mockUseGameStore.getState = jest.fn(() => state)
+  mockUseGameStore.getState = vi.fn(() => state)
   return state
 }
 
@@ -100,7 +99,7 @@ function setupDefaultApiMocks() {
 
 describe('QuestionSetSelector', () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
     setupGameStoreMock()
     setupDefaultApiMocks()
   })

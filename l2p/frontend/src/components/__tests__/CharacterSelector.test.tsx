@@ -1,62 +1,63 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import '@testing-library/jest-dom';
 import { useCharacterStore, useAvailableCharacters, useCharacterLoading, useCharacterUpdating } from '../../stores/characterStore';
 
 // Mock the character store
-jest.mock('../../stores/characterStore', () => ({
-  useCharacterStore: jest.fn(),
-  useAvailableCharacters: jest.fn(),
-  useCharacterLoading: jest.fn(),
-  useCharacterUpdating: jest.fn()
+vi.mock('../../stores/characterStore', () => ({
+  useCharacterStore: vi.fn(),
+  useAvailableCharacters: vi.fn(),
+  useCharacterLoading: vi.fn(),
+  useCharacterUpdating: vi.fn(),
+  useOwnedCharacters: vi.fn(() => []),
+  useRespectBalance: vi.fn(() => 0),
 }));
 
 // Mock the auth store
-jest.mock('../../stores/authStore', () => ({
-  useAuthStore: jest.fn()
+vi.mock('../../stores/authStore', () => ({
+  useAuthStore: vi.fn()
 }));
 
 // Mock the theme store
-jest.mock('../../stores/themeStore', () => ({
-  useThemeStore: jest.fn(() => ({
+vi.mock('../../stores/themeStore', () => ({
+  useThemeStore: vi.fn(() => ({
     theme: 'dark'
   }))
 }));
 
 // Mock the settings store
-jest.mock('../../stores/settingsStore', () => ({
-  useSettingsStore: jest.fn(() => ({
+vi.mock('../../stores/settingsStore', () => ({
+  useSettingsStore: vi.fn(() => ({
     language: 'en'
   }))
 }));
 
 // Mock the audio store
-jest.mock('../../stores/audioStore', () => ({
-  useAudioStore: jest.fn(() => ({
-    playSound: jest.fn()
+vi.mock('../../stores/audioStore', () => ({
+  useAudioStore: vi.fn(() => ({
+    playSound: vi.fn()
   }))
 }));
 
 // Mock the avatar service to return null/undefined so it falls back to character.emoji
-jest.mock('../../services/avatarService', () => ({
+vi.mock('../../services/avatarService', () => ({
   avatarService: {
-    getAvatarEmoji: jest.fn(() => null), // Return null to fall back to character.emoji
-    getAvatarSvgPath: jest.fn(() => null), // Return null to fall back to emoji display
-    initialize: jest.fn(),
-    setActiveAvatarOverride: jest.fn()
+    getAvatarEmoji: vi.fn(() => null), // Return null to fall back to character.emoji
+    getAvatarSvgPath: vi.fn(() => null), // Return null to fall back to emoji display
+    initialize: vi.fn(),
+    setActiveAvatarOverride: vi.fn()
   }
 }));
 
 // Import the component after all mocks are defined
 import { CharacterSelector } from '../CharacterSelector';
 
-const mockUseCharacterStore = useCharacterStore as jest.MockedFunction<typeof useCharacterStore>;
-const mockUseAvailableCharacters = useAvailableCharacters as jest.MockedFunction<typeof useAvailableCharacters>;
-const mockUseCharacterLoading = useCharacterLoading as jest.MockedFunction<typeof useCharacterLoading>;
-const mockUseCharacterUpdating = useCharacterUpdating as jest.MockedFunction<typeof useCharacterUpdating>;
+const mockUseCharacterStore = useCharacterStore as vi.MockedFunction<typeof useCharacterStore>;
+const mockUseAvailableCharacters = useAvailableCharacters as vi.MockedFunction<typeof useAvailableCharacters>;
+const mockUseCharacterLoading = useCharacterLoading as vi.MockedFunction<typeof useCharacterLoading>;
+const mockUseCharacterUpdating = useCharacterUpdating as vi.MockedFunction<typeof useCharacterUpdating>;
 
 describe('CharacterSelector Component', () => {
-  const mockUpdateCharacter = jest.fn();
+  const mockUpdateCharacter = vi.fn();
 
   const mockCharacters = [
     {
@@ -83,9 +84,9 @@ describe('CharacterSelector Component', () => {
   ];
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     mockUseCharacterStore.mockReturnValue({
-      loadCharacters: jest.fn(),
+      loadCharacters: vi.fn(),
       updateCharacter: mockUpdateCharacter
     });
     
@@ -97,7 +98,7 @@ describe('CharacterSelector Component', () => {
   const renderCharacterSelector = (props = {}) => {
     const defaultProps = {
       selectedCharacter: '1',
-      onCharacterSelect: jest.fn(),
+      onCharacterSelect: vi.fn(),
       ...props
     }
     return render(<CharacterSelector {...defaultProps} />)
@@ -154,7 +155,7 @@ describe('CharacterSelector Component', () => {
 
     it('should call onCharacterSelect when character is selected', async () => {
       mockUpdateCharacter.mockResolvedValue(true);
-      const mockOnCharacterSelect = jest.fn();
+      const mockOnCharacterSelect = vi.fn();
 
       renderCharacterSelector({ onCharacterSelect: mockOnCharacterSelect });
 
@@ -188,7 +189,7 @@ describe('CharacterSelector Component', () => {
   describe('Error Handling', () => {
     it('should handle character update failure', async () => {
       mockUpdateCharacter.mockResolvedValue(false);
-      const mockOnCharacterSelect = jest.fn();
+      const mockOnCharacterSelect = vi.fn();
 
       renderCharacterSelector({ onCharacterSelect: mockOnCharacterSelect });
 

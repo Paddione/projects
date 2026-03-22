@@ -3,14 +3,14 @@ import { performanceOptimizer } from '../performanceOptimizer'
 import { Socket } from 'socket.io-client'
 
 // Mock socket.io-client to control server events
-jest.mock('socket.io-client')
+vi.mock('socket.io-client')
 
 // Mock navigation to verify redirects without side effects
-jest.mock('../navigationService', () => ({
+vi.mock('../navigationService', () => ({
   navigationService: {
-    navigateToGame: jest.fn(),
-    navigateToResults: jest.fn(),
-    navigateToHome: jest.fn()
+    navigateToGame: vi.fn(),
+    navigateToResults: vi.fn(),
+    navigateToHome: vi.fn()
   }
 }))
 
@@ -19,30 +19,30 @@ import { navigationService } from '../navigationService'
 import { io } from 'socket.io-client'
 
 // Get the mocked io function
-const mockIo = io as jest.MockedFunction<typeof io>
+const mockIo = io as vi.MockedFunction<typeof io>
 
 describe('SocketService event handlers', () => {
   let mockSocket: Record<string, unknown> & {
-    serverEmit: jest.Mock;
-    on: jest.Mock;
-    off: jest.Mock;
-    emit: jest.Mock;
-    disconnect: jest.Mock;
+    serverEmit: vi.Mock;
+    on: vi.Mock;
+    off: vi.Mock;
+    emit: vi.Mock;
+    disconnect: vi.Mock;
     connected: boolean;
   }
 
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
     // Skip fake timers to avoid performance property issues
 
     // Create a fresh mock socket for each test
     mockSocket = {
-      on: jest.fn(),
-      off: jest.fn(),
-      emit: jest.fn(),
-      disconnect: jest.fn(),
+      on: vi.fn(),
+      off: vi.fn(),
+      emit: vi.fn(),
+      disconnect: vi.fn(),
       connected: true,
-      serverEmit: jest.fn((event: string, data?: Record<string, unknown>) => {
+      serverEmit: vi.fn((event: string, data?: Record<string, unknown>) => {
         // Find the handler and call it
         const calls = mockSocket.on.mock.calls
         const handler = calls.find((call: Record<string, unknown>) => call[0] === event)
@@ -65,7 +65,7 @@ describe('SocketService event handlers', () => {
       ; (socketService.constructor as any).globalConnectionInProgress = false
 
     // Make throttling execute immediately for deterministic tests
-    jest.spyOn(performanceOptimizer, 'throttle').mockImplementation((_key: string, fn: (...args: unknown[]) => unknown) => {
+    vi.spyOn(performanceOptimizer, 'throttle').mockImplementation((_key: string, fn: (...args: unknown[]) => unknown) => {
       return (...args: unknown[]) => fn(...args)
     })
   })

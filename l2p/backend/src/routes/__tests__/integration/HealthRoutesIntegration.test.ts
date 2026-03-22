@@ -1,4 +1,4 @@
-import { describe, beforeAll, afterAll, it, expect, jest } from '@jest/globals';
+import { describe, beforeAll, afterAll, it, expect, vi } from 'vitest';
 import request from 'supertest';
 import { app } from '../../../test-server.js';
 import { DatabaseService } from '../../../services/DatabaseService.js';

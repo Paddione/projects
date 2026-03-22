@@ -1,35 +1,11 @@
-import '@testing-library/jest-dom/jest-globals'
+import * as matchers from '@testing-library/jest-dom/matchers'
+import { expect } from 'vitest'
+expect.extend(matchers)
 import { configure } from '@testing-library/react'
 import './test-setup'
 
-const TEST_TIMEOUTS: Record<string, number> = {
-  unit: 30_000,
-  integration: 60_000,
-  e2e: 120_000,
-  performance: 300_000
-}
-
-const detectedTestType = process.env['TEST_TYPE'] ?? 'unit'
-const configuredTimeout = Number(
-  process.env['JEST_TEST_TIMEOUT'] ?? TEST_TIMEOUTS[detectedTestType] ?? TEST_TIMEOUTS['unit']
-)
-
-if (!Number.isNaN(configuredTimeout)) {
-  jest.setTimeout(configuredTimeout)
-}
-
 // Only run frontend setup in browser environment
 if (typeof window !== 'undefined') {
-  // Initialize test environment
-  let testContext;
-  try {
-    const { TestUtilities } = require('../../../shared-infrastructure/shared/l2p/test-config/dist/cjs/TestUtilities');
-    const { environment } = TestUtilities.getCurrentContext();
-    testContext = TestUtilities.configManager?.getEnvironmentConfig(environment);
-  } catch {
-    // Use fallback configuration - this is expected for unit tests
-    testContext = null;
-  }
 
   // Mock Web Audio API
   if (!window.AudioContext) {
@@ -95,31 +71,41 @@ if (typeof window !== 'undefined') {
     })
   }
 
-  // Mock requestAnimationFrame
-  Object.defineProperty(window, 'requestAnimationFrame', {
-    value: (callback: FrameRequestCallback) => {
-      return setTimeout(() => callback(performance.now()), 16)
-    }
-  })
+  // Mock requestAnimationFrame (skip if already defined by jsdom)
+  try {
+    Object.defineProperty(window, 'requestAnimationFrame', {
+      value: (callback: FrameRequestCallback) => {
+        return setTimeout(() => callback(performance.now()), 16)
+      },
+      writable: true,
+      configurable: true
+    })
+  } catch { /* already defined */ }
 
-  Object.defineProperty(window, 'cancelAnimationFrame', {
-    value: (id: number) => {
-      clearTimeout(id)
-    }
-  })
+  try {
+    Object.defineProperty(window, 'cancelAnimationFrame', {
+      value: (id: number) => {
+        clearTimeout(id)
+      },
+      writable: true,
+      configurable: true
+    })
+  } catch { /* already defined */ }
 
-  // Mock performance API (writable/configurable to play nice with Jest fake timers)
-  Object.defineProperty(window, 'performance', {
-    value: {
-      now: () => Date.now(),
-      mark: () => { },
-      measure: () => { },
-      getEntriesByType: () => [],
-      getEntriesByName: () => []
-    },
-    writable: true,
-    configurable: true
-  })
+  // Mock performance API (writable/configurable to play nice with fake timers)
+  try {
+    Object.defineProperty(window, 'performance', {
+      value: {
+        now: () => Date.now(),
+        mark: () => { },
+        measure: () => { },
+        getEntriesByType: () => [],
+        getEntriesByName: () => []
+      },
+      writable: true,
+      configurable: true
+    })
+  } catch { /* already defined */ }
 
   // Mock ResizeObserver
   Object.defineProperty(window, 'ResizeObserver', {

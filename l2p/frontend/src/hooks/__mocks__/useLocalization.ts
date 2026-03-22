@@ -1,7 +1,7 @@
-import { jest } from '@jest/globals'
+import { jest } from 'vitest'
 
 const mockUseLocalization = {
-  t: jest.fn((key: string) => {
+  t: vi.fn((key: string) => {
     const translations: Record<string, string> = {
       'settings.title': 'Settings',
       'settings.audio': 'Audio',
@@ -22,14 +22,14 @@ const mockUseLocalization = {
     return translations[key] || key
   }),
   currentLanguage: 'en',
-  setLanguage: jest.fn(),
-  getSupportedLanguages: jest.fn(),
-  getLanguageName: jest.fn(),
-  getLanguageFlag: jest.fn()
+  setLanguage: vi.fn(),
+  getSupportedLanguages: vi.fn(),
+  getLanguageName: vi.fn(),
+  getLanguageFlag: vi.fn()
 }
 
 export { mockUseLocalization }
-const useLocalization = jest.fn(() => mockUseLocalization)
+const useLocalization = vi.fn(() => mockUseLocalization)
 
 export default useLocalization
 export { useLocalization }

@@ -1,4 +1,4 @@
-import { describe, beforeAll, afterAll, beforeEach, afterEach, it, expect } from '@jest/globals';
+import { describe, beforeAll, afterAll, beforeEach, afterEach, it, expect } from 'vitest';
 import { io as Client, Socket as ClientSocket } from 'socket.io-client'
 import { Server } from 'socket.io'
 import { createServer } from 'http'

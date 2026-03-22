@@ -4,16 +4,16 @@ import { Character, CharacterProfile } from '../../types'
 import { apiService } from '../../services/apiService'
 
 // Mock the API service
-jest.mock('../../services/apiService', () => ({
+vi.mock('../../services/apiService', () => ({
   apiService: {
-    getAllCharacters: jest.fn(),
-    getCharacterProfile: jest.fn(),
-    updateCharacter: jest.fn(),
-    awardExperience: jest.fn(),
+    getAllCharacters: vi.fn(),
+    getCharacterProfile: vi.fn(),
+    updateCharacter: vi.fn(),
+    awardExperience: vi.fn(),
   }
 }))
 
-const mockApiService = apiService as jest.Mocked<typeof apiService>
+const mockApiService = apiService as vi.Mocked<typeof apiService>
 
 // Mock data
 const mockCharacters: Character[] = [
@@ -55,7 +55,7 @@ const mockCharacterProfile: CharacterProfile = {
 
 describe('characterStore', () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
     // Reset store to initial state
     useCharacterStore.setState({
       characters: [],
@@ -103,7 +103,7 @@ describe('characterStore', () => {
     })
 
     it('handles API error when loading characters', async () => {
-      const consoleSpy = jest.spyOn(console, 'error').mockImplementation()
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation()
       mockApiService.getAllCharacters.mockResolvedValue({
         success: false,
         error: 'Failed to load characters'
@@ -124,7 +124,7 @@ describe('characterStore', () => {
     })
 
     it('handles network error when loading characters', async () => {
-      const consoleSpy = jest.spyOn(console, 'error').mockImplementation()
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation()
       mockApiService.getAllCharacters.mockRejectedValue(new Error('Network error'))
 
       const { result } = renderHook(() => useCharacterStore())
@@ -188,7 +188,7 @@ describe('characterStore', () => {
     })
 
     it('handles API error when loading character profile', async () => {
-      const consoleSpy = jest.spyOn(console, 'error').mockImplementation()
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation()
       mockApiService.getCharacterProfile.mockResolvedValue({
         success: false,
         error: 'Failed to load profile'
@@ -209,7 +209,7 @@ describe('characterStore', () => {
     })
 
     it('handles network error when loading character profile', async () => {
-      const consoleSpy = jest.spyOn(console, 'error').mockImplementation()
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation()
       mockApiService.getCharacterProfile.mockRejectedValue(new Error('Network error'))
 
       const { result } = renderHook(() => useCharacterStore())
@@ -259,7 +259,7 @@ describe('characterStore', () => {
     })
 
     it('handles API error when updating character', async () => {
-      const consoleSpy = jest.spyOn(console, 'error').mockImplementation()
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation()
       mockApiService.updateCharacter.mockResolvedValue({
         success: false,
         error: 'Failed to update character'
@@ -281,7 +281,7 @@ describe('characterStore', () => {
     })
 
     it('handles network error when updating character', async () => {
-      const consoleSpy = jest.spyOn(console, 'error').mockImplementation()
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation()
       mockApiService.updateCharacter.mockRejectedValue(new Error('Network error'))
 
       const { result } = renderHook(() => useCharacterStore())
@@ -417,7 +417,7 @@ describe('characterStore', () => {
     })
 
     it('handles API error when awarding experience', async () => {
-      const consoleSpy = jest.spyOn(console, 'error').mockImplementation()
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation()
       mockApiService.awardExperience.mockResolvedValue({
         success: false,
         error: 'Failed to award experience'
@@ -437,7 +437,7 @@ describe('characterStore', () => {
     })
 
     it('handles network error when awarding experience', async () => {
-      const consoleSpy = jest.spyOn(console, 'error').mockImplementation()
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation()
       mockApiService.awardExperience.mockRejectedValue(new Error('Network error'))
 
       const { result } = renderHook(() => useCharacterStore())
@@ -454,7 +454,7 @@ describe('characterStore', () => {
     })
 
     it('handles profile update failure after level up', async () => {
-      const consoleSpy = jest.spyOn(console, 'error').mockImplementation()
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation()
       
       mockApiService.awardExperience.mockResolvedValue({
         success: true,

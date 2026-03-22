@@ -7,12 +7,12 @@ describe('Timer Component', () => {
     timeRemaining: 60,
     totalTime: 60,
     isRunning: true,
-    onTimeUp: jest.fn(),
+    onTimeUp: vi.fn(),
     showProgress: true
   }
 
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
   })
 
   it('renders timer display correctly', () => {
@@ -61,7 +61,7 @@ describe('Timer Component', () => {
   })
 
   it('calls onTimeUp when time reaches zero', () => {
-    const onTimeUp = jest.fn()
+    const onTimeUp = vi.fn()
     render(<Timer {...defaultProps} timeRemaining={0} onTimeUp={onTimeUp} />)
     
     expect(onTimeUp).toHaveBeenCalledTimes(1)

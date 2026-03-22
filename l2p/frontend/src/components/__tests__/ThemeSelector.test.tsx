@@ -1,15 +1,14 @@
 import React from 'react'
-import { describe, it, expect, beforeEach, jest } from '@jest/globals'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
-import '@testing-library/jest-dom/jest-globals'
 import { ThemeSelector } from '../ThemeSelector'
 
 // Mock hooks
-const mockSetTheme = jest.fn()
-const mockHandleThemeChange = jest.fn()
-const mockHandleButtonHover = jest.fn()
+const mockSetTheme = vi.fn()
+const mockHandleThemeChange = vi.fn()
+const mockHandleButtonHover = vi.fn()
 
-jest.mock('../../stores/themeStore', () => ({
+vi.mock('../../stores/themeStore', () => ({
   useThemeStore: () => ({
     theme: 'light',
     setTheme: mockSetTheme,
@@ -17,7 +16,7 @@ jest.mock('../../stores/themeStore', () => ({
   }),
 }))
 
-jest.mock('../../hooks/useAudio', () => ({
+vi.mock('../../hooks/useAudio', () => ({
   useAudio: () => ({
     handleThemeChange: mockHandleThemeChange,
     handleButtonHover: mockHandleButtonHover,
@@ -26,7 +25,7 @@ jest.mock('../../hooks/useAudio', () => ({
 
 describe('ThemeSelector', () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
   })
 
   it('should render theme selector', () => {

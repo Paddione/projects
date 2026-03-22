@@ -1,9 +1,9 @@
-import { jest, describe, beforeEach, it, expect } from '@jest/globals';
+import {vi, describe, beforeEach, it, expect } from 'vitest';
 import { HallOfFameRepository, HallOfFameEntry, CreateHallOfFameData } from '../HallOfFameRepository';
 import { BaseRepository } from '../BaseRepository';
 
 // Mock the BaseRepository
-jest.mock('../BaseRepository');
+vi.mock('../BaseRepository');
 
 describe('HallOfFameRepository', () => {
   let hallOfFameRepository: HallOfFameRepository;
@@ -35,11 +35,11 @@ describe('HallOfFameRepository', () => {
 
   beforeEach(() => {
     // Clear all mocks
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     // Mock database connection and query methods
     mockDb = {
-      query: jest.fn()
+      query: vi.fn()
     };
 
     // Set global database service for BaseRepository.getDb() to find
@@ -52,16 +52,16 @@ describe('HallOfFameRepository', () => {
     (hallOfFameRepository as any).db = mockDb;
 
     // Mock the getDb method directly to ensure it returns our mock
-    jest.spyOn(hallOfFameRepository as any, 'getDb').mockReturnValue(mockDb);
+    vi.spyOn(hallOfFameRepository as any, 'getDb').mockReturnValue(mockDb);
     
     // Mock BaseRepository methods
-    jest.spyOn(BaseRepository.prototype as any, 'findById').mockImplementation(() => Promise.resolve(null));
-    jest.spyOn(BaseRepository.prototype as any, 'create').mockImplementation(() => Promise.resolve({}));
-    jest.spyOn(BaseRepository.prototype as any, 'update').mockImplementation(() => Promise.resolve(null));
-    jest.spyOn(BaseRepository.prototype as any, 'delete').mockImplementation(() => Promise.resolve(false));
-    jest.spyOn(BaseRepository.prototype as any, 'findAll').mockImplementation(() => Promise.resolve([]));
-    jest.spyOn(BaseRepository.prototype as any, 'exists').mockImplementation(() => Promise.resolve(false));
-    jest.spyOn(BaseRepository.prototype as any, 'count').mockImplementation(() => Promise.resolve(0));
+    vi.spyOn(BaseRepository.prototype as any, 'findById').mockImplementation(() => Promise.resolve(null));
+    vi.spyOn(BaseRepository.prototype as any, 'create').mockImplementation(() => Promise.resolve({}));
+    vi.spyOn(BaseRepository.prototype as any, 'update').mockImplementation(() => Promise.resolve(null));
+    vi.spyOn(BaseRepository.prototype as any, 'delete').mockImplementation(() => Promise.resolve(false));
+    vi.spyOn(BaseRepository.prototype as any, 'findAll').mockImplementation(() => Promise.resolve([]));
+    vi.spyOn(BaseRepository.prototype as any, 'exists').mockImplementation(() => Promise.resolve(false));
+    vi.spyOn(BaseRepository.prototype as any, 'count').mockImplementation(() => Promise.resolve(0));
   });
 
   afterEach(() => {
@@ -445,7 +445,7 @@ describe('HallOfFameRepository', () => {
           });
         
         // Mock the count query for getEntryCountForQuestionSet
-        jest.spyOn(BaseRepository.prototype as any, 'count').mockResolvedValueOnce(15);
+        vi.spyOn(BaseRepository.prototype as any, 'count').mockResolvedValueOnce(15);
 
         const result = await hallOfFameRepository.isScoreEligibleForHallOfFame(700, 1);
 

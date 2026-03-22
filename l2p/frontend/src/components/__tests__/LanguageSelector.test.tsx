@@ -1,15 +1,14 @@
 import React from 'react'
-import { describe, it, expect, beforeEach, jest } from '@jest/globals'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
-import '@testing-library/jest-dom/jest-globals'
 import { LanguageSelector } from '../LanguageSelector'
 
 // Mock hooks
-const mockSetLanguage = jest.fn()
-const mockHandleLanguageChange = jest.fn()
-const mockHandleButtonHover = jest.fn()
+const mockSetLanguage = vi.fn()
+const mockHandleLanguageChange = vi.fn()
+const mockHandleButtonHover = vi.fn()
 
-jest.mock('../../hooks/useLocalization', () => ({
+vi.mock('../../hooks/useLocalization', () => ({
   useLocalization: () => ({
     currentLanguage: 'en',
     setLanguage: mockSetLanguage,
@@ -19,7 +18,7 @@ jest.mock('../../hooks/useLocalization', () => ({
   }),
 }))
 
-jest.mock('../../hooks/useAudio', () => ({
+vi.mock('../../hooks/useAudio', () => ({
   useAudio: () => ({
     handleLanguageChange: mockHandleLanguageChange,
     handleButtonHover: mockHandleButtonHover,
@@ -28,7 +27,7 @@ jest.mock('../../hooks/useAudio', () => ({
 
 describe('LanguageSelector', () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
   })
 
   it('should render language selector', () => {

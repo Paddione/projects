@@ -4,17 +4,17 @@ import { render, screen, act } from '@testing-library/react'
 // Mock the settings store
 const mockSettingsStore = {
   theme: 'light' as 'light' | 'dark',
-  toggleTheme: jest.fn()
+  toggleTheme: vi.fn()
 }
 
-jest.mock('../../stores/settingsStore', () => ({
+vi.mock('../../stores/settingsStore', () => ({
   useSettingsStore: () => mockSettingsStore
 }))
 
 // Mock document methods
-const mockSetAttribute = jest.fn()
-const mockQuerySelector = jest.fn()
-const mockSetAttributeMeta = jest.fn()
+const mockSetAttribute = vi.fn()
+const mockQuerySelector = vi.fn()
+const mockSetAttributeMeta = vi.fn()
 
 Object.defineProperty(document, 'documentElement', {
   value: {
@@ -33,7 +33,7 @@ import { ThemeProvider, useTheme } from '../ThemeProvider'
 
 describe('ThemeProvider Component', () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
     mockSettingsStore.theme = 'light'
   })
 
@@ -207,7 +207,7 @@ describe('ThemeProvider Component', () => {
 
       // Suppress console.error for this test
       const originalError = console.error
-      console.error = jest.fn()
+      console.error = vi.fn()
 
       expect(() => {
         render(<TestComponent />)
@@ -284,7 +284,7 @@ describe('ThemeProvider Component', () => {
 
   describe('Performance', () => {
     it('does not re-render unnecessarily when theme is stable', () => {
-      const renderCount = jest.fn()
+      const renderCount = vi.fn()
       
       const TestComponent = () => {
         renderCount()
@@ -311,7 +311,7 @@ describe('ThemeProvider Component', () => {
     })
 
     it('updates only when theme actually changes', () => {
-      const updateCount = jest.fn()
+      const updateCount = vi.fn()
       
       const TestComponent = () => {
         const { theme } = useTheme()

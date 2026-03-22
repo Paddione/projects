@@ -1,14 +1,14 @@
-import { describe, beforeEach, afterEach, it, expect, jest } from '@jest/globals';
+import { describe, beforeEach, afterEach, it, expect, vi } from 'vitest';
 import { EmailService } from '../EmailService';
 
 // Mock nodemailer
-jest.mock('nodemailer', () => ({
-    createTransporter: jest.fn(),
+vi.mock('nodemailer', () => ({
+    createTransporter: vi.fn(),
 }));
 
 describe('EmailService SMTP Error Handling', () => {
     let emailService: EmailService;
-    let consoleSpy: jest.SpyInstance;
+    let consoleSpy: vi.SpyInstance;
 
     beforeEach(() => {
         // Mock environment variables for SMTP
@@ -21,21 +21,21 @@ describe('EmailService SMTP Error Handling', () => {
         process.env.EMAIL_SENDER_NAME = 'Test Platform';
 
         // Spy on console methods
-        consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => { });
+        consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => { });
 
         emailService = new EmailService();
     });
 
     afterEach(() => {
         consoleSpy.mockRestore();
-        jest.clearAllMocks();
+        vi.clearAllMocks();
     });
 
     describe('Enhanced SMTP Error Messages', () => {
         it('should provide helpful error message for 535 authentication error', async () => {
             // Mock transporter with authentication error
             const mockTransporter = {
-                sendMail: jest.fn().mockRejectedValue(
+                sendMail: vi.fn().mockRejectedValue(
                     new Error('Invalid login: 535-5.7.8 Username and Password not accepted')
                 ),
             };
@@ -60,7 +60,7 @@ describe('EmailService SMTP Error Handling', () => {
         it('should provide helpful error message for ENOTFOUND connection error', async () => {
             // Mock transporter with connection error
             const mockTransporter = {
-                sendMail: jest.fn().mockRejectedValue(
+                sendMail: vi.fn().mockRejectedValue(
                     new Error('getaddrinfo ENOTFOUND smtp.gmail.com')
                 ),
             };
@@ -82,7 +82,7 @@ describe('EmailService SMTP Error Handling', () => {
         it('should provide helpful error message for ECONNREFUSED error', async () => {
             // Mock transporter with connection refused error
             const mockTransporter = {
-                sendMail: jest.fn().mockRejectedValue(
+                sendMail: vi.fn().mockRejectedValue(
                     new Error('connect ECONNREFUSED 74.125.28.108:587')
                 ),
             };
@@ -104,7 +104,7 @@ describe('EmailService SMTP Error Handling', () => {
         it('should handle unknown errors gracefully', async () => {
             // Mock transporter with unknown error
             const mockTransporter = {
-                sendMail: jest.fn().mockRejectedValue(
+                sendMail: vi.fn().mockRejectedValue(
                     new Error('Some unknown SMTP error')
                 ),
             };
@@ -131,7 +131,7 @@ describe('EmailService SMTP Error Handling', () => {
             delete process.env.SMTP_USER;
             delete process.env.SMTP_PASS;
 
-            const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => { });
+            const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => { });
             const disabledEmailService = new EmailService();
 
             // Should not throw error, just warn

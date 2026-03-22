@@ -1,33 +1,32 @@
 import React from 'react'
-import { describe, it, expect, beforeEach, jest } from '@jest/globals'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
-import '@testing-library/jest-dom/jest-globals'
 import { HomePage } from '../HomePage'
 import { apiService } from '../../services/apiService'
 
 // Mock components
-jest.mock('../../components/GameInterface', () => ({
+vi.mock('../../components/GameInterface', () => ({
   GameInterface: () => <div data-testid="game-interface">Game Interface</div>,
 }))
 
-jest.mock('../../components/LobbiesList', () => ({
+vi.mock('../../components/LobbiesList', () => ({
   LobbiesList: () => <div data-testid="lobbies-list">Lobbies List</div>,
 }))
 
 // Mock apiService
-jest.mock('../../services/apiService', () => ({
+vi.mock('../../services/apiService', () => ({
   apiService: {
-    getCurrentUser: jest.fn(),
+    getCurrentUser: vi.fn(),
   },
 }))
 
 describe('HomePage', () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
   })
 
   it('should render GameInterface and LobbiesList', () => {
-    jest.mocked(apiService.getCurrentUser).mockReturnValue(null)
+    vi.mocked(apiService.getCurrentUser).mockReturnValue(null)
 
     render(<HomePage />)
 
@@ -36,7 +35,7 @@ describe('HomePage', () => {
   })
 
   it('should show welcome message when user is logged in', () => {
-    jest.mocked(apiService.getCurrentUser).mockReturnValue({
+    vi.mocked(apiService.getCurrentUser).mockReturnValue({
       id: '1',
       username: 'testuser',
       email: 'test@example.com',
@@ -48,7 +47,7 @@ describe('HomePage', () => {
   })
 
   it('should not show welcome message when user is not logged in', () => {
-    jest.mocked(apiService.getCurrentUser).mockReturnValue(null)
+    vi.mocked(apiService.getCurrentUser).mockReturnValue(null)
 
     render(<HomePage />)
 

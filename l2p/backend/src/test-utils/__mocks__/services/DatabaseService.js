@@ -1,12 +1,12 @@
-const mockQuery = jest.fn().mockResolvedValue({ rows: [] });
-const mockGetClient = jest.fn().mockResolvedValue({
-  query: jest.fn().mockResolvedValue({ rows: [] }),
-  release: jest.fn()
+const mockQuery = vi.fn().mockResolvedValue({ rows: [] });
+const mockGetClient = vi.fn().mockResolvedValue({
+  query: vi.fn().mockResolvedValue({ rows: [] }),
+  release: vi.fn()
 });
 
-const mockClose = jest.fn().mockResolvedValue(undefined);
+const mockClose = vi.fn().mockResolvedValue(undefined);
 
-const mockGetInstance = jest.fn().mockReturnValue({
+const mockGetInstance = vi.fn().mockReturnValue({
   query: mockQuery,
   getClient: mockGetClient,
   close: mockClose

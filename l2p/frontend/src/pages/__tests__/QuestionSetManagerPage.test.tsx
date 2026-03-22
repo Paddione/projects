@@ -1,23 +1,22 @@
 import React from 'react'
-import { describe, it, expect, beforeEach, jest } from '@jest/globals'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
-import '@testing-library/jest-dom/jest-globals'
 import { QuestionSetManagerPage } from '../QuestionSetManagerPage'
 import { useGameStore } from '../../stores/gameStore'
 
 // Mock dependencies
-jest.mock('../../stores/gameStore')
-jest.mock('../../components/QuestionSetManager', () => ({
+vi.mock('../../stores/gameStore')
+vi.mock('../../components/QuestionSetManager', () => ({
   QuestionSetManager: () => <div data-testid="question-set-manager">Question Set Manager</div>,
 }))
 
 describe('QuestionSetManagerPage', () => {
-  const mockSetError = jest.fn()
+  const mockSetError = vi.fn()
 
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
 
-    jest.mocked(useGameStore).mockReturnValue({
+    vi.mocked(useGameStore).mockReturnValue({
       error: null,
       setError: mockSetError,
     } as any)
@@ -37,7 +36,7 @@ describe('QuestionSetManagerPage', () => {
   })
 
   it('should display error when present', () => {
-    jest.mocked(useGameStore).mockReturnValue({
+    vi.mocked(useGameStore).mockReturnValue({
       error: 'Test error message',
       setError: mockSetError,
     } as any)

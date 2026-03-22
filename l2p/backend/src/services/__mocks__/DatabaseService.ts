@@ -1,11 +1,11 @@
-import { jest } from '@jest/globals';
+import { jest } from 'vitest';
 
 // Manual mock for DatabaseService to support tests that import the class directly
 export class DatabaseService {
-  static getInstance = jest.fn(() => new Proxy({} as any, {
+  static getInstance = vi.fn(() => new Proxy({} as any, {
     get(target, prop: string) {
       if (!(prop in target)) {
-        target[prop] = jest.fn();
+        target[prop] = vi.fn();
       }
       return target[prop];
     }
@@ -16,7 +16,7 @@ export class DatabaseService {
 export const db = new Proxy({} as any, {
   get(target, prop: string) {
     if (!(prop in target)) {
-      target[prop] = jest.fn();
+      target[prop] = vi.fn();
     }
     return target[prop];
   }

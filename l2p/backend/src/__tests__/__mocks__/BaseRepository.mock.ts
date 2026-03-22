@@ -1,4 +1,4 @@
-import { jest } from '@jest/globals';
+import { jest } from 'vitest';
 import { QueryResultRow } from 'pg';
 
 // Create a mock implementation of BaseRepository
@@ -7,7 +7,7 @@ class MockBaseRepository {
   
   constructor() {
     this.db = {
-      query: jest.fn() as unknown as (...args: unknown[]) => Promise<unknown>
+      query: vi.fn() as unknown as (...args: unknown[]) => Promise<unknown>
     };
   }
 
@@ -51,7 +51,7 @@ export function createMockBaseRepository() {
       const value = Reflect.get(target, prop, receiver) as unknown;
       if (typeof value === 'function') {
         const fn = value as (...args: unknown[]) => unknown;
-        return jest.fn(fn.bind(target));
+        return vi.fn(fn.bind(target));
       }
       return value;
     }

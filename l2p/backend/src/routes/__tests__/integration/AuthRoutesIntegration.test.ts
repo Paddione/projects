@@ -1,4 +1,4 @@
-import { describe, beforeAll, afterAll, beforeEach, it, expect, jest } from '@jest/globals';
+import { describe, beforeAll, afterAll, beforeEach, it, expect, vi } from 'vitest';
 import request from 'supertest';
 import { app } from '../../../server';
 import { DatabaseService } from '../../../services/DatabaseService';
@@ -6,13 +6,13 @@ import { AuthService } from '../../../services/AuthService';
 import { EmailService } from '../../../services/EmailService';
 
 // Mock EmailService at module level to prevent SMTP issues in tests
-jest.mock('../../../services/EmailService', () => ({
-  EmailService: jest.fn().mockImplementation(() => ({
-    sendEmailVerificationEmail: jest.fn().mockResolvedValue(undefined),
-    sendPasswordResetEmail: jest.fn().mockResolvedValue(undefined),
-    sendWelcomeEmail: jest.fn().mockResolvedValue(undefined),
-    sendEmail: jest.fn().mockResolvedValue(undefined),
-    testConnection: jest.fn().mockResolvedValue(true)
+vi.mock('../../../services/EmailService', () => ({
+  EmailService: vi.fn().mockImplementation(() => ({
+    sendEmailVerificationEmail: vi.fn().mockResolvedValue(undefined),
+    sendPasswordResetEmail: vi.fn().mockResolvedValue(undefined),
+    sendWelcomeEmail: vi.fn().mockResolvedValue(undefined),
+    sendEmail: vi.fn().mockResolvedValue(undefined),
+    testConnection: vi.fn().mockResolvedValue(true)
   }))
 }));
 

@@ -361,7 +361,7 @@ describe('Perks Routes Integration', () => {
       // Mock database failure — use /api/perks/user which always queries the DB
       // (unlike /api/perks/all which has an in-memory cache)
       const originalQuery = db.query;
-      db.query = jest.fn().mockRejectedValue(new Error('Database connection failed')) as any;
+      db.query = vi.fn().mockRejectedValue(new Error('Database connection failed')) as any;
 
       const response = await request(app)
         .get('/api/perks/user')

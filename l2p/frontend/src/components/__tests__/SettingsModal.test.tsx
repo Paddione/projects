@@ -1,11 +1,10 @@
-import '@testing-library/jest-dom'
 import React from 'react'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 
 // Create mock objects
 const mockUseLocalization = {
-  t: jest.fn((key: string) => {
+  t: vi.fn((key: string) => {
     const translations: Record<string, string> = {
       'settings.title': 'Settings',
       'settings.audio': 'Audio',
@@ -28,51 +27,51 @@ const mockUseLocalization = {
     return translations[key] || key
   }),
   currentLanguage: 'en',
-  setLanguage: jest.fn(),
-  getSupportedLanguages: jest.fn(() => ['en', 'de']),
-  getLanguageName: jest.fn((lang: string) => lang === 'en' ? 'English' : 'Deutsch'),
-  getLanguageFlag: jest.fn((lang: string) => lang === 'en' ? '🇺🇸' : '🇩🇪')
+  setLanguage: vi.fn(),
+  getSupportedLanguages: vi.fn(() => ['en', 'de']),
+  getLanguageName: vi.fn((lang: string) => lang === 'en' ? 'English' : 'Deutsch'),
+  getLanguageFlag: vi.fn((lang: string) => lang === 'en' ? '🇺🇸' : '🇩🇪')
 }
 
 const mockUseAudio = {
-  handleButtonClick: jest.fn(),
-  handleButtonHover: jest.fn(),
-  handleModalOpen: jest.fn(),
-  handleModalClose: jest.fn(),
-  isAudioSupported: jest.fn().mockReturnValue(true)
+  handleButtonClick: vi.fn(),
+  handleButtonHover: vi.fn(),
+  handleModalOpen: vi.fn(),
+  handleModalClose: vi.fn(),
+  isAudioSupported: vi.fn().mockReturnValue(true)
 }
 
 const mockUseVisualFeedback = {
-  animateModal: jest.fn()
+  animateModal: vi.fn()
 }
 
 // Mock the hooks
-jest.mock('../../hooks/useLocalization', () => ({
+vi.mock('../../hooks/useLocalization', () => ({
   useLocalization: () => mockUseLocalization
 }))
 
-jest.mock('../../hooks/useAudio', () => ({
+vi.mock('../../hooks/useAudio', () => ({
   useAudio: () => mockUseAudio
 }))
 
-jest.mock('../../hooks/useVisualFeedback', () => ({
+vi.mock('../../hooks/useVisualFeedback', () => ({
   useVisualFeedback: () => mockUseVisualFeedback
 }))
 
-jest.mock('../LanguageSelector', () => ({
+vi.mock('../LanguageSelector', () => ({
   LanguageSelector: () => <div data-testid="language-selector">Language Selector</div>
 }))
 
-jest.mock('../AudioSettings', () => ({
+vi.mock('../AudioSettings', () => ({
   AudioSettings: () => <div data-testid="audio-settings">Audio Settings</div>
 }));
 
-jest.mock('../ThemeSelector', () => ({
+vi.mock('../ThemeSelector', () => ({
   ThemeSelector: () => <div data-testid="theme-selector">Theme Selector</div>
 }));
 
 // Mock CSS modules
-jest.mock('../../styles/SettingsModal.module.css', () => ({
+vi.mock('../../styles/SettingsModal.module.css', () => ({
   __esModule: true,
   default: {
     modal: 'modal-class',
@@ -101,7 +100,7 @@ jest.mock('../../styles/SettingsModal.module.css', () => ({
 import { SettingsModal } from '../SettingsModal'
 
 describe('SettingsModal Component', () => {
-  const mockOnClose = jest.fn()
+  const mockOnClose = vi.fn()
   let user: ReturnType<typeof userEvent.setup>
 
   beforeEach(() => {
@@ -131,7 +130,7 @@ describe('SettingsModal Component', () => {
     // Fresh userEvent instance per test to ensure proper act wrapping
     user = userEvent.setup()
     
-    jest.clearAllMocks()
+    vi.clearAllMocks()
   })
 
   describe('Modal Visibility', () => {
@@ -485,7 +484,7 @@ describe('SettingsModal Component', () => {
   describe('Error Handling', () => {
     it('handles missing translation keys gracefully', () => {
       const originalMock = mockUseLocalization.t
-      mockUseLocalization.t = jest.fn((key: string) => {
+      mockUseLocalization.t = vi.fn((key: string) => {
         // Return undefined for the settings title to test error handling
         if (key === 'settings.title') {
           return undefined as any

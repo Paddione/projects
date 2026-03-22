@@ -1,29 +1,28 @@
 import React from 'react'
 import { render, screen, within, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import '@testing-library/jest-dom'
 import PerksManager from '../PerksManager'
 import { useAuthStore } from '../../stores/authStore'
 import { apiService } from '../../services/apiService'
 
-jest.mock('../../services/apiService', () => ({
+vi.mock('../../services/apiService', () => ({
   apiService: {
-    getUserPerks: jest.fn(),
-    activatePerk: jest.fn(),
-    deactivatePerk: jest.fn(),
+    getUserPerks: vi.fn(),
+    activatePerk: vi.fn(),
+    deactivatePerk: vi.fn(),
   }
 }))
 
-jest.mock('../../services/themeService', () => ({
-  themeService: { initialize: jest.fn(), setTheme: jest.fn() }
+vi.mock('../../services/themeService', () => ({
+  themeService: { initialize: vi.fn(), setTheme: vi.fn() }
 }))
 
-jest.mock('../../services/avatarService', () => ({
-  avatarService: { initialize: jest.fn(), setActiveAvatarOverride: jest.fn() }
+vi.mock('../../services/avatarService', () => ({
+  avatarService: { initialize: vi.fn(), setActiveAvatarOverride: vi.fn() }
 }))
 
-jest.mock('../../stores/authStore')
-const mockUseAuthStore = useAuthStore as jest.MockedFunction<typeof useAuthStore>
+vi.mock('../../stores/authStore')
+const mockUseAuthStore = useAuthStore as vi.MockedFunction<typeof useAuthStore>
 
 // --- Mock Data ---
 
@@ -99,9 +98,9 @@ function setupAuthMock(user: any = mockUser) {
     user,
     token: 'test-token',
     isAuthenticated: !!user,
-    login: jest.fn(), logout: jest.fn(), register: jest.fn(),
-    refreshToken: jest.fn(), setUser: jest.fn(), setToken: jest.fn(),
-    clearAuth: jest.fn(), setLoading: jest.fn(), setError: jest.fn()
+    login: vi.fn(), logout: vi.fn(), register: vi.fn(),
+    refreshToken: vi.fn(), setUser: vi.fn(), setToken: vi.fn(),
+    clearAuth: vi.fn(), setLoading: vi.fn(), setError: vi.fn()
   }
   mockUseAuthStore.mockImplementation((selector: any) => {
     if (typeof selector === 'function') return selector(mockStoreState)
@@ -111,11 +110,11 @@ function setupAuthMock(user: any = mockUser) {
 
 describe('PerksManager', () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
     setupAuthMock()
-    ;(apiService.getUserPerks as jest.Mock).mockResolvedValue({ success: true, data: mockPerksPayload })
-    ;(apiService.activatePerk as jest.Mock).mockResolvedValue({ success: true })
-    ;(apiService.deactivatePerk as jest.Mock).mockResolvedValue({ success: true })
+    ;(apiService.getUserPerks as vi.Mock).mockResolvedValue({ success: true, data: mockPerksPayload })
+    ;(apiService.activatePerk as vi.Mock).mockResolvedValue({ success: true })
+    ;(apiService.deactivatePerk as vi.Mock).mockResolvedValue({ success: true })
   })
 
   // --- Loading & Error States ---
@@ -127,7 +126,7 @@ describe('PerksManager', () => {
   })
 
   it('handles API errors gracefully', async () => {
-    ;(apiService.getUserPerks as jest.Mock).mockResolvedValueOnce({ success: false, error: 'Server error' })
+    ;(apiService.getUserPerks as vi.Mock).mockResolvedValueOnce({ success: false, error: 'Server error' })
     render(<PerksManager />)
     expect(await screen.findByText('Unable to Load Perks')).toBeInTheDocument()
     expect(screen.getByText('Server error')).toBeInTheDocument()
@@ -135,7 +134,7 @@ describe('PerksManager', () => {
   })
 
   it('handles network errors gracefully', async () => {
-    ;(apiService.getUserPerks as jest.Mock).mockRejectedValueOnce(new Error('Network error'))
+    ;(apiService.getUserPerks as vi.Mock).mockRejectedValueOnce(new Error('Network error'))
     render(<PerksManager />)
     expect(await screen.findByText('Unable to Load Perks')).toBeInTheDocument()
     expect(screen.getByText('Network error')).toBeInTheDocument()

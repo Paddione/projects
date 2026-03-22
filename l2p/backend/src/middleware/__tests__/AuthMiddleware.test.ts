@@ -1,26 +1,26 @@
-import { describe, beforeEach, it, expect, jest } from '@jest/globals';
+import { describe, beforeEach, it, expect, vi } from 'vitest';
 import { Request, Response, NextFunction } from 'express';
 import { AuthMiddleware } from '../auth';
 import { AuthService, TokenPayload } from '../../services/AuthService';
 
-global.fetch = jest.fn();
-const mockFetch = global.fetch as jest.MockedFunction<typeof fetch>;
+global.fetch = vi.fn();
+const mockFetch = global.fetch as vi.MockedFunction<typeof fetch>;
 
 const createMockFetchResponse = (data: unknown, options: { ok?: boolean; status?: number } = {}) => ({
   ok: options.ok ?? true,
   status: options.status ?? 200,
-  json: jest.fn().mockResolvedValue(data),
+  json: vi.fn().mockResolvedValue(data),
 } as Response);
 
 // Mock AuthService
-jest.mock('../../services/AuthService');
+vi.mock('../../services/AuthService');
 
 describe('AuthMiddleware', () => {
   let authMiddleware: AuthMiddleware;
-  let mockAuthService: jest.Mocked<AuthService>;
+  let mockAuthService: vi.Mocked<AuthService>;
   let mockRequest: Partial<Request>;
   let mockResponse: Partial<Response>;
-  let mockNext: jest.MockedFunction<NextFunction>;
+  let mockNext: vi.MockedFunction<NextFunction>;
   const originalAuthServiceUrl = process.env['AUTH_SERVICE_URL'];
 
   const mockTokenPayload: TokenPayload = {
@@ -37,27 +37,27 @@ describe('AuthMiddleware', () => {
 
   beforeEach(() => {
     // Clear all mocks
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     mockFetch.mockReset();
     process.env['AUTH_SERVICE_URL'] = 'http://auth.test';
 
     // Create mock auth service
     mockAuthService = {
-      verifyAccessToken: jest.fn(),
-      verifyRefreshToken: jest.fn(),
-      generateAccessToken: jest.fn(),
-      generateRefreshToken: jest.fn(),
-      hashPassword: jest.fn(),
-      comparePassword: jest.fn(),
-      registerUser: jest.fn(),
-      loginUser: jest.fn(),
-      refreshAccessToken: jest.fn(),
-      resetPassword: jest.fn(),
-      verifyPasswordResetToken: jest.fn(),
-      changePassword: jest.fn(),
-      verifyEmailToken: jest.fn(),
-      resendVerificationEmail: jest.fn(),
-      getOrCreateUserFromUnifiedAuth: jest.fn().mockResolvedValue({
+      verifyAccessToken: vi.fn(),
+      verifyRefreshToken: vi.fn(),
+      generateAccessToken: vi.fn(),
+      generateRefreshToken: vi.fn(),
+      hashPassword: vi.fn(),
+      comparePassword: vi.fn(),
+      registerUser: vi.fn(),
+      loginUser: vi.fn(),
+      refreshAccessToken: vi.fn(),
+      resetPassword: vi.fn(),
+      verifyPasswordResetToken: vi.fn(),
+      changePassword: vi.fn(),
+      verifyEmailToken: vi.fn(),
+      resendVerificationEmail: vi.fn(),
+      getOrCreateUserFromUnifiedAuth: vi.fn().mockResolvedValue({
         id: 123,
         username: 'testuser',
         email: 'test@example.com',
@@ -65,7 +65,7 @@ describe('AuthMiddleware', () => {
         character_level: 1,
         is_admin: false
       })
-    } as unknown as jest.Mocked<AuthService>;
+    } as unknown as vi.Mocked<AuthService>;
 
     // Create auth middleware instance
     authMiddleware = new AuthMiddleware();
@@ -83,12 +83,12 @@ describe('AuthMiddleware', () => {
 
     // Create mock response
     mockResponse = {
-      status: jest.fn().mockReturnThis() as jest.MockedFunction<Response['status']>,
-      json: jest.fn().mockReturnThis() as jest.MockedFunction<Response['json']>
+      status: vi.fn().mockReturnThis() as vi.MockedFunction<Response['status']>,
+      json: vi.fn().mockReturnThis() as vi.MockedFunction<Response['json']>
     };
 
     // Create mock next function
-    mockNext = jest.fn() as unknown as jest.MockedFunction<NextFunction>;
+    mockNext = vi.fn() as unknown as vi.MockedFunction<NextFunction>;
   });
 
   afterEach(() => {

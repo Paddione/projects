@@ -1,24 +1,48 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
 // Skip timer-heavy suite during coverage or when explicitly requested
 const d = (process.env.TEST_COVERAGE === '1' || process.env.SKIP_TIMER_TESTS === 'true') ? describe.skip : describe;
 import { GameService, GameState, QuestionData } from '../GameService';
 import { Server } from 'socket.io';
 
-// Mock all dependencies
-jest.mock('socket.io');
-jest.mock('../LobbyService');
-jest.mock('../QuestionService');
-jest.mock('../ScoringService');
-jest.mock('../CharacterService');
-jest.mock('../../repositories/GameSessionRepository');
-jest.mock('../../repositories/UserRepository');
-jest.mock('../../repositories/LobbyRepository');
-jest.mock('../../middleware/logging');
+// Mock all dependencies with constructable factories
+vi.mock('socket.io', () => ({
+  Server: vi.fn().mockImplementation(function() {
+    return { to: vi.fn().mockReturnThis(), emit: vi.fn(), in: vi.fn().mockReturnThis(), sockets: { adapter: { rooms: new Map() } } };
+  }),
+}));
+vi.mock('../LobbyService', () => ({
+  LobbyService: vi.fn().mockImplementation(function() { return { getLobby: vi.fn(), updateLobby: vi.fn(), getLobbyByCode: vi.fn() }; }),
+}));
+vi.mock('../QuestionService', () => ({
+  QuestionService: vi.fn().mockImplementation(function() { return { getQuestions: vi.fn(), generateQuestions: vi.fn(), validateAnswer: vi.fn() }; }),
+}));
+vi.mock('../ScoringService', () => ({
+  ScoringService: vi.fn().mockImplementation(function() { return { calculateScore: vi.fn(), updatePlayerScore: vi.fn(), getLeaderboard: vi.fn() }; }),
+}));
+vi.mock('../CharacterService', () => ({
+  CharacterService: vi.fn().mockImplementation(function() { return { getCharacter: vi.fn(), updateCharacterProgress: vi.fn() }; }),
+}));
+vi.mock('../../repositories/GameSessionRepository', () => ({
+  GameSessionRepository: vi.fn().mockImplementation(function() { return { create: vi.fn(), findById: vi.fn(), update: vi.fn(), delete: vi.fn(), savePlayerResult: vi.fn() }; }),
+}));
+vi.mock('../../repositories/UserRepository', () => ({
+  UserRepository: vi.fn().mockImplementation(function() { return { findUserById: vi.fn(), findByUsername: vi.fn(), createUser: vi.fn(), updateUser: vi.fn() }; }),
+}));
+vi.mock('../../repositories/LobbyRepository', () => ({
+  LobbyRepository: vi.fn().mockImplementation(function() { return { findByCode: vi.fn(), updateLobbyStatus: vi.fn(), findById: vi.fn(), create: vi.fn(), update: vi.fn(), delete: vi.fn() }; }),
+}));
+vi.mock('../../middleware/logging', () => ({
+  RequestLogger: { log: vi.fn() },
+  logRequest: vi.fn((_req: any, _res: any, next: any) => next()),
+  logError: vi.fn((_err: any, _req: any, _res: any, next: any) => next()),
+  auditLog: vi.fn(),
+  requestLogger: vi.fn((_req: any, _res: any, next: any) => next()),
+}));
 
 d('GameService - Timer Management', () => {
   let gameService: GameService;
-  let mockIo: jest.Mocked<Server>;
+  let mockIo: vi.Mocked<Server>;
   
   const createMockGameState = (overrides: Partial<GameState> = {}): GameState => ({
     lobbyCode: 'TEST123',
@@ -74,18 +98,18 @@ d('GameService - Timer Management', () => {
   });
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     
     // Set up fake timers
-    jest.useFakeTimers();
+    vi.useFakeTimers();
     
     // Set test environment
     process.env.TEST_ENVIRONMENT = 'local';
     
     // Setup Socket.IO mock
     mockIo = {
-      to: jest.fn().mockReturnThis(),
-      emit: jest.fn()
+      to: vi.fn().mockReturnThis(),
+      emit: vi.fn()
     } as any;
 
     // Create GameService instance
@@ -99,7 +123,7 @@ d('GameService - Timer Management', () => {
     }
     
     // Restore real timers
-    jest.useRealTimers();
+    vi.useRealTimers();
     
     // Clean up environment variables
     delete process.env.TEST_ENVIRONMENT;
@@ -146,10 +170,10 @@ d('GameService - Timer Management', () => {
 
       // Mock timer with unref method
       const mockTimer = {
-        unref: jest.fn()
+        unref: vi.fn()
       };
       
-      jest.spyOn(global, 'setInterval').mockReturnValue(mockTimer as any);
+      vi.spyOn(global, 'setInterval').mockReturnValue(mockTimer as any);
 
       (gameService as any).startQuestionTimer('TEST123');
 
@@ -166,7 +190,7 @@ d('GameService - Timer Management', () => {
       (gameService as any).startQuestionTimer('TEST123');
 
       // Advance timer by 5 seconds
-      jest.advanceTimersByTime(5000);
+      vi.advanceTimersByTime(5000);
 
       expect(mockGameState.timeRemaining).toBe(55);
     });
@@ -178,8 +202,8 @@ d('GameService - Timer Management', () => {
       (gameService as any).startQuestionTimer('TEST123');
 
       // Clear initial events and advance time
-      (mockIo.emit as jest.Mock).mockClear();
-      jest.advanceTimersByTime(3000);
+      (mockIo.emit as vi.Mock).mockClear();
+      vi.advanceTimersByTime(3000);
 
       // Verify time-update events were emitted
       expect(mockIo.to).toHaveBeenCalledWith('TEST123');
@@ -193,15 +217,15 @@ d('GameService - Timer Management', () => {
       (gameService as any).activeGames.set('TEST123', mockGameState);
 
       (gameService as any).startQuestionTimer('TEST123');
-      (mockIo.emit as jest.Mock).mockClear();
+      (mockIo.emit as vi.Mock).mockClear();
 
       // Advance to trigger 10-second warning
-      jest.advanceTimersByTime(2000); // Now at 10 seconds
+      vi.advanceTimersByTime(2000); // Now at 10 seconds
 
       expect(mockIo.emit).toHaveBeenCalledWith('time-warning', { timeRemaining: 10 });
 
       // Advance to trigger 5-second warning
-      jest.advanceTimersByTime(5000); // Now at 5 seconds
+      vi.advanceTimersByTime(5000); // Now at 5 seconds
 
       expect(mockIo.emit).toHaveBeenCalledWith('time-warning', { timeRemaining: 5 });
     });
@@ -211,14 +235,14 @@ d('GameService - Timer Management', () => {
       (gameService as any).activeGames.set('TEST123', mockGameState);
 
       // Mock endQuestion method
-      const endQuestionSpy = jest.spyOn(gameService as any, 'endQuestion')
+      const endQuestionSpy = vi.spyOn(gameService as any, 'endQuestion')
         .mockImplementation(() => Promise.resolve());
 
       (gameService as any).startQuestionTimer('TEST123');
 
       // Advance timer to zero and run pending timers
-      jest.advanceTimersByTime(2000);
-      await jest.runAllTimersAsync();
+      vi.advanceTimersByTime(2000);
+      await vi.runAllTimersAsync();
 
       expect(endQuestionSpy).toHaveBeenCalledWith('TEST123');
     });
@@ -228,17 +252,17 @@ d('GameService - Timer Management', () => {
       (gameService as any).activeGames.set('TEST123', mockGameState);
 
       // Mock endQuestion to throw error
-      const endQuestionSpy = jest.spyOn(gameService as any, 'endQuestion')
+      const endQuestionSpy = vi.spyOn(gameService as any, 'endQuestion')
         .mockImplementation(() => Promise.reject(new Error('Test error')));
 
       // Mock console.error to verify error handling
-      const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
       (gameService as any).startQuestionTimer('TEST123');
 
       // Advance timer to trigger error
-      jest.advanceTimersByTime(1000);
-      await jest.runAllTimersAsync();
+      vi.advanceTimersByTime(1000);
+      await vi.runAllTimersAsync();
 
       // In test environment, errors should be swallowed
       expect(endQuestionSpy).toHaveBeenCalled();
@@ -253,7 +277,7 @@ d('GameService - Timer Management', () => {
       (gameService as any).activeGames.set('TEST123', mockGameState);
 
       // Mock setTimeout to capture timer creation
-      const setTimeoutSpy = jest.spyOn(global, 'setTimeout');
+      const setTimeoutSpy = vi.spyOn(global, 'setTimeout');
 
       // Trigger next question scheduling (via endQuestion simulation)
       (gameService as any).endQuestion('TEST123');
@@ -272,10 +296,10 @@ d('GameService - Timer Management', () => {
 
       // Mock timer with unref method
       const mockTimer = {
-        unref: jest.fn()
+        unref: vi.fn()
       };
       
-      jest.spyOn(global, 'setTimeout').mockReturnValue(mockTimer as any);
+      vi.spyOn(global, 'setTimeout').mockReturnValue(mockTimer as any);
 
       // Trigger endQuestion which creates next question timer
       (gameService as any).endQuestion('TEST123');
@@ -289,14 +313,14 @@ d('GameService - Timer Management', () => {
       (gameService as any).activeGames.set('TEST123', mockGameState);
 
       // Mock startNextQuestion
-      const startNextQuestionSpy = jest.spyOn(gameService, 'startNextQuestion')
+      const startNextQuestionSpy = vi.spyOn(gameService, 'startNextQuestion')
         .mockImplementation(() => Promise.resolve());
 
       // Trigger endQuestion which schedules next question
       await (gameService as any).endQuestion('TEST123');
 
       // Advance timers to trigger next question
-      jest.advanceTimersByTime(5000);
+      vi.advanceTimersByTime(5000);
 
       expect(startNextQuestionSpy).toHaveBeenCalledWith('TEST123');
     });
@@ -306,16 +330,16 @@ d('GameService - Timer Management', () => {
       (gameService as any).activeGames.set('TEST123', mockGameState);
 
       // Mock startNextQuestion to throw error
-      const startNextQuestionSpy = jest.spyOn(gameService, 'startNextQuestion')
+      const startNextQuestionSpy = vi.spyOn(gameService, 'startNextQuestion')
         .mockImplementation(() => Promise.reject(new Error('Test error')));
 
-      const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
       // Trigger endQuestion
       await (gameService as any).endQuestion('TEST123');
 
       // Advance timers to trigger error
-      jest.advanceTimersByTime(5000);
+      vi.advanceTimersByTime(5000);
 
       expect(startNextQuestionSpy).toHaveBeenCalled();
       
@@ -335,8 +359,8 @@ d('GameService - Timer Management', () => {
       (gameService as any).nextQuestionTimers.set('TEST123', mockNextTimer);
 
       // Mock clearInterval and clearTimeout
-      const clearIntervalSpy = jest.spyOn(global, 'clearInterval');
-      const clearTimeoutSpy = jest.spyOn(global, 'clearTimeout');
+      const clearIntervalSpy = vi.spyOn(global, 'clearInterval');
+      const clearTimeoutSpy = vi.spyOn(global, 'clearTimeout');
 
       // Call clearTimers
       (gameService as any).clearTimers('TEST123');
@@ -351,8 +375,8 @@ d('GameService - Timer Management', () => {
     });
 
     it('should handle clearing non-existent timers gracefully', () => {
-      const clearIntervalSpy = jest.spyOn(global, 'clearInterval');
-      const clearTimeoutSpy = jest.spyOn(global, 'clearTimeout');
+      const clearIntervalSpy = vi.spyOn(global, 'clearInterval');
+      const clearTimeoutSpy = vi.spyOn(global, 'clearTimeout');
 
       // Call clearTimers on non-existent lobby
       (gameService as any).clearTimers('NONEXISTENT');
@@ -372,7 +396,7 @@ d('GameService - Timer Management', () => {
       const mockNextTimer = setTimeout(() => {}, 1000);
       (gameService as any).nextQuestionTimers.set('TEST123', mockNextTimer);
 
-      const clearIntervalSpy = jest.spyOn(global, 'clearInterval');
+      const clearIntervalSpy = vi.spyOn(global, 'clearInterval');
 
       // Call clearGameTimer
       (gameService as any).clearGameTimer('TEST123');
@@ -402,8 +426,8 @@ d('GameService - Timer Management', () => {
       (gameService as any).nextQuestionTimers.set('LOBBY1', nextTimer1);
       (gameService as any).nextQuestionTimers.set('LOBBY2', nextTimer2);
 
-      const clearIntervalSpy = jest.spyOn(global, 'clearInterval');
-      const clearTimeoutSpy = jest.spyOn(global, 'clearTimeout');
+      const clearIntervalSpy = vi.spyOn(global, 'clearInterval');
+      const clearTimeoutSpy = vi.spyOn(global, 'clearTimeout');
 
       // Call cleanup
       gameService.cleanup();
@@ -438,7 +462,7 @@ d('GameService - Timer Management', () => {
 
       // Advance timer - should not crash
       expect(() => {
-        jest.advanceTimersByTime(1000);
+        vi.advanceTimersByTime(1000);
       }).not.toThrow();
     });
 
@@ -463,7 +487,7 @@ d('GameService - Timer Management', () => {
       // Create initial timer
       (gameService as any).startQuestionTimer('TEST123');
       
-      const clearIntervalSpy = jest.spyOn(global, 'clearInterval');
+      const clearIntervalSpy = vi.spyOn(global, 'clearInterval');
 
       // Create new timer (should clear old one first)
       (gameService as any).startQuestionTimer('TEST123');
@@ -479,11 +503,11 @@ d('GameService - Timer Management', () => {
       (gameService as any).activeGames.set('TEST123', mockGameState);
 
       // Mock startNextQuestion to prevent it from actually advancing the game
-      const startNextQuestionSpy = jest.spyOn(gameService, 'startNextQuestion')
+      const startNextQuestionSpy = vi.spyOn(gameService, 'startNextQuestion')
         .mockImplementation(() => Promise.resolve());
 
       // Spy on endQuestion but let it run (don't mock implementation)
-      const endQuestionSpy = jest.spyOn(gameService as any, 'endQuestion');
+      const endQuestionSpy = vi.spyOn(gameService as any, 'endQuestion');
 
       // Start question timer
       (gameService as any).startQuestionTimer('TEST123');
@@ -492,15 +516,15 @@ d('GameService - Timer Management', () => {
       expect((gameService as any).gameTimers.has('TEST123')).toBe(true);
 
       // Simulate time running out
-      jest.advanceTimersByTime(60000);
-      await jest.runAllTimersAsync();
+      vi.advanceTimersByTime(60000);
+      await vi.runAllTimersAsync();
 
       // Verify endQuestion was called
       expect(endQuestionSpy).toHaveBeenCalledWith('TEST123');
 
       // Fast forward through next question delay
-      jest.advanceTimersByTime(5000);
-      await jest.runAllTimersAsync();
+      vi.advanceTimersByTime(5000);
+      await vi.runAllTimersAsync();
 
       // Verify startNextQuestion was called
       expect(startNextQuestionSpy).toHaveBeenCalledWith('TEST123');
@@ -515,11 +539,11 @@ d('GameService - Timer Management', () => {
       const nextTimer = setTimeout(() => {}, 1000);
       (gameService as any).nextQuestionTimers.set('TEST123', nextTimer);
 
-      const clearIntervalSpy = jest.spyOn(global, 'clearInterval');
-      const clearTimeoutSpy = jest.spyOn(global, 'clearTimeout');
+      const clearIntervalSpy = vi.spyOn(global, 'clearInterval');
+      const clearTimeoutSpy = vi.spyOn(global, 'clearTimeout');
 
       // Mock endGameSession to simulate game ending
-      const mockEndGameSession = jest.fn().mockResolvedValue(void 0);
+      const mockEndGameSession = vi.fn().mockResolvedValue(void 0);
       (gameService as any).endGameSession = mockEndGameSession;
 
       // End game session

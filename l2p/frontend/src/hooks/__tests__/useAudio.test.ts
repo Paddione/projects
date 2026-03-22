@@ -12,57 +12,57 @@ const mockAudioStore = {
   currentTrack: null,
   
   // State setters
-  setMusicVolume: jest.fn(),
-  setSoundVolume: jest.fn(),
-  setMasterVolume: jest.fn(),
-  setIsMuted: jest.fn(),
-  setIsPlaying: jest.fn(),
-  setCurrentTrack: jest.fn(),
-  toggleMute: jest.fn(),
+  setMusicVolume: vi.fn(),
+  setSoundVolume: vi.fn(),
+  setMasterVolume: vi.fn(),
+  setIsMuted: vi.fn(),
+  setIsPlaying: vi.fn(),
+  setCurrentTrack: vi.fn(),
+  toggleMute: vi.fn(),
   
   // Basic audio controls
-  playSound: jest.fn(),
-  stopSound: jest.fn(),
-  stopAllSounds: jest.fn(),
-  resumeAudioContext: jest.fn(),
-  isAudioSupported: jest.fn(() => true),
+  playSound: vi.fn(),
+  stopSound: vi.fn(),
+  stopAllSounds: vi.fn(),
+  resumeAudioContext: vi.fn(),
+  isAudioSupported: vi.fn(() => true),
   
   // Game audio methods
-  playCorrectAnswer: jest.fn(),
-  playWrongAnswer: jest.fn(),
-  playButtonClick: jest.fn(),
-  playButtonHover: jest.fn(),
-  playPlayerJoin: jest.fn(),
-  playPlayerLeave: jest.fn(),
-  playTimerWarning: jest.fn(),
-  playTimerUrgent: jest.fn(),
-  playGameStart: jest.fn(),
-  playGameEnd: jest.fn(),
-  playQuestionStart: jest.fn(),
-  playLobbyCreated: jest.fn(),
-  playLobbyJoined: jest.fn(),
-  playApplause: jest.fn(),
-  playHighScore: jest.fn(),
-  playPerfectScore: jest.fn(),
-  playMultiplierUp: jest.fn(),
-  playMultiplierReset: jest.fn(),
-  playScorePoints: jest.fn(),
-  playScoreBonus: jest.fn(),
-        playLobbyMusic: jest.fn(),
-  playNotification: jest.fn(),
-  playSuccess: jest.fn(),
-  playError: jest.fn(),
-  playTick: jest.fn(),
-  playCountdown: jest.fn(),
-  playMenuSelect: jest.fn(),
-  playMenuConfirm: jest.fn(),
-  playMenuCancel: jest.fn(),
-  playVolumeChange: jest.fn(),
-  playLanguageChange: jest.fn(),
-  playThemeChange: jest.fn()
+  playCorrectAnswer: vi.fn(),
+  playWrongAnswer: vi.fn(),
+  playButtonClick: vi.fn(),
+  playButtonHover: vi.fn(),
+  playPlayerJoin: vi.fn(),
+  playPlayerLeave: vi.fn(),
+  playTimerWarning: vi.fn(),
+  playTimerUrgent: vi.fn(),
+  playGameStart: vi.fn(),
+  playGameEnd: vi.fn(),
+  playQuestionStart: vi.fn(),
+  playLobbyCreated: vi.fn(),
+  playLobbyJoined: vi.fn(),
+  playApplause: vi.fn(),
+  playHighScore: vi.fn(),
+  playPerfectScore: vi.fn(),
+  playMultiplierUp: vi.fn(),
+  playMultiplierReset: vi.fn(),
+  playScorePoints: vi.fn(),
+  playScoreBonus: vi.fn(),
+        playLobbyMusic: vi.fn(),
+  playNotification: vi.fn(),
+  playSuccess: vi.fn(),
+  playError: vi.fn(),
+  playTick: vi.fn(),
+  playCountdown: vi.fn(),
+  playMenuSelect: vi.fn(),
+  playMenuConfirm: vi.fn(),
+  playMenuCancel: vi.fn(),
+  playVolumeChange: vi.fn(),
+  playLanguageChange: vi.fn(),
+  playThemeChange: vi.fn()
 }
 
-jest.mock('../../stores/audioStore', () => ({
+vi.mock('../../stores/audioStore', () => ({
   useAudioStore: () => mockAudioStore,
 }))
 
@@ -71,18 +71,18 @@ describe('useAudio Hook', () => {
   let removeEventListeners: { [key: string]: EventListener } = {}
 
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
     
     // Reset event listeners
     eventListeners = {}
     removeEventListeners = {}
     
     // Mock document event listeners
-    document.addEventListener = jest.fn((event, listener, _options) => {
+    document.addEventListener = vi.fn((event, listener, _options) => {
       eventListeners[event] = listener as EventListener
     })
     
-    document.removeEventListener = jest.fn((event, listener) => {
+    document.removeEventListener = vi.fn((event, listener) => {
       removeEventListeners[event] = listener as EventListener
     })
   })
@@ -378,12 +378,12 @@ describe('useAudio Hook', () => {
     it('sets up event listeners only once on mount', () => {
       const { rerender } = renderHook(() => useAudio())
       
-      const initialCallCount = (document.addEventListener as jest.Mock).mock.calls.length
+      const initialCallCount = (document.addEventListener as vi.Mock).mock.calls.length
       
       rerender()
       
       // Should not add more event listeners on re-render
-      expect((document.addEventListener as jest.Mock).mock.calls.length).toBe(initialCallCount)
+      expect((document.addEventListener as vi.Mock).mock.calls.length).toBe(initialCallCount)
     })
   })
 
@@ -406,7 +406,7 @@ describe('useAudio Hook', () => {
     it('handles DOM event listener errors gracefully', () => {
       // Mock addEventListener to throw an error
       const originalAddEventListener = document.addEventListener
-      document.addEventListener = jest.fn().mockImplementation(() => {
+      document.addEventListener = vi.fn().mockImplementation(() => {
         throw new Error('DOM error')
       })
       

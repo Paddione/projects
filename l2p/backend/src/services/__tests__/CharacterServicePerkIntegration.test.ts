@@ -1,13 +1,13 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { CharacterService } from '../CharacterService.js';
 import { PerksManager, Perk } from '../PerksManager.js';
 import { PerkQueryService, DraftPerk } from '../PerkQueryService.js';
 import { DatabaseService } from '../DatabaseService.js';
 
 // Mock dependencies
-jest.mock('../DatabaseService.js');
-jest.mock('../PerksManager.js');
-jest.mock('../PerkQueryService.js');
+vi.mock('../DatabaseService.js');
+vi.mock('../PerksManager.js');
+vi.mock('../PerkQueryService.js');
 
 const buildMockPerk = (overrides: Partial<Perk> & { id?: number } = {}): Perk => ({
   id: overrides.id ?? 1,
@@ -26,9 +26,9 @@ const buildMockPerk = (overrides: Partial<Perk> & { id?: number } = {}): Perk =>
 
 describe('CharacterService - Perk Integration', () => {
   let characterService: CharacterService;
-  let mockDb: jest.Mocked<DatabaseService>;
-  let mockPerksManager: jest.Mocked<PerksManager>;
-  let mockPerkQueryService: jest.Mocked<PerkQueryService>;
+  let mockDb: vi.Mocked<DatabaseService>;
+  let mockPerksManager: vi.Mocked<PerksManager>;
+  let mockPerkQueryService: vi.Mocked<PerkQueryService>;
   const buildProfile = (userId: number, level: number, experiencePoints: number) => ({
     authUserId: userId,
     selectedCharacter: 'student',
@@ -42,38 +42,38 @@ describe('CharacterService - Perk Integration', () => {
   beforeEach(() => {
     // Mock database service
     mockDb = {
-      query: jest.fn(),
-      getInstance: jest.fn(),
-      beginTransaction: jest.fn(),
-      commit: jest.fn(),
-      rollback: jest.fn(),
-      close: jest.fn()
+      query: vi.fn(),
+      getInstance: vi.fn(),
+      beginTransaction: vi.fn(),
+      commit: vi.fn(),
+      rollback: vi.fn(),
+      close: vi.fn()
     } as any;
 
-    (DatabaseService.getInstance as jest.Mock).mockReturnValue(mockDb);
+    (DatabaseService.getInstance as vi.Mock).mockReturnValue(mockDb);
 
     // Mock perks manager
     mockPerksManager = {
-      checkAndUnlockPerksForLevel: jest.fn(),
-      getInstance: jest.fn()
+      checkAndUnlockPerksForLevel: vi.fn(),
+      getInstance: vi.fn()
     } as any;
 
-    (PerksManager.getInstance as jest.Mock).mockReturnValue(mockPerksManager);
+    (PerksManager.getInstance as vi.Mock).mockReturnValue(mockPerksManager);
 
     // Mock perk draft service
     mockPerkQueryService = {
-      getNewlyUnlockedPerks: jest.fn(),
-      getInstance: jest.fn()
+      getNewlyUnlockedPerks: vi.fn(),
+      getInstance: vi.fn()
     } as any;
 
-    (PerkQueryService.getInstance as jest.Mock).mockReturnValue(mockPerkQueryService);
+    (PerkQueryService.getInstance as vi.Mock).mockReturnValue(mockPerkQueryService);
 
     characterService = new CharacterService();
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
-    jest.clearAllMocks();
+    vi.restoreAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('awardExperience - Perk Integration', () => {
@@ -88,7 +88,7 @@ describe('CharacterService - Perk Integration', () => {
       const experienceGained = (nextLevelThreshold - currentXp) + 50;
       const updatedXp = currentXp + experienceGained;
 
-      jest.spyOn((characterService as any).gameProfileService, 'getOrCreateProfile')
+      vi.spyOn((characterService as any).gameProfileService, 'getOrCreateProfile')
         .mockResolvedValue(buildProfile(userId, oldLevel, currentXp));
 
       const unlockedPerk: DraftPerk = {
@@ -154,7 +154,7 @@ describe('CharacterService - Perk Integration', () => {
       const updatedXp = currentXp + experienceGained;
       const resultingLevel = characterService.calculateLevel(updatedXp);
 
-      jest.spyOn((characterService as any).gameProfileService, 'getOrCreateProfile')
+      vi.spyOn((characterService as any).gameProfileService, 'getOrCreateProfile')
         .mockResolvedValue(buildProfile(userId, level, currentXp));
 
       mockDb.query.mockResolvedValueOnce({
@@ -197,7 +197,7 @@ describe('CharacterService - Perk Integration', () => {
       const experienceGained = characterService.getTotalExperienceForLevel(targetLevel - 1) + 1000;
       const newLevel = characterService.calculateLevel(currentXp + experienceGained);
 
-      jest.spyOn((characterService as any).gameProfileService, 'getOrCreateProfile')
+      vi.spyOn((characterService as any).gameProfileService, 'getOrCreateProfile')
         .mockResolvedValue(buildProfile(userId, startingLevel, currentXp));
 
       const unlockedPerks: DraftPerk[] = [
@@ -250,7 +250,7 @@ describe('CharacterService - Perk Integration', () => {
       const experienceGained = (nextLevelThreshold - currentXp) + 25;
       const updatedXp = currentXp + experienceGained;
 
-      jest.spyOn((characterService as any).gameProfileService, 'getOrCreateProfile')
+      vi.spyOn((characterService as any).gameProfileService, 'getOrCreateProfile')
         .mockResolvedValue(buildProfile(userId, oldLevel, currentXp));
 
       mockDb.query.mockResolvedValueOnce({
@@ -300,7 +300,7 @@ describe('CharacterService - Perk Integration', () => {
       const experienceGained = characterService.calculateLevelExperience(maxLevel);
       const updatedXp = currentXp + experienceGained;
 
-      jest.spyOn((characterService as any).gameProfileService, 'getOrCreateProfile')
+      vi.spyOn((characterService as any).gameProfileService, 'getOrCreateProfile')
         .mockResolvedValue(buildProfile(userId, maxLevel, currentXp));
 
       mockDb.query.mockResolvedValueOnce({
@@ -339,10 +339,10 @@ describe('CharacterService - Perk Integration', () => {
       const userId = 999;
       const experienceGained = 100;
 
-      jest.spyOn((characterService as any).gameProfileService, 'getOrCreateProfile')
+      vi.spyOn((characterService as any).gameProfileService, 'getOrCreateProfile')
         .mockRejectedValue(new Error('Game profile not found'));
 
-      jest.spyOn((characterService as any).userRepository, 'findUserById')
+      vi.spyOn((characterService as any).userRepository, 'findUserById')
         .mockResolvedValue(null);
 
       // Should throw error when user not found
@@ -360,7 +360,7 @@ describe('CharacterService - Perk Integration', () => {
       const level = 10;
       const experience = characterService.getTotalExperienceForLevel(level - 1) + 12345;
 
-      jest.spyOn((characterService as any).gameProfileService, 'getOrCreateProfile')
+      vi.spyOn((characterService as any).gameProfileService, 'getOrCreateProfile')
         .mockResolvedValue(buildProfile(userId, level, experience));
 
       const result = await characterService.getUserCharacterInfo(userId);

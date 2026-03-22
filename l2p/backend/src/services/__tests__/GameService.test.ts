@@ -1,63 +1,97 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { GameService, GameState, GamePlayer, QuestionData } from '../GameService';
 import { Server } from 'socket.io';
 
 // Mock all dependencies
-jest.mock('socket.io');
+vi.mock('socket.io', () => ({
+  Server: vi.fn().mockImplementation(function() {
+    return {
+      to: vi.fn().mockReturnThis(),
+      emit: vi.fn(),
+      in: vi.fn().mockReturnThis(),
+      sockets: { adapter: { rooms: new Map() } },
+    };
+  }),
+}));
 
 // Create service mocks with proper structure
-jest.mock('../LobbyService', () => ({
+vi.mock('../LobbyService', () => ({
   __esModule: true,
-  LobbyService: jest.fn().mockImplementation(() => ({
-    getLobby: jest.fn(),
-    updateLobby: jest.fn(),
-    addPlayerToLobby: jest.fn(),
-    removePlayerFromLobby: jest.fn()
-  }))
+  LobbyService: vi.fn().mockImplementation(function() { return {
+    getLobby: vi.fn(),
+    updateLobby: vi.fn(),
+    addPlayerToLobby: vi.fn(),
+    removePlayerFromLobby: vi.fn()
+  }; })
 }));
 
-jest.mock('../QuestionService', () => ({
+vi.mock('../QuestionService', () => ({
   __esModule: true,
-  QuestionService: jest.fn().mockImplementation(() => ({
-    getQuestions: jest.fn(),
-    generateQuestions: jest.fn(),
-    validateAnswer: jest.fn()
-  }))
+  QuestionService: vi.fn().mockImplementation(function() { return {
+    getQuestions: vi.fn(),
+    generateQuestions: vi.fn(),
+    validateAnswer: vi.fn()
+  }; })
 }));
 
-jest.mock('../ScoringService', () => ({
+vi.mock('../ScoringService', () => ({
   __esModule: true,
-  ScoringService: jest.fn().mockImplementation(() => ({
-    calculateScore: jest.fn(),
-    updatePlayerScore: jest.fn(),
-    getLeaderboard: jest.fn()
-  }))
+  ScoringService: vi.fn().mockImplementation(function() { return {
+    calculateScore: vi.fn(),
+    updatePlayerScore: vi.fn(),
+    getLeaderboard: vi.fn()
+  }; })
 }));
 
-jest.mock('../CharacterService', () => ({
+vi.mock('../CharacterService', () => ({
   __esModule: true,
-  CharacterService: jest.fn().mockImplementation(() => ({
-    getCharacter: jest.fn(),
-    updateCharacterProgress: jest.fn()
-  }))
+  CharacterService: vi.fn().mockImplementation(function() { return {
+    getCharacter: vi.fn(),
+    updateCharacterProgress: vi.fn()
+  }; })
 }));
-jest.mock('../../repositories/GameSessionRepository');
-jest.mock('../../repositories/UserRepository');
+vi.mock('../../repositories/GameSessionRepository', () => ({
+  GameSessionRepository: vi.fn().mockImplementation(function() {
+    return {
+      create: vi.fn(),
+      findById: vi.fn(),
+      update: vi.fn(),
+      delete: vi.fn(),
+      savePlayerResult: vi.fn(),
+    };
+  }),
+}));
+vi.mock('../../repositories/UserRepository', () => ({
+  UserRepository: vi.fn().mockImplementation(function() {
+    return {
+      findUserById: vi.fn(),
+      findByUsername: vi.fn(),
+      createUser: vi.fn(),
+      updateUser: vi.fn(),
+    };
+  }),
+}));
 // Mock LobbyRepository to avoid real DB calls; compatible with moduleNameMapper (.ts)
-jest.mock('../../repositories/LobbyRepository', () => {
-  const updateLobbyStatus = jest.fn<any, any>().mockResolvedValue({ id: 1, status: 'ended' });
+vi.mock('../../repositories/LobbyRepository', () => {
+  const updateLobbyStatus = vi.fn<any, any>().mockResolvedValue({ id: 1, status: 'ended' });
   return {
     __esModule: true,
-    LobbyRepository: jest.fn().mockImplementation(() => ({
+    LobbyRepository: vi.fn().mockImplementation(function() { return {
       updateLobbyStatus,
-      findById: jest.fn(),
-      create: jest.fn(),
-      update: jest.fn(),
-      delete: jest.fn()
-    })),
+      findById: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      delete: vi.fn()
+    }; }),
   };
 });
-jest.mock('../../middleware/logging');
+vi.mock('../../middleware/logging', () => ({
+  RequestLogger: { log: vi.fn(), logGameEvent: vi.fn() },
+  logRequest: vi.fn((_req: any, _res: any, next: any) => next()),
+  logError: vi.fn(),
+  auditLog: vi.fn(),
+  requestLogger: vi.fn((_req: any, _res: any, next: any) => next()),
+}));
 
 // Import mocked modules
 import { LobbyService } from '../LobbyService';
@@ -70,14 +104,14 @@ import { LobbyRepository } from '../../repositories/LobbyRepository';
 
 describe('GameService', () => {
   let gameService: GameService;
-  let mockIo: jest.Mocked<Server>;
-  let mockLobbyService: jest.Mocked<LobbyService>;
-  let mockQuestionService: jest.Mocked<QuestionService>;
-  let mockScoringService: jest.Mocked<ScoringService>;
-  let mockCharacterService: jest.Mocked<CharacterService>;
-  let mockGameSessionRepository: jest.Mocked<GameSessionRepository>;
-  let mockUserRepository: jest.Mocked<UserRepository>;
-  let mockLobbyRepository: jest.Mocked<LobbyRepository>;
+  let mockIo: vi.Mocked<Server>;
+  let mockLobbyService: vi.Mocked<LobbyService>;
+  let mockQuestionService: vi.Mocked<QuestionService>;
+  let mockScoringService: vi.Mocked<ScoringService>;
+  let mockCharacterService: vi.Mocked<CharacterService>;
+  let mockGameSessionRepository: vi.Mocked<GameSessionRepository>;
+  let mockUserRepository: vi.Mocked<UserRepository>;
+  let mockLobbyRepository: vi.Mocked<LobbyRepository>;
 
   // Test data
   const mockLobby = {
@@ -168,52 +202,52 @@ describe('GameService', () => {
 
   beforeEach(() => {
     // Clear all mocks
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     // Set test environment for proper timer behavior
     process.env.TEST_ENVIRONMENT = 'local';
 
     // Setup Socket.IO mock
     mockIo = {
-      to: jest.fn().mockReturnThis(),
-      emit: jest.fn()
+      to: vi.fn().mockReturnThis(),
+      emit: vi.fn()
     } as any;
 
     // Setup service mocks
-    mockLobbyService = new LobbyService() as jest.Mocked<LobbyService>;
-    mockQuestionService = new QuestionService() as jest.Mocked<QuestionService>;
-    mockScoringService = new ScoringService() as jest.Mocked<ScoringService>;
-    mockCharacterService = new CharacterService() as jest.Mocked<CharacterService>;
-    // Ensure commonly used methods are jest.fn mocks with promise helpers available
+    mockLobbyService = new LobbyService() as vi.Mocked<LobbyService>;
+    mockQuestionService = new QuestionService() as vi.Mocked<QuestionService>;
+    mockScoringService = new ScoringService() as vi.Mocked<ScoringService>;
+    mockCharacterService = new CharacterService() as vi.Mocked<CharacterService>;
+    // Ensure commonly used methods are vi.fn mocks with promise helpers available
     // LobbyService
-    (mockLobbyService as any).getLobbyByCode = jest.fn();
-    (mockLobbyService as any).getLobbyQuestionSetInfo = jest.fn();
-    (mockLobbyService as any).validateQuestionSetSelection = jest.fn();
-    (mockLobbyService as any).updateLobbyStatus = jest.fn();
-    (mockLobbyService as any).deleteLobbyByCode = jest.fn().mockResolvedValue(true);
-    (mockLobbyService as any).updatePlayerConnection = jest.fn();
+    (mockLobbyService as any).getLobbyByCode = vi.fn();
+    (mockLobbyService as any).getLobbyQuestionSetInfo = vi.fn();
+    (mockLobbyService as any).validateQuestionSetSelection = vi.fn();
+    (mockLobbyService as any).updateLobbyStatus = vi.fn();
+    (mockLobbyService as any).deleteLobbyByCode = vi.fn().mockResolvedValue(true);
+    (mockLobbyService as any).updatePlayerConnection = vi.fn();
     // QuestionService
-    (mockQuestionService as any).getRandomQuestions = jest.fn();
-    (mockQuestionService as any).getAllQuestionSets = jest.fn<any, any>().mockResolvedValue([
+    (mockQuestionService as any).getRandomQuestions = vi.fn();
+    (mockQuestionService as any).getAllQuestionSets = vi.fn<any, any>().mockResolvedValue([
       { id: 1, name: 'Default', difficulty: 'easy', is_active: true, created_at: new Date(), updated_at: new Date() }
     ]);
     // ScoringService
-    (mockScoringService as any).calculateScore = jest.fn();
-    (mockScoringService as any).savePlayerResult = jest.fn();
-    mockGameSessionRepository = new GameSessionRepository() as jest.Mocked<GameSessionRepository>;
-    mockUserRepository = new UserRepository() as jest.Mocked<UserRepository>;
-    mockLobbyRepository = new LobbyRepository() as jest.Mocked<LobbyRepository>;
+    (mockScoringService as any).calculateScore = vi.fn();
+    (mockScoringService as any).savePlayerResult = vi.fn();
+    mockGameSessionRepository = new GameSessionRepository() as vi.Mocked<GameSessionRepository>;
+    mockUserRepository = new UserRepository() as vi.Mocked<UserRepository>;
+    mockLobbyRepository = new LobbyRepository() as vi.Mocked<LobbyRepository>;
     // GameSessionRepository
-    (mockGameSessionRepository as any).createGameSession = jest.fn();
-    (mockGameSessionRepository as any).endGameSession = jest.fn();
+    (mockGameSessionRepository as any).createGameSession = vi.fn();
+    (mockGameSessionRepository as any).endGameSession = vi.fn();
     // UserRepository
-    (mockUserRepository as any).findByUsername = jest.fn();
+    (mockUserRepository as any).findByUsername = vi.fn();
     // LobbyRepository
-    (mockLobbyRepository as any).updateLobbyStatus = jest.fn();
+    (mockLobbyRepository as any).updateLobbyStatus = vi.fn();
 
     // Ensure io mock can handle room emissions where io.to(...).emit === io.emit
-    (mockIo as any).emit = jest.fn();
-    (mockIo as any).to = jest.fn().mockImplementation(() => mockIo);
+    (mockIo as any).emit = vi.fn();
+    (mockIo as any).to = vi.fn().mockImplementation(() => mockIo);
     // Create GameService instance
     gameService = new GameService(mockIo);
 
@@ -225,7 +259,7 @@ describe('GameService', () => {
     (gameService as any).gameSessionRepository = mockGameSessionRepository;
 
     // Mock private methods that create timers to prevent Socket.IO errors in tests
-    jest.spyOn(gameService as any, 'startQuestionTimer').mockImplementation(() => { });
+    vi.spyOn(gameService as any, 'startQuestionTimer').mockImplementation(() => { });
   });
 
   // Add cleanup to specific test groups that need it
@@ -401,7 +435,7 @@ describe('GameService', () => {
       mockGameState.currentQuestionIndex = 2; // All questions done
       (gameService as any).activeGames.set('ABC123', mockGameState);
 
-      const endGameSpy = jest.spyOn(gameService as any, 'endGameSession').mockResolvedValue(undefined as any);
+      const endGameSpy = vi.spyOn(gameService as any, 'endGameSession').mockResolvedValue(undefined as any);
 
       await gameService.startNextQuestion('ABC123');
 
@@ -424,7 +458,7 @@ describe('GameService', () => {
     });
 
     it('should end game session if no question available', async () => {
-      const endGameSpy = jest.spyOn(gameService as any, 'endGameSession').mockResolvedValue(undefined as any);
+      const endGameSpy = vi.spyOn(gameService as any, 'endGameSession').mockResolvedValue(undefined as any);
       mockGameState.questions = [];
       (gameService as any).activeGames.set('ABC123', mockGameState);
 
@@ -513,7 +547,7 @@ describe('GameService', () => {
 
     it('should successfully submit answer', async () => {
       // Mock the endQuestion method to prevent it from actually running
-      const endQuestionSpy = jest.spyOn(gameService as any, 'endQuestion').mockResolvedValue(undefined);
+      const endQuestionSpy = vi.spyOn(gameService as any, 'endQuestion').mockResolvedValue(undefined);
 
       await gameService.submitAnswer('ABC123', 'player1', '4');
 
@@ -562,7 +596,7 @@ describe('GameService', () => {
 
     it('should end question early if all players answered', async () => {
       // Mock the endQuestion method to prevent it from actually running
-      const endQuestionSpy = jest.spyOn(gameService as any, 'endQuestion').mockResolvedValue(undefined);
+      const endQuestionSpy = vi.spyOn(gameService as any, 'endQuestion').mockResolvedValue(undefined);
 
       await gameService.submitAnswer('ABC123', 'player1', '4');
 
@@ -661,7 +695,7 @@ describe('GameService', () => {
 
     it('should end current question and broadcast results', async () => {
       // Mock the endQuestion method to prevent it from actually running
-      const endQuestionSpy = jest.spyOn(gameService as any, 'endQuestion').mockResolvedValue(undefined);
+      const endQuestionSpy = vi.spyOn(gameService as any, 'endQuestion').mockResolvedValue(undefined);
 
       await gameService.endCurrentQuestion('ABC123');
 
@@ -670,7 +704,7 @@ describe('GameService', () => {
 
     it('should clear timer when ending question', async () => {
       // Mock the endQuestion method to prevent it from actually running
-      const endQuestionSpy = jest.spyOn(gameService as any, 'endQuestion').mockResolvedValue(undefined);
+      const endQuestionSpy = vi.spyOn(gameService as any, 'endQuestion').mockResolvedValue(undefined);
 
       await gameService.endCurrentQuestion('ABC123');
 
@@ -680,7 +714,7 @@ describe('GameService', () => {
 
   describe('endGameSession', () => {
     let mockGameState: GameState;
-    let savePlayerResultsSpy: jest.SpyInstance;
+    let savePlayerResultsSpy: vi.SpyInstance;
 
     beforeEach(() => {
       mockGameState = {
@@ -755,7 +789,7 @@ describe('GameService', () => {
       // Mock the UserRepository instance that GameService creates
       (gameService as any).userRepository = mockUserRepository;
       (gameService as any).lobbyRepository = mockLobbyRepository;
-      savePlayerResultsSpy = jest.spyOn(gameService as any, 'savePlayerResults').mockResolvedValue(undefined);
+      savePlayerResultsSpy = vi.spyOn(gameService as any, 'savePlayerResults').mockResolvedValue(undefined);
     });
 
     afterEach(() => {
@@ -966,8 +1000,8 @@ describe('GameService', () => {
     });
 
     it('should end game if all players disconnected after grace period', async () => {
-      jest.useFakeTimers();
-      const endGameSpy = jest.spyOn(gameService as any, 'endGameSession').mockResolvedValue(undefined);
+      vi.useFakeTimers();
+      const endGameSpy = vi.spyOn(gameService as any, 'endGameSession').mockResolvedValue(undefined);
 
       // Disconnect both players
       await gameService.handlePlayerDisconnect('ABC123', 'player1');
@@ -977,12 +1011,12 @@ describe('GameService', () => {
       expect(endGameSpy).not.toHaveBeenCalled();
 
       // Advance past the 30s grace period
-      jest.advanceTimersByTime(31000);
+      vi.advanceTimersByTime(31000);
       // Allow async timer callbacks to resolve
       await Promise.resolve();
       await Promise.resolve();
 
-      jest.useRealTimers();
+      vi.useRealTimers();
     });
 
     it('should do nothing if game not found', async () => {
@@ -994,15 +1028,15 @@ describe('GameService', () => {
 
   describe('Timer Management', () => {
     beforeEach(() => {
-      jest.useFakeTimers();
+      vi.useFakeTimers();
       // Restore the real timer functionality for these tests
       (gameService as any).startQuestionTimer.mockRestore();
     });
 
     afterEach(() => {
-      jest.useRealTimers();
+      vi.useRealTimers();
       // Re-mock the timer to prevent issues in other tests
-      jest.spyOn(gameService as any, 'startQuestionTimer').mockImplementation(() => { });
+      vi.spyOn(gameService as any, 'startQuestionTimer').mockImplementation(() => { });
     });
 
     it('should start question timer and update time remaining', async () => {
@@ -1042,10 +1076,10 @@ describe('GameService', () => {
       await gameService.startNextQuestion('ABC123');
 
       // Clear the initial question-started event
-      (mockIo.emit as jest.Mock).mockClear();
+      (mockIo.emit as vi.Mock).mockClear();
 
       // Advance timer by 5 seconds (should trigger 5 timer updates)
-      jest.advanceTimersByTime(5000);
+      vi.advanceTimersByTime(5000);
 
       const updatedGameState = (gameService as any).activeGames.get('ABC123');
       expect(updatedGameState.timeRemaining).toBe(55);
@@ -1095,10 +1129,10 @@ describe('GameService', () => {
       await gameService.startNextQuestion('ABC123');
 
       // Clear the initial question-started event
-      (mockIo.emit as jest.Mock).mockClear();
+      (mockIo.emit as vi.Mock).mockClear();
 
       // Advance timer to end (60 seconds)
-      jest.advanceTimersByTime(60000);
+      vi.advanceTimersByTime(60000);
 
       // Check that the final time-update was emitted before ending
       expect(mockIo.emit).toHaveBeenCalledWith('time-update', { timeRemaining: 0 });
@@ -1157,7 +1191,7 @@ describe('GameService', () => {
       (gameService as any).activeGames.set('ABC123', mockGameState);
 
       // Mock endQuestion to prevent game from ending when all players answer
-      jest.spyOn(gameService as any, 'endQuestion').mockResolvedValue(undefined);
+      vi.spyOn(gameService as any, 'endQuestion').mockResolvedValue(undefined);
 
       mockScoringService.calculateScore.mockReturnValue({
         timeElapsed: 10,
@@ -1258,7 +1292,7 @@ describe('GameService', () => {
       (gameService as any).activeGames.set('ABC123', mockGameState);
 
       // Mock endQuestion to prevent game from ending when player answers
-      jest.spyOn(gameService as any, 'endQuestion').mockResolvedValue(undefined);
+      vi.spyOn(gameService as any, 'endQuestion').mockResolvedValue(undefined);
     };
 
     it('should calculate correct score for correct answer', async () => {

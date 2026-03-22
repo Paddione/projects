@@ -2,26 +2,26 @@ import { useThemeStore, type ThemeState, type Theme } from '../themeStore'
 
 // Mock localStorage for persistence
 const localStorageMock = {
-  getItem: jest.fn(),
-  setItem: jest.fn(),
-  removeItem: jest.fn(),
-  clear: jest.fn(),
+  getItem: vi.fn(),
+  setItem: vi.fn(),
+  removeItem: vi.fn(),
+  clear: vi.fn(),
   length: 0,
-  key: jest.fn()
+  key: vi.fn()
 }
 Object.defineProperty(window, 'localStorage', {
   value: localStorageMock
 })
 
 // Mock matchMedia for system theme detection
-const matchMediaMock = jest.fn()
+const matchMediaMock = vi.fn()
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
   value: matchMediaMock
 })
 
-let documentSetAttributeSpy: jest.SpyInstance
-let documentQuerySelectorSpy: jest.SpyInstance
+let documentSetAttributeSpy: vi.SpyInstance
+let documentQuerySelectorSpy: vi.SpyInstance
 
 describe('ThemeStore', () => {
   let store: ThemeState
@@ -29,24 +29,24 @@ describe('ThemeStore', () => {
 
   beforeEach(() => {
     // Reset all mocks
-    jest.clearAllMocks()
+    vi.clearAllMocks()
 
-    documentSetAttributeSpy = jest.spyOn(document.documentElement, 'setAttribute')
+    documentSetAttributeSpy = vi.spyOn(document.documentElement, 'setAttribute')
     
     // Reset localStorage
     localStorageMock.getItem.mockReturnValue(null)
     
     // Setup mock meta theme-color element
     mockMetaThemeColor = {
-      setAttribute: jest.fn()
+      setAttribute: vi.fn()
     }
-    documentQuerySelectorSpy = jest.spyOn(document, 'querySelector').mockReturnValue(mockMetaThemeColor as any)
+    documentQuerySelectorSpy = vi.spyOn(document, 'querySelector').mockReturnValue(mockMetaThemeColor as any)
     
     // Setup default matchMedia mock
     matchMediaMock.mockReturnValue({
       matches: false,
-      addEventListener: jest.fn(),
-      removeEventListener: jest.fn()
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn()
     })
     
     // Mock window properties that might be accessed
@@ -130,8 +130,8 @@ describe('ThemeStore', () => {
     it('should detect light system theme', () => {
       matchMediaMock.mockReturnValue({
         matches: false,
-        addEventListener: jest.fn(),
-        removeEventListener: jest.fn()
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn()
       })
       
       const systemTheme = store.getSystemTheme()
@@ -141,8 +141,8 @@ describe('ThemeStore', () => {
     it('should detect dark system theme', () => {
       matchMediaMock.mockReturnValue({
         matches: true,
-        addEventListener: jest.fn(),
-        removeEventListener: jest.fn()
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn()
       })
       
       const systemTheme = store.getSystemTheme()
@@ -152,8 +152,8 @@ describe('ThemeStore', () => {
     it('should handle auto theme with light system preference', () => {
       matchMediaMock.mockReturnValue({
         matches: false,
-        addEventListener: jest.fn(),
-        removeEventListener: jest.fn()
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn()
       })
       
       store.setTheme('auto')
@@ -165,8 +165,8 @@ describe('ThemeStore', () => {
     it('should handle auto theme with dark system preference', () => {
       matchMediaMock.mockReturnValue({
         matches: true,
-        addEventListener: jest.fn(),
-        removeEventListener: jest.fn()
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn()
       })
       
       store.setTheme('auto')
@@ -192,8 +192,8 @@ describe('ThemeStore', () => {
     it('should set data-theme attribute for auto theme based on system preference', () => {
       matchMediaMock.mockReturnValue({
         matches: true, // Dark system theme
-        addEventListener: jest.fn(),
-        removeEventListener: jest.fn()
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn()
       })
       
       store.setTheme('auto')
@@ -216,8 +216,8 @@ describe('ThemeStore', () => {
     it('should update meta theme-color for auto theme with light system preference', () => {
       matchMediaMock.mockReturnValue({
         matches: false, // Light system theme
-        addEventListener: jest.fn(),
-        removeEventListener: jest.fn()
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn()
       })
       
       store.setTheme('auto')
@@ -228,8 +228,8 @@ describe('ThemeStore', () => {
     it('should update meta theme-color for auto theme with dark system preference', () => {
       matchMediaMock.mockReturnValue({
         matches: true, // Dark system theme
-        addEventListener: jest.fn(),
-        removeEventListener: jest.fn()
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn()
       })
       
       store.setTheme('auto')
@@ -273,8 +273,8 @@ describe('ThemeStore', () => {
     it('should sync isDark state with auto theme and system preference', () => {
       matchMediaMock.mockReturnValue({
         matches: false, // Light system theme
-        addEventListener: jest.fn(),
-        removeEventListener: jest.fn()
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn()
       })
       
       store.setTheme('auto')
@@ -282,8 +282,8 @@ describe('ThemeStore', () => {
       
       matchMediaMock.mockReturnValue({
         matches: true, // Dark system theme
-        addEventListener: jest.fn(),
-        removeEventListener: jest.fn()
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn()
       })
       
       store.setTheme('auto')
@@ -369,11 +369,11 @@ describe('ThemeStore', () => {
   describe('System Theme Change Handling', () => {
     it('should handle system theme changes when using auto theme', () => {
       // Mock the event listener
-      const mockAddEventListener = jest.fn()
+      const mockAddEventListener = vi.fn()
       matchMediaMock.mockReturnValue({
         matches: false, // Start with light system theme
         addEventListener: mockAddEventListener,
-        removeEventListener: jest.fn()
+        removeEventListener: vi.fn()
       })
       
       store.setTheme('auto')
@@ -383,7 +383,7 @@ describe('ThemeStore', () => {
       matchMediaMock.mockReturnValue({
         matches: true, // Now dark system theme
         addEventListener: mockAddEventListener,
-        removeEventListener: jest.fn()
+        removeEventListener: vi.fn()
       })
       
       // The store should handle this automatically, but we can test the getSystemTheme function
@@ -404,8 +404,8 @@ describe('ThemeStore', () => {
       // Test auto theme with light system preference
       matchMediaMock.mockReturnValue({
         matches: false,
-        addEventListener: jest.fn(),
-        removeEventListener: jest.fn()
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn()
       })
       store.setTheme('auto')
       expect(mockMetaThemeColor.setAttribute).toHaveBeenCalledWith('content', '#ffffff')
@@ -413,8 +413,8 @@ describe('ThemeStore', () => {
       // Test auto theme with dark system preference
       matchMediaMock.mockReturnValue({
         matches: true,
-        addEventListener: jest.fn(),
-        removeEventListener: jest.fn()
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn()
       })
       store.setTheme('auto')
       expect(mockMetaThemeColor.setAttribute).toHaveBeenCalledWith('content', '#0f172a')

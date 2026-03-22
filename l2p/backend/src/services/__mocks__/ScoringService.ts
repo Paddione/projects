@@ -1,19 +1,19 @@
-import { jest } from '@jest/globals';
+import { jest } from 'vitest';
 
 const scoringStore: Record<string, any> = {
-  calculateScore: jest.fn(),
+  calculateScore: vi.fn(),
 };
 const scoringProxy: any = new Proxy(scoringStore, {
   get(target, prop: string | symbol) {
     const key = String(prop);
     if (!(key in target)) {
-      (target as any)[key] = jest.fn();
+      (target as any)[key] = vi.fn();
     }
     return (target as any)[key];
   }
 });
 
-const ScoringService = jest.fn().mockImplementation(() => scoringProxy);
+const ScoringService = vi.fn().mockImplementation(() => scoringProxy);
 
 export { ScoringService };
 export default ScoringService;

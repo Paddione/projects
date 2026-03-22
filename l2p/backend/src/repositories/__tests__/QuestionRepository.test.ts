@@ -10,7 +10,7 @@ import {
 } from '../../types/Question';
 
 // Mock the DatabaseService
-jest.mock('../../services/DatabaseService');
+vi.mock('../../services/DatabaseService');
 
 // Mock data
 export const mockQuestion: Question = {
@@ -71,24 +71,24 @@ describe('QuestionRepository', () => {
 
   beforeEach(() => {
     // Clear all mocks
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     // Mock database connection and query methods
     mockDb = {
-      query: jest.fn()
+      query: vi.fn()
     };
 
     // Mock DatabaseService.getInstance to return our mock database
-    (DatabaseService.getInstance as jest.Mock).mockReturnValue(mockDb);
+    (DatabaseService.getInstance as vi.Mock).mockReturnValue(mockDb);
 
     // Mock BaseRepository methods to use mockDb.query
-    jest.spyOn(BaseRepository.prototype as any, 'findById').mockImplementation(async (...args: any[]) => {
+    vi.spyOn(BaseRepository.prototype as any, 'findById').mockImplementation(async (...args: any[]) => {
       const [table, id] = args;
       const result = await mockDb.query(`SELECT * FROM ${table} WHERE id = $1`, [id]);
       return result.rows[0] || null;
     });
 
-    jest.spyOn(BaseRepository.prototype as any, 'create').mockImplementation(async (...args: any[]) => {
+    vi.spyOn(BaseRepository.prototype as any, 'create').mockImplementation(async (...args: any[]) => {
       const [table, data] = args;
       const columns = Object.keys(data).join(', ');
       const placeholders = Object.keys(data).map((_, i) => `$${i + 1}`).join(', ');
@@ -100,7 +100,7 @@ describe('QuestionRepository', () => {
       return result.rows[0] || null;
     });
 
-    jest.spyOn(BaseRepository.prototype as any, 'update').mockImplementation(async (...args: any[]) => {
+    vi.spyOn(BaseRepository.prototype as any, 'update').mockImplementation(async (...args: any[]) => {
       const [table, id, data] = args;
       const setClause = Object.keys(data).map((key, i) => `${key} = $${i + 2}`).join(', ');
       const values = [id, ...Object.values(data)];
@@ -111,25 +111,25 @@ describe('QuestionRepository', () => {
       return result.rows[0] || null;
     });
 
-    jest.spyOn(BaseRepository.prototype as any, 'delete').mockImplementation(async (...args: any[]) => {
+    vi.spyOn(BaseRepository.prototype as any, 'delete').mockImplementation(async (...args: any[]) => {
       const [table, id] = args;
       const result = await mockDb.query(`DELETE FROM ${table} WHERE id = $1 RETURNING *`, [id]);
       return result.rows[0] || null;
     });
 
-    jest.spyOn(BaseRepository.prototype as any, 'findAll').mockImplementation(async (...args: any[]) => {
+    vi.spyOn(BaseRepository.prototype as any, 'findAll').mockImplementation(async (...args: any[]) => {
       const [table] = args;
       const result = await mockDb.query(`SELECT * FROM ${table}`);
       return result.rows || [];
     });
 
-    jest.spyOn(BaseRepository.prototype as any, 'exists').mockImplementation(async (...args: any[]) => {
+    vi.spyOn(BaseRepository.prototype as any, 'exists').mockImplementation(async (...args: any[]) => {
       const [table, condition, params] = args;
       const result = await mockDb.query(`SELECT EXISTS(SELECT 1 FROM ${table} WHERE ${condition})`, params);
       return result.rows[0]?.exists || false;
     });
 
-    jest.spyOn(BaseRepository.prototype as any, 'count').mockImplementation(async (...args: any[]) => {
+    vi.spyOn(BaseRepository.prototype as any, 'count').mockImplementation(async (...args: any[]) => {
       const [table, condition, params] = args;
       const whereClause = condition ? `WHERE ${condition}` : '';
       const result = await mockDb.query(`SELECT COUNT(*) FROM ${table} ${whereClause}`, params || []);
@@ -144,7 +144,7 @@ describe('QuestionRepository', () => {
     // Clean up the global mock after each test
     delete (globalThis as any).__DB_SERVICE__;
     // Reset the DatabaseService mock
-    (DatabaseService.getInstance as jest.Mock).mockReset();
+    (DatabaseService.getInstance as vi.Mock).mockReset();
   });
 
   describe('Question Set Methods', () => {

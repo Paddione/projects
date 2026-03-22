@@ -1,4 +1,4 @@
-import { describe, it, expect } from '@jest/globals';
+import { describe, it, expect } from 'vitest';
 
 describe('JWT Simple Test', () => {
   it('should test JWT library directly', () => {

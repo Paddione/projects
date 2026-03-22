@@ -4,73 +4,75 @@ import { MemoryRouter } from 'react-router-dom'
 import { AppContent } from '../App'
 
 // Mock CSS modules
-jest.mock('@/styles/App.module.css', () => ({
-  app: 'app',
-  container: 'container',
-  main: 'main'
+vi.mock('@/styles/App.module.css', () => ({
+  default: {
+    app: 'app',
+    container: 'container',
+    main: 'main'
+  }
 }))
 
 // Mock all external dependencies
-jest.mock('../components/ThemeProvider', () => ({
+vi.mock('../components/ThemeProvider', () => ({
   ThemeProvider: ({ children }: { children: React.ReactNode }) => (
     <div data-testid="theme-provider">{children}</div>
   )
 }))
 
-jest.mock('../components/Header', () => ({
+vi.mock('../components/Header', () => ({
   Header: () => <header data-testid="header">Header</header>
 }))
 
-jest.mock('../pages/HomePage', () => ({
+vi.mock('../pages/HomePage', () => ({
   HomePage: () => <div data-testid="home-page">Home Page</div>
 }))
 
-jest.mock('../pages/LobbyPage', () => ({
+vi.mock('../pages/LobbyPage', () => ({
   LobbyPage: () => <div data-testid="lobby-page">Lobby Page</div>
 }))
 
-jest.mock('../pages/GamePage', () => ({
+vi.mock('../pages/GamePage', () => ({
   GamePage: () => <div data-testid="game-page">Game Page</div>
 }))
 
-jest.mock('../pages/ResultsPage', () => ({
+vi.mock('../pages/ResultsPage', () => ({
   ResultsPage: () => <div data-testid="results-page">Results Page</div>
 }))
 
-jest.mock('../components/DemoPage', () => ({
+vi.mock('../components/DemoPage', () => ({
   DemoPage: () => <div data-testid="demo-page">Demo Page</div>
 }))
 
-jest.mock('../components/PerformanceMonitor', () => ({
+vi.mock('../components/PerformanceMonitor', () => ({
   PerformanceMonitor: () => <div data-testid="performance-monitor">Performance Monitor</div>
 }))
 
-jest.mock('../components/ErrorBoundary', () => ({
+vi.mock('../components/ErrorBoundary', () => ({
   __esModule: true,
   default: ({ children }: { children: React.ReactNode }) => (
     <div data-testid="error-boundary">{children}</div>
   )
 }))
 
-jest.mock('../components/AuthGuard', () => ({
+vi.mock('../components/AuthGuard', () => ({
   AuthGuard: ({ children }: { children: React.ReactNode }) => (
     <div data-testid="auth-guard">{children}</div>
   )
 }))
 
-jest.mock('../pages/ProfilePage', () => ({
+vi.mock('../pages/ProfilePage', () => ({
   ProfilePage: () => <div data-testid="profile-page">Profile Page</div>
 }))
 
-jest.mock('../pages/QuestionSetManagerPage', () => ({
+vi.mock('../pages/QuestionSetManagerPage', () => ({
   QuestionSetManagerPage: () => <div data-testid="question-set-manager-page">Question Set Manager Page</div>
 }))
 
-jest.mock('../components/LevelUpNotificationManager', () => ({
+vi.mock('../components/LevelUpNotificationManager', () => ({
   LevelUpNotificationManager: () => <div data-testid="level-up-notification-manager">Level Up Notification Manager</div>
 }))
 
-jest.mock('../pages/AdminLogsPage', () => ({
+vi.mock('../pages/AdminLogsPage', () => ({
   AdminLogsPage: () => <div data-testid="admin-logs-page">Admin Logs Page</div>
 }))
 
@@ -85,7 +87,7 @@ const renderAppWithRoute = (initialRoute: string = '/') => {
 
 describe('App Component', () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
   })
 
   describe('Basic Rendering', () => {
@@ -275,7 +277,7 @@ describe('App Component', () => {
 
     it('maintains app structure when routes fail', async () => {
       // Mock console.error to avoid test noise
-      const consoleSpy = jest.spyOn(console, 'error').mockImplementation()
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation()
       
       renderAppWithRoute('/potentially-broken-route')
       

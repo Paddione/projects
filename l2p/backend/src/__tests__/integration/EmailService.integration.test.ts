@@ -1,4 +1,4 @@
-import { describe, beforeEach, it, expect } from '@jest/globals';
+import { describe, beforeEach, it, expect } from 'vitest';
 import { EmailService } from '../../services/EmailService';
 
 describe('EmailService Integration Tests', () => {
