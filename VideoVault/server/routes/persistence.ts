@@ -144,6 +144,12 @@ export async function bulkUpsertVideos(req: Request, res: Response) {
     );
   }
 
+  // Rebuild movies_index.json so the fast-path GET /api/videos reflects changes
+  try {
+    const { generateMoviesIndex } = await import('../lib/startup-tasks');
+    await generateMoviesIndex(db);
+  } catch { /* non-fatal */ }
+
   res.json({ upserted: rows.length });
 }
 
