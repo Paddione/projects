@@ -53,3 +53,13 @@ test('health endpoint returns OK', async ({ request }) => {
   expect(body.status).toBe('OK');
   expect(body.service).toBe('sos');
 });
+
+test('version endpoint returns service info', async ({ request }) => {
+  const res = await request.get('/api/version');
+  expect(res.ok()).toBeTruthy();
+  const body = await res.json();
+  expect(body.service).toBe('sos');
+  expect(body.version).toBeTruthy();
+  expect(body.uptime).toBeGreaterThan(0);
+  expect(body.node).toMatch(/^v\d+/);
+});

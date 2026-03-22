@@ -24,6 +24,8 @@ RUN npx tsc
 FROM base AS production
 ENV NODE_ENV=production
 ENV PORT=3005
+ARG GIT_SHA=dev
+ENV GIT_SHA=$GIT_SHA
 
 RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 --ingroup nodejs appuser

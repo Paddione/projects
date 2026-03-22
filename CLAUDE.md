@@ -354,6 +354,42 @@ When multiple agents work simultaneously:
 
 Dev stack runs in `korczewski-dev` namespace, parallel to production. Deploy with `cd k8s && skaffold dev -p dev`.
 
+## Feature Implementation Workflow
+
+When implementing a feature (whether via `/feature-dev` or a direct request), follow this end-to-end pipeline. Do NOT stop between steps unless you need a genuine design decision from the user.
+
+### Visual Companions for Questions
+
+Whenever you ask the user a question during implementation, **always include a visual diagram** directly above the question:
+
+- **Architecture/design decisions** → Mermaid `graph` or `flowchart` showing components and data flow
+- **UI/UX questions** → ASCII wireframe or HTML mockup of the proposed layout
+- **Data model questions** → Mermaid `erDiagram` showing entities and relationships
+- **Trade-off questions** → Markdown comparison table with columns for each option
+
+Never ask a bare-text question without a visual. The visual helps make the right decision faster.
+
+### Question Answering Rules
+
+- **NEVER self-answer your own questions.** Present the visual, present the options, then STOP and WAIT for the user's response.
+- The ONLY exception: if the user explicitly says "use recommended", "your call", "you decide", or similar — only then may you pick an option and continue.
+- After the user answers, immediately resume implementation — do not summarize or confirm, just build.
+
+### Auto-Continue After User Answers
+
+After the user answers a question, **immediately continue implementation**. Do not:
+- Summarize what they said back to them
+- Ask "shall I proceed?" or "ready to continue?"
+- Pause for confirmation unless there's a new ambiguity
+
+### Full Pipeline (complete all before stopping)
+
+1. **Implement** — Write the feature code
+2. **Test** — Write unit + e2e tests for ALL new/changed code. Run unit and integration tests. Fix until green.
+3. **Deploy** — Deploy to k3s production via `./k8s/scripts/deploy/deploy-<service>.sh`. Run e2e tests against production. Fix and redeploy until green.
+4. **Document** — MANDATORY: Update Obsidian vault (`shared-infrastructure/SMB-Share/Obsidian/`) — service docs, architecture, infrastructure as applicable. Update CLAUDE.md with any changes to endpoints, commands, or config. Do NOT skip Obsidian.
+5. **Ship** — `git commit` with descriptive message including all changes (implementation, tests, docs), `git push`.
+
 ## Change Discipline
 
 - Confirm target project before making changes

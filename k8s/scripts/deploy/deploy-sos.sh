@@ -44,7 +44,8 @@ detect_registry
 # Build and push image
 if [ "$MANIFESTS_ONLY" = false ]; then
     log_info "Building sos..."
-    docker build -t "$REGISTRY/sos:latest" -f "$PROJECT_ROOT/SOS/Dockerfile" "$PROJECT_ROOT"
+    GIT_SHA=$(git -C "$PROJECT_ROOT" rev-parse --short HEAD 2>/dev/null || echo "unknown")
+    docker build -t "$REGISTRY/sos:latest" --build-arg GIT_SHA="$GIT_SHA" -f "$PROJECT_ROOT/SOS/Dockerfile" "$PROJECT_ROOT"
 
     log_info "Pushing sos..."
     docker push "$REGISTRY/sos:latest"
