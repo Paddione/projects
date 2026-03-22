@@ -5,11 +5,11 @@
  * It sets up global test utilities and cleanup hooks.
  */
 
-import { jest, beforeAll, afterAll } from '@jest/globals';
+import { beforeAll, afterAll, vi } from 'vitest';
 import { deleteAllTestUsers, getTestDataStats } from './test-utils.js';
 
 // Increase timeout for database operations
-jest.setTimeout(30000);
+vi.setConfig({ testTimeout: 30000 });
 
 // Global setup - runs once before all tests
 beforeAll(async () => {

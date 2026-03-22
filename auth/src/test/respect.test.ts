@@ -1,4 +1,4 @@
-import { describe, it } from '@jest/globals';
+import { describe, it } from 'vitest';
 
 describe('RespectService', () => {
   it.todo('creditRespect should increase balance and log transaction');
