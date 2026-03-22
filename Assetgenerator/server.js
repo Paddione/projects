@@ -1044,6 +1044,7 @@ app.post('/api/visual-library/batch/generate', async (req, res) => {
   if (!ids || !Array.isArray(ids)) return res.status(400).json({ error: 'ids array required' });
 
   visualGenerationInProgress = true;
+  req.on('close', () => { visualGenerationInProgress = false; });
   _rateLimitedBackends.clear();
   res.writeHead(200, { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', Connection: 'keep-alive' });
 
@@ -1118,10 +1119,12 @@ app.post('/api/visual-library/batch/generate', async (req, res) => {
       if (assetFailed) failed++; else succeeded++;
     }
 
+    visualGenerationInProgress = false;
     res.write(`event: complete\ndata: ${JSON.stringify({ total: ids.length, succeeded, failed })}\n\n`);
     res.end();
-  } finally {
+  } catch (outerErr) {
     visualGenerationInProgress = false;
+    try { res.end(); } catch {}
   }
 });
 
@@ -1273,6 +1276,7 @@ app.post('/api/visual-library/:id/generate/:phase', async (req, res) => {
   if (!validPhases.includes(phase)) return res.status(400).json({ error: `Invalid phase: ${phase}` });
 
   visualGenerationInProgress = true;
+  req.on('close', () => { visualGenerationInProgress = false; });
   res.writeHead(200, { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', Connection: 'keep-alive' });
 
   try {
@@ -1342,10 +1346,12 @@ app.post('/api/visual-library/:id/generate/:phase', async (req, res) => {
       }
     }
 
+    visualGenerationInProgress = false;
     res.write(`event: complete\ndata: ${JSON.stringify({ asset: asset.id })}\n\n`);
     res.end();
-  } finally {
+  } catch (outerErr) {
     visualGenerationInProgress = false;
+    try { res.end(); } catch {}
   }
 });
 
