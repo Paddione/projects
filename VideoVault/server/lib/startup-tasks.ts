@@ -151,9 +151,7 @@ async function drainSingleInbox(inboxDir: string, moviesDir: string): Promise<nu
       continue;
     }
 
-    // If destination already exists, check whether it's the same file (same size).
-    // If so, remove the inbox copy (it's a leftover duplicate, e.g. from SMB re-sync).
-    // If sizes differ, skip to avoid overwriting a different file.
+    // If destination already exists at root, check same-size duplicate.
     try {
       const destStat = await fs.stat(dest);
       if (destStat.size === srcStat.size) {
@@ -166,6 +164,28 @@ async function drainSingleInbox(inboxDir: string, moviesDir: string): Promise<nu
       }
       continue;
     } catch { /* good — doesn't exist at destination */ }
+
+    // Check if an organized subdirectory already contains this file
+    // (e.g., inbox file re-dropped after it was already organized)
+    const { title, year } = parseMovieFilename(name);
+    const organizedFolder = generateOrganizedPath(title, year);
+    const organizedDir = path.join(moviesDir, organizedFolder);
+    try {
+      const dirEntries = await fs.readdir(organizedDir);
+      const hasVideo = dirEntries.some(
+        (e: string) => MOVIE_EXTENSIONS.includes(path.extname(e).toLowerCase()),
+      );
+      if (hasVideo) {
+        // Already organized — remove inbox duplicate
+        try {
+          await fs.unlink(src);
+          logger.info(`[StartupTasks] Inbox cleanup: removed ${name} (already organized in ${organizedFolder}/)`);
+        } catch (unlinkErr: any) {
+          logger.warn(`[StartupTasks] Inbox cleanup: failed to remove ${name}`, { error: unlinkErr.message });
+        }
+        continue;
+      }
+    } catch { /* dir doesn't exist — proceed with move */ }
 
     try {
       await fs.rename(src, dest);
@@ -222,11 +242,26 @@ async function organizeFlatFiles(moviesDir: string): Promise<void> {
     const targetDir = path.join(moviesDir, folderName);
     const targetPath = path.join(targetDir, organizedFilename);
 
-    // Skip if target directory already exists (avoid collisions)
+    // If target directory already exists, check if it already has a video file.
+    // If so, the flat file is a duplicate — remove it instead of skipping.
     try {
       await fs.access(targetDir);
+      const dirContents = await fs.readdir(targetDir);
+      const hasVideo = dirContents.some(
+        (e: string) => MOVIE_EXTENSIONS.includes(path.extname(e).toLowerCase()),
+      );
+      if (hasVideo) {
+        // Already organized — remove the flat duplicate
+        try {
+          await fs.unlink(srcPath);
+          organized++;
+          logger.info(`[StartupTasks] Removed flat duplicate: ${entry.name} (already in ${folderName}/)`);
+        } catch (err: any) {
+          logger.warn(`[StartupTasks] Failed to remove flat duplicate: ${entry.name}`, { error: err.message });
+        }
+      }
       continue;
-    } catch { /* good — doesn't exist */ }
+    } catch { /* good — doesn't exist, proceed with organize */ }
 
     try {
       const thumbsDir = path.join(targetDir, 'Thumbnails');
