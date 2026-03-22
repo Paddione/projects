@@ -24,9 +24,8 @@ COPY l2p/frontend/package*.json ./
 RUN npm install --legacy-peer-deps && \
     npm cache clean --force || true
 
-# Copy source code and shared design system
+# Copy source code
 COPY --chown=nodejs:nodejs l2p/frontend/ ./
-COPY --chown=nodejs:nodejs shared-infrastructure/shared/design-system/ ../shared-infrastructure/shared/design-system/
 
 # Create necessary directories with proper permissions
 RUN mkdir -p coverage test-results playwright-report .vite && \
