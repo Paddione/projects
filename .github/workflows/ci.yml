@@ -223,8 +223,8 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
-      - name: Unit tests
-        run: npm run test:unit
+      - name: Unit + integration tests
+        run: npm run test
 
   # ---------------------------------------------------------------------------
   # Arena: E2E Asset Coverage Tests
