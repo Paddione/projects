@@ -3,8 +3,8 @@ import { SoundService } from '../services/SoundService';
 
 export function VolumeControl() {
   const [open, setOpen] = useState(false);
-  const [muted, setMuted] = useState(SoundService.isMuted);
-  const [volumes, setVolumes] = useState(SoundService.getVolumes);
+  const [muted, setMuted] = useState(() => SoundService.isMuted);
+  const [volumes, setVolumes] = useState(() => SoundService.getVolumes());
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Close popup on outside click

@@ -3,6 +3,10 @@ import react from '@vitejs/plugin-react';
 
 export default defineConfig({
     plugins: [react()],
+    resolve: {
+        // Allow Vite to resolve dependencies from shared-infrastructure packages
+        dedupe: ['three'],
+    },
     server: {
         port: 3002,
         middlewareMode: false,

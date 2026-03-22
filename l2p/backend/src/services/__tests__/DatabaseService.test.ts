@@ -283,7 +283,8 @@ describe('DatabaseService', () => {
       expect(databaseService.isHealthy()).toBe(true);
     });
 
-    it('should handle pool error event and attempt reconnection', (done) => {
+    it('should handle pool error event and attempt reconnection', async () => {
+      vi.useFakeTimers();
       // Find the error handler from the on calls
       const errorHandler = mockPool.on.mock.calls.find((call: any) => call[0] === 'error')?.[1];
       expect(errorHandler).toBeDefined();
@@ -297,11 +298,11 @@ describe('DatabaseService', () => {
         errorHandler(error);
       }
 
-      // Check that reconnection is attempted after delay (50ms in test environment)
-      setTimeout(() => {
-        expect(testConnectionSpy).toHaveBeenCalled();
-        done();
-      }, 100); // Use 100ms to account for the 50ms delay in test environment
+      // Advance past the reconnection delay
+      await vi.advanceTimersByTimeAsync(200);
+
+      expect(testConnectionSpy).toHaveBeenCalled();
+      vi.useRealTimers();
     });
   });
 
@@ -597,7 +598,8 @@ describe('DatabaseService', () => {
   });
 
   describe('Error Recovery', () => {
-    it('should attempt reconnection on pool error', (done) => {
+    it('should attempt reconnection on pool error', async () => {
+      vi.useFakeTimers();
       const errorHandler = mockPool.on.mock.calls.find((call: any) => call[0] === 'error')?.[1];
       const testConnectionSpy = vi.spyOn(databaseService, 'testConnection').mockResolvedValue(true);
 
@@ -607,15 +609,15 @@ describe('DatabaseService', () => {
         errorHandler(poolError);
       }
 
-      // Verify reconnection attempt after delay (short in test env)
-      setTimeout(() => {
-        expect(testConnectionSpy).toHaveBeenCalled();
-        testConnectionSpy.mockRestore();
-        done();
-      }, 150);
+      // Verify reconnection attempt after delay
+      await vi.advanceTimersByTimeAsync(200);
+      expect(testConnectionSpy).toHaveBeenCalled();
+      testConnectionSpy.mockRestore();
+      vi.useRealTimers();
     });
 
-    it('should retry reconnection on failure', (done) => {
+    it('should retry reconnection on failure', async () => {
+      vi.useFakeTimers();
       const errorHandler = mockPool.on.mock.calls.find((call: any) => call[0] === 'error')?.[1];
       const testConnectionSpy = vi.spyOn(databaseService, 'testConnection')
         .mockRejectedValueOnce(new Error('Reconnection failed'))
@@ -627,12 +629,11 @@ describe('DatabaseService', () => {
         errorHandler(poolError);
       }
 
-      // Verify retry after additional delay (short in test env)
-      setTimeout(() => {
-        expect(testConnectionSpy).toHaveBeenCalledTimes(2);
-        testConnectionSpy.mockRestore();
-        done();
-      }, 400); // 50ms + 100ms + buffer
+      // Verify retry after additional delay
+      await vi.advanceTimersByTimeAsync(500);
+      expect(testConnectionSpy).toHaveBeenCalledTimes(2);
+      testConnectionSpy.mockRestore();
+      vi.useRealTimers();
     });
 
     it('should handle connection pool exhaustion', async () => {

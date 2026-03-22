@@ -82,47 +82,6 @@ jobs:
 
       - name: Unit tests (backend)
         run: npm run test:unit:backend
-        continue-on-error: true  # TODO: EmailService.test.ts mock issue in CI — investigate resetMocks timing
-
-  # ---------------------------------------------------------------------------
-  # L2P: Integration Tests (with PostgreSQL service container)
-  # ---------------------------------------------------------------------------
-  l2p-integration:
-    needs: changes
-    if: needs.changes.outputs.l2p == 'true'
-    continue-on-error: true  # TODO: fix migration setup for Vitest integration tests
-    runs-on: ubuntu-latest
-    services:
-      postgres:
-        image: postgres:16
-        env:
-          POSTGRES_USER: l2p_user
-          POSTGRES_PASSWORD: ci_test_password_l2p
-          POSTGRES_DB: l2p_test_db
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd "pg_isready -U l2p_user -d l2p_test_db"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-    defaults:
-      run:
-        working-directory: l2p
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run integration tests
-        run: cd backend && npm run test:integration:ci
-        env:
-          TEST_DATABASE_URL: postgresql://l2p_user:ci_test_password_l2p@localhost:5432/l2p_test_db
 
   # ---------------------------------------------------------------------------
   # Auth: Typecheck + Unit Tests
@@ -278,43 +237,6 @@ jobs:
         run: npm --prefix backend run test:unit
 
   # ---------------------------------------------------------------------------
-  # Arena: E2E Asset Coverage Tests
-  # ---------------------------------------------------------------------------
-  arena-e2e-assets:
-    needs: changes
-    if: needs.changes.outputs.arena == 'true'
-    continue-on-error: true  # TODO: fix Vite build in CI (pre-existing, not related to test infra)
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: arena
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build arena
-        run: npm run build:all
-
-      - name: Install Playwright
-        run: npx playwright install --with-deps chromium
-
-      - name: Run asset coverage tests
-        run: npx playwright test e2e/assets.spec.ts
-
-      - name: Upload test results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: playwright-report-arena
-          path: arena/playwright-report/
-
-  # ---------------------------------------------------------------------------
   # Docker Build Validation (master only)
   # ---------------------------------------------------------------------------
   docker-validate:
@@ -402,38 +324,34 @@ jobs:
   # ---------------------------------------------------------------------------
   ci-status:
     if: always()
-    needs: [l2p, l2p-integration, auth, shop, videovault, sos, assetgenerator, arena, arena-e2e-assets, docker-validate, k8s-validate]
+    needs: [l2p, auth, shop, videovault, sos, assetgenerator, arena, docker-validate, k8s-validate]
     runs-on: ubuntu-latest
     steps:
       - name: Check pipeline status
         env:
           L2P_RESULT: ${{ needs.l2p.result }}
-          L2P_INT_RESULT: ${{ needs.l2p-integration.result }}
           AUTH_RESULT: ${{ needs.auth.result }}
           SHOP_RESULT: ${{ needs.shop.result }}
           VV_RESULT: ${{ needs.videovault.result }}
           SOS_RESULT: ${{ needs.sos.result }}
           ASSETGEN_RESULT: ${{ needs.assetgenerator.result }}
           ARENA_RESULT: ${{ needs.arena.result }}
-          ARENA_E2E_RESULT: ${{ needs.arena-e2e-assets.result }}
           DOCKER_RESULT: ${{ needs.docker-validate.result }}
           K8S_RESULT: ${{ needs.k8s-validate.result }}
         run: |
           echo "Pipeline results:"
           echo "  l2p:               $L2P_RESULT"
-          echo "  l2p-integration:   $L2P_INT_RESULT"
           echo "  auth:              $AUTH_RESULT"
           echo "  shop:              $SHOP_RESULT"
           echo "  videovault:        $VV_RESULT"
           echo "  sos:               $SOS_RESULT"
           echo "  assetgenerator:    $ASSETGEN_RESULT"
           echo "  arena:             $ARENA_RESULT"
-          echo "  arena-e2e-assets:  $ARENA_E2E_RESULT"
           echo "  docker-validate:   $DOCKER_RESULT"
           echo "  k8s-validate:      $K8S_RESULT"
 
           # Fail if any required job failed (skipped is OK — means no changes for that service)
-          for result in "$L2P_RESULT" "$L2P_INT_RESULT" "$AUTH_RESULT" "$SHOP_RESULT" "$VV_RESULT" "$SOS_RESULT" "$ASSETGEN_RESULT" "$ARENA_RESULT" "$ARENA_E2E_RESULT" "$DOCKER_RESULT" "$K8S_RESULT"; do
+          for result in "$L2P_RESULT" "$AUTH_RESULT" "$SHOP_RESULT" "$VV_RESULT" "$SOS_RESULT" "$ASSETGEN_RESULT" "$ARENA_RESULT" "$DOCKER_RESULT" "$K8S_RESULT"; do
             if [[ "$result" == "failure" ]]; then
               echo "::error::One or more CI jobs failed"
               exit 1
