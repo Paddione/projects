@@ -26,6 +26,11 @@ COPY --chown=nodejs:nodejs shared-infrastructure/shared/3d/dist/ ../shared-infra
 RUN ln -s /app/node_modules ../shared-infrastructure/shared/3d/node_modules
 COPY --chown=nodejs:nodejs arena/frontend/src ./src
 COPY --chown=nodejs:nodejs arena/frontend/public ./public
+# Replace broken symlinks (audio dirs point to /mnt/pve3a which doesn't exist in container)
+# deploy-arena.sh resolves these before build, but handle gracefully if built directly
+RUN find public -maxdepth 3 -type l ! -exec test -e {} \; -print | while read link; do \
+      rm "$link" && mkdir -p "$link"; \
+    done
 COPY --chown=nodejs:nodejs arena/frontend/index.html ./
 COPY --chown=nodejs:nodejs arena/frontend/vite.config.ts ./
 COPY --chown=nodejs:nodejs arena/frontend/tsconfig*.json ./
