@@ -1,14 +1,11 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import path from 'path';
 
 export default defineConfig({
     plugins: [react()],
     resolve: {
-        alias: {
-            // Ensure shared-3d's three.js imports resolve to arena's node_modules
-            'three': path.resolve(__dirname, 'node_modules/three'),
-        },
+        // Allow Vite to resolve dependencies from shared-infrastructure packages
+        dedupe: ['three'],
     },
     server: {
         port: 3002,
