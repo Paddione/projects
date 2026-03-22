@@ -8,7 +8,7 @@ import {
   tags,
   type InsertDBVideo,
 } from '@shared/schema';
-import { eq, inArray, isNotNull, and } from 'drizzle-orm';
+import { eq, inArray, isNotNull, and, sql } from 'drizzle-orm';
 import { randomUUID } from 'crypto';
 import path from 'path';
 import fs from 'fs/promises';
@@ -61,7 +61,16 @@ export async function listVideos(req: Request, res: Response) {
         ),
       );
   }
-  res.json(rows);
+  // Deduplicate by filename — same physical file may have multiple DB records
+  // with different IDs due to client/server ID generation mismatch
+  const seen = new Map<string, number>();
+  const deduped = rows.filter((row: any, i: number) => {
+    const key = `${row.filename}\0${row.size}`;
+    if (seen.has(key)) return false;
+    seen.set(key, i);
+    return true;
+  });
+  res.json(deduped);
 }
 
 export async function bulkUpsertVideos(req: Request, res: Response) {
@@ -86,6 +95,24 @@ export async function bulkUpsertVideos(req: Request, res: Response) {
   }));
 
   if (rows.length === 0) return res.json({ upserted: 0 });
+
+  // Remove duplicate records: same filename+path but different id
+  // This handles client/server ID generation mismatch (btoa vs sha256)
+  const incomingPaths = rows.map((r) => r.path).filter(Boolean) as string[];
+  const incomingIds = new Set(rows.map((r) => r.id));
+  if (incomingPaths.length > 0) {
+    await db!
+      .delete(videos)
+      .where(
+        and(
+          inArray(videos.path, incomingPaths),
+          sql`${videos.id} NOT IN (${sql.join(
+            [...incomingIds].map((id) => sql`${id}`),
+            sql`, `,
+          )})`,
+        ),
+      );
+  }
 
   // Upsert by id
   await db!
