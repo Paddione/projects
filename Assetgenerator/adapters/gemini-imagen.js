@@ -74,10 +74,10 @@ export async function generate({ id, asset, config, libraryRoot }) {
   const outputPath = join(outputDir, `${id}.png`);
 
   const basePrompt = asset.prompt || `${asset.category} game asset: ${id}`;
-  // Append 3D style directive and safety suffix
-  const styleDirective = '3D rendered game asset, stylized low-poly 3D model, clean geometry, soft studio lighting, isometric perspective';
-  const safetyClause = 'no text, no letters, no words, no labels, no watermark, no signature';
-  const prompt = `${basePrompt}, ${styleDirective}, ${safetyClause}`;
+  // Safety clause FIRST (higher token weight), then style directive
+  const safetyClause = 'no shadows, no watermark, no signature, no text, no letters, no words, no labels';
+  const styleDirective = '3D rendered game asset, stylized low-poly 3D model, clean geometry, flat even lighting, isometric perspective';
+  const prompt = `${safetyClause}, ${basePrompt}, ${styleDirective}`;
   const resolution = asset.conceptResolution || 1024;
 
   // Map resolution to Imagen imageSize
