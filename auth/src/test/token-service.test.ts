@@ -34,13 +34,13 @@ vi.mock('./test-utils.js', () => ({
 }));
 
 import { TokenService } from '../services/TokenService.js';
-import type { User } from '../db/schema.js';
 
 // ---------------------------------------------------------------------------
 // Test fixtures
 // ---------------------------------------------------------------------------
 
-const testUser: User = {
+// Partial User object — only fields TokenService actually reads
+const testUser = {
   id: 42,
   username: 'testuser',
   email: 'testuser@example.com',
@@ -50,7 +50,7 @@ const testUser: User = {
   password_hash: 'hashed-password',
   created_at: new Date('2024-01-01T00:00:00Z'),
   updated_at: new Date('2024-01-01T00:00:00Z'),
-};
+} as any;
 
 // ---------------------------------------------------------------------------
 // generateTokens()

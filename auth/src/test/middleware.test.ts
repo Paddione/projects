@@ -46,17 +46,17 @@ import { authenticate, optionalAuthenticate, requireAdmin } from '../middleware/
 // Helpers
 // ---------------------------------------------------------------------------
 
-function mockReq(overrides: Partial<Request> = {}): Request {
-  return {
-    headers: {},
+function mockReq(overrides: Record<string, unknown> = {}): Request {
+  const base: Record<string, unknown> = {
+    headers: {} as Record<string, string>,
     method: 'GET',
     cookies: {},
     user: undefined,
-    header(name: string) {
-      return (this.headers as Record<string, string>)[name.toLowerCase()];
-    },
     ...overrides,
-  } as unknown as Request;
+  };
+  base.header = (name: string) =>
+    (base.headers as Record<string, string>)[name.toLowerCase()];
+  return base as unknown as Request;
 }
 
 function mockRes(): Response & {
