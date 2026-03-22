@@ -1,4 +1,4 @@
-import { jest } from 'vitest'
+import { vi } from 'vitest'
 
 const mockUseAudio = {
   handleButtonClick: vi.fn(),
