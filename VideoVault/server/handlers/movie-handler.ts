@@ -395,7 +395,7 @@ export async function handleMovieProcessing(
     // 7. Store in database
     // Deterministic ID from rootKey + relative path (matches client-side generation)
     const effectiveRootKey = rootKey || 'movies';
-    const id = movieId || generateVideoIdSync(effectiveRootKey, relativePath);
+    const id = movieId || generateVideoIdSync(crypto, effectiveRootKey, relativePath);
     const isHddExt = rootKey === 'hdd-ext';
 
     // Build categories: extract from filename + merge with sidecar if available

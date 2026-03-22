@@ -1,5 +1,6 @@
 import path from 'path';
 import fs from 'fs/promises';
+import crypto from 'crypto';
 import { eq, and, isNotNull } from 'drizzle-orm';
 import { videos, directoryRoots } from '@shared/schema';
 import { logger } from './logger';
@@ -383,7 +384,7 @@ async function autoIndexLibrary(db: any, moviesDir: string): Promise<void> {
         continue;
       }
 
-      const id = generateVideoIdSync('movies', entry.name);
+      const id = generateVideoIdSync(crypto, 'movies', entry.name);
       const videoPath = path.join(moviesDir, entry.name);
       const stat = await fs.stat(videoPath);
       const thumbUrl = `/media/movies/Thumbnails/${encodeURIComponent(baseName)}_thumb.jpg`;
@@ -438,7 +439,7 @@ async function autoIndexLibrary(db: any, moviesDir: string): Promise<void> {
       if (!thumbInfo) { skipped++; continue; }
 
       const relVideoPath = path.join(dirEntry.name, videoFile.name);
-      const id = generateVideoIdSync('movies', relVideoPath);
+      const id = generateVideoIdSync(crypto, 'movies', relVideoPath);
 
       const videoPath = path.join(dir, videoFile.name);
       const stat = await fs.stat(videoPath);
@@ -547,7 +548,7 @@ export async function generateMoviesIndex(db: any, moviesDir?: string): Promise<
 
       const videoPath = path.join(MOVIES_DIR, entry.name);
       const stat = await fs.stat(videoPath);
-      const id = generateVideoIdSync('movies', entry.name);
+      const id = generateVideoIdSync(crypto, 'movies', entry.name);
       const thumbUrl = `/media/movies/Thumbnails/${encodeURIComponent(baseName)}_thumb.jpg`;
 
       result.push({
@@ -586,7 +587,7 @@ export async function generateMoviesIndex(db: any, moviesDir?: string): Promise<
         // Read metadata.json sidecar if available
         const sidecar = await readSidecar(dir);
         const id = sidecar?.id
-          || generateVideoIdSync('movies', relVideoPath);
+          || generateVideoIdSync(crypto, 'movies', relVideoPath);
         const displayName = sidecar?.displayName
           || path.basename(videoFile.name, path.extname(videoFile.name));
         const thumbUrl = `/media/movies/${encodeURIComponent(dirEntry.name)}/Thumbnails/${encodeURIComponent(thumbInfo.thumbFile)}`;

@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import path from 'path';
 import fs from 'fs/promises';
+import crypto from 'crypto';
 import { eq, like } from 'drizzle-orm';
 import { videos } from '@shared/schema';
 import { handleMovieProcessing, scanMoviesDirectory, batchProcessMovies, generateMovieThumbnail, cleanupEmptyDirectories, cleanupOrphanedThumbnails, extractMovieMetadata, detectQualityCategories, MOVIE_EXTENSIONS } from '../handlers/movie-handler';
@@ -244,7 +245,7 @@ router.post('/movies/rename', async (req: Request, res: Response) => {
     const newRelPath = path.relative(MOVIES_DIR, newDirPath);
     const newRelVideoPath = path.join(newRelPath, `${sanitizedNewName}${ext}`);
     const newDbPath = `movies/${newRelVideoPath}`;
-    const newId = generateVideoIdSync('movies', newRelVideoPath);
+    const newId = generateVideoIdSync(crypto, 'movies', newRelVideoPath);
 
     try {
       if (db) {
@@ -585,7 +586,7 @@ router.post('/movies/index', async (req: Request, res: Response) => {
           }
 
           // Deterministic ID from relative path
-          const id = generateVideoIdSync('movies', relVideoPath);
+          const id = generateVideoIdSync(crypto, 'movies', relVideoPath);
 
           // Check if already indexed
           if (!forceReindex && db) {
@@ -1081,7 +1082,7 @@ router.post('/hdd-ext/index', async (req: Request, res: Response) => {
           }
 
           // Deterministic ID
-          const id = generateVideoIdSync('hdd-ext', relVideoPath);
+          const id = generateVideoIdSync(crypto, 'hdd-ext', relVideoPath);
 
           // Check if already indexed
           if (!forceReindex && db) {
