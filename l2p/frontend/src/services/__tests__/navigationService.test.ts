@@ -1,5 +1,6 @@
 import { navigationService } from '../navigationService'
 import { useGameStore } from '../../stores/gameStore'
+import { apiService } from '../apiService'
 
 // Mock the game store
 vi.mock('../../stores/gameStore', () => ({
@@ -63,7 +64,7 @@ describe('NavigationService', () => {
 
       ; (useGameStore.getState as vi.Mock).mockReturnValue(gameStoreMock)
 
-    apiServiceMock = require('../apiService').apiService
+    apiServiceMock = apiService as typeof apiServiceMock
     apiServiceMock.getLobby.mockResolvedValue({
       success: true,
       data: {

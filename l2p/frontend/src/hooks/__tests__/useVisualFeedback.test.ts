@@ -68,6 +68,7 @@ const mockVisualFeedbackService = visualFeedbackService as vi.Mocked<typeof visu
 describe('useVisualFeedback', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    vi.resetAllMocks()
     vi.clearAllTimers()
     mockMatchMedia.mockReturnValue({
       matches: false,

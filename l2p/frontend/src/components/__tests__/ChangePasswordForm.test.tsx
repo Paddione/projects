@@ -12,7 +12,8 @@ vi.mock('../../services/apiService', () => ({
 }))
 
 // Mock setTimeout for testing auto-close
-vi.useFakeTimers()
+// Use shouldAdvanceTime so waitFor() still resolves with real timers
+vi.useFakeTimers({ shouldAdvanceTime: true })
 
 describe('ChangePasswordForm', () => {
   const mockOnClose = vi.fn()

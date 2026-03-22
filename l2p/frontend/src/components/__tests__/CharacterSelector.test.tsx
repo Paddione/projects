@@ -8,8 +8,23 @@ vi.mock('../../stores/characterStore', () => ({
   useAvailableCharacters: vi.fn(),
   useCharacterLoading: vi.fn(),
   useCharacterUpdating: vi.fn(),
-  useOwnedCharacters: vi.fn(() => []),
+  useOwnedCharacters: vi.fn(() => ['1', '2', '3']),
   useRespectBalance: vi.fn(() => 0),
+}));
+
+// Mock useLocalization used by CharacterSelector with needed translations
+vi.mock('../../hooks/useLocalization', () => ({
+  useLocalization: () => ({
+    t: (key: string) => {
+      const translations: Record<string, string> = {
+        'character.loading': 'Loading characters...',
+        'character.chooseTitle': 'Choose Your Character',
+        'character.chooseDescription': 'Select a university-themed character to represent you in the game',
+        'character.updating': 'Updating character...',
+      }
+      return translations[key] ?? key
+    },
+  }),
 }));
 
 // Mock the auth store
@@ -87,7 +102,10 @@ describe('CharacterSelector Component', () => {
     vi.clearAllMocks();
     mockUseCharacterStore.mockReturnValue({
       loadCharacters: vi.fn(),
-      updateCharacter: mockUpdateCharacter
+      updateCharacter: mockUpdateCharacter,
+      characters: mockCharacters,
+      purchaseCharacter: vi.fn(),
+      loadCharacterProfile: vi.fn(),
     });
     
     mockUseAvailableCharacters.mockReturnValue(mockCharacters);

@@ -12,9 +12,10 @@ vi.mock('../../services/apiService', () => ({
 
 vi.mock('../../stores/gameStore')
 
-vi.mock('../../styles/QuestionSetSelector.module.css', () =>
-  new Proxy({}, { get: (_, name) => name })
-)
+vi.mock('../../styles/QuestionSetSelector.module.css', () => {
+  const proxy = new Proxy({}, { get: (_, name) => (typeof name === 'string' ? name : undefined) })
+  return { default: proxy }
+})
 
 vi.mock('../../hooks/useLocalization', () => ({
   useLocalization: () => ({

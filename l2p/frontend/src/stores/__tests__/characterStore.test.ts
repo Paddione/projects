@@ -1,5 +1,14 @@
 import { renderHook, act } from '@testing-library/react'
-import { useCharacterStore } from '../characterStore'
+import {
+  useCharacterStore,
+  useCurrentCharacter,
+  useCharacterLevel,
+  useCharacterExperience,
+  useCharacterProgress,
+  useAvailableCharacters,
+  useCharacterLoading,
+  useCharacterUpdating,
+} from '../characterStore'
 import { Character, CharacterProfile } from '../../types'
 import { apiService } from '../../services/apiService'
 
@@ -542,7 +551,6 @@ describe('characterStore', () => {
 
   describe('selector hooks', () => {
     it('useCurrentCharacter returns current character', () => {
-      const { useCurrentCharacter } = require('../characterStore')
       const { result } = renderHook(() => useCurrentCharacter())
       
       expect(result.current).toBeNull()
@@ -555,7 +563,6 @@ describe('characterStore', () => {
     })
 
     it('useCharacterLevel returns current level', () => {
-      const { useCharacterLevel } = require('../characterStore')
       const { result } = renderHook(() => useCharacterLevel())
       
       expect(result.current).toBe(1)
@@ -568,7 +575,6 @@ describe('characterStore', () => {
     })
 
     it('useCharacterExperience returns current experience', () => {
-      const { useCharacterExperience } = require('../characterStore')
       const { result } = renderHook(() => useCharacterExperience())
       
       expect(result.current).toBe(0)
@@ -581,7 +587,6 @@ describe('characterStore', () => {
     })
 
     it('useCharacterProgress returns current progress', () => {
-      const { useCharacterProgress } = require('../characterStore')
       const { result } = renderHook(() => useCharacterProgress())
       
       expect(result.current).toBeNull()
@@ -594,7 +599,6 @@ describe('characterStore', () => {
     })
 
     it('useAvailableCharacters returns available characters', () => {
-      const { useAvailableCharacters } = require('../characterStore')
       const { result } = renderHook(() => useAvailableCharacters())
       
       expect(result.current).toEqual([])
@@ -607,7 +611,6 @@ describe('characterStore', () => {
     })
 
     it('useCharacterLoading returns loading state', () => {
-      const { useCharacterLoading } = require('../characterStore')
       const { result } = renderHook(() => useCharacterLoading())
       
       expect(result.current).toBe(false)
@@ -620,7 +623,6 @@ describe('characterStore', () => {
     })
 
     it('useCharacterUpdating returns updating state', () => {
-      const { useCharacterUpdating } = require('../characterStore')
       const { result } = renderHook(() => useCharacterUpdating())
       
       expect(result.current).toBe(false)
