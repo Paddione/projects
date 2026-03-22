@@ -98,8 +98,29 @@ def triposr_generate(image_path: Path, output_path: Path) -> bool:
             _triposr_model.to("cuda")
 
         image = Image.open(image_path)
-        # TripoSR expects RGB — composite RGBA onto white background
+        # TripoSR expects RGB — crop to subject bounding box then composite on white.
+        # Using the full image with a white background causes TripoSR to reconstruct
+        # the background as flat geometry (grey wall artifact).
         if image.mode == 'RGBA':
+            alpha = image.split()[3]
+            bbox = alpha.getbbox()
+            if bbox:
+                # Add 5% margin around subject
+                w, h = image.size
+                margin = int(max(w, h) * 0.05)
+                x0 = max(0, bbox[0] - margin)
+                y0 = max(0, bbox[1] - margin)
+                x1 = min(w, bbox[2] + margin)
+                y1 = min(h, bbox[3] + margin)
+                # Make square (TripoSR works best with square input)
+                crop_w, crop_h = x1 - x0, y1 - y0
+                side = max(crop_w, crop_h)
+                cx, cy = (x0 + x1) // 2, (y0 + y1) // 2
+                x0 = max(0, cx - side // 2)
+                y0 = max(0, cy - side // 2)
+                x1 = min(w, x0 + side)
+                y1 = min(h, y0 + side)
+                image = image.crop((x0, y0, x1, y1))
             bg = Image.new('RGB', image.size, (255, 255, 255))
             bg.paste(image, mask=image.split()[3])
             image = bg
