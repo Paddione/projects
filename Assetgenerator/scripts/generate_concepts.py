@@ -40,6 +40,28 @@ NEGATIVE_PROMPT = (
 # Style suffix removed — asset prompts already contain full style direction
 STYLE_SUFFIX = ""
 
+# Categories that should keep their background (no rembg)
+KEEP_BACKGROUND_CATEGORIES = {"tiles"}
+
+
+def remove_background(image_path: Path) -> bool:
+    """Remove background from a generated concept image using rembg."""
+    try:
+        from rembg import remove
+        from PIL import Image
+
+        img = Image.open(image_path)
+        result = remove(img)
+        result.save(image_path, "PNG")
+        print(f"  [REMBG] Background removed: {image_path.name}")
+        return True
+    except ImportError:
+        print("  [WARN] rembg not installed, skipping background removal")
+        return False
+    except Exception as e:
+        print(f"  [WARN] Background removal failed: {e}")
+        return False
+
 
 def load_manifest() -> dict:
     if not MANIFEST_PATH.exists():
@@ -235,9 +257,12 @@ def generate_asset(asset: dict, category: str, meta: dict, backend: str, comfyui
     print(f"  [GEN] {category}/{asset_id} ({w}x{h})")
 
     if backend == "comfyui":
-        return comfyui_generate(comfyui_url, prompt, out_path, w, h)
+        ok = comfyui_generate(comfyui_url, prompt, out_path, w, h)
     else:
-        return diffusers_generate(prompt, out_path, w, h)
+        ok = diffusers_generate(prompt, out_path, w, h)
+    if ok and category not in KEEP_BACKGROUND_CATEGORIES:
+        remove_background(out_path)
+    return ok
 
 
 def generate_character_concepts(char: dict, meta: dict, backend: str, comfyui_url: str) -> bool:
@@ -257,6 +282,7 @@ def generate_character_concepts(char: dict, meta: dict, backend: str, comfyui_ur
             ok = diffusers_generate(prompt, main_path, w, h)
         if not ok:
             return False
+        remove_background(main_path)
     else:
         print(f"  [SKIP] characters/{char_id} — already exists")
 
@@ -278,6 +304,8 @@ def generate_character_concepts(char: dict, meta: dict, backend: str, comfyui_ur
             ok = diffusers_generate(anim_prompt, anim_path, 768, 768)
         if not ok:
             print(f"  [WARN] Failed to generate {char_id}_{anim_name}, continuing...")
+        else:
+            remove_background(anim_path)
 
     return True
 
@@ -323,10 +351,14 @@ def main():
             print(f"  [SKIP] {args.category}/{args.id} — already exists")
         elif backend == "comfyui":
             ok = comfyui_generate(args.comfyui_url, args.override_prompt, out_path, w, h)
+            if ok and args.category not in KEEP_BACKGROUND_CATEGORIES:
+                remove_background(out_path)
             print(f"\n[DONE] {'Success' if ok else 'Failed'}")
             sys.exit(0 if ok else 1)
         else:
             ok = diffusers_generate(args.override_prompt, out_path, w, h)
+            if ok and args.category not in KEEP_BACKGROUND_CATEGORIES:
+                remove_background(out_path)
             print(f"\n[DONE] {'Success' if ok else 'Failed'}")
             sys.exit(0 if ok else 1)
         sys.exit(0)
