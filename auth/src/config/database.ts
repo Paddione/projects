@@ -10,10 +10,13 @@ if (!connectionString) {
 }
 
 // Create postgres connection
+// Use a shorter connect_timeout in test environments so unit tests that mock
+// the DB don't block for 10 seconds waiting for a real connection to fail.
+const isTest = process.env.NODE_ENV === 'test' || process.env.VITEST === 'true';
 const client = postgres(connectionString, {
   max: 10,
   idle_timeout: 20,
-  connect_timeout: 10,
+  connect_timeout: isTest ? 2 : 10,
 });
 
 // Create drizzle instance with schema
