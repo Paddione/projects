@@ -56,7 +56,7 @@
       "tags": [
         "arena"
       ],
-      "prompt": "single front view, full-body male character, university researcher, lab coat over smart casual clothes, safety goggles on forehead, holding tablet, focused expression, mint green accent color, A-pose, no shadows, no ground, no text, no numbers, transparent background",
+      "prompt": "single front view, full-body male character, university researcher, lab coat over smart casual clothes, safety goggles on forehead, focused expression, low-poly 3D model, isometric game sprite, mint green accent color, A-pose, no shadows, no ground, no text, no numbers, transparent background",
       "poses": [
         "stand",
         "walk",
@@ -71,27 +71,16 @@
       "color": "#3eff8b",
       "pipeline": {
         "concept": {
-          "status": "done",
-          "generatedAt": "2026-03-15T22:22:30.355Z",
-          "backend": "gemini-imagen",
-          "path": "concepts/characters/researcher.png"
+          "status": "pending"
         },
         "model": {
-          "status": "done",
-          "generatedAt": "2026-03-16T00:57:20.145Z",
-          "backend": "triposr",
-          "path": "models/characters/researcher.glb"
+          "status": "pending"
         },
         "render": {
-          "status": "done",
-          "generatedAt": "2026-03-16T01:00:42.202Z",
-          "backend": "blender",
-          "frameCount": 8
+          "status": "pending"
         },
         "pack": {
-          "status": "done",
-          "generatedAt": "2026-03-16T01:06:47.717Z",
-          "backend": "packer"
+          "status": "pending"
         }
       },
       "assignedTo": {
@@ -1338,7 +1327,7 @@
       "tags": [
         "arena"
       ],
-      "prompt": "single front view, full-body female character, research scientist, lab coat over blouse, safety goggles on forehead, clipboard in hand, determined expression, mint green accent color, A-pose, no shadows, no ground, no text, no numbers, transparent background",
+      "prompt": "single front view, full-body female character, research scientist, lab coat over blouse, safety goggles on forehead, determined expression, low-poly 3D model, isometric game sprite, mint green accent color, A-pose, no shadows, no ground, no text, no numbers, transparent background",
       "poses": [
         "stand",
         "walk",
@@ -1354,27 +1343,16 @@
       "conceptBackend": "gemini-imagen",
       "pipeline": {
         "concept": {
-          "status": "done",
-          "generatedAt": "2026-03-16T09:56:09.763Z",
-          "path": "concepts/characters/researcher_f.png",
-          "backend": "gemini-imagen"
+          "status": "pending"
         },
         "model": {
-          "status": "done",
-          "generatedAt": "2026-03-16T09:56:20.235Z",
-          "path": "models/characters/researcher_f.glb",
-          "backend": "triposr"
+          "status": "pending"
         },
         "render": {
-          "status": "done",
-          "generatedAt": "2026-03-16T10:05:56.564Z",
-          "frameCount": 8,
-          "backend": "blender"
+          "status": "pending"
         },
         "pack": {
-          "status": "done",
-          "generatedAt": "2026-03-16T10:21:33.799Z",
-          "backend": "packer"
+          "status": "pending"
         }
       }
     },
