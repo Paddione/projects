@@ -23,6 +23,7 @@
     "exactOptionalPropertyTypes": false,
     "noFallthroughCasesInSwitch": true,
     "noUncheckedIndexedAccess": true,
+    "types": ["vitest/globals"],
     "allowImportingTsExtensions": false,
     "baseUrl": ".",
     "paths": {
