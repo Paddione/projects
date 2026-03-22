@@ -1,12 +1,12 @@
 import path from 'path';
 import fs from 'fs/promises';
-import crypto from 'crypto';
 import { eq, and, isNotNull } from 'drizzle-orm';
 import { videos, directoryRoots } from '@shared/schema';
 import { logger } from './logger';
 import { MOVIE_EXTENSIONS, extractMovieMetadata, detectQualityCategories, generateMovieThumbnail, parseMovieFilename, generateOrganizedPath } from '../handlers/movie-handler';
 import { readSidecar, writeSidecar } from './sidecar';
 import { extractCategoriesFromPath, mergeCategories } from '@shared/category-extractor';
+import { generateVideoIdSync } from '@shared/video-id';
 
 // Track filenames that failed stat (encoding issues on SMB) — warn only once
 const _failedStatNames = new Set<string>();
@@ -383,7 +383,7 @@ async function autoIndexLibrary(db: any, moviesDir: string): Promise<void> {
         continue;
       }
 
-      const id = crypto.createHash('sha256').update('movies:' + entry.name).digest('hex').slice(0, 36);
+      const id = generateVideoIdSync('movies', entry.name);
       const videoPath = path.join(moviesDir, entry.name);
       const stat = await fs.stat(videoPath);
       const thumbUrl = `/media/movies/Thumbnails/${encodeURIComponent(baseName)}_thumb.jpg`;
@@ -438,7 +438,7 @@ async function autoIndexLibrary(db: any, moviesDir: string): Promise<void> {
       if (!thumbInfo) { skipped++; continue; }
 
       const relVideoPath = path.join(dirEntry.name, videoFile.name);
-      const id = crypto.createHash('sha256').update('movies:' + relVideoPath).digest('hex').slice(0, 36);
+      const id = generateVideoIdSync('movies', relVideoPath);
 
       const videoPath = path.join(dir, videoFile.name);
       const stat = await fs.stat(videoPath);
@@ -547,7 +547,7 @@ export async function generateMoviesIndex(db: any, moviesDir?: string): Promise<
 
       const videoPath = path.join(MOVIES_DIR, entry.name);
       const stat = await fs.stat(videoPath);
-      const id = crypto.createHash('sha256').update('movies:' + entry.name).digest('hex').slice(0, 36);
+      const id = generateVideoIdSync('movies', entry.name);
       const thumbUrl = `/media/movies/Thumbnails/${encodeURIComponent(baseName)}_thumb.jpg`;
 
       result.push({
@@ -586,7 +586,7 @@ export async function generateMoviesIndex(db: any, moviesDir?: string): Promise<
         // Read metadata.json sidecar if available
         const sidecar = await readSidecar(dir);
         const id = sidecar?.id
-          || crypto.createHash('sha256').update('movies:' + relVideoPath).digest('hex').slice(0, 36);
+          || generateVideoIdSync('movies', relVideoPath);
         const displayName = sidecar?.displayName
           || path.basename(videoFile.name, path.extname(videoFile.name));
         const thumbUrl = `/media/movies/${encodeURIComponent(dirEntry.name)}/Thumbnails/${encodeURIComponent(thumbInfo.thumbFile)}`;

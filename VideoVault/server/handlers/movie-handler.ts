@@ -7,8 +7,8 @@ import { logger } from '../lib/logger';
 import { readSidecar, writeSidecar } from '../lib/sidecar';
 import { extractCategoriesFromPath, mergeCategories } from '@shared/category-extractor';
 import type { JobContext } from '../lib/enhanced-job-queue';
-import { v4 as uuidv4 } from 'uuid';
 import crypto from 'crypto';
+import { generateVideoIdSync } from '@shared/video-id';
 
 // Supported movie file extensions
 export const MOVIE_EXTENSIONS = ['.mp4', '.mkv', '.avi', '.mov', '.wmv', '.webm', '.m4v'];
@@ -393,7 +393,9 @@ export async function handleMovieProcessing(
     logger.info(`[MovieHandler] Thumbnails generated: ${thumbnails.thumb}, ${thumbnails.sprite}`);
 
     // 7. Store in database
-    const id = movieId || uuidv4();
+    // Deterministic ID from rootKey + relative path (matches client-side generation)
+    const effectiveRootKey = rootKey || 'movies';
+    const id = movieId || generateVideoIdSync(effectiveRootKey, relativePath);
     const isHddExt = rootKey === 'hdd-ext';
 
     // Build categories: extract from filename + merge with sidecar if available
