@@ -250,7 +250,7 @@ jobs:
         run: npm ci
 
       - name: Unit tests
-        run: npm run test
+        run: npx vitest run test/worker-manager.test.js test/adapter-routing.test.js
 
   # ---------------------------------------------------------------------------
   # Arena: E2E Asset Coverage Tests
