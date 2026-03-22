@@ -15,6 +15,9 @@ vi.mock('../services/apiService', () => ({
         on: mockOn,
         off: mockOff,
     }),
+    api: {
+        getAuthServiceUrl: () => null,
+    },
 }));
 
 // Mock navigate
