@@ -4,11 +4,10 @@
  * Tests that GPU adapters route to worker when connected,
  * and throw when disconnected. Cloud adapters always run locally.
  *
- * Run: cd Assetgenerator && node --test test/adapter-routing.test.js
+ * Run: cd Assetgenerator && npx vitest run test/adapter-routing.test.js
  */
 
-import { describe, it, before, after } from 'node:test';
-import assert from 'node:assert/strict';
+import { describe, it, beforeAll, afterAll, expect } from 'vitest';
 import { createServer } from 'node:http';
 import { WebSocket } from 'ws';
 import { initWorkerManager, getWorker, shutdownWorkerManager } from '../worker-manager.js';
@@ -28,7 +27,7 @@ function connectWorker(port) {
     ws.on('open', () => {
       ws.once('message', (raw) => {
         const msg = JSON.parse(raw);
-        assert.equal(msg.type, 'welcome');
+        expect(msg.type).toBe('welcome');
         ws.send(JSON.stringify({ type: 'register', hostname: 'test', gpu: 'Test GPU' }));
         setTimeout(() => resolve(ws), 50);
       });
@@ -40,12 +39,12 @@ function connectWorker(port) {
 describe('Adapter Routing', () => {
   let httpServer, port;
 
-  before(async () => {
+  beforeAll(async () => {
     ({ server: httpServer, port } = await createTestServer());
     initWorkerManager(httpServer);
   });
 
-  after(async () => {
+  afterAll(async () => {
     shutdownWorkerManager();
     await new Promise((r) => httpServer.close(r));
   });
@@ -63,10 +62,10 @@ describe('Adapter Routing', () => {
     });
 
     const worker = getWorker();
-    assert.ok(worker);
+    expect(worker).toBeTruthy();
     const result = await worker.exec({ cmd: 'python3', args: ['test.py'], cwd: '/tmp', env: {} });
-    assert.equal(result.code, 0);
-    assert.ok(result.stdout.includes('SEED:99999'));
+    expect(result.code).toBe(0);
+    expect(result.stdout.includes('SEED:99999')).toBeTruthy();
 
     ws.close();
     await new Promise((r) => setTimeout(r, 100));
@@ -74,7 +73,7 @@ describe('Adapter Routing', () => {
 
   it('getWorker() returns null when no worker — adapter should throw', async () => {
     const worker = getWorker();
-    assert.equal(worker, null);
+    expect(worker).toBe(null);
   });
 
   it('exec message has correct shape', async () => {
@@ -94,12 +93,12 @@ describe('Adapter Routing', () => {
     worker.exec({ cmd: 'python3', args: ['--version'], cwd: '/home/test', env: { CUDA: '0' } });
     const msg = await execReceived;
 
-    assert.equal(msg.type, 'exec');
-    assert.ok(msg.jobId);
-    assert.equal(msg.cmd, 'python3');
-    assert.deepEqual(msg.args, ['--version']);
-    assert.equal(msg.cwd, '/home/test');
-    assert.deepEqual(msg.env, { CUDA: '0' });
+    expect(msg.type).toBe('exec');
+    expect(msg.jobId).toBeTruthy();
+    expect(msg.cmd).toBe('python3');
+    expect(msg.args).toEqual(['--version']);
+    expect(msg.cwd).toBe('/home/test');
+    expect(msg.env).toEqual({ CUDA: '0' });
 
     ws.close();
     await new Promise((r) => setTimeout(r, 100));

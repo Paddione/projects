@@ -5,11 +5,10 @@
  * to simulate NAS storage. Covers CRUD, import, assign, sync,
  * staleness propagation, and concurrency locks.
  *
- * Run: cd Assetgenerator && node --test test/api.test.js
+ * Run: cd Assetgenerator && npx vitest run test/api.test.js
  */
 
-import { describe, it, before, after } from 'node:test';
-import assert from 'node:assert/strict';
+import { describe, it, beforeAll, afterAll, expect } from 'vitest';
 import { mkdtempSync, writeFileSync, readFileSync, existsSync, mkdirSync, rmSync, symlinkSync } from 'node:fs';
 import { join, resolve, dirname } from 'node:path';
 import { tmpdir } from 'node:os';
@@ -88,7 +87,7 @@ function createTestWav(filePath) {
 
 // ─── Setup & Teardown ─────────────────────────────────────────────────────
 
-before(async () => {
+beforeAll(async () => {
   // Create temp directory structure
   tmpDir = mkdtempSync(join(tmpdir(), 'assetgen-test-'));
   nasAudioDir = join(tmpDir, 'audio-library');
@@ -248,7 +247,7 @@ before(async () => {
   });
 });
 
-after(() => {
+afterAll(() => {
   // Kill server
   if (server) server.kill('SIGTERM');
 
@@ -272,37 +271,37 @@ after(() => {
 describe('Server basics', () => {
   it('serves prerequisites', async () => {
     const { status, json } = await fetchJSON('/api/prerequisites');
-    assert.equal(status, 200);
-    assert.equal(typeof json.python, 'boolean');
-    assert.equal(typeof json.ffmpeg, 'boolean');
+    expect(status).toBe(200);
+    expect(typeof json.python).toBe('boolean');
+    expect(typeof json.ffmpeg).toBe('boolean');
   });
 
   it('lists projects', async () => {
     const { status, json } = await fetchJSON('/api/projects');
-    assert.equal(status, 200);
-    assert.ok(Array.isArray(json));
-    assert.ok(json.includes('arena'));
+    expect(status).toBe(200);
+    expect(Array.isArray(json)).toBeTruthy();
+    expect(json.includes('arena')).toBeTruthy();
   });
 
   it('loads arena project', async () => {
     const { status, json } = await fetchJSON('/api/projects/arena');
-    assert.equal(status, 200);
-    assert.equal(json.name, 'arena');
-    assert.ok(json.sounds.gunshot);
+    expect(status).toBe(200);
+    expect(json.name).toBe('arena');
+    expect(json.sounds.gunshot).toBeTruthy();
   });
 
   it('returns 404 for unknown project', async () => {
     const { status } = await fetchJSON('/api/projects/nonexistent');
-    assert.equal(status, 404);
+    expect(status).toBe(404);
   });
 });
 
 describe('Audio Library CRUD', () => {
   it('returns empty library initially', async () => {
     const { status, json } = await fetchJSON('/api/library');
-    assert.equal(status, 200);
-    assert.equal(json.version, 1);
-    assert.deepEqual(json.sounds, {});
+    expect(status).toBe(200);
+    expect(json.version).toBe(1);
+    expect(json.sounds).toEqual({});
   });
 
   it('creates a sound entry', async () => {
@@ -310,11 +309,11 @@ describe('Audio Library CRUD', () => {
       method: 'POST',
       body: { id: 'test-sound', name: 'Test Sound', category: 'sfx/weapons', tags: ['test'], prompt: 'test prompt', duration: 0.5 },
     });
-    assert.equal(status, 201);
-    assert.equal(json.id, 'test-sound');
-    assert.equal(json.category, 'sfx/weapons');
-    assert.equal(json.prompt, 'test prompt');
-    assert.ok(json.createdAt);
+    expect(status).toBe(201);
+    expect(json.id).toBe('test-sound');
+    expect(json.category).toBe('sfx/weapons');
+    expect(json.prompt).toBe('test prompt');
+    expect(json.createdAt).toBeTruthy();
   });
 
   it('rejects duplicate sound', async () => {
@@ -322,13 +321,13 @@ describe('Audio Library CRUD', () => {
       method: 'POST',
       body: { id: 'test-sound', name: 'Dupe', category: 'sfx/weapons' },
     });
-    assert.equal(status, 409);
+    expect(status).toBe(409);
   });
 
   it('reads the created sound', async () => {
     const { json } = await fetchJSON('/api/library');
-    assert.ok(json.sounds['test-sound']);
-    assert.equal(json.sounds['test-sound'].name, 'Test Sound');
+    expect(json.sounds['test-sound']).toBeTruthy();
+    expect(json.sounds['test-sound'].name).toBe('Test Sound');
   });
 
   it('updates sound metadata', async () => {
@@ -336,9 +335,9 @@ describe('Audio Library CRUD', () => {
       method: 'PUT',
       body: { name: 'Updated Sound', tags: ['updated'] },
     });
-    assert.equal(status, 200);
-    assert.equal(json.name, 'Updated Sound');
-    assert.deepEqual(json.tags, ['updated']);
+    expect(status).toBe(200);
+    expect(json.name).toBe('Updated Sound');
+    expect(json.tags).toEqual(['updated']);
   });
 
   it('returns 404 for unknown sound update', async () => {
@@ -346,17 +345,17 @@ describe('Audio Library CRUD', () => {
       method: 'PUT',
       body: { name: 'Nope' },
     });
-    assert.equal(status, 404);
+    expect(status).toBe(404);
   });
 
   it('deletes a sound', async () => {
     const { status, json } = await fetchJSON('/api/library/test-sound', { method: 'DELETE' });
-    assert.equal(status, 200);
-    assert.equal(json.deleted, 'test-sound');
+    expect(status).toBe(200);
+    expect(json.deleted).toBe('test-sound');
 
     // Verify gone
     const { json: lib } = await fetchJSON('/api/library');
-    assert.equal(lib.sounds['test-sound'], undefined);
+    expect(lib.sounds['test-sound']).toBe(undefined);
   });
 
   it('rejects create without required fields', async () => {
@@ -364,7 +363,7 @@ describe('Audio Library CRUD', () => {
       method: 'POST',
       body: { id: 'no-name' },
     });
-    assert.equal(status, 400);
+    expect(status).toBe(400);
   });
 });
 
@@ -374,37 +373,37 @@ describe('Audio Library Import', () => {
       method: 'POST',
       body: { project: 'arena' },
     });
-    assert.equal(status, 200);
-    assert.ok(json.count >= 3, `Expected >=3 imported, got ${json.count}`);
-    assert.ok(json.imported.includes('gunshot'));
-    assert.ok(json.imported.includes('melee_swing'));
-    assert.ok(json.imported.includes('battle'));
+    expect(status).toBe(200);
+    expect(json.count >= 3).toBeTruthy();
+    expect(json.imported.includes('gunshot')).toBeTruthy();
+    expect(json.imported.includes('melee_swing')).toBeTruthy();
+    expect(json.imported.includes('battle')).toBeTruthy();
   });
 
   it('maps sound IDs to correct subcategories', async () => {
     const { json } = await fetchJSON('/api/library');
-    assert.equal(json.sounds.gunshot.category, 'sfx/weapons');
-    assert.equal(json.sounds.melee_swing.category, 'sfx/weapons');
-    assert.equal(json.sounds.battle.category, 'music/battle');
+    expect(json.sounds.gunshot.category).toBe('sfx/weapons');
+    expect(json.sounds.melee_swing.category).toBe('sfx/weapons');
+    expect(json.sounds.battle.category).toBe('music/battle');
   });
 
   it('copies WAV files to NAS', async () => {
-    assert.ok(existsSync(join(nasAudioDir, 'sfx', 'weapons', 'gunshot.wav')));
-    assert.ok(existsSync(join(nasAudioDir, 'sfx', 'weapons', 'melee_swing.wav')));
-    assert.ok(existsSync(join(nasAudioDir, 'music', 'battle', 'battle.wav')));
+    expect(existsSync(join(nasAudioDir, 'sfx', 'weapons', 'gunshot.wav'))).toBeTruthy();
+    expect(existsSync(join(nasAudioDir, 'sfx', 'weapons', 'melee_swing.wav'))).toBeTruthy();
+    expect(existsSync(join(nasAudioDir, 'music', 'battle', 'battle.wav'))).toBeTruthy();
   });
 
   it('preserves prompt and seed from arena state', async () => {
     const { json } = await fetchJSON('/api/library');
-    assert.equal(json.sounds.gunshot.prompt, 'laser gunshot');
-    assert.equal(json.sounds.gunshot.seed, 12345);
-    assert.equal(json.sounds.gunshot.duration, 0.5);
+    expect(json.sounds.gunshot.prompt).toBe('laser gunshot');
+    expect(json.sounds.gunshot.seed).toBe(12345);
+    expect(json.sounds.gunshot.duration).toBe(0.5);
   });
 
   it('records arena assignment', async () => {
     const { json } = await fetchJSON('/api/library');
-    assert.ok(json.sounds.gunshot.assignedTo.arena);
-    assert.equal(json.sounds.gunshot.assignedTo.arena.targetPath, 'sfx/gunshot');
+    expect(json.sounds.gunshot.assignedTo.arena).toBeTruthy();
+    expect(json.sounds.gunshot.assignedTo.arena.targetPath).toBe('sfx/gunshot');
   });
 
   it('skips already-imported sounds on re-import', async () => {
@@ -412,7 +411,7 @@ describe('Audio Library Import', () => {
       method: 'POST',
       body: { project: 'arena' },
     });
-    assert.equal(json.count, 0);
+    expect(json.count).toBe(0);
   });
 
   it('rejects import for unknown project', async () => {
@@ -420,12 +419,12 @@ describe('Audio Library Import', () => {
       method: 'POST',
       body: { project: 'nonexistent' },
     });
-    assert.equal(status, 404);
+    expect(status).toBe(404);
   });
 });
 
 describe('Audio Library Assign/Unassign', () => {
-  before(async () => {
+  beforeAll(async () => {
     // Create a sound with a WAV on NAS for assign testing
     createTestWav(join(nasAudioDir, 'sfx', 'ui', 'test-assign.wav'));
     await fetchJSON('/api/library', {
@@ -440,27 +439,23 @@ describe('Audio Library Assign/Unassign', () => {
       body: { project: 'arena', targetPath: 'sfx/test-assign' },
     });
     if (status !== 200) console.log('ASSIGN ERROR:', JSON.stringify(json));
-    assert.equal(status, 200);
-    assert.ok(json.assignedTo.arena);
-    assert.equal(json.assignedTo.arena.targetPath, 'sfx/test-assign');
-    assert.equal(json.assignedTo.arena.syncedAt, null, 'syncedAt should be null before sync');
+    expect(status).toBe(200);
+    expect(json.assignedTo.arena).toBeTruthy();
+    expect(json.assignedTo.arena.targetPath).toBe('sfx/test-assign');
+    expect(json.assignedTo.arena.syncedAt).toBe(null);
   });
 
   it('sync processes WAV and creates OGG+MP3 on NAS', async () => {
     const { status } = await fetchJSON('/api/projects/arena/sync', { method: 'POST' });
-    assert.equal(status, 200);
-    assert.ok(existsSync(join(nasAudioDir, 'sfx', 'ui', 'test-assign.ogg')),
-      'OGG not found on NAS');
-    assert.ok(existsSync(join(nasAudioDir, 'sfx', 'ui', 'test-assign.mp3')),
-      'MP3 not found on NAS');
+    expect(status).toBe(200);
+    expect(existsSync(join(nasAudioDir, 'sfx', 'ui', 'test-assign.ogg'))).toBeTruthy();
+    expect(existsSync(join(nasAudioDir, 'sfx', 'ui', 'test-assign.mp3'))).toBeTruthy();
   });
 
   it('sync copies OGG+MP3 to project output dir', async () => {
     const outputRoot = join(arenaDir, 'frontend', 'public', 'assets');
-    assert.ok(existsSync(join(outputRoot, 'sfx', 'test-assign.ogg')),
-      'OGG not found in project output');
-    assert.ok(existsSync(join(outputRoot, 'sfx', 'test-assign.mp3')),
-      'MP3 not found in project output');
+    expect(existsSync(join(outputRoot, 'sfx', 'test-assign.ogg'))).toBeTruthy();
+    expect(existsSync(join(outputRoot, 'sfx', 'test-assign.mp3'))).toBeTruthy();
   });
 
   it('rejects assign without required fields', async () => {
@@ -468,7 +463,7 @@ describe('Audio Library Assign/Unassign', () => {
       method: 'POST',
       body: { project: 'arena' },
     });
-    assert.equal(status, 400);
+    expect(status).toBe(400);
   });
 
   it('unassigns sound from project', async () => {
@@ -476,8 +471,8 @@ describe('Audio Library Assign/Unassign', () => {
       method: 'POST',
       body: { project: 'arena' },
     });
-    assert.equal(status, 200);
-    assert.equal(json.assignedTo.arena, undefined);
+    expect(status).toBe(200);
+    expect(json.assignedTo.arena).toBe(undefined);
   });
 });
 
@@ -495,24 +490,24 @@ describe('Audio Library Sync', () => {
     }
 
     const { status, json } = await fetchJSON('/api/projects/arena/sync', { method: 'POST' });
-    assert.equal(status, 200);
-    assert.ok(typeof json.count === 'number');
+    expect(status).toBe(200);
+    expect(typeof json.count).toBe('number');
   });
 });
 
 describe('Audio Generation Lock', () => {
   it('returns 409 for unknown sound generation', async () => {
     const { status } = await fetchJSON('/api/library/nonexistent/generate', { method: 'POST' });
-    assert.equal(status, 404);
+    expect(status).toBe(404);
   });
 });
 
 describe('Visual Library CRUD', () => {
   it('returns empty visual library initially', async () => {
     const { status, json } = await fetchJSON('/api/visual-library');
-    assert.equal(status, 200);
-    assert.equal(json.version, 1);
-    assert.deepEqual(json.assets, {});
+    expect(status).toBe(200);
+    expect(json.version).toBe(1);
+    expect(json.assets).toEqual({});
   });
 
   it('creates a character asset', async () => {
@@ -526,18 +521,18 @@ describe('Visual Library CRUD', () => {
         prompt: 'a test character',
       },
     });
-    assert.equal(status, 201);
-    assert.equal(json.id, 'test-char');
-    assert.equal(json.category, 'characters');
-    assert.deepEqual(json.poses, ['stand', 'gun']); // From config defaults
-    assert.equal(json.directions, 8); // From config
-    assert.equal(json.size, 64); // From config
+    expect(status).toBe(201);
+    expect(json.id).toBe('test-char');
+    expect(json.category).toBe('characters');
+    expect(json.poses).toEqual(['stand', 'gun']); // From config defaults
+    expect(json.directions).toBe(8); // From config
+    expect(json.size).toBe(64); // From config
     // 3D category should have model phase
-    assert.ok(json.pipeline.concept);
-    assert.ok(json.pipeline.model);
-    assert.ok(json.pipeline.render);
-    assert.ok(json.pipeline.pack);
-    assert.equal(json.pipeline.concept.status, 'pending');
+    expect(json.pipeline.concept).toBeTruthy();
+    expect(json.pipeline.model).toBeTruthy();
+    expect(json.pipeline.render).toBeTruthy();
+    expect(json.pipeline.pack).toBeTruthy();
+    expect(json.pipeline.concept.status).toBe('pending');
   });
 
   it('creates a tile asset (non-3D, no model phase)', async () => {
@@ -545,17 +540,17 @@ describe('Visual Library CRUD', () => {
       method: 'POST',
       body: { id: 'test-tile', name: 'Test Tile', category: 'tiles', prompt: 'a floor tile' },
     });
-    assert.equal(status, 201);
-    assert.equal(json.pipeline.model, undefined, 'Tile should not have model phase');
-    assert.ok(json.pipeline.concept);
-    assert.ok(json.pipeline.render);
-    assert.ok(json.pipeline.pack);
+    expect(status).toBe(201);
+    expect(json.pipeline.model).toBe(undefined);
+    expect(json.pipeline.concept).toBeTruthy();
+    expect(json.pipeline.render).toBeTruthy();
+    expect(json.pipeline.pack).toBeTruthy();
   });
 
   it('reads single asset', async () => {
     const { status, json } = await fetchJSON('/api/visual-library/test-char');
-    assert.equal(status, 200);
-    assert.equal(json.name, 'Test Character');
+    expect(status).toBe(200);
+    expect(json.name).toBe('Test Character');
   });
 
   it('rejects duplicate asset', async () => {
@@ -563,7 +558,7 @@ describe('Visual Library CRUD', () => {
       method: 'POST',
       body: { id: 'test-char', name: 'Dupe', category: 'characters' },
     });
-    assert.equal(status, 409);
+    expect(status).toBe(409);
   });
 
   it('updates asset metadata', async () => {
@@ -571,22 +566,22 @@ describe('Visual Library CRUD', () => {
       method: 'PUT',
       body: { prompt: 'updated prompt', tags: ['updated'] },
     });
-    assert.equal(status, 200);
-    assert.equal(json.prompt, 'updated prompt');
-    assert.deepEqual(json.tags, ['updated']);
+    expect(status).toBe(200);
+    expect(json.prompt).toBe('updated prompt');
+    expect(json.tags).toEqual(['updated']);
   });
 
   it('deletes asset', async () => {
     const { status } = await fetchJSON('/api/visual-library/test-tile', { method: 'DELETE' });
-    assert.equal(status, 200);
+    expect(status).toBe(200);
 
     const { json } = await fetchJSON('/api/visual-library');
-    assert.equal(json.assets['test-tile'], undefined);
+    expect(json.assets['test-tile']).toBe(undefined);
   });
 
   it('returns 404 for unknown asset', async () => {
     const { status } = await fetchJSON('/api/visual-library/nonexistent');
-    assert.equal(status, 404);
+    expect(status).toBe(404);
   });
 });
 
@@ -612,10 +607,10 @@ describe('Visual Pipeline Staleness', () => {
 
     // Verify all done
     const { json: before } = await fetchJSON('/api/visual-library/test-char');
-    assert.equal(before.pipeline.concept.status, 'done');
-    assert.equal(before.pipeline.model.status, 'done');
-    assert.equal(before.pipeline.render.status, 'done');
-    assert.equal(before.pipeline.pack.status, 'done');
+    expect(before.pipeline.concept.status).toBe('done');
+    expect(before.pipeline.model.status).toBe('done');
+    expect(before.pipeline.render.status).toBe('done');
+    expect(before.pipeline.pack.status).toBe('done');
 
     // Trigger concept regeneration — will fail (no ComfyUI) but staleness should propagate
     // We can test staleness by calling the generate endpoint and checking downstream
@@ -631,16 +626,16 @@ describe('Visual Pipeline Staleness', () => {
     const { json: afterAttempt } = await fetchJSON('/api/visual-library/test-char');
 
     // On error, concept should be 'error', downstream unchanged
-    assert.equal(afterAttempt.pipeline.concept.status, 'error');
+    expect(afterAttempt.pipeline.concept.status).toBe('error');
     // Downstream stays done because staleness only triggers on success
-    assert.equal(afterAttempt.pipeline.model.status, 'done');
-    assert.equal(afterAttempt.pipeline.render.status, 'done');
-    assert.equal(afterAttempt.pipeline.pack.status, 'done');
+    expect(afterAttempt.pipeline.model.status).toBe('done');
+    expect(afterAttempt.pipeline.render.status).toBe('done');
+    expect(afterAttempt.pipeline.pack.status).toBe('done');
   });
 });
 
 describe('Visual Library Assign/Sync', () => {
-  before(async () => {
+  beforeAll(async () => {
     // Create a visual asset with pack done
     const libPath = join(PROJECT_ROOT, 'visual-library.json');
     const libData = JSON.parse(readFileSync(libPath, 'utf-8'));
@@ -674,15 +669,15 @@ describe('Visual Library Assign/Sync', () => {
       method: 'POST',
       body: { project: 'arena', atlas: 'characters' },
     });
-    assert.equal(status, 200);
-    assert.ok(json.assignedTo.arena);
-    assert.equal(json.assignedTo.arena.atlas, 'characters');
+    expect(status).toBe(200);
+    expect(json.assignedTo.arena).toBeTruthy();
+    expect(json.assignedTo.arena.atlas).toBe('characters');
   });
 
   it('copies atlas files to project', async () => {
     const spritesDir = join(arenaDir, 'frontend', 'public', 'assets', 'sprites');
-    assert.ok(existsSync(join(spritesDir, 'characters.png')));
-    assert.ok(existsSync(join(spritesDir, 'characters.json')));
+    expect(existsSync(join(spritesDir, 'characters.png'))).toBeTruthy();
+    expect(existsSync(join(spritesDir, 'characters.json'))).toBeTruthy();
   });
 
   it('unassigns visual asset', async () => {
@@ -690,8 +685,8 @@ describe('Visual Library Assign/Sync', () => {
       method: 'POST',
       body: { project: 'arena' },
     });
-    assert.equal(status, 200);
-    assert.equal(json.assignedTo.arena, undefined);
+    expect(status).toBe(200);
+    expect(json.assignedTo.arena).toBe(undefined);
   });
 
   it('syncs stale visual assignments', async () => {
@@ -705,14 +700,14 @@ describe('Visual Library Assign/Sync', () => {
     writeFileSync(libPath, JSON.stringify(libData, null, 2));
 
     const { status, json } = await fetchJSON('/api/projects/arena/sync-visual', { method: 'POST' });
-    assert.equal(status, 200);
-    assert.ok(json.synced.includes('assign-test'));
-    assert.equal(json.count, 1);
+    expect(status).toBe(200);
+    expect(json.synced.includes('assign-test')).toBeTruthy();
+    expect(json.count).toBe(1);
   });
 });
 
 describe('Visual Library Import', () => {
-  before(async () => {
+  beforeAll(async () => {
     // Create character render files in arena for import test
     const renderDir = join(arenaDir, 'assets', 'renders', 'characters', 'warrior');
     mkdirSync(renderDir, { recursive: true });
@@ -725,25 +720,25 @@ describe('Visual Library Import', () => {
       method: 'POST',
       body: { project: 'arena' },
     });
-    assert.equal(status, 200);
-    assert.ok(json.imported.includes('warrior'));
-    assert.ok(json.count >= 1);
+    expect(status).toBe(200);
+    expect(json.imported.includes('warrior')).toBeTruthy();
+    expect(json.count >= 1).toBeTruthy();
   });
 
   it('sets correct pipeline status for imported assets', async () => {
     const { json } = await fetchJSON('/api/visual-library/warrior');
     if (!json.pipeline) return;
     // warrior has renders but no concept/model source
-    assert.equal(json.pipeline.render.status, 'done');
-    assert.equal(json.pipeline.render.frameCount, 2);
+    expect(json.pipeline.render.status).toBe('done');
+    expect(json.pipeline.render.frameCount).toBe(2);
     // Pack done because atlas exists
-    assert.equal(json.pipeline.pack.status, 'done');
+    expect(json.pipeline.pack.status).toBe('done');
   });
 
   it('copies render files to NAS', async () => {
     const renderDir = join(nasVisualDir, 'renders', 'characters', 'warrior');
-    assert.ok(existsSync(join(renderDir, 'warrior-stand-N.png')));
-    assert.ok(existsSync(join(renderDir, 'warrior-gun-N.png')));
+    expect(existsSync(join(renderDir, 'warrior-stand-N.png'))).toBeTruthy();
+    expect(existsSync(join(renderDir, 'warrior-gun-N.png'))).toBeTruthy();
   });
 
   it('rejects import for unknown project', async () => {
@@ -751,7 +746,7 @@ describe('Visual Library Import', () => {
       method: 'POST',
       body: { project: 'nonexistent' },
     });
-    assert.equal(status, 404);
+    expect(status).toBe(404);
   });
 });
 
@@ -760,15 +755,13 @@ describe('Visual Generation Lock', () => {
     const res = await fetch(`${baseUrl}/api/visual-library/nonexistent/generate/concept`, { method: 'POST' });
     // SSE or 404 depending on route ordering
     const text = await res.text();
-    assert.ok(res.status === 404 || text.includes('not found') || text.includes('Asset not found'),
-      `Expected 404 or not found, got ${res.status}: ${text.slice(0, 200)}`);
+    expect(res.status === 404 || text.includes('not found') || text.includes('Asset not found')).toBeTruthy();
   });
 
   it('rejects invalid phase', async () => {
     const res = await fetch(`${baseUrl}/api/visual-library/test-char/generate/invalid`, { method: 'POST' });
     const text = await res.text();
-    assert.ok(res.status === 400 || text.includes('Invalid phase'),
-      `Expected 400, got ${res.status}`);
+    expect(res.status === 400 || text.includes('Invalid phase')).toBeTruthy();
   });
 });
 
@@ -785,7 +778,7 @@ describe('Concurrent generation locks', () => {
     if (firstSound) {
       // This will fail (no backend) but should NOT be 409
       const res = await fetch(`${baseUrl}/api/library/${firstSound}/generate`, { method: 'POST' });
-      assert.notEqual(res.status, 409, 'Audio generation should not be locked');
+      expect(res.status).not.toBe(409);
       await res.text(); // Drain response
     }
   });
@@ -799,10 +792,10 @@ describe('Audio streaming', () => {
 
     const res = await fetch(`${baseUrl}/api/library/${firstId}/audio`);
     // May be 404 if WAV not on NAS (import copies it)
-    assert.ok([200, 404].includes(res.status));
+    expect([200, 404].includes(res.status)).toBeTruthy();
     if (res.status === 200) {
       const buf = await res.arrayBuffer();
-      assert.ok(buf.byteLength > 0);
+      expect(buf.byteLength > 0).toBeTruthy();
     }
   });
 
@@ -813,16 +806,16 @@ describe('Audio streaming', () => {
 
     // OGG might not exist yet (no processing), should be 404
     const res = await fetch(`${baseUrl}/api/library/${firstId}/audio?format=ogg`);
-    assert.ok([200, 404].includes(res.status));
+    expect([200, 404].includes(res.status)).toBeTruthy();
   });
 });
 
 describe('Project scan', () => {
   it('scan discovers arena sounds', async () => {
     const { status, json } = await fetchJSON('/api/projects/arena/scan', { method: 'POST' });
-    assert.equal(status, 200);
-    assert.ok(json.sounds);
-    assert.ok(json.sounds.gunshot);
+    expect(status).toBe(200);
+    expect(json.sounds).toBeTruthy();
+    expect(json.sounds.gunshot).toBeTruthy();
   });
 });
 
@@ -833,7 +826,7 @@ describe('Project scan', () => {
 describe('Regen workflow (SSE flow)', () => {
   const REGEN_ID = '_regen_test_disposable';
 
-  before(async () => {
+  beforeAll(async () => {
     // Create a disposable library sound with a WAV on NAS
     const config = JSON.parse(readFileSync(join(PROJECT_ROOT, 'config', 'library-config.json'), 'utf-8'));
     const wavDir = join(config.libraryRoot, 'sfx', 'ui');
@@ -845,41 +838,41 @@ describe('Regen workflow (SSE flow)', () => {
     });
   });
 
-  after(async () => {
+  afterAll(async () => {
     // Clean up disposable sound
     try { await fetchJSON(`/api/library/${REGEN_ID}`, { method: 'DELETE' }); } catch {}
   });
 
   it('generate endpoint returns SSE stream with progress events', async () => {
     const res = await fetch(`${baseUrl}/api/library/${REGEN_ID}/generate`, { method: 'POST' });
-    assert.equal(res.status, 200);
-    assert.equal(res.headers.get('content-type'), 'text/event-stream');
+    expect(res.status).toBe(200);
+    expect(res.headers.get('content-type')).toBe('text/event-stream');
 
     const text = await res.text();
     // Should contain at least a progress event and a complete event
-    assert.ok(text.includes('event: progress'), 'Missing progress event');
-    assert.ok(text.includes('event: complete'), 'Missing complete event');
+    expect(text.includes('event: progress')).toBeTruthy();
+    expect(text.includes('event: complete')).toBeTruthy();
     // Will contain an error event (no AudioCraft in test) — that's expected
-    assert.ok(text.includes(`"sound":"${REGEN_ID}"`), 'SSE data should reference the sound ID');
+    expect(text.includes(`"sound":"${REGEN_ID}"`)).toBeTruthy();
   });
 
   it('generation error is reported via SSE (not HTTP 500)', async () => {
     const res = await fetch(`${baseUrl}/api/library/${REGEN_ID}/generate`, { method: 'POST' });
     // Endpoint should return 200 (SSE stream), not 500
-    assert.equal(res.status, 200);
+    expect(res.status).toBe(200);
 
     const text = await res.text();
     // Error from missing AudioCraft/Python should be in SSE error event
-    assert.ok(text.includes('event: error'), 'Should contain SSE error event for failed generation');
+    expect(text.includes('event: error')).toBeTruthy();
     // The complete event should still fire
-    assert.ok(text.includes('event: complete'), 'Complete event should always fire');
+    expect(text.includes('event: complete')).toBeTruthy();
   });
 
   it('lock is released after failed generation', async () => {
     // After the failed generate above, the lock should be released
     // A second generate call should NOT return 409
     const res = await fetch(`${baseUrl}/api/library/${REGEN_ID}/generate`, { method: 'POST' });
-    assert.notEqual(res.status, 409, 'Lock should be released after failed generation');
+    expect(res.status).not.toBe(409);
     await res.text(); // Drain
   });
 });
@@ -887,7 +880,7 @@ describe('Regen workflow (SSE flow)', () => {
 describe('Concurrent generation / busy state', () => {
   const BUSY_ID = '_busy_test_disposable';
 
-  before(async () => {
+  beforeAll(async () => {
     const config = JSON.parse(readFileSync(join(PROJECT_ROOT, 'config', 'library-config.json'), 'utf-8'));
     createTestWav(join(config.libraryRoot, 'sfx', 'ui', `${BUSY_ID}.wav`));
 
@@ -897,7 +890,7 @@ describe('Concurrent generation / busy state', () => {
     });
   });
 
-  after(async () => {
+  afterAll(async () => {
     try { await fetchJSON(`/api/library/${BUSY_ID}`, { method: 'DELETE' }); } catch {}
   });
 
@@ -913,7 +906,7 @@ describe('Concurrent generation / busy state', () => {
 
     if (secondRes.status === 409) {
       const body = await secondRes.json();
-      assert.equal(body.error, 'Audio generation in progress');
+      expect(body.error).toBe('Audio generation in progress');
     } else {
       // If the first one already completed (fast failure), both get through — acceptable
       await secondRes.text(); // Drain
@@ -940,7 +933,7 @@ describe('Concurrent generation / busy state', () => {
     // Either 409 (lock held) or both complete (fast failure) — both acceptable
     if (secondRes.status === 409) {
       const body = await secondRes.json();
-      assert.equal(body.error, 'Visual generation in progress');
+      expect(body.error).toBe('Visual generation in progress');
     } else {
       await secondRes.text();
     }
@@ -965,7 +958,7 @@ describe('Concurrent generation / busy state', () => {
 
     const visualRes = await fetch(`${baseUrl}/api/visual-library/_cross_test/generate/concept`, { method: 'POST' });
     // Should NOT be 409 — different lock
-    assert.notEqual(visualRes.status, 409, 'Visual should not be blocked by audio lock');
+    expect(visualRes.status).not.toBe(409);
     await visualRes.text();
 
     const audio = await audioRes;
@@ -978,7 +971,7 @@ describe('Concurrent generation / busy state', () => {
 describe('Audio file update after generation', () => {
   const REFRESH_ID = '_refresh_test_disposable';
 
-  before(async () => {
+  beforeAll(async () => {
     const config = JSON.parse(readFileSync(join(PROJECT_ROOT, 'config', 'library-config.json'), 'utf-8'));
     const wavDir = join(config.libraryRoot, 'sfx', 'ui');
     createTestWav(join(wavDir, `${REFRESH_ID}.wav`));
@@ -989,15 +982,15 @@ describe('Audio file update after generation', () => {
     });
   });
 
-  after(async () => {
+  afterAll(async () => {
     try { await fetchJSON(`/api/library/${REFRESH_ID}`, { method: 'DELETE' }); } catch {}
   });
 
   it('WAV file is streamable from library endpoint', async () => {
     const res = await fetch(`${baseUrl}/api/library/${REFRESH_ID}/audio`);
-    assert.equal(res.status, 200, 'WAV should be streamable');
+    expect(res.status).toBe(200);
     const buf = await res.arrayBuffer();
-    assert.ok(buf.byteLength > 44, 'WAV should have content beyond header');
+    expect(buf.byteLength > 44).toBeTruthy();
   });
 
   it('processed OGG is streamable after assign + sync', async () => {
@@ -1006,14 +999,14 @@ describe('Audio file update after generation', () => {
       method: 'POST',
       body: { project: 'arena', targetPath: `sfx/${REFRESH_ID}` },
     });
-    assert.equal(status, 200);
+    expect(status).toBe(200);
     await fetchJSON('/api/projects/arena/sync', { method: 'POST' });
 
     // OGG should now exist on NAS
     const res = await fetch(`${baseUrl}/api/library/${REFRESH_ID}/audio?format=ogg`);
-    assert.equal(res.status, 200, 'OGG should be streamable after sync processing');
+    expect(res.status).toBe(200);
     const buf = await res.arrayBuffer();
-    assert.ok(buf.byteLength > 0, 'OGG should have content');
+    expect(buf.byteLength > 0).toBeTruthy();
 
     // Cleanup assignment
     await fetchJSON(`/api/library/${REFRESH_ID}/unassign`, {
@@ -1031,9 +1024,9 @@ describe('Audio file update after generation', () => {
     await fetchJSON('/api/projects/arena/sync', { method: 'POST' });
 
     const res = await fetch(`${baseUrl}/api/library/${REFRESH_ID}/audio?format=mp3`);
-    assert.equal(res.status, 200, 'MP3 should be streamable after sync processing');
+    expect(res.status).toBe(200);
     const buf = await res.arrayBuffer();
-    assert.ok(buf.byteLength > 0, 'MP3 should have content');
+    expect(buf.byteLength > 0).toBeTruthy();
 
     await fetchJSON(`/api/library/${REFRESH_ID}/unassign`, {
       method: 'POST',
@@ -1045,7 +1038,7 @@ describe('Audio file update after generation', () => {
 describe('Delete workflow', () => {
   const DEL_ID = '_delete_test_disposable';
 
-  before(async () => {
+  beforeAll(async () => {
     // Create disposable sound with files on NAS
     const config = JSON.parse(readFileSync(join(PROJECT_ROOT, 'config', 'library-config.json'), 'utf-8'));
     const wavDir = join(config.libraryRoot, 'sfx', 'ui');
@@ -1062,38 +1055,38 @@ describe('Delete workflow', () => {
 
   it('sound exists before deletion', async () => {
     const { json } = await fetchJSON('/api/library');
-    assert.ok(json.sounds[DEL_ID], 'Sound should exist in library');
+    expect(json.sounds[DEL_ID]).toBeTruthy();
   });
 
   it('NAS files exist before deletion', async () => {
     const config = JSON.parse(readFileSync(join(PROJECT_ROOT, 'config', 'library-config.json'), 'utf-8'));
     const wavDir = join(config.libraryRoot, 'sfx', 'ui');
-    assert.ok(existsSync(join(wavDir, `${DEL_ID}.wav`)), 'WAV should exist');
-    assert.ok(existsSync(join(wavDir, `${DEL_ID}.ogg`)), 'OGG should exist');
-    assert.ok(existsSync(join(wavDir, `${DEL_ID}.mp3`)), 'MP3 should exist');
+    expect(existsSync(join(wavDir, `${DEL_ID}.wav`))).toBeTruthy();
+    expect(existsSync(join(wavDir, `${DEL_ID}.ogg`))).toBeTruthy();
+    expect(existsSync(join(wavDir, `${DEL_ID}.mp3`))).toBeTruthy();
   });
 
   it('DELETE removes sound from library catalog', async () => {
     const { status, json } = await fetchJSON(`/api/library/${DEL_ID}`, { method: 'DELETE' });
-    assert.equal(status, 200);
-    assert.equal(json.deleted, DEL_ID);
+    expect(status).toBe(200);
+    expect(json.deleted).toBe(DEL_ID);
 
     // Verify gone from catalog
     const { json: lib } = await fetchJSON('/api/library');
-    assert.equal(lib.sounds[DEL_ID], undefined, 'Sound should be removed from catalog');
+    expect(lib.sounds[DEL_ID]).toBe(undefined);
   });
 
   it('DELETE removes WAV/OGG/MP3 from NAS', async () => {
     const config = JSON.parse(readFileSync(join(PROJECT_ROOT, 'config', 'library-config.json'), 'utf-8'));
     const wavDir = join(config.libraryRoot, 'sfx', 'ui');
-    assert.ok(!existsSync(join(wavDir, `${DEL_ID}.wav`)), 'WAV should be deleted from NAS');
-    assert.ok(!existsSync(join(wavDir, `${DEL_ID}.ogg`)), 'OGG should be deleted from NAS');
-    assert.ok(!existsSync(join(wavDir, `${DEL_ID}.mp3`)), 'MP3 should be deleted from NAS');
+    expect(!existsSync(join(wavDir, `${DEL_ID}.wav`))).toBeTruthy();
+    expect(!existsSync(join(wavDir, `${DEL_ID}.ogg`))).toBeTruthy();
+    expect(!existsSync(join(wavDir, `${DEL_ID}.mp3`))).toBeTruthy();
   });
 
   it('DELETE returns 404 for already-deleted sound', async () => {
     const { status } = await fetchJSON(`/api/library/${DEL_ID}`, { method: 'DELETE' });
-    assert.equal(status, 404);
+    expect(status).toBe(404);
   });
 
   it('visual DELETE removes asset and NAS files', async () => {
@@ -1112,18 +1105,18 @@ describe('Delete workflow', () => {
 
     // Verify exists
     const { json: before } = await fetchJSON(`/api/visual-library/${VDEL_ID}`);
-    assert.equal(before.id, VDEL_ID);
+    expect(before.id).toBe(VDEL_ID);
 
     // Delete
     const { status } = await fetchJSON(`/api/visual-library/${VDEL_ID}`, { method: 'DELETE' });
-    assert.equal(status, 200);
+    expect(status).toBe(200);
 
     // Verify gone from catalog
     const { status: getStatus } = await fetchJSON(`/api/visual-library/${VDEL_ID}`);
-    assert.equal(getStatus, 404);
+    expect(getStatus).toBe(404);
 
     // Verify concept PNG cleaned from NAS
-    assert.ok(!existsSync(join(conceptDir, `${VDEL_ID}.png`)), 'Concept PNG should be deleted from NAS');
+    expect(!existsSync(join(conceptDir, `${VDEL_ID}.png`))).toBeTruthy();
   });
 });
 
@@ -1134,20 +1127,20 @@ describe('Delete workflow', () => {
 describe('Library flagged field (BUG 4/5)', () => {
   const FLAG_ID = '_flag_test_disposable';
 
-  before(async () => {
+  beforeAll(async () => {
     await fetchJSON('/api/library', {
       method: 'POST',
       body: { id: FLAG_ID, name: 'Flag Test', category: 'sfx/ui', prompt: 'flag test beep', duration: 1.0 },
     });
   });
 
-  after(async () => {
+  afterAll(async () => {
     try { await fetchJSON(`/api/library/${FLAG_ID}`, { method: 'DELETE' }); } catch {}
   });
 
   it('newly created sound is not flagged', async () => {
     const { json } = await fetchJSON('/api/library');
-    assert.equal(json.sounds[FLAG_ID].flagged, undefined);
+    expect(json.sounds[FLAG_ID].flagged).toBe(undefined);
   });
 
   it('PUT accepts flagged=true', async () => {
@@ -1155,13 +1148,13 @@ describe('Library flagged field (BUG 4/5)', () => {
       method: 'PUT',
       body: { flagged: true },
     });
-    assert.equal(status, 200);
-    assert.equal(json.flagged, true);
+    expect(status).toBe(200);
+    expect(json.flagged).toBe(true);
   });
 
   it('flagged persists in library catalog', async () => {
     const { json } = await fetchJSON('/api/library');
-    assert.equal(json.sounds[FLAG_ID].flagged, true);
+    expect(json.sounds[FLAG_ID].flagged).toBe(true);
   });
 
   it('PUT accepts flagged=false (unflag)', async () => {
@@ -1169,15 +1162,15 @@ describe('Library flagged field (BUG 4/5)', () => {
       method: 'PUT',
       body: { flagged: false },
     });
-    assert.equal(status, 200);
-    assert.equal(json.flagged, false);
+    expect(status).toBe(200);
+    expect(json.flagged).toBe(false);
   });
 });
 
 describe('Library regenerate-flagged endpoint (BUG 4)', () => {
   const LRF_ID = '_lib_regen_flagged_disposable';
 
-  before(async () => {
+  beforeAll(async () => {
     const config = JSON.parse(readFileSync(join(PROJECT_ROOT, 'config', 'library-config.json'), 'utf-8'));
     const wavDir = join(config.libraryRoot, 'sfx', 'ui');
     createTestWav(join(wavDir, `${LRF_ID}.wav`));
@@ -1188,15 +1181,15 @@ describe('Library regenerate-flagged endpoint (BUG 4)', () => {
     });
   });
 
-  after(async () => {
+  afterAll(async () => {
     try { await fetchJSON(`/api/library/${LRF_ID}`, { method: 'DELETE' }); } catch {}
   });
 
   it('returns 400 when no sounds are flagged', async () => {
     const res = await fetch(`${baseUrl}/api/library/regenerate-flagged`, { method: 'POST' });
-    assert.equal(res.status, 400);
+    expect(res.status).toBe(400);
     const json = await res.json();
-    assert.equal(json.error, 'No flagged sounds');
+    expect(json.error).toBe('No flagged sounds');
   });
 
   it('returns SSE stream when flagged sounds exist', async () => {
@@ -1207,13 +1200,13 @@ describe('Library regenerate-flagged endpoint (BUG 4)', () => {
     });
 
     const res = await fetch(`${baseUrl}/api/library/regenerate-flagged`, { method: 'POST' });
-    assert.equal(res.status, 200);
-    assert.equal(res.headers.get('content-type'), 'text/event-stream');
+    expect(res.status).toBe(200);
+    expect(res.headers.get('content-type')).toBe('text/event-stream');
 
     const text = await res.text();
-    assert.ok(text.includes('event: progress'), 'Missing progress event');
-    assert.ok(text.includes('event: complete'), 'Missing complete event');
-    assert.ok(text.includes(`"sound":"${LRF_ID}"`), 'SSE data should reference the sound ID');
+    expect(text.includes('event: progress')).toBeTruthy();
+    expect(text.includes('event: complete')).toBeTruthy();
+    expect(text.includes(`"sound":"${LRF_ID}"`)).toBeTruthy();
   });
 
   it('unflag is cleared after regen attempt (even on error)', async () => {
@@ -1231,7 +1224,7 @@ describe('Library regenerate-flagged endpoint (BUG 4)', () => {
     // Since AudioCraft isn't available, the sound will error and flagged stays true
     const { json } = await fetchJSON('/api/library');
     // Error path: flagged remains true (not auto-cleared on failure)
-    assert.equal(json.sounds[LRF_ID].flagged, true, 'Flagged should remain true after failed generation');
+    expect(json.sounds[LRF_ID].flagged).toBe(true);
   });
 
   it('returns 409 when generation is already in progress', async () => {
@@ -1243,7 +1236,7 @@ describe('Library regenerate-flagged endpoint (BUG 4)', () => {
     const secondRes = await fetch(`${baseUrl}/api/library/regenerate-flagged`, { method: 'POST' });
     if (secondRes.status === 409) {
       const body = await secondRes.json();
-      assert.equal(body.error, 'Audio generation in progress');
+      expect(body.error).toBe('Audio generation in progress');
     } else {
       // First one completed so fast the lock was already released — acceptable
       await secondRes.text();
@@ -1261,8 +1254,7 @@ describe('Duration rounding (BUG 2)', () => {
     for (const [id, sound] of Object.entries(json.sounds)) {
       if (sound._fileDuration != null) {
         const decimalPlaces = (String(sound._fileDuration).split('.')[1] || '').length;
-        assert.ok(decimalPlaces <= 1,
-          `${id} _fileDuration ${sound._fileDuration} has ${decimalPlaces} decimal places, expected ≤1`);
+        expect(decimalPlaces <= 1).toBeTruthy();
       }
     }
   });
@@ -1273,12 +1265,11 @@ describe('Duration rounding (BUG 2)', () => {
 
     const { json } = await fetchJSON('/api/projects/arena/scan', { method: 'POST' });
     const sound = json.sounds['_dur_test'];
-    assert.ok(sound, '_dur_test should appear after scan');
+    expect(sound).toBeTruthy();
 
     if (sound.duration != null) {
       const decimalPlaces = (String(sound.duration).split('.')[1] || '').length;
-      assert.ok(decimalPlaces <= 1,
-        `_dur_test duration ${sound.duration} has ${decimalPlaces} decimal places, expected ≤1`);
+      expect(decimalPlaces <= 1).toBeTruthy();
     }
   });
 });
@@ -1286,13 +1277,13 @@ describe('Duration rounding (BUG 2)', () => {
 describe('Queue depth endpoint', () => {
   it('GET /api/queue-depth returns depth object', async () => {
     const res = await fetch(`${baseUrl}/api/queue-depth`);
-    assert.equal(res.status, 200);
+    expect(res.status).toBe(200);
     const data = await res.json();
-    assert.equal(typeof data.depth, 'number');
-    assert.equal(typeof data.pending, 'number');
-    assert.equal(typeof data.active, 'number');
-    assert.equal(typeof data.workerConnected, 'boolean');
-    assert.equal(data.depth, 0);
+    expect(typeof data.depth).toBe('number');
+    expect(typeof data.pending).toBe('number');
+    expect(typeof data.active).toBe('number');
+    expect(typeof data.workerConnected).toBe('boolean');
+    expect(data.depth).toBe(0);
   });
 });
 
@@ -1306,8 +1297,7 @@ describe('Seed integer rounding (BUG 3)', () => {
     });
 
     const { json } = await fetchJSON('/api/library');
-    assert.equal(json.sounds[SEED_ID].seed, 718862916,
-      'Large integer seed should survive JSON round-trip exactly');
+    expect(json.sounds[SEED_ID].seed).toBe(718862916);
 
     // Cleanup
     await fetchJSON(`/api/library/${SEED_ID}`, { method: 'DELETE' });
@@ -1324,8 +1314,8 @@ describe('Seed integer rounding (BUG 3)', () => {
       method: 'PUT',
       body: { seed: 2147483647 }, // Max int32
     });
-    assert.equal(status, 200);
-    assert.equal(json.seed, 2147483647);
+    expect(status).toBe(200);
+    expect(json.seed).toBe(2147483647);
 
     await fetchJSON(`/api/library/${SEED_ID2}`, { method: 'DELETE' });
   });
