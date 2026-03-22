@@ -14,9 +14,10 @@ import request from 'supertest';
 // Mock DatabaseService before any app module is imported
 // ---------------------------------------------------------------------------
 
-const { mockDbQuery, mockHealthCheck } = vi.hoisted(() => ({
+const { mockDbQuery, mockHealthCheck, mockAuthFetch } = vi.hoisted(() => ({
     mockDbQuery: vi.fn(),
     mockHealthCheck: vi.fn(),
+    mockAuthFetch: vi.fn(),
 }));
 
 vi.mock('./services/DatabaseService.js', () => ({
@@ -26,6 +27,12 @@ vi.mock('./services/DatabaseService.js', () => ({
             healthCheck: mockHealthCheck,
         }),
     },
+}));
+
+vi.mock('./config/authClient.js', () => ({
+    authFetch: mockAuthFetch,
+    authFetchInternal: mockAuthFetch,
+    fetchUserProfile: vi.fn().mockResolvedValue(null),
 }));
 
 // ---------------------------------------------------------------------------
@@ -90,6 +97,8 @@ function makeLobbyRow(overrides: Record<string, unknown> = {}): Record<string, u
 describe('HTTP API Integration', () => {
     beforeEach(() => {
         vi.clearAllMocks();
+        // Default: auth service returns 404 (not found) — routes will use fallback/default behaviour
+        mockAuthFetch.mockResolvedValue({ ok: false, status: 404, json: async () => ({}) } as Response);
     });
 
     afterEach(() => {
@@ -438,6 +447,13 @@ describe('HTTP API Integration', () => {
                 selected_character: 'ninja',
                 experience: 0,
             };
+            // 'ninja' is not 'student' so the route verifies ownership via authFetch
+            mockAuthFetch.mockResolvedValueOnce({
+                ok: true,
+                json: async () => ({
+                    inventory: [{ itemType: 'character', itemId: 'character_ninja' }],
+                }),
+            } as Response);
             mockDbQuery.mockResolvedValueOnce({ rowCount: 1, rows: [playerRow] });
 
             const res = await request(app)
@@ -534,26 +550,32 @@ describe('HTTP API Integration', () => {
 
     describe('GET /api/matches/:id/results', () => {
         it('returns results for a match', async () => {
-            const rows = [
-                { player_id: 1, placement: 1, kills: 3 },
-                { player_id: 2, placement: 2, kills: 1 },
+            const resultRows = [
+                { playerId: '1', placement: 1, kills: 3, username: 'Alice', character: 'student', deaths: 0, damageDealt: 100, itemsCollected: 2, roundsWon: 1, experienceGained: 50, levelBefore: 1, levelAfter: 2 },
+                { playerId: '2', placement: 2, kills: 1, username: 'Bob', character: 'rogue', deaths: 1, damageDealt: 30, itemsCollected: 0, roundsWon: 0, experienceGained: 20, levelBefore: 1, levelAfter: 1 },
             ];
-            mockDbQuery.mockResolvedValueOnce({ rowCount: 2, rows });
+            // First query: match metadata
+            mockDbQuery.mockResolvedValueOnce({ rowCount: 1, rows: [{ id: 1, winner_auth_id: 42 }] });
+            // Second query: match results
+            mockDbQuery.mockResolvedValueOnce({ rowCount: 2, rows: resultRows });
 
             const res = await request(app).get('/api/matches/1/results');
 
             expect(res.status).toBe(200);
-            expect(res.body).toHaveLength(2);
-            expect(res.body[0].placement).toBe(1);
+            expect(res.body.results).toHaveLength(2);
+            expect(res.body.results[0].placement).toBe(1);
         });
 
         it('returns empty array when no results found', async () => {
+            // First query: match metadata — match exists but has no results
+            mockDbQuery.mockResolvedValueOnce({ rowCount: 1, rows: [{ id: 999, winner_auth_id: null }] });
+            // Second query: match results — empty
             mockDbQuery.mockResolvedValueOnce({ rowCount: 0, rows: [] });
 
             const res = await request(app).get('/api/matches/999/results');
 
             expect(res.status).toBe(200);
-            expect(res.body).toEqual([]);
+            expect(res.body.results).toEqual([]);
         });
 
         it('returns 500 on DB error', async () => {
