@@ -17,14 +17,16 @@ export interface ExtractedCategories {
 const CATEGORY_PATTERNS: Record<string, string[]> = {
   age: [
     'teen', '18yo', '19yo', 'young', 'mature', 'milf', 'cougar', 'older',
-    'granny', 'college', 'middle aged',
+    'granny', 'college', 'middle aged', 'babe',
   ],
   physical: [
     'blonde', 'brunette', 'redhead', 'petite', 'busty', 'big tits',
     'small tits', 'skinny', 'curvy', 'thick', 'slim', 'tall', 'short',
     'athletic', 'chubby', 'natural', 'fake', 'pierced', 'tattooed',
     'hairy', 'shaved', 'bald', 'muscular', 'fit', 'big ass', 'small ass',
-    'long hair', 'short hair',
+    'long hair', 'short hair', 'tiny', 'beautiful', 'beauty', 'cute',
+    'sexy', 'huge', 'tight', 'glasses', 'braces', 'stockings',
+    'lingerie', 'latex', 'leather', 'nylon', 'pantyhose',
   ],
   ethnicity: [
     'asian', 'russian', 'italian', 'british', 'japanese', 'chinese',
@@ -35,11 +37,11 @@ const CATEGORY_PATTERNS: Record<string, string[]> = {
   ],
   relationship: [
     'step', 'stepsis', 'stepmom', 'stepdad', 'stepson', 'stepdaughter',
-    'step-mom', 'step-dad', 'step-sister', 'step-brother',
+    'step-mom', 'step-dad', 'step-sister', 'step-brother', 'stepsister',
     'mom', 'dad', 'sister', 'brother', 'gf', 'girlfriend', 'wife',
     'husband', 'stranger', 'neighbor', 'boss', 'teacher', 'student',
     'babysitter', 'roommate', 'ex', 'friend', 'coworker', 'landlord',
-    'couple',
+    'couple', 'daughter', 'daddy',
   ],
   acts: [
     'anal', 'oral', 'creampie', 'facial', 'dp', 'gangbang', 'threesome',
@@ -48,13 +50,18 @@ const CATEGORY_PATTERNS: Record<string, string[]> = {
     'bondage', 'roleplay', 'pov', 'missionary', 'doggy', 'cowgirl',
     'reverse cowgirl', 'rough', 'gentle', 'romantic', 'massage',
     'casting', 'interview', 'fuck', 'fucking', 'penetration',
+    'lesbian', 'cuckold', 'orgy', 'interracial', 'bbc', 'bisexual',
+    'double penetration', 'swallow', 'cum swap', 'hardcore',
+    'submissive', 'compilation', 'striptease', 'strip', 'cosplay',
+    'bukkake', 'bukakke',
   ],
   setting: [
     'hotel', 'bedroom', 'bathroom', 'kitchen', 'office', 'outdoor',
     'car', 'public', 'beach', 'pool', 'shower', 'amateur', 'homemade',
     'studio', 'gym', 'garden', 'balcony', 'sauna', 'jacuzzi',
     'classroom', 'hospital', 'dungeon', 'yacht', 'camping', 'van',
-    'dressing room', 'indoor', 'morning',
+    'dressing room', 'indoor', 'morning', 'webcam', 'cam',
+    'behind the scenes',
   ],
   quality: ['4k', 'hd', '1080p', '720p', '480p', 'uhd', 'fhd', '8k', '2k', '60fps', 'vr', 'hdr'],
 };
