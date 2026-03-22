@@ -217,6 +217,9 @@ nginx/logs/
 # Build artifacts that can be regenerated
 build/
 dist/
+# Exception: shared-3d pre-built dist needed by Docker builds
+!arena/frontend/packages/shared-3d/dist/
+!l2p/frontend/packages/shared-3d/dist/
 out/
 .next/
 .nuxt/
