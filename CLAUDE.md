@@ -68,9 +68,9 @@ Each service has its own README.md and CLAUDE.md:
 | SOS | [SOS/README.md](SOS/README.md) | [SOS/CLAUDE.md](SOS/CLAUDE.md) | [docs/services/sos.md](docs/services/sos.md) |
 | Assetgenerator | [Assetgenerator/README.md](Assetgenerator/README.md) | [Assetgenerator/CLAUDE.md](Assetgenerator/CLAUDE.md) | [docs/services/assetgenerator.md](docs/services/assetgenerator.md) |
 
-Infrastructure: [k8s/README.md](k8s/README.md), [shared-infrastructure/README.md](shared-infrastructure/README.md)
+Infrastructure: [k8s/README.md](k8s/README.md), [shared-infrastructure/README.md](shared-infrastructure/README.md), [SMB-Symlinks/README.md](SMB-Symlinks/README.md)
 
-Architecture diagrams and operational runbooks: [Obsidian vault](shared-infrastructure/SMB-Share/Obsidian/)
+Architecture diagrams and operational runbooks: [Obsidian vault](SMB-Symlinks/storage-pve3a/Obsidian/)
 
 **Read the relevant project CLAUDE.md before making changes.** Consult `docs/` for cross-service architecture and shared patterns.
 
@@ -168,7 +168,7 @@ After the user answers a question, **immediately continue implementation**. Do n
 1. **Implement** — Write the feature code
 2. **Test** — Write unit + e2e tests for ALL new/changed code. Run unit and integration tests. Fix until green.
 3. **Deploy** — Deploy to k3s production via `./k8s/scripts/deploy/deploy-<service>.sh`. Run e2e tests against production. Fix and redeploy until green.
-4. **Document** — MANDATORY: Update Obsidian vault (`shared-infrastructure/SMB-Share/Obsidian/`) — service docs, architecture, infrastructure as applicable. Update relevant docs in `docs/` for cross-service changes. Do NOT skip Obsidian.
+4. **Document** — MANDATORY: Update Obsidian vault (`SMB-Symlinks/storage-pve3a/Obsidian/`) — service docs, architecture, infrastructure as applicable. Update relevant docs in `docs/` for cross-service changes. Do NOT skip Obsidian.
 5. **Ship** — `git commit` with descriptive message including all changes (implementation, tests, docs), `git push`.
 
 ## Change Discipline

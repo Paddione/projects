@@ -5,7 +5,7 @@
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 
-DEFAULT_DIR="/home/patrick/projects/VideoVault/shared-infrastructure/SMB-Share/movies/1_inbox"
+DEFAULT_DIR="/home/patrick/projects/SMB-Symlinks/SDD-Share/movies/1_inbox"
 
 # Colors
 RED='\033[0;31m'
