@@ -26,6 +26,7 @@ from pathlib import Path
 
 MANIFEST_PATH = Path(__file__).parent.parent / "assets" / "manifest.json"
 OUTPUT_BASE = Path(__file__).parent.parent / "assets" / "concepts"
+FORCE_OVERWRITE = False
 
 # SDXL generation params
 DEFAULT_WIDTH = 1024
@@ -247,7 +248,7 @@ def generate_asset(asset: dict, category: str, meta: dict, backend: str, comfyui
     out_dir = ensure_output_dir(category)
     out_path = out_dir / f"{asset_id}.png"
 
-    if out_path.exists():
+    if out_path.exists() and not FORCE_OVERWRITE:
         print(f"  [SKIP] {category}/{asset_id} — already exists")
         return True
 
@@ -272,7 +273,7 @@ def generate_character_concepts(char: dict, meta: dict, backend: str, comfyui_ur
 
     # Main character concept
     main_path = out_dir / f"{char_id}.png"
-    if not main_path.exists():
+    if not main_path.exists() or FORCE_OVERWRITE:
         prompt = char["prompt"]
         w, h = get_resolution("characters", meta)
         print(f"  [GEN] characters/{char_id} (overview, {w}x{h})")
@@ -289,7 +290,7 @@ def generate_character_concepts(char: dict, meta: dict, backend: str, comfyui_ur
     # Per-animation reference sheets (optional, helps Blender rigging)
     for anim_name in char.get("animations", {}):
         anim_path = out_dir / f"{char_id}_{anim_name}.png"
-        if anim_path.exists():
+        if anim_path.exists() and not FORCE_OVERWRITE:
             print(f"  [SKIP] characters/{char_id}_{anim_name} — already exists")
             continue
 
@@ -319,12 +320,14 @@ def main():
                         help="Generation backend (default: auto-detect)")
     parser.add_argument("--output", help="Output base directory (overrides default)")
     parser.add_argument("--prompt", dest="override_prompt", help="Override prompt for single asset generation")
+    parser.add_argument("--force", action="store_true", help="Overwrite existing concepts")
     args = parser.parse_args()
 
-    global OUTPUT_BASE
+    global OUTPUT_BASE, FORCE_OVERWRITE
     if args.output:
         OUTPUT_BASE = Path(args.output)
         OUTPUT_BASE.mkdir(parents=True, exist_ok=True)
+    FORCE_OVERWRITE = args.force
 
     # Determine backend
     backend = args.backend
@@ -347,8 +350,8 @@ def main():
         w, h = get_resolution(args.category, {})
         print(f"\n  [GEN] {args.category}/{args.id} ({w}x{h})")
         out_path = OUTPUT_BASE / f"{args.id}.png"
-        if out_path.exists():
-            print(f"  [SKIP] {args.category}/{args.id} — already exists")
+        if out_path.exists() and not args.force:
+            print(f"  [SKIP] {args.category}/{args.id} — already exists (use --force to overwrite)")
         elif backend == "comfyui":
             ok = comfyui_generate(args.comfyui_url, args.override_prompt, out_path, w, h)
             if ok and args.category not in KEEP_BACKGROUND_CATEGORIES:
