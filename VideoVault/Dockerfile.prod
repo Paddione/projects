@@ -13,7 +13,7 @@ RUN apt-get update \
   && rm -rf /var/lib/apt/lists/*
 
 # Copy shared modules (local to VideoVault)
-COPY VideoVault/shared/videovault /app/shared/videovault
+COPY VideoVault/shared/ /app/shared/
 
 COPY VideoVault/package*.json ./
 COPY VideoVault/tsconfig.json ./
@@ -42,7 +42,7 @@ RUN apt-get update \
 
 ENV NODE_ENV=production
 
-COPY --from=build /app/shared/videovault /app/shared/videovault
+COPY --from=build /app/shared/ /app/shared/
 
 COPY VideoVault/package*.json ./
 RUN npm install -g npm@11 && npm install --legacy-peer-deps --omit=dev
