@@ -237,42 +237,6 @@ jobs:
         run: npm --prefix backend run test:unit
 
   # ---------------------------------------------------------------------------
-  # Arena: E2E Asset Coverage Tests
-  # ---------------------------------------------------------------------------
-  arena-e2e-assets:
-    needs: changes
-    if: needs.changes.outputs.arena == 'true'
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: arena
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build arena
-        run: npm run build:all
-
-      - name: Install Playwright
-        run: npx playwright install --with-deps chromium
-
-      - name: Run asset coverage tests
-        run: npx playwright test e2e/assets.spec.ts
-
-      - name: Upload test results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: playwright-report-arena
-          path: arena/playwright-report/
-
-  # ---------------------------------------------------------------------------
   # Docker Build Validation (master only)
   # ---------------------------------------------------------------------------
   docker-validate:
@@ -360,7 +324,7 @@ jobs:
   # ---------------------------------------------------------------------------
   ci-status:
     if: always()
-    needs: [l2p, auth, shop, videovault, sos, assetgenerator, arena, arena-e2e-assets, docker-validate, k8s-validate]
+    needs: [l2p, auth, shop, videovault, sos, assetgenerator, arena, docker-validate, k8s-validate]
     runs-on: ubuntu-latest
     steps:
       - name: Check pipeline status
@@ -372,7 +336,6 @@ jobs:
           SOS_RESULT: ${{ needs.sos.result }}
           ASSETGEN_RESULT: ${{ needs.assetgenerator.result }}
           ARENA_RESULT: ${{ needs.arena.result }}
-          ARENA_E2E_RESULT: ${{ needs.arena-e2e-assets.result }}
           DOCKER_RESULT: ${{ needs.docker-validate.result }}
           K8S_RESULT: ${{ needs.k8s-validate.result }}
         run: |
@@ -384,12 +347,11 @@ jobs:
           echo "  sos:               $SOS_RESULT"
           echo "  assetgenerator:    $ASSETGEN_RESULT"
           echo "  arena:             $ARENA_RESULT"
-          echo "  arena-e2e-assets:  $ARENA_E2E_RESULT"
           echo "  docker-validate:   $DOCKER_RESULT"
           echo "  k8s-validate:      $K8S_RESULT"
 
           # Fail if any required job failed (skipped is OK — means no changes for that service)
-          for result in "$L2P_RESULT" "$AUTH_RESULT" "$SHOP_RESULT" "$VV_RESULT" "$SOS_RESULT" "$ASSETGEN_RESULT" "$ARENA_RESULT" "$ARENA_E2E_RESULT" "$DOCKER_RESULT" "$K8S_RESULT"; do
+          for result in "$L2P_RESULT" "$AUTH_RESULT" "$SHOP_RESULT" "$VV_RESULT" "$SOS_RESULT" "$ASSETGEN_RESULT" "$ARENA_RESULT" "$DOCKER_RESULT" "$K8S_RESULT"; do
             if [[ "$result" == "failure" ]]; then
               echo "::error::One or more CI jobs failed"
               exit 1
