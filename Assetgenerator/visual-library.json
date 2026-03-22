@@ -21,7 +21,7 @@
       "directions": 8,
       "size": 64,
       "color": "#00f2ff",
-      "conceptBackend": "gemini-imagen",
+      "conceptBackend": "comfyui",
       "pipeline": {
         "concept": {
           "status": "done",
@@ -89,7 +89,7 @@
           "syncedAt": "2026-03-16T05:32:13.795Z"
         }
       },
-      "conceptBackend": "gemini-imagen"
+      "conceptBackend": "comfyui"
     },
     "professor": {
       "id": "professor",
@@ -139,7 +139,7 @@
           "syncedAt": "2026-03-16T05:32:13.820Z"
         }
       },
-      "conceptBackend": "gemini-imagen"
+      "conceptBackend": "comfyui"
     },
     "dean": {
       "id": "dean",
@@ -192,7 +192,7 @@
           "syncedAt": "2026-03-16T05:32:13.844Z"
         }
       },
-      "conceptBackend": "gemini-imagen"
+      "conceptBackend": "comfyui"
     },
     "librarian": {
       "id": "librarian",
@@ -237,7 +237,7 @@
         }
       },
       "assignedTo": {},
-      "conceptBackend": "gemini-imagen"
+      "conceptBackend": "comfyui"
     },
     "projectile": {
       "id": "projectile",
@@ -280,7 +280,7 @@
           "syncedAt": "2026-03-15T04:40:18.589Z"
         }
       },
-      "conceptBackend": "gemini-imagen"
+      "conceptBackend": "comfyui"
     },
     "melee_arc": {
       "id": "melee_arc",
@@ -324,7 +324,7 @@
           "syncedAt": "2026-03-15T04:40:18.668Z"
         }
       },
-      "conceptBackend": "gemini-imagen"
+      "conceptBackend": "comfyui"
     },
     "muzzle_flash": {
       "id": "muzzle_flash",
@@ -370,7 +370,7 @@
           "syncedAt": "2026-03-15T04:40:18.778Z"
         }
       },
-      "conceptBackend": "gemini-imagen"
+      "conceptBackend": "comfyui"
     },
     "health_pack": {
       "id": "health_pack",
@@ -413,7 +413,7 @@
           "syncedAt": "2026-03-15T04:40:18.894Z"
         }
       },
-      "conceptBackend": "gemini-imagen"
+      "conceptBackend": "comfyui"
     },
     "armor_plate": {
       "id": "armor_plate",
@@ -456,7 +456,7 @@
           "syncedAt": "2026-03-15T04:40:18.989Z"
         }
       },
-      "conceptBackend": "gemini-imagen"
+      "conceptBackend": "comfyui"
     },
     "machine_gun": {
       "id": "machine_gun",
@@ -503,7 +503,7 @@
           "syncedAt": "2026-03-16T05:32:13.897Z"
         }
       },
-      "conceptBackend": "gemini-imagen"
+      "conceptBackend": "comfyui"
     },
     "floor_01": {
       "id": "floor_01",
@@ -541,7 +541,7 @@
           "syncedAt": "2026-03-15T04:40:19.073Z"
         }
       },
-      "conceptBackend": "gemini-imagen"
+      "conceptBackend": "comfyui"
     },
     "floor_02": {
       "id": "floor_02",
@@ -579,7 +579,7 @@
           "syncedAt": "2026-03-15T04:40:19.130Z"
         }
       },
-      "conceptBackend": "gemini-imagen"
+      "conceptBackend": "comfyui"
     },
     "floor_03": {
       "id": "floor_03",
@@ -617,7 +617,7 @@
           "syncedAt": "2026-03-15T04:40:19.185Z"
         }
       },
-      "conceptBackend": "gemini-imagen"
+      "conceptBackend": "comfyui"
     },
     "floor_04": {
       "id": "floor_04",
@@ -655,7 +655,7 @@
           "syncedAt": "2026-03-15T04:40:19.237Z"
         }
       },
-      "conceptBackend": "gemini-imagen"
+      "conceptBackend": "comfyui"
     },
     "wall": {
       "id": "wall",
@@ -693,7 +693,7 @@
           "syncedAt": "2026-03-15T04:40:19.290Z"
         }
       },
-      "conceptBackend": "gemini-imagen"
+      "conceptBackend": "comfyui"
     },
     "boundary": {
       "id": "boundary",
@@ -731,7 +731,7 @@
           "syncedAt": "2026-03-15T04:40:19.343Z"
         }
       },
-      "conceptBackend": "gemini-imagen"
+      "conceptBackend": "comfyui"
     },
     "zone_overlay": {
       "id": "zone_overlay",
@@ -770,7 +770,7 @@
           "syncedAt": "2026-03-16T05:32:13.921Z"
         }
       },
-      "conceptBackend": "gemini-imagen"
+      "conceptBackend": "comfyui"
     },
     "building": {
       "id": "building",
@@ -817,7 +817,7 @@
           "syncedAt": "2026-03-16T05:32:13.945Z"
         }
       },
-      "conceptBackend": "gemini-imagen"
+      "conceptBackend": "comfyui"
     },
     "bench": {
       "id": "bench",
@@ -864,7 +864,7 @@
           "syncedAt": "2026-03-16T05:32:13.971Z"
         }
       },
-      "conceptBackend": "gemini-imagen"
+      "conceptBackend": "comfyui"
     },
     "fountain": {
       "id": "fountain",
@@ -911,7 +911,7 @@
           "syncedAt": "2026-03-16T05:32:13.998Z"
         }
       },
-      "conceptBackend": "gemini-imagen"
+      "conceptBackend": "comfyui"
     },
     "hedge": {
       "id": "hedge",
@@ -958,7 +958,7 @@
           "syncedAt": "2026-03-16T05:32:14.023Z"
         }
       },
-      "conceptBackend": "gemini-imagen"
+      "conceptBackend": "comfyui"
     },
     "pond": {
       "id": "pond",
@@ -1005,7 +1005,7 @@
           "syncedAt": "2026-03-16T05:32:14.049Z"
         }
       },
-      "conceptBackend": "gemini-imagen"
+      "conceptBackend": "comfyui"
     },
     "heart_full": {
       "id": "heart_full",
@@ -1043,7 +1043,7 @@
           "syncedAt": "2026-03-15T04:40:19.615Z"
         }
       },
-      "conceptBackend": "gemini-imagen"
+      "conceptBackend": "comfyui"
     },
     "heart_empty": {
       "id": "heart_empty",
@@ -1081,7 +1081,7 @@
           "syncedAt": "2026-03-15T04:40:19.708Z"
         }
       },
-      "conceptBackend": "gemini-imagen"
+      "conceptBackend": "comfyui"
     },
     "shield": {
       "id": "shield",
@@ -1119,7 +1119,7 @@
           "syncedAt": "2026-03-15T04:40:19.802Z"
         }
       },
-      "conceptBackend": "gemini-imagen"
+      "conceptBackend": "comfyui"
     },
     "gun_icon": {
       "id": "gun_icon",
@@ -1157,7 +1157,7 @@
           "syncedAt": "2026-03-15T04:40:19.887Z"
         }
       },
-      "conceptBackend": "gemini-imagen"
+      "conceptBackend": "comfyui"
     },
     "melee_icon": {
       "id": "melee_icon",
@@ -1195,7 +1195,7 @@
           "syncedAt": "2026-03-15T04:40:19.988Z"
         }
       },
-      "conceptBackend": "gemini-imagen"
+      "conceptBackend": "comfyui"
     },
     "round_pip_on": {
       "id": "round_pip_on",
@@ -1233,7 +1233,7 @@
           "syncedAt": "2026-03-15T04:40:20.081Z"
         }
       },
-      "conceptBackend": "gemini-imagen"
+      "conceptBackend": "comfyui"
     },
     "round_pip_off": {
       "id": "round_pip_off",
@@ -1271,7 +1271,7 @@
           "syncedAt": "2026-03-15T04:40:20.172Z"
         }
       },
-      "conceptBackend": "gemini-imagen"
+      "conceptBackend": "comfyui"
     },
     "student_f": {
       "id": "student_f",
@@ -1293,7 +1293,7 @@
       "directions": 8,
       "size": 64,
       "color": "#00f2ff",
-      "conceptBackend": "gemini-imagen",
+      "conceptBackend": "comfyui",
       "pipeline": {
         "concept": {
           "status": "done",
@@ -1340,7 +1340,7 @@
       "directions": 8,
       "size": 64,
       "color": "#3eff8b",
-      "conceptBackend": "gemini-imagen",
+      "conceptBackend": "comfyui",
       "pipeline": {
         "concept": {
           "status": "pending"
@@ -1376,7 +1376,7 @@
       "directions": 8,
       "size": 64,
       "color": "#bc13fe",
-      "conceptBackend": "gemini-imagen",
+      "conceptBackend": "comfyui",
       "pipeline": {
         "concept": {
           "status": "done",
@@ -1423,7 +1423,7 @@
       "directions": 8,
       "size": 64,
       "color": "#ffd700",
-      "conceptBackend": "gemini-imagen",
+      "conceptBackend": "comfyui",
       "pipeline": {
         "concept": {
           "status": "done",
@@ -1470,7 +1470,7 @@
       "directions": 8,
       "size": 64,
       "color": "#ff6b9d",
-      "conceptBackend": "gemini-imagen",
+      "conceptBackend": "comfyui",
       "pipeline": {
         "concept": {
           "status": "done",
@@ -1513,7 +1513,7 @@
       "directions": 8,
       "size": 64,
       "color": "#00f2ff",
-      "conceptBackend": "gemini-imagen",
+      "conceptBackend": "comfyui",
       "pipeline": {
         "concept": {
           "status": "done",
@@ -1556,7 +1556,7 @@
       "directions": 8,
       "size": 64,
       "color": "#00f2ff",
-      "conceptBackend": "gemini-imagen",
+      "conceptBackend": "comfyui",
       "pipeline": {
         "concept": {
           "status": "done",
@@ -1598,7 +1598,7 @@
       "directions": 8,
       "size": 64,
       "color": "#00f2ff",
-      "conceptBackend": "gemini-imagen",
+      "conceptBackend": "comfyui",
       "pipeline": {
         "concept": {
           "status": "done",
@@ -1640,7 +1640,7 @@
       "directions": 8,
       "size": 64,
       "color": "#00f2ff",
-      "conceptBackend": "gemini-imagen",
+      "conceptBackend": "comfyui",
       "pipeline": {
         "concept": {
           "status": "done",
@@ -1682,7 +1682,7 @@
       "directions": 8,
       "size": 64,
       "color": "#3eff8b",
-      "conceptBackend": "gemini-imagen",
+      "conceptBackend": "comfyui",
       "pipeline": {
         "concept": {
           "status": "done",
@@ -1724,7 +1724,7 @@
       "directions": 8,
       "size": 64,
       "color": "#3eff8b",
-      "conceptBackend": "gemini-imagen",
+      "conceptBackend": "comfyui",
       "pipeline": {
         "concept": {
           "status": "done",
@@ -1766,7 +1766,7 @@
       "directions": 8,
       "size": 64,
       "color": "#3eff8b",
-      "conceptBackend": "gemini-imagen",
+      "conceptBackend": "comfyui",
       "pipeline": {
         "concept": {
           "status": "done",
@@ -1808,7 +1808,7 @@
       "directions": 8,
       "size": 64,
       "color": "#3eff8b",
-      "conceptBackend": "gemini-imagen",
+      "conceptBackend": "comfyui",
       "pipeline": {
         "concept": {
           "status": "done",
@@ -1850,7 +1850,7 @@
       "directions": 8,
       "size": 64,
       "color": "#bc13fe",
-      "conceptBackend": "gemini-imagen",
+      "conceptBackend": "comfyui",
       "pipeline": {
         "concept": {
           "status": "done",
@@ -1892,7 +1892,7 @@
       "directions": 8,
       "size": 64,
       "color": "#bc13fe",
-      "conceptBackend": "gemini-imagen",
+      "conceptBackend": "comfyui",
       "pipeline": {
         "concept": {
           "status": "done",
@@ -1934,7 +1934,7 @@
       "directions": 8,
       "size": 64,
       "color": "#bc13fe",
-      "conceptBackend": "gemini-imagen",
+      "conceptBackend": "comfyui",
       "pipeline": {
         "concept": {
           "status": "done",
@@ -1976,7 +1976,7 @@
       "directions": 8,
       "size": 64,
       "color": "#bc13fe",
-      "conceptBackend": "gemini-imagen",
+      "conceptBackend": "comfyui",
       "pipeline": {
         "concept": {
           "status": "done",
@@ -2017,7 +2017,7 @@
       "directions": 8,
       "size": 64,
       "color": "#ffd700",
-      "conceptBackend": "gemini-imagen",
+      "conceptBackend": "comfyui",
       "pipeline": {
         "concept": {
           "status": "done",
@@ -2059,7 +2059,7 @@
       "directions": 8,
       "size": 64,
       "color": "#ffd700",
-      "conceptBackend": "gemini-imagen",
+      "conceptBackend": "comfyui",
       "pipeline": {
         "concept": {
           "status": "done",
@@ -2101,7 +2101,7 @@
       "directions": 8,
       "size": 64,
       "color": "#ffd700",
-      "conceptBackend": "gemini-imagen",
+      "conceptBackend": "comfyui",
       "pipeline": {
         "concept": {
           "status": "done",
@@ -2143,7 +2143,7 @@
       "directions": 8,
       "size": 64,
       "color": "#ffd700",
-      "conceptBackend": "gemini-imagen",
+      "conceptBackend": "comfyui",
       "pipeline": {
         "concept": {
           "status": "done",
@@ -2185,7 +2185,7 @@
       "directions": 8,
       "size": 64,
       "color": "#ff6b9d",
-      "conceptBackend": "gemini-imagen",
+      "conceptBackend": "comfyui",
       "pipeline": {
         "concept": {
           "status": "done",
@@ -2227,7 +2227,7 @@
       "directions": 8,
       "size": 64,
       "color": "#ff6b9d",
-      "conceptBackend": "gemini-imagen",
+      "conceptBackend": "comfyui",
       "pipeline": {
         "concept": {
           "status": "done",
@@ -2269,7 +2269,7 @@
       "directions": 8,
       "size": 64,
       "color": "#ff6b9d",
-      "conceptBackend": "gemini-imagen",
+      "conceptBackend": "comfyui",
       "pipeline": {
         "concept": {
           "status": "done",
@@ -2311,7 +2311,7 @@
       "directions": 8,
       "size": 64,
       "color": "#ff6b9d",
-      "conceptBackend": "gemini-imagen",
+      "conceptBackend": "comfyui",
       "pipeline": {
         "concept": {
           "status": "done",

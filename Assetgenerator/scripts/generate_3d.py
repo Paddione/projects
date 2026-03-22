@@ -267,6 +267,7 @@ def main():
                         help="Use text-to-3D (Meshy only, skips concept art requirement)")
     parser.add_argument("--input", help="Input concept image or directory (overrides default)")
     parser.add_argument("--output", help="Output directory (overrides default)")
+    parser.add_argument("--force", action="store_true", help="Overwrite existing models")
     args = parser.parse_args()
 
     global OUTPUT_BASE, CONCEPTS_DIR
@@ -307,8 +308,8 @@ def main():
         concept_path = Path(args.input)
         out_path = OUTPUT_BASE / f"{args.id}.glb"
 
-        if out_path.exists():
-            print(f"  [SKIP] {args.id}.glb — already exists")
+        if out_path.exists() and not args.force:
+            print(f"  [SKIP] {args.id}.glb — already exists (use --force to overwrite)")
             sys.exit(0)
 
         print(f"  [GEN] {args.id} (image-to-3D, direct mode)")
@@ -351,8 +352,8 @@ def main():
                 continue
 
             out_path = out_dir / f"{asset_id}.glb"
-            if out_path.exists():
-                print(f"  [SKIP] {cat_name}/{asset_id}.glb — already exists")
+            if out_path.exists() and not args.force:
+                print(f"  [SKIP] {cat_name}/{asset_id}.glb — already exists (use --force to overwrite)")
                 total += 1
                 success += 1
                 continue

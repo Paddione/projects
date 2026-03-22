@@ -21,6 +21,7 @@ export async function generate({ id, asset, config, libraryRoot }) {
     '--backend', 'triposr',
     '--input', conceptPath,
     '--output', outputDir,
+    '--force',
   ];
 
   const result = await enqueueJob({

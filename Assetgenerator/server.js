@@ -4,6 +4,7 @@ import { readFileSync, writeFileSync, existsSync, readdirSync, statSync, unlinkS
 import { resolve, join, dirname } from 'node:path';
 import { execFileSync, spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import { createHash } from 'node:crypto';
 import { createServer } from 'node:http';
 import { initWorkerManager, getWorkerStatus, getQueueDepth } from './worker-manager.js';
 
@@ -823,6 +824,10 @@ app.post('/api/library/import', (req, res) => {
 // Visual Library Routes
 // =============================================================================
 
+function promptHash(prompt) {
+  return createHash('sha256').update(prompt || '').digest('hex').slice(0, 16);
+}
+
 function markDownstreamStale(asset, fromPhase) {
   const phases = ['concept', 'model', 'render', 'pack'];
   const startIdx = phases.indexOf(fromPhase) + 1;
@@ -844,7 +849,7 @@ let _rateLimitedBackends = new Set();
  * Returns { result, adapterName } on success.
  */
 async function generateConceptWithFallback({ id, asset, vConfig, onFallback }) {
-  const configPriority = vConfig.conceptBackendPriority || ['gemini-imagen', 'siliconflow', 'comfyui'];
+  const configPriority = vConfig.conceptBackendPriority || ['comfyui', 'gemini-imagen', 'siliconflow'];
   let backends;
   if (asset.conceptBackend) {
     backends = [asset.conceptBackend, ...configPriority.filter(b => b !== asset.conceptBackend)];
@@ -1001,9 +1006,16 @@ app.put('/api/visual-library/:id', (req, res) => {
   const library = loadVisualLibrary();
   const asset = library.assets[req.params.id];
   if (!asset) return res.status(404).json({ error: 'Asset not found' });
+  const oldPrompt = asset.prompt;
   const allowed = ['name', 'category', 'tags', 'prompt', 'poses', 'directions', 'size', 'color', 'conceptBackend'];
   for (const key of allowed) {
     if (req.body[key] !== undefined) asset[key] = req.body[key];
+  }
+  // Prompt changed → invalidate entire pipeline (concept + downstream)
+  if (req.body.prompt !== undefined && req.body.prompt !== oldPrompt) {
+    for (const phase of ['concept', 'model', 'render', 'pack']) {
+      if (asset.pipeline[phase]) asset.pipeline[phase].status = 'pending';
+    }
   }
   saveVisualLibrary(library);
   res.json(asset);
@@ -1048,8 +1060,12 @@ app.post('/api/visual-library/batch/generate', async (req, res) => {
     }
 
     const phases = ['concept', 'model', 'render', 'pack'];
-    const startIdx = fromPhase ? phases.indexOf(fromPhase) : 0;
+    let startIdx = fromPhase ? phases.indexOf(fromPhase) : 0;
     const catConfig = vConfig.categories[asset.category] || {};
+    // Force concept regeneration if prompt changed since last concept was generated
+    const batchConceptStale = asset.pipeline.concept?.status === 'done'
+      && asset.pipeline.concept.promptHash !== promptHash(asset.prompt);
+    if (batchConceptStale && startIdx > 0) startIdx = 0;
     const phasesToRun = phases.slice(startIdx >= 0 ? startIdx : 0)
       .filter(p => !(p === 'model' && catConfig.has3D === false))
       .filter(p => asset.pipeline[p]);
@@ -1083,6 +1099,7 @@ app.post('/api/visual-library/batch/generate', async (req, res) => {
         }
 
         asset.pipeline[p] = { status: 'done', generatedAt: new Date().toISOString(), backend: adapterName };
+        if (p === 'concept') asset.pipeline[p].promptHash = promptHash(asset.prompt);
         if (result.path) asset.pipeline[p].path = result.path;
         if (result.frameCount) asset.pipeline[p].frameCount = result.frameCount;
         if (result.backend) asset.pipeline[p].backend = result.backend;
@@ -1198,7 +1215,7 @@ app.post('/api/visual-library/import', (req, res) => {
         category,
         tags: [project],
         prompt: asset.prompt || '',
-        conceptBackend: 'gemini-imagen',
+        conceptBackend: 'comfyui',
         poses: asset.poses || catConfig.defaultPoses || ['idle'],
         directions: catConfig.directions || 1,
         size: asset.size || catConfig.size || 32,
@@ -1258,10 +1275,15 @@ app.post('/api/visual-library/:id/generate/:phase', async (req, res) => {
   const vConfig = loadVisualConfig();
   const catConfig = vConfig.categories[asset.category] || {};
 
+  // Detect stale concept: prompt changed since last concept generation
+  const conceptStale = asset.pipeline.concept?.status === 'done'
+    && asset.pipeline.concept.promptHash !== promptHash(asset.prompt);
+
   let phasesToRun;
   if (phase === 'full') {
+    // If concept is stale, re-run entire pipeline (concept changed → everything downstream is invalid)
     phasesToRun = ['concept', 'model', 'render', 'pack']
-      .filter(p => asset.pipeline[p] && asset.pipeline[p].status !== 'done');
+      .filter(p => asset.pipeline[p] && (asset.pipeline[p].status !== 'done' || conceptStale));
   } else {
     phasesToRun = [phase];
   }
@@ -1300,6 +1322,7 @@ app.post('/api/visual-library/:id/generate/:phase', async (req, res) => {
       asset.pipeline[p].status = 'done';
       asset.pipeline[p].generatedAt = new Date().toISOString();
       asset.pipeline[p].backend = adapterName;
+      if (p === 'concept') asset.pipeline[p].promptHash = promptHash(asset.prompt);
       if (result.path) asset.pipeline[p].path = result.path;
       if (result.frameCount) asset.pipeline[p].frameCount = result.frameCount;
 
