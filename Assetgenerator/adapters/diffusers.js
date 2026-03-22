@@ -19,7 +19,7 @@ export async function generate({ id, asset, config, libraryRoot }) {
   ];
 
   if (asset.prompt) args.push('--prompt', asset.prompt);
-  args.push('--output', outputDir);
+  args.push('--output', outputDir, '--force');
 
   const result = await enqueueJob({
     cmd: workerPython, args, cwd: PROJECT_ROOT, env: {},

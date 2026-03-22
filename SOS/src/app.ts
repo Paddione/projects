@@ -18,6 +18,18 @@ app.get('/api/health', (_req, res) => {
 const publicDir = path.join(__dirname, '..', 'public');
 app.use(express.static(publicDir));
 
+// Version endpoint
+app.get('/api/version', (_req, res) => {
+  res.set('Cache-Control', 'no-store');
+  res.json({
+    service: 'sos',
+    version: process.env.npm_package_version || '1.0.0',
+    sha: process.env.GIT_SHA || 'dev',
+    uptime: process.uptime(),
+    node: process.version,
+  });
+});
+
 // 404 for unknown API routes
 app.all('/api/*', (_req, res) => {
   res.status(404).json({ error: 'Not found' });

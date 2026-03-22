@@ -166,7 +166,7 @@ describe('VideoDatabase - Extended Tests', () => {
       const existingVideos = [createMockVideo({ id: '1' })];
       const newVideos = [
         createMockVideo({ id: '1', displayName: 'Updated' }),
-        createMockVideo({ id: '2', displayName: 'New' })
+        createMockVideo({ id: '2', displayName: 'New', filename: 'new-video.mp4', path: '/path/to/new-video.mp4' })
       ];
 
       vi.mocked(serverHealth.isHealthy).mockResolvedValue(false);

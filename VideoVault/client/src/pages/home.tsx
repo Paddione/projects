@@ -582,6 +582,7 @@ export default function Home() {
           onRemoveCategory={(videoId, type, value) =>
             actions.removeVideoCategory(videoId, type, value) as void
           }
+          onUpdateCategories={actions.updateVideoCategories}
           onOpenBatchRename={(ids) => {
             setBatchSelection(ids);
             setIsBatchRenameOpen(true);

@@ -104,15 +104,15 @@ npm run deploy:down              # Stop containers
 
 Production runs on k3s (lightweight Kubernetes), NOT Docker Compose. Never use `docker-compose` or `npm run deploy:prod` to deploy to production.
 
-**Use Skaffold for code changes** (builds images + deploys):
+**Deploy with shell scripts** (build + push + restart):
 ```bash
-cd ../../k8s && skaffold run -p l2p        # Build + deploy L2P (backend + frontend)
-cd ../../k8s && skaffold run               # Build + deploy everything
+../../k8s/scripts/deploy/deploy-l2p.sh                # Build, push, deploy (backend + frontend)
+../../k8s/scripts/deploy/deploy-l2p.sh --manifests-only  # Manifest-only (config changes)
 ```
 
-Shell scripts only apply manifests (no image rebuild):
+**Or use Skaffold** (alternative, requires defaultRepo — not usable from WSL2):
 ```bash
-../../k8s/scripts/deploy/deploy-l2p.sh     # Manifest-only (use for config changes)
+cd ../../k8s && skaffold run -p l2p        # Build + deploy L2P (backend + frontend)
 ```
 
 See `k8s/services/l2p-backend/` and `k8s/services/l2p-frontend/` for manifests. Skaffold config at `k8s/skaffold.yaml`.
@@ -137,7 +137,7 @@ l2p/
 │       ├── pages/               # Route screens (Home, Lobby, Game, Results)
 │       ├── services/            # API client (apiService.ts), Socket.io client
 │       ├── hooks/               # Custom hooks (useThing)
-│       ├── stores/              # Zustand (8 stores, see Architecture below)
+│       ├── stores/              # Zustand (7 stores, see Architecture below)
 │       ├── __tests__/
 │       └── utils/
 │   └── e2e/
@@ -205,7 +205,6 @@ Shared utilities: `../shared-infrastructure/shared/l2p/` (error-handling, test-c
 | audioStore | Audio settings (volume, mute, sound effects) |
 | characterStore | Character selection, level/XP progress |
 | fileUploadStore | File upload progress (question generation) |
-| perkDraftStore | Perk unlock state (active perks, skill tree) |
 
 ### Real-Time (Socket.io)
 

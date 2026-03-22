@@ -1,9 +1,10 @@
-import { WebGLRenderer, Scene, Vector2 } from 'three';
+import { WebGLRenderer, WebGLRenderTarget, Scene, Vector2 } from 'three';
 import type { OrthographicCamera } from 'three';
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { QualitySettings } from './QualitySettings';
 
 const VignetteShader = {
@@ -66,8 +67,10 @@ export class PostProcessing {
     constructor(renderer: WebGLRenderer, scene: Scene, camera: OrthographicCamera) {
         const q = QualitySettings.current;
         const size = renderer.getSize(new Vector2());
+        const samples = q.tier === 'low' ? 0 : 4;
 
-        this.composer = new EffectComposer(renderer);
+        const renderTarget = new WebGLRenderTarget(size.x, size.y, { samples });
+        this.composer = new EffectComposer(renderer, renderTarget);
         this.composer.addPass(new RenderPass(scene, camera));
 
         this.bloomPass = new UnrealBloomPass(size, q.bloomStrength, 0.4, 0.6);
@@ -81,6 +84,9 @@ export class PostProcessing {
         this.chromaticPass = new ShaderPass(ChromaticShader);
         this.chromaticPass.enabled = false;
         this.composer.addPass(this.chromaticPass);
+
+        // OutputPass handles linear → sRGB conversion (required since Three.js r154+)
+        this.composer.addPass(new OutputPass());
     }
 
     render(): void {

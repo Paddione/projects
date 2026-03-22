@@ -4,6 +4,7 @@ import { readFileSync, writeFileSync, existsSync, readdirSync, statSync, unlinkS
 import { resolve, join, dirname } from 'node:path';
 import { execFileSync, spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import { createHash } from 'node:crypto';
 import { createServer } from 'node:http';
 import { initWorkerManager, getWorkerStatus, getQueueDepth } from './worker-manager.js';
 
@@ -781,7 +782,7 @@ app.post('/api/library/import', (req, res) => {
     round_start: 'sfx/ui', round_end: 'sfx/ui',
     zone_warning: 'sfx/environment', zone_tick: 'sfx/environment',
     battle: 'music/battle', lobby: 'music/ambient',
-    victory: 'music/stings', defeat: 'music/stings', respectisevt: 'music/stings',
+    victory: 'music/stings', defeat: 'music/stings', respect_event: 'music/stings',
   };
 
   const audioRoot = resolve(__dirname, proj.audioRoot);
@@ -823,6 +824,10 @@ app.post('/api/library/import', (req, res) => {
 // Visual Library Routes
 // =============================================================================
 
+function promptHash(prompt) {
+  return createHash('sha256').update(prompt || '').digest('hex').slice(0, 16);
+}
+
 function markDownstreamStale(asset, fromPhase) {
   const phases = ['concept', 'model', 'render', 'pack'];
   const startIdx = phases.indexOf(fromPhase) + 1;
@@ -844,7 +849,7 @@ let _rateLimitedBackends = new Set();
  * Returns { result, adapterName } on success.
  */
 async function generateConceptWithFallback({ id, asset, vConfig, onFallback }) {
-  const configPriority = vConfig.conceptBackendPriority || ['gemini-imagen', 'siliconflow', 'comfyui'];
+  const configPriority = vConfig.conceptBackendPriority || ['comfyui', 'gemini-imagen', 'siliconflow'];
   let backends;
   if (asset.conceptBackend) {
     backends = [asset.conceptBackend, ...configPriority.filter(b => b !== asset.conceptBackend)];
@@ -901,6 +906,7 @@ app.get('/api/visual-library/:id/concept', (req, res) => {
   const vConfig = loadVisualConfig();
   const filePath = join(vConfig.libraryRoot, asset.pipeline.concept.path);
   if (!existsSync(filePath)) return res.status(404).json({ error: 'File not found' });
+  res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
   res.sendFile(filePath);
 });
 
@@ -912,6 +918,7 @@ app.get('/api/visual-library/:id/model', (req, res) => {
   const vConfig = loadVisualConfig();
   const filePath = join(vConfig.libraryRoot, asset.pipeline.model.path);
   if (!existsSync(filePath)) return res.status(404).json({ error: 'File not found' });
+  res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
   res.sendFile(filePath);
 });
 
@@ -923,6 +930,7 @@ app.get('/api/visual-library/:id/render/:pose/:direction', (req, res) => {
   const filePath = join(vConfig.libraryRoot, 'renders', asset.category, asset.id,
     `${asset.id}-${req.params.pose}-${req.params.direction}.png`);
   if (!existsSync(filePath)) return res.status(404).json({ error: 'Render not found' });
+  res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
   res.sendFile(filePath);
 });
 
@@ -934,6 +942,7 @@ app.get('/api/visual-library/:id/render-frame/:filename', (req, res) => {
   const vConfig = loadVisualConfig();
   const filePath = join(vConfig.libraryRoot, 'renders', asset.category, asset.id, req.params.filename);
   if (!existsSync(filePath)) return res.status(404).json({ error: 'Frame not found' });
+  res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
   res.sendFile(filePath);
 });
 
@@ -997,9 +1006,16 @@ app.put('/api/visual-library/:id', (req, res) => {
   const library = loadVisualLibrary();
   const asset = library.assets[req.params.id];
   if (!asset) return res.status(404).json({ error: 'Asset not found' });
+  const oldPrompt = asset.prompt;
   const allowed = ['name', 'category', 'tags', 'prompt', 'poses', 'directions', 'size', 'color', 'conceptBackend'];
   for (const key of allowed) {
     if (req.body[key] !== undefined) asset[key] = req.body[key];
+  }
+  // Prompt changed → invalidate entire pipeline (concept + downstream)
+  if (req.body.prompt !== undefined && req.body.prompt !== oldPrompt) {
+    for (const phase of ['concept', 'model', 'render', 'pack']) {
+      if (asset.pipeline[phase]) asset.pipeline[phase].status = 'pending';
+    }
   }
   saveVisualLibrary(library);
   res.json(asset);
@@ -1028,77 +1044,88 @@ app.post('/api/visual-library/batch/generate', async (req, res) => {
   if (!ids || !Array.isArray(ids)) return res.status(400).json({ error: 'ids array required' });
 
   visualGenerationInProgress = true;
+  req.on('close', () => { visualGenerationInProgress = false; });
   _rateLimitedBackends.clear();
   res.writeHead(200, { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', Connection: 'keep-alive' });
 
-  const library = loadVisualLibrary();
-  const vConfig = loadVisualConfig();
-  let succeeded = 0, failed = 0;
+  try {
+    const library = loadVisualLibrary();
+    const vConfig = loadVisualConfig();
+    let succeeded = 0, failed = 0;
 
-  for (const id of ids) {
-    const asset = library.assets[id];
-    if (!asset) {
-      res.write(`event: error\ndata: ${JSON.stringify({ asset: id, error: 'Not found' })}\n\n`);
-      failed++;
-      continue;
-    }
-
-    const phases = ['concept', 'model', 'render', 'pack'];
-    const startIdx = fromPhase ? phases.indexOf(fromPhase) : 0;
-    const catConfig = vConfig.categories[asset.category] || {};
-    const phasesToRun = phases.slice(startIdx >= 0 ? startIdx : 0)
-      .filter(p => !(p === 'model' && catConfig.has3D === false))
-      .filter(p => asset.pipeline[p]);
-
-    let assetFailed = false;
-    for (const p of phasesToRun) {
-      try {
-        res.write(`event: progress\ndata: ${JSON.stringify({ asset: id, phase: p, status: 'generating' })}\n\n`);
-        asset._currentPhase = p;
-
-        let result, adapterName;
-
-        if (p === 'concept') {
-          // Use fallback chain for concept generation (Gemini → SiliconFlow → ComfyUI)
-          const fallbackResult = await generateConceptWithFallback({
-            id, asset, vConfig,
-            onFallback: (backend, reason) => {
-              res.write(`event: fallback\ndata: ${JSON.stringify({ asset: id, phase: p, from: backend, reason })}\n\n`);
-            },
-          });
-          result = fallbackResult.result;
-          adapterName = fallbackResult.adapterName;
-        } else {
-          const defaultAdapterMap = { model: 'triposr', render: 'blender', pack: 'packer', rig: 'mixamo', animate: 'mixamo' };
-          adapterName = defaultAdapterMap[p];
-          const adapterPath = join(__dirname, 'adapters', `${adapterName}.js`);
-          if (!existsSync(adapterPath)) throw new Error(`Adapter ${adapterName} not found`);
-
-          const adapter = await import(adapterPath);
-          result = await adapter.generate({ id, asset, config: vConfig, libraryRoot: vConfig.libraryRoot });
-        }
-
-        asset.pipeline[p] = { status: 'done', generatedAt: new Date().toISOString(), backend: adapterName };
-        if (result.path) asset.pipeline[p].path = result.path;
-        if (result.frameCount) asset.pipeline[p].frameCount = result.frameCount;
-        if (result.backend) asset.pipeline[p].backend = result.backend;
-        saveVisualLibrary(library);
-
-        res.write(`event: done\ndata: ${JSON.stringify({ asset: id, phase: p, ...result, backend: adapterName })}\n\n`);
-      } catch (err) {
-        asset.pipeline[p] = { status: 'error' };
-        saveVisualLibrary(library);
-        res.write(`event: error\ndata: ${JSON.stringify({ asset: id, phase: p, error: err.message })}\n\n`);
-        assetFailed = true;
-        break;
+    for (const id of ids) {
+      const asset = library.assets[id];
+      if (!asset) {
+        res.write(`event: error\ndata: ${JSON.stringify({ asset: id, error: 'Not found' })}\n\n`);
+        failed++;
+        continue;
       }
-    }
-    if (assetFailed) failed++; else succeeded++;
-  }
 
-  res.write(`event: complete\ndata: ${JSON.stringify({ total: ids.length, succeeded, failed })}\n\n`);
-  res.end();
-  visualGenerationInProgress = false;
+      const phases = ['concept', 'model', 'render', 'pack'];
+      let startIdx = fromPhase ? phases.indexOf(fromPhase) : 0;
+      const catConfig = vConfig.categories[asset.category] || {};
+      // Force concept regeneration if prompt changed since last concept was generated
+      const batchConceptStale = asset.pipeline.concept?.status === 'done'
+        && asset.pipeline.concept.promptHash !== promptHash(asset.prompt);
+      if (batchConceptStale && startIdx > 0) startIdx = 0;
+      const phasesToRun = phases.slice(startIdx >= 0 ? startIdx : 0)
+        .filter(p => !(p === 'model' && catConfig.has3D === false))
+        .filter(p => asset.pipeline[p]);
+
+      let assetFailed = false;
+      for (const p of phasesToRun) {
+        try {
+          res.write(`event: progress\ndata: ${JSON.stringify({ asset: id, phase: p, status: 'generating' })}\n\n`);
+          asset._currentPhase = p;
+
+          let result, adapterName;
+
+          if (p === 'concept') {
+            // Use fallback chain for concept generation (ComfyUI → Gemini → SiliconFlow)
+            const fallbackResult = await generateConceptWithFallback({
+              id, asset, vConfig,
+              onFallback: (backend, reason) => {
+                res.write(`event: fallback\ndata: ${JSON.stringify({ asset: id, phase: p, from: backend, reason })}\n\n`);
+              },
+            });
+            result = fallbackResult.result;
+            adapterName = fallbackResult.adapterName;
+          } else {
+            const defaultAdapterMap = { model: 'triposr', render: 'blender', pack: 'packer', rig: 'mixamo', animate: 'mixamo' };
+            adapterName = defaultAdapterMap[p];
+            const adapterPath = join(__dirname, 'adapters', `${adapterName}.js`);
+            if (!existsSync(adapterPath)) throw new Error(`Adapter ${adapterName} not found`);
+
+            const adapter = await import(adapterPath);
+            result = await adapter.generate({ id, asset, config: vConfig, libraryRoot: vConfig.libraryRoot });
+          }
+
+          asset.pipeline[p] = { status: 'done', generatedAt: new Date().toISOString(), backend: adapterName };
+          if (p === 'concept') asset.pipeline[p].promptHash = promptHash(asset.prompt);
+          if (result.path) asset.pipeline[p].path = result.path;
+          if (result.frameCount) asset.pipeline[p].frameCount = result.frameCount;
+          if (result.backend) asset.pipeline[p].backend = result.backend;
+          saveVisualLibrary(library);
+
+          res.write(`event: done\ndata: ${JSON.stringify({ asset: id, phase: p, ...result, backend: adapterName })}\n\n`);
+        } catch (err) {
+          asset.pipeline[p] = { status: 'error' };
+          saveVisualLibrary(library);
+          res.write(`event: error\ndata: ${JSON.stringify({ asset: id, phase: p, error: err.message })}\n\n`);
+          assetFailed = true;
+          break;
+        }
+      }
+      if (assetFailed) failed++; else succeeded++;
+    }
+
+    visualGenerationInProgress = false;
+    res.write(`event: complete\ndata: ${JSON.stringify({ total: ids.length, succeeded, failed })}\n\n`);
+    res.end();
+  } catch (outerErr) {
+    visualGenerationInProgress = false;
+    try { res.end(); } catch {}
+  }
 });
 
 app.post('/api/visual-library/import', (req, res) => {
@@ -1194,7 +1221,7 @@ app.post('/api/visual-library/import', (req, res) => {
         category,
         tags: [project],
         prompt: asset.prompt || '',
-        conceptBackend: 'gemini-imagen',
+        conceptBackend: 'comfyui',
         poses: asset.poses || catConfig.defaultPoses || ['idle'],
         directions: catConfig.directions || 1,
         size: asset.size || catConfig.size || 32,
@@ -1249,71 +1276,83 @@ app.post('/api/visual-library/:id/generate/:phase', async (req, res) => {
   if (!validPhases.includes(phase)) return res.status(400).json({ error: `Invalid phase: ${phase}` });
 
   visualGenerationInProgress = true;
+  req.on('close', () => { visualGenerationInProgress = false; });
   res.writeHead(200, { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', Connection: 'keep-alive' });
 
-  const vConfig = loadVisualConfig();
-  const catConfig = vConfig.categories[asset.category] || {};
+  try {
+    const vConfig = loadVisualConfig();
+    const catConfig = vConfig.categories[asset.category] || {};
 
-  let phasesToRun;
-  if (phase === 'full') {
-    phasesToRun = ['concept', 'model', 'render', 'pack']
-      .filter(p => asset.pipeline[p] && asset.pipeline[p].status !== 'done');
-  } else {
-    phasesToRun = [phase];
-  }
-  // Skip model for non-3D categories
-  phasesToRun = phasesToRun.filter(p => !(p === 'model' && catConfig.has3D === false));
+    // Detect stale concept: prompt changed since last concept generation
+    const conceptStale = asset.pipeline.concept?.status === 'done'
+      && asset.pipeline.concept.promptHash !== promptHash(asset.prompt);
 
-  _rateLimitedBackends.clear();
-  for (const p of phasesToRun) {
-    try {
-      res.write(`event: progress\ndata: ${JSON.stringify({ asset: asset.id, phase: p, status: 'generating' })}\n\n`);
-      if (!asset.pipeline[p]) asset.pipeline[p] = {};
-      asset.pipeline[p].status = 'generating';
-      asset._currentPhase = p;
-
-      let result, adapterName;
-
-      if (p === 'concept') {
-        const fallbackResult = await generateConceptWithFallback({
-          id: asset.id, asset, vConfig,
-          onFallback: (backend, reason) => {
-            res.write(`event: fallback\ndata: ${JSON.stringify({ asset: asset.id, phase: p, from: backend, reason })}\n\n`);
-          },
-        });
-        result = fallbackResult.result;
-        adapterName = fallbackResult.adapterName;
-      } else {
-        const defaultAdapterMap = { model: 'triposr', render: 'blender', pack: 'packer', rig: 'mixamo', animate: 'mixamo' };
-        adapterName = defaultAdapterMap[p];
-        const adapterPath = join(__dirname, 'adapters', `${adapterName}.js`);
-        if (!existsSync(adapterPath)) throw new Error(`Adapter not found: ${adapterPath}`);
-
-        const adapter = await import(adapterPath);
-        result = await adapter.generate({ id: asset.id, asset, config: vConfig, libraryRoot: vConfig.libraryRoot });
-      }
-
-      asset.pipeline[p].status = 'done';
-      asset.pipeline[p].generatedAt = new Date().toISOString();
-      asset.pipeline[p].backend = adapterName;
-      if (result.path) asset.pipeline[p].path = result.path;
-      if (result.frameCount) asset.pipeline[p].frameCount = result.frameCount;
-
-      markDownstreamStale(asset, p);
-      saveVisualLibrary(library);
-
-      res.write(`event: done\ndata: ${JSON.stringify({ asset: asset.id, phase: p, ...result, backend: adapterName })}\n\n`);
-    } catch (err) {
-      asset.pipeline[p].status = 'error';
-      saveVisualLibrary(library);
-      res.write(`event: error\ndata: ${JSON.stringify({ asset: asset.id, phase: p, error: err.message })}\n\n`);
-      break;
+    let phasesToRun;
+    if (phase === 'full') {
+      // If concept is stale, re-run entire pipeline (concept changed → everything downstream is invalid)
+      phasesToRun = ['concept', 'model', 'render', 'pack']
+        .filter(p => asset.pipeline[p] && (asset.pipeline[p].status !== 'done' || conceptStale));
+    } else {
+      phasesToRun = [phase];
     }
-  }
+    // Skip model for non-3D categories
+    phasesToRun = phasesToRun.filter(p => !(p === 'model' && catConfig.has3D === false));
 
-  res.write(`event: complete\ndata: ${JSON.stringify({ asset: asset.id })}\n\n`);
-  res.end();
-  visualGenerationInProgress = false;
+    _rateLimitedBackends.clear();
+    for (const p of phasesToRun) {
+      try {
+        res.write(`event: progress\ndata: ${JSON.stringify({ asset: asset.id, phase: p, status: 'generating' })}\n\n`);
+        if (!asset.pipeline[p]) asset.pipeline[p] = {};
+        asset.pipeline[p].status = 'generating';
+        asset._currentPhase = p;
+
+        let result, adapterName;
+
+        if (p === 'concept') {
+          const fallbackResult = await generateConceptWithFallback({
+            id: asset.id, asset, vConfig,
+            onFallback: (backend, reason) => {
+              res.write(`event: fallback\ndata: ${JSON.stringify({ asset: asset.id, phase: p, from: backend, reason })}\n\n`);
+            },
+          });
+          result = fallbackResult.result;
+          adapterName = fallbackResult.adapterName;
+        } else {
+          const defaultAdapterMap = { model: 'triposr', render: 'blender', pack: 'packer', rig: 'mixamo', animate: 'mixamo' };
+          adapterName = defaultAdapterMap[p];
+          const adapterPath = join(__dirname, 'adapters', `${adapterName}.js`);
+          if (!existsSync(adapterPath)) throw new Error(`Adapter not found: ${adapterPath}`);
+
+          const adapter = await import(adapterPath);
+          result = await adapter.generate({ id: asset.id, asset, config: vConfig, libraryRoot: vConfig.libraryRoot });
+        }
+
+        asset.pipeline[p].status = 'done';
+        asset.pipeline[p].generatedAt = new Date().toISOString();
+        asset.pipeline[p].backend = adapterName;
+        if (p === 'concept') asset.pipeline[p].promptHash = promptHash(asset.prompt);
+        if (result.path) asset.pipeline[p].path = result.path;
+        if (result.frameCount) asset.pipeline[p].frameCount = result.frameCount;
+
+        markDownstreamStale(asset, p);
+        saveVisualLibrary(library);
+
+        res.write(`event: done\ndata: ${JSON.stringify({ asset: asset.id, phase: p, ...result, backend: adapterName })}\n\n`);
+      } catch (err) {
+        asset.pipeline[p].status = 'error';
+        saveVisualLibrary(library);
+        res.write(`event: error\ndata: ${JSON.stringify({ asset: asset.id, phase: p, error: err.message })}\n\n`);
+        break;
+      }
+    }
+
+    visualGenerationInProgress = false;
+    res.write(`event: complete\ndata: ${JSON.stringify({ asset: asset.id })}\n\n`);
+    res.end();
+  } catch (outerErr) {
+    visualGenerationInProgress = false;
+    try { res.end(); } catch {}
+  }
 });
 
 app.post('/api/visual-library/:id/assign', (req, res) => {

@@ -98,6 +98,27 @@ def triposr_generate(image_path: Path, output_path: Path) -> bool:
             _triposr_model.to("cuda")
 
         image = Image.open(image_path)
+        # TripoSR expects RGB — crop to subject bounding box then composite on white.
+        # Using the full image with a white background causes TripoSR to reconstruct
+        # the background as flat geometry (grey wall artifact).
+        if image.mode == 'RGBA':
+            alpha = image.split()[3]
+            # Threshold alpha to ignore faint fringe pixels from rembg
+            alpha_thresh = alpha.point(lambda p: 255 if p > 128 else 0)
+            bbox = alpha_thresh.getbbox()
+            if bbox:
+                # Crop tightly to subject
+                image = image.crop(bbox)
+            # Resize subject to fill 85% of a square frame (TripoSR sweet spot)
+            cw, ch = image.size
+            target = 512
+            foreground_ratio = 0.85
+            scale = foreground_ratio * target / max(cw, ch)
+            new_w, new_h = int(cw * scale), int(ch * scale)
+            image = image.resize((new_w, new_h), Image.LANCZOS)
+            bg = Image.new('RGBA', (target, target), (255, 255, 255, 255))
+            bg.paste(image, ((target - new_w) // 2, (target - new_h) // 2), mask=image.split()[3])
+            image = bg.convert('RGB')
 
         # Run TripoSR inference (~15s on 12GB GPU)
         with torch.no_grad():
@@ -267,6 +288,7 @@ def main():
                         help="Use text-to-3D (Meshy only, skips concept art requirement)")
     parser.add_argument("--input", help="Input concept image or directory (overrides default)")
     parser.add_argument("--output", help="Output directory (overrides default)")
+    parser.add_argument("--force", action="store_true", help="Overwrite existing models")
     args = parser.parse_args()
 
     global OUTPUT_BASE, CONCEPTS_DIR
@@ -307,8 +329,8 @@ def main():
         concept_path = Path(args.input)
         out_path = OUTPUT_BASE / f"{args.id}.glb"
 
-        if out_path.exists():
-            print(f"  [SKIP] {args.id}.glb — already exists")
+        if out_path.exists() and not args.force:
+            print(f"  [SKIP] {args.id}.glb — already exists (use --force to overwrite)")
             sys.exit(0)
 
         print(f"  [GEN] {args.id} (image-to-3D, direct mode)")
@@ -351,8 +373,8 @@ def main():
                 continue
 
             out_path = out_dir / f"{asset_id}.glb"
-            if out_path.exists():
-                print(f"  [SKIP] {cat_name}/{asset_id}.glb — already exists")
+            if out_path.exists() and not args.force:
+                print(f"  [SKIP] {cat_name}/{asset_id}.glb — already exists (use --force to overwrite)")
                 total += 1
                 success += 1
                 continue

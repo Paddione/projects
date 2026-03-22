@@ -34,6 +34,12 @@ npm run typecheck     # tsc --noEmit
 - `GET /health/live` — Liveness probe
 - `GET /api/health` — Convenience endpoint
 
+## Version Endpoint
+
+- `GET /api/version` — Returns `{ service, version, sha, uptime, node }`
+  - `sha` comes from `GIT_SHA` env var (set at Docker build time via `--build-arg`)
+  - Falls back to `'dev'` in local development
+
 ## Deployment
 
 - **Port**: 3005

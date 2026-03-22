@@ -658,7 +658,7 @@
       border-radius: 6px;
       border: 1px solid var(--border);
       object-fit: contain;
-      background: var(--bg-deep);
+      background: repeating-conic-gradient(#2a2a3a 0% 25%, #1a1a2a 0% 50%) 0 0 / 20px 20px;
       cursor: pointer;
       transition: border-color 0.2s;
     }
@@ -2548,7 +2548,7 @@ function createVisualSlotRow(slot, allAssets, projectName) {
   // Concept thumbnail
   const thumb = document.createElement('img');
   thumb.className = 'slot-thumb';
-  thumb.style.cssText = 'width:32px; height:32px; border-radius:3px; object-fit:cover; margin-right:0.5rem; background:var(--bg-deep);';
+  thumb.style.cssText = 'width:32px; height:32px; border-radius:3px; object-fit:cover; margin-right:0.5rem; background:repeating-conic-gradient(#2a2a3a 0% 25%, #1a1a2a 0% 50%) 0 0 / 8px 8px;';
   if (slot.asset.pipeline?.concept?.status === 'done') {
     thumb.src = `/api/visual-library/${slot.libraryId}/concept?t=${Date.now()}`;
   } else {
@@ -3136,6 +3136,7 @@ document.getElementById('sync-btn').addEventListener('click', async () => {
 document.addEventListener('DOMContentLoaded', loadProjects);
 
 // Worker status polling
+let _lastWorkerConnected = false;
 async function pollWorkerStatus() {
   try {
     const res = await fetch('/api/worker-status');
@@ -3146,11 +3147,14 @@ async function pollWorkerStatus() {
       dot.style.background = '#50fa7b';
       label.textContent = `${data.hostname} \u00b7 ${data.gpu}`;
       label.style.color = '#50fa7b';
+      if (!_lastWorkerConnected) checkPrerequisites();
     } else {
       dot.style.background = '#6272a4';
       label.textContent = 'No GPU worker';
       label.style.color = '#6272a4';
+      if (_lastWorkerConnected) checkPrerequisites();
     }
+    _lastWorkerConnected = data.connected;
   } catch { /* silent */ }
 }
 pollWorkerStatus();
@@ -3297,10 +3301,10 @@ window.ModelViewer = {
     scene.add(grid);
     this._gridHelper = grid;
 
-    // Load GLB model
+    // Load GLB model (cache-bust with timestamp to always fetch latest)
     const loader = new GLTFLoader();
     loader.load(
-      `/api/visual-library/${assetId}/model`,
+      `/api/visual-library/${assetId}/model?t=${Date.now()}`,
       (gltf) => {
         loadingEl.remove();
         const model = gltf.scene;

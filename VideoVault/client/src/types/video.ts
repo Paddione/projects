@@ -104,7 +104,7 @@ export interface VideoManagerState {
   pinnedVideoId: string | null;
 }
 
-export type SortField = 'displayName' | 'lastModified' | 'size' | 'path' | 'categoryCount';
+export type SortField = 'displayName' | 'lastModified' | 'size' | 'path' | 'categoryCount' | 'unassignedCount';
 export type SortDirection = 'asc' | 'desc';
 
 declare module './video' { }

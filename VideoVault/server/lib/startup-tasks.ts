@@ -7,6 +7,7 @@ import { logger } from './logger';
 import { MOVIE_EXTENSIONS, extractMovieMetadata, detectQualityCategories, generateMovieThumbnail, parseMovieFilename, generateOrganizedPath } from '../handlers/movie-handler';
 import { readSidecar, writeSidecar } from './sidecar';
 import { extractCategoriesFromPath, mergeCategories } from '@shared/category-extractor';
+import { generateVideoIdSync } from '@shared/video-id';
 
 // Track filenames that failed stat (encoding issues on SMB) — warn only once
 const _failedStatNames = new Set<string>();
@@ -76,8 +77,28 @@ export async function runStartupTasks(db: any): Promise<void> {
     }
   }
 
-  // 6. Generate missing thumbnails for flat files (slow — runs last)
+  // 6. Generate missing thumbnails for flat AND subdirectory files (slow — runs last)
   await generateMissingThumbnails(MOVIES_DIR);
+  await generateMissingSubdirThumbnails(MOVIES_DIR);
+
+  // 7. Clean up empty directories (no video content)
+  try {
+    const { cleanupEmptyDirectories } = await import('../handlers/movie-handler');
+    const removed = await cleanupEmptyDirectories(MOVIES_DIR);
+    if (removed > 0) {
+      logger.info('[StartupTasks] Cleaned up empty directories', { removed });
+    }
+  } catch (err: any) {
+    logger.warn('[StartupTasks] Empty directory cleanup failed', { error: err.message });
+  }
+
+  // 8. Re-index newly generated thumbnails and rebuild movies_index.json
+  if (db) {
+    await autoIndexLibrary(db, MOVIES_DIR);
+    try {
+      await generateMoviesIndex(db, MOVIES_DIR);
+    } catch { /* non-fatal */ }
+  }
 }
 
 /**
@@ -118,9 +139,10 @@ async function drainSingleInbox(inboxDir: string, moviesDir: string): Promise<nu
     const dest = path.join(moviesDir, name);
 
     // Verify it's actually a file
+    let srcStat;
     try {
-      const stat = await fs.stat(src);
-      if (!stat.isFile()) continue;
+      srcStat = await fs.stat(src);
+      if (!srcStat.isFile()) continue;
     } catch {
       if (!_failedStatNames.has(name)) {
         _failedStatNames.add(name);
@@ -129,11 +151,41 @@ async function drainSingleInbox(inboxDir: string, moviesDir: string): Promise<nu
       continue;
     }
 
-    // Skip if already exists at destination
+    // If destination already exists at root, check same-size duplicate.
     try {
-      await fs.access(dest);
-      continue; // silently skip duplicates
-    } catch { /* good — doesn't exist */ }
+      const destStat = await fs.stat(dest);
+      if (destStat.size === srcStat.size) {
+        try {
+          await fs.unlink(src);
+          logger.info(`[StartupTasks] Inbox cleanup: removed duplicate ${name} (same size as destination)`);
+        } catch (unlinkErr: any) {
+          logger.warn(`[StartupTasks] Inbox cleanup: failed to remove duplicate ${name}`, { error: unlinkErr.message });
+        }
+      }
+      continue;
+    } catch { /* good — doesn't exist at destination */ }
+
+    // Check if an organized subdirectory already contains this file
+    // (e.g., inbox file re-dropped after it was already organized)
+    const { title, year } = parseMovieFilename(name);
+    const organizedFolder = generateOrganizedPath(title, year);
+    const organizedDir = path.join(moviesDir, organizedFolder);
+    try {
+      const dirEntries = await fs.readdir(organizedDir);
+      const hasVideo = dirEntries.some(
+        (e: string) => MOVIE_EXTENSIONS.includes(path.extname(e).toLowerCase()),
+      );
+      if (hasVideo) {
+        // Already organized — remove inbox duplicate
+        try {
+          await fs.unlink(src);
+          logger.info(`[StartupTasks] Inbox cleanup: removed ${name} (already organized in ${organizedFolder}/)`);
+        } catch (unlinkErr: any) {
+          logger.warn(`[StartupTasks] Inbox cleanup: failed to remove ${name}`, { error: unlinkErr.message });
+        }
+        continue;
+      }
+    } catch { /* dir doesn't exist — proceed with move */ }
 
     try {
       await fs.rename(src, dest);
@@ -190,11 +242,26 @@ async function organizeFlatFiles(moviesDir: string): Promise<void> {
     const targetDir = path.join(moviesDir, folderName);
     const targetPath = path.join(targetDir, organizedFilename);
 
-    // Skip if target directory already exists (avoid collisions)
+    // If target directory already exists, check if it already has a video file.
+    // If so, the flat file is a duplicate — remove it instead of skipping.
     try {
       await fs.access(targetDir);
+      const dirContents = await fs.readdir(targetDir);
+      const hasVideo = dirContents.some(
+        (e: string) => MOVIE_EXTENSIONS.includes(path.extname(e).toLowerCase()),
+      );
+      if (hasVideo) {
+        // Already organized — remove the flat duplicate
+        try {
+          await fs.unlink(srcPath);
+          organized++;
+          logger.info(`[StartupTasks] Removed flat duplicate: ${entry.name} (already in ${folderName}/)`);
+        } catch (err: any) {
+          logger.warn(`[StartupTasks] Failed to remove flat duplicate: ${entry.name}`, { error: err.message });
+        }
+      }
       continue;
-    } catch { /* good — doesn't exist */ }
+    } catch { /* good — doesn't exist, proceed with organize */ }
 
     try {
       const thumbsDir = path.join(targetDir, 'Thumbnails');
@@ -313,6 +380,70 @@ async function generateMissingThumbnails(moviesDir: string): Promise<void> {
 }
 
 /**
+ * For each subdirectory in MOVIES_DIR that contains a video file
+ * but is missing thumbnails/sprites, generate them via ffmpeg.
+ */
+async function generateMissingSubdirThumbnails(moviesDir: string): Promise<void> {
+  let entries;
+  try {
+    entries = await fs.readdir(moviesDir, { withFileTypes: true });
+  } catch {
+    return;
+  }
+
+  const SKIP_DIRS = new Set(['Thumbnails', '1_inbox', '2_processing', '3_complete']);
+  const subdirs = entries.filter((e) => e.isDirectory() && !SKIP_DIRS.has(e.name));
+
+  let generated = 0;
+  let failed = 0;
+
+  for (const dirEntry of subdirs) {
+    const dir = path.join(moviesDir, dirEntry.name);
+
+    let dirFiles;
+    try {
+      dirFiles = await fs.readdir(dir, { withFileTypes: true });
+    } catch {
+      continue;
+    }
+
+    const videoFile = dirFiles.find(
+      (e) => e.isFile() && MOVIE_EXTENSIONS.includes(path.extname(e.name).toLowerCase()),
+    );
+    if (!videoFile) continue;
+
+    const baseName = path.basename(videoFile.name, path.extname(videoFile.name));
+    const thumbsDir = path.join(dir, 'Thumbnails');
+    const thumbPath = path.join(thumbsDir, `${baseName}_thumb.jpg`);
+    const spritePath = path.join(thumbsDir, `${baseName}_sprite.jpg`);
+
+    let hasThumb = false;
+    let hasSprite = false;
+    try { await fs.access(thumbPath); hasThumb = true; } catch { /* */ }
+    try { await fs.access(spritePath); hasSprite = true; } catch { /* */ }
+
+    if (hasThumb && hasSprite) continue;
+
+    const videoPath = path.join(dir, videoFile.name);
+    try {
+      await fs.mkdir(thumbsDir, { recursive: true });
+      await generateMovieThumbnail(videoPath, thumbsDir);
+      generated++;
+      logger.info(`[StartupTasks] Generated subdirectory thumbnails for ${dirEntry.name}/${videoFile.name}`);
+    } catch (err: any) {
+      failed++;
+      if (failed <= 5) {
+        logger.warn(`[StartupTasks] Subdirectory thumbnail generation failed for ${dirEntry.name}`, { error: err.message });
+      }
+    }
+  }
+
+  if (generated > 0 || failed > 0) {
+    logger.info('[StartupTasks] Subdirectory thumbnail generation complete', { generated, failed });
+  }
+}
+
+/**
  * Find the first *_thumb.jpg file in a Thumbnails directory.
  * Returns the base name (before _thumb.jpg) or null if none found.
  */
@@ -372,7 +503,7 @@ async function autoIndexLibrary(db: any, moviesDir: string): Promise<void> {
         continue;
       }
 
-      const id = crypto.createHash('sha256').update('movies:' + entry.name).digest('hex').slice(0, 36);
+      const id = generateVideoIdSync(crypto, 'movies', entry.name);
       const videoPath = path.join(moviesDir, entry.name);
       const stat = await fs.stat(videoPath);
       const thumbUrl = `/media/movies/Thumbnails/${encodeURIComponent(baseName)}_thumb.jpg`;
@@ -427,7 +558,7 @@ async function autoIndexLibrary(db: any, moviesDir: string): Promise<void> {
       if (!thumbInfo) { skipped++; continue; }
 
       const relVideoPath = path.join(dirEntry.name, videoFile.name);
-      const id = crypto.createHash('sha256').update('movies:' + relVideoPath).digest('hex').slice(0, 36);
+      const id = generateVideoIdSync(crypto, 'movies', relVideoPath);
 
       const videoPath = path.join(dir, videoFile.name);
       const stat = await fs.stat(videoPath);
@@ -536,7 +667,7 @@ export async function generateMoviesIndex(db: any, moviesDir?: string): Promise<
 
       const videoPath = path.join(MOVIES_DIR, entry.name);
       const stat = await fs.stat(videoPath);
-      const id = crypto.createHash('sha256').update('movies:' + entry.name).digest('hex').slice(0, 36);
+      const id = generateVideoIdSync(crypto, 'movies', entry.name);
       const thumbUrl = `/media/movies/Thumbnails/${encodeURIComponent(baseName)}_thumb.jpg`;
 
       result.push({
@@ -575,7 +706,7 @@ export async function generateMoviesIndex(db: any, moviesDir?: string): Promise<
         // Read metadata.json sidecar if available
         const sidecar = await readSidecar(dir);
         const id = sidecar?.id
-          || crypto.createHash('sha256').update('movies:' + relVideoPath).digest('hex').slice(0, 36);
+          || generateVideoIdSync(crypto, 'movies', relVideoPath);
         const displayName = sidecar?.displayName
           || path.basename(videoFile.name, path.extname(videoFile.name));
         const thumbUrl = `/media/movies/${encodeURIComponent(dirEntry.name)}/Thumbnails/${encodeURIComponent(thumbInfo.thumbFile)}`;

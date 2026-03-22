@@ -68,8 +68,17 @@ export class VideoDatabase {
     try {
       const rows = await ApiClient.get<any[]>(`/api/videos`);
       const normalized = this.normalizeLoadedVideos(rows);
-      this.saveToStorage(normalized);
-      return normalized;
+      // Deduplicate by filename+size — server may have entries with different IDs
+      // for the same physical file (client vs server ID generation mismatch)
+      const seen = new Map<string, number>();
+      const deduped = normalized.filter((v, i) => {
+        const key = `${v.filename}\0${v.size}`;
+        if (seen.has(key)) return false;
+        seen.set(key, i);
+        return true;
+      });
+      this.saveToStorage(deduped);
+      return deduped;
     } catch {
       serverHealth.markUnhealthy();
       return this.loadFromStorage();
@@ -98,10 +107,26 @@ export class VideoDatabase {
   }
 
   static addVideos(existingVideos: Video[], newVideos: Video[]): Video[] {
+    // Deduplicate by both id AND filename+size to handle client/server ID mismatch.
+    // Client generates IDs as btoa(filename-size-lastModified), server uses sha256(path).
+    // Same physical file can have two different IDs — dedup by content identity too.
     const videoMap = new Map(existingVideos.map((v) => [v.id, v]));
+    const contentKeyMap = new Map<string, string>(); // contentKey -> id
+    for (const v of existingVideos) {
+      contentKeyMap.set(`${v.filename}\0${v.size}`, v.id);
+    }
 
     newVideos.forEach((video) => {
+      const contentKey = `${video.filename}\0${video.size}`;
+      const existingId = contentKeyMap.get(contentKey);
+
+      // If same file exists under a different ID, remove the old entry
+      if (existingId && existingId !== video.id) {
+        videoMap.delete(existingId);
+      }
+
       videoMap.set(video.id, video);
+      contentKeyMap.set(contentKey, video.id);
     });
 
     const updatedVideos = Array.from(videoMap.values());

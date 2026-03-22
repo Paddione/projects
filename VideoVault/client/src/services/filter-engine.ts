@@ -94,6 +94,12 @@ export class FilterEngine {
     }
 
     const categoryArray = video.categories[type as keyof typeof video.categories];
+
+    // "unassigned" matches videos with no values for this category type
+    if (value === 'unassigned') {
+      return !Array.isArray(categoryArray) || categoryArray.length === 0;
+    }
+
     return Array.isArray(categoryArray) && categoryArray.includes(value);
   }
 
@@ -138,7 +144,7 @@ export class FilterEngine {
       });
     });
 
-    return Array.from(categoryMap.entries()).map(([key, data]) => {
+    const results = Array.from(categoryMap.entries()).map(([key, data]) => {
       const [type, ...valueParts] = key.split(':');
       const value = valueParts.join(':');
       const isCustom = type === 'custom';
@@ -151,6 +157,25 @@ export class FilterEngine {
         url: data.url,
       };
     });
+
+    // Add virtual "unassigned" entries for standard category types
+    const STANDARD_TYPES = ['age', 'physical', 'ethnicity', 'relationship', 'acts', 'setting', 'quality'];
+    for (const type of STANDARD_TYPES) {
+      const unassignedCount = videos.filter(
+        (v) => !Array.isArray(v.categories[type]) || v.categories[type].length === 0,
+      ).length;
+      if (unassignedCount > 0) {
+        results.push({
+          type,
+          value: 'unassigned',
+          count: unassignedCount,
+          isCustom: false,
+          url: undefined,
+        });
+      }
+    }
+
+    return results;
   }
 
   static updateFilterCounts(

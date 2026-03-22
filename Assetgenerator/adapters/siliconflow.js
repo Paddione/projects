@@ -76,8 +76,10 @@ export async function generate({ id, asset, config, libraryRoot }) {
   const outputPath = join(outputDir, `${id}.png`);
 
   const basePrompt = asset.prompt || `${asset.category} game asset: ${id}`;
-  const styleDirective = '3D rendered game asset, stylized low-poly 3D model, clean geometry, soft studio lighting, isometric perspective';
-  const prompt = `${basePrompt}, ${styleDirective}`;
+  // Safety clause FIRST (higher token weight), then style directive
+  const safetyClause = 'no shadows, no watermark, no signature, no text, no letters, no words, no labels';
+  const styleDirective = '3D rendered game asset, stylized low-poly 3D model, clean geometry, flat even lighting, isometric perspective';
+  const prompt = `${safetyClause}, ${basePrompt}, ${styleDirective}`;
   const resolution = asset.conceptResolution || 1024;
 
   console.log(`  [SiliconFlow] Generating concept for ${id}: "${prompt.slice(0, 80)}..."`);

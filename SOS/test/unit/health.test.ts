@@ -60,6 +60,30 @@ describe('GET /health/live', () => {
   });
 });
 
+describe('GET /api/version', () => {
+  it('returns version info with all fields', async () => {
+    const res = await fetch(`${baseUrl}/api/version`);
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.service).toBe('sos');
+    expect(body.version).toBe('1.0.0');
+    expect(body.sha).toBeTypeOf('string');
+    expect(body.uptime).toBeTypeOf('number');
+    expect(body.node).toMatch(/^v\d+/);
+  });
+
+  it('returns no-store cache header', async () => {
+    const res = await fetch(`${baseUrl}/api/version`);
+    expect(res.headers.get('cache-control')).toBe('no-store');
+  });
+
+  it('defaults sha to dev when GIT_SHA not set', async () => {
+    const res = await fetch(`${baseUrl}/api/version`);
+    const body = await res.json();
+    expect(body.sha).toBe('dev');
+  });
+});
+
 describe('GET /api/health', () => {
   it('returns convenience health endpoint', async () => {
     const res = await fetch(`${baseUrl}/api/health`);

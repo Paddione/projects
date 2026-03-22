@@ -11,6 +11,7 @@ import { handleEbookProcessing, scanEbooksDirectory } from '../handlers/ebook-ha
 import { jobQueue } from '../lib/job-queue';
 import { logger } from '../lib/logger';
 import { readSidecar, writeSidecar } from '../lib/sidecar';
+import { generateVideoIdSync } from '@shared/video-id';
 import { db } from '../db';
 
 const router = Router();
@@ -244,7 +245,7 @@ router.post('/movies/rename', async (req: Request, res: Response) => {
     const newRelPath = path.relative(MOVIES_DIR, newDirPath);
     const newRelVideoPath = path.join(newRelPath, `${sanitizedNewName}${ext}`);
     const newDbPath = `movies/${newRelVideoPath}`;
-    const newId = crypto.createHash('sha256').update('movies:' + newRelVideoPath).digest('hex').slice(0, 36);
+    const newId = generateVideoIdSync(crypto, 'movies', newRelVideoPath);
 
     try {
       if (db) {
@@ -585,7 +586,7 @@ router.post('/movies/index', async (req: Request, res: Response) => {
           }
 
           // Deterministic ID from relative path
-          const id = crypto.createHash('sha256').update('movies:' + relVideoPath).digest('hex').slice(0, 36);
+          const id = generateVideoIdSync(crypto, 'movies', relVideoPath);
 
           // Check if already indexed
           if (!forceReindex && db) {
@@ -1081,7 +1082,7 @@ router.post('/hdd-ext/index', async (req: Request, res: Response) => {
           }
 
           // Deterministic ID
-          const id = crypto.createHash('sha256').update('hdd-ext:' + relVideoPath).digest('hex').slice(0, 36);
+          const id = generateVideoIdSync(crypto, 'hdd-ext', relVideoPath);
 
           // Check if already indexed
           if (!forceReindex && db) {

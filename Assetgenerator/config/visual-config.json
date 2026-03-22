@@ -56,6 +56,6 @@
     "powerOfTwo": true
   },
   "tags": ["arena"],
-  "conceptBackendPriority": ["gemini-imagen", "siliconflow", "diffusers"],
+  "conceptBackendPriority": ["comfyui", "gemini-imagen", "siliconflow", "diffusers"],
   "modelBackendPriority": ["meshy", "triposr"]
 }

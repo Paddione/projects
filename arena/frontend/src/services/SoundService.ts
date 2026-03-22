@@ -27,7 +27,7 @@ const SFX_IDS = [
 ] as const;
 
 // All music track IDs
-const MUSIC_IDS = ['lobby', 'battle', 'victory', 'defeat', 'respectisevt'] as const;
+const MUSIC_IDS = ['lobby', 'battle', 'victory', 'defeat', 'respect_event'] as const;
 
 type SFXId = (typeof SFX_IDS)[number];
 type MusicId = (typeof MUSIC_IDS)[number];
@@ -50,6 +50,12 @@ class SoundServiceImpl {
     private musicVolume = 0.35;
     private muted = false;
 
+    private static readonly STORAGE_KEYS = {
+        master: 'arena_volume_master',
+        sfx: 'arena_volume_sfx',
+        music: 'arena_volume_music',
+    } as const;
+
     get isLoaded(): boolean {
         return this.loaded;
     }
@@ -60,6 +66,7 @@ class SoundServiceImpl {
     async loadAll(): Promise<void> {
         if (this.loaded) return;
 
+        this.loadSavedVolumes();
         const promises: Promise<void>[] = [];
 
         // Load SFX
@@ -199,10 +206,12 @@ class SoundServiceImpl {
     setMasterVolume(vol: number): void {
         this.masterVolume = Math.max(0, Math.min(1, vol));
         Howler.volume(this.masterVolume);
+        localStorage.setItem(SoundServiceImpl.STORAGE_KEYS.master, String(this.masterVolume));
     }
 
     setSFXVolume(vol: number): void {
         this.sfxVolume = Math.max(0, Math.min(1, vol));
+        localStorage.setItem(SoundServiceImpl.STORAGE_KEYS.sfx, String(this.sfxVolume));
     }
 
     setMusicVolume(vol: number): void {
@@ -210,6 +219,7 @@ class SoundServiceImpl {
         if (this.currentMusic) {
             this.currentMusic.howl.volume(this.musicVolume * this.masterVolume);
         }
+        localStorage.setItem(SoundServiceImpl.STORAGE_KEYS.music, String(this.musicVolume));
     }
 
     toggleMute(): boolean {
@@ -220,6 +230,22 @@ class SoundServiceImpl {
 
     get isMuted(): boolean {
         return this.muted;
+    }
+
+    /** Restore saved volume levels from localStorage. Call once at startup. */
+    loadSavedVolumes(): void {
+        const m = localStorage.getItem(SoundServiceImpl.STORAGE_KEYS.master);
+        const s = localStorage.getItem(SoundServiceImpl.STORAGE_KEYS.sfx);
+        const mu = localStorage.getItem(SoundServiceImpl.STORAGE_KEYS.music);
+        if (m !== null) this.masterVolume = parseFloat(m);
+        if (s !== null) this.sfxVolume = parseFloat(s);
+        if (mu !== null) this.musicVolume = parseFloat(mu);
+        Howler.volume(this.masterVolume);
+    }
+
+    /** Get current volume levels for UI binding. */
+    getVolumes(): { master: number; sfx: number; music: number } {
+        return { master: this.masterVolume, sfx: this.sfxVolume, music: this.musicVolume };
     }
 
     // =========================================================================

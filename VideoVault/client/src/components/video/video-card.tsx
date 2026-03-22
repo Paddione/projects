@@ -6,6 +6,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Video } from '@/types/video';
 import { getCategoryColorClasses } from '@/lib/category-colors';
 import { Play, Clock, FileVideo, Tags, Edit, FolderPlus, Trash2, Scissors, Pin } from 'lucide-react';
+import { CategoryPicker } from '@/components/video/category-picker';
 import { ThumbnailGenerator } from '@/services/thumbnail-generator';
 import { VideoThumbnailService } from '@/services/video-thumbnail';
 import { BulkOperationsService } from '@/services/bulk-operations';
@@ -25,6 +26,7 @@ interface VideoCardProps {
   onFocusMode?: (video: Video) => void;
   onPin?: (video: Video) => void;
   onRemoveCategory?: (videoId: string, categoryType: string, categoryValue: string) => void;
+  onUpdateCategories?: (videoId: string, categories: Partial<{ categories: any; customCategories: any }>) => void;
   'data-video-index'?: number;
   onClick?: () => void;
   isSelected?: boolean;
@@ -44,6 +46,7 @@ export function VideoCard({
   onFocusMode,
   onPin,
   onRemoveCategory,
+  onUpdateCategories,
   onClick,
   isSelected = false,
   onSelectionChange,
@@ -370,6 +373,15 @@ export function VideoCard({
     return categories.slice(0, 6);
   };
 
+  const UNASSIGNED_TYPES = ['age', 'physical', 'ethnicity', 'relationship', 'acts', 'setting', 'quality'] as const;
+  const UNASSIGNED_LABELS: Record<string, string> = {
+    age: 'age', physical: 'physical', ethnicity: 'ethnicity',
+    relationship: 'relationship', acts: 'acts', setting: 'setting', quality: 'quality',
+  };
+
+  const getUnassignedTypes = () =>
+    UNASSIGNED_TYPES.filter((type) => !video.categories[type]?.length);
+
   const handleCardClick = (e: React.MouseEvent) => {
     // Don't trigger play if clicking on action buttons or checkbox
     if (
@@ -680,6 +692,19 @@ export function VideoCard({
               {category.value}
             </Badge>
           ))}
+          {getUnassignedTypes().map((type) => (
+            <span
+              key={`unassigned-${type}`}
+              className="inline-flex items-center rounded-md border border-dashed border-muted-foreground/30 px-1.5 py-0.5 text-xs text-muted-foreground/50"
+              title={`${UNASSIGNED_LABELS[type]}: unassigned`}
+              data-testid={`unassigned-chip-${video.id}-${type}`}
+            >
+              {UNASSIGNED_LABELS[type]}
+            </span>
+          ))}
+          {onUpdateCategories && (
+            <CategoryPicker video={video} onApply={onUpdateCategories} />
+          )}
         </div>
 
         {/* Actions and metadata */}

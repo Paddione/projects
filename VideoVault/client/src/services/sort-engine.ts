@@ -37,6 +37,11 @@ export class SortEngine {
         const bc = this.countCategories(b);
         return ac === bc ? 0 : ac < bc ? -1 : 1;
       }
+      case 'unassignedCount': {
+        const au = this.countUnassignedTypes(a);
+        const bu = this.countUnassignedTypes(b);
+        return au === bu ? 0 : au < bu ? -1 : 1;
+      }
       default:
         return 0;
     }
@@ -52,5 +57,13 @@ export class SortEngine {
       return sum + count;
     }, 0);
     return standard + custom;
+  }
+
+  private static readonly STANDARD_TYPES = ['age', 'physical', 'ethnicity', 'relationship', 'acts', 'setting', 'quality'];
+
+  private static countUnassignedTypes(v: Video): number {
+    return this.STANDARD_TYPES.filter(
+      (type) => !Array.isArray(v.categories[type]) || v.categories[type].length === 0,
+    ).length;
   }
 }

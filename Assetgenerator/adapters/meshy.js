@@ -16,6 +16,7 @@ export async function generate({ id, asset, config, libraryRoot }) {
     '--backend', 'meshy',
     '--input', conceptPath,
     '--output', outputDir,
+    '--force',
   ];
 
   return new Promise((resolvePromise, reject) => {

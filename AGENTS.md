@@ -5,16 +5,9 @@ Rules for AI agents working in this repository. For full command references and 
 ## Task Management
 
 Before starting work:
-1. Check `.agent-tasks.md` at repo root
-2. Add a task entry: `[YYYY-MM-DD HH:MM] [project] [STATUS] Description`
-3. Update status between major steps; mark `[DONE]` immediately when complete
-
-Status values: `IN_PROGRESS`, `BLOCKED`, `DONE`
-
-Example:
-```
-[2025-12-27 14:30] [l2p] [IN_PROGRESS] Adding profile feature (frontend/src/components/Profile.tsx)
-```
+1. Use Claude Code's built-in task system (`TaskCreate`, `TaskUpdate`) to track progress
+2. Mark tasks `in_progress` when starting, `completed` when done
+3. For multi-agent coordination, check git status and recent commits to avoid conflicts
 
 ## Project Isolation
 
@@ -66,3 +59,4 @@ If a critical section is in use, mark your task `[BLOCKED]` and yield.
 - Do not add dependencies, run migrations, or change infrastructure without explicit approval
 - Keep secrets out of the repo
 - Update existing docs rather than creating new ones
+- Update the Obsidian vault (`shared-infrastructure/SMB-Share/Obsidian/`) when implementing new features or changing existing ones

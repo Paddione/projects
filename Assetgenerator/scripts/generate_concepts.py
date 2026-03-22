@@ -26,6 +26,7 @@ from pathlib import Path
 
 MANIFEST_PATH = Path(__file__).parent.parent / "assets" / "manifest.json"
 OUTPUT_BASE = Path(__file__).parent.parent / "assets" / "concepts"
+FORCE_OVERWRITE = False
 
 # SDXL generation params
 DEFAULT_WIDTH = 1024
@@ -37,8 +38,30 @@ NEGATIVE_PROMPT = (
     "realistic photo, photorealistic, noisy, grainy"
 )
 
-# Style suffix appended to all prompts for consistency
-STYLE_SUFFIX = ", low-poly 3D render, stylized, clean edges, solid colors, game asset sheet, white background"
+# Style suffix removed — asset prompts already contain full style direction
+STYLE_SUFFIX = ""
+
+# Categories that should keep their background (no rembg)
+KEEP_BACKGROUND_CATEGORIES = {"tiles"}
+
+
+def remove_background(image_path: Path) -> bool:
+    """Remove background from a generated concept image using rembg."""
+    try:
+        from rembg import remove
+        from PIL import Image
+
+        img = Image.open(image_path)
+        result = remove(img)
+        result.save(image_path, "PNG")
+        print(f"  [REMBG] Background removed: {image_path.name}")
+        return True
+    except ImportError:
+        print("  [WARN] rembg not installed, skipping background removal")
+        return False
+    except Exception as e:
+        print(f"  [WARN] Background removal failed: {e}")
+        return False
 
 
 def load_manifest() -> dict:
@@ -225,7 +248,7 @@ def generate_asset(asset: dict, category: str, meta: dict, backend: str, comfyui
     out_dir = ensure_output_dir(category)
     out_path = out_dir / f"{asset_id}.png"
 
-    if out_path.exists():
+    if out_path.exists() and not FORCE_OVERWRITE:
         print(f"  [SKIP] {category}/{asset_id} — already exists")
         return True
 
@@ -235,9 +258,12 @@ def generate_asset(asset: dict, category: str, meta: dict, backend: str, comfyui
     print(f"  [GEN] {category}/{asset_id} ({w}x{h})")
 
     if backend == "comfyui":
-        return comfyui_generate(comfyui_url, prompt, out_path, w, h)
+        ok = comfyui_generate(comfyui_url, prompt, out_path, w, h)
     else:
-        return diffusers_generate(prompt, out_path, w, h)
+        ok = diffusers_generate(prompt, out_path, w, h)
+    if ok and category not in KEEP_BACKGROUND_CATEGORIES:
+        remove_background(out_path)
+    return ok
 
 
 def generate_character_concepts(char: dict, meta: dict, backend: str, comfyui_url: str) -> bool:
@@ -247,7 +273,7 @@ def generate_character_concepts(char: dict, meta: dict, backend: str, comfyui_ur
 
     # Main character concept
     main_path = out_dir / f"{char_id}.png"
-    if not main_path.exists():
+    if not main_path.exists() or FORCE_OVERWRITE:
         prompt = char["prompt"]
         w, h = get_resolution("characters", meta)
         print(f"  [GEN] characters/{char_id} (overview, {w}x{h})")
@@ -257,13 +283,14 @@ def generate_character_concepts(char: dict, meta: dict, backend: str, comfyui_ur
             ok = diffusers_generate(prompt, main_path, w, h)
         if not ok:
             return False
+        remove_background(main_path)
     else:
         print(f"  [SKIP] characters/{char_id} — already exists")
 
     # Per-animation reference sheets (optional, helps Blender rigging)
     for anim_name in char.get("animations", {}):
         anim_path = out_dir / f"{char_id}_{anim_name}.png"
-        if anim_path.exists():
+        if anim_path.exists() and not FORCE_OVERWRITE:
             print(f"  [SKIP] characters/{char_id}_{anim_name} — already exists")
             continue
 
@@ -278,6 +305,8 @@ def generate_character_concepts(char: dict, meta: dict, backend: str, comfyui_ur
             ok = diffusers_generate(anim_prompt, anim_path, 768, 768)
         if not ok:
             print(f"  [WARN] Failed to generate {char_id}_{anim_name}, continuing...")
+        else:
+            remove_background(anim_path)
 
     return True
 
@@ -291,12 +320,14 @@ def main():
                         help="Generation backend (default: auto-detect)")
     parser.add_argument("--output", help="Output base directory (overrides default)")
     parser.add_argument("--prompt", dest="override_prompt", help="Override prompt for single asset generation")
+    parser.add_argument("--force", action="store_true", help="Overwrite existing concepts")
     args = parser.parse_args()
 
-    global OUTPUT_BASE
+    global OUTPUT_BASE, FORCE_OVERWRITE
     if args.output:
         OUTPUT_BASE = Path(args.output)
         OUTPUT_BASE.mkdir(parents=True, exist_ok=True)
+    FORCE_OVERWRITE = args.force
 
     # Determine backend
     backend = args.backend
@@ -319,14 +350,18 @@ def main():
         w, h = get_resolution(args.category, {})
         print(f"\n  [GEN] {args.category}/{args.id} ({w}x{h})")
         out_path = OUTPUT_BASE / f"{args.id}.png"
-        if out_path.exists():
-            print(f"  [SKIP] {args.category}/{args.id} — already exists")
+        if out_path.exists() and not args.force:
+            print(f"  [SKIP] {args.category}/{args.id} — already exists (use --force to overwrite)")
         elif backend == "comfyui":
             ok = comfyui_generate(args.comfyui_url, args.override_prompt, out_path, w, h)
+            if ok and args.category not in KEEP_BACKGROUND_CATEGORIES:
+                remove_background(out_path)
             print(f"\n[DONE] {'Success' if ok else 'Failed'}")
             sys.exit(0 if ok else 1)
         else:
             ok = diffusers_generate(args.override_prompt, out_path, w, h)
+            if ok and args.category not in KEEP_BACKGROUND_CATEGORIES:
+                remove_background(out_path)
             print(f"\n[DONE] {'Success' if ok else 'Failed'}")
             sys.exit(0 if ok else 1)
         sys.exit(0)

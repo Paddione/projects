@@ -47,7 +47,7 @@ interface Settings {
   maxScanConcurrency: number;
 
   // UI preferences
-  defaultSortField: 'displayName' | 'lastModified' | 'size' | 'path' | 'categoryCount';
+  defaultSortField: 'displayName' | 'lastModified' | 'size' | 'path' | 'categoryCount' | 'unassignedCount';
   defaultSortDirection: 'asc' | 'desc';
   uiDensity: 'compact' | 'comfortable' | 'spacious';
   showThumbnails: boolean;
@@ -348,6 +348,7 @@ export function SettingsModal({ isOpen, onClose, onSettingsChange }: SettingsMod
                       <SelectItem value="size">{t('settings.sortFileSize')}</SelectItem>
                       <SelectItem value="path">{t('settings.sortPath')}</SelectItem>
                       <SelectItem value="categoryCount">{t('settings.sortCategoryCount')}</SelectItem>
+                      <SelectItem value="unassignedCount">Unassigned types</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

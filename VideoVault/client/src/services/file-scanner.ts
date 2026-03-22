@@ -8,6 +8,7 @@ import { ApiClient } from './api-client';
 import { SpriteCache } from './sprite-cache';
 import { setSpriteMeta } from './sprite-indexeddb';
 import { FileHandleRegistry } from './file-handle-registry';
+import { generateVideoId } from '@shared/video-id';
 
 // Throttled thumbnail generation requests to prevent server flooding
 class ThumbnailRequestQueue {
@@ -237,8 +238,14 @@ export class FileScanner {
       categories.quality.push(quality.toLowerCase());
     }
 
+    // Deterministic ID matching server-side generation: sha256(rootKey + ':' + relativePath)
+    // Falls back to sha256(filename + ':' + filename) when rootKey/path unavailable
+    const idRootKey = rootKey?.replace(/_\d+(_[a-z0-9]+)?$/, '') || file.name;
+    const idPath = relativePath || file.name;
+    const id = await generateVideoId(idRootKey, idPath);
+
     const video: Video = {
-      id: this.generateVideoId(file.name, file.size, file.lastModified),
+      id,
       filename: file.name,
       displayName: this.generateDisplayName(file.name),
       path: relativePath || file.name,
@@ -302,33 +309,6 @@ export class FileScanner {
     return CategoryExtractor.extractCategories(filename);
   }
 
-  private static generateVideoId(filename: string, size: number, lastModified: number): string {
-    // Encode using UTF-8 bytes to avoid InvalidCharacterError from btoa on non-Latin1
-    const input = `${filename}-${size}-${lastModified}`;
-    try {
-      const bytes = new TextEncoder().encode(input);
-      let binary = '';
-      for (let i = 0; i < bytes.length; i++) {
-        binary += String.fromCharCode(bytes[i]);
-      }
-      return btoa(binary).replace(/[+/=]/g, '');
-    } catch (_e) {
-      // Fallback path using encodeURIComponent in unlikely environments
-      try {
-        // unescape is deprecated but acceptable as a guarded fallback
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        return btoa(unescape(encodeURIComponent(input))).replace(/[+/=]/g, '');
-      } catch (_e2) {
-        // As a last resort, return a simple hashed-like id
-        let hash = 0;
-        for (let i = 0; i < input.length; i++) {
-          hash = ((hash << 5) - hash + input.charCodeAt(i)) | 0;
-        }
-        return Math.abs(hash).toString(36);
-      }
-    }
-  }
 
   private static generateDisplayName(filename: string): string {
     // Remove extension
