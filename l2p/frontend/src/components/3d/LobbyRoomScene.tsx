@@ -164,7 +164,7 @@ class CharacterErrorBoundary extends React.Component<
   static getDerivedStateFromError() {
     return { hasError: true }
   }
-  render() {
+  override render() {
     return this.state.hasError ? this.props.fallback : this.props.children
   }
 }
@@ -182,7 +182,7 @@ export const LobbyRoomScene: React.FC<LobbyRoomSceneProps> = ({ players, hostId 
       <SceneLighting hostPosition={hostPosition} />
 
       {/* Floor */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.01, 0]}>
+      <mesh rotation={[-Math.PI / 2, 0, 0] as const} position={[0, -0.01, 0]}>
         <planeGeometry args={[8, 5]} />
         <meshStandardMaterial color="#1a1a2e" roughness={0.8} />
       </mesh>
@@ -190,17 +190,17 @@ export const LobbyRoomScene: React.FC<LobbyRoomSceneProps> = ({ players, hostId 
       {players.map((player, index) => {
         const position = getSemicirclePosition(index, total)
         const isHost = player.id === hostId
-        const color = PLAYER_COLORS[index % PLAYER_COLORS.length]
+        const color = PLAYER_COLORS[index % PLAYER_COLORS.length]!
         const characterId = player.character || 'student'
 
         return (
           <React.Suspense
             key={player.id}
-            fallback={<PlaceholderPlayer position={position} isHost={isHost} color={color} />}
+            fallback={<PlaceholderPlayer position={position as [number, number, number]} isHost={isHost} color={color} />}
           >
             <CharacterErrorBoundary
               fallback={
-                <PlaceholderPlayer position={position} isHost={isHost} color={color} />
+                <PlaceholderPlayer position={position as [number, number, number]} isHost={isHost} color={color} />
               }
             >
               <PlayerCharacter

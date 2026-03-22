@@ -190,7 +190,7 @@ class ErrorBoundaryFallback extends React.Component<
     return { hasError: true }
   }
 
-  render() {
+  override render() {
     if (this.state.hasError) {
       return this.props.fallback
     }
