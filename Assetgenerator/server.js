@@ -781,7 +781,7 @@ app.post('/api/library/import', (req, res) => {
     round_start: 'sfx/ui', round_end: 'sfx/ui',
     zone_warning: 'sfx/environment', zone_tick: 'sfx/environment',
     battle: 'music/battle', lobby: 'music/ambient',
-    victory: 'music/stings', defeat: 'music/stings', respectisevt: 'music/stings',
+    victory: 'music/stings', defeat: 'music/stings', respect_event: 'music/stings',
   };
 
   const audioRoot = resolve(__dirname, proj.audioRoot);

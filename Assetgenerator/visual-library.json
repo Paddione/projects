@@ -8,9 +8,10 @@
       "tags": [
         "arena"
       ],
-      "prompt": "young university student character, casual hoodie and jeans, backpack, sneakers, determined expression, low-poly 3D model reference, isometric game sprite, bright cyan accent color, transparent background",
+      "prompt": "single front view, young university student character, casual hoodie and jeans, backpack, sneakers, determined expression, low-poly 3D model, isometric game sprite, bright cyan accent color, A-pose, no shadows, no ground, no text, no numbers, transparent background",
       "poses": [
         "stand",
+        "walk",
         "gun",
         "machine",
         "reload",
@@ -55,9 +56,10 @@
       "tags": [
         "arena"
       ],
-      "prompt": "single full-body male character, university researcher, lab coat over smart casual clothes, safety goggles on forehead, holding tablet, focused expression, mint green accent color, 3D character model reference sheet, A-pose, plain white background, no environment, no shadows, no text",
+      "prompt": "single front view, full-body male character, university researcher, lab coat over smart casual clothes, safety goggles on forehead, holding tablet, focused expression, mint green accent color, A-pose, no shadows, no ground, no text, no numbers, transparent background",
       "poses": [
         "stand",
+        "walk",
         "gun",
         "machine",
         "reload",
@@ -107,9 +109,10 @@
       "tags": [
         "arena"
       ],
-      "prompt": "senior university professor character, tweed jacket with elbow patches, bow tie, glasses, grey hair, authoritative stance, low-poly 3D model reference, isometric game sprite, vivid purple accent color, transparent background",
+      "prompt": "single front view, senior university professor character, tweed jacket with elbow patches, bow tie, glasses, grey hair, authoritative stance, low-poly 3D model, isometric game sprite, vivid purple accent color, A-pose, no shadows, no ground, no text, no numbers, transparent background",
       "poses": [
         "stand",
+        "walk",
         "gun",
         "machine",
         "reload",
@@ -156,9 +159,10 @@
       "tags": [
         "arena"
       ],
-      "prompt": "single full-body male character, university dean, formal dark tailored suit, gold tie pin, slicked-back silver hair, commanding posture, broad shoulders, gold accent details, 3D character model reference sheet, A-pose, plain white background, no environment, no shadows, no text",
+      "prompt": "single front view, full-body male character, university dean, formal dark tailored suit, gold tie pin, slicked-back silver hair, commanding posture, broad shoulders, gold accent details, A-pose, no shadows, no ground, no text, no numbers, transparent background",
       "poses": [
         "stand",
+        "walk",
         "gun",
         "machine",
         "reload",
@@ -208,9 +212,10 @@
       "tags": [
         "arena"
       ],
-      "prompt": "single full-body male character, university librarian, cozy cardigan sweater over collared shirt, reading glasses on chain around neck, book tucked under arm, calm demeanor, coral pink accent color, 3D character model reference sheet, A-pose, plain white background, no environment, no shadows, no text",
+      "prompt": "single front view, full-body male character, university librarian, cozy cardigan sweater over collared shirt, reading glasses on chain around neck, book tucked under arm, calm demeanor, coral pink accent color, A-pose, no shadows, no ground, no text, no numbers, transparent background",
       "poses": [
         "stand",
+        "walk",
         "gun",
         "machine",
         "reload",
@@ -252,7 +257,7 @@
       "tags": [
         "arena"
       ],
-      "prompt": "3D rendered glowing energy projectile, sci-fi laser bolt, yellow-orange emissive glow, stylized game VFX, transparent background",
+      "prompt": "3D rendered glowing energy projectile, sci-fi laser bolt, yellow-orange emissive glow, stylized game VFX, no shadows, no ground, no text, no numbers, transparent background",
       "poses": [
         "idle"
       ],
@@ -295,7 +300,7 @@
       "tags": [
         "arena"
       ],
-      "prompt": "3D rendered sword slash arc effect, energy trail with particle sparks, white-blue emissive glow, stylized game VFX, transparent background",
+      "prompt": "3D rendered sword slash arc effect, energy trail with particle sparks, white-blue emissive glow, stylized game VFX, no shadows, no ground, no text, no numbers, transparent background",
       "poses": [
         "idle"
       ],
@@ -339,7 +344,7 @@
       "tags": [
         "arena"
       ],
-      "prompt": "3D rendered muzzle flash effect, bright yellow-white burst with volumetric sparks, stylized game VFX, transparent background",
+      "prompt": "3D rendered muzzle flash effect, bright yellow-white burst with volumetric sparks, stylized game VFX, no shadows, no ground, no text, no numbers, transparent background",
       "poses": [
         "idle"
       ],
@@ -385,7 +390,7 @@
       "tags": [
         "arena"
       ],
-      "prompt": "3D rendered red health pack with glowing cross symbol, stylized game item, clean geometry, soft studio lighting, isometric view, transparent background",
+      "prompt": "3D rendered red health pack with glowing cross symbol, stylized game item, clean geometry, soft studio lighting, isometric view, no shadows, no ground, no text, no numbers, transparent background",
       "poses": [
         "idle"
       ],
@@ -428,7 +433,7 @@
       "tags": [
         "arena"
       ],
-      "prompt": "3D rendered blue armor plate pickup with glowing shield icon, stylized game item, clean geometry, soft studio lighting, isometric view, transparent background",
+      "prompt": "3D rendered blue armor plate pickup with glowing shield icon, stylized game item, clean geometry, soft studio lighting, isometric view, no shadows, no ground, no text, no numbers, transparent background",
       "poses": [
         "idle"
       ],
@@ -471,7 +476,7 @@
       "tags": [
         "arena"
       ],
-      "prompt": "3D rendered machine gun pickup, sci-fi automatic weapon with glowing ammo indicator, stylized game item, clean geometry, soft studio lighting, isometric view, transparent background",
+      "prompt": "3D rendered machine gun pickup, sci-fi automatic weapon with glowing ammo indicator, stylized game item, clean geometry, soft studio lighting, isometric view, no shadows, no ground, no text, no numbers, transparent background",
       "poses": [
         "idle"
       ],
@@ -518,7 +523,7 @@
       "tags": [
         "arena"
       ],
-      "prompt": "3D rendered dark stone floor tile, top-down view, PBR textured, seamless tileable, dark navy tone",
+      "prompt": "3D rendered dark stone floor tile, top-down view, PBR textured, seamless tileable, dark navy tone, no text, no numbers",
       "poses": [
         "idle"
       ],
@@ -556,7 +561,7 @@
       "tags": [
         "arena"
       ],
-      "prompt": "3D rendered dark stone floor tile variant, top-down view, PBR textured, seamless tileable, slightly cracked surface",
+      "prompt": "3D rendered dark stone floor tile variant, top-down view, PBR textured, seamless tileable, slightly cracked surface, no text, no numbers",
       "poses": [
         "idle"
       ],
@@ -594,7 +599,7 @@
       "tags": [
         "arena"
       ],
-      "prompt": "3D rendered dark stone floor tile variant, top-down view, PBR textured, seamless tileable, moss patches",
+      "prompt": "3D rendered dark stone floor tile variant, top-down view, PBR textured, seamless tileable, moss patches, no text, no numbers",
       "poses": [
         "idle"
       ],
@@ -632,7 +637,7 @@
       "tags": [
         "arena"
       ],
-      "prompt": "3D rendered dark stone floor tile variant, top-down view, PBR textured, seamless tileable, worn edges",
+      "prompt": "3D rendered dark stone floor tile variant, top-down view, PBR textured, seamless tileable, worn edges, no text, no numbers",
       "poses": [
         "idle"
       ],
@@ -670,7 +675,7 @@
       "tags": [
         "arena"
       ],
-      "prompt": "3D rendered stone wall tile, top-down view, PBR textured, dark gray, rough hewn blocks with depth",
+      "prompt": "3D rendered stone wall tile, top-down view, PBR textured, dark gray, rough hewn blocks with depth, no text, no numbers",
       "poses": [
         "idle"
       ],
@@ -708,7 +713,7 @@
       "tags": [
         "arena"
       ],
-      "prompt": "3D rendered boundary wall edge tile, top-down view, PBR textured, dark surface with glowing blue emissive border",
+      "prompt": "3D rendered boundary wall edge tile, top-down view, PBR textured, dark surface with glowing blue emissive border, no text, no numbers",
       "poses": [
         "idle"
       ],
@@ -746,7 +751,7 @@
       "tags": [
         "arena"
       ],
-      "prompt": "danger zone overlay tile, translucent red tint, subtle hazard pattern, top-down",
+      "prompt": "danger zone overlay tile, translucent red tint, subtle hazard pattern, top-down, no text, no numbers",
       "poses": [
         "idle"
       ],
@@ -785,7 +790,7 @@
       "tags": [
         "arena"
       ],
-      "prompt": "3D rendered campus building wall section, isometric view, brick facade with PBR materials, academic architecture, clean geometry",
+      "prompt": "3D rendered campus building wall section, isometric view, brick facade with PBR materials, academic architecture, clean geometry, no shadows, no ground, no text, no numbers, transparent background",
       "poses": [
         "idle"
       ],
@@ -832,7 +837,7 @@
       "tags": [
         "arena"
       ],
-      "prompt": "3D rendered park bench, isometric view, wooden slats with PBR wood material, campus outdoor seating, clean geometry",
+      "prompt": "3D rendered park bench, isometric view, wooden slats with PBR wood material, campus outdoor seating, clean geometry, no shadows, no ground, no text, no numbers, transparent background",
       "poses": [
         "idle"
       ],
@@ -879,7 +884,7 @@
       "tags": [
         "arena"
       ],
-      "prompt": "3D rendered stone fountain, isometric view, circular base with water effect, campus courtyard centerpiece, clean geometry, PBR materials",
+      "prompt": "3D rendered stone fountain, isometric view, circular base with water effect, campus courtyard centerpiece, clean geometry, PBR materials, no shadows, no ground, no text, no numbers, transparent background",
       "poses": [
         "idle"
       ],
@@ -926,7 +931,7 @@
       "tags": [
         "arena"
       ],
-      "prompt": "3D rendered trimmed hedge, isometric view, dark green foliage with volumetric depth, campus garden border, clean geometry",
+      "prompt": "3D rendered trimmed hedge, isometric view, dark green foliage with volumetric depth, campus garden border, clean geometry, no shadows, no ground, no text, no numbers, transparent background",
       "poses": [
         "idle"
       ],
@@ -973,7 +978,7 @@
       "tags": [
         "arena"
       ],
-      "prompt": "3D rendered ornamental pond, isometric view, blue reflective water surface with caustics, campus water feature, clean geometry",
+      "prompt": "3D rendered ornamental pond, isometric view, blue reflective water surface with caustics, campus water feature, clean geometry, no shadows, no ground, no text, no numbers, transparent background",
       "poses": [
         "idle"
       ],
@@ -1020,7 +1025,7 @@
       "tags": [
         "arena"
       ],
-      "prompt": "stylized 3D red heart icon, full health indicator, glossy surface, soft glow, game UI, transparent background",
+      "prompt": "stylized 3D red heart icon, full health indicator, glossy surface, soft glow, game UI, no shadows, no ground, no text, no numbers, transparent background",
       "poses": [
         "idle"
       ],
@@ -1058,7 +1063,7 @@
       "tags": [
         "arena"
       ],
-      "prompt": "stylized 3D dark heart icon, empty health indicator, matte surface, desaturated, game UI, transparent background",
+      "prompt": "stylized 3D dark heart icon, empty health indicator, matte surface, desaturated, game UI, no shadows, no ground, no text, no numbers, transparent background",
       "poses": [
         "idle"
       ],
@@ -1096,7 +1101,7 @@
       "tags": [
         "arena"
       ],
-      "prompt": "stylized 3D blue shield icon, armor indicator, metallic surface with emissive edge, game UI, transparent background",
+      "prompt": "stylized 3D blue shield icon, armor indicator, metallic surface with emissive edge, game UI, no shadows, no ground, no text, no numbers, transparent background",
       "poses": [
         "idle"
       ],
@@ -1134,7 +1139,7 @@
       "tags": [
         "arena"
       ],
-      "prompt": "stylized 3D gun icon, ranged weapon indicator, clean silhouette, game UI, transparent background",
+      "prompt": "stylized 3D gun icon, ranged weapon indicator, clean silhouette, game UI, no shadows, no ground, no text, no numbers, transparent background",
       "poses": [
         "idle"
       ],
@@ -1172,7 +1177,7 @@
       "tags": [
         "arena"
       ],
-      "prompt": "stylized 3D sword icon, melee weapon indicator, metallic blade with glow, game UI, transparent background",
+      "prompt": "stylized 3D sword icon, melee weapon indicator, metallic blade with glow, game UI, no shadows, no ground, no text, no numbers, transparent background",
       "poses": [
         "idle"
       ],
@@ -1210,7 +1215,7 @@
       "tags": [
         "arena"
       ],
-      "prompt": "stylized 3D glowing circular pip, round won indicator, emissive cyan glow, game UI, transparent background",
+      "prompt": "stylized 3D glowing circular pip, round won indicator, emissive cyan glow, game UI, no shadows, no ground, no text, no numbers, transparent background",
       "poses": [
         "idle"
       ],
@@ -1248,7 +1253,7 @@
       "tags": [
         "arena"
       ],
-      "prompt": "stylized 3D dim circular pip, round not won indicator, dark matte surface, game UI, transparent background",
+      "prompt": "stylized 3D dim circular pip, round not won indicator, dark matte surface, game UI, no shadows, no ground, no text, no numbers, transparent background",
       "poses": [
         "idle"
       ],
@@ -1286,9 +1291,10 @@
       "tags": [
         "arena"
       ],
-      "prompt": "young female university student character, casual hoodie and jeans, ponytail hairstyle, backpack, sneakers, determined expression, low-poly 3D model reference, isometric game sprite, bright cyan accent color, transparent background",
+      "prompt": "single front view, young female university student character, casual hoodie and jeans, ponytail hairstyle, backpack, sneakers, determined expression, low-poly 3D model, isometric game sprite, bright cyan accent color, A-pose, no shadows, no ground, no text, no numbers, transparent background",
       "poses": [
         "stand",
+        "walk",
         "gun",
         "machine",
         "reload",
@@ -1332,9 +1338,10 @@
       "tags": [
         "arena"
       ],
-      "prompt": "single full-body female character, research scientist, lab coat over blouse, safety goggles on forehead, clipboard in hand, determined expression, mint green accent color, 3D character model reference sheet, A-pose, plain white background, no environment, no shadows, no text",
+      "prompt": "single front view, full-body female character, research scientist, lab coat over blouse, safety goggles on forehead, clipboard in hand, determined expression, mint green accent color, A-pose, no shadows, no ground, no text, no numbers, transparent background",
       "poses": [
         "stand",
+        "walk",
         "gun",
         "machine",
         "reload",
@@ -1378,9 +1385,10 @@
       "tags": [
         "arena"
       ],
-      "prompt": "female university professor character, tweed blazer, reading glasses, professional bun hairstyle, books under arm, authoritative stance, low-poly 3D model reference, isometric game sprite, purple accent color, transparent background",
+      "prompt": "single front view, female university professor character, tweed blazer, reading glasses, professional bun hairstyle, books under arm, authoritative stance, low-poly 3D model, isometric game sprite, purple accent color, A-pose, no shadows, no ground, no text, no numbers, transparent background",
       "poses": [
         "stand",
+        "walk",
         "gun",
         "machine",
         "reload",
@@ -1424,9 +1432,10 @@
       "tags": [
         "arena"
       ],
-      "prompt": "single full-body female character, university dean, formal business suit, pearl necklace, elegant updo hairstyle, confident posture, gold accent details, 3D character model reference sheet, A-pose, plain white background, no environment, no shadows, no text",
+      "prompt": "single front view, full-body female character, university dean, formal business suit, pearl necklace, elegant updo hairstyle, confident posture, gold accent details, A-pose, no shadows, no ground, no text, no numbers, transparent background",
       "poses": [
         "stand",
+        "walk",
         "gun",
         "machine",
         "reload",
@@ -1470,9 +1479,10 @@
       "tags": [
         "arena"
       ],
-      "prompt": "single full-body female character, university librarian, cardigan sweater, vintage round glasses, long braided hair, warm expression, coral pink accent color, 3D character model reference sheet, A-pose, plain white background, no environment, no shadows, no text",
+      "prompt": "single front view, full-body female character, university librarian, cardigan sweater, vintage round glasses, long braided hair, warm expression, coral pink accent color, A-pose, no shadows, no ground, no text, no numbers, transparent background",
       "poses": [
         "stand",
+        "walk",
         "gun",
         "machine",
         "reload",
@@ -1517,9 +1527,10 @@
         "arena",
         "skin"
       ],
-      "prompt": "single front view, male character, glowing neon cyan outlines, cyberpunk style, dark body with bright edge lighting, full body, isometric 3D game character, low poly, solid white background, no text",
+      "prompt": "single front view, young male university student, casual hoodie and jeans, backpack, glowing neon cyan outlines, cyberpunk style, dark body with bright edge lighting, full body, isometric 3D game character, low poly, A-pose, no shadows, no ground, no text, no numbers, transparent background",
       "poses": [
-        "stand"
+        "stand",
+        "walk"
       ],
       "directions": 8,
       "size": 64,
@@ -1559,9 +1570,10 @@
         "arena",
         "skin"
       ],
-      "prompt": "single front view, male character, wearing elegant formal attire, black tie suit or evening gown, polished shoes, full body, isometric 3D game character, low poly, solid white background, no text",
+      "prompt": "single front view, young male university student, black tie suit, polished shoes, youthful face, determined expression, cyan accent details, full body, isometric 3D game character, low poly, A-pose, no shadows, no ground, no text, no numbers, transparent background",
       "poses": [
-        "stand"
+        "stand",
+        "walk"
       ],
       "directions": 8,
       "size": 64,
@@ -1600,9 +1612,10 @@
         "arena",
         "skin"
       ],
-      "prompt": "single front view, female character, glowing neon cyan outlines, cyberpunk style, dark body with bright edge lighting, full body, isometric 3D game character, low poly, solid white background, no text",
+      "prompt": "single front view, young female university student, ponytail hairstyle, casual hoodie and jeans, glowing neon cyan outlines, cyberpunk style, dark body with bright edge lighting, full body, isometric 3D game character, low poly, A-pose, no shadows, no ground, no text, no numbers, transparent background",
       "poses": [
-        "stand"
+        "stand",
+        "walk"
       ],
       "directions": 8,
       "size": 64,
@@ -1641,9 +1654,10 @@
         "arena",
         "skin"
       ],
-      "prompt": "single front view, female character, wearing elegant formal attire, black tie suit or evening gown, polished shoes, full body, isometric 3D game character, low poly, solid white background, no text",
+      "prompt": "single front view, young female university student, elegant evening gown, ponytail updo, polished shoes, youthful face, cyan accent details, full body, isometric 3D game character, low poly, A-pose, no shadows, no ground, no text, no numbers, transparent background",
       "poses": [
-        "stand"
+        "stand",
+        "walk"
       ],
       "directions": 8,
       "size": 64,
@@ -1682,9 +1696,10 @@
         "arena",
         "skin"
       ],
-      "prompt": "single front view, male character, glowing neon cyan outlines, cyberpunk style, dark body with bright edge lighting, full body, isometric 3D game character, low poly, solid white background, no text, 3D character model reference sheet, A-pose, plain white background, no environment, no shadows, no text, no watermark",
+      "prompt": "single front view, male university researcher, lab coat, safety goggles on forehead, glowing neon mint green outlines, cyberpunk style, dark body with bright edge lighting, full body, isometric 3D game character, low poly, A-pose, no shadows, no ground, no text, no numbers, transparent background",
       "poses": [
-        "stand"
+        "stand",
+        "walk"
       ],
       "directions": 8,
       "size": 64,
@@ -1723,9 +1738,10 @@
         "arena",
         "skin"
       ],
-      "prompt": "single front view, male character, wearing elegant formal attire, black tie suit or evening gown, polished shoes, full body, isometric 3D game character, low poly, solid white background, no text, 3D character model reference sheet, A-pose, plain white background, no environment, no shadows, no text, no watermark",
+      "prompt": "single front view, male university researcher, black tie suit, safety goggles pushed up on forehead, polished shoes, focused expression, mint green accent details, full body, isometric 3D game character, low poly, A-pose, no shadows, no ground, no text, no numbers, transparent background",
       "poses": [
-        "stand"
+        "stand",
+        "walk"
       ],
       "directions": 8,
       "size": 64,
@@ -1764,9 +1780,10 @@
         "arena",
         "skin"
       ],
-      "prompt": "single front view, female character, glowing neon cyan outlines, cyberpunk style, dark body with bright edge lighting, full body, isometric 3D game character, low poly, solid white background, no text, 3D character model reference sheet, A-pose, plain white background, no environment, no shadows, no text, no watermark",
+      "prompt": "single front view, female research scientist, lab coat over blouse, safety goggles on forehead, glowing neon mint green outlines, cyberpunk style, dark body with bright edge lighting, full body, isometric 3D game character, low poly, A-pose, no shadows, no ground, no text, no numbers, transparent background",
       "poses": [
-        "stand"
+        "stand",
+        "walk"
       ],
       "directions": 8,
       "size": 64,
@@ -1805,9 +1822,10 @@
         "arena",
         "skin"
       ],
-      "prompt": "single front view, female character, wearing elegant formal attire, black tie suit or evening gown, polished shoes, full body, isometric 3D game character, low poly, solid white background, no text, 3D character model reference sheet, A-pose, plain white background, no environment, no shadows, no text, no watermark",
+      "prompt": "single front view, female research scientist, elegant evening gown, safety goggles as hair accessory, polished shoes, determined expression, mint green accent details, full body, isometric 3D game character, low poly, A-pose, no shadows, no ground, no text, no numbers, transparent background",
       "poses": [
-        "stand"
+        "stand",
+        "walk"
       ],
       "directions": 8,
       "size": 64,
@@ -1846,9 +1864,10 @@
         "arena",
         "skin"
       ],
-      "prompt": "single front view, male character, glowing neon cyan outlines, cyberpunk style, dark body with bright edge lighting, full body, isometric 3D game character, low poly, solid white background, no text",
+      "prompt": "single front view, senior male university professor, tweed jacket with elbow patches, bow tie, glasses, grey hair, glowing neon purple outlines, cyberpunk style, dark body with bright edge lighting, full body, isometric 3D game character, low poly, A-pose, no shadows, no ground, no text, no numbers, transparent background",
       "poses": [
-        "stand"
+        "stand",
+        "walk"
       ],
       "directions": 8,
       "size": 64,
@@ -1887,9 +1906,10 @@
         "arena",
         "skin"
       ],
-      "prompt": "single front view, male character, wearing elegant formal attire, black tie suit or evening gown, polished shoes, full body, isometric 3D game character, low poly, solid white background, no text",
+      "prompt": "single front view, senior male university professor, elegant tuxedo with purple pocket square, glasses, grey hair, bow tie, authoritative stance, purple accent details, full body, isometric 3D game character, low poly, A-pose, no shadows, no ground, no text, no numbers, transparent background",
       "poses": [
-        "stand"
+        "stand",
+        "walk"
       ],
       "directions": 8,
       "size": 64,
@@ -1928,9 +1948,10 @@
         "arena",
         "skin"
       ],
-      "prompt": "single front view, female character, glowing neon cyan outlines, cyberpunk style, dark body with bright edge lighting, full body, isometric 3D game character, low poly, solid white background, no text",
+      "prompt": "single front view, female university professor, tweed blazer, reading glasses, professional bun hairstyle, glowing neon purple outlines, cyberpunk style, dark body with bright edge lighting, full body, isometric 3D game character, low poly, A-pose, no shadows, no ground, no text, no numbers, transparent background",
       "poses": [
-        "stand"
+        "stand",
+        "walk"
       ],
       "directions": 8,
       "size": 64,
@@ -1969,9 +1990,10 @@
         "arena",
         "skin"
       ],
-      "prompt": "single front view, female character, wearing elegant formal attire, black tie suit or evening gown, polished shoes, full body, isometric 3D game character, low poly, solid white background, no text",
+      "prompt": "single front view, female university professor, elegant evening gown, reading glasses, professional bun hairstyle, purple accent details, authoritative stance, full body, isometric 3D game character, low poly, A-pose, no shadows, no ground, no text, no numbers, transparent background",
       "poses": [
-        "stand"
+        "stand",
+        "walk"
       ],
       "directions": 8,
       "size": 64,
@@ -2009,9 +2031,10 @@
         "arena",
         "skin"
       ],
-      "prompt": "single front view, male character, glowing neon cyan outlines, cyberpunk style, dark body with bright edge lighting, full body, isometric 3D game character, low poly, solid white background, no text, 3D character model reference sheet, A-pose, plain white background, no environment, no shadows, no text, no watermark",
+      "prompt": "single front view, male university dean, formal dark suit, slicked-back silver hair, broad shoulders, glowing neon gold outlines, cyberpunk style, dark body with bright edge lighting, full body, isometric 3D game character, low poly, A-pose, no shadows, no ground, no text, no numbers, transparent background",
       "poses": [
-        "stand"
+        "stand",
+        "walk"
       ],
       "directions": 8,
       "size": 64,
@@ -2050,9 +2073,10 @@
         "arena",
         "skin"
       ],
-      "prompt": "single front view, male character, wearing elegant formal attire, black tie suit or evening gown, polished shoes, full body, isometric 3D game character, low poly, solid white background, no text, 3D character model reference sheet, A-pose, plain white background, no environment, no shadows, no text, no watermark",
+      "prompt": "single front view, male university dean, white tie tuxedo with gold cufflinks, slicked-back silver hair, commanding posture, gold accent details, full body, isometric 3D game character, low poly, A-pose, no shadows, no ground, no text, no numbers, transparent background",
       "poses": [
-        "stand"
+        "stand",
+        "walk"
       ],
       "directions": 8,
       "size": 64,
@@ -2091,9 +2115,10 @@
         "arena",
         "skin"
       ],
-      "prompt": "single front view, female character, glowing neon cyan outlines, cyberpunk style, dark body with bright edge lighting, full body, isometric 3D game character, low poly, solid white background, no text, 3D character model reference sheet, A-pose, plain white background, no environment, no shadows, no text, no watermark",
+      "prompt": "single front view, female university dean, formal business suit, elegant updo hairstyle, glowing neon gold outlines, cyberpunk style, dark body with bright edge lighting, full body, isometric 3D game character, low poly, A-pose, no shadows, no ground, no text, no numbers, transparent background",
       "poses": [
-        "stand"
+        "stand",
+        "walk"
       ],
       "directions": 8,
       "size": 64,
@@ -2132,9 +2157,10 @@
         "arena",
         "skin"
       ],
-      "prompt": "single front view, female character, wearing elegant formal attire, black tie suit or evening gown, polished shoes, full body, isometric 3D game character, low poly, solid white background, no text, 3D character model reference sheet, A-pose, plain white background, no environment, no shadows, no text, no watermark",
+      "prompt": "single front view, female university dean, elegant evening gown, pearl necklace, elegant updo hairstyle, confident posture, gold accent details, full body, isometric 3D game character, low poly, A-pose, no shadows, no ground, no text, no numbers, transparent background",
       "poses": [
-        "stand"
+        "stand",
+        "walk"
       ],
       "directions": 8,
       "size": 64,
@@ -2173,9 +2199,10 @@
         "arena",
         "skin"
       ],
-      "prompt": "single front view, male character, glowing neon cyan outlines, cyberpunk style, dark body with bright edge lighting, full body, isometric 3D game character, low poly, solid white background, no text, 3D character model reference sheet, A-pose, plain white background, no environment, no shadows, no text, no watermark",
+      "prompt": "single front view, male university librarian, cardigan sweater, reading glasses on chain, book under arm, glowing neon coral pink outlines, cyberpunk style, dark body with bright edge lighting, full body, isometric 3D game character, low poly, A-pose, no shadows, no ground, no text, no numbers, transparent background",
       "poses": [
-        "stand"
+        "stand",
+        "walk"
       ],
       "directions": 8,
       "size": 64,
@@ -2214,9 +2241,10 @@
         "arena",
         "skin"
       ],
-      "prompt": "single front view, male character, wearing elegant formal attire, black tie suit or evening gown, polished shoes, full body, isometric 3D game character, low poly, solid white background, no text, 3D character model reference sheet, A-pose, plain white background, no environment, no shadows, no text, no watermark",
+      "prompt": "single front view, male university librarian, elegant black tie suit, reading glasses on chain, book under arm, calm demeanor, coral pink accent details, full body, isometric 3D game character, low poly, A-pose, no shadows, no ground, no text, no numbers, transparent background",
       "poses": [
-        "stand"
+        "stand",
+        "walk"
       ],
       "directions": 8,
       "size": 64,
@@ -2255,9 +2283,10 @@
         "arena",
         "skin"
       ],
-      "prompt": "single front view, female character, glowing neon cyan outlines, cyberpunk style, dark body with bright edge lighting, full body, isometric 3D game character, low poly, solid white background, no text, 3D character model reference sheet, A-pose, plain white background, no environment, no shadows, no text, no watermark",
+      "prompt": "single front view, female university librarian, cardigan sweater, vintage round glasses, long braided hair, glowing neon coral pink outlines, cyberpunk style, dark body with bright edge lighting, full body, isometric 3D game character, low poly, A-pose, no shadows, no ground, no text, no numbers, transparent background",
       "poses": [
-        "stand"
+        "stand",
+        "walk"
       ],
       "directions": 8,
       "size": 64,
@@ -2296,9 +2325,10 @@
         "arena",
         "skin"
       ],
-      "prompt": "single front view, female character, wearing elegant formal attire, black tie suit or evening gown, polished shoes, full body, isometric 3D game character, low poly, solid white background, no text, 3D character model reference sheet, A-pose, plain white background, no environment, no shadows, no text, no watermark",
+      "prompt": "single front view, female university librarian, elegant evening gown, vintage round glasses, long braided hair updo, warm expression, coral pink accent details, full body, isometric 3D game character, low poly, A-pose, no shadows, no ground, no text, no numbers, transparent background",
       "poses": [
-        "stand"
+        "stand",
+        "walk"
       ],
       "directions": 8,
       "size": 64,
