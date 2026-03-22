@@ -25,6 +25,7 @@ jobs:
       shop: ${{ steps.filter.outputs.shop }}
       videovault: ${{ steps.filter.outputs.videovault }}
       sos: ${{ steps.filter.outputs.sos }}
+      assetgenerator: ${{ steps.filter.outputs.assetgenerator }}
       k8s: ${{ steps.filter.outputs.k8s }}
       any-service: ${{ steps.filter.outputs.arena == 'true' || steps.filter.outputs.l2p == 'true' || steps.filter.outputs.auth == 'true' || steps.filter.outputs.shop == 'true' || steps.filter.outputs.videovault == 'true' || steps.filter.outputs.sos == 'true' }}
     steps:
@@ -48,6 +49,8 @@ jobs:
               - 'shared-infrastructure/shared/videovault/**'
             sos:
               - 'SOS/**'
+            assetgenerator:
+              - 'Assetgenerator/**'
             k8s:
               - 'k8s/**'
 
@@ -227,6 +230,29 @@ jobs:
         run: npm run test
 
   # ---------------------------------------------------------------------------
+  # Assetgenerator: Unit Tests
+  # ---------------------------------------------------------------------------
+  assetgenerator:
+    needs: changes
+    if: needs.changes.outputs.assetgenerator == 'true'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: Assetgenerator
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Unit tests
+        run: npm run test
+
+  # ---------------------------------------------------------------------------
   # Arena: E2E Asset Coverage Tests
   # ---------------------------------------------------------------------------
   arena-e2e-assets:
@@ -345,7 +371,7 @@ jobs:
   # ---------------------------------------------------------------------------
   ci-status:
     if: always()
-    needs: [l2p, l2p-integration, auth, shop, videovault, sos, arena-e2e-assets, docker-validate, k8s-validate]
+    needs: [l2p, l2p-integration, auth, shop, videovault, sos, assetgenerator, arena-e2e-assets, docker-validate, k8s-validate]
     runs-on: ubuntu-latest
     steps:
       - name: Check pipeline status
@@ -356,6 +382,7 @@ jobs:
           SHOP_RESULT: ${{ needs.shop.result }}
           VV_RESULT: ${{ needs.videovault.result }}
           SOS_RESULT: ${{ needs.sos.result }}
+          ASSETGEN_RESULT: ${{ needs.assetgenerator.result }}
           ARENA_E2E_RESULT: ${{ needs.arena-e2e-assets.result }}
           DOCKER_RESULT: ${{ needs.docker-validate.result }}
           K8S_RESULT: ${{ needs.k8s-validate.result }}
@@ -367,12 +394,13 @@ jobs:
           echo "  shop:              $SHOP_RESULT"
           echo "  videovault:        $VV_RESULT"
           echo "  sos:               $SOS_RESULT"
+          echo "  assetgenerator:    $ASSETGEN_RESULT"
           echo "  arena-e2e-assets:  $ARENA_E2E_RESULT"
           echo "  docker-validate:   $DOCKER_RESULT"
           echo "  k8s-validate:      $K8S_RESULT"
 
           # Fail if any required job failed (skipped is OK — means no changes for that service)
-          for result in "$L2P_RESULT" "$L2P_INT_RESULT" "$AUTH_RESULT" "$SHOP_RESULT" "$VV_RESULT" "$SOS_RESULT" "$ARENA_E2E_RESULT" "$DOCKER_RESULT" "$K8S_RESULT"; do
+          for result in "$L2P_RESULT" "$L2P_INT_RESULT" "$AUTH_RESULT" "$SHOP_RESULT" "$VV_RESULT" "$SOS_RESULT" "$ASSETGEN_RESULT" "$ARENA_E2E_RESULT" "$DOCKER_RESULT" "$K8S_RESULT"; do
             if [[ "$result" == "failure" ]]; then
               echo "::error::One or more CI jobs failed"
               exit 1
