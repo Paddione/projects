@@ -103,27 +103,22 @@ def triposr_generate(image_path: Path, output_path: Path) -> bool:
         # the background as flat geometry (grey wall artifact).
         if image.mode == 'RGBA':
             alpha = image.split()[3]
-            bbox = alpha.getbbox()
+            # Threshold alpha to ignore faint fringe pixels from rembg
+            alpha_thresh = alpha.point(lambda p: 255 if p > 128 else 0)
+            bbox = alpha_thresh.getbbox()
             if bbox:
-                # Add 5% margin around subject
-                w, h = image.size
-                margin = int(max(w, h) * 0.05)
-                x0 = max(0, bbox[0] - margin)
-                y0 = max(0, bbox[1] - margin)
-                x1 = min(w, bbox[2] + margin)
-                y1 = min(h, bbox[3] + margin)
-                # Make square (TripoSR works best with square input)
-                crop_w, crop_h = x1 - x0, y1 - y0
-                side = max(crop_w, crop_h)
-                cx, cy = (x0 + x1) // 2, (y0 + y1) // 2
-                x0 = max(0, cx - side // 2)
-                y0 = max(0, cy - side // 2)
-                x1 = min(w, x0 + side)
-                y1 = min(h, y0 + side)
-                image = image.crop((x0, y0, x1, y1))
-            bg = Image.new('RGB', image.size, (255, 255, 255))
-            bg.paste(image, mask=image.split()[3])
-            image = bg
+                # Crop tightly to subject
+                image = image.crop(bbox)
+            # Resize subject to fill 85% of a square frame (TripoSR sweet spot)
+            cw, ch = image.size
+            target = 512
+            foreground_ratio = 0.85
+            scale = foreground_ratio * target / max(cw, ch)
+            new_w, new_h = int(cw * scale), int(ch * scale)
+            image = image.resize((new_w, new_h), Image.LANCZOS)
+            bg = Image.new('RGBA', (target, target), (255, 255, 255, 255))
+            bg.paste(image, ((target - new_w) // 2, (target - new_h) // 2), mask=image.split()[3])
+            image = bg.convert('RGB')
 
         # Run TripoSR inference (~15s on 12GB GPU)
         with torch.no_grad():
