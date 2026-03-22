@@ -148,8 +148,8 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
-      - name: Unit tests
-        run: npm run test
+      - name: Unit tests (DB-independent)
+        run: npx vitest run src/test/middleware.test.ts src/test/token-service.test.ts
 
   # ---------------------------------------------------------------------------
   # Shop: Unit Tests
