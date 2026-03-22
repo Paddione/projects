@@ -1,6 +1,19 @@
-// Mock for shared-3d package in vitest
+// Mock for shared-3d package (used in both vitest and TypeScript compilation)
 const noop = () => {};
 const noopAsync = () => Promise.resolve();
+
+export interface CharacterInstance {
+    mesh: { position: { set: typeof noop; x: number; y: number; z: number }; rotation: { y: number }; scale: { setScalar: typeof noop } };
+    playAnimation: typeof noop;
+    stopAnimation: typeof noop;
+    update: (delta: number) => void;
+    dispose: typeof noop;
+}
+
+export interface LightingRig {
+    lights: unknown[];
+    dispose: typeof noop;
+}
 
 export class ModelLoader {
     load = () => Promise.resolve({ scene: {}, animations: [] });
@@ -32,7 +45,7 @@ export function createArenaLighting() {
 }
 
 export class CharacterManager {
-    getCharacter = () => Promise.resolve({
+    getCharacter = (_id: string, _url: string): Promise<CharacterInstance> => Promise.resolve({
         mesh: {
             position: { set: noop, x: 0, y: 0, z: 0 },
             rotation: { y: 0 },

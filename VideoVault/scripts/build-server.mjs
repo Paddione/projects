@@ -2,7 +2,6 @@ import { build } from 'esbuild';
 import { readFile } from 'fs/promises';
 import path from 'path';
 
-import { existsSync } from 'fs';
 
 const pkg = JSON.parse(await readFile('./package.json', 'utf8'));
 const external = [
@@ -10,11 +9,8 @@ const external = [
     ...Object.keys(pkg.devDependencies || {}),
 ].filter(dep => dep !== '@shared');
 
-// Robust shared path resolution for local and Docker environments
-let sharedPath = path.resolve(import.meta.dirname, '../../shared-infrastructure/shared/videovault');
-if (!existsSync(sharedPath)) {
-    sharedPath = path.resolve(import.meta.dirname, '../shared-infrastructure/shared/videovault');
-}
+// Shared modules are inlined in shared/
+const sharedPath = path.resolve(import.meta.dirname, '../shared/videovault');
 
 console.log(`Using shared path: ${sharedPath}`);
 

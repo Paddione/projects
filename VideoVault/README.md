@@ -330,7 +330,7 @@ The browser is the primary data store:
 
 ### Shared Types and Errors
 
-Error codes and payload types use `@shared/errors` imports. The `VideoVault/shared-infrastructure` symlink is a legacy broken link (target `../shared-infrastructure` no longer exists).
+Error codes and payload types use `@shared/errors` imports. Shared modules live in `shared/videovault/`.
 
 ### Tailwind CSS
 

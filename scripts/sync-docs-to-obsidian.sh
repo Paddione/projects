@@ -43,9 +43,10 @@ repo_files() {
 }
 
 # Collect all .md files from Obsidian Synch dir (relative paths)
+# -P: never follow symlinks (prevents escaping Synch/)
 obsidian_files() {
     cd "$DEST"
-    find . -type f -name '*.md' 2>/dev/null | sed 's|^\./||' | sort
+    find -P . -type f -name '*.md' 2>/dev/null | sed 's|^\./||' | sort
 }
 
 REPO_LIST=$(repo_files)
@@ -58,6 +59,15 @@ SKIPPED=0
 # Arithmetic (( x++ )) returns 1 when x is 0, which trips set -e.
 # Use "|| true" pattern or increment safely.
 inc() { eval "$1=$(( ${!1} + 1 ))"; }
+
+# Guard: reject any relative path containing ".." components.
+# This prevents traversal above Synch/ or the repo root regardless of
+# whether the destination directory exists yet.
+is_safe_rel() {
+    local rel="$1"
+    # Split on / and reject if any component is ".."
+    [[ ! "$rel" =~ (^|/)\.\.(/|$) ]]
+}
 
 sync_file() {
     local rel="$1"
@@ -81,6 +91,12 @@ while IFS= read -r rel; do
     [[ -z "$rel" ]] && continue
     repo_file="$REPO_ROOT/$rel"
     obs_file="$DEST/$rel"
+
+    # Skip paths with ".." that could escape the sync roots
+    if ! is_safe_rel "$rel"; then
+        echo "[SKIP] unsafe path: $rel"
+        continue
+    fi
 
     if [[ -f "$obs_file" ]]; then
         # Both exist — compare timestamps
@@ -107,6 +123,12 @@ done <<< "$REPO_LIST"
 while IFS= read -r rel; do
     [[ -z "$rel" ]] && continue
     repo_file="$REPO_ROOT/$rel"
+
+    # Skip paths with ".." that could escape the sync roots
+    if ! is_safe_rel "$rel"; then
+        echo "[SKIP] unsafe path: $rel"
+        continue
+    fi
 
     if [[ ! -f "$repo_file" ]]; then
         sync_file "$rel" "$DEST/$rel" "$repo_file" "obsidian → repo (new)"

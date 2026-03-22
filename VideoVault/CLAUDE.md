@@ -130,7 +130,7 @@ server/
   lib/                     # Server utilities
   routes.ts                # Route registration
 
-# Note: shared-infrastructure/ symlink is legacy (target no longer exists)
+# Note: shared modules live in shared/videovault/
 
 e2e/
   playwright/              # Playwright E2E specs
@@ -163,7 +163,7 @@ import { ErrorCodes } from '@shared/errors';
 
 Configured in `tsconfig.json` (paths), `vite.config.ts` (resolve.alias), and `vitest.config.ts` (resolve.alias + test stubs).
 
-> **Note**: `VideoVault/shared-infrastructure` is a legacy broken symlink (target no longer exists).
+> **Note**: Shared modules are in `shared/videovault/`. The old `shared-infrastructure` symlink has been removed.
 
 ## Testing Strategy
 
@@ -267,4 +267,4 @@ Required: `DATABASE_URL` (optional, enables Postgres), `SESSION_SECRET` (32-char
 4. **Postgres passwords**: Alphanumeric only
 5. **Coverage thresholds**: Check `vitest.config.ts` before adding code to covered files
 6. **Centralized state**: Route through `useVideoManager`, not direct service imports in components
-7. **Legacy symlink**: `shared-infrastructure` is a broken symlink (may need cleanup)
+7. **Shared modules**: Located in `shared/videovault/`; aliases configured in `tsconfig.json`, `vite.config.ts`, and `vitest.config.ts`

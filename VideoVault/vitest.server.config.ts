@@ -6,7 +6,7 @@ export default defineConfig({
     resolve: {
         alias: {
             'zod': path.resolve(__dirname, 'node_modules', 'zod'),
-            '@shared': path.resolve(__dirname, 'shared-infrastructure', 'shared', 'videovault'),
+            '@shared': path.resolve(__dirname, 'shared', 'videovault'),
         },
     },
     test: {

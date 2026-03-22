@@ -1,4 +1,4 @@
-import { jest } from '@jest/globals';
+import { vi } from 'vitest';
 
 /**
  * Comprehensive timer testing utilities for consistent timer behavior testing
@@ -19,14 +19,14 @@ export class TimerTestUtils {
     this.originalClearTimeout = global.clearTimeout;
     this.originalClearInterval = global.clearInterval;
 
-    // Use Jest fake timers
-    jest.useFakeTimers();
+    // Use vitest fake timers
+    vi.useFakeTimers();
 
     return {
-      setTimeoutSpy: jest.spyOn(global, 'setTimeout'),
-      setIntervalSpy: jest.spyOn(global, 'setInterval'),
-      clearTimeoutSpy: jest.spyOn(global, 'clearTimeout'),
-      clearIntervalSpy: jest.spyOn(global, 'clearInterval'),
+      setTimeoutSpy: vi.spyOn(global, 'setTimeout'),
+      setIntervalSpy: vi.spyOn(global, 'setInterval'),
+      clearTimeoutSpy: vi.spyOn(global, 'clearTimeout'),
+      clearIntervalSpy: vi.spyOn(global, 'clearInterval'),
     };
   }
 
@@ -34,7 +34,7 @@ export class TimerTestUtils {
    * Restore real timers and clean up spies
    */
   static restoreRealTimers() {
-    jest.useRealTimers();
+    vi.useRealTimers();
   }
 
   /**
@@ -45,16 +45,16 @@ export class TimerTestUtils {
       id: Math.random().toString(36).substr(2, 9),
       type,
       isCleared: false,
-      unref: jest.fn(),
-      ref: jest.fn(),
-      refresh: jest.fn(),
+      unref: vi.fn(),
+      ref: vi.fn(),
+      refresh: vi.fn(),
       [Symbol.toPrimitive]: () => mockTimer.id,
     };
 
     const originalClear = type === 'timeout' ? this.originalClearTimeout : this.originalClearInterval;
-    
+
     // Mock the clear function to track clearing
-    const clearSpy = jest.spyOn(global, type === 'timeout' ? 'clearTimeout' : 'clearInterval')
+    const clearSpy = vi.spyOn(global, type === 'timeout' ? 'clearTimeout' : 'clearInterval')
       .mockImplementation((timer: any) => {
         if (timer === mockTimer) {
           mockTimer.isCleared = true;
@@ -73,14 +73,14 @@ export class TimerTestUtils {
       setTimeout(() => reject(new Error(`Timer execution timeout after ${timeoutMs}ms`)), timeoutMs);
     });
 
-    const timerPromise = jest.runAllTimersAsync();
+    const timerPromise = vi.runAllTimersAsync();
 
     try {
       await Promise.race([timerPromise, timeoutPromise]);
     } catch (error) {
       // If timeout, try to run only pending timers
       if (error instanceof Error && error.message.includes('timeout')) {
-        await jest.runOnlyPendingTimersAsync();
+        await vi.runOnlyPendingTimersAsync();
       } else {
         throw error;
       }
@@ -91,8 +91,8 @@ export class TimerTestUtils {
    * Advance timers by time with pending timer execution
    */
   static async advanceTimersByTimeAsync(ms: number): Promise<void> {
-    jest.advanceTimersByTime(ms);
-    await jest.runOnlyPendingTimersAsync();
+    vi.advanceTimersByTime(ms);
+    await vi.runOnlyPendingTimersAsync();
   }
 
   /**
@@ -102,27 +102,27 @@ export class TimerTestUtils {
     const createdTimers: any[] = [];
     const clearedTimers: any[] = [];
 
-    const setTimeoutSpy = jest.spyOn(global, 'setTimeout')
+    const setTimeoutSpy = vi.spyOn(global, 'setTimeout')
       .mockImplementation((callback: any, delay: number) => {
         const timer = this.originalSetTimeout(callback, delay);
         createdTimers.push({ timer, type: 'timeout', delay, callback });
         return timer;
       });
 
-    const setIntervalSpy = jest.spyOn(global, 'setInterval')
+    const setIntervalSpy = vi.spyOn(global, 'setInterval')
       .mockImplementation((callback: any, delay: number) => {
         const timer = this.originalSetInterval(callback, delay);
         createdTimers.push({ timer, type: 'interval', delay, callback });
         return timer;
       });
 
-    const clearTimeoutSpy = jest.spyOn(global, 'clearTimeout')
+    const clearTimeoutSpy = vi.spyOn(global, 'clearTimeout')
       .mockImplementation((timer: any) => {
         clearedTimers.push({ timer, type: 'timeout' });
         return this.originalClearTimeout(timer);
       });
 
-    const clearIntervalSpy = jest.spyOn(global, 'clearInterval')
+    const clearIntervalSpy = vi.spyOn(global, 'clearInterval')
       .mockImplementation((timer: any) => {
         clearedTimers.push({ timer, type: 'interval' });
         return this.originalClearInterval(timer);
@@ -133,7 +133,7 @@ export class TimerTestUtils {
       clearedTimers,
       spies: { setTimeoutSpy, setIntervalSpy, clearTimeoutSpy, clearIntervalSpy },
       verifyTimerCreated: (type: 'timeout' | 'interval', delay?: number) => {
-        const matching = createdTimers.filter(t => 
+        const matching = createdTimers.filter(t =>
           t.type === type && (delay === undefined || t.delay === delay)
         );
         return matching.length > 0;
@@ -142,12 +142,12 @@ export class TimerTestUtils {
         return clearedTimers.some(t => t.timer === timer);
       },
       verifyAllTimersCleared: () => {
-        return createdTimers.every(created => 
+        return createdTimers.every(created =>
           clearedTimers.some(cleared => cleared.timer === created.timer)
         );
       },
       getTimerCount: (type?: 'timeout' | 'interval') => {
-        const active = createdTimers.filter(created => 
+        const active = createdTimers.filter(created =>
           !clearedTimers.some(cleared => cleared.timer === created.timer)
         );
         return type ? active.filter(t => t.type === type).length : active.length;
@@ -196,7 +196,7 @@ export class TimerTestUtils {
       });
 
       const allOperations = Promise.all(
-        operations.map(op => op.promise.catch(() => null)) // Don't fail if individual operations fail
+        operations.map(op => op.promise.catch(() => null))
       );
 
       try {
@@ -242,7 +242,7 @@ export class TimerTestUtils {
       return (...args: any[]) => {
         const timer = originalFn(...args);
         if (timer && typeof timer === 'object') {
-          timer.unref = jest.fn(() => {
+          timer.unref = vi.fn(() => {
             unrefCalls.push({ timer, type });
             return timer;
           });
@@ -251,10 +251,10 @@ export class TimerTestUtils {
       };
     };
 
-    const setTimeoutSpy = jest.spyOn(global, 'setTimeout')
+    const setTimeoutSpy = vi.spyOn(global, 'setTimeout')
       .mockImplementation(createMockWithUnref(this.originalSetTimeout, 'timeout'));
 
-    const setIntervalSpy = jest.spyOn(global, 'setInterval')
+    const setIntervalSpy = vi.spyOn(global, 'setInterval')
       .mockImplementation(createMockWithUnref(this.originalSetInterval, 'interval'));
 
     return {
@@ -275,18 +275,15 @@ export class TimerTestUtils {
    */
   static createTimerTestSuite(serviceName: string) {
     return {
-      /**
-       * Test timer creation and management
-       */
       testTimerCreation: (createTimerFn: () => any, expectedType: 'timeout' | 'interval', expectedDelay?: number) => {
         it(`should create ${expectedType} timer with correct delay`, () => {
           const verifier = TimerTestUtils.createTimerVerifier();
-          
+
           createTimerFn();
 
           expect(verifier.verifyTimerCreated(expectedType, expectedDelay)).toBe(true);
           if (expectedDelay !== undefined) {
-            const matching = verifier.createdTimers.filter(t => 
+            const matching = verifier.createdTimers.filter(t =>
               t.type === expectedType && t.delay === expectedDelay
             );
             expect(matching).toHaveLength(1);
@@ -294,13 +291,10 @@ export class TimerTestUtils {
         });
       },
 
-      /**
-       * Test timer cleanup
-       */
       testTimerCleanup: (createTimerFn: () => any, cleanupFn: () => void) => {
         it('should properly clean up timers', () => {
           const verifier = TimerTestUtils.createTimerVerifier();
-          
+
           createTimerFn();
           expect(verifier.getTimerCount()).toBeGreaterThan(0);
 
@@ -309,9 +303,6 @@ export class TimerTestUtils {
         });
       },
 
-      /**
-       * Test timer behavior in test environment
-       */
       testTimerUnref: (createTimerFn: () => any) => {
         it('should unref timers in test environment', () => {
           const mockUnref = TimerTestUtils.mockTimerUnref();
@@ -320,18 +311,15 @@ export class TimerTestUtils {
           createTimerFn();
 
           expect(mockUnref.unrefCalls.length).toBeGreaterThan(0);
-          
+
           delete process.env.TEST_ENVIRONMENT;
         });
       },
 
-      /**
-       * Test async cleanup operations
-       */
       testAsyncCleanup: (cleanupFn: () => Promise<any>, expectedBehavior: string) => {
         it(`should handle async cleanup: ${expectedBehavior}`, async () => {
           const helper = TimerTestUtils.createCleanupTestHelper();
-          
+
           const cleanupPromise = cleanupFn();
           helper.addOperation('cleanup', cleanupPromise);
 
@@ -348,20 +336,17 @@ export class TimerTestUtils {
  * Async cleanup test utilities
  */
 export class AsyncCleanupTestUtils {
-  /**
-   * Test long-running cleanup operations
-   */
   static async testLongRunningCleanup(
     cleanupFn: () => Promise<any>,
     timeoutMs: number = 1000
   ) {
     const startTime = Date.now();
-    
+
     try {
       await cleanupFn();
       const endTime = Date.now();
       const duration = endTime - startTime;
-      
+
       return {
         success: true,
         duration,
@@ -370,7 +355,7 @@ export class AsyncCleanupTestUtils {
     } catch (error) {
       const endTime = Date.now();
       const duration = endTime - startTime;
-      
+
       return {
         success: false,
         duration,
@@ -380,9 +365,6 @@ export class AsyncCleanupTestUtils {
     }
   }
 
-  /**
-   * Test concurrent cleanup operations
-   */
   static async testConcurrentCleanup(
     cleanupFns: Array<() => Promise<any>>,
     expectedBehavior: 'all-succeed' | 'some-fail' | 'race-condition' = 'all-succeed'
@@ -403,16 +385,13 @@ export class AsyncCleanupTestUtils {
         switch (expectedBehavior) {
           case 'all-succeed': return failed === 0;
           case 'some-fail': return failed > 0 && successful > 0;
-          case 'race-condition': return true; // Any outcome is acceptable for race conditions
+          case 'race-condition': return true;
           default: return true;
         }
       })()
     };
   }
 
-  /**
-   * Test cleanup operation with resource monitoring
-   */
   static monitorResourceUsage() {
     const startMemory = process.memoryUsage();
     const startTime = process.hrtime.bigint();
@@ -421,7 +400,7 @@ export class AsyncCleanupTestUtils {
       finish: () => {
         const endMemory = process.memoryUsage();
         const endTime = process.hrtime.bigint();
-        const duration = Number(endTime - startTime) / 1000000; // Convert to milliseconds
+        const duration = Number(endTime - startTime) / 1000000;
 
         return {
           duration,
@@ -461,19 +440,19 @@ export class ConsoleTestUtils {
     const warnings: string[] = [];
     const infos: string[] = [];
 
-    const logSpy = jest.spyOn(console, 'log').mockImplementation((...args) => {
+    const logSpy = vi.spyOn(console, 'log').mockImplementation((...args) => {
       logs.push(args.join(' '));
     });
 
-    const errorSpy = jest.spyOn(console, 'error').mockImplementation((...args) => {
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation((...args) => {
       errors.push(args.join(' '));
     });
 
-    const warnSpy = jest.spyOn(console, 'warn').mockImplementation((...args) => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation((...args) => {
       warnings.push(args.join(' '));
     });
 
-    const infoSpy = jest.spyOn(console, 'info').mockImplementation((...args) => {
+    const infoSpy = vi.spyOn(console, 'info').mockImplementation((...args) => {
       infos.push(args.join(' '));
     });
 

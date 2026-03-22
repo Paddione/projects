@@ -12,9 +12,8 @@ RUN apt-get update \
   build-essential \
   && rm -rf /var/lib/apt/lists/*
 
-# Copy shared infrastructure (required for local dependencies)
-COPY shared-infrastructure/shared/videovault /app/shared-infrastructure/shared/videovault
-COPY shared-infrastructure/shared/design-system /app/shared-infrastructure/shared/design-system
+# Copy shared modules (local to VideoVault)
+COPY VideoVault/shared/videovault /app/shared/videovault
 
 COPY VideoVault/package*.json ./
 COPY VideoVault/tsconfig.json ./
@@ -43,8 +42,7 @@ RUN apt-get update \
 
 ENV NODE_ENV=production
 
-COPY --from=build /app/shared-infrastructure/shared/videovault /app/shared-infrastructure/shared/videovault
-COPY --from=build /app/shared-infrastructure/shared/design-system /app/shared-infrastructure/shared/design-system
+COPY --from=build /app/shared/videovault /app/shared/videovault
 
 COPY VideoVault/package*.json ./
 RUN npm install -g npm@11 && npm install --legacy-peer-deps --omit=dev

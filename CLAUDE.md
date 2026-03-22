@@ -41,11 +41,11 @@ npm run validate:env         # Validate environment files
 ### Running Single Tests
 
 ```bash
-# l2p backend (ESM requires --experimental-vm-modules)
-cd l2p/backend && NODE_OPTIONS=--experimental-vm-modules npx jest src/services/AuthService.test.ts
+# l2p backend
+cd l2p/backend && npx vitest run src/services/__tests__/AuthService.test.ts
 
 # l2p frontend
-cd l2p/frontend && NODE_ENV=test npx jest src/components/Login.test.tsx
+cd l2p/frontend && npx vitest run src/components/__tests__/Login.test.tsx
 
 # VideoVault
 cd VideoVault && npx vitest run client/src/services/filter-engine.test.ts
@@ -106,7 +106,7 @@ For full testing reference see [docs/guides/testing.md](docs/guides/testing.md).
 
 ### Critical Rules
 
-1. **L2P ESM flag**: ALL Jest tests need `NODE_OPTIONS=--experimental-vm-modules`
+1. **L2P uses vitest**: Run tests via `npx vitest run` (not Jest). No ESM flag needed.
 2. **L2P test DB isolation**: Integration tests use port 5433. Never test against production (5432).
 3. **VideoVault test stubs**: Enhanced services stubbed in `vitest.config.ts`. Single-threaded execution.
 4. **VideoVault coverage**: Per-file thresholds (85-95%) enforced.
