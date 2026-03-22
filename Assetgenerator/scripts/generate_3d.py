@@ -98,6 +98,11 @@ def triposr_generate(image_path: Path, output_path: Path) -> bool:
             _triposr_model.to("cuda")
 
         image = Image.open(image_path)
+        # TripoSR expects RGB — composite RGBA onto white background
+        if image.mode == 'RGBA':
+            bg = Image.new('RGB', image.size, (255, 255, 255))
+            bg.paste(image, mask=image.split()[3])
+            image = bg
 
         # Run TripoSR inference (~15s on 12GB GPU)
         with torch.no_grad():
