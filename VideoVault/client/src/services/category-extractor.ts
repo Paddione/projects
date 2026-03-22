@@ -7,7 +7,7 @@ export class CategoryExtractor {
   static readonly CATEGORY_PATTERNS = {
     age: [
       'teen', '18yo', '19yo', 'young', 'mature', 'milf', 'cougar', 'older',
-      'granny', 'college', 'middle aged', 'babe',
+      'granny', 'college', 'middle aged', 'babe', 'old/young',
     ],
     physical: [
       'blonde', 'brunette', 'redhead', 'petite', 'busty', 'big tits',

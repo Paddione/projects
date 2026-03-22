@@ -17,7 +17,7 @@ export interface ExtractedCategories {
 const CATEGORY_PATTERNS: Record<string, string[]> = {
   age: [
     'teen', '18yo', '19yo', 'young', 'mature', 'milf', 'cougar', 'older',
-    'granny', 'college', 'middle aged', 'babe',
+    'granny', 'college', 'middle aged', 'babe', 'old young',
   ],
   physical: [
     'blonde', 'brunette', 'redhead', 'petite', 'busty', 'big tits',
@@ -107,6 +107,12 @@ export function extractCategoriesFromFilename(filename: string): ExtractedCatego
   if (categories.ethnicity.includes('deutsches')) {
     categories.ethnicity = categories.ethnicity.filter(e => e !== 'deutsches');
     if (!categories.ethnicity.includes('german')) categories.ethnicity.push('german');
+  }
+
+  // Map "old young" → "old/young" for display
+  if (categories.age.includes('old young')) {
+    categories.age = categories.age.filter(e => e !== 'old young');
+    if (!categories.age.includes('old/young')) categories.age.push('old/young');
   }
 
   return categories;
