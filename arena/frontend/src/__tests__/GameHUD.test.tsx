@@ -19,7 +19,14 @@ vi.mock('../stores/gameStore', () => ({
 }));
 
 vi.mock('../services/SoundService', () => ({
-  SoundService: { toggleMute: vi.fn(() => false) },
+  SoundService: {
+    toggleMute: vi.fn(() => false),
+    isMuted: false,
+    getVolumes: vi.fn(() => ({ master: 0.7, sfx: 0.5, music: 0.35 })),
+    setMasterVolume: vi.fn(),
+    setSFXVolume: vi.fn(),
+    setMusicVolume: vi.fn(),
+  },
 }));
 
 vi.mock('../components/EmoteWheel', () => ({
