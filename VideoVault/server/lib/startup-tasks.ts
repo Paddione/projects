@@ -77,8 +77,28 @@ export async function runStartupTasks(db: any): Promise<void> {
     }
   }
 
-  // 6. Generate missing thumbnails for flat files (slow — runs last)
+  // 6. Generate missing thumbnails for flat AND subdirectory files (slow — runs last)
   await generateMissingThumbnails(MOVIES_DIR);
+  await generateMissingSubdirThumbnails(MOVIES_DIR);
+
+  // 7. Clean up empty directories (no video content)
+  try {
+    const { cleanupEmptyDirectories } = await import('../handlers/movie-handler');
+    const removed = await cleanupEmptyDirectories(MOVIES_DIR);
+    if (removed > 0) {
+      logger.info('[StartupTasks] Cleaned up empty directories', { removed });
+    }
+  } catch (err: any) {
+    logger.warn('[StartupTasks] Empty directory cleanup failed', { error: err.message });
+  }
+
+  // 8. Re-index newly generated thumbnails and rebuild movies_index.json
+  if (db) {
+    await autoIndexLibrary(db, MOVIES_DIR);
+    try {
+      await generateMoviesIndex(db, MOVIES_DIR);
+    } catch { /* non-fatal */ }
+  }
 }
 
 /**
@@ -321,6 +341,70 @@ async function generateMissingThumbnails(moviesDir: string): Promise<void> {
 
   if (generated > 0 || failed > 0) {
     logger.info('[StartupTasks] Thumbnail generation complete', { generated, failed });
+  }
+}
+
+/**
+ * For each subdirectory in MOVIES_DIR that contains a video file
+ * but is missing thumbnails/sprites, generate them via ffmpeg.
+ */
+async function generateMissingSubdirThumbnails(moviesDir: string): Promise<void> {
+  let entries;
+  try {
+    entries = await fs.readdir(moviesDir, { withFileTypes: true });
+  } catch {
+    return;
+  }
+
+  const SKIP_DIRS = new Set(['Thumbnails', '1_inbox', '2_processing', '3_complete']);
+  const subdirs = entries.filter((e) => e.isDirectory() && !SKIP_DIRS.has(e.name));
+
+  let generated = 0;
+  let failed = 0;
+
+  for (const dirEntry of subdirs) {
+    const dir = path.join(moviesDir, dirEntry.name);
+
+    let dirFiles;
+    try {
+      dirFiles = await fs.readdir(dir, { withFileTypes: true });
+    } catch {
+      continue;
+    }
+
+    const videoFile = dirFiles.find(
+      (e) => e.isFile() && MOVIE_EXTENSIONS.includes(path.extname(e.name).toLowerCase()),
+    );
+    if (!videoFile) continue;
+
+    const baseName = path.basename(videoFile.name, path.extname(videoFile.name));
+    const thumbsDir = path.join(dir, 'Thumbnails');
+    const thumbPath = path.join(thumbsDir, `${baseName}_thumb.jpg`);
+    const spritePath = path.join(thumbsDir, `${baseName}_sprite.jpg`);
+
+    let hasThumb = false;
+    let hasSprite = false;
+    try { await fs.access(thumbPath); hasThumb = true; } catch { /* */ }
+    try { await fs.access(spritePath); hasSprite = true; } catch { /* */ }
+
+    if (hasThumb && hasSprite) continue;
+
+    const videoPath = path.join(dir, videoFile.name);
+    try {
+      await fs.mkdir(thumbsDir, { recursive: true });
+      await generateMovieThumbnail(videoPath, thumbsDir);
+      generated++;
+      logger.info(`[StartupTasks] Generated subdirectory thumbnails for ${dirEntry.name}/${videoFile.name}`);
+    } catch (err: any) {
+      failed++;
+      if (failed <= 5) {
+        logger.warn(`[StartupTasks] Subdirectory thumbnail generation failed for ${dirEntry.name}`, { error: err.message });
+      }
+    }
+  }
+
+  if (generated > 0 || failed > 0) {
+    logger.info('[StartupTasks] Subdirectory thumbnail generation complete', { generated, failed });
   }
 }
 
