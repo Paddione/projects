@@ -251,6 +251,7 @@ export default defineConfig({
       '@/services': path.resolve(__dirname, './src/services'),
       '@/types': path.resolve(__dirname, './src/types'),
       '@/utils': path.resolve(__dirname, './src/utils'),
+      'shared-3d': path.resolve(__dirname, 'packages/shared-3d/dist'),
     },
   },
   cacheDir: process.env.VITE_CACHE_DIR || '/tmp/.vite',
