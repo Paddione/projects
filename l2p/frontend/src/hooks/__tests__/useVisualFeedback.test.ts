@@ -3,20 +3,20 @@ import { useVisualFeedback } from '../useVisualFeedback'
 import { visualFeedbackService } from '../../services/visualFeedback'
 
 // Mock the visual feedback service
-jest.mock('../../services/visualFeedback', () => ({
+vi.mock('../../services/visualFeedback', () => ({
   visualFeedbackService: {
-    flashAvatar: jest.fn(),
-    animateMultiplierBadge: jest.fn(),
-    animateScorePoints: jest.fn(),
-    animateAnswerSelection: jest.fn(),
-    animateTimerWarning: jest.fn(),
-    scrollToElement: jest.fn(),
-    animateLoadingSpinner: jest.fn(),
-    stopLoadingSpinner: jest.fn(),
-    animateMessage: jest.fn(),
-    animateButtonPress: jest.fn(),
-    animateModal: jest.fn(),
-    cleanup: jest.fn()
+    flashAvatar: vi.fn(),
+    animateMultiplierBadge: vi.fn(),
+    animateScorePoints: vi.fn(),
+    animateAnswerSelection: vi.fn(),
+    animateTimerWarning: vi.fn(),
+    scrollToElement: vi.fn(),
+    animateLoadingSpinner: vi.fn(),
+    stopLoadingSpinner: vi.fn(),
+    animateMessage: vi.fn(),
+    animateButtonPress: vi.fn(),
+    animateModal: vi.fn(),
+    cleanup: vi.fn()
   }
 }))
 
@@ -32,25 +32,25 @@ const mockElement = {
     borderLeft: '',
     opacity: ''
   },
-  getBoundingClientRect: jest.fn(() => ({
+  getBoundingClientRect: vi.fn(() => ({
     top: 0,
     bottom: 100,
     left: 0,
     right: 100
   })),
-  scrollIntoView: jest.fn()
+  scrollIntoView: vi.fn()
 } as unknown as HTMLElement
 
 // Mock window.matchMedia for reduced motion preference
-const mockMatchMedia = jest.fn()
+const mockMatchMedia = vi.fn()
 Object.defineProperty(window, 'matchMedia', {
   value: mockMatchMedia,
   writable: true
 })
 
 // Mock requestAnimationFrame and cancelAnimationFrame
-const mockRequestAnimationFrame = jest.fn()
-const mockCancelAnimationFrame = jest.fn()
+const mockRequestAnimationFrame = vi.fn()
+const mockCancelAnimationFrame = vi.fn()
 Object.defineProperty(window, 'requestAnimationFrame', {
   value: mockRequestAnimationFrame,
   writable: true
@@ -61,18 +61,19 @@ Object.defineProperty(window, 'cancelAnimationFrame', {
 })
 
 // Use fake timers in a way that doesn't conflict with global setup
-jest.useFakeTimers({ legacyFakeTimers: true })
+vi.useFakeTimers({ legacyFakeTimers: true })
 
-const mockVisualFeedbackService = visualFeedbackService as jest.Mocked<typeof visualFeedbackService>
+const mockVisualFeedbackService = visualFeedbackService as vi.Mocked<typeof visualFeedbackService>
 
 describe('useVisualFeedback', () => {
   beforeEach(() => {
-    jest.clearAllMocks()
-    jest.clearAllTimers()
+    vi.clearAllMocks()
+    vi.resetAllMocks()
+    vi.clearAllTimers()
     mockMatchMedia.mockReturnValue({
       matches: false,
-      addListener: jest.fn(),
-      removeListener: jest.fn()
+      addListener: vi.fn(),
+      removeListener: vi.fn()
     })
   })
 
@@ -283,7 +284,7 @@ describe('useVisualFeedback', () => {
 
       // Fast-forward timers to simulate animation completion
       act(() => {
-        jest.advanceTimersByTime(300) // Flash duration
+        vi.advanceTimersByTime(300) // Flash duration
       })
 
       expect(mockVisualFeedbackService.flashAvatar).toHaveBeenCalledWith(mockElement, true)
@@ -313,8 +314,8 @@ describe('useVisualFeedback', () => {
       // Mock reduced motion preference
       mockMatchMedia.mockReturnValue({
         matches: true, // User prefers reduced motion
-        addListener: jest.fn(),
-        removeListener: jest.fn()
+        addListener: vi.fn(),
+        removeListener: vi.fn()
       })
 
       const { result } = renderHook(() => useVisualFeedback())
@@ -509,8 +510,8 @@ describe('useVisualFeedback', () => {
       // Test with motion preference
       mockMatchMedia.mockReturnValue({
         matches: false, // User prefers motion
-        addListener: jest.fn(),
-        removeListener: jest.fn()
+        addListener: vi.fn(),
+        removeListener: vi.fn()
       })
 
       const { result } = renderHook(() => useVisualFeedback())
@@ -525,8 +526,8 @@ describe('useVisualFeedback', () => {
       // Test with reduced motion preference
       mockMatchMedia.mockReturnValue({
         matches: true, // User prefers reduced motion
-        addListener: jest.fn(),
-        removeListener: jest.fn()
+        addListener: vi.fn(),
+        removeListener: vi.fn()
       })
 
       const { result: result2 } = renderHook(() => useVisualFeedback())

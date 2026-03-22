@@ -1,7 +1,6 @@
 import React from 'react'
-import { describe, it, expect } from '@jest/globals'
+import { describe, it, expect } from 'vitest'
 import { render, screen } from '@testing-library/react'
-import '@testing-library/jest-dom/jest-globals'
 import { AdminLogsPage } from '../AdminLogsPage'
 
 describe('AdminLogsPage', () => {

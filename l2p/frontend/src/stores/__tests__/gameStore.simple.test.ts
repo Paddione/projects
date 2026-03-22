@@ -4,7 +4,7 @@ import { renderHook, act } from '@testing-library/react'
 describe('gameStore Coverage Tests', () => {
   beforeAll(() => {
     // Mock the performance optimizer to avoid throttling issues
-    jest.mock('../../services/performanceOptimizer', () => ({
+    vi.mock('../../services/performanceOptimizer', () => ({
       performanceOptimizer: {
         throttle: (key: string, fn: Function) => fn
       }

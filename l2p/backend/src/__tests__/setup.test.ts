@@ -5,7 +5,7 @@ describe('Basic Test Setup', () => {
   });
 
   it('should have Jest globals available', () => {
-    expect(jest).toBeDefined();
+    expect(vi).toBeDefined();
     expect(expect).toBeDefined();
     expect(test).toBeDefined();
     expect(describe).toBeDefined();

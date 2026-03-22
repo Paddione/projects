@@ -1,5 +1,5 @@
 // Test setup file for Jest
-import { jest } from '@jest/globals';
+import { vi } from 'vitest';
 
 // Set test environment variables
 process.env['NODE_ENV'] = 'test';
@@ -21,11 +21,11 @@ function setupCommonMocks() {
   // Mock console methods to reduce test noise
   global.console = {
     ...originalConsole,
-    log: jest.fn(originalConsole.log),
-    debug: jest.fn(originalConsole.debug),
-    info: jest.fn(originalConsole.info),
-    warn: jest.fn(originalConsole.warn),
-    error: jest.fn(originalConsole.error),
+    log: vi.fn(originalConsole.log),
+    debug: vi.fn(originalConsole.debug),
+    info: vi.fn(originalConsole.info),
+    warn: vi.fn(originalConsole.warn),
+    error: vi.fn(originalConsole.error),
   };
 
   // Set default mock implementations for common modules
@@ -50,13 +50,8 @@ process.env['SMTP_USER'] = process.env['SMTP_USER'] || 'test@test.com';
 process.env['SMTP_PASS'] = process.env['SMTP_PASS'] || 'test_password';
 process.env['JWT_SECRET'] = process.env['JWT_SECRET'] || 'test_jwt_secret';
 
-// Global test timeout
-if (typeof jest !== 'undefined' && typeof jest.setTimeout === 'function') {
-  jest.setTimeout(30000); // Increased timeout for slower CI environments
-}
-
-// Set up global Jest mocks
-global.jest = jest;
+// Global test timeout (Vitest uses vi.setConfig, not vi.setTimeout)
+vi.setConfig({ testTimeout: 30000 });
 
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (reason, promise) => {
@@ -75,15 +70,15 @@ const originalExit = process.exit;
 // @ts-ignore
 process.exit = (code?: number) => {
   // Reset all mocks before exiting
-  jest.clearAllMocks();
-  jest.resetModules();
+  vi.clearAllMocks();
+  vi.resetModules();
   originalExit(code || 0);
 };
 
 // Clean up after all tests
 afterAll(() => {
-  jest.clearAllMocks();
-  jest.resetModules();
+  vi.clearAllMocks();
+  vi.resetModules();
 });
 
 export {}; 

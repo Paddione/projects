@@ -2,12 +2,12 @@ import { useSettingsStore, type SettingsState, type Theme, type Language } from 
 
 // Mock localStorage for persistence
 const localStorageMock = {
-  getItem: jest.fn(),
-  setItem: jest.fn(),
-  removeItem: jest.fn(),
-  clear: jest.fn(),
+  getItem: vi.fn(),
+  setItem: vi.fn(),
+  removeItem: vi.fn(),
+  clear: vi.fn(),
   length: 0,
-  key: jest.fn()
+  key: vi.fn()
 }
 Object.defineProperty(window, 'localStorage', {
   value: localStorageMock
@@ -18,7 +18,7 @@ describe('SettingsStore', () => {
 
   beforeEach(() => {
     // Reset all mocks
-    jest.clearAllMocks()
+    vi.clearAllMocks()
 
     // Reset localStorage
     localStorageMock.getItem.mockReturnValue(null)

@@ -1,50 +1,50 @@
-import { describe, it, expect, beforeEach, jest } from '@jest/globals'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { useAudioStore } from '../audioStore'
 import { audioManager } from '../../services/audioManager'
 
 // Mock audioManager
-jest.mock('../../services/audioManager', () => ({
+vi.mock('../../services/audioManager', () => ({
   audioManager: {
-    setMusicVolume: jest.fn(),
-    setSoundVolume: jest.fn(),
-    setMasterVolume: jest.fn(),
-    setMuted: jest.fn(),
-    playSound: jest.fn(),
-    stopAllSounds: jest.fn(),
-    playCorrectAnswer: jest.fn(),
-    playWrongAnswer: jest.fn(),
-    playButtonClick: jest.fn(),
-    playButtonHover: jest.fn(),
-    playPlayerJoin: jest.fn(),
-    playPlayerLeave: jest.fn(),
-    playTimerWarning: jest.fn(),
-    playTimerUrgent: jest.fn(),
-    playGameStart: jest.fn(),
-    playGameEnd: jest.fn(),
-    playQuestionStart: jest.fn(),
-    playLobbyCreated: jest.fn(),
-    playLobbyJoined: jest.fn(),
-    playApplause: jest.fn(),
-    playHighScore: jest.fn(),
-    playPerfectScore: jest.fn(),
-    playMultiplierUp: jest.fn(),
-    playMultiplierReset: jest.fn(),
-    playScorePoints: jest.fn(),
-    playScoreBonus: jest.fn(),
-    playLobbyMusic: jest.fn(),
-    playNotification: jest.fn(),
-    playSuccess: jest.fn(),
-    playError: jest.fn(),
-    playTick: jest.fn(),
-    playCountdown: jest.fn(),
-    playMenuSelect: jest.fn(),
-    playMenuConfirm: jest.fn(),
-    playMenuCancel: jest.fn(),
-    playVolumeChange: jest.fn(),
-    playLanguageChange: jest.fn(),
-    playThemeChange: jest.fn(),
-    resumeAudioContext: jest.fn(),
-    isAudioSupported: jest.fn().mockReturnValue(true),
+    setMusicVolume: vi.fn(),
+    setSoundVolume: vi.fn(),
+    setMasterVolume: vi.fn(),
+    setMuted: vi.fn(),
+    playSound: vi.fn(),
+    stopAllSounds: vi.fn(),
+    playCorrectAnswer: vi.fn(),
+    playWrongAnswer: vi.fn(),
+    playButtonClick: vi.fn(),
+    playButtonHover: vi.fn(),
+    playPlayerJoin: vi.fn(),
+    playPlayerLeave: vi.fn(),
+    playTimerWarning: vi.fn(),
+    playTimerUrgent: vi.fn(),
+    playGameStart: vi.fn(),
+    playGameEnd: vi.fn(),
+    playQuestionStart: vi.fn(),
+    playLobbyCreated: vi.fn(),
+    playLobbyJoined: vi.fn(),
+    playApplause: vi.fn(),
+    playHighScore: vi.fn(),
+    playPerfectScore: vi.fn(),
+    playMultiplierUp: vi.fn(),
+    playMultiplierReset: vi.fn(),
+    playScorePoints: vi.fn(),
+    playScoreBonus: vi.fn(),
+    playLobbyMusic: vi.fn(),
+    playNotification: vi.fn(),
+    playSuccess: vi.fn(),
+    playError: vi.fn(),
+    playTick: vi.fn(),
+    playCountdown: vi.fn(),
+    playMenuSelect: vi.fn(),
+    playMenuConfirm: vi.fn(),
+    playMenuCancel: vi.fn(),
+    playVolumeChange: vi.fn(),
+    playLanguageChange: vi.fn(),
+    playThemeChange: vi.fn(),
+    resumeAudioContext: vi.fn(),
+    isAudioSupported: vi.fn().mockReturnValue(true),
   },
 }))
 
@@ -60,7 +60,7 @@ describe('audioStore', () => {
     store.setCurrentTrack(null)
 
     // Clear all mocks
-    jest.clearAllMocks()
+    vi.clearAllMocks()
   })
 
   describe('Initial state', () => {
@@ -226,7 +226,7 @@ describe('audioStore', () => {
     })
 
     it('should handle errors gracefully', () => {
-      jest.mocked(audioManager.playSound).mockImplementationOnce(() => {
+      vi.mocked(audioManager.playSound).mockImplementationOnce(() => {
         throw new Error('Audio error')
       })
 
@@ -415,7 +415,7 @@ describe('audioStore', () => {
     })
 
     it('should call isAudioSupported', () => {
-      jest.mocked(audioManager.isAudioSupported).mockReturnValue(true)
+      vi.mocked(audioManager.isAudioSupported).mockReturnValue(true)
 
       const result = useAudioStore.getState().isAudioSupported()
       expect(result).toBe(true)

@@ -1,4 +1,4 @@
-const sendEmail = jest.fn().mockResolvedValue(true);
+const sendEmail = vi.fn().mockResolvedValue(true);
 
 const mockEmailService = {
   sendEmail

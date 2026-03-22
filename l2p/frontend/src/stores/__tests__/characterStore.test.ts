@@ -1,19 +1,28 @@
 import { renderHook, act } from '@testing-library/react'
-import { useCharacterStore } from '../characterStore'
+import {
+  useCharacterStore,
+  useCurrentCharacter,
+  useCharacterLevel,
+  useCharacterExperience,
+  useCharacterProgress,
+  useAvailableCharacters,
+  useCharacterLoading,
+  useCharacterUpdating,
+} from '../characterStore'
 import { Character, CharacterProfile } from '../../types'
 import { apiService } from '../../services/apiService'
 
 // Mock the API service
-jest.mock('../../services/apiService', () => ({
+vi.mock('../../services/apiService', () => ({
   apiService: {
-    getAllCharacters: jest.fn(),
-    getCharacterProfile: jest.fn(),
-    updateCharacter: jest.fn(),
-    awardExperience: jest.fn(),
+    getAllCharacters: vi.fn(),
+    getCharacterProfile: vi.fn(),
+    updateCharacter: vi.fn(),
+    awardExperience: vi.fn(),
   }
 }))
 
-const mockApiService = apiService as jest.Mocked<typeof apiService>
+const mockApiService = apiService as vi.Mocked<typeof apiService>
 
 // Mock data
 const mockCharacters: Character[] = [
@@ -55,7 +64,7 @@ const mockCharacterProfile: CharacterProfile = {
 
 describe('characterStore', () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
     // Reset store to initial state
     useCharacterStore.setState({
       characters: [],
@@ -103,7 +112,7 @@ describe('characterStore', () => {
     })
 
     it('handles API error when loading characters', async () => {
-      const consoleSpy = jest.spyOn(console, 'error').mockImplementation()
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation()
       mockApiService.getAllCharacters.mockResolvedValue({
         success: false,
         error: 'Failed to load characters'
@@ -124,7 +133,7 @@ describe('characterStore', () => {
     })
 
     it('handles network error when loading characters', async () => {
-      const consoleSpy = jest.spyOn(console, 'error').mockImplementation()
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation()
       mockApiService.getAllCharacters.mockRejectedValue(new Error('Network error'))
 
       const { result } = renderHook(() => useCharacterStore())
@@ -188,7 +197,7 @@ describe('characterStore', () => {
     })
 
     it('handles API error when loading character profile', async () => {
-      const consoleSpy = jest.spyOn(console, 'error').mockImplementation()
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation()
       mockApiService.getCharacterProfile.mockResolvedValue({
         success: false,
         error: 'Failed to load profile'
@@ -209,7 +218,7 @@ describe('characterStore', () => {
     })
 
     it('handles network error when loading character profile', async () => {
-      const consoleSpy = jest.spyOn(console, 'error').mockImplementation()
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation()
       mockApiService.getCharacterProfile.mockRejectedValue(new Error('Network error'))
 
       const { result } = renderHook(() => useCharacterStore())
@@ -259,7 +268,7 @@ describe('characterStore', () => {
     })
 
     it('handles API error when updating character', async () => {
-      const consoleSpy = jest.spyOn(console, 'error').mockImplementation()
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation()
       mockApiService.updateCharacter.mockResolvedValue({
         success: false,
         error: 'Failed to update character'
@@ -281,7 +290,7 @@ describe('characterStore', () => {
     })
 
     it('handles network error when updating character', async () => {
-      const consoleSpy = jest.spyOn(console, 'error').mockImplementation()
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation()
       mockApiService.updateCharacter.mockRejectedValue(new Error('Network error'))
 
       const { result } = renderHook(() => useCharacterStore())
@@ -417,7 +426,7 @@ describe('characterStore', () => {
     })
 
     it('handles API error when awarding experience', async () => {
-      const consoleSpy = jest.spyOn(console, 'error').mockImplementation()
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation()
       mockApiService.awardExperience.mockResolvedValue({
         success: false,
         error: 'Failed to award experience'
@@ -437,7 +446,7 @@ describe('characterStore', () => {
     })
 
     it('handles network error when awarding experience', async () => {
-      const consoleSpy = jest.spyOn(console, 'error').mockImplementation()
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation()
       mockApiService.awardExperience.mockRejectedValue(new Error('Network error'))
 
       const { result } = renderHook(() => useCharacterStore())
@@ -454,7 +463,7 @@ describe('characterStore', () => {
     })
 
     it('handles profile update failure after level up', async () => {
-      const consoleSpy = jest.spyOn(console, 'error').mockImplementation()
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation()
       
       mockApiService.awardExperience.mockResolvedValue({
         success: true,
@@ -542,7 +551,6 @@ describe('characterStore', () => {
 
   describe('selector hooks', () => {
     it('useCurrentCharacter returns current character', () => {
-      const { useCurrentCharacter } = require('../characterStore')
       const { result } = renderHook(() => useCurrentCharacter())
       
       expect(result.current).toBeNull()
@@ -555,7 +563,6 @@ describe('characterStore', () => {
     })
 
     it('useCharacterLevel returns current level', () => {
-      const { useCharacterLevel } = require('../characterStore')
       const { result } = renderHook(() => useCharacterLevel())
       
       expect(result.current).toBe(1)
@@ -568,7 +575,6 @@ describe('characterStore', () => {
     })
 
     it('useCharacterExperience returns current experience', () => {
-      const { useCharacterExperience } = require('../characterStore')
       const { result } = renderHook(() => useCharacterExperience())
       
       expect(result.current).toBe(0)
@@ -581,7 +587,6 @@ describe('characterStore', () => {
     })
 
     it('useCharacterProgress returns current progress', () => {
-      const { useCharacterProgress } = require('../characterStore')
       const { result } = renderHook(() => useCharacterProgress())
       
       expect(result.current).toBeNull()
@@ -594,7 +599,6 @@ describe('characterStore', () => {
     })
 
     it('useAvailableCharacters returns available characters', () => {
-      const { useAvailableCharacters } = require('../characterStore')
       const { result } = renderHook(() => useAvailableCharacters())
       
       expect(result.current).toEqual([])
@@ -607,7 +611,6 @@ describe('characterStore', () => {
     })
 
     it('useCharacterLoading returns loading state', () => {
-      const { useCharacterLoading } = require('../characterStore')
       const { result } = renderHook(() => useCharacterLoading())
       
       expect(result.current).toBe(false)
@@ -620,7 +623,6 @@ describe('characterStore', () => {
     })
 
     it('useCharacterUpdating returns updating state', () => {
-      const { useCharacterUpdating } = require('../characterStore')
       const { result } = renderHook(() => useCharacterUpdating())
       
       expect(result.current).toBe(false)

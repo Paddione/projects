@@ -1,5 +1,5 @@
 import React from 'react'
-import { describe, it, expect, beforeEach, jest } from '@jest/globals'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { render, waitFor } from '@testing-library/react'
 import { GameStateManager } from '../GameStateManager'
 import { useGameStore } from '../../stores/gameStore'
@@ -7,40 +7,40 @@ import { socketService } from '../../services/socketService'
 import { navigationService } from '../../services/navigationService'
 
 // Mock dependencies
-jest.mock('../../stores/gameStore')
-jest.mock('../../services/socketService', () => ({
+vi.mock('../../stores/gameStore')
+vi.mock('../../services/socketService', () => ({
   socketService: {
-    connect: jest.fn(),
-    disconnect: jest.fn(),
+    connect: vi.fn(),
+    disconnect: vi.fn(),
   },
 }))
-jest.mock('../../services/navigationService', () => ({
+vi.mock('../../services/navigationService', () => ({
   navigationService: {
-    validateCurrentRoute: jest.fn(),
-    handleGameStateChange: jest.fn(),
-    destroy: jest.fn(),
+    validateCurrentRoute: vi.fn(),
+    handleGameStateChange: vi.fn(),
+    destroy: vi.fn(),
   },
 }))
 
 describe('GameStateManager', () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
 
     // Mock game store
-    jest.mocked(useGameStore).mockReturnValue({
+    vi.mocked(useGameStore).mockReturnValue({
       lobbyCode: null,
       gameStarted: false,
       gameEnded: false,
     } as any)
 
     // Mock socket service
-    jest.mocked(socketService.connect).mockReturnValue(undefined)
-    jest.mocked(socketService.disconnect).mockReturnValue(undefined)
+    vi.mocked(socketService.connect).mockReturnValue(undefined)
+    vi.mocked(socketService.disconnect).mockReturnValue(undefined)
 
     // Mock navigation service
-    jest.mocked(navigationService.validateCurrentRoute).mockResolvedValue()
-    jest.mocked(navigationService.handleGameStateChange).mockResolvedValue()
-    jest.mocked(navigationService.destroy).mockReturnValue(undefined)
+    vi.mocked(navigationService.validateCurrentRoute).mockResolvedValue()
+    vi.mocked(navigationService.handleGameStateChange).mockResolvedValue()
+    vi.mocked(navigationService.destroy).mockReturnValue(undefined)
 
     // Reset window location
     window.history.replaceState({}, '', '/')
@@ -75,7 +75,7 @@ describe('GameStateManager', () => {
     })
 
     it('should add beforeunload event listener', async () => {
-      const addEventListenerSpy = jest.spyOn(window, 'addEventListener')
+      const addEventListenerSpy = vi.spyOn(window, 'addEventListener')
 
       render(<GameStateManager />)
 
@@ -117,7 +117,7 @@ describe('GameStateManager', () => {
     })
 
     it('should remove beforeunload event listener on unmount', () => {
-      const removeEventListenerSpy = jest.spyOn(window, 'removeEventListener')
+      const removeEventListenerSpy = vi.spyOn(window, 'removeEventListener')
 
       const { unmount } = render(<GameStateManager />)
 
@@ -131,7 +131,7 @@ describe('GameStateManager', () => {
 
   describe('Game state changes', () => {
     it('should handle game state change when gameStarted changes', () => {
-      jest.mocked(useGameStore).mockReturnValue({
+      vi.mocked(useGameStore).mockReturnValue({
         lobbyCode: 'ABC123',
         gameStarted: true,
         gameEnded: false,
@@ -143,7 +143,7 @@ describe('GameStateManager', () => {
     })
 
     it('should handle game state change when gameEnded changes', () => {
-      jest.mocked(useGameStore).mockReturnValue({
+      vi.mocked(useGameStore).mockReturnValue({
         lobbyCode: 'ABC123',
         gameStarted: false,
         gameEnded: true,
@@ -155,7 +155,7 @@ describe('GameStateManager', () => {
     })
 
     it('should validate route when lobbyCode is set', () => {
-      jest.mocked(useGameStore).mockReturnValue({
+      vi.mocked(useGameStore).mockReturnValue({
         lobbyCode: 'ABC123',
         gameStarted: false,
         gameEnded: false,
@@ -171,7 +171,7 @@ describe('GameStateManager', () => {
     it('should warn user when leaving game page', async () => {
       window.history.replaceState({}, '', '/game/ABC123')
 
-      const addEventListenerSpy = jest.spyOn(window, 'addEventListener')
+      const addEventListenerSpy = vi.spyOn(window, 'addEventListener')
       render(<GameStateManager />)
 
       await waitFor(() => {
@@ -179,7 +179,7 @@ describe('GameStateManager', () => {
       })
 
       const event = new Event('beforeunload') as BeforeUnloadEvent
-      event.preventDefault = jest.fn()
+      event.preventDefault = vi.fn()
 
       window.dispatchEvent(event)
 
@@ -191,7 +191,7 @@ describe('GameStateManager', () => {
     it('should warn user when leaving lobby page', async () => {
       window.history.replaceState({}, '', '/lobby/ABC123')
 
-      const addEventListenerSpy = jest.spyOn(window, 'addEventListener')
+      const addEventListenerSpy = vi.spyOn(window, 'addEventListener')
       render(<GameStateManager />)
 
       await waitFor(() => {
@@ -199,7 +199,7 @@ describe('GameStateManager', () => {
       })
 
       const event = new Event('beforeunload') as BeforeUnloadEvent
-      event.preventDefault = jest.fn()
+      event.preventDefault = vi.fn()
 
       window.dispatchEvent(event)
 
@@ -210,7 +210,7 @@ describe('GameStateManager', () => {
     it('should not warn user when leaving other pages', async () => {
       window.history.replaceState({}, '', '/')
 
-      const addEventListenerSpy = jest.spyOn(window, 'addEventListener')
+      const addEventListenerSpy = vi.spyOn(window, 'addEventListener')
       render(<GameStateManager />)
 
       await waitFor(() => {
@@ -218,7 +218,7 @@ describe('GameStateManager', () => {
       })
 
       const event = new Event('beforeunload') as BeforeUnloadEvent
-      event.preventDefault = jest.fn()
+      event.preventDefault = vi.fn()
 
       window.dispatchEvent(event)
 
@@ -234,12 +234,12 @@ describe('GameStateManager', () => {
       ; (window as any).ENV = { VITE_SOCKET_URL: 'ws://test.com' }
       const { rerender } = render(<GameStateManager />)
 
-      const firstCallCount = jest.mocked(socketService.connect).mock.calls.length
+      const firstCallCount = vi.mocked(socketService.connect).mock.calls.length
 
       rerender(<GameStateManager />)
       rerender(<GameStateManager />)
 
-      const finalCallCount = jest.mocked(socketService.connect).mock.calls.length
+      const finalCallCount = vi.mocked(socketService.connect).mock.calls.length
 
       // Should only connect once despite multiple renders
       expect(finalCallCount).toBe(firstCallCount)
@@ -250,11 +250,11 @@ describe('GameStateManager', () => {
   describe('Error handling', () => {
     it('should handle socket connection errors gracefully', async () => {
       ; (window as any).ENV = { VITE_SOCKET_URL: 'ws://test.com' }
-      jest.mocked(socketService.connect).mockImplementation(() => {
+      vi.mocked(socketService.connect).mockImplementation(() => {
         throw new Error('Connection failed')
       })
 
-      const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => undefined)
+      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined)
 
       expect(() => render(<GameStateManager />)).not.toThrow()
 
@@ -267,9 +267,9 @@ describe('GameStateManager', () => {
     })
 
     it('should handle navigation validation errors gracefully', () => {
-      jest.mocked(navigationService.validateCurrentRoute).mockRejectedValue(new Error('Validation failed'))
+      vi.mocked(navigationService.validateCurrentRoute).mockRejectedValue(new Error('Validation failed'))
 
-      const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => undefined)
+      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined)
 
       expect(() => render(<GameStateManager />)).not.toThrow()
 

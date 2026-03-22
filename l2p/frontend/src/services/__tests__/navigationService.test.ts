@@ -1,14 +1,15 @@
 import { navigationService } from '../navigationService'
 import { useGameStore } from '../../stores/gameStore'
+import { apiService } from '../apiService'
 
 // Mock the game store
-jest.mock('../../stores/gameStore', () => ({
+vi.mock('../../stores/gameStore', () => ({
   useGameStore: {
-    getState: jest.fn(() => ({
-      resetGame: jest.fn(),
-      setError: jest.fn(),
-      setGameState: jest.fn(),
-      setLobbyCode: jest.fn(),
+    getState: vi.fn(() => ({
+      resetGame: vi.fn(),
+      setError: vi.fn(),
+      setGameState: vi.fn(),
+      setLobbyCode: vi.fn(),
       currentLobby: null,
       error: null,
     })),
@@ -16,10 +17,10 @@ jest.mock('../../stores/gameStore', () => ({
 }))
 
 // Mock the API service
-jest.mock('../apiService', () => ({
+vi.mock('../apiService', () => ({
   apiService: {
-    getLobby: jest.fn(),
-    isAuthenticated: jest.fn(() => true),
+    getLobby: vi.fn(),
+    isAuthenticated: vi.fn(() => true),
   },
 }))
 
@@ -32,8 +33,8 @@ const originalConsoleError = console.error
 const originalConsoleWarn = console.warn
 
 beforeAll(() => {
-  console.error = jest.fn()
-  console.warn = jest.fn()
+  console.error = vi.fn()
+  console.warn = vi.fn()
 })
 
 afterAll(() => {
@@ -44,26 +45,26 @@ afterAll(() => {
 describe('NavigationService', () => {
   let gameStoreMock: Record<string, unknown>
   let apiServiceMock: {
-    getLobby: jest.Mock;
-    isAuthenticated: jest.Mock;
+    getLobby: vi.Mock;
+    isAuthenticated: vi.Mock;
   }
 
   beforeEach(() => {
     // Reset mocks
-    jest.clearAllMocks()
+    vi.clearAllMocks()
 
     gameStoreMock = {
-      resetGame: jest.fn(),
-      setError: jest.fn(),
-      setGameState: jest.fn(),
-      setLobbyCode: jest.fn(),
+      resetGame: vi.fn(),
+      setError: vi.fn(),
+      setGameState: vi.fn(),
+      setLobbyCode: vi.fn(),
       currentLobby: null,
       error: null,
     }
 
-      ; (useGameStore.getState as jest.Mock).mockReturnValue(gameStoreMock)
+      ; (useGameStore.getState as vi.Mock).mockReturnValue(gameStoreMock)
 
-    apiServiceMock = require('../apiService').apiService
+    apiServiceMock = apiService as typeof apiServiceMock
     apiServiceMock.getLobby.mockResolvedValue({
       success: true,
       data: {
@@ -83,7 +84,7 @@ describe('NavigationService', () => {
 
   describe('Navigation to Home', () => {
     it('should navigate to home page', async () => {
-      const mockNavigate = jest.spyOn(navigationService as any, 'navigate').mockImplementation()
+      const mockNavigate = vi.spyOn(navigationService as any, 'navigate').mockImplementation()
 
       await navigationService.navigateToHome()
 
@@ -92,10 +93,10 @@ describe('NavigationService', () => {
     })
 
     it('should notify listeners when navigating to home', async () => {
-      const listener = jest.fn()
+      const listener = vi.fn()
       const unsubscribe = navigationService.subscribe(listener)
 
-      jest.spyOn(navigationService as any, 'navigate').mockImplementation()
+      vi.spyOn(navigationService as any, 'navigate').mockImplementation()
 
       await navigationService.navigateToHome()
 
@@ -106,11 +107,11 @@ describe('NavigationService', () => {
 
     it('should handle navigation errors', async () => {
       const error = new Error('Navigation failed')
-      jest.spyOn(navigationService as any, 'navigate').mockImplementation(() => {
+      vi.spyOn(navigationService as any, 'navigate').mockImplementation(() => {
         throw error
       })
 
-      const handleErrorSpy = jest.spyOn(navigationService as any, 'handleNavigationError')
+      const handleErrorSpy = vi.spyOn(navigationService as any, 'handleNavigationError')
 
       await navigationService.navigateToHome()
 
@@ -122,7 +123,7 @@ describe('NavigationService', () => {
     const mockLobbyCode = 'TEST123'
 
     it('should navigate to lobby with valid code', async () => {
-      const mockNavigate = jest.spyOn(navigationService as any, 'navigate').mockImplementation()
+      const mockNavigate = vi.spyOn(navigationService as any, 'navigate').mockImplementation()
 
       await navigationService.navigateToLobby(mockLobbyCode)
 
@@ -130,7 +131,7 @@ describe('NavigationService', () => {
     })
 
     it('should validate lobby exists before navigation', async () => {
-      jest.spyOn(navigationService as any, 'navigate').mockImplementation()
+      vi.spyOn(navigationService as any, 'navigate').mockImplementation()
 
       await navigationService.navigateToLobby(mockLobbyCode)
 
@@ -143,7 +144,7 @@ describe('NavigationService', () => {
         error: 'Lobby not found',
       })
 
-      const handleErrorSpy = jest.spyOn(navigationService as any, 'handleNavigationError')
+      const handleErrorSpy = vi.spyOn(navigationService as any, 'handleNavigationError')
 
       await navigationService.navigateToLobby('INVALID')
 
@@ -154,10 +155,10 @@ describe('NavigationService', () => {
     })
 
     it('should notify listeners with lobby context', async () => {
-      const listener = jest.fn()
+      const listener = vi.fn()
       const unsubscribe = navigationService.subscribe(listener)
 
-      jest.spyOn(navigationService as any, 'navigate').mockImplementation()
+      vi.spyOn(navigationService as any, 'navigate').mockImplementation()
 
       await navigationService.navigateToLobby(mockLobbyCode)
 
@@ -185,7 +186,7 @@ describe('NavigationService', () => {
         },
       })
 
-      const mockNavigate = jest.spyOn(navigationService as any, 'navigate').mockImplementation()
+      const mockNavigate = vi.spyOn(navigationService as any, 'navigate').mockImplementation()
 
       await navigationService.navigateToGame(mockLobbyCode)
 
@@ -203,7 +204,7 @@ describe('NavigationService', () => {
         },
       })
 
-      const handleErrorSpy = jest.spyOn(navigationService as any, 'handleNavigationError')
+      const handleErrorSpy = vi.spyOn(navigationService as any, 'handleNavigationError')
 
       await navigationService.navigateToGame(mockLobbyCode)
 
@@ -224,7 +225,7 @@ describe('NavigationService', () => {
         },
       })
 
-      const mockNavigate = jest.spyOn(navigationService as any, 'navigate').mockImplementation()
+      const mockNavigate = vi.spyOn(navigationService as any, 'navigate').mockImplementation()
 
       await navigationService.navigateToGame(mockLobbyCode)
 
@@ -236,7 +237,7 @@ describe('NavigationService', () => {
     const mockLobbyCode = 'TEST123'
 
     it('should navigate to results page', async () => {
-      const mockNavigate = jest.spyOn(navigationService as any, 'navigate').mockImplementation()
+      const mockNavigate = vi.spyOn(navigationService as any, 'navigate').mockImplementation()
 
       await navigationService.navigateToResults(mockLobbyCode)
 
@@ -244,7 +245,7 @@ describe('NavigationService', () => {
     })
 
     it('should validate lobby exists', async () => {
-      jest.spyOn(navigationService as any, 'navigate').mockImplementation()
+      vi.spyOn(navigationService as any, 'navigate').mockImplementation()
 
       await navigationService.navigateToResults(mockLobbyCode)
 
@@ -256,7 +257,7 @@ describe('NavigationService', () => {
     it('should validate current route on initialization', () => {
       setPathname('/lobby/TEST123')
 
-      const validateSpy = jest.spyOn(navigationService as any, 'validateCurrentRoute')
+      const validateSpy = vi.spyOn(navigationService as any, 'validateCurrentRoute')
 
       // Call validateCurrentRoute directly since constructor already ran
       navigationService.validateCurrentRoute()
@@ -265,7 +266,7 @@ describe('NavigationService', () => {
     })
 
     it('should handle popstate events', () => {
-      const validateSpy = jest.spyOn(navigationService as any, 'validateCurrentRoute')
+      const validateSpy = vi.spyOn(navigationService as any, 'validateCurrentRoute')
 
       // Trigger popstate event
       const popstateEvent = new PopStateEvent('popstate')
@@ -292,7 +293,7 @@ describe('NavigationService', () => {
     it('should redirect to home if not authenticated', () => {
       apiServiceMock.isAuthenticated.mockReturnValue(false)
 
-      const mockNavigate = jest.spyOn(navigationService as any, 'navigate').mockImplementation()
+      const mockNavigate = vi.spyOn(navigationService as any, 'navigate').mockImplementation()
 
         ; (navigationService as any).requireAuthentication()
 
@@ -302,7 +303,7 @@ describe('NavigationService', () => {
     it('should allow access if authenticated', () => {
       apiServiceMock.isAuthenticated.mockReturnValue(true)
 
-      const mockNavigate = jest.spyOn(navigationService as any, 'navigate').mockImplementation()
+      const mockNavigate = vi.spyOn(navigationService as any, 'navigate').mockImplementation()
 
       const result = (navigationService as any).requireAuthentication()
 
@@ -316,7 +317,7 @@ describe('NavigationService', () => {
       const error = new Error('Test error')
       const context = 'Test context'
 
-      const consoleSpy = jest.spyOn(console, 'error').mockImplementation()
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation()
 
         ; (navigationService as any).handleNavigationError(context, error)
 
@@ -326,7 +327,7 @@ describe('NavigationService', () => {
 
     it('should navigate to error page for critical errors', () => {
       const error = new Error('Critical error')
-      const mockNavigate = jest.spyOn(navigationService as any, 'navigate').mockImplementation()
+      const mockNavigate = vi.spyOn(navigationService as any, 'navigate').mockImplementation()
 
         ; (navigationService as any).handleNavigationError('Critical context', error, true)
 
@@ -336,8 +337,8 @@ describe('NavigationService', () => {
 
   describe('Subscription Management', () => {
     it('should add and remove listeners', () => {
-      const listener1 = jest.fn()
-      const listener2 = jest.fn()
+      const listener1 = vi.fn()
+      const listener2 = vi.fn()
 
       const unsubscribe1 = navigationService.subscribe(listener1)
       const unsubscribe2 = navigationService.subscribe(listener2)
@@ -352,8 +353,8 @@ describe('NavigationService', () => {
     })
 
     it('should notify all listeners', () => {
-      const listener1 = jest.fn()
-      const listener2 = jest.fn()
+      const listener1 = vi.fn()
+      const listener2 = vi.fn()
 
       navigationService.subscribe(listener1)
       navigationService.subscribe(listener2)

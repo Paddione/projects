@@ -1,20 +1,20 @@
-import { describe, beforeEach, it, expect, jest } from '@jest/globals';
+import { describe, beforeEach, it, expect, vi } from 'vitest';
 import { LobbyRepository, Lobby, CreateLobbyData, UpdateLobbyData } from '../LobbyRepository';
 import { BaseRepository } from '../BaseRepository';
 import { DatabaseService } from '../../services/DatabaseService.js';
 import { createMockQueryResult } from '../../__tests__/test-utils/mockData';
 
 // Mock DatabaseService
-jest.mock('../../services/DatabaseService.js');
+vi.mock('../../services/DatabaseService.js');
 // DatabaseService has a private constructor; only mock the static getInstance safely
-const MockedDatabaseService = DatabaseService as unknown as { getInstance: jest.MockedFunction<() => any> };
+const MockedDatabaseService = DatabaseService as unknown as { getInstance: vi.MockedFunction<() => any> };
 
 // Mock the BaseRepository
-jest.mock('../BaseRepository');
+vi.mock('../BaseRepository');
 
 describe('LobbyRepository', () => {
   let lobbyRepository: LobbyRepository;
-  let mockDb: jest.Mocked<DatabaseService>;
+  let mockDb: vi.Mocked<DatabaseService>;
 
   // Test data
   const mockLobby: Lobby = {
@@ -86,17 +86,17 @@ describe('LobbyRepository', () => {
 
   beforeEach(() => {
     // Clear all mocks
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     // Create mock database instance
     mockDb = {
-      query: jest.fn(),
-      close: jest.fn(),
-      testConnection: jest.fn(),
-      isHealthy: jest.fn(),
-      getConnection: jest.fn(),
-      getPool: jest.fn(),
-      getDb: jest.fn(),
+      query: vi.fn(),
+      close: vi.fn(),
+      testConnection: vi.fn(),
+      isHealthy: vi.fn(),
+      getConnection: vi.fn(),
+      getPool: vi.fn(),
+      getDb: vi.fn(),
     } as any;
 
     // Mock the getInstance method to return our mock
@@ -108,20 +108,20 @@ describe('LobbyRepository', () => {
     (lobbyRepository as any).db = mockDb;
     
     // Also mock the getDb method to return our mock
-    jest.spyOn(lobbyRepository as any, 'getDb').mockReturnValue(mockDb);
+    vi.spyOn(lobbyRepository as any, 'getDb').mockReturnValue(mockDb);
 
     // Mock BaseRepository methods
-    jest.spyOn(BaseRepository.prototype as any, 'findById').mockImplementation(() => Promise.resolve(null));
-    jest.spyOn(BaseRepository.prototype as any, 'create').mockImplementation(() => Promise.resolve({}));
-    jest.spyOn(BaseRepository.prototype as any, 'update').mockImplementation(() => Promise.resolve(null));
-    jest.spyOn(BaseRepository.prototype as any, 'delete').mockImplementation(() => Promise.resolve(false));
-    jest.spyOn(BaseRepository.prototype as any, 'findAll').mockImplementation(() => Promise.resolve([]));
-    jest.spyOn(BaseRepository.prototype as any, 'exists').mockImplementation(() => Promise.resolve(false));
-    jest.spyOn(BaseRepository.prototype as any, 'count').mockImplementation(() => Promise.resolve(0));
+    vi.spyOn(BaseRepository.prototype as any, 'findById').mockImplementation(() => Promise.resolve(null));
+    vi.spyOn(BaseRepository.prototype as any, 'create').mockImplementation(() => Promise.resolve({}));
+    vi.spyOn(BaseRepository.prototype as any, 'update').mockImplementation(() => Promise.resolve(null));
+    vi.spyOn(BaseRepository.prototype as any, 'delete').mockImplementation(() => Promise.resolve(false));
+    vi.spyOn(BaseRepository.prototype as any, 'findAll').mockImplementation(() => Promise.resolve([]));
+    vi.spyOn(BaseRepository.prototype as any, 'exists').mockImplementation(() => Promise.resolve(false));
+    vi.spyOn(BaseRepository.prototype as any, 'count').mockImplementation(() => Promise.resolve(0));
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   describe('Constructor and Initialization', () => {
@@ -138,7 +138,7 @@ describe('LobbyRepository', () => {
   describe('Basic CRUD Operations', () => {
     describe('findLobbyById', () => {
       it('should find lobby by ID successfully', async () => {
-        const mockFindById = ((BaseRepository.prototype as any).findById as jest.Mock);
+        const mockFindById = ((BaseRepository.prototype as any).findById as vi.Mock);
         (mockFindById as any).mockResolvedValue(mockLobby);
 
         const result = await lobbyRepository.findLobbyById(1);
@@ -148,7 +148,7 @@ describe('LobbyRepository', () => {
       });
 
       it('should return null when lobby not found', async () => {
-        const mockFindById = ((BaseRepository.prototype as any).findById as jest.Mock);
+        const mockFindById = ((BaseRepository.prototype as any).findById as vi.Mock);
         (mockFindById as any).mockResolvedValue(null);
 
         const result = await lobbyRepository.findLobbyById(999);
@@ -158,7 +158,7 @@ describe('LobbyRepository', () => {
       });
 
       it('should handle database errors', async () => {
-        const mockFindById = ((BaseRepository.prototype as any).findById as jest.Mock);
+        const mockFindById = ((BaseRepository.prototype as any).findById as vi.Mock);
         (mockFindById as any).mockRejectedValue(new Error('Database connection failed'));
 
         await expect(lobbyRepository.findLobbyById(1)).rejects.toThrow('Database connection failed');
@@ -167,7 +167,7 @@ describe('LobbyRepository', () => {
 
     describe('createLobby', () => {
       it('should create lobby with provided data', async () => {
-        const mockCreate = jest.spyOn(BaseRepository.prototype as any, 'create');
+        const mockCreate = vi.spyOn(BaseRepository.prototype as any, 'create');
         mockCreate.mockResolvedValue(mockLobby);
 
         const result = await lobbyRepository.createLobby(mockCreateLobbyData);
@@ -182,7 +182,7 @@ describe('LobbyRepository', () => {
       });
 
       it('should create lobby with default values when optional fields missing', async () => {
-        const mockCreate = jest.spyOn(BaseRepository.prototype as any, 'create');
+        const mockCreate = vi.spyOn(BaseRepository.prototype as any, 'create');
         mockCreate.mockResolvedValue(mockLobby);
 
         const minimalLobbyData: CreateLobbyData = {
@@ -203,14 +203,14 @@ describe('LobbyRepository', () => {
       });
 
       it('should handle duplicate lobby code error', async () => {
-        const mockCreate = jest.spyOn(BaseRepository.prototype as any, 'create');
+        const mockCreate = vi.spyOn(BaseRepository.prototype as any, 'create');
         mockCreate.mockRejectedValue(new Error('duplicate key value violates unique constraint "lobbies_code_key"'));
 
         await expect(lobbyRepository.createLobby(mockCreateLobbyData)).rejects.toThrow('duplicate key');
       });
 
       it('should handle foreign key constraint errors', async () => {
-        const mockCreate = jest.spyOn(BaseRepository.prototype as any, 'create');
+        const mockCreate = vi.spyOn(BaseRepository.prototype as any, 'create');
         mockCreate.mockRejectedValue(new Error('violates foreign key constraint "lobbies_host_id_fkey"'));
 
         await expect(lobbyRepository.createLobby(mockCreateLobbyData)).rejects.toThrow('foreign key constraint');
@@ -219,7 +219,7 @@ describe('LobbyRepository', () => {
 
     describe('updateLobby', () => {
       it('should update lobby successfully', async () => {
-        const mockUpdate = ((BaseRepository.prototype as any).update as jest.Mock);
+        const mockUpdate = ((BaseRepository.prototype as any).update as vi.Mock);
         const updatedLobby = { ...mockLobby, ...mockUpdateLobbyData };
         (mockUpdate as any).mockResolvedValue(updatedLobby);
 
@@ -230,7 +230,7 @@ describe('LobbyRepository', () => {
       });
 
       it('should return null when lobby not found for update', async () => {
-        const mockUpdate = ((BaseRepository.prototype as any).update as jest.Mock);
+        const mockUpdate = ((BaseRepository.prototype as any).update as vi.Mock);
         (mockUpdate as any).mockResolvedValue(null);
 
         const result = await lobbyRepository.updateLobby(999, mockUpdateLobbyData);
@@ -240,7 +240,7 @@ describe('LobbyRepository', () => {
       });
 
       it('should handle partial updates', async () => {
-        const mockUpdate = ((BaseRepository.prototype as any).update as jest.Mock);
+        const mockUpdate = ((BaseRepository.prototype as any).update as vi.Mock);
         const partialUpdate = { status: 'playing' as const };
         const updatedLobby = { ...mockLobby, status: 'playing' as const };
         (mockUpdate as any).mockResolvedValue(updatedLobby);
@@ -254,7 +254,7 @@ describe('LobbyRepository', () => {
 
     describe('deleteLobby', () => {
       it('should delete lobby successfully', async () => {
-        const mockDelete = ((BaseRepository.prototype as any).delete as jest.Mock);
+        const mockDelete = ((BaseRepository.prototype as any).delete as vi.Mock);
         (mockDelete as any).mockResolvedValue(true);
 
         const result = await lobbyRepository.deleteLobby(1);
@@ -264,7 +264,7 @@ describe('LobbyRepository', () => {
       });
 
       it('should return false when lobby not found for deletion', async () => {
-        const mockDelete = ((BaseRepository.prototype as any).delete as jest.Mock);
+        const mockDelete = ((BaseRepository.prototype as any).delete as vi.Mock);
         (mockDelete as any).mockResolvedValue(false);
 
         const result = await lobbyRepository.deleteLobby(999);
@@ -274,7 +274,7 @@ describe('LobbyRepository', () => {
       });
 
       it('should handle deletion errors', async () => {
-        const mockDelete = ((BaseRepository.prototype as any).delete as jest.Mock);
+        const mockDelete = ((BaseRepository.prototype as any).delete as vi.Mock);
         (mockDelete as any).mockRejectedValue(new Error('Foreign key constraint violation'));
 
         await expect(lobbyRepository.deleteLobby(1)).rejects.toThrow('Foreign key constraint violation');
@@ -383,7 +383,7 @@ describe('LobbyRepository', () => {
   describe('Lobby Status Management', () => {
     describe('updateLobbyStatus', () => {
       it('should update lobby status to playing and set started_at', async () => {
-        const mockUpdate = jest.spyOn(lobbyRepository, 'updateLobby');
+        const mockUpdate = vi.spyOn(lobbyRepository, 'updateLobby');
         const playingLobby = { ...mockLobby, status: 'playing' as const, started_at: expect.any(Date) };
         mockUpdate.mockResolvedValue(playingLobby);
 
@@ -397,7 +397,7 @@ describe('LobbyRepository', () => {
       });
 
       it('should update lobby status to ended and set ended_at', async () => {
-        const mockUpdate = jest.spyOn(lobbyRepository, 'updateLobby');
+        const mockUpdate = vi.spyOn(lobbyRepository, 'updateLobby');
         const endedLobby = { ...mockLobby, status: 'ended' as const, ended_at: expect.any(Date) };
         mockUpdate.mockResolvedValue(endedLobby);
 
@@ -411,7 +411,7 @@ describe('LobbyRepository', () => {
       });
 
       it('should update lobby status to waiting without timestamp', async () => {
-        const mockUpdate = jest.spyOn(lobbyRepository, 'updateLobby');
+        const mockUpdate = vi.spyOn(lobbyRepository, 'updateLobby');
         const waitingLobby = { ...mockLobby, status: 'waiting' as const };
         mockUpdate.mockResolvedValue(waitingLobby);
 
@@ -424,7 +424,7 @@ describe('LobbyRepository', () => {
       });
 
       it('should update lobby status to starting without timestamp', async () => {
-        const mockUpdate = jest.spyOn(lobbyRepository, 'updateLobby');
+        const mockUpdate = vi.spyOn(lobbyRepository, 'updateLobby');
         const startingLobby = { ...mockLobby, status: 'starting' as const };
         mockUpdate.mockResolvedValue(startingLobby);
 
@@ -437,7 +437,7 @@ describe('LobbyRepository', () => {
       });
 
       it('should return null when lobby not found for status update', async () => {
-        const mockUpdate = jest.spyOn(lobbyRepository, 'updateLobby');
+        const mockUpdate = vi.spyOn(lobbyRepository, 'updateLobby');
         (mockUpdate as any).mockResolvedValue(null);
 
         const result = await lobbyRepository.updateLobbyStatus(999, 'playing');
@@ -450,8 +450,8 @@ describe('LobbyRepository', () => {
   describe('Player Management Operations', () => {
     describe('addPlayerToLobby', () => {
       it('should add player to lobby successfully', async () => {
-        const mockFindById = jest.spyOn(lobbyRepository, 'findLobbyById');
-        const mockUpdate = jest.spyOn(lobbyRepository, 'updateLobby');
+        const mockFindById = vi.spyOn(lobbyRepository, 'findLobbyById');
+        const mockUpdate = vi.spyOn(lobbyRepository, 'updateLobby');
 
         mockFindById.mockResolvedValue(mockLobby);
         const updatedLobby = {
@@ -470,8 +470,8 @@ describe('LobbyRepository', () => {
       });
 
       it('should handle lobby with no existing players', async () => {
-        const mockFindById = jest.spyOn(lobbyRepository, 'findLobbyById');
-        const mockUpdate = jest.spyOn(lobbyRepository, 'updateLobby');
+        const mockFindById = vi.spyOn(lobbyRepository, 'findLobbyById');
+        const mockUpdate = vi.spyOn(lobbyRepository, 'updateLobby');
 
         const emptyLobby = { ...mockLobby, players: [] };
         mockFindById.mockResolvedValue(emptyLobby);
@@ -487,8 +487,8 @@ describe('LobbyRepository', () => {
       });
 
       it('should handle lobby with null players array', async () => {
-        const mockFindById = jest.spyOn(lobbyRepository, 'findLobbyById');
-        const mockUpdate = jest.spyOn(lobbyRepository, 'updateLobby');
+        const mockFindById = vi.spyOn(lobbyRepository, 'findLobbyById');
+        const mockUpdate = vi.spyOn(lobbyRepository, 'updateLobby');
 
         const lobbyWithNullPlayers = { ...mockLobby, players: null as any };
         mockFindById.mockResolvedValue(lobbyWithNullPlayers);
@@ -504,7 +504,7 @@ describe('LobbyRepository', () => {
       });
 
       it('should return null when lobby not found', async () => {
-        const mockFindById = jest.spyOn(lobbyRepository, 'findLobbyById');
+        const mockFindById = vi.spyOn(lobbyRepository, 'findLobbyById');
         (mockFindById as any).mockResolvedValue(null);
 
         const result = await lobbyRepository.addPlayerToLobby(999, mockPlayer);
@@ -516,8 +516,8 @@ describe('LobbyRepository', () => {
 
     describe('removePlayerFromLobby', () => {
       it('should remove player from lobby successfully', async () => {
-        const mockFindById = jest.spyOn(lobbyRepository, 'findLobbyById');
-        const mockUpdate = jest.spyOn(lobbyRepository, 'updateLobby');
+        const mockFindById = vi.spyOn(lobbyRepository, 'findLobbyById');
+        const mockUpdate = vi.spyOn(lobbyRepository, 'updateLobby');
 
         const lobbyWithMultiplePlayers = {
           ...mockLobby,
@@ -541,8 +541,8 @@ describe('LobbyRepository', () => {
       });
 
       it('should handle removing non-existent player', async () => {
-        const mockFindById = jest.spyOn(lobbyRepository, 'findLobbyById');
-        const mockUpdate = jest.spyOn(lobbyRepository, 'updateLobby');
+        const mockFindById = vi.spyOn(lobbyRepository, 'findLobbyById');
+        const mockUpdate = vi.spyOn(lobbyRepository, 'updateLobby');
 
         mockFindById.mockResolvedValue(mockLobby);
         (mockUpdate as any).mockResolvedValue(mockLobby); // No change since player doesn't exist
@@ -556,8 +556,8 @@ describe('LobbyRepository', () => {
       });
 
       it('should handle lobby with null players array', async () => {
-        const mockFindById = jest.spyOn(lobbyRepository, 'findLobbyById');
-        const mockUpdate = jest.spyOn(lobbyRepository, 'updateLobby');
+        const mockFindById = vi.spyOn(lobbyRepository, 'findLobbyById');
+        const mockUpdate = vi.spyOn(lobbyRepository, 'updateLobby');
 
         const lobbyWithNullPlayers = { ...mockLobby, players: null as any };
         mockFindById.mockResolvedValue(lobbyWithNullPlayers);
@@ -573,7 +573,7 @@ describe('LobbyRepository', () => {
       });
 
       it('should return null when lobby not found', async () => {
-        const mockFindById = jest.spyOn(lobbyRepository, 'findLobbyById');
+        const mockFindById = vi.spyOn(lobbyRepository, 'findLobbyById');
         (mockFindById as any).mockResolvedValue(null);
 
         const result = await lobbyRepository.removePlayerFromLobby(999, 'user_1');
@@ -585,8 +585,8 @@ describe('LobbyRepository', () => {
 
     describe('updatePlayerInLobby', () => {
       it('should update player in lobby successfully', async () => {
-        const mockFindById = jest.spyOn(lobbyRepository, 'findLobbyById');
-        const mockUpdate = jest.spyOn(lobbyRepository, 'updateLobby');
+        const mockFindById = vi.spyOn(lobbyRepository, 'findLobbyById');
+        const mockUpdate = vi.spyOn(lobbyRepository, 'updateLobby');
 
         mockFindById.mockResolvedValue(mockLobby);
         const playerUpdate = { isReady: true, score: 100 };
@@ -607,8 +607,8 @@ describe('LobbyRepository', () => {
       });
 
       it('should handle updating non-existent player', async () => {
-        const mockFindById = jest.spyOn(lobbyRepository, 'findLobbyById');
-        const mockUpdate = jest.spyOn(lobbyRepository, 'updateLobby');
+        const mockFindById = vi.spyOn(lobbyRepository, 'findLobbyById');
+        const mockUpdate = vi.spyOn(lobbyRepository, 'updateLobby');
 
         mockFindById.mockResolvedValue(mockLobby);
         (mockUpdate as any).mockResolvedValue(mockLobby); // No change since player doesn't exist
@@ -622,8 +622,8 @@ describe('LobbyRepository', () => {
       });
 
       it('should handle lobby with null players array', async () => {
-        const mockFindById = jest.spyOn(lobbyRepository, 'findLobbyById');
-        const mockUpdate = jest.spyOn(lobbyRepository, 'updateLobby');
+        const mockFindById = vi.spyOn(lobbyRepository, 'findLobbyById');
+        const mockUpdate = vi.spyOn(lobbyRepository, 'updateLobby');
 
         const lobbyWithNullPlayers = { ...mockLobby, players: null as any };
         mockFindById.mockResolvedValue(lobbyWithNullPlayers);
@@ -639,7 +639,7 @@ describe('LobbyRepository', () => {
       });
 
       it('should return null when lobby not found', async () => {
-        const mockFindById = jest.spyOn(lobbyRepository, 'findLobbyById');
+        const mockFindById = vi.spyOn(lobbyRepository, 'findLobbyById');
         (mockFindById as any).mockResolvedValue(null);
 
         const result = await lobbyRepository.updatePlayerInLobby(999, 'user_1', { score: 100 });
@@ -649,8 +649,8 @@ describe('LobbyRepository', () => {
       });
 
       it('should handle partial player updates', async () => {
-        const mockFindById = jest.spyOn(lobbyRepository, 'findLobbyById');
-        const mockUpdate = jest.spyOn(lobbyRepository, 'updateLobby');
+        const mockFindById = vi.spyOn(lobbyRepository, 'findLobbyById');
+        const mockUpdate = vi.spyOn(lobbyRepository, 'updateLobby');
 
         mockFindById.mockResolvedValue(mockLobby);
         const partialUpdate = { isReady: true };
@@ -674,7 +674,7 @@ describe('LobbyRepository', () => {
   describe('Utility and Statistical Operations', () => {
     describe('codeExists', () => {
       it('should return true when lobby code exists', async () => {
-        const mockExists = jest.spyOn(BaseRepository.prototype as any, 'exists');
+        const mockExists = vi.spyOn(BaseRepository.prototype as any, 'exists');
         mockExists.mockResolvedValue(true);
 
         const result = await lobbyRepository.codeExists('ABC123');
@@ -684,7 +684,7 @@ describe('LobbyRepository', () => {
       });
 
       it('should return false when lobby code does not exist', async () => {
-        const mockExists = jest.spyOn(BaseRepository.prototype as any, 'exists');
+        const mockExists = vi.spyOn(BaseRepository.prototype as any, 'exists');
         mockExists.mockResolvedValue(false);
 
         const result = await lobbyRepository.codeExists('NONEXISTENT');
@@ -696,7 +696,7 @@ describe('LobbyRepository', () => {
 
     describe('getLobbyCount', () => {
       it('should return total lobby count', async () => {
-        (((BaseRepository.prototype as any).count as jest.Mock) as any).mockResolvedValue(25);
+        (((BaseRepository.prototype as any).count as vi.Mock) as any).mockResolvedValue(25);
 
         const result = await lobbyRepository.getLobbyCount();
 
@@ -705,7 +705,7 @@ describe('LobbyRepository', () => {
       });
 
       it('should return zero when no lobbies', async () => {
-        (((BaseRepository.prototype as any).count as jest.Mock) as any).mockResolvedValue(0);
+        (((BaseRepository.prototype as any).count as vi.Mock) as any).mockResolvedValue(0);
 
         const result = await lobbyRepository.getLobbyCount();
 
@@ -715,7 +715,7 @@ describe('LobbyRepository', () => {
 
     describe('getActiveLobbyCount', () => {
       it('should return active lobby count', async () => {
-        (((BaseRepository.prototype as any).count as jest.Mock) as any).mockResolvedValue(15);
+        (((BaseRepository.prototype as any).count as vi.Mock) as any).mockResolvedValue(15);
 
         const result = await lobbyRepository.getActiveLobbyCount();
 
@@ -864,7 +864,7 @@ describe('LobbyRepository', () => {
     });
 
     it('should handle malformed JSON in settings', async () => {
-      const mockUpdate = ((BaseRepository.prototype as any).update as jest.Mock);
+      const mockUpdate = ((BaseRepository.prototype as any).update as vi.Mock);
       const malformedSettings = { invalidJson: 'test' };
       (mockUpdate as any).mockResolvedValue(mockLobby);
 
@@ -898,7 +898,7 @@ describe('LobbyRepository', () => {
     });
 
     it('should handle negative lobby IDs', async () => {
-      const mockFindById = ((BaseRepository.prototype as any).findById as jest.Mock);
+      const mockFindById = ((BaseRepository.prototype as any).findById as vi.Mock);
       (mockFindById as any).mockResolvedValue(null);
 
       const result = await lobbyRepository.findLobbyById(-1);
@@ -921,7 +921,7 @@ describe('LobbyRepository', () => {
     });
 
     it('should handle null settings gracefully', async () => {
-      const mockUpdate = ((BaseRepository.prototype as any).update as jest.Mock);
+      const mockUpdate = ((BaseRepository.prototype as any).update as vi.Mock);
       (mockUpdate as any).mockResolvedValue(mockLobby);
 
       await lobbyRepository.updateLobby(1, { settings: null as any });
@@ -974,8 +974,8 @@ describe('LobbyRepository', () => {
 
     it('should handle large player arrays efficiently', async () => {
       const largePlayers = Array(100).fill(mockPlayer);
-      const mockFindById = jest.spyOn(lobbyRepository, 'findLobbyById');
-      const mockUpdate = jest.spyOn(lobbyRepository, 'updateLobby');
+      const mockFindById = vi.spyOn(lobbyRepository, 'findLobbyById');
+      const mockUpdate = vi.spyOn(lobbyRepository, 'updateLobby');
 
       const lobbyWithManyPlayers = { ...mockLobby, players: largePlayers };
       mockFindById.mockResolvedValue(lobbyWithManyPlayers);
@@ -1017,7 +1017,7 @@ describe('LobbyRepository', () => {
 
     it('should handle all lobby statuses', async () => {
       const statuses: Array<Lobby['status']> = ['waiting', 'starting', 'playing', 'ended'];
-      const mockUpdate = jest.spyOn(lobbyRepository, 'updateLobby');
+      const mockUpdate = vi.spyOn(lobbyRepository, 'updateLobby');
 
       for (const status of statuses) {
         mockUpdate.mockResolvedValue({ ...mockLobby, status });
@@ -1044,7 +1044,7 @@ describe('LobbyRepository', () => {
         }
       };
 
-      const mockUpdate = ((BaseRepository.prototype as any).update as jest.Mock);
+      const mockUpdate = ((BaseRepository.prototype as any).update as vi.Mock);
       (mockUpdate as any).mockResolvedValue({ ...mockLobby, settings: complexSettings });
 
       const result = await lobbyRepository.updateLobby(1, { settings: complexSettings });
@@ -1054,8 +1054,8 @@ describe('LobbyRepository', () => {
     });
 
     it('should handle edge case player counts', async () => {
-      const mockFindById = jest.spyOn(lobbyRepository, 'findLobbyById');
-      const mockUpdate = jest.spyOn(lobbyRepository, 'updateLobby');
+      const mockFindById = vi.spyOn(lobbyRepository, 'findLobbyById');
+      const mockUpdate = vi.spyOn(lobbyRepository, 'updateLobby');
 
       // Test with maximum players (8)
       const maxPlayers = Array(8).fill(null).map((_, i) => ({
@@ -1083,7 +1083,7 @@ describe('LobbyRepository', () => {
 
   describe('Complex Scenarios', () => {
     it('should handle lobby lifecycle transitions', async () => {
-      const mockUpdate = jest.spyOn(lobbyRepository, 'updateLobby');
+      const mockUpdate = vi.spyOn(lobbyRepository, 'updateLobby');
 
       // Simulate complete lobby lifecycle
       const transitions = [
@@ -1109,8 +1109,8 @@ describe('LobbyRepository', () => {
     });
 
     it('should handle multiple player operations in sequence', async () => {
-      const mockFindById = jest.spyOn(lobbyRepository, 'findLobbyById');
-      const mockUpdate = jest.spyOn(lobbyRepository, 'updateLobby');
+      const mockFindById = vi.spyOn(lobbyRepository, 'findLobbyById');
+      const mockUpdate = vi.spyOn(lobbyRepository, 'updateLobby');
 
       // Start with empty lobby
       let currentLobby = { ...mockLobby, players: [] };

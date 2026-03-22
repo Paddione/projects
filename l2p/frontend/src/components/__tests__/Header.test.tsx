@@ -1,47 +1,46 @@
 import React from 'react'
-import { describe, it, expect, beforeEach, jest } from '@jest/globals'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
-import '@testing-library/jest-dom/jest-globals'
 import { MemoryRouter } from 'react-router-dom'
 import { Header } from '../Header'
 import { apiService } from '../../services/apiService'
 
 // Mock dependencies
-jest.mock('../../services/apiService', () => ({
+vi.mock('../../services/apiService', () => ({
   apiService: {
-    getCurrentUser: jest.fn(),
-    logout: jest.fn(),
-    clearAuth: jest.fn(),
+    getCurrentUser: vi.fn(),
+    logout: vi.fn(),
+    clearAuth: vi.fn(),
   },
 }))
 
-jest.mock('../ThemeProvider', () => ({
+vi.mock('../ThemeProvider', () => ({
   useTheme: () => ({
     theme: 'light',
-    toggleTheme: jest.fn(),
+    toggleTheme: vi.fn(),
   }),
 }))
 
-jest.mock('../../hooks/useAudio', () => ({
+vi.mock('../../hooks/useAudio', () => ({
   useAudio: () => ({
     masterVolume: 0.7,
-    setMasterVolume: jest.fn(),
+    setMasterVolume: vi.fn(),
     isMuted: false,
-    setIsMuted: jest.fn(),
-    handleMenuSelect: jest.fn(),
-    handleMenuConfirm: jest.fn(),
-    handleMenuCancel: jest.fn(),
-    handleVolumeChange: jest.fn(),
+    setIsMuted: vi.fn(),
+    handleMenuSelect: vi.fn(),
+    handleMenuConfirm: vi.fn(),
+    handleMenuCancel: vi.fn(),
+    handleVolumeChange: vi.fn(),
   }),
 }))
 
 describe('Header', () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
   })
 
   it('should render logo and navigation', () => {
-    jest.mocked(apiService.getCurrentUser).mockReturnValue({
+    vi.mocked(apiService.getCurrentUser).mockReturnValue({
       id: '1',
       username: 'testuser',
       email: 'test@example.com',
@@ -56,7 +55,7 @@ describe('Header', () => {
   })
 
   it('should show admin link for admin users', () => {
-    jest.mocked(apiService.getCurrentUser).mockReturnValue({
+    vi.mocked(apiService.getCurrentUser).mockReturnValue({
       id: '1',
       username: 'admin',
       email: 'admin@example.com',
@@ -69,7 +68,7 @@ describe('Header', () => {
   })
 
   it('should not show admin link for non-admin users', () => {
-    jest.mocked(apiService.getCurrentUser).mockReturnValue({
+    vi.mocked(apiService.getCurrentUser).mockReturnValue({
       id: '1',
       username: 'user',
       email: 'user@example.com',
@@ -82,7 +81,7 @@ describe('Header', () => {
   })
 
   it('should render mute toggle button', () => {
-    jest.mocked(apiService.getCurrentUser).mockReturnValue({
+    vi.mocked(apiService.getCurrentUser).mockReturnValue({
       id: '1',
       username: 'testuser',
       email: 'test@example.com',
@@ -94,7 +93,7 @@ describe('Header', () => {
   })
 
   it('should render volume slider', () => {
-    jest.mocked(apiService.getCurrentUser).mockReturnValue({
+    vi.mocked(apiService.getCurrentUser).mockReturnValue({
       id: '1',
       username: 'testuser',
       email: 'test@example.com',
@@ -106,7 +105,7 @@ describe('Header', () => {
   })
 
   it('should render logout button', () => {
-    jest.mocked(apiService.getCurrentUser).mockReturnValue({
+    vi.mocked(apiService.getCurrentUser).mockReturnValue({
       id: '1',
       username: 'testuser',
       email: 'test@example.com',
@@ -118,12 +117,12 @@ describe('Header', () => {
   })
 
   it('should handle logout successfully', async () => {
-    jest.mocked(apiService.getCurrentUser).mockReturnValue({
+    vi.mocked(apiService.getCurrentUser).mockReturnValue({
       id: '1',
       username: 'testuser',
       email: 'test@example.com',
     })
-    jest.mocked(apiService.logout).mockResolvedValue({ success: true })
+    vi.mocked(apiService.logout).mockResolvedValue({ success: true })
 
     render(<MemoryRouter><Header /></MemoryRouter>)
 
@@ -135,12 +134,12 @@ describe('Header', () => {
   })
 
   it('should handle logout error by clearing auth and reloading', async () => {
-    jest.mocked(apiService.getCurrentUser).mockReturnValue({
+    vi.mocked(apiService.getCurrentUser).mockReturnValue({
       id: '1',
       username: 'testuser',
       email: 'test@example.com',
     })
-    jest.mocked(apiService.logout).mockRejectedValue(new Error('Logout failed'))
+    vi.mocked(apiService.logout).mockRejectedValue(new Error('Logout failed'))
 
     render(<MemoryRouter><Header /></MemoryRouter>)
 

@@ -1,18 +1,18 @@
-import { describe, beforeEach, it, expect, jest } from '@jest/globals';
+import { describe, beforeEach, it, expect, vi } from 'vitest';
 import { EmailService } from '../EmailService';
 import nodemailer from 'nodemailer';
 
-// Do not use static jest.mock for nodemailer in ESM; we'll spy on createTransport in beforeEach
+// Do not use static vi.mock for nodemailer in ESM; we'll spy on createTransport in beforeEach
 
 describe('EmailService', () => {
   let emailService: EmailService;
-  let mockTransporter: jest.Mocked<nodemailer.Transporter>;
-  let mockCreateTransport: jest.MockedFunction<typeof nodemailer.createTransport>;
-  let createTransportSpy: jest.SpiedFunction<typeof nodemailer.createTransport>;
+  let mockTransporter: vi.Mocked<nodemailer.Transporter>;
+  let mockCreateTransport: vi.MockedFunction<typeof nodemailer.createTransport>;
+  let createTransportSpy: vi.MockedFunction<typeof nodemailer.createTransport>;
 
   beforeEach(() => {
     // Clear all mocks
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     // Mock environment variables
     process.env.SMTP_HOST = 'smtp.test.com';
@@ -25,13 +25,13 @@ describe('EmailService', () => {
 
     // Mock transporter methods
     mockTransporter = {
-      sendMail: jest.fn(),
-      verify: jest.fn(),
+      sendMail: vi.fn(),
+      verify: vi.fn(),
     } as any;
 
     // Spy on nodemailer.createTransport in ESM
-    createTransportSpy = jest.spyOn(nodemailer as any, 'createTransport');
-    mockCreateTransport = createTransportSpy as unknown as jest.MockedFunction<typeof nodemailer.createTransport>;
+    createTransportSpy = vi.spyOn(nodemailer as any, 'createTransport');
+    mockCreateTransport = createTransportSpy as unknown as vi.MockedFunction<typeof nodemailer.createTransport>;
     createTransportSpy.mockReturnValue(mockTransporter as any);
 
     // Create EmailService instance
@@ -81,9 +81,9 @@ describe('EmailService', () => {
       delete process.env.EMAIL_SENDER_NAME;
 
       // Clear the mock to reset call count
-      jest.clearAllMocks();
+      vi.clearAllMocks();
 
-      const consoleSpy = jest.spyOn(console, 'warn').mockImplementation(() => { });
+      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => { });
 
       new EmailService();
 
@@ -98,7 +98,7 @@ describe('EmailService', () => {
         throw new Error('Connection failed');
       });
 
-      const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => { });
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => { });
 
       new EmailService();
 
@@ -108,7 +108,7 @@ describe('EmailService', () => {
     });
 
     it('should log successful initialization', () => {
-      const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => { });
+      const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => { });
 
       new EmailService();
 
@@ -387,7 +387,7 @@ describe('EmailService', () => {
       it('should send welcome email successfully', async () => {
         const mockResult = { messageId: 'welcome-message-123' };
         mockTransporter.sendMail.mockResolvedValue(mockResult);
-        const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => { });
+        const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => { });
 
         await emailService.sendWelcomeEmail('user@example.com', 'testuser');
 
@@ -400,7 +400,7 @@ describe('EmailService', () => {
       it('should send password reset email successfully', async () => {
         const mockResult = { messageId: 'reset-message-456' };
         mockTransporter.sendMail.mockResolvedValue(mockResult);
-        const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => { });
+        const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => { });
 
         await emailService.sendPasswordResetEmail('user@example.com', 'testuser', 'temp123!', "reset-token");
 
@@ -413,7 +413,7 @@ describe('EmailService', () => {
       it('should send email verification successfully', async () => {
         const mockResult = { messageId: 'verify-message-789' };
         mockTransporter.sendMail.mockResolvedValue(mockResult);
-        const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => { });
+        const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => { });
 
         await emailService.sendEmailVerificationEmail('user@example.com', 'testuser', 'verify-token');
 
@@ -428,7 +428,7 @@ describe('EmailService', () => {
       it('should handle SMTP connection errors', async () => {
         const smtpError = new Error('SMTP connection failed');
         mockTransporter.sendMail.mockRejectedValue(smtpError);
-        const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => { });
+        const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => { });
 
         await expect(emailService.sendWelcomeEmail('user@example.com', 'testuser'))
           .rejects.toThrow('Failed to send email: SMTP connection failed');
@@ -482,7 +482,7 @@ describe('EmailService', () => {
       });
 
       it('should log warning when sending welcome email with disabled service', async () => {
-        const consoleSpy = jest.spyOn(console, 'warn').mockImplementation(() => { });
+        const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => { });
 
         await emailServiceDisabled.sendWelcomeEmail('user@example.com', 'testuser');
 
@@ -495,7 +495,7 @@ describe('EmailService', () => {
       });
 
       it('should log warning when sending password reset with disabled service', async () => {
-        const consoleSpy = jest.spyOn(console, 'warn').mockImplementation(() => { });
+        const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => { });
 
         await emailServiceDisabled.sendPasswordResetEmail('user@example.com', 'testuser', 'temp123!', "reset-token");
 
@@ -507,7 +507,7 @@ describe('EmailService', () => {
       });
 
       it('should log warning when sending verification email with disabled service', async () => {
-        const consoleSpy = jest.spyOn(console, 'warn').mockImplementation(() => { });
+        const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => { });
 
         await emailServiceDisabled.sendEmailVerificationEmail('user@example.com', 'testuser', 'token');
 
@@ -524,7 +524,7 @@ describe('EmailService', () => {
     describe('testConnection', () => {
       it('should return true for successful connection test', async () => {
         mockTransporter.verify.mockResolvedValue(true);
-        const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => { });
+        const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => { });
 
         const result = await emailService.testConnection();
 
@@ -538,7 +538,7 @@ describe('EmailService', () => {
       it('should return false for failed connection test', async () => {
         const connectionError = new Error('Connection failed');
         mockTransporter.verify.mockRejectedValue(connectionError);
-        const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => { });
+        const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => { });
 
         const result = await emailService.testConnection();
 
@@ -553,7 +553,7 @@ describe('EmailService', () => {
         delete process.env.SMTP_PASS;
 
         const emailServiceDisabled = new EmailService();
-        const consoleSpy = jest.spyOn(console, 'warn').mockImplementation(() => { });
+        const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => { });
 
         const result = await emailServiceDisabled.testConnection();
 
@@ -568,7 +568,7 @@ describe('EmailService', () => {
     describe('testConnectionDetailed', () => {
       it('should return success details for successful connection', async () => {
         mockTransporter.verify.mockResolvedValue(true);
-        const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => { });
+        const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => { });
 
         const result = await emailService.testConnectionDetailed();
 
@@ -581,7 +581,7 @@ describe('EmailService', () => {
       it('should return error details for failed connection', async () => {
         const connectionError = new Error('Detailed connection failed');
         mockTransporter.verify.mockRejectedValue(connectionError);
-        const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => { });
+        const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => { });
 
         const result = await emailService.testConnectionDetailed();
 
@@ -613,7 +613,7 @@ describe('EmailService', () => {
 
       it('should handle unknown error types', async () => {
         mockTransporter.verify.mockRejectedValue('Unknown error string');
-        const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => { });
+        const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => { });
 
         const result = await emailService.testConnectionDetailed();
 
@@ -669,7 +669,7 @@ describe('EmailService', () => {
     it('should handle rate limiting errors appropriately', async () => {
       const rateLimitError = new Error('Rate limit exceeded - too many requests');
       mockTransporter.sendMail.mockRejectedValue(rateLimitError);
-      const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => { });
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => { });
 
       await expect(emailService.sendWelcomeEmail('user@example.com', 'testuser'))
         .rejects.toThrow('Failed to send email: Rate limit exceeded - too many requests');

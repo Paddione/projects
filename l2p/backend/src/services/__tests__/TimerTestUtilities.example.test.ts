@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { TimerTestUtils, AsyncCleanupTestUtils, ConsoleTestUtils } from '../../../../../shared-infrastructure/shared/l2p/test-utils/timer-test-utils';
 
 // Skip this entire suite during coverage runs or when explicitly requested
@@ -131,9 +131,9 @@ d('Timer Test Utilities - Examples and Verification', () => {
     it('should test interval execution multiple times', async () => {
       mockService.startInterval('interval-test', 500);
 
-      // Run for 2.5 seconds using jest.advanceTimersByTime directly
+      // Run for 2.5 seconds using vi.advanceTimersByTime directly
       // (advanceTimersByTimeAsync also runs pending timers which may fire extra ticks)
-      jest.advanceTimersByTime(2500);
+      vi.advanceTimersByTime(2500);
 
       // At 500ms intervals over 2500ms: fires at 500, 1000, 1500, 2000, 2500 = 5 times
       expect(consoleCapture.logs.filter(log =>
@@ -362,7 +362,7 @@ d('Timer Test Utilities - Examples and Verification', () => {
 
       // Advance time by 600ms using jest directly (not advanceTimersByTimeAsync
       // which also runs pending timers and may fire additional interval ticks)
-      jest.advanceTimersByTime(600);
+      vi.advanceTimersByTime(600);
 
       // Should have executed: quick (100ms), medium (500ms), and 3 intervals (200ms, 400ms, 600ms)
       expect(consoleCapture.logs.filter(log => log.includes('quick executed'))).toHaveLength(1);

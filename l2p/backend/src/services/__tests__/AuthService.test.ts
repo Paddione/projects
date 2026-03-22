@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { AuthService } from '../AuthService';
 import { UserRepository } from '../../repositories/UserRepository';
 import { EmailService } from '../EmailService';
@@ -16,13 +16,13 @@ type TokenPayload = {
 };
 
 // Mock the dependencies
-jest.mock('../../repositories/UserRepository');
-jest.mock('../EmailService');
-jest.mock('crypto');
+vi.mock('../../repositories/UserRepository');
+vi.mock('../EmailService');
+vi.mock('crypto');
 
 // Mock JWT with inline factory
-jest.mock('jsonwebtoken', () => {
-  const mockSign = jest.fn((payload: any, secret: string, options?: any) => {
+vi.mock('jsonwebtoken', () => {
+  const mockSign = vi.fn((payload: any, secret: string, options?: any) => {
     if (secret.includes('refresh') || options?.expiresIn === '7d') {
       return 'mock-refresh-token';
     } else if (options?.expiresIn === '15m' || secret.includes('jwt')) {
@@ -31,7 +31,7 @@ jest.mock('jsonwebtoken', () => {
     return 'mock-token';
   });
 
-  const mockVerify = jest.fn((token: string, secret: string, options?: any) => {
+  const mockVerify = vi.fn((token: string, secret: string, options?: any) => {
     if (token === 'valid-token' || token === 'valid-refresh-token') {
       return {
         userId: 1,
@@ -86,47 +86,47 @@ jest.mock('jsonwebtoken', () => {
 
 // Create explicit mock factory functions
 const createUserRepoMock = () => ({
-  findByUsername: jest.fn(),
-  findByEmail: jest.fn(),
-  findUserById: jest.fn(),
-  createUser: jest.fn(),
-  updateUser: jest.fn(),
-  updateLastLogin: jest.fn(),
-  verifyEmail: jest.fn(),
-  setEmailVerificationToken: jest.fn(),
-  findByPasswordResetToken: jest.fn(),
-  resetPassword: jest.fn(),
-  clearPasswordResetToken: jest.fn(),
-  findByEmailVerificationToken: jest.fn(),
-  setPasswordResetToken: jest.fn(),
-  deleteUser: jest.fn(),
-  findAllUsers: jest.fn(),
-  listUsersPaginated: jest.fn(),
-  findActiveUsers: jest.fn(),
-  usernameExists: jest.fn(),
-  emailExists: jest.fn(),
-  getUserCount: jest.fn(),
-  getActiveUserCount: jest.fn(),
-  searchUsers: jest.fn(),
-  updatePreferences: jest.fn(),
-  getUsersByTimezone: jest.fn(),
-  incrementFailedLoginAttempts: jest.fn(),
-  resetFailedLoginAttempts: jest.fn(),
-  lockAccount: jest.fn(),
-  addToBlacklist: jest.fn(),
-  isTokenBlacklisted: jest.fn(),
+  findByUsername: vi.fn(),
+  findByEmail: vi.fn(),
+  findUserById: vi.fn(),
+  createUser: vi.fn(),
+  updateUser: vi.fn(),
+  updateLastLogin: vi.fn(),
+  verifyEmail: vi.fn(),
+  setEmailVerificationToken: vi.fn(),
+  findByPasswordResetToken: vi.fn(),
+  resetPassword: vi.fn(),
+  clearPasswordResetToken: vi.fn(),
+  findByEmailVerificationToken: vi.fn(),
+  setPasswordResetToken: vi.fn(),
+  deleteUser: vi.fn(),
+  findAllUsers: vi.fn(),
+  listUsersPaginated: vi.fn(),
+  findActiveUsers: vi.fn(),
+  usernameExists: vi.fn(),
+  emailExists: vi.fn(),
+  getUserCount: vi.fn(),
+  getActiveUserCount: vi.fn(),
+  searchUsers: vi.fn(),
+  updatePreferences: vi.fn(),
+  getUsersByTimezone: vi.fn(),
+  incrementFailedLoginAttempts: vi.fn(),
+  resetFailedLoginAttempts: vi.fn(),
+  lockAccount: vi.fn(),
+  addToBlacklist: vi.fn(),
+  isTokenBlacklisted: vi.fn(),
 });
 
 const createEmailServiceMock = () => ({
-  sendEmailVerificationEmail: jest.fn(),
-  sendWelcomeEmail: jest.fn(),
-  sendPasswordResetEmail: jest.fn(),
+  sendEmailVerificationEmail: vi.fn(),
+  sendWelcomeEmail: vi.fn(),
+  sendPasswordResetEmail: vi.fn(),
 });
 
 describe('AuthService', () => {
   let authService: AuthService;
-  let mockUserRepository: jest.Mocked<UserRepository>;
-  let mockEmailService: jest.Mocked<EmailService>;
+  let mockUserRepository: vi.Mocked<UserRepository>;
+  let mockEmailService: vi.Mocked<EmailService>;
 
   // JWT and crypto are mocked via __mocks__ files
 
@@ -167,15 +167,15 @@ describe('AuthService', () => {
 
   beforeEach(() => {
     // Clear all mocks
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     
     // Mock crypto.randomBytes
-    jest.spyOn(crypto, 'randomBytes').mockImplementation((size: number) => ({
-      toString: jest.fn().mockReturnValue(`mock-token-${size}`)
+    vi.spyOn(crypto, 'randomBytes').mockImplementation((size: number) => ({
+      toString: vi.fn().mockReturnValue(`mock-token-${size}`)
     } as any));
 
     // Mock JWT functions directly on the imported module
-    (jwt.sign as jest.Mock) = jest.fn((payload: any, secret: string, options?: any) => {
+    (jwt.sign as vi.Mock) = vi.fn((payload: any, secret: string, options?: any) => {
       if (secret.includes('refresh') || options?.expiresIn === '7d') {
         return 'mock-refresh-token';
       } else if (options?.expiresIn === '15m' || secret.includes('jwt')) {
@@ -184,7 +184,7 @@ describe('AuthService', () => {
       return 'mock-token';
     });
 
-    (jwt.verify as jest.Mock) = jest.fn((token: string, secret: string, options?: any) => {
+    (jwt.verify as vi.Mock) = vi.fn((token: string, secret: string, options?: any) => {
       if (token === 'valid-token' || token === 'valid-refresh-token') {
         return {
           userId: 1,
@@ -199,8 +199,8 @@ describe('AuthService', () => {
     });
 
     // Setup mocks using factory functions
-    mockUserRepository = createUserRepoMock() as unknown as jest.Mocked<UserRepository>;
-    mockEmailService = createEmailServiceMock() as unknown as jest.Mocked<EmailService>;
+    mockUserRepository = createUserRepoMock() as unknown as vi.Mocked<UserRepository>;
+    mockEmailService = createEmailServiceMock() as unknown as vi.Mocked<EmailService>;
 
     // Create AuthService instance
     authService = new AuthService();

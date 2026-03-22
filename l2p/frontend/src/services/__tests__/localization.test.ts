@@ -1,21 +1,21 @@
-import { describe, it, expect, beforeEach, afterEach } from '@jest/globals'
+import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { LocalizationService, localizationService } from '../localization'
 
 describe('LocalizationService', () => {
   let service: LocalizationService
   let localStorageMock: { [key: string]: string }
-  let getItemSpy: jest.SpyInstance
-  let setItemSpy: jest.SpyInstance
-  let removeItemSpy: jest.SpyInstance
+  let getItemSpy: vi.SpyInstance
+  let setItemSpy: vi.SpyInstance
+  let removeItemSpy: vi.SpyInstance
 
   beforeEach(() => {
     // Mock localStorage
     localStorageMock = {}
-    getItemSpy = jest.spyOn(window.localStorage, 'getItem').mockImplementation((key: string) => localStorageMock[key] || null)
-    setItemSpy = jest.spyOn(window.localStorage, 'setItem').mockImplementation((key: string, value: string) => {
+    getItemSpy = vi.spyOn(window.localStorage, 'getItem').mockImplementation((key: string) => localStorageMock[key] || null)
+    setItemSpy = vi.spyOn(window.localStorage, 'setItem').mockImplementation((key: string, value: string) => {
       localStorageMock[key] = value
     })
-    removeItemSpy = jest.spyOn(window.localStorage, 'removeItem').mockImplementation((key: string) => {
+    removeItemSpy = vi.spyOn(window.localStorage, 'removeItem').mockImplementation((key: string) => {
       delete localStorageMock[key]
     })
 

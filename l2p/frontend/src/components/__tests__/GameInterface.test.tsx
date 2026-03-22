@@ -1,7 +1,6 @@
 import React from 'react'
-import { describe, it, expect, beforeEach, jest } from '@jest/globals'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
-import '@testing-library/jest-dom/jest-globals'
 import { GameInterface } from '../GameInterface'
 import { useGameStore } from '../../stores/gameStore'
 import { socketService } from '../../services/socketService'
@@ -9,40 +8,40 @@ import { navigationService } from '../../services/navigationService'
 import { apiService } from '../../services/apiService'
 
 // Mock dependencies
-jest.mock('../../stores/gameStore')
-jest.mock('../../services/socketService', () => ({
+vi.mock('../../stores/gameStore')
+vi.mock('../../services/socketService', () => ({
   socketService: {
-    isConnected: jest.fn(),
-    connect: jest.fn(),
-    createLobby: jest.fn(),
-    joinLobby: jest.fn(),
+    isConnected: vi.fn(),
+    connect: vi.fn(),
+    createLobby: vi.fn(),
+    joinLobby: vi.fn(),
   },
 }))
-jest.mock('../../services/navigationService', () => ({
+vi.mock('../../services/navigationService', () => ({
   navigationService: {
-    navigateToLobby: jest.fn(),
+    navigateToLobby: vi.fn(),
   },
 }))
-jest.mock('../../services/apiService', () => ({
+vi.mock('../../services/apiService', () => ({
   apiService: {
-    isAuthenticated: jest.fn(),
+    isAuthenticated: vi.fn(),
   },
 }))
 
-jest.mock('../../hooks/useAudio', () => ({
+vi.mock('../../hooks/useAudio', () => ({
   useAudio: () => ({
-    handleMenuSelect: jest.fn(),
-    handleMenuConfirm: jest.fn(),
-    handleMenuCancel: jest.fn(),
-    handleButtonHover: jest.fn(),
+    handleMenuSelect: vi.fn(),
+    handleMenuConfirm: vi.fn(),
+    handleMenuCancel: vi.fn(),
+    handleButtonHover: vi.fn(),
   }),
 }))
 
 describe('GameInterface', () => {
-  const mockSetLobbyCode = jest.fn()
-  const mockSetIsHost = jest.fn()
-  const mockSetLoading = jest.fn()
-  const mockSetError = jest.fn()
+  const mockSetLobbyCode = vi.fn()
+  const mockSetIsHost = vi.fn()
+  const mockSetLoading = vi.fn()
+  const mockSetError = vi.fn()
   const buildLobby = (code: string) => ({
     id: 1,
     code,
@@ -59,10 +58,10 @@ describe('GameInterface', () => {
   })
 
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
 
     // Mock game store
-    jest.mocked(useGameStore).mockReturnValue({
+    vi.mocked(useGameStore).mockReturnValue({
       lobbyCode: null,
       isHost: false,
       isLoading: false,
@@ -74,11 +73,11 @@ describe('GameInterface', () => {
     } as any)
 
     // Mock API service
-    jest.mocked(apiService.isAuthenticated).mockReturnValue(true)
+    vi.mocked(apiService.isAuthenticated).mockReturnValue(true)
 
     // Mock socket service
-    jest.mocked(socketService.isConnected).mockReturnValue(true)
-    jest.mocked(socketService.connect).mockReturnValue(undefined)
+    vi.mocked(socketService.isConnected).mockReturnValue(true)
+    vi.mocked(socketService.connect).mockReturnValue(undefined)
   })
 
   describe('Rendering', () => {
@@ -115,11 +114,11 @@ describe('GameInterface', () => {
 
   describe('Create Lobby', () => {
     it('should create lobby successfully', async () => {
-      jest.mocked(socketService.createLobby).mockResolvedValue({
+      vi.mocked(socketService.createLobby).mockResolvedValue({
         success: true,
         data: buildLobby('ABC123'),
       })
-      jest.mocked(navigationService.navigateToLobby).mockResolvedValue()
+      vi.mocked(navigationService.navigateToLobby).mockResolvedValue()
 
       render(<GameInterface />)
 
@@ -140,12 +139,12 @@ describe('GameInterface', () => {
     })
 
     it('should connect to socket if not connected', async () => {
-      jest.mocked(socketService.isConnected).mockReturnValue(false)
-      jest.mocked(socketService.createLobby).mockResolvedValue({
+      vi.mocked(socketService.isConnected).mockReturnValue(false)
+      vi.mocked(socketService.createLobby).mockResolvedValue({
         success: true,
         data: buildLobby('ABC123'),
       })
-      jest.mocked(navigationService.navigateToLobby).mockResolvedValue()
+      vi.mocked(navigationService.navigateToLobby).mockResolvedValue()
 
       render(<GameInterface />)
 
@@ -157,7 +156,7 @@ describe('GameInterface', () => {
     })
 
     it('should show error when not authenticated', async () => {
-      jest.mocked(apiService.isAuthenticated).mockReturnValue(false)
+      vi.mocked(apiService.isAuthenticated).mockReturnValue(false)
 
       render(<GameInterface />)
 
@@ -170,7 +169,7 @@ describe('GameInterface', () => {
     })
 
     it('should handle create lobby error', async () => {
-      jest.mocked(socketService.createLobby).mockRejectedValue(new Error('Network error'))
+      vi.mocked(socketService.createLobby).mockRejectedValue(new Error('Network error'))
 
       render(<GameInterface />)
 
@@ -183,7 +182,7 @@ describe('GameInterface', () => {
     })
 
     it('should show loading state during creation', async () => {
-      jest.mocked(useGameStore).mockReturnValue({
+      vi.mocked(useGameStore).mockReturnValue({
         lobbyCode: null,
         isHost: false,
         isLoading: true,
@@ -204,11 +203,11 @@ describe('GameInterface', () => {
 
   describe('Join Lobby', () => {
     it('should join lobby successfully', async () => {
-      jest.mocked(socketService.joinLobby).mockResolvedValue({
+      vi.mocked(socketService.joinLobby).mockResolvedValue({
         success: true,
         data: buildLobby('XYZ789'),
       })
-      jest.mocked(navigationService.navigateToLobby).mockResolvedValue()
+      vi.mocked(navigationService.navigateToLobby).mockResolvedValue()
 
       render(<GameInterface />)
 
@@ -274,7 +273,7 @@ describe('GameInterface', () => {
     })
 
     it('should show error when not authenticated', async () => {
-      jest.mocked(apiService.isAuthenticated).mockReturnValue(false)
+      vi.mocked(apiService.isAuthenticated).mockReturnValue(false)
 
       render(<GameInterface />)
 
@@ -291,7 +290,7 @@ describe('GameInterface', () => {
     })
 
     it('should handle join lobby error', async () => {
-      jest.mocked(socketService.joinLobby).mockRejectedValue(new Error('Lobby not found'))
+      vi.mocked(socketService.joinLobby).mockRejectedValue(new Error('Lobby not found'))
 
       render(<GameInterface />)
 
@@ -308,12 +307,12 @@ describe('GameInterface', () => {
     })
 
     it('should connect to socket if not connected before joining', async () => {
-      jest.mocked(socketService.isConnected).mockReturnValue(false)
-      jest.mocked(socketService.joinLobby).mockResolvedValue({
+      vi.mocked(socketService.isConnected).mockReturnValue(false)
+      vi.mocked(socketService.joinLobby).mockResolvedValue({
         success: true,
         data: buildLobby('ABC123'),
       })
-      jest.mocked(navigationService.navigateToLobby).mockResolvedValue()
+      vi.mocked(navigationService.navigateToLobby).mockResolvedValue()
 
       render(<GameInterface />)
 
@@ -331,7 +330,7 @@ describe('GameInterface', () => {
 
   describe('Error Display', () => {
     it('should display error when error exists', () => {
-      jest.mocked(useGameStore).mockReturnValue({
+      vi.mocked(useGameStore).mockReturnValue({
         lobbyCode: null,
         isHost: false,
         isLoading: false,
@@ -348,7 +347,7 @@ describe('GameInterface', () => {
     })
 
     it('should clear error when clear button is clicked', () => {
-      jest.mocked(useGameStore).mockReturnValue({
+      vi.mocked(useGameStore).mockReturnValue({
         lobbyCode: null,
         isHost: false,
         isLoading: false,

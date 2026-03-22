@@ -31,13 +31,13 @@ class MockAudioParam implements AudioParam {
   minValue: number = 0.0;
 
   // Prefix unused parameters with underscore to satisfy linter
-  setValueAtTime = jest.fn((_value: number, _startTime: number) => this);
-  linearRampToValueAtTime = jest.fn((_value: number, _endTime: number) => this);
-  exponentialRampToValueAtTime = jest.fn((_value: number, _endTime: number) => this);
-  setTargetAtTime = jest.fn((_target: number, _startTime: number, _timeConstant: number) => this);
-  setValueCurveAtTime = jest.fn((_values: Float32Array, _startTime: number, _duration: number) => this);
-  cancelScheduledValues = jest.fn((_cancelTime: number) => this);
-  cancelAndHoldAtTime = jest.fn((_cancelTime: number) => this);
+  setValueAtTime = vi.fn((_value: number, _startTime: number) => this);
+  linearRampToValueAtTime = vi.fn((_value: number, _endTime: number) => this);
+  exponentialRampToValueAtTime = vi.fn((_value: number, _endTime: number) => this);
+  setTargetAtTime = vi.fn((_target: number, _startTime: number, _timeConstant: number) => this);
+  setValueCurveAtTime = vi.fn((_values: Float32Array, _startTime: number, _duration: number) => this);
+  cancelScheduledValues = vi.fn((_cancelTime: number) => this);
+  cancelAndHoldAtTime = vi.fn((_cancelTime: number) => this);
 }
 
 // Create a mock for GainNode
@@ -56,22 +56,22 @@ class MockGainNode extends EventTarget implements GainNode {
     this.context = context;
   }
   
-  connect = jest.fn((_destinationNode: AudioNode | AudioParam) => {
+  connect = vi.fn((_destinationNode: AudioNode | AudioParam) => {
     return this as unknown as GainNode;
   });
   
-  disconnect = jest.fn();
+  disconnect = vi.fn();
   
   // EventTarget implementation with proper typing
-  override addEventListener = jest.fn((_type: string, _listener: EventListener, _options?: boolean | AddEventListenerOptions): void => {
+  override addEventListener = vi.fn((_type: string, _listener: EventListener, _options?: boolean | AddEventListenerOptions): void => {
     // Mock implementation
   });
   
-  override removeEventListener = jest.fn((_type: string, _listener: EventListener, _options?: boolean | EventListenerOptions) => {
+  override removeEventListener = vi.fn((_type: string, _listener: EventListener, _options?: boolean | EventListenerOptions) => {
     // Mock implementation
   });
   
-  override dispatchEvent = jest.fn((_event: Event) => true);
+  override dispatchEvent = vi.fn((_event: Event) => true);
 }
 
 type MockAudioBufferSourceNode = {
@@ -96,10 +96,10 @@ type MockAudioBufferSourceNode = {
   onended: ((this: AudioScheduledSourceNode, ev: Event) => void) | null;
   
   // Mock methods
-  connect: jest.Mock<MockAudioBufferSourceNode, [AudioNode | AudioParam]>;
-  disconnect: jest.Mock<void, []>;
-  start: jest.Mock<void, [number?, number?, number?]>;
-  stop: jest.Mock<void, [number?]>;
+  connect: vi.Mock<MockAudioBufferSourceNode, [AudioNode | AudioParam]>;
+  disconnect: vi.Mock<void, []>;
+  start: vi.Mock<void, [number?, number?, number?]>;
+  stop: vi.Mock<void, [number?]>;
   [key: string]: unknown;
 };
 
@@ -113,9 +113,9 @@ interface MockAudioDestinationNode extends AudioNode {
 
 interface MockAudioContext extends Omit<AudioContext, 'createGain' | 'createBufferSource' | 'decodeAudioData'> {
   // Only mock methods we actually use in tests
-  createGain: jest.Mock<MockGainNode>;
-  createBufferSource: jest.Mock<MockAudioBufferSourceNode>;
-  decodeAudioData: jest.Mock<Promise<AudioBuffer>, [ArrayBuffer]>;
+  createGain: vi.Mock<MockGainNode>;
+  createBufferSource: vi.Mock<MockAudioBufferSourceNode>;
+  decodeAudioData: vi.Mock<Promise<AudioBuffer>, [ArrayBuffer]>;
   // Add other required properties with proper types
   destination: MockAudioDestinationNode;
   currentTime: number;
@@ -129,9 +129,9 @@ const createMockAudioBuffer = (options: Partial<AudioBuffer> = {}): AudioBuffer 
     length: 441000,
     numberOfChannels: 2,
     sampleRate: 44100,
-    getChannelData: jest.fn().mockReturnValue(new Float32Array(441000)),
-    copyFromChannel: jest.fn(),
-    copyToChannel: jest.fn()
+    getChannelData: vi.fn().mockReturnValue(new Float32Array(441000)),
+    copyFromChannel: vi.fn(),
+    copyToChannel: vi.fn()
   };
   
   return {
@@ -151,18 +151,18 @@ const createMockGainNode = (): MockGainNode => {
     defaultValue: 1,
     maxValue: 1,
     minValue: 0,
-    setValueAtTime: jest.fn().mockReturnThis(),
-    linearRampToValueAtTime: jest.fn().mockReturnThis(),
-    exponentialRampToValueAtTime: jest.fn().mockReturnThis(),
-    setTargetAtTime: jest.fn().mockReturnThis(),
-    setValueCurveAtTime: jest.fn().mockReturnThis(),
-    cancelScheduledValues: jest.fn().mockReturnThis(),
-    cancelAndHoldAtTime: jest.fn().mockReturnThis()
+    setValueAtTime: vi.fn().mockReturnThis(),
+    linearRampToValueAtTime: vi.fn().mockReturnThis(),
+    exponentialRampToValueAtTime: vi.fn().mockReturnThis(),
+    setTargetAtTime: vi.fn().mockReturnThis(),
+    setValueCurveAtTime: vi.fn().mockReturnThis(),
+    cancelScheduledValues: vi.fn().mockReturnThis(),
+    cancelAndHoldAtTime: vi.fn().mockReturnThis()
   } as unknown as AudioParam;
 
   return {
-    connect: jest.fn().mockReturnThis(),
-    disconnect: jest.fn(),
+    connect: vi.fn().mockReturnThis(),
+    disconnect: vi.fn(),
     gain,
     channelCount: 2,
     channelCountMode: 'max' as ChannelCountMode,
@@ -170,9 +170,9 @@ const createMockGainNode = (): MockGainNode => {
     context: {} as AudioContext,
     numberOfInputs: 1,
     numberOfOutputs: 1,
-    addEventListener: jest.fn(),
-    removeEventListener: jest.fn(),
-    dispatchEvent: jest.fn(() => true)
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    dispatchEvent: vi.fn(() => true)
   } as unknown as MockGainNode;
 };
 
@@ -180,10 +180,10 @@ const mockGainNode = createMockGainNode();
 
 const createMockAudioBufferSourceNode = (): MockAudioBufferSourceNode => {
   const node = {
-    connect: jest.fn().mockReturnThis(),
-    disconnect: jest.fn(),
-    start: jest.fn(),
-    stop: jest.fn(),
+    connect: vi.fn().mockReturnThis(),
+    disconnect: vi.fn(),
+    start: vi.fn(),
+    stop: vi.fn(),
     onended: null,
     buffer: null,
     loop: false,
@@ -197,17 +197,17 @@ const createMockAudioBufferSourceNode = (): MockAudioBufferSourceNode => {
     context: {} as AudioContext,
     numberOfInputs: 0,
     numberOfOutputs: 1,
-    addEventListener: jest.fn(),
-    removeEventListener: jest.fn(),
-    dispatchEvent: jest.fn()
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    dispatchEvent: vi.fn()
   };
   return node as unknown as MockAudioBufferSourceNode;
 };
 
 // Create a minimal mock AudioDestinationNode
 const mockDestinationNode: MockAudioDestinationNode = {
-  connect: jest.fn(() => ({} as AudioNode)),
-  disconnect: jest.fn(),
+  connect: vi.fn(() => ({} as AudioNode)),
+  disconnect: vi.fn(),
   // Required AudioNode properties with minimal implementations
   context: {} as AudioContext,
   numberOfInputs: 1,
@@ -221,26 +221,26 @@ const mockDestinationNode: MockAudioDestinationNode = {
 
 // Create a minimal mock AudioContext
 const mockAudioContext: MockAudioContext = {
-  createGain: jest.fn(() => createMockGainNode()),
-  createBufferSource: jest.fn(() => createMockAudioBufferSourceNode()),
-  decodeAudioData: jest.fn(() => Promise.resolve(createMockAudioBuffer())),
-  close: jest.fn(() => Promise.resolve()),
-  resume: jest.fn(() => Promise.resolve()),
-  suspend: jest.fn(() => Promise.resolve()),
+  createGain: vi.fn(() => createMockGainNode()),
+  createBufferSource: vi.fn(() => createMockAudioBufferSourceNode()),
+  decodeAudioData: vi.fn(() => Promise.resolve(createMockAudioBuffer())),
+  close: vi.fn(() => Promise.resolve()),
+  resume: vi.fn(() => Promise.resolve()),
+  suspend: vi.fn(() => Promise.resolve()),
   destination: mockDestinationNode,
   currentTime: 0,
   state: 'running' as AudioContextState,
   // Add other required AudioContext methods with minimal implementations
-  createMediaElementSource: jest.fn(),
-  createMediaStreamDestination: jest.fn(),
-  createMediaStreamSource: jest.fn(),
-  createMediaStreamTrackSource: jest.fn(),
-  createOscillator: jest.fn(),
-  createPanner: jest.fn(),
-  createPeriodicWave: jest.fn(),
-  createScriptProcessor: jest.fn(),
-  createStereoPanner: jest.fn(),
-  createWaveShaper: jest.fn()
+  createMediaElementSource: vi.fn(),
+  createMediaStreamDestination: vi.fn(),
+  createMediaStreamSource: vi.fn(),
+  createMediaStreamTrackSource: vi.fn(),
+  createOscillator: vi.fn(),
+  createPanner: vi.fn(),
+  createPeriodicWave: vi.fn(),
+  createScriptProcessor: vi.fn(),
+  createStereoPanner: vi.fn(),
+  createWaveShaper: vi.fn()
 } as unknown as MockAudioContext;
 
 // Mock fetch implementation with proper typing
@@ -271,17 +271,17 @@ const mockFetchImplementation = (_input: RequestInfo | URL, _init?: RequestInit)
 };
 
 // Assign to global.fetch with proper typing
-global.fetch = jest.fn(mockFetchImplementation) as typeof global.fetch;
+global.fetch = vi.fn(mockFetchImplementation) as typeof global.fetch;
 
 // Mock window.AudioContext
 Object.defineProperty(window, 'AudioContext', {
   writable: true,
-  value: jest.fn(() => mockAudioContext as unknown as AudioContext)
+  value: vi.fn(() => mockAudioContext as unknown as AudioContext)
 });
 
 Object.defineProperty(window, 'webkitAudioContext', {
   writable: true,
-  value: jest.fn(() => mockAudioContext as unknown as AudioContext)
+  value: vi.fn(() => mockAudioContext as unknown as AudioContext)
 });
 
 describe('AudioManager', () => {
@@ -294,18 +294,18 @@ describe('AudioManager', () => {
     privateManager = asPrivate(audioManager);
 
     // Mock the loadAllAudioFiles method to prevent actual file loading
-    jest.spyOn(privateManager, 'loadAllAudioFiles').mockResolvedValue(undefined);
+    vi.spyOn(privateManager, 'loadAllAudioFiles').mockResolvedValue(undefined);
   })
 
   afterEach(() => {
-    jest.restoreAllMocks()
+    vi.restoreAllMocks()
   })
 
   describe('Initialization', () => {
     it('should initialize successfully with valid audio context', async () => {
       // DISABLED is false by default, so init proceeds normally
       // Mock the init method to simulate successful initialization
-      const mockInit = jest.spyOn(privateManager, 'init').mockImplementation(async function(this: AudioManagerPrivate) {
+      const mockInit = vi.spyOn(privateManager, 'init').mockImplementation(async function(this: AudioManagerPrivate) {
         privateManager.audioContext = mockAudioContext;
         privateManager.gainNodes = new Map([
           ['music', mockGainNode],
@@ -329,7 +329,7 @@ describe('AudioManager', () => {
 
     it('should create gain nodes for different audio types', async () => {
       // Mock the init method to simulate successful initialization with gain nodes
-      const mockInit = jest.spyOn(privateManager as unknown as { init: () => Promise<void> }, 'init').mockImplementation(async function(this: AudioManagerPrivate) {
+      const mockInit = vi.spyOn(privateManager as unknown as { init: () => Promise<void> }, 'init').mockImplementation(async function(this: AudioManagerPrivate) {
         privateManager.audioContext = mockAudioContext;
         privateManager.gainNodes = new Map([
           ['music', mockGainNode],
@@ -358,7 +358,7 @@ describe('AudioManager', () => {
       // Set DISABLED = true to test the disabled path
       (privateManager as unknown as { DISABLED: boolean }).DISABLED = true;
 
-      const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+      const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
 
       await privateManager.init();
 
@@ -378,7 +378,7 @@ describe('AudioManager', () => {
       const freshPrivate = asPrivate(freshAudioManager);
       (freshPrivate as unknown as { DISABLED: boolean }).DISABLED = true;
 
-      const ensureInitSpy = jest.spyOn(freshPrivate, 'ensureInitialized');
+      const ensureInitSpy = vi.spyOn(freshPrivate, 'ensureInitialized');
 
       await freshAudioManager.playSound('test-sound');
 
@@ -394,7 +394,7 @@ describe('AudioManager', () => {
       privateManager.isInitialized = true;
       privateManager.audioContext = mockAudioContext as unknown as AudioContext;
 
-      const initSpy = jest.spyOn(audioManager as AudioManager, 'init' as never)
+      const initSpy = vi.spyOn(audioManager as AudioManager, 'init' as never)
 
       // Call playSound again
       await audioManager.playSound('test-sound')
@@ -408,7 +408,7 @@ describe('AudioManager', () => {
       const freshAudioManager = new AudioManager();
       (asPrivate(freshAudioManager) as unknown as { DISABLED: boolean }).DISABLED = true;
 
-      const consoleSpy = jest.spyOn(console, 'warn')
+      const consoleSpy = vi.spyOn(console, 'warn')
 
       await freshAudioManager.playSound('test-sound')
 
@@ -435,7 +435,7 @@ describe('AudioManager', () => {
     })
 
     it('should play sounds when initialized', () => {
-      const consoleSpy = jest.spyOn(console, 'warn')
+      const consoleSpy = vi.spyOn(console, 'warn')
 
       audioManager.playSound('test-sound')
 
@@ -447,7 +447,7 @@ describe('AudioManager', () => {
       // Set DISABLED = true to test the disabled path
       (asPrivate(audioManager) as unknown as { DISABLED: boolean }).DISABLED = true;
 
-      const consoleSpy = jest.spyOn(console, 'warn')
+      const consoleSpy = vi.spyOn(console, 'warn')
 
       audioManager.playSound('unknown-sound')
 

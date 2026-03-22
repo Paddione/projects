@@ -1,29 +1,29 @@
 import React from 'react'
-import { describe, it, expect, beforeEach, jest } from '@jest/globals'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
-import '@testing-library/jest-dom/jest-globals'
 import { ChangePasswordForm } from '../ChangePasswordForm'
 import { apiService } from '../../services/apiService'
 
 // Mock apiService
-jest.mock('../../services/apiService', () => ({
+vi.mock('../../services/apiService', () => ({
   apiService: {
-    changePassword: jest.fn(),
+    changePassword: vi.fn(),
   },
 }))
 
 // Mock setTimeout for testing auto-close
-jest.useFakeTimers()
+// Use shouldAdvanceTime so waitFor() still resolves with real timers
+vi.useFakeTimers({ shouldAdvanceTime: true })
 
 describe('ChangePasswordForm', () => {
-  const mockOnClose = jest.fn()
+  const mockOnClose = vi.fn()
 
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
   })
 
   afterEach(() => {
-    jest.clearAllTimers()
+    vi.clearAllTimers()
   })
 
   describe('Initial render', () => {
@@ -83,7 +83,7 @@ describe('ChangePasswordForm', () => {
 
   describe('Form submission', () => {
     it('should handle successful password change', async () => {
-      jest.mocked(apiService.changePassword).mockResolvedValue({
+      vi.mocked(apiService.changePassword).mockResolvedValue({
         success: true,
       })
 
@@ -101,12 +101,12 @@ describe('ChangePasswordForm', () => {
       })
 
       // Fast-forward timers to trigger auto-close
-      jest.advanceTimersByTime(1500)
+      vi.advanceTimersByTime(1500)
       expect(mockOnClose).toHaveBeenCalled()
     })
 
     it('should handle password change failure', async () => {
-      jest.mocked(apiService.changePassword).mockResolvedValue({
+      vi.mocked(apiService.changePassword).mockResolvedValue({
         success: false,
         error: 'Current password is incorrect',
       })
@@ -155,7 +155,7 @@ describe('ChangePasswordForm', () => {
     })
 
     it('should show loading state during submission', async () => {
-      jest.mocked(apiService.changePassword).mockImplementation(() =>
+      vi.mocked(apiService.changePassword).mockImplementation(() =>
         new Promise(resolve => setTimeout(() => resolve({ success: true }), 100))
       )
 
@@ -175,7 +175,7 @@ describe('ChangePasswordForm', () => {
     })
 
     it('should disable submit button while loading', async () => {
-      jest.mocked(apiService.changePassword).mockImplementation(() =>
+      vi.mocked(apiService.changePassword).mockImplementation(() =>
         new Promise(resolve => setTimeout(() => resolve({ success: true }), 100))
       )
 
@@ -196,7 +196,7 @@ describe('ChangePasswordForm', () => {
     })
 
     it('should clear form after successful password change', async () => {
-      jest.mocked(apiService.changePassword).mockResolvedValue({
+      vi.mocked(apiService.changePassword).mockResolvedValue({
         success: true,
       })
 
@@ -232,7 +232,7 @@ describe('ChangePasswordForm', () => {
 
   describe('Error handling', () => {
     it('should handle API errors', async () => {
-      jest.mocked(apiService.changePassword).mockRejectedValue(new Error('Network error'))
+      vi.mocked(apiService.changePassword).mockRejectedValue(new Error('Network error'))
 
       render(<ChangePasswordForm />)
 
@@ -248,7 +248,7 @@ describe('ChangePasswordForm', () => {
     })
 
     it('should handle non-Error exceptions', async () => {
-      jest.mocked(apiService.changePassword).mockRejectedValue('Unknown error')
+      vi.mocked(apiService.changePassword).mockRejectedValue('Unknown error')
 
       render(<ChangePasswordForm />)
 
@@ -264,7 +264,7 @@ describe('ChangePasswordForm', () => {
     })
 
     it('should clear error when submitting again', async () => {
-      jest.mocked(apiService.changePassword).mockResolvedValue({
+      vi.mocked(apiService.changePassword).mockResolvedValue({
         success: false,
         error: 'Test error',
       })
@@ -282,7 +282,7 @@ describe('ChangePasswordForm', () => {
       })
 
       // Submit again with different password
-      jest.mocked(apiService.changePassword).mockResolvedValue({ success: true })
+      vi.mocked(apiService.changePassword).mockResolvedValue({ success: true })
       fireEvent.change(screen.getByLabelText('New Password'), { target: { value: 'AnotherPass123!' } })
       fireEvent.change(screen.getByLabelText('Confirm New Password'), { target: { value: 'AnotherPass123!' } })
 
@@ -321,7 +321,7 @@ describe('ChangePasswordForm', () => {
 
   describe('Success message handling', () => {
     it('should not auto-close if onClose not provided', async () => {
-      jest.mocked(apiService.changePassword).mockResolvedValue({
+      vi.mocked(apiService.changePassword).mockResolvedValue({
         success: true,
       })
 
@@ -338,7 +338,7 @@ describe('ChangePasswordForm', () => {
       })
 
       // Fast-forward timers
-      jest.advanceTimersByTime(1500)
+      vi.advanceTimersByTime(1500)
 
       // onClose should not be called because it wasn't provided
       // Just verify the success message is still there

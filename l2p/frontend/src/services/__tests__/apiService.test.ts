@@ -1,5 +1,5 @@
 // Mock fetch globally BEFORE importing apiService
-global.fetch = jest.fn()
+global.fetch = vi.fn()
 
 // Mock localStorage with proper storage BEFORE importing apiService
 const createLocalStorageMock = () => {
@@ -43,8 +43,8 @@ const originalConsoleLog = console.log
 const originalConsoleError = console.error
 
 beforeAll(() => {
-  console.log = jest.fn()
-  console.error = jest.fn()
+  console.log = vi.fn()
+  console.error = vi.fn()
 })
 
 afterAll(() => {
@@ -52,7 +52,7 @@ afterAll(() => {
   console.error = originalConsoleError
 })
 
-const mockFetch = fetch as jest.MockedFunction<typeof fetch>
+const mockFetch = fetch as vi.MockedFunction<typeof fetch>
 
 // Helper function to create mock Response objects
 const createMockResponse = (
@@ -66,20 +66,20 @@ const createMockResponse = (
   redirected: false,
   type: 'default' as ResponseType,
   url: 'http://test.com',
-  clone: jest.fn(),
+  clone: vi.fn(),
   body: null,
   bodyUsed: false,
-  arrayBuffer: jest.fn(),
-  blob: jest.fn(),
-  formData: jest.fn(),
-  json: jest.fn().mockResolvedValue(data),
-  text: jest.fn(),
-  bytes: jest.fn().mockResolvedValue(new Uint8Array()),
+  arrayBuffer: vi.fn(),
+  blob: vi.fn(),
+  formData: vi.fn(),
+  json: vi.fn().mockResolvedValue(data),
+  text: vi.fn(),
+  bytes: vi.fn().mockResolvedValue(new Uint8Array()),
 } as Response)
 
 describe('ApiService', () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
     localStorageMock.clear()
     // Clear auth to ensure test isolation
     apiService.clearAuth()
@@ -297,7 +297,7 @@ describe('ApiService', () => {
       const mockResponse = {
         ok: false,
         status: 500,
-        json: jest.fn().mockRejectedValue(new Error('Invalid JSON')),
+        json: vi.fn().mockRejectedValue(new Error('Invalid JSON')),
       }
       mockFetch.mockResolvedValue(mockResponse as any)
 

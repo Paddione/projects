@@ -12,65 +12,65 @@ const createMockAudioStore = () => ({
   currentTrack: null,
   
   // State setters
-  setMusicVolume: jest.fn(),
-  setSoundVolume: jest.fn(),
-  setMasterVolume: jest.fn(),
-  setIsMuted: jest.fn(),
-  setIsPlaying: jest.fn(),
-  setCurrentTrack: jest.fn(),
-  toggleMute: jest.fn(),
+  setMusicVolume: vi.fn(),
+  setSoundVolume: vi.fn(),
+  setMasterVolume: vi.fn(),
+  setIsMuted: vi.fn(),
+  setIsPlaying: vi.fn(),
+  setCurrentTrack: vi.fn(),
+  toggleMute: vi.fn(),
   
   // Basic audio controls
-  playSound: jest.fn(),
-  stopSound: jest.fn(),
-  stopAllSounds: jest.fn(),
-  resumeAudioContext: jest.fn(),
-  isAudioSupported: jest.fn(() => true),
+  playSound: vi.fn(),
+  stopSound: vi.fn(),
+  stopAllSounds: vi.fn(),
+  resumeAudioContext: vi.fn(),
+  isAudioSupported: vi.fn(() => true),
   
   // Game audio methods
-  playCorrectAnswer: jest.fn(),
-  playWrongAnswer: jest.fn(),
-  playButtonClick: jest.fn(),
-  playButtonHover: jest.fn(),
-  playPlayerJoin: jest.fn(),
-  playPlayerLeave: jest.fn(),
-  playTimerWarning: jest.fn(),
-  playTimerUrgent: jest.fn(),
-  playGameStart: jest.fn(),
-  playGameEnd: jest.fn(),
-  playQuestionStart: jest.fn(),
-  playLobbyCreated: jest.fn(),
-  playLobbyJoined: jest.fn(),
-  playApplause: jest.fn(),
-  playHighScore: jest.fn(),
-  playPerfectScore: jest.fn(),
-  playMultiplierUp: jest.fn(),
-  playMultiplierReset: jest.fn(),
-  playScorePoints: jest.fn(),
-  playScoreBonus: jest.fn(),
-        playLobbyMusic: jest.fn(),
-  playNotification: jest.fn(),
-  playSuccess: jest.fn(),
-  playError: jest.fn(),
-  playTick: jest.fn(),
-  playCountdown: jest.fn(),
-  playMenuSelect: jest.fn(),
-  playMenuConfirm: jest.fn(),
-  playMenuCancel: jest.fn(),
-  playVolumeChange: jest.fn(),
-  playLanguageChange: jest.fn(),
-  playThemeChange: jest.fn()
+  playCorrectAnswer: vi.fn(),
+  playWrongAnswer: vi.fn(),
+  playButtonClick: vi.fn(),
+  playButtonHover: vi.fn(),
+  playPlayerJoin: vi.fn(),
+  playPlayerLeave: vi.fn(),
+  playTimerWarning: vi.fn(),
+  playTimerUrgent: vi.fn(),
+  playGameStart: vi.fn(),
+  playGameEnd: vi.fn(),
+  playQuestionStart: vi.fn(),
+  playLobbyCreated: vi.fn(),
+  playLobbyJoined: vi.fn(),
+  playApplause: vi.fn(),
+  playHighScore: vi.fn(),
+  playPerfectScore: vi.fn(),
+  playMultiplierUp: vi.fn(),
+  playMultiplierReset: vi.fn(),
+  playScorePoints: vi.fn(),
+  playScoreBonus: vi.fn(),
+        playLobbyMusic: vi.fn(),
+  playNotification: vi.fn(),
+  playSuccess: vi.fn(),
+  playError: vi.fn(),
+  playTick: vi.fn(),
+  playCountdown: vi.fn(),
+  playMenuSelect: vi.fn(),
+  playMenuConfirm: vi.fn(),
+  playMenuCancel: vi.fn(),
+  playVolumeChange: vi.fn(),
+  playLanguageChange: vi.fn(),
+  playThemeChange: vi.fn()
 })
 
 const mockAudioStore = createMockAudioStore()
 
-jest.mock('../../stores/audioStore', () => ({
+vi.mock('../../stores/audioStore', () => ({
   useAudioStore: () => mockAudioStore,
 }))
 
 describe('Enhanced useAudio Hook Tests', () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
     
     // Reset mock implementations
     Object.keys(mockAudioStore).forEach(key => {
@@ -377,8 +377,8 @@ describe('Enhanced useAudio Hook Tests', () => {
     })
 
     it('handles event listener cleanup properly', () => {
-      const addEventListenerSpy = jest.spyOn(document, 'addEventListener')
-      const removeEventListenerSpy = jest.spyOn(document, 'removeEventListener')
+      const addEventListenerSpy = vi.spyOn(document, 'addEventListener')
+      const removeEventListenerSpy = vi.spyOn(document, 'removeEventListener')
       
       const { unmount } = renderHook(() => useAudio())
       

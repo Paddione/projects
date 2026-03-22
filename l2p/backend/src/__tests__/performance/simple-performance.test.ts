@@ -3,7 +3,7 @@
  * Basic test to verify performance testing framework works
  */
 
-import { describe, test, expect } from '@jest/globals';
+import { describe, test, expect } from 'vitest';
 import TestConfigManager from 'test-config/TestConfigManager';
 import PerformanceTestFramework from 'test-config/PerformanceTestFramework';
 

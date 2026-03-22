@@ -1,11 +1,11 @@
-import { jest } from '@jest/globals';
+import { vi } from 'vitest';
 
 export class LobbyRepository {
   constructor() {
     return new Proxy(this as any, {
       get(target, prop: string) {
         if (!(prop in target)) {
-          target[prop] = jest.fn();
+          target[prop] = vi.fn();
         }
         return target[prop];
       }

@@ -1,13 +1,13 @@
-import { jest } from '@jest/globals';
+import { vi } from 'vitest';
 import { GameSessionRepository, GameSession, PlayerResult, CreateGameSessionData, CreatePlayerResultData } from '../GameSessionRepository';
 import { BaseRepository } from '../BaseRepository';
 import { DatabaseService } from '../../services/DatabaseService';
 
 // Mock the DatabaseService
-jest.mock('../../services/DatabaseService');
+vi.mock('../../services/DatabaseService');
 
 // Mock the BaseRepository
-jest.mock('../BaseRepository');
+vi.mock('../BaseRepository');
 
 describe('GameSessionRepository', () => {
   let repository: GameSessionRepository;
@@ -15,18 +15,18 @@ describe('GameSessionRepository', () => {
 
   beforeEach(() => {
     // Clear all mocks
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     // Mock database connection and query methods
     mockDb = {
-      query: jest.fn()
+      query: vi.fn()
     };
 
     // Set global database service for BaseRepository.getDb() to find
     (globalThis as any).__DB_SERVICE__ = mockDb;
 
     // Mock the DatabaseService.getInstance method as fallback
-    (DatabaseService.getInstance as jest.Mock).mockReturnValue(mockDb);
+    (DatabaseService.getInstance as vi.Mock).mockReturnValue(mockDb);
 
     // Create GameSessionRepository instance
     repository = new GameSessionRepository();
@@ -35,15 +35,15 @@ describe('GameSessionRepository', () => {
     (repository as any).db = mockDb;
 
     // Mock the getDb method directly to ensure it returns our mock
-    jest.spyOn(repository as any, 'getDb').mockReturnValue(mockDb);
+    vi.spyOn(repository as any, 'getDb').mockReturnValue(mockDb);
     
     // Mock BaseRepository methods to use the mockDb
-    jest.spyOn(BaseRepository.prototype as any, 'findById').mockImplementation(async (...args: any[]) => {
+    vi.spyOn(BaseRepository.prototype as any, 'findById').mockImplementation(async (...args: any[]) => {
       const [table, id] = args;
       const result = await mockDb.query(`SELECT * FROM ${table} WHERE id = $1`, [id]);
       return result.rows[0] || null;
     });
-    jest.spyOn(BaseRepository.prototype as any, 'create').mockImplementation(async (...args: any[]) => {
+    vi.spyOn(BaseRepository.prototype as any, 'create').mockImplementation(async (...args: any[]) => {
       const [table, data] = args;
       const columns = Object.keys(data).join(', ');
       const placeholders = Object.keys(data).map((_, i) => `$${i + 1}`).join(', ');
@@ -56,7 +56,7 @@ describe('GameSessionRepository', () => {
       return result.rows[0] || null;
     });
 
-    jest.spyOn(BaseRepository.prototype as any, 'update').mockImplementation(async (...args: any[]) => {
+    vi.spyOn(BaseRepository.prototype as any, 'update').mockImplementation(async (...args: any[]) => {
       const [table, id, data] = args;
       const setClause = Object.keys(data).map((key, i) => `${key} = $${i + 2}`).join(', ');
       const values = [id, ...Object.values(data)];
@@ -67,7 +67,7 @@ describe('GameSessionRepository', () => {
       );
       return result.rows[0] || null;
     });
-    jest.spyOn(BaseRepository.prototype as any, 'delete').mockImplementation(async (...args: any[]) => {
+    vi.spyOn(BaseRepository.prototype as any, 'delete').mockImplementation(async (...args: any[]) => {
       const [table, id] = args;
       const result = await mockDb.query(`DELETE FROM ${table} WHERE id = $1`, [id]);
       return result.rowCount > 0;
@@ -78,7 +78,7 @@ describe('GameSessionRepository', () => {
     // Clean up the global mock after each test
     delete (globalThis as any).__DB_SERVICE__;
     // Reset the DatabaseService mock
-    (DatabaseService.getInstance as jest.Mock).mockReset();
+    (DatabaseService.getInstance as vi.Mock).mockReset();
   });
 
   describe('findGameSessionById', () => {

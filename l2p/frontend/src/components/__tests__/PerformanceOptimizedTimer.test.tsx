@@ -58,7 +58,7 @@ const MockPerformanceOptimizedTimer: React.FC<{
 }
 
 // Mock the actual component
-jest.mock('../PerformanceOptimizedTimer', () => ({
+vi.mock('../PerformanceOptimizedTimer', () => ({
   PerformanceOptimizedTimer: MockPerformanceOptimizedTimer
 }))
 
@@ -107,7 +107,7 @@ describe('PerformanceOptimizedTimer', () => {
   })
 
   it('calls onTimeUp callback when provided', () => {
-    const mockOnTimeUp = jest.fn()
+    const mockOnTimeUp = vi.fn()
     render(<PerformanceOptimizedTimer duration={60} onTimeUp={mockOnTimeUp} />)
     
     // This is a basic test - in real implementation, onTimeUp would be called when timer expires

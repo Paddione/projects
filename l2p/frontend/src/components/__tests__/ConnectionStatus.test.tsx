@@ -2,22 +2,22 @@ import React from 'react'
 import { render, screen } from '@testing-library/react'
 
 // Mock socketService to control connection status
-jest.mock('../../services/socketService', () => ({
+vi.mock('../../services/socketService', () => ({
   socketService: {
-    getConnectionStatus: jest.fn(),
-    on: jest.fn(),
-    off: jest.fn()
+    getConnectionStatus: vi.fn(),
+    on: vi.fn(),
+    off: vi.fn()
   }
 }))
 
 // Import the component after all mocks are defined
 import { ConnectionStatus } from '../ConnectionStatus'
 
-const { socketService } = require('../../services/socketService')
+import { socketService } from '../../services/socketService'
 
 describe('ConnectionStatus Component', () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
   })
 
   it('renders with default props', () => {

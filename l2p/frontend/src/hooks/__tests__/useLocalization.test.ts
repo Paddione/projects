@@ -2,13 +2,13 @@ import { renderHook, act } from '@testing-library/react'
 import { useLocalization } from '../useLocalization'
 
 // Mock the localization service module
-jest.mock('../../services/localization', () => {
-  const mockGetCurrentLanguage = jest.fn()
-  const mockSetLanguage = jest.fn()
-  const mockTranslate = jest.fn()
-  const mockGetSupportedLanguages = jest.fn()
-  const mockGetLanguageName = jest.fn()
-  const mockGetLanguageFlag = jest.fn()
+vi.mock('../../services/localization', () => {
+  const mockGetCurrentLanguage = vi.fn()
+  const mockSetLanguage = vi.fn()
+  const mockTranslate = vi.fn()
+  const mockGetSupportedLanguages = vi.fn()
+  const mockGetLanguageName = vi.fn()
+  const mockGetLanguageFlag = vi.fn()
 
   return {
     localizationService: {
@@ -25,11 +25,11 @@ jest.mock('../../services/localization', () => {
 
 // Import the mocked module to get access to the mock functions
 import { localizationService } from '../../services/localization'
-const mockLocalizationService = localizationService as jest.Mocked<typeof localizationService>
+const mockLocalizationService = localizationService as vi.Mocked<typeof localizationService>
 
 describe('useLocalization Hook', () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
     
     // Set up default mock implementations
     mockLocalizationService.getCurrentLanguage.mockReturnValue('en')

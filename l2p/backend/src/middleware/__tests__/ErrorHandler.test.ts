@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach, jest } from '@jest/globals';
+import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach, vi } from 'vitest';
 import { Request, Response, NextFunction } from 'express';
 import { 
   ErrorHandler, 
@@ -14,7 +14,7 @@ import {
 // Mock console.error to avoid noise in tests
 const originalConsoleError = console.error;
 beforeAll(() => {
-  console.error = jest.fn();
+  console.error = vi.fn();
 });
 
 afterAll(() => {
@@ -24,11 +24,11 @@ afterAll(() => {
 describe('ErrorHandler', () => {
   let mockRequest: Partial<Request>;
   let mockResponse: Partial<Response>;
-  let mockNext: jest.MockedFunction<NextFunction>;
+  let mockNext: vi.MockedFunction<NextFunction>;
 
   beforeEach(() => {
     // Clear all mocks
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     // Create mock request
     mockRequest = {
@@ -40,12 +40,12 @@ describe('ErrorHandler', () => {
 
     // Create mock response with proper Jest mocks
     mockResponse = {
-      status: jest.fn().mockReturnThis(),
-      json: jest.fn().mockReturnThis()
+      status: vi.fn().mockReturnThis(),
+      json: vi.fn().mockReturnThis()
     } as any;
 
     // Create mock next function
-    mockNext = jest.fn();
+    mockNext = vi.fn();
 
     // Reset environment
     delete process.env.NODE_ENV;
@@ -365,7 +365,7 @@ describe('ErrorHandler', () => {
 
   describe('asyncHandler', () => {
     it('should handle successful async operations', async () => {
-      const asyncFunction = jest.fn().mockResolvedValue('success');
+      const asyncFunction = vi.fn().mockResolvedValue('success');
       const wrappedFunction = ErrorHandler.asyncHandler(asyncFunction);
 
       await wrappedFunction(
@@ -384,7 +384,7 @@ describe('ErrorHandler', () => {
 
     it('should catch and pass async errors to next', async () => {
       const error = new Error('Async error');
-      const asyncFunction = jest.fn().mockRejectedValue(error);
+      const asyncFunction = vi.fn().mockRejectedValue(error);
       const wrappedFunction = ErrorHandler.asyncHandler(asyncFunction);
 
       await wrappedFunction(
@@ -403,7 +403,7 @@ describe('ErrorHandler', () => {
 
     it('should handle synchronous errors in async functions', async () => {
       const error = new Error('Sync error');
-      const asyncFunction = jest.fn().mockImplementation(() => {
+      const asyncFunction = vi.fn().mockImplementation(() => {
         throw error;
       });
       const wrappedFunction = ErrorHandler.asyncHandler(asyncFunction);
@@ -642,7 +642,7 @@ describe('ErrorHandler', () => {
         mockNext
       );
 
-      const responseCall = (mockResponse.json as jest.Mock).mock.calls[0][0];
+      const responseCall = (mockResponse.json as vi.Mock).mock.calls[0][0];
       const timestamp = responseCall.timestamp;
 
       expect(timestamp).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);

@@ -1,16 +1,16 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { PerksManager } from '../PerksManager.js';
 import { DatabaseService } from '../DatabaseService.js';
 import { PerkQueryService } from '../PerkQueryService.js';
 
 // Mock DatabaseService
-jest.mock('../DatabaseService.js');
-jest.mock('../PerkQueryService.js');
+vi.mock('../DatabaseService.js');
+vi.mock('../PerkQueryService.js');
 
 describe('PerksManager', () => {
   let perksManager: PerksManager;
-  let mockDb: jest.Mocked<DatabaseService>;
-  let mockPerkQueryService: { getNewlyUnlockedPerks: jest.Mock };
+  let mockDb: vi.Mocked<DatabaseService>;
+  let mockPerkQueryService: { getNewlyUnlockedPerks: vi.Mock };
 
   beforeEach(() => {
     // Reset singleton instances
@@ -19,23 +19,23 @@ describe('PerksManager', () => {
 
     // Mock database service
     mockDb = {
-      query: jest.fn(),
-      getInstance: jest.fn(),
+      query: vi.fn(),
+      getInstance: vi.fn(),
     } as any;
 
-    (DatabaseService.getInstance as jest.Mock).mockReturnValue(mockDb);
+    (DatabaseService.getInstance as vi.Mock).mockReturnValue(mockDb);
 
     // Mock PerkQueryService
     mockPerkQueryService = {
-      getNewlyUnlockedPerks: jest.fn().mockResolvedValue([]),
+      getNewlyUnlockedPerks: vi.fn().mockResolvedValue([]),
     };
-    (PerkQueryService.getInstance as jest.Mock).mockReturnValue(mockPerkQueryService);
+    (PerkQueryService.getInstance as vi.Mock).mockReturnValue(mockPerkQueryService);
 
     perksManager = PerksManager.getInstance();
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('getInstance', () => {
@@ -147,7 +147,7 @@ describe('PerksManager', () => {
         .mockResolvedValueOnce({ rows: [] } as any); // updateUserActiveSettings query
 
       // Mock updateUserActiveSettings
-      jest.spyOn(perksManager as any, 'updateUserActiveSettings').mockResolvedValue(undefined);
+      vi.spyOn(perksManager as any, 'updateUserActiveSettings').mockResolvedValue(undefined);
 
       const result = await perksManager.activatePerk(1, 2, { selected_avatar: 'scientist' });
 
@@ -174,7 +174,7 @@ describe('PerksManager', () => {
         .mockResolvedValueOnce({ rows: [{ type: 'avatar' }] } as any) // Perk exists check
         .mockResolvedValueOnce({ rows: [] } as any); // updateUserActiveSettings query
 
-      jest.spyOn(perksManager as any, 'updateUserActiveSettings').mockResolvedValue(undefined);
+      vi.spyOn(perksManager as any, 'updateUserActiveSettings').mockResolvedValue(undefined);
 
       const result = await perksManager.deactivatePerk(1, 2);
 
@@ -210,7 +210,7 @@ describe('PerksManager', () => {
       ];
 
       mockDb.query.mockResolvedValue({ rows: [mockUser] } as any);
-      jest.spyOn(perksManager, 'getActivePerks').mockResolvedValue(mockActivePerks as any);
+      vi.spyOn(perksManager, 'getActivePerks').mockResolvedValue(mockActivePerks as any);
 
       const result = await perksManager.getUserLoadout(1);
 

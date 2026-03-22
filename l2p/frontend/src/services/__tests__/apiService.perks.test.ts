@@ -1,14 +1,14 @@
 import { apiService } from '../apiService';
 
 // Mock fetch
-const mockFetch = jest.fn();
+const mockFetch = vi.fn();
 global.fetch = mockFetch;
 
 describe('ApiService Perks Methods', () => {
   const mockToken = 'test-token';
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     
     // Mock the request method to use our token
     (apiService as any).token = mockToken;

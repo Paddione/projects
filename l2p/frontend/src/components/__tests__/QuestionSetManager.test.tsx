@@ -3,35 +3,35 @@ import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
 import { apiService } from '../../services/apiService'
 
 // Mock child components to keep tests focused and fast
-jest.mock('../LoadingSpinner', () => ({
+vi.mock('../LoadingSpinner', () => ({
 	LoadingSpinner: () => <div data-testid="loading-spinner">Loading...</div>
 }))
 
 // AI generator removed; no mock needed
 
 // Mock the API service methods used by QuestionSetManager
-jest.mock('../../services/apiService', () => ({
+vi.mock('../../services/apiService', () => ({
 	apiService: {
-		getQuestionSets: jest.fn(),
-		getQuestionSetDetails: jest.fn(),
-		getQuestionSetStats: jest.fn(),
-		createQuestionSet: jest.fn(),
-		updateQuestionSet: jest.fn(),
-		deleteQuestionSet: jest.fn(),
-		importQuestionSet: jest.fn(),
-		exportQuestionSet: jest.fn(),
+		getQuestionSets: vi.fn(),
+		getQuestionSetDetails: vi.fn(),
+		getQuestionSetStats: vi.fn(),
+		createQuestionSet: vi.fn(),
+		updateQuestionSet: vi.fn(),
+		deleteQuestionSet: vi.fn(),
+		importQuestionSet: vi.fn(),
+		exportQuestionSet: vi.fn(),
 		// unused here but required by TS shape in other tests
-		getFiles: jest.fn(),
-		testGeminiConnection: jest.fn(),
-		testChromaConnection: jest.fn(),
-		getChromaStats: jest.fn(),
-		getToken: jest.fn(() => 'test-token')
+		getFiles: vi.fn(),
+		testGeminiConnection: vi.fn(),
+		testChromaConnection: vi.fn(),
+		getChromaStats: vi.fn(),
+		getToken: vi.fn(() => 'test-token')
 	}
 }))
 
 import { QuestionSetManager } from '../QuestionSetManager'
 
-const mockApi = apiService as jest.Mocked<typeof apiService>
+const mockApi = apiService as vi.Mocked<typeof apiService>
 
 function renderManager() {
 	return render(<QuestionSetManager />)
@@ -57,7 +57,7 @@ const secondSet = {
 
 describe('QuestionSetManager', () => {
 	beforeEach(() => {
-		jest.clearAllMocks()
+		vi.clearAllMocks()
 
 		mockApi.getQuestionSets.mockResolvedValue({
 			success: true,
@@ -142,7 +142,7 @@ describe('QuestionSetManager', () => {
 
 	it('deletes a question set after confirmation', async () => {
 		mockApi.deleteQuestionSet.mockResolvedValue({ success: true, data: { message: 'ok' } } as any)
-		const confirmSpy = jest.spyOn(window, 'confirm').mockReturnValue(true)
+		const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true)
 
 		await act(async () => { renderManager() })
 		await waitFor(() => expect(screen.getByText('Set A')).toBeInTheDocument())
@@ -193,8 +193,8 @@ describe('QuestionSetManager', () => {
 		mockApi.exportQuestionSet.mockResolvedValue({ success: true, data: { questionSet: baseSet, questions: [] } } as any)
 
 		// Mock URL constructor and methods properly
-		const mockCreateObjectURL = jest.fn(() => 'blob://download')
-		const mockRevokeObjectURL = jest.fn()
+		const mockCreateObjectURL = vi.fn(() => 'blob://download')
+		const mockRevokeObjectURL = vi.fn()
 
 		// Mock the global URL constructor
 		global.URL = {
@@ -203,10 +203,10 @@ describe('QuestionSetManager', () => {
 		} as any
 
 		// Spy on anchor creation to avoid actually clicking
-		const createElementSpy = jest.spyOn(document, 'createElement')
+		const createElementSpy = vi.spyOn(document, 'createElement')
 		createElementSpy.mockImplementation(((tagName: string) => {
 			const element = document.createElementNS('http://www.w3.org/1999/xhtml', tagName) as any
-			element.click = jest.fn()
+			element.click = vi.fn()
 			return element
 		}) as any)
 

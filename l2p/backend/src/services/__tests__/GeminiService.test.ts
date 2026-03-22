@@ -1,13 +1,13 @@
-import { describe, beforeEach, it, expect, jest } from '@jest/globals';
+import { describe, beforeEach, it, expect, vi } from 'vitest';
 import { GeminiService, QuestionGenerationRequest, GeneratedQuestion, QuestionGenerationResult } from '../GeminiService.js';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
 // Mock the dependencies
-jest.mock('@google/generative-ai');
+vi.mock('@google/generative-ai');
 
 describe('GeminiService', () => {
   interface MockModel {
-    generateContent: jest.MockedFunction<() => Promise<{ response: { text: () => string } }>>;
+    generateContent: vi.MockedFunction<() => Promise<{ response: { text: () => string } }>>;
   }
 
   interface MockResult {
@@ -21,7 +21,7 @@ describe('GeminiService', () => {
   }
 
   let geminiService: GeminiService;
-  let mockGoogleGenerativeAI: jest.Mocked<GoogleGenerativeAI>;
+  let mockGoogleGenerativeAI: vi.Mocked<GoogleGenerativeAI>;
   let mockModel: MockModel;
   let mockResult: MockResult;
   let mockResponse: MockResponse;
@@ -98,9 +98,9 @@ describe('GeminiService', () => {
     process.env.JEST_WORKER_ID = 'test-worker';
     
     // Create a new mock instance
-    const mockAI = new GoogleGenerativeAI('test-api-key') as jest.Mocked<GoogleGenerativeAI>;
+    const mockAI = new GoogleGenerativeAI('test-api-key') as vi.Mocked<GoogleGenerativeAI>;
     const mockGenModel = {
-      generateContent: jest.fn().mockResolvedValue({
+      generateContent: vi.fn().mockResolvedValue({
         response: {
           text: () => mockValidJsonResponse
         }
@@ -108,7 +108,7 @@ describe('GeminiService', () => {
     } as any;
     
     // Setup the mock to return our mock model
-    mockAI.getGenerativeModel = jest.fn().mockReturnValue(mockGenModel);
+    mockAI.getGenerativeModel = vi.fn().mockReturnValue(mockGenModel);
     
     // Create the service
     const service = new GeminiService();
@@ -126,12 +126,12 @@ describe('GeminiService', () => {
 
   beforeEach(() => {
     // Clear all mocks and environment
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     
     // Mock console methods to reduce noise in tests
-    jest.spyOn(console, 'log').mockImplementation(() => {});
-    jest.spyOn(console, 'warn').mockImplementation(() => {});
-    jest.spyOn(console, 'error').mockImplementation(() => {});
+    vi.spyOn(console, 'log').mockImplementation(() => {});
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    vi.spyOn(console, 'error').mockImplementation(() => {});
     
     // Create a test instance with API key by default
     const { service, mockAI, mockGenModel } = createTestGeminiService({ hasApiKey: true });
@@ -148,7 +148,7 @@ describe('GeminiService', () => {
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   describe('generateQuestions', () => {
@@ -194,7 +194,7 @@ describe('GeminiService', () => {
     it('should handle invalid JSON response', async () => {
                     // Arrange
       const { service, mockGenModel } = createTestGeminiService();
-      (mockGenModel.generateContent as jest.Mock).mockResolvedValue({
+      (mockGenModel.generateContent as vi.Mock).mockResolvedValue({
         response: {
           text: () => 'Invalid JSON response without any brackets'
         }
@@ -215,7 +215,7 @@ describe('GeminiService', () => {
       const service = new GeminiService();
       
       // Force test environment to simulate missing API key
-      Object.defineProperty(process.env, 'GEMINI_API_KEY', { value: '' });
+      process.env.GEMINI_API_KEY = '';
       
       const request: QuestionGenerationRequest = {
         ...mockQuestionGenerationRequest,
@@ -244,7 +244,7 @@ describe('GeminiService', () => {
       // Arrange
       const { service, mockGenModel } = createTestGeminiService();
       const apiError = new Error('API Error');
-      (mockGenModel.generateContent as jest.Mock).mockRejectedValue(apiError);
+      (mockGenModel.generateContent as vi.Mock).mockRejectedValue(apiError);
       
       const request: QuestionGenerationRequest = {
         ...mockQuestionGenerationRequest,
@@ -370,7 +370,7 @@ describe('GeminiService', () => {
 
     it('should handle connection failure', async () => {
       // Arrange
-      (mockModel.generateContent as jest.Mock).mockRejectedValue(new Error('Connection failed'));
+      (mockModel.generateContent as vi.Mock).mockRejectedValue(new Error('Connection failed'));
 
       // Act
       const result = await geminiService.testConnection();

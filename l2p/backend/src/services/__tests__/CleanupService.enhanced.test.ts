@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
 // Skip long-running cleanup timer suite during coverage runs
 const d = (process.env.TEST_COVERAGE === '1' || process.env.SKIP_TIMER_TESTS === 'true') ? describe.skip : describe;
@@ -6,8 +6,8 @@ import { CleanupService } from '../CleanupService.js';
 
 d('CleanupService - Enhanced Testing', () => {
   interface MockLobbyService {
-    cleanupInactiveLobbies: jest.MockedFunction<(minutes: number) => Promise<number>>;
-    cleanupOldLobbies: jest.MockedFunction<(hours: number) => Promise<number>>;
+    cleanupInactiveLobbies: vi.MockedFunction<(minutes: number) => Promise<number>>;
+    cleanupOldLobbies: vi.MockedFunction<(hours: number) => Promise<number>>;
   }
 
   let cleanupService: CleanupService;
@@ -16,17 +16,17 @@ d('CleanupService - Enhanced Testing', () => {
   let consoleErrorSpy: any;
 
   beforeEach(() => {
-    jest.clearAllMocks();
-    jest.useFakeTimers();
+    vi.clearAllMocks();
+    vi.useFakeTimers();
 
     // Mock console methods
-    consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-    consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
     // Create mock LobbyService
     mockLobbyService = {
-      cleanupInactiveLobbies: jest.fn(() => Promise.resolve(0)),
-      cleanupOldLobbies: jest.fn(() => Promise.resolve(0)),
+      cleanupInactiveLobbies: vi.fn(() => Promise.resolve(0)),
+      cleanupOldLobbies: vi.fn(() => Promise.resolve(0)),
     } as MockLobbyService;
 
     cleanupService = new CleanupService(mockLobbyService as any);
@@ -38,7 +38,7 @@ d('CleanupService - Enhanced Testing', () => {
       cleanupService.stop();
     }
     
-    jest.useRealTimers();
+    vi.useRealTimers();
     consoleLogSpy.mockRestore();
     consoleErrorSpy.mockRestore();
   });
@@ -51,7 +51,7 @@ d('CleanupService - Enhanced Testing', () => {
       cleanupService.start();
 
       // Wait for initial cleanup to complete
-      await jest.runOnlyPendingTimersAsync();
+      await vi.runOnlyPendingTimersAsync();
 
       expect(mockLobbyService.cleanupInactiveLobbies).toHaveBeenCalledWith(10);
       expect(mockLobbyService.cleanupOldLobbies).toHaveBeenCalledWith(24);
@@ -73,14 +73,14 @@ d('CleanupService - Enhanced Testing', () => {
       mockLobbyService.cleanupOldLobbies.mockClear();
 
       // Advance time by 5 minutes (cleanup interval) and flush promises
-      jest.advanceTimersByTime(5 * 60 * 1000);
+      vi.advanceTimersByTime(5 * 60 * 1000);
       await Promise.resolve();
 
       expect(mockLobbyService.cleanupInactiveLobbies).toHaveBeenCalledTimes(1);
       expect(mockLobbyService.cleanupOldLobbies).toHaveBeenCalledTimes(1);
 
       // Advance by another 5 minutes
-      jest.advanceTimersByTime(5 * 60 * 1000);
+      vi.advanceTimersByTime(5 * 60 * 1000);
       await Promise.resolve();
 
       expect(mockLobbyService.cleanupInactiveLobbies).toHaveBeenCalledTimes(2);
@@ -91,7 +91,7 @@ d('CleanupService - Enhanced Testing', () => {
       cleanupService.start();
       
       // Advance past initial cleanup
-      await jest.runOnlyPendingTimersAsync();
+      await vi.runOnlyPendingTimersAsync();
       
       // Clear counters
       mockLobbyService.cleanupInactiveLobbies.mockClear();
@@ -100,8 +100,8 @@ d('CleanupService - Enhanced Testing', () => {
       cleanupService.stop();
 
       // Advance time - no more cleanups should occur
-      jest.advanceTimersByTime(10 * 60 * 1000);
-      await jest.runOnlyPendingTimersAsync();
+      vi.advanceTimersByTime(10 * 60 * 1000);
+      await vi.runOnlyPendingTimersAsync();
 
       expect(mockLobbyService.cleanupInactiveLobbies).not.toHaveBeenCalled();
       expect(mockLobbyService.cleanupOldLobbies).not.toHaveBeenCalled();
@@ -114,7 +114,7 @@ d('CleanupService - Enhanced Testing', () => {
       mockLobbyService.cleanupOldLobbies.mockResolvedValue(0);
 
       cleanupService.start();
-      await jest.runOnlyPendingTimersAsync();
+      await vi.runOnlyPendingTimersAsync();
 
       expect(consoleLogSpy).toHaveBeenCalledWith(
         'Cleaned up 5 inactive lobbies (older than 10 minutes)'
@@ -126,7 +126,7 @@ d('CleanupService - Enhanced Testing', () => {
       mockLobbyService.cleanupOldLobbies.mockResolvedValue(3);
 
       cleanupService.start();
-      await jest.runOnlyPendingTimersAsync();
+      await vi.runOnlyPendingTimersAsync();
 
       expect(consoleLogSpy).toHaveBeenCalledWith(
         'Cleaned up 3 old ended lobbies (older than 24 hours)'
@@ -138,7 +138,7 @@ d('CleanupService - Enhanced Testing', () => {
       mockLobbyService.cleanupOldLobbies.mockResolvedValue(0);
 
       cleanupService.start();
-      await jest.runOnlyPendingTimersAsync();
+      await vi.runOnlyPendingTimersAsync();
 
       expect(consoleLogSpy).toHaveBeenCalledWith('No lobbies needed cleanup');
     });
@@ -148,7 +148,7 @@ d('CleanupService - Enhanced Testing', () => {
       mockLobbyService.cleanupOldLobbies.mockResolvedValue(1);
 
       cleanupService.start();
-      await jest.runOnlyPendingTimersAsync();
+      await vi.runOnlyPendingTimersAsync();
 
       expect(consoleLogSpy).toHaveBeenCalledWith(
         'Cleaned up 2 inactive lobbies (older than 10 minutes)'
@@ -166,7 +166,7 @@ d('CleanupService - Enhanced Testing', () => {
       mockLobbyService.cleanupInactiveLobbies.mockRejectedValue(testError);
 
       cleanupService.start();
-      await jest.runOnlyPendingTimersAsync();
+      await vi.runOnlyPendingTimersAsync();
 
       expect(consoleErrorSpy).toHaveBeenCalledWith(
         'Error during scheduled cleanup:',
@@ -184,7 +184,7 @@ d('CleanupService - Enhanced Testing', () => {
       cleanupService.start();
 
       // Initial cleanup should fail
-      await jest.runOnlyPendingTimersAsync();
+      await vi.runOnlyPendingTimersAsync();
       expect(consoleErrorSpy).toHaveBeenCalledWith(
         'Error during scheduled cleanup:',
         expect.any(Error)
@@ -194,8 +194,8 @@ d('CleanupService - Enhanced Testing', () => {
       consoleErrorSpy.mockClear();
 
       // Next cleanup should succeed
-      jest.advanceTimersByTime(5 * 60 * 1000);
-      await jest.runOnlyPendingTimersAsync();
+      vi.advanceTimersByTime(5 * 60 * 1000);
+      await vi.runOnlyPendingTimersAsync();
 
       expect(consoleErrorSpy).not.toHaveBeenCalled();
       expect(consoleLogSpy).toHaveBeenCalledWith(
@@ -208,7 +208,7 @@ d('CleanupService - Enhanced Testing', () => {
       mockLobbyService.cleanupOldLobbies.mockRejectedValue(new Error('Old lobby cleanup failed'));
 
       cleanupService.start();
-      await jest.runOnlyPendingTimersAsync();
+      await vi.runOnlyPendingTimersAsync();
 
       expect(consoleErrorSpy).toHaveBeenCalledWith(
         'Error during scheduled cleanup:',
@@ -225,7 +225,7 @@ d('CleanupService - Enhanced Testing', () => {
       cleanupService.start();
       
       // Handle async promise rejections
-      await expect(jest.runOnlyPendingTimersAsync()).resolves.not.toThrow();
+      await expect(vi.runOnlyPendingTimersAsync()).resolves.not.toThrow();
       
       expect(consoleErrorSpy).toHaveBeenCalledWith(
         'Error during scheduled cleanup:',
@@ -251,7 +251,7 @@ d('CleanupService - Enhanced Testing', () => {
     it('should allow restart after stop', async () => {
       // Start, stop, then start again
       cleanupService.start();
-      await jest.runOnlyPendingTimersAsync();
+      await vi.runOnlyPendingTimersAsync();
 
       cleanupService.stop();
       expect(consoleLogSpy).toHaveBeenCalledWith('Cleanup service stopped');
@@ -293,7 +293,7 @@ d('CleanupService - Enhanced Testing', () => {
 
     it('should call cleanup methods with correct parameters', async () => {
       cleanupService.start();
-      await jest.runOnlyPendingTimersAsync();
+      await vi.runOnlyPendingTimersAsync();
 
       expect(mockLobbyService.cleanupInactiveLobbies).toHaveBeenCalledWith(10);
       expect(mockLobbyService.cleanupOldLobbies).toHaveBeenCalledWith(24);
@@ -318,11 +318,11 @@ d('CleanupService - Enhanced Testing', () => {
       await Promise.resolve();
 
       // First interval
-      jest.advanceTimersByTime(5 * 60 * 1000);
+      vi.advanceTimersByTime(5 * 60 * 1000);
       await Promise.resolve();
 
       // Second interval
-      jest.advanceTimersByTime(5 * 60 * 1000);
+      vi.advanceTimersByTime(5 * 60 * 1000);
       await Promise.resolve();
 
       expect(timestamps).toHaveLength(3);
@@ -350,11 +350,11 @@ d('CleanupService - Enhanced Testing', () => {
       cleanupService.start();
 
       // Run initial cleanup
-      await jest.runOnlyPendingTimersAsync();
+      await vi.runOnlyPendingTimersAsync();
 
       // Start next interval while previous cleanup might still be running
-      jest.advanceTimersByTime(5 * 60 * 1000);
-      await jest.runOnlyPendingTimersAsync();
+      vi.advanceTimersByTime(5 * 60 * 1000);
+      await vi.runOnlyPendingTimersAsync();
 
       expect(cleanupCount).toBeGreaterThan(0);
     });
@@ -371,7 +371,7 @@ d('CleanupService - Enhanced Testing', () => {
       cleanupService.start();
 
       // Start cleanup and immediately stop service
-      const cleanupPromise = jest.runOnlyPendingTimersAsync();
+      const cleanupPromise = vi.runOnlyPendingTimersAsync();
       cleanupService.stop();
 
       await cleanupPromise;
@@ -384,8 +384,8 @@ d('CleanupService - Enhanced Testing', () => {
 
   describe('Memory Management', () => {
     it('should not leak timers when started and stopped repeatedly', () => {
-      const setIntervalSpy = jest.spyOn(global, 'setInterval');
-      const clearIntervalSpy = jest.spyOn(global, 'clearInterval');
+      const setIntervalSpy = vi.spyOn(global, 'setInterval');
+      const clearIntervalSpy = vi.spyOn(global, 'clearInterval');
 
       for (let i = 0; i < 5; i++) {
         cleanupService.start();
@@ -398,7 +398,7 @@ d('CleanupService - Enhanced Testing', () => {
     });
 
     it('should properly cleanup all resources on stop', () => {
-      const clearIntervalSpy = jest.spyOn(global, 'clearInterval');
+      const clearIntervalSpy = vi.spyOn(global, 'clearInterval');
 
       cleanupService.start();
       const timerId = (cleanupService as any).cleanupInterval;
@@ -418,11 +418,11 @@ d('CleanupService - Enhanced Testing', () => {
       cleanupService.start();
 
       // Use jest timer controls - setInterval creates a pending timer
-      expect(jest.getTimerCount()).toBeGreaterThan(0);
+      expect(vi.getTimerCount()).toBeGreaterThan(0);
 
       // Advance by one interval and flush promises (runAllTimersAsync loops
       // forever on setInterval, so use advanceTimersByTime instead)
-      jest.advanceTimersByTime(5 * 60 * 1000);
+      vi.advanceTimersByTime(5 * 60 * 1000);
       await Promise.resolve();
 
       expect(mockLobbyService.cleanupInactiveLobbies).toHaveBeenCalled();
@@ -443,12 +443,12 @@ d('CleanupService - Enhanced Testing', () => {
       expect(cleanupCallCount).toBe(1);
 
       // Advance by exact interval
-      jest.advanceTimersByTime(5 * 60 * 1000);
+      vi.advanceTimersByTime(5 * 60 * 1000);
       await Promise.resolve();
       expect(cleanupCallCount).toBe(2);
 
       // Advance by multiple intervals (3 x 5 minutes)
-      jest.advanceTimersByTime(15 * 60 * 1000);
+      vi.advanceTimersByTime(15 * 60 * 1000);
       await Promise.resolve();
       expect(cleanupCallCount).toBe(5); // 2 + 3 more
     });

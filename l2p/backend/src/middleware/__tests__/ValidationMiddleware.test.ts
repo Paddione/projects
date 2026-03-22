@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, jest } from '@jest/globals';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { Request, Response, NextFunction } from 'express';
 import Joi from 'joi';
 import {
@@ -14,11 +14,11 @@ import { ValidationError } from '../errorHandler.js';
 describe('ValidationMiddleware', () => {
   let mockRequest: Partial<Request>;
   let mockResponse: Partial<Response>;
-  let mockNext: jest.MockedFunction<NextFunction>;
+  let mockNext: vi.MockedFunction<NextFunction>;
 
   beforeEach(() => {
     // Clear all mocks
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     // Create mock request
     mockRequest = {
@@ -31,12 +31,12 @@ describe('ValidationMiddleware', () => {
 
     // Create mock response with proper Jest mocks
     mockResponse = {
-      status: jest.fn().mockReturnThis(),
-      json: jest.fn().mockReturnThis(),
+      status: vi.fn().mockReturnThis(),
+      json: vi.fn().mockReturnThis(),
     } as any;
 
     // Create mock next function
-    mockNext = jest.fn();
+    mockNext = vi.fn();
   });
 
   describe('ValidationMiddleware.validate', () => {
@@ -344,7 +344,7 @@ describe('ValidationMiddleware', () => {
     });
 
     it('should reset rate limit after window expires', () => {
-      jest.useFakeTimers();
+      vi.useFakeTimers();
       try {
         // Arrange
         const rateLimit = ValidationMiddleware.rateLimitValidation(2, 100); // 2 requests per 100ms
@@ -356,14 +356,14 @@ describe('ValidationMiddleware', () => {
         rateLimit(mockRequest as Request, mockResponse as Response, mockNext);
 
         // Advance time past the window
-        jest.advanceTimersByTime(150);
+        vi.advanceTimersByTime(150);
 
         // 4th request should be allowed after window expires
         rateLimit(mockRequest as Request, mockResponse as Response, mockNext);
 
         expect(mockNext).toHaveBeenCalledTimes(3); // 2 initial + 1 after reset
       } finally {
-        jest.useRealTimers();
+        vi.useRealTimers();
       }
     });
 

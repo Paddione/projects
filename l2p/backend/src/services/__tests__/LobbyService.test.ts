@@ -1,59 +1,67 @@
-import { describe, it, expect, beforeEach, jest } from '@jest/globals';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { LobbyService, CreateLobbyRequest, JoinLobbyRequest, Player, LobbyWithPlayers } from '../LobbyService';
 import { LobbyRepository, Lobby } from '../../repositories/LobbyRepository';
 import { UserRepository, User } from '../../repositories/UserRepository';
 import { QuestionService } from '../QuestionService';
 import { GameProfileService } from '../GameProfileService';
 
-// Mock the dependencies
-jest.mock('../../repositories/LobbyRepository');
-jest.mock('../../repositories/UserRepository');
-jest.mock('../QuestionService');
-jest.mock('../GameProfileService');
+// Mock the dependencies with factory constructors
+vi.mock('../../repositories/LobbyRepository', () => ({
+  LobbyRepository: vi.fn().mockImplementation(function() { return {}; }),
+}));
+vi.mock('../../repositories/UserRepository', () => ({
+  UserRepository: vi.fn().mockImplementation(function() { return {}; }),
+}));
+vi.mock('../QuestionService', () => ({
+  QuestionService: vi.fn().mockImplementation(function() { return {}; }),
+}));
+vi.mock('../GameProfileService', () => ({
+  GameProfileService: vi.fn().mockImplementation(function() { return {}; }),
+}));
 
-// Provide explicit mock implementations so methods are jest.fn()
+// Provide explicit mock implementations so methods are vi.fn()
 const createLobbyRepoMock = () => ({
-  findByCode: jest.fn(),
-  findLobbyById: jest.fn(),
-  codeExists: jest.fn(),
-  createLobby: jest.fn(),
-  updateLobby: jest.fn(),
-  deleteLobby: jest.fn(),
-  findActiveLobbies: jest.fn(),
-  findLobbiesByHost: jest.fn(),
-  updateLobbyStatus: jest.fn(),
-  addPlayerToLobby: jest.fn(),
-  removePlayerFromLobby: jest.fn(),
-  updatePlayerInLobby: jest.fn(),
-  getLobbyCount: jest.fn(),
-  getActiveLobbyCount: jest.fn(),
-  cleanupOldLobbies: jest.fn(),
-  cleanupInactiveLobbies: jest.fn(),
+  findByCode: vi.fn(),
+  findLobbyById: vi.fn(),
+  codeExists: vi.fn(),
+  createLobby: vi.fn(),
+  updateLobby: vi.fn(),
+  deleteLobby: vi.fn(),
+  findActiveLobbies: vi.fn(),
+  findLobbiesByHost: vi.fn(),
+  updateLobbyStatus: vi.fn(),
+  addPlayerToLobby: vi.fn(),
+  removePlayerFromLobby: vi.fn(),
+  updatePlayerInLobby: vi.fn(),
+  getLobbyCount: vi.fn(),
+  getActiveLobbyCount: vi.fn(),
+  cleanupOldLobbies: vi.fn(),
+  cleanupInactiveLobbies: vi.fn(),
 });
 
 const createUserRepoMock = () => ({
-  findUserById: jest.fn(),
+  findUserById: vi.fn(),
 });
 
 const createQuestionServiceMock = () => ({
-  getQuestionSetById: jest.fn(),
-  getQuestionsBySetId: jest.fn(),
-  getAllQuestionSetsWithStats: jest.fn(),
+  getQuestionSetById: vi.fn(),
+  getQuestionsBySetId: vi.fn(),
+  getAllQuestionSetsWithStats: vi.fn(),
 });
 
 const createGameProfileServiceMock = () => ({
-  getOrCreateProfile: jest.fn(),
+  getOrCreateProfile: vi.fn(),
 });
 
-// Note: Rather than mocking constructors (which may not be jest.Mock in ESM),
+// Note: Rather than mocking constructors (which may not be vi.Mock in ESM),
 // we build plain mocked objects and inject them into the service under test.
 
 describe('LobbyService', () => {
   let lobbyService: LobbyService;
-  let mockLobbyRepository: jest.Mocked<LobbyRepository>;
-  let mockUserRepository: jest.Mocked<UserRepository>;
-  let mockQuestionService: jest.Mocked<QuestionService>;
-  let mockGameProfileService: jest.Mocked<GameProfileService>;
+  let mockLobbyRepository: vi.Mocked<LobbyRepository>;
+  let mockUserRepository: vi.Mocked<UserRepository>;
+  let mockQuestionService: vi.Mocked<QuestionService>;
+  let mockGameProfileService: vi.Mocked<GameProfileService>;
 
   // Test data
   const mockUser: User = {
@@ -122,13 +130,13 @@ describe('LobbyService', () => {
 
   beforeEach(() => {
     // Clear all mocks
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     // Setup mocks as plain objects to avoid constructor side effects
-    mockLobbyRepository = createLobbyRepoMock() as unknown as jest.Mocked<LobbyRepository>;
-    mockUserRepository = createUserRepoMock() as unknown as jest.Mocked<UserRepository>;
-    mockQuestionService = createQuestionServiceMock() as unknown as jest.Mocked<QuestionService>;
-    mockGameProfileService = createGameProfileServiceMock() as unknown as jest.Mocked<GameProfileService>;
+    mockLobbyRepository = createLobbyRepoMock() as unknown as vi.Mocked<LobbyRepository>;
+    mockUserRepository = createUserRepoMock() as unknown as vi.Mocked<UserRepository>;
+    mockQuestionService = createQuestionServiceMock() as unknown as vi.Mocked<QuestionService>;
+    mockGameProfileService = createGameProfileServiceMock() as unknown as vi.Mocked<GameProfileService>;
 
     // Create LobbyService instance
     lobbyService = new LobbyService();

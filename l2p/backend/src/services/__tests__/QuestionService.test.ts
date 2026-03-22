@@ -1,13 +1,13 @@
-import { describe, beforeEach, it, expect, jest } from '@jest/globals';
+import { describe, beforeEach, it, expect, vi } from 'vitest';
 import { QuestionService, QuestionSelectionOptions, LocalizedQuestion, QuestionSetWithStats } from '../QuestionService';
 import { QuestionRepository, Question, QuestionSet, CreateQuestionData, CreateQuestionSetData } from '../../repositories/QuestionRepository';
 
 // Mock the dependencies
-jest.mock('../../repositories/QuestionRepository');
+vi.mock('../../repositories/QuestionRepository');
 
 describe('QuestionService', () => {
   let questionService: QuestionService;
-  let mockQuestionRepository: jest.Mocked<QuestionRepository>;
+  let mockQuestionRepository: vi.Mocked<QuestionRepository>;
 
   // Test data
   const mockQuestionSet: QuestionSet = {
@@ -85,48 +85,48 @@ describe('QuestionService', () => {
 
   beforeEach(() => {
     // Clear all mocks
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     // Create a complete mock of QuestionRepository
-    const repoMock: Record<string, jest.Mock> = {
+    const repoMock: Record<string, vi.Mock> = {
       // Question Set methods
-      findQuestionSetById: jest.fn(),
-      findAllQuestionSets: jest.fn(),
-      findQuestionSetsByCategory: jest.fn(),
-      createQuestionSet: jest.fn(),
-      updateQuestionSet: jest.fn(),
-      deleteQuestionSet: jest.fn(),
-      getQuestionSetCount: jest.fn(),
+      findQuestionSetById: vi.fn(),
+      findAllQuestionSets: vi.fn(),
+      findQuestionSetsByCategory: vi.fn(),
+      createQuestionSet: vi.fn(),
+      updateQuestionSet: vi.fn(),
+      deleteQuestionSet: vi.fn(),
+      getQuestionSetCount: vi.fn(),
 
       // Question methods
-      findQuestionById: jest.fn(),
-      findQuestionsBySetId: jest.fn(),
-      createQuestion: jest.fn(),
-      updateQuestion: jest.fn(),
-      deleteQuestion: jest.fn(),
-      getQuestionCount: jest.fn(),
-      getRandomQuestions: jest.fn(),
-      getQuestionsByDifficulty: jest.fn(),
-      searchQuestions: jest.fn(),
-      validateQuestionStructure: jest.fn(),
-      getDistinctQuestionCategories: jest.fn(),
-      findAllQuestionsPaginated: jest.fn(),
-      addQuestionsToSet: jest.fn(),
-      removeQuestionsFromSet: jest.fn(),
-      getQuestionSetIdsForQuestion: jest.fn(),
+      findQuestionById: vi.fn(),
+      findQuestionsBySetId: vi.fn(),
+      createQuestion: vi.fn(),
+      updateQuestion: vi.fn(),
+      deleteQuestion: vi.fn(),
+      getQuestionCount: vi.fn(),
+      getRandomQuestions: vi.fn(),
+      getQuestionsByDifficulty: vi.fn(),
+      searchQuestions: vi.fn(),
+      validateQuestionStructure: vi.fn(),
+      getDistinctQuestionCategories: vi.fn(),
+      findAllQuestionsPaginated: vi.fn(),
+      addQuestionsToSet: vi.fn(),
+      removeQuestionsFromSet: vi.fn(),
+      getQuestionSetIdsForQuestion: vi.fn(),
 
       // Any other methods that might be needed
-      findById: jest.fn(),
-      findAll: jest.fn(),
-      create: jest.fn(),
-      update: jest.fn(),
-      delete: jest.fn(),
-      exists: jest.fn(),
-      count: jest.fn(),
-      query: jest.fn()
+      findById: vi.fn(),
+      findAll: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      delete: vi.fn(),
+      exists: vi.fn(),
+      count: vi.fn(),
+      query: vi.fn()
     };
 
-    mockQuestionRepository = repoMock as unknown as jest.Mocked<QuestionRepository>;
+    mockQuestionRepository = repoMock as unknown as vi.Mocked<QuestionRepository>;
 
     // Create QuestionService instance
     questionService = new QuestionService();

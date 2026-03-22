@@ -1,13 +1,12 @@
 import React from 'react'
-import { describe, it, expect, beforeEach, jest } from '@jest/globals'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
-import '@testing-library/jest-dom/jest-globals'
 
 // Mock avatarService — return null for SVG path so component falls back to getAvatarEmoji.
-// Using plain functions (not jest.fn()) because resetMocks:true in jest config
+// Using plain functions (not vi.fn()) because resetMocks:true in jest config
 // clears mock implementations between tests. Emoji map must be inside the factory
-// because jest.mock() is hoisted above variable declarations.
-jest.mock('../../services/avatarService', () => {
+// because vi.mock() is hoisted above variable declarations.
+vi.mock('../../services/avatarService', () => {
   const emojis: Record<string, string> = {
     student: '👨‍🎓',
     professor: '👨‍🏫',
@@ -31,10 +30,10 @@ jest.mock('../../services/avatarService', () => {
 import { LevelUpNotification } from '../LevelUpNotification'
 
 // Mock timers
-jest.useFakeTimers()
+vi.useFakeTimers()
 
 describe('LevelUpNotification', () => {
-  const mockOnClose = jest.fn()
+  const mockOnClose = vi.fn()
   const mockNotification = {
     playerId: 'test-player-id',
     username: 'TestUser',
@@ -45,11 +44,11 @@ describe('LevelUpNotification', () => {
   }
 
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
   })
 
   afterEach(() => {
-    jest.clearAllTimers()
+    vi.clearAllTimers()
   })
 
   it('should render level up notification', () => {
@@ -87,11 +86,11 @@ describe('LevelUpNotification', () => {
     render(<LevelUpNotification notification={mockNotification} onClose={mockOnClose} />)
 
     // Fast-forward 5 seconds
-    jest.advanceTimersByTime(5000)
+    vi.advanceTimersByTime(5000)
 
     // Should start fade out animation
     // onClose should be called after additional 500ms
-    jest.advanceTimersByTime(500)
+    vi.advanceTimersByTime(500)
 
     expect(mockOnClose).toHaveBeenCalled()
   })
@@ -103,7 +102,7 @@ describe('LevelUpNotification', () => {
     fireEvent.click(closeButton)
 
     // Fast-forward fade out animation
-    jest.advanceTimersByTime(500)
+    vi.advanceTimersByTime(500)
 
     expect(mockOnClose).toHaveBeenCalled()
   })
@@ -114,7 +113,7 @@ describe('LevelUpNotification', () => {
     unmount()
 
     // Fast-forward timers - should not call onClose since component unmounted
-    jest.advanceTimersByTime(6000)
+    vi.advanceTimersByTime(6000)
   })
 
   it('should display all character types correctly', () => {

@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { Request, Response, NextFunction } from 'express';
 import {
   RequestLogger,
@@ -13,9 +13,9 @@ import {
 } from '../logging.js';
 
 // Console spies (initialized per-test to avoid cross-file restore issues)
-let mockConsoleLog: jest.SpyInstance<any, any>;
-let mockConsoleError: jest.SpyInstance<any, any>;
-let mockConsoleWarn: jest.SpyInstance<any, any>;
+let mockConsoleLog: vi.SpyInstance<any, any>;
+let mockConsoleError: vi.SpyInstance<any, any>;
+let mockConsoleWarn: vi.SpyInstance<any, any>;
 
 describe('LoggingMiddleware', () => {
   interface MockUser {
@@ -33,16 +33,16 @@ describe('LoggingMiddleware', () => {
 
   let mockRequest: Partial<Request> & { user?: MockUser; correlationId?: string; connection?: MockConnection };
   let mockResponse: Partial<Response>;
-  let mockNext: jest.MockedFunction<NextFunction>;
+  let mockNext: vi.MockedFunction<NextFunction>;
 
   beforeEach(() => {
     // Clear all mocks
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     // Recreate console spies for each test
-    mockConsoleLog = jest.spyOn(console, 'log').mockImplementation(() => {});
-    mockConsoleError = jest.spyOn(console, 'error').mockImplementation(() => {});
-    mockConsoleWarn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    mockConsoleLog = vi.spyOn(console, 'log').mockImplementation(() => {});
+    mockConsoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
+    mockConsoleWarn = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
     // Create mock request
     mockRequest = {
@@ -50,7 +50,7 @@ describe('LoggingMiddleware', () => {
       url: '/api/test',
       ip: '192.168.1.1',
       connection: ({ remoteAddress: '192.168.1.1' } as unknown) as any,
-      get: jest.fn().mockReturnValue('Mozilla/5.0 Test Browser'),
+      get: vi.fn().mockReturnValue('Mozilla/5.0 Test Browser'),
       user: {
         userId: 123,
         username: 'testuser',
@@ -69,7 +69,7 @@ describe('LoggingMiddleware', () => {
     };
 
     // Create mock next function
-    mockNext = jest.fn();
+    mockNext = vi.fn();
   });
 
   // Note: do not restoreAllMocks here, as it would remove our console spies for subsequent tests
@@ -166,16 +166,16 @@ describe('LoggingMiddleware', () => {
       });
     });
 
-    it('should log slow request warning for responses over 1 second', (done) => {
+    it('should log slow request warning for responses over 1 second', () => {
       // Arrange
-      jest.useFakeTimers();
+      vi.useFakeTimers();
 
       // Act
       RequestLogger.log(mockRequest as Request, mockResponse as Response, mockNext);
-      
+
       // Advance time by 1.1 seconds
-      jest.advanceTimersByTime(1100);
-      
+      vi.advanceTimersByTime(1100);
+
       // Simulate response end
       const originalEnd = mockResponse.end;
       if (typeof originalEnd === 'function') {
@@ -191,8 +191,7 @@ describe('LoggingMiddleware', () => {
         correlationId: undefined
       });
 
-      jest.useRealTimers();
-      done();
+      vi.useRealTimers();
     });
 
     it('should handle missing IP address gracefully', () => {
@@ -217,7 +216,7 @@ describe('LoggingMiddleware', () => {
 
     it('should handle missing user agent gracefully', () => {
       // Arrange
-      (mockRequest.get as jest.Mock).mockReturnValue(undefined);
+      (mockRequest.get as vi.Mock).mockReturnValue(undefined);
 
       // Act
       RequestLogger.log(mockRequest as Request, mockResponse as Response, mockNext);

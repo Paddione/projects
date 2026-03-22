@@ -72,7 +72,7 @@ router.get('/available', authenticate, async (req: Request, res: Response): Prom
       return;
     }
 
-    const authToken = req.headers.authorization?.replace('Bearer ', '') || (req.cookies as Record<string, string>)?.accessToken;
+    const authToken = req.headers.authorization?.replace('Bearer ', '') || (req.cookies as Record<string, string>)?.['accessToken'];
     const userInfo = await characterService.getUserCharacterInfo(userId, authToken);
     if (!userInfo) {
       res.status(404).json({
@@ -139,7 +139,7 @@ router.get('/profile', authenticate, async (req: Request, res: Response): Promis
       return;
     }
 
-    const authToken = req.headers.authorization?.replace('Bearer ', '') || (req.cookies as Record<string, string>)?.accessToken;
+    const authToken = req.headers.authorization?.replace('Bearer ', '') || (req.cookies as Record<string, string>)?.['accessToken'];
     const userInfo = await characterService.getUserCharacterInfo(userId, authToken);
     if (!userInfo) {
       res.status(404).json({
@@ -194,7 +194,7 @@ router.put('/select', authenticate, async (req: Request, res: Response): Promise
     }
 
     const { characterId } = value;
-    const authToken = req.headers.authorization?.replace('Bearer ', '') || (req.cookies as Record<string, string>)?.accessToken;
+    const authToken = req.headers.authorization?.replace('Bearer ', '') || (req.cookies as Record<string, string>)?.['accessToken'];
 
     // Update user's character (tries auth service first if token available)
     const updatedUser = await characterService.updateCharacter(userId, characterId, authToken);

@@ -1,15 +1,14 @@
 import React from 'react'
 import { render, RenderOptions, waitFor } from '@testing-library/react'
-import '@testing-library/jest-dom'
 import { BrowserRouter } from 'react-router-dom'
 import { ThemeProvider } from './components/ThemeProvider'
 import userEvent from '@testing-library/user-event'
 
 // Mock the settings store for tests
-jest.mock('./stores/settingsStore', () => ({
+vi.mock('./stores/settingsStore', () => ({
   useSettingsStore: () => ({
     theme: 'light',
-    toggleTheme: jest.fn(),
+    toggleTheme: vi.fn(),
     settings: {
       language: 'en',
       theme: 'light',
@@ -17,12 +16,12 @@ jest.mock('./stores/settingsStore', () => ({
       musicEnabled: true,
       notificationsEnabled: true
     },
-    updateSettings: jest.fn()
+    updateSettings: vi.fn()
   })
 }))
 
 // Mock CSS modules
-jest.mock('./styles/AuthForm.module.css', () => ({
+vi.mock('./styles/AuthForm.module.css', () => ({
   authContainer: 'authContainer',
   authCard: 'authCard',
   header: 'header',
@@ -76,8 +75,8 @@ const customUserEvent = userEvent.setup({
     // Only advance timers if fake timers are in use
     try {
       // Check if fake timers are enabled by checking jest configuration
-      if (jest.isMockFunction(setTimeout)) {
-        jest.advanceTimersByTime(ms);
+      if (vi.isMockFunction(setTimeout)) {
+        vi.advanceTimersByTime(ms);
       }
     } catch {
       // Silently handle timer access errors in environments without fake timers

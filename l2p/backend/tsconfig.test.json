@@ -24,7 +24,7 @@
       "@shared/*": ["../../shared-infrastructure/shared/l2p/*"],
       "@test-config/*": ["../../shared-infrastructure/shared/l2p/test-config/*"]
     },
-    "types": ["jest", "node", "@types/supertest", "@playwright/test"]
+    "types": ["vitest/globals", "node", "@types/supertest", "@playwright/test"]
   },
   "include": [
     "src/**/*.ts",

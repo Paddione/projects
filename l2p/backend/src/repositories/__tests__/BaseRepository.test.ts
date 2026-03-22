@@ -1,4 +1,4 @@
-import { describe, beforeEach, afterEach, it, expect, jest } from '@jest/globals';
+import { describe, beforeEach, afterEach, it, expect, vi } from 'vitest';
 import { BaseRepository } from '../BaseRepository.js';
 import { DatabaseService } from '@/services/DatabaseService';
 import { QueryResult, QueryResultRow } from 'pg';
@@ -6,19 +6,19 @@ import { QueryResult, QueryResultRow } from 'pg';
 // ESM-friendly: spy on the real static method
 
 const mockDatabaseService = {
-  query: jest.fn(),
-  getClient: jest.fn(),
-  beginTransaction: jest.fn(),
-  commitTransaction: jest.fn(),
-  rollbackTransaction: jest.fn(),
-  testConnection: jest.fn(),
-  transaction: jest.fn(),
-  getPoolStatus: jest.fn(),
-  isHealthy: jest.fn(),
-  healthCheck: jest.fn()
-} as unknown as jest.Mocked<DatabaseService>;
+  query: vi.fn(),
+  getClient: vi.fn(),
+  beginTransaction: vi.fn(),
+  commitTransaction: vi.fn(),
+  rollbackTransaction: vi.fn(),
+  testConnection: vi.fn(),
+  transaction: vi.fn(),
+  getPoolStatus: vi.fn(),
+  isHealthy: vi.fn(),
+  healthCheck: vi.fn()
+} as unknown as vi.Mocked<DatabaseService>;
 
-jest.spyOn(DatabaseService, 'getInstance').mockReturnValue(mockDatabaseService as unknown as DatabaseService);
+vi.spyOn(DatabaseService, 'getInstance').mockReturnValue(mockDatabaseService as unknown as DatabaseService);
 
 // Create a concrete implementation for testing
 class TestRepository extends BaseRepository {
@@ -57,7 +57,7 @@ describe('BaseRepository', () => {
   beforeEach(() => {
     (globalThis as any).__DB_SERVICE__ = mockDatabaseService;
     repository = new TestRepository();
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   afterEach(() => {

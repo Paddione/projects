@@ -3,27 +3,27 @@ import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
 import { apiService } from '../../services/apiService';
 
 // Mock the API service
-jest.mock('../../services/apiService', () => ({
+vi.mock('../../services/apiService', () => ({
   apiService: {
-    getFileStatus: jest.fn(),
-    updateFileOptions: jest.fn(),
-    getToken: jest.fn(() => 'test-token')
+    getFileStatus: vi.fn(),
+    updateFileOptions: vi.fn(),
+    getToken: vi.fn(() => 'test-token')
   }
 }));
 
 // Mock the LoadingSpinner component
-jest.mock('../LoadingSpinner', () => ({
+vi.mock('../LoadingSpinner', () => ({
   LoadingSpinner: () => <div data-testid="loading-spinner">Loading...</div>
 }));
 
 // Import the component after all mocks are defined
 import { DocumentProcessor } from '../DocumentProcessor';
 
-const mockApiService = apiService as jest.Mocked<typeof apiService>;
+const mockApiService = apiService as vi.Mocked<typeof apiService>;
 
 describe('DocumentProcessor Component', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     mockApiService.getFileStatus.mockResolvedValue({
       success: true,
       data: {

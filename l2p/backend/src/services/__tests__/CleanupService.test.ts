@@ -2,8 +2,8 @@ import { CleanupService } from '../CleanupService.js';
 
 describe('CleanupService', () => {
     interface MockLobbyService {
-        cleanupInactiveLobbies: jest.MockedFunction<(minutes: number) => Promise<number>>;
-        cleanupOldLobbies: jest.MockedFunction<(hours: number) => Promise<number>>;
+        cleanupInactiveLobbies: vi.MockedFunction<(minutes: number) => Promise<number>>;
+        cleanupOldLobbies: vi.MockedFunction<(hours: number) => Promise<number>>;
     }
 
     let cleanupService: CleanupService;
@@ -11,12 +11,12 @@ describe('CleanupService', () => {
 
     beforeEach(() => {
         // Clear all mocks
-        jest.clearAllMocks();
+        vi.clearAllMocks();
 
         // Create simple mock object
         mockLobbyService = {
-            cleanupInactiveLobbies: jest.fn(),
-            cleanupOldLobbies: jest.fn(),
+            cleanupInactiveLobbies: vi.fn(),
+            cleanupOldLobbies: vi.fn(),
         } as MockLobbyService;
 
         // Create service instance
@@ -43,7 +43,7 @@ describe('CleanupService', () => {
             mockLobbyService.cleanupOldLobbies.mockResolvedValue(1);
 
             // Spy on console.log
-            const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+            const consoleSpy = vi.spyOn(console, 'log').mockImplementation();
 
             cleanupService.start();
 
@@ -54,7 +54,7 @@ describe('CleanupService', () => {
         });
 
         it('should not start if already running', () => {
-            const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+            const consoleSpy = vi.spyOn(console, 'log').mockImplementation();
 
             cleanupService.start();
             cleanupService.start(); // Try to start again
@@ -67,7 +67,7 @@ describe('CleanupService', () => {
 
     describe('stop', () => {
         it('should stop the cleanup service', () => {
-            const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+            const consoleSpy = vi.spyOn(console, 'log').mockImplementation();
 
             cleanupService.start();
             cleanupService.stop();
@@ -78,7 +78,7 @@ describe('CleanupService', () => {
         });
 
         it('should handle stopping when not running', () => {
-            const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+            const consoleSpy = vi.spyOn(console, 'log').mockImplementation();
 
             cleanupService.stop(); // Stop without starting
 
@@ -93,7 +93,7 @@ describe('CleanupService', () => {
             mockLobbyService.cleanupInactiveLobbies.mockResolvedValue(0);
             mockLobbyService.cleanupOldLobbies.mockResolvedValue(0);
 
-            const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+            const consoleSpy = vi.spyOn(console, 'log').mockImplementation();
 
             cleanupService.start();
 
@@ -108,7 +108,7 @@ describe('CleanupService', () => {
             mockLobbyService.cleanupInactiveLobbies.mockResolvedValue(3);
             mockLobbyService.cleanupOldLobbies.mockResolvedValue(2);
 
-            const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+            const consoleSpy = vi.spyOn(console, 'log').mockImplementation();
 
             cleanupService.start();
 
@@ -119,7 +119,7 @@ describe('CleanupService', () => {
         });
 
         it('should verify service can be stopped', () => {
-            const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+            const consoleSpy = vi.spyOn(console, 'log').mockImplementation();
 
             cleanupService.start();
             cleanupService.stop();
@@ -132,7 +132,7 @@ describe('CleanupService', () => {
 
     describe('error handling', () => {
         it('should handle service start and stop correctly', () => {
-            const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+            const consoleSpy = vi.spyOn(console, 'log').mockImplementation();
 
             // Test starting service
             cleanupService.start();
@@ -146,7 +146,7 @@ describe('CleanupService', () => {
         });
 
         it('should handle multiple start calls correctly', () => {
-            const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+            const consoleSpy = vi.spyOn(console, 'log').mockImplementation();
 
             cleanupService.start();
             cleanupService.start(); // Try to start again

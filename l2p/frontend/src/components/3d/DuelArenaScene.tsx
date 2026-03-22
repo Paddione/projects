@@ -223,7 +223,7 @@ class DuelErrorBoundary extends React.Component<
   static getDerivedStateFromError() {
     return { hasError: true }
   }
-  render() {
+  override render() {
     return this.state.hasError ? this.props.fallback : this.props.children
   }
 }

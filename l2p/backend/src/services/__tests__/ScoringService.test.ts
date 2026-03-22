@@ -1,22 +1,22 @@
-import { describe, it, expect, beforeEach, jest } from '@jest/globals';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { ScoringService, ScoreCalculation, PlayerStatistics } from '../ScoringService';
 import { GameSessionRepository, CreatePlayerResultData, PlayerResult } from '../../repositories/GameSessionRepository';
 import { CharacterService } from '../CharacterService';
 import { User } from '../../repositories/UserRepository';
 
 // Mock the dependencies
-jest.mock('../../repositories/GameSessionRepository');
-jest.mock('../CharacterService');
-jest.mock('../../middleware/logging', () => ({
+vi.mock('../../repositories/GameSessionRepository');
+vi.mock('../CharacterService');
+vi.mock('../../middleware/logging', () => ({
   RequestLogger: {
-    logGameEvent: jest.fn()
+    logGameEvent: vi.fn()
   }
 }));
 
 describe('ScoringService', () => {
   let scoringService: ScoringService;
-  let mockGameSessionRepository: jest.Mocked<GameSessionRepository>;
-  let mockCharacterService: jest.Mocked<CharacterService>;
+  let mockGameSessionRepository: vi.Mocked<GameSessionRepository>;
+  let mockCharacterService: vi.Mocked<CharacterService>;
 
   // Test data
   const mockPlayerResult: PlayerResult = {
@@ -82,16 +82,16 @@ describe('ScoringService', () => {
 
   beforeEach(() => {
     // Clear all mocks
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     // Setup mocks
-    mockGameSessionRepository = new GameSessionRepository() as jest.Mocked<GameSessionRepository>;
-    // Ensure commonly used repository methods are jest.fn for ESM auto-mock
-    (mockGameSessionRepository as any).getPlayerStats = jest.fn();
-    (mockGameSessionRepository as any).getTopPlayersByScore = jest.fn();
-    (mockGameSessionRepository as any).createPlayerResult = jest.fn();
-    mockCharacterService = new CharacterService() as jest.Mocked<CharacterService>;
-    (mockCharacterService as any).awardExperience = jest.fn();
+    mockGameSessionRepository = new GameSessionRepository() as vi.Mocked<GameSessionRepository>;
+    // Ensure commonly used repository methods are vi.fn for ESM auto-mock
+    (mockGameSessionRepository as any).getPlayerStats = vi.fn();
+    (mockGameSessionRepository as any).getTopPlayersByScore = vi.fn();
+    (mockGameSessionRepository as any).createPlayerResult = vi.fn();
+    mockCharacterService = new CharacterService() as vi.Mocked<CharacterService>;
+    (mockCharacterService as any).awardExperience = vi.fn();
 
     // Create ScoringService instance
     scoringService = new ScoringService();

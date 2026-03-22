@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { Server, Socket } from 'socket.io';
 import { SocketService, SocketUser, SocketLobbyEvent } from '../SocketService';
 import { LobbyService } from '../LobbyService';
@@ -7,27 +7,27 @@ import { UserRepository } from '../../repositories/UserRepository';
 import { RequestLogger } from '../../middleware/logging';
 
 // Mock the dependencies
-jest.mock('../GameService');
-jest.mock('../../repositories/UserRepository');
-jest.mock('../../middleware/logging');
+vi.mock('../GameService');
+vi.mock('../../repositories/UserRepository');
+vi.mock('../../middleware/logging');
 
 // Mock LobbyService with proper constructor and methods
-jest.mock('../LobbyService', () => {
+vi.mock('../LobbyService', () => {
   const mockLobbyServiceMethods = {
-    joinLobby: jest.fn(),
-    leaveLobby: jest.fn(),
-    updatePlayerReady: jest.fn(),
-    updatePlayerConnection: jest.fn(),
-    getLobbyByCode: jest.fn(),
-    getLobbyQuestionSetInfo: jest.fn(),
-    updateLobbyQuestionSets: jest.fn(),
+    joinLobby: vi.fn(),
+    leaveLobby: vi.fn(),
+    updatePlayerReady: vi.fn(),
+    updatePlayerConnection: vi.fn(),
+    getLobbyByCode: vi.fn(),
+    getLobbyQuestionSetInfo: vi.fn(),
+    updateLobbyQuestionSets: vi.fn(),
   };
 
   function MockLobbyServiceConstructor() {
     return mockLobbyServiceMethods;
   }
   
-  (MockLobbyServiceConstructor as any).isValidLobbyCode = jest.fn(() => true);
+  (MockLobbyServiceConstructor as any).isValidLobbyCode = vi.fn(() => true);
 
   return {
     LobbyService: MockLobbyServiceConstructor
@@ -36,12 +36,12 @@ jest.mock('../LobbyService', () => {
 
 describe('SocketService', () => {
   let socketService: SocketService;
-  let mockIo: jest.Mocked<Server>;
-  let mockSocket: jest.Mocked<Socket>;
-  let mockLobbyService: jest.Mocked<LobbyService>;
-  let mockGameService: jest.Mocked<GameService>;
-  let mockUserRepository: jest.Mocked<UserRepository>;
-  let mockRequestLogger: jest.Mocked<typeof RequestLogger>;
+  let mockIo: vi.Mocked<Server>;
+  let mockSocket: vi.Mocked<Socket>;
+  let mockLobbyService: vi.Mocked<LobbyService>;
+  let mockGameService: vi.Mocked<GameService>;
+  let mockUserRepository: vi.Mocked<UserRepository>;
+  let mockRequestLogger: vi.Mocked<typeof RequestLogger>;
 
   // Test data
   const mockSocketUser: SocketUser = {
@@ -118,37 +118,37 @@ describe('SocketService', () => {
 
   beforeEach(() => {
     // Clear all mocks
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     // Mock console.error to prevent noise in test output
-    jest.spyOn(console, 'error').mockImplementation(() => { });
+    vi.spyOn(console, 'error').mockImplementation(() => { });
 
     // Create mock Socket.IO server
     const mockToResult = {
-      emit: jest.fn()
+      emit: vi.fn()
     };
 
     mockIo = {
-      on: jest.fn(),
-      to: jest.fn().mockReturnValue(mockToResult),
+      on: vi.fn(),
+      to: vi.fn().mockReturnValue(mockToResult),
       emit: mockToResult.emit, // Point to the same emit function
-      in: jest.fn().mockReturnThis(),
-      use: jest.fn(), // Add the missing use method for authentication middleware
+      in: vi.fn().mockReturnThis(),
+      use: vi.fn(), // Add the missing use method for authentication middleware
       sockets: {
-        join: jest.fn(),
-        leave: jest.fn(),
-        disconnect: jest.fn()
+        join: vi.fn(),
+        leave: vi.fn(),
+        disconnect: vi.fn()
       }
     } as any;
 
     // Create mock Socket with authenticated user data (required by requireAuth)
     mockSocket = {
       id: 'socket-123',
-      join: jest.fn(),
-      leave: jest.fn(),
-      emit: jest.fn(),
-      on: jest.fn(),
-      disconnect: jest.fn(),
+      join: vi.fn(),
+      leave: vi.fn(),
+      emit: vi.fn(),
+      on: vi.fn(),
+      disconnect: vi.fn(),
       rooms: new Set(['room1']),
       data: {
         user: {
@@ -166,29 +166,29 @@ describe('SocketService', () => {
     } as any;
 
     // Get the mocked LobbyService instance - it returns the mockLobbyServiceMethods object
-    const mockedModule = jest.requireMock('../LobbyService') as any;
+    const mockedModule = { LobbyService } as any;
     mockLobbyService = new mockedModule.LobbyService() as any;
 
     mockGameService = {
-      isGameActive: jest.fn(),
-      startGameSession: jest.fn(),
-      submitAnswer: jest.fn(),
-      handlePlayerDisconnect: jest.fn(),
+      isGameActive: vi.fn(),
+      startGameSession: vi.fn(),
+      submitAnswer: vi.fn(),
+      handlePlayerDisconnect: vi.fn(),
       // Add other methods as needed
     } as any;
 
     mockUserRepository = {
-      findUserById: jest.fn(),
+      findUserById: vi.fn(),
       // Add other methods as needed
     } as any;
 
-    // Mock the static RequestLogger methods using jest.spyOn
-    jest.spyOn(RequestLogger, 'logSocketConnection').mockImplementation(() => { });
-    jest.spyOn(RequestLogger, 'logSocketEvent').mockImplementation(() => { });
+    // Mock the static RequestLogger methods using vi.spyOn
+    vi.spyOn(RequestLogger, 'logSocketConnection').mockImplementation(() => { });
+    vi.spyOn(RequestLogger, 'logSocketEvent').mockImplementation(() => { });
 
     mockRequestLogger = {
-      logSocketConnection: RequestLogger.logSocketConnection as jest.MockedFunction<typeof RequestLogger.logSocketConnection>,
-      logSocketEvent: RequestLogger.logSocketEvent as jest.MockedFunction<typeof RequestLogger.logSocketEvent>,
+      logSocketConnection: RequestLogger.logSocketConnection as vi.MockedFunction<typeof RequestLogger.logSocketConnection>,
+      logSocketEvent: RequestLogger.logSocketEvent as vi.MockedFunction<typeof RequestLogger.logSocketEvent>,
       // Add other methods as needed
     } as any;
 
@@ -203,7 +203,7 @@ describe('SocketService', () => {
 
   afterEach(() => {
     // Restore console.error
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   describe('Constructor and Initialization', () => {
@@ -268,7 +268,7 @@ describe('SocketService', () => {
     describe('handleJoinLobby', () => {
       it('should successfully join a valid lobby', async () => {
         // Mock the static method
-        const mockedModule = jest.requireMock('../LobbyService') as any;
+        const mockedModule = { LobbyService } as any;
         mockedModule.LobbyService.isValidLobbyCode.mockReturnValue(true);
         mockLobbyService.joinLobby.mockResolvedValue(mockLobby);
 
@@ -297,7 +297,7 @@ describe('SocketService', () => {
 
       it('should reject invalid lobby code format', async () => {
         // Mock the static method to return false for invalid code
-        const mockedModule = jest.requireMock('../LobbyService') as any;
+        const mockedModule = { LobbyService } as any;
         mockedModule.LobbyService.isValidLobbyCode.mockReturnValue(false);
 
         // Call the method directly
@@ -314,7 +314,7 @@ describe('SocketService', () => {
 
       it('should handle lobby not found error', async () => {
         // Mock the static method
-        const mockedModule = jest.requireMock('../LobbyService') as any;
+        const mockedModule = { LobbyService } as any;
         mockedModule.LobbyService.isValidLobbyCode.mockReturnValue(true);
         mockLobbyService.joinLobby.mockRejectedValue(new Error('Lobby not found'));
 
@@ -332,7 +332,7 @@ describe('SocketService', () => {
 
       it('should handle server errors during join', async () => {
         // Mock the static method
-        const mockedModule = jest.requireMock('../LobbyService') as any;
+        const mockedModule = { LobbyService } as any;
         mockedModule.LobbyService.isValidLobbyCode.mockReturnValue(true);
         mockLobbyService.joinLobby.mockRejectedValue(new Error('Database error'));
 
@@ -723,7 +723,7 @@ describe('SocketService', () => {
   describe('Error Recovery', () => {
     it('should handle lobby service errors gracefully', async () => {
       // Mock the static method
-      const mockedModule = jest.requireMock('../LobbyService') as any;
+      const mockedModule = { LobbyService } as any;
       mockedModule.LobbyService.isValidLobbyCode.mockReturnValue(true);
 
       // Mock a service error
@@ -759,7 +759,7 @@ describe('SocketService', () => {
 
     it('should handle invalid data gracefully', async () => {
       // Mock the static method to return false for invalid code
-      const mockedModule = jest.requireMock('../LobbyService') as any;
+      const mockedModule = { LobbyService } as any;
       mockedModule.LobbyService.isValidLobbyCode.mockReturnValue(false);
 
       // Call the method directly
@@ -793,7 +793,7 @@ describe('SocketService', () => {
 
     it('should handle room management correctly', async () => {
       // Mock the static method
-      const mockedModule = jest.requireMock('../LobbyService') as any;
+      const mockedModule = { LobbyService } as any;
       mockedModule.LobbyService.isValidLobbyCode.mockReturnValue(true);
       mockLobbyService.joinLobby.mockResolvedValue(mockLobby);
 
@@ -809,7 +809,7 @@ describe('SocketService', () => {
 
     it('should handle message broadcasting correctly', async () => {
       // Mock the static method
-      const mockedModule = jest.requireMock('../LobbyService') as any;
+      const mockedModule = { LobbyService } as any;
       mockedModule.LobbyService.isValidLobbyCode.mockReturnValue(true);
       mockLobbyService.joinLobby.mockResolvedValue(mockLobby);
 
@@ -866,7 +866,7 @@ describe('SocketService', () => {
 
     it('should handle rapid event firing without memory leaks', async () => {
       // Mock the static method
-      const mockedModule = jest.requireMock('../LobbyService') as any;
+      const mockedModule = { LobbyService } as any;
       mockedModule.LobbyService.isValidLobbyCode.mockReturnValue(true);
       mockLobbyService.joinLobby.mockResolvedValue(mockLobby);
 
@@ -957,7 +957,7 @@ describe('SocketService', () => {
 
     it('should handle malformed event data gracefully', async () => {
       // Mock the static method to return false for invalid/null lobby codes
-      const mockedModule = jest.requireMock('../LobbyService') as any;
+      const mockedModule = { LobbyService } as any;
       mockedModule.LobbyService.isValidLobbyCode.mockReturnValue(false);
 
       const connectionHandler = mockIo.on.mock.calls[0]![1];
@@ -1033,7 +1033,7 @@ describe('SocketService', () => {
 
     it('should handle socket room operations correctly', async () => {
       // Mock the static method
-      const mockedModule = jest.requireMock('../LobbyService') as any;
+      const mockedModule = { LobbyService } as any;
       mockedModule.LobbyService.isValidLobbyCode.mockReturnValue(true);
       mockLobbyService.joinLobby.mockResolvedValue(mockLobby);
 
@@ -1064,7 +1064,7 @@ describe('SocketService', () => {
   describe('Concurrent Event Handling', () => {
     it('should handle simultaneous join and leave events', async () => {
       // Mock the static method
-      const mockedModule = jest.requireMock('../LobbyService') as any;
+      const mockedModule = { LobbyService } as any;
       mockedModule.LobbyService.isValidLobbyCode.mockReturnValue(true);
       mockLobbyService.joinLobby.mockResolvedValue(mockLobby);
       mockLobbyService.leaveLobby.mockResolvedValue(null);
@@ -1110,7 +1110,7 @@ describe('SocketService', () => {
   describe('Error Recovery and Resilience', () => {
     it('should recover from temporary service failures', async () => {
       // Mock the static method
-      const mockedModule = jest.requireMock('../LobbyService') as any;
+      const mockedModule = { LobbyService } as any;
       mockedModule.LobbyService.isValidLobbyCode.mockReturnValue(true);
 
       // First call fails, second succeeds
@@ -1143,7 +1143,7 @@ describe('SocketService', () => {
 
     it('should handle partial service failures gracefully', async () => {
       // Mock the static method
-      const mockedModule = jest.requireMock('../LobbyService') as any;
+      const mockedModule = { LobbyService } as any;
       mockedModule.LobbyService.isValidLobbyCode.mockReturnValue(true);
       mockLobbyService.joinLobby.mockResolvedValue(mockLobby);
 
@@ -1166,7 +1166,7 @@ describe('SocketService', () => {
 
     it('should handle network timeouts gracefully', async () => {
       // Mock the static method
-      const mockedModule = jest.requireMock('../LobbyService') as any;
+      const mockedModule = { LobbyService } as any;
       mockedModule.LobbyService.isValidLobbyCode.mockReturnValue(true);
 
       // Simulate timeout
