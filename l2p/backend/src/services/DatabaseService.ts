@@ -205,7 +205,7 @@ export class DatabaseService {
     let client: PoolClient | null = null;
     try {
       client = await this.pool.connect();
-      const result = await client.query('SELECT NOW()');
+      await client.query('SELECT NOW()');
       client.release();
       this.isConnected = true;
       return true;

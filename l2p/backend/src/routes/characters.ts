@@ -36,7 +36,7 @@ const awardExperienceSchema = Joi.object({
  * GET /api/characters
  * Get all available characters
  */
-router.get('/', async (req: Request, res: Response): Promise<void> => {
+router.get('/', async (_req: Request, res: Response): Promise<void> => {
   try {
     const characters = characterService.getAllCharacters();
     

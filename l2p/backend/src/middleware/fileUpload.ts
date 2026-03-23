@@ -5,7 +5,7 @@ import fs from 'fs';
 
 // Configure storage
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
+  destination: (_req, _file, cb) => {
     const uploadDir = path.join(process.cwd(), 'uploads');
     
     // Create uploads directory if it doesn't exist
@@ -15,7 +15,7 @@ const storage = multer.diskStorage({
     
     cb(null, uploadDir);
   },
-  filename: (req, file, cb) => {
+  filename: (_req, file, cb) => {
     // Generate unique filename with timestamp
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
     const ext = path.extname(file.originalname);
@@ -25,7 +25,7 @@ const storage = multer.diskStorage({
 });
 
 // File filter function
-const fileFilter = (req: any, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
+const fileFilter = (_req: any, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
   const allowedTypes = ['.md', '.pdf', '.docx', '.html'];
   const fileExt = path.extname(file.originalname).toLowerCase();
   
@@ -47,7 +47,7 @@ const upload = multer({
 });
 
 // Error handling middleware
-export const handleFileUploadError = (error: Error, req: Request, res: Response, next: NextFunction): void => {
+export const handleFileUploadError = (error: Error, _req: Request, res: Response, next: NextFunction): void => {
   // Support both real MulterError and mocked variants in tests
   const isMulterError =
     (error as any)?.name === 'MulterError' ||

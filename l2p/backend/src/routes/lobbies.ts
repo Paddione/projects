@@ -616,7 +616,7 @@ router.get('/my', authenticate, asyncHandler(async (req: AuthenticatedRequest, r
  * GET /api/lobbies/stats
  * Get lobby statistics
  */
-router.get('/stats', asyncHandler(async (req: Request, res: Response): Promise<void> => {
+router.get('/stats', asyncHandler(async (_req: Request, res: Response): Promise<void> => {
   try {
     const stats = await lobbyService.getLobbyStats();
 
@@ -670,7 +670,7 @@ router.delete('/cleanup', authenticate, asyncHandler(async (req: AuthenticatedRe
  * Get available question sets for lobby creation
  * Public endpoint - no authentication required for basic question set info
  */
-router.get('/question-sets/available', asyncHandler(async (req: Request, res: Response): Promise<void> => {
+router.get('/question-sets/available', asyncHandler(async (_req: Request, res: Response): Promise<void> => {
   try {
     const questionSets = await lobbyService.getAvailableQuestionSets();
 

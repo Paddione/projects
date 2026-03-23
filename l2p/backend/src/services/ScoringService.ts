@@ -1,7 +1,7 @@
-import { GameSessionRepository, CreatePlayerResultData, PlayerResult } from '../repositories/GameSessionRepository.js';
+import { GameSessionRepository, CreatePlayerResultData } from '../repositories/GameSessionRepository.js';
 import { CharacterService } from './CharacterService.js';
 import { RequestLogger } from '../middleware/logging.js';
-import { GameplayModifiers, ScoreContext, PerkEffectEngine } from './PerkEffectEngine.js';
+import { GameplayModifiers, ScoreContext } from './PerkEffectEngine.js';
 
 export interface ScoreCalculation {
   timeElapsed: number;
@@ -289,7 +289,7 @@ export class ScoringService {
   /**
    * Get leaderboard for a question set
    */
-  async getLeaderboard(questionSetId: number, limit: number = 10): Promise<Array<{
+  async getLeaderboard(_questionSetId: number, limit: number = 10): Promise<Array<{
     rank: number;
     username: string;
     characterName?: string;
@@ -329,7 +329,7 @@ export class ScoringService {
   /**
    * Validate if a game session qualifies for Hall of Fame
    */
-  validateHallOfFameEligibility(gameSessionId: number, totalQuestions: number, completedQuestions: number): boolean {
+  validateHallOfFameEligibility(_gameSessionId: number, totalQuestions: number, completedQuestions: number): boolean {
     // Must complete at least 80% of questions to qualify
     const completionRate = completedQuestions / totalQuestions;
     return completionRate >= 0.8;
@@ -369,7 +369,7 @@ export class ScoringService {
   /**
    * Get performance rating based on score and accuracy
    */
-  getPerformanceRating(score: number, accuracy: number, maxMultiplier: number): string {
+  getPerformanceRating(_score: number, accuracy: number, maxMultiplier: number): string {
     if (accuracy >= 90 && maxMultiplier >= 4) return 'Perfect';
     if (accuracy >= 80 && maxMultiplier >= 3) return 'Excellent';
     if (accuracy >= 70 && maxMultiplier >= 2) return 'Good';

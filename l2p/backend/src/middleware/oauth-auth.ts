@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { AuthService, TokenPayload } from '../services/AuthService.js';
+import { TokenPayload } from '../services/AuthService.js';
 
 // Extend Express Request interface to include user
 declare global {

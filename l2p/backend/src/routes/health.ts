@@ -10,7 +10,7 @@ const router = Router();
  * GET /health
  * Basic health check endpoint
  */
-router.get('/', asyncHandler(async (req: Request, res: Response) => {
+router.get('/', asyncHandler(async (_req: Request, res: Response) => {
   const memoryUsage = process.memoryUsage();
   
   try {
@@ -73,7 +73,7 @@ router.get('/', asyncHandler(async (req: Request, res: Response) => {
  * GET /health/database
  * Database health check endpoint
  */
-router.get('/database', asyncHandler(async (req: Request, res: Response) => {
+router.get('/database', asyncHandler(async (_req: Request, res: Response) => {
   try {
     const start = Date.now();
     const dbService = DatabaseService.getInstance();
@@ -107,7 +107,7 @@ router.get('/database', asyncHandler(async (req: Request, res: Response) => {
  * GET /health/migrations
  * Migration status endpoint
  */
-router.get('/migrations', asyncHandler(async (req: Request, res: Response) => {
+router.get('/migrations', asyncHandler(async (_req: Request, res: Response) => {
   try {
     res.setHeader('Cache-Control', 'no-store');
     res.status(200).json({
@@ -134,7 +134,7 @@ router.get('/migrations', asyncHandler(async (req: Request, res: Response) => {
  * GET /health/detailed
  * Detailed health check with all checks and metrics
  */
-router.get('/detailed', asyncHandler(async (req: Request, res: Response) => {
+router.get('/detailed', asyncHandler(async (_req: Request, res: Response) => {
   const memoryUsage = process.memoryUsage();
   
   const health = {
@@ -163,7 +163,7 @@ router.get('/detailed', asyncHandler(async (req: Request, res: Response) => {
  * GET /health/ready
  * Readiness probe for Kubernetes/Docker
  */
-router.get('/ready', asyncHandler(async (req: Request, res: Response) => {
+router.get('/ready', asyncHandler(async (_req: Request, res: Response) => {
   try {
     // Check database connection
     const dbService = DatabaseService.getInstance();
@@ -194,7 +194,7 @@ router.get('/ready', asyncHandler(async (req: Request, res: Response) => {
  * GET /health/live
  * Liveness probe for Kubernetes/Docker
  */
-router.get('/live', asyncHandler(async (req: Request, res: Response) => {
+router.get('/live', asyncHandler(async (_req: Request, res: Response) => {
   // Simple liveness check - if we can respond, we're alive
   res.setHeader('Cache-Control', 'no-store');
   res.status(200).json({

@@ -109,20 +109,6 @@ export class PerksManager {
   }
 
   /**
-   * Get or create legacy user ID for OAuth users
-   * This is a bridge function to allow OAuth users to use the perks system
-   * which currently requires a legacy user_id from the users table
-   */
-  private async getLegacyUserId(authUserId: number): Promise<number> {
-    const query = 'SELECT get_or_create_legacy_user_id($1) as legacy_user_id';
-    const result = await this.db.query(query, [authUserId]);
-    if (!result.rows[0]) {
-      throw new Error('Failed to get legacy user ID for OAuth user');
-    }
-    return result.rows[0]['legacy_user_id'];
-  }
-
-  /**
    * Get perks available for a specific level
    */
   async getPerksForLevel(level: number): Promise<Perk[]> {
@@ -551,65 +537,6 @@ export class PerksManager {
       default:
         return {};
     }
-  }
-
-  /**
-   * Get a specific user perk (draft-based: checks if perk was chosen in a draft)
-   */
-  private async getUserPerk(userId: number, perkId: number): Promise<UserPerk | null> {
-    const query = `
-      SELECT
-        p.id AS perk_master_id,
-        p.name AS perk_name,
-        p.category AS perk_category,
-        p.type AS perk_type,
-        p.tier AS perk_tier,
-        p.title AS perk_title,
-        p.description AS perk_description,
-        p.config_schema AS perk_config_schema,
-        p.asset_data AS perk_asset_data,
-        p.effect_config AS perk_effect_config,
-        p.is_active AS perk_is_active,
-        p.created_at AS perk_created_at,
-        p.updated_at AS perk_updated_at,
-        d.id AS draft_id,
-        d.chosen_perk_id
-      FROM perks p
-      LEFT JOIN user_perk_drafts d ON d.chosen_perk_id = p.id AND d.user_id = $1
-      WHERE p.id = $2
-    `;
-
-    const result = await this.db.query(query, [userId, perkId]);
-
-    if (result.rows.length === 0) {
-      return null;
-    }
-
-    const row = result.rows[0]!;
-    const isChosen = row['chosen_perk_id'] != null;
-    return {
-      id: row['draft_id'] ?? row['perk_master_id'],
-      user_id: userId,
-      perk_id: row['perk_master_id'],
-      is_unlocked: isChosen,
-      is_active: isChosen,
-      configuration: row['perk_effect_config'] ?? {},
-      updated_at: row['perk_updated_at'],
-      perk: {
-        id: row['perk_master_id'],
-        name: row['perk_name'],
-        category: row['perk_category'],
-        type: row['perk_type'],
-        level_required: 0,
-        title: row['perk_title'],
-        description: row['perk_description'],
-        config_schema: row['perk_config_schema'],
-        asset_data: row['perk_asset_data'],
-        is_active: row['perk_is_active'],
-        created_at: row['perk_created_at'],
-        updated_at: row['perk_updated_at']
-      }
-    };
   }
 
   /**

@@ -12,14 +12,14 @@ const characterService = new CharacterService();
 const router = express.Router();
 
 // Minimal test route
-router.get('/test', (req: Request, res: Response) => {
+router.get('/test', (_req: Request, res: Response) => {
   res.json({ success: true, message: 'Perks route is working!', timestamp: new Date().toISOString() });
 });
 
 /**
  * Get all perks available to the system
  */
-router.get('/all', authenticate, async (req: Request, res: Response): Promise<void> => {
+router.get('/all', authenticate, async (_req: Request, res: Response): Promise<void> => {
   try {
     const perks = await perksManager.getAllPerks();
     

@@ -42,7 +42,7 @@ export { databaseHealthCheck };
 // Export health check handlers for server.ts
 import { Request, Response } from 'express';
 
-export const healthCheckHandler = async (req: Request, res: Response) => {
+export const healthCheckHandler = async (_req: Request, res: Response) => {
   try {
     const dbHealth = await databaseHealthCheck.check();
     res.status(200).json({
@@ -61,7 +61,7 @@ export const healthCheckHandler = async (req: Request, res: Response) => {
   }
 };
 
-export const readinessHandler = async (req: Request, res: Response) => {
+export const readinessHandler = async (_req: Request, res: Response) => {
   try {
     const dbHealth = await databaseHealthCheck.check();
     if (dbHealth.status === 'healthy') {

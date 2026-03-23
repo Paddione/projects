@@ -140,7 +140,7 @@ export class RequestLogger {
   /**
    * Error logging middleware
    */
-  static logError = (err: Error, req: Request, res: Response, next: NextFunction): void => {
+  static logError = (err: Error, req: Request, _res: Response, next: NextFunction): void => {
     const ip = req.ip || (req as any).connection?.remoteAddress || 'unknown';
     const correlationId = (req as any).correlationId as string | undefined;
     const logEntry: LogEntry = {

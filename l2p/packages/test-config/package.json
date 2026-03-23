@@ -95,7 +95,7 @@
     "nginx:reload": "node dist/generate-nginx-config.js reload",
     "nginx:switch": "node dist/generate-nginx-config.js switch",
     "nginx:validate": "node dist/generate-nginx-config.js validate",
-    "test": "jest",
+    "test": "echo 'No tests configured for test-config package'",
     "test:env:cleanup": "node dist/TestEnvironmentCLI.js cleanup",
     "test:env:health": "node dist/TestEnvironmentCLI.js health",
     "test:env:start": "node dist/TestEnvironmentCLI.js start",
@@ -106,7 +106,7 @@
     "test:run:health": "node dist/TestRunnerCLI.js health",
     "test:run:integration": "node dist/TestRunnerCLI.js integration",
     "test:run:unit": "node dist/TestRunnerCLI.js unit",
-    "test:watch": "jest --watch",
+    "test:watch": "echo 'No tests configured for test-config package'",
     "check:deprecated": "node -e \"const fs=require('fs'); const path='package-lock.json'; if(!fs.existsSync(path)){console.log('No package-lock.json found.'); process.exit(0);} const lock=JSON.parse(fs.readFileSync(path,'utf8')); const deprecated=Object.entries(lock.packages||{}).filter(([,info])=>info.deprecated); if(!deprecated.length){console.log('No deprecated packages.'); process.exit(0);} deprecated.forEach(([name,info])=>{const pkg=name.replace(/^node_modules\\//,''); console.log(pkg + ': ' + info.deprecated);}); process.exit(1);\""
   },
   "dependencies": {
@@ -123,11 +123,8 @@
     "@playwright/test": "^1.55.0",
     "@types/glob": "^8.1.0",
     "@types/inquirer": "^9.0.7",
-    "@types/jest": "^30.0.0",
     "@types/js-yaml": "^4.0.5",
     "@types/node": "^18.15.11",
-    "jest": "^30.2.0",
-    "ts-jest": "^29.4.6",
     "typescript": "^5.0.2"
   }
 }

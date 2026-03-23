@@ -88,9 +88,9 @@ router.post('/single',
       const documentId = `${processedFile.id}_${Date.now()}`;
 
       // Store file metadata in database
-      const fileRecord = await databaseService.query(`
+      await databaseService.query(`
         INSERT INTO uploaded_files (
-          file_id, user_id, original_name, file_type, file_size, 
+          file_id, user_id, original_name, file_type, file_size,
           metadata, chroma_document_id, created_at
         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
         RETURNING *
@@ -340,7 +340,7 @@ router.delete('/:id',
         return;
       }
 
-      const fileRecord = result.rows[0] as any;
+      // result.rows[0] contains the file record (unused after ChromaDB removal)
 
       // ChromaDB integration removed - no longer needed
 
@@ -576,7 +576,7 @@ router.post('/:id/update-version',
     try {
       const fileId = req.params['id'];
       const userId = (req as any).user.id;
-      const { content, metadata } = req.body as any;
+      const { content: _content, metadata } = req.body as any;
 
       // Verify file ownership
       const fileResult = await databaseService.query(`

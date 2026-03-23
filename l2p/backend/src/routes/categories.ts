@@ -6,7 +6,7 @@ const router = express.Router();
 const categoryService = new CategoryService();
 
 // GET /api/categories — list all with question counts
-router.get('/', asyncHandler(async (req: express.Request, res: express.Response) => {
+router.get('/', asyncHandler(async (_req: express.Request, res: express.Response) => {
   const categories = await categoryService.getAllCategories();
   res.json({ success: true, data: categories });
 }));

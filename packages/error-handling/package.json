@@ -1,0 +1,13 @@
+{
+  "name": "@korczewski/error-handling",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Shared error classes and Express middleware for all services",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "peerDependencies": {
+    "express": "^4.18.0",
+    "@types/express": ">=4"
+  }
+}

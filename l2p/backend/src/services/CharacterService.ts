@@ -1,5 +1,4 @@
 import { UserRepository, User } from '../repositories/UserRepository.js';
-import { PerksManager, UserPerk } from './PerksManager.js';
 import { GameProfileService, GameProfile } from './GameProfileService.js';
 import { DatabaseService } from './DatabaseService.js';
 import { PerkQueryService } from './PerkQueryService.js';
@@ -30,7 +29,6 @@ export interface ExperienceAwardData {
 
 export class CharacterService {
   private userRepository: UserRepository;
-  private perksManager: PerksManager;
   private gameProfileService: GameProfileService;
   private db: DatabaseService;
 
@@ -96,7 +94,6 @@ export class CharacterService {
 
   constructor() {
     this.userRepository = new UserRepository();
-    this.perksManager = PerksManager.getInstance();
     this.gameProfileService = new GameProfileService();
     this.db = DatabaseService.getInstance();
   }
@@ -237,7 +234,7 @@ export class CharacterService {
 
     // Try to update game profile first (OAuth users)
     try {
-      const profile = await this.gameProfileService.getOrCreateProfile(userId);
+      await this.gameProfileService.getOrCreateProfile(userId);
 
       // Auth service is unreachable — only student is safe to select
       if (characterId !== 'student') {

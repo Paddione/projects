@@ -5,11 +5,11 @@ import { ScoringService } from './ScoringService.js';
 import { RequestLogger } from '../middleware/logging.js';
 import { LobbyService } from './LobbyService.js';
 import { CharacterService } from './CharacterService.js';
-import { PerkQueryService, DraftPerk } from './PerkQueryService.js';
+import { PerkQueryService } from './PerkQueryService.js';
 import { PerkEffectEngine, GameplayModifiers, ScoreContext } from './PerkEffectEngine.js';
 import { PerksManager } from './PerksManager.js';
 import { authFetchInternal } from '../config/authClient.js';
-import type { AnswerType, AnswerMetadata, EstimationMetadata, OrderingMetadata, MatchingMetadata, FillInBlankMetadata } from '../types/question.js';
+import type { AnswerType, AnswerMetadata, EstimationMetadata, OrderingMetadata, MatchingMetadata } from '../types/question.js';
 
 const ARENA_BASE_URL = process.env['ARENA_BASE_URL'] || 'https://arena.korczewski.de';
 const DEATHMATCH_TIMEOUT_SECONDS = 60;
@@ -895,20 +895,6 @@ export class GameService {
     }));
 
     return results;
-  }
-
-  /**
-   * Update player scores based on question results
-   */
-  private updatePlayerScores(gameState: GameState, results: any): void {
-    gameState.players.forEach(player => {
-      const playerResult = results.playerResults.find((p: any) => p.playerId === player.id);
-      if (!playerResult) return;
-
-      // Update player's score and streak
-      player.score += playerResult.score;
-      player.currentStreak = playerResult.isCorrect ? player.currentStreak + 1 : 0;
-    });
   }
 
   /**

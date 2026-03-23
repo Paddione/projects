@@ -39,7 +39,7 @@ import {
   CORRELATION_ID_HEADER,
 } from '../middleware/correlationId.js';
 import { csrfProtection } from '../middleware/csrf.js';
-import { errorHandler } from '../middleware/errorHandler.js';
+import { errorHandler, NotFoundError } from '../middleware/errorHandler.js';
 import { authenticate, optionalAuthenticate, requireAdmin } from '../middleware/authenticate.js';
 
 // ---------------------------------------------------------------------------
@@ -226,21 +226,20 @@ describe('errorHandler middleware', () => {
     errorHandler(err, req, res, noop);
 
     expect(res._status).toBe(403);
-    expect((res._body as any).error).toBe('CORS policy violation');
-    expect((res._body as any).message).toBe('Origin not allowed');
+    expect((res._body as any).error).toBe('Not allowed by CORS');
+    expect((res._body as any).code).toBe('CORS_ERROR');
   });
 
-  it('preserves non-200 statusCode from res when no CORS error', () => {
-    const err = new Error('Not found');
+  it('returns correct status for AppError subclasses', () => {
+    const err = new NotFoundError('Not found');
     const req = mockReq();
     const res = mockRes();
-    res.statusCode = 404;
-    (res as any)._status = 404;
 
     errorHandler(err, req, res, noop);
 
     expect(res._status).toBe(404);
     expect((res._body as any).error).toBe('Not found');
+    expect((res._body as any).code).toBe('NOT_FOUND_ERROR');
   });
 
   it('defaults to 500 when res.statusCode is 200', () => {

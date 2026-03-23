@@ -14,7 +14,7 @@ export class ValidationMiddleware {
    * Validate request data against Joi schemas
    */
   static validate = (schema: ValidationSchema) => {
-    return (req: Request, res: Response, next: NextFunction): void => {
+    return (req: Request, _res: Response, next: NextFunction): void => {
       const errors: string[] = [];
 
       // Validate request body
@@ -254,7 +254,7 @@ export class ValidationMiddleware {
   /**
    * Sanitize input data to prevent XSS and injection attacks
    */
-  static sanitize = (req: Request, res: Response, next: NextFunction): void => {
+  static sanitize = (req: Request, _res: Response, next: NextFunction): void => {
     // Sanitize string values in body
     if (req.body && typeof req.body === 'object') {
       req.body = ValidationMiddleware.sanitizeObject(req.body);

@@ -108,7 +108,7 @@ export class FileProcessingService {
    */
   private async extractPdfContent(
     buffer: Buffer,
-    options: ProcessingOptions
+    _options: ProcessingOptions
   ): Promise<{ content: string; metadata: FileMetadata }> {
     try {
       // Dynamically resolve pdf-parse (works with Jest mocks and ESM/CJS variants)
@@ -159,7 +159,7 @@ export class FileProcessingService {
    */
   private async extractDocxContent(
     buffer: Buffer,
-    options: ProcessingOptions
+    _options: ProcessingOptions
   ): Promise<{ content: string; metadata: FileMetadata }> {
     try {
       const extract = (mammoth as any)?.extractRawText as undefined | ((arg: any) => Promise<any>);
@@ -188,7 +188,7 @@ export class FileProcessingService {
    */
   private extractMarkdownContent(
     buffer: Buffer,
-    options: ProcessingOptions
+    _options: ProcessingOptions
   ): Promise<{ content: string; metadata: FileMetadata }> {
     try {
       const content = buffer.toString('utf-8');
@@ -219,7 +219,7 @@ export class FileProcessingService {
    */
   private extractHtmlContent(
     buffer: Buffer,
-    options: ProcessingOptions
+    _options: ProcessingOptions
   ): Promise<{ content: string; metadata: FileMetadata }> {
     try {
       const html = buffer.toString('utf-8');

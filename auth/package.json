@@ -32,6 +32,7 @@
   "author": "Patrick",
   "license": "MIT",
   "dependencies": {
+    "@korczewski/error-handling": "file:../packages/error-handling",
     "bcryptjs": "^3.0.3",
     "connect-pg-simple": "^9.0.1",
     "cookie-parser": "^1.4.6",
@@ -48,7 +49,7 @@
     "passport-google-oauth20": "^2.0.0",
     "pg": "^8.11.3",
     "postgres": "^3.4.3",
-    "zod": "^3.22.4"
+    "zod": "^3.24.2"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.2",

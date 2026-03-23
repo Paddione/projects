@@ -8,7 +8,7 @@ import { Request, Response, NextFunction } from 'express';
  *   RateLimit-Limit, RateLimit-Remaining, RateLimit-Reset
  * This middleware reads those and adds a warning signal.
  */
-export function rateLimitWarning(req: Request, res: Response, next: NextFunction) {
+export function rateLimitWarning(_req: Request, res: Response, next: NextFunction) {
   const originalWriteHead = res.writeHead;
 
   res.writeHead = function (this: Response, ...args: Parameters<typeof res.writeHead>) {

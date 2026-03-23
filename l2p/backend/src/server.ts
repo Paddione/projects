@@ -230,7 +230,7 @@ app.use(helmet({
 app.use(cors(corsOptions));
 
 // Remove Origin-Agent-Cluster header to prevent browser warnings about inconsistent usage
-app.use((req, res, next) => {
+app.use((_req, res, next) => {
   // Override the end method to remove the header right before sending response
   const originalEnd = res.end;
   res.end = function (chunk?: any, encoding?: BufferEncoding | (() => void), cb?: () => void) {
@@ -255,7 +255,7 @@ app.use((req, res, next) => {
 
 // Rate limiting with different limits for different endpoints
 // Disable rate limiting when DISABLE_RATE_LIMITING=true or in test environment
-const generalLimiter = isRateLimitDisabled ? (req: Request, res: Response, next: NextFunction) => next() : rateLimit({
+const generalLimiter = isRateLimitDisabled ? (_req: Request, _res: Response, next: NextFunction) => next() : rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 100, // limit each IP to 100 requests per windowMs
   skip: hasBypassKey,
@@ -266,7 +266,7 @@ const generalLimiter = isRateLimitDisabled ? (req: Request, res: Response, next:
   },
   standardHeaders: true,
   legacyHeaders: false,
-  handler: (req, res, _next) => {
+  handler: (_req, res, _next) => {
     try {
       // Provide Retry-After in seconds to instruct client backoff
       const retryAfterSec = Math.ceil((15 * 60 * 1000) / 1000);
@@ -282,7 +282,7 @@ const generalLimiter = isRateLimitDisabled ? (req: Request, res: Response, next:
   }
 });
 
-const authLimiter = isRateLimitDisabled ? (req: Request, res: Response, next: NextFunction) => next() : rateLimit({
+const authLimiter = isRateLimitDisabled ? (_req: Request, _res: Response, next: NextFunction) => next() : rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 100, // limit each IP to 100 auth requests per windowMs (loosened from 10)
   skip: hasBypassKey,
@@ -297,7 +297,7 @@ const authLimiter = isRateLimitDisabled ? (req: Request, res: Response, next: Ne
   skipSuccessfulRequests: true,
   standardHeaders: true,
   legacyHeaders: false,
-  handler: (req, res, _next) => {
+  handler: (_req, res, _next) => {
     try {
       const retryAfterSec = Math.ceil((15 * 60 * 1000) / 1000);
       res.setHeader('Retry-After', String(retryAfterSec));
@@ -349,7 +349,7 @@ app.use(requestLogger);
 // app.use(errorLogger);
 
 // Migration status endpoint under API
-app.get('/api/migrations/status', async (req: Request, res: Response) => {
+app.get('/api/migrations/status', async (_req: Request, res: Response) => {
   try {
     const migrationService = new MigrationService();
     const status = await migrationService.getMigrationStatus();
@@ -389,7 +389,7 @@ app.use('/api/perks/draft', perkDraftRoutes);
 app.use('/api/perks', perksRoutes);
 
 // Basic API routes
-app.get('/api/status', (req: Request, res: Response) => {
+app.get('/api/status', (_req: Request, res: Response) => {
   // Allow caching with revalidation to demonstrate ETag/304
   res.setHeader('Cache-Control', 'public, max-age=60, s-maxage=120, stale-while-revalidate=120');
   res.json({
@@ -400,7 +400,7 @@ app.get('/api/status', (req: Request, res: Response) => {
 });
 
 // Database test endpoint
-app.get('/api/database/test', async (req: Request, res: Response) => {
+app.get('/api/database/test', async (_req: Request, res: Response) => {
   try {
     const db = DatabaseService.getInstance();
     const result = await db.query('SELECT NOW() as current_time, version() as pg_version');
