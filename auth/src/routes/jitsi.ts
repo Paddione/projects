@@ -9,6 +9,25 @@ import { eq } from 'drizzle-orm';
 const router = express.Router();
 const tokenService = new TokenService();
 
+// In-memory conference store (ephemeral — restarts clear it, which is fine)
+interface Conference {
+  id: string;
+  room: string;
+  name: string;
+  createdBy: { userId: number; username: string; name: string | null };
+  createdAt: string;
+  guestUrl: string;
+}
+const conferences = new Map<string, Conference>();
+
+// Cleanup conferences older than 24h every hour
+setInterval(() => {
+  const cutoff = Date.now() - 24 * 60 * 60 * 1000;
+  for (const [id, conf] of conferences) {
+    if (new Date(conf.createdAt).getTime() < cutoff) conferences.delete(id);
+  }
+}, 60 * 60 * 1000);
+
 /**
  * GET /api/jitsi/authorize
  *
@@ -97,6 +116,96 @@ router.post('/invite', csrfProtection, authenticate, async (req: Request, res: R
     console.error('Jitsi invite error:', error);
     res.status(500).json({ error: 'Failed to generate invite' });
   }
+});
+
+/**
+ * GET /api/jitsi/conferences
+ *
+ * List all active conferences. Any authenticated user can see them.
+ */
+router.get('/conferences', authenticate, (_req: Request, res: Response) => {
+  res.json({ conferences: Array.from(conferences.values()) });
+});
+
+/**
+ * POST /api/jitsi/conferences
+ *
+ * Create a new conference. Generates a room, guest invite URL, and
+ * makes it visible to all authenticated users.
+ */
+router.post('/conferences', authenticate, async (req: Request, res: Response) => {
+  try {
+    const { name } = req.body;
+
+    if (!name || typeof name !== 'string' || !name.trim()) {
+      res.status(400).json({ error: 'Conference name is required' });
+      return;
+    }
+
+    // Generate a room slug from the name
+    const room = name.trim().toLowerCase().replace(/[^a-z0-9\-_]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '') || 'meeting';
+
+    // Check for duplicate room
+    for (const conf of conferences.values()) {
+      if (conf.room === room) {
+        res.status(409).json({ error: 'A conference with this room name already exists', conference: conf });
+        return;
+      }
+    }
+
+    // Fetch creator info
+    const [user] = await db
+      .select()
+      .from(users)
+      .where(eq(users.id, req.user!.userId))
+      .limit(1);
+
+    if (!user) {
+      res.status(404).json({ error: 'User not found' });
+      return;
+    }
+
+    // Generate guest invite URL (2h expiry)
+    const guestToken = tokenService.generateGuestInvite(room, '4h');
+    const guestUrl = `https://meet.korczewski.de/${room}?jwt=${guestToken}`;
+
+    const id = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    const conference: Conference = {
+      id,
+      room,
+      name: name.trim(),
+      createdBy: { userId: user.id, username: user.username, name: user.name },
+      createdAt: new Date().toISOString(),
+      guestUrl,
+    };
+
+    conferences.set(id, conference);
+    res.status(201).json({ conference });
+  } catch (error) {
+    console.error('Create conference error:', error);
+    res.status(500).json({ error: 'Failed to create conference' });
+  }
+});
+
+/**
+ * DELETE /api/jitsi/conferences/:id
+ *
+ * End/remove a conference. Only the creator or admins can do this.
+ */
+router.delete('/conferences/:id', authenticate, (req: Request, res: Response) => {
+  const conf = conferences.get(req.params.id);
+  if (!conf) {
+    res.status(404).json({ error: 'Conference not found' });
+    return;
+  }
+
+  if (conf.createdBy.userId !== req.user!.userId && req.user!.role !== 'ADMIN') {
+    res.status(403).json({ error: 'Only the creator or admin can end this conference' });
+    return;
+  }
+
+  conferences.delete(req.params.id);
+  res.json({ message: 'Conference ended' });
 });
 
 export default router;
