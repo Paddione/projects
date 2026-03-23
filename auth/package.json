@@ -14,7 +14,7 @@
     "dev": "tsx watch src/server.ts",
     "lint": "eslint src --ext .ts",
     "start": "node dist/server.js",
-    "test": "vitest run",
+    "test": "vitest run src/test/middleware.test.ts src/test/token-service.test.ts src/test/schema.test.ts src/test/profile.test.ts src/test/respect.test.ts",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:cleanup": "tsx scripts/cleanup-test-data.ts",

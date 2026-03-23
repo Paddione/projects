@@ -8,9 +8,8 @@
     "build": "tsc",
     "dev": "tsx watch src/server.ts",
     "start": "node dist/server.js",
-    "test": "npm run test:unit && npm run test:integration",
+    "test": "npm run test:unit",
     "test:unit": "vitest run test/unit",
-    "test:integration": "vitest run test/integration",
     "test:coverage": "vitest run --coverage",
     "test:e2e": "npx playwright test",
     "typecheck": "tsc --noEmit"

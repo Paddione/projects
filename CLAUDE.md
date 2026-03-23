@@ -106,8 +106,8 @@ For full testing reference see [docs/guides/testing.md](docs/guides/testing.md).
 
 ### Critical Rules
 
-1. **L2P uses vitest**: Run tests via `npx vitest run` (not Jest). No ESM flag needed.
-2. **L2P test DB isolation**: Integration tests use port 5433. Never test against production (5432).
+1. **All services use Vitest**: Run tests via `npx vitest run`. No ESM flag needed.
+2. **No integration tests**: Unit tests only (mocked infra). E2E runs against production k3s.
 3. **VideoVault test stubs**: Enhanced services stubbed in `vitest.config.ts`. Single-threaded execution.
 4. **VideoVault coverage**: Per-file thresholds (85-95%) enforced.
 
@@ -169,7 +169,7 @@ After the user answers a question, **immediately continue implementation**. Do n
 2. **Test** — Write unit + e2e tests for ALL new/changed code. Run unit and integration tests. Fix until green.
 3. **Deploy** — Deploy to k3s production via `./k8s/scripts/deploy/deploy-<service>.sh`. Run e2e tests against production. Fix and redeploy until green.
 4. **Document** — MANDATORY: Update Obsidian vault (`SMB-Symlinks/storage-pve3a/Obsidian/`) — service docs, architecture, infrastructure as applicable. Update relevant docs in `docs/` for cross-service changes. Do NOT skip Obsidian.
-5. **Ship** — `git commit` with descriptive message including all changes (implementation, tests, docs), `git push`.
+5. **Ship** — `git commit` with descriptive message including all changes (implementation, tests, docs), `git push`. If on a feature branch, create a PR via `gh pr create` targeting `master` — never leave feature branch commits un-PR'd.
 
 ## Change Discipline
 

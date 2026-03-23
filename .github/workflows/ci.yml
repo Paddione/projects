@@ -103,8 +103,8 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
-      - name: Unit tests (DB-independent)
-        run: npx vitest run src/test/middleware.test.ts src/test/token-service.test.ts
+      - name: Unit tests
+        run: npm test
 
   # ---------------------------------------------------------------------------
   # Shop: Unit Tests
@@ -181,8 +181,8 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
-      - name: Unit + integration tests
-        run: npm run test
+      - name: Unit tests
+        run: npm test
 
   # ---------------------------------------------------------------------------
   # Assetgenerator: Unit Tests

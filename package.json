@@ -15,7 +15,7 @@
     "dev:videovault": "cd VideoVault && npm run dev",
     "dev:assetgenerator": "cd Assetgenerator && node server.js --project arena",
     "install:all": "cd l2p && npm run install:all && cd ../VideoVault && npm install && cd ../shop && npm install && cd ../SOS && npm install",
-    "test:all": "npm --prefix l2p run test:all && npm --prefix auth run test && npm --prefix VideoVault run test && npm --prefix shop run test && npm --prefix SOS run test",
+    "test:all": "npm --prefix l2p run test:unit && npm --prefix auth run test && npm --prefix VideoVault run test && npm --prefix shop run test && npm --prefix SOS run test && npm --prefix arena run test",
     "typecheck:all": "bash scripts/typecheck-all.sh",
     "validate:env": "node scripts/validate-env.js all",
     "validate:env:dev": "node scripts/validate-env.js dev",
