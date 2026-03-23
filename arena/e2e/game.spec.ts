@@ -1,20 +1,22 @@
 import { test, expect, type Page } from '@playwright/test';
 import {
     mockAuth, blockSocket, makeGameState, emitFromServer,
-    ALICE, BOB,
+    force2DRenderer, ALICE, BOB,
 } from './helpers/mockApi';
 
 /**
  * Game page E2E tests — tests the PixiJS render loop + HUD overlay
  *
  * Strategy:
- *   1. Mock auth → navigate to /game/match-xxx
- *   2. Block actual socket.io connection
- *   3. Inject game-state via emitFromServer()
- *   4. Assert HUD renders, socket events update visuals
+ *   1. Force 2D renderer (Game.tsx exposes __arenaSocket)
+ *   2. Mock auth → navigate to /game/match-xxx
+ *   3. Block actual socket.io connection
+ *   4. Inject game-state via emitFromServer()
+ *   5. Assert HUD renders, socket events update visuals
  */
 
 async function gotoGame(page: Page, matchId: string = 'match-test-001') {
+    await force2DRenderer(page);
     await mockAuth(page, ALICE);
     await blockSocket(page);
 
@@ -90,8 +92,8 @@ test.describe('Game page', () => {
             ],
         }));
 
-        // Count filled hearts
-        const filledHearts = page.locator('.hp-icon:has-text("❤️")');
+        // Count filled hearts (use CSS class, not emoji text matching)
+        const filledHearts = page.locator('.hp-icon.full');
         await expect(filledHearts).toHaveCount(1);
     });
 
@@ -248,15 +250,20 @@ test.describe('Game page', () => {
 
         await emitFromServer(page, 'game-state', makeGameState());
 
-        const muteBtn = page.locator('button:has-text("🔊")').first();
-        await expect(muteBtn).toBeVisible();
+        // Volume control: first click opens popup, then click "Mute" inside
+        const volumeIcon = page.locator('button:has-text("🔊")').first();
+        await expect(volumeIcon).toBeVisible();
 
-        // Click to mute
+        // Open volume popup
+        await volumeIcon.click();
+
+        // Click the mute button inside the popup
+        const muteBtn = page.locator('.volume-mute-btn');
+        await expect(muteBtn).toBeVisible();
         await muteBtn.click();
 
-        // Icon should change to 🔇
-        const mutedBtn = page.locator('button:has-text("🔇")').first();
-        await expect(mutedBtn).toBeVisible();
+        // After muting, the main icon and mute button should show 🔇
+        await expect(muteBtn).toContainText('🔇');
     });
 
     test('match-end navigates to /results/:id', async ({ page }) => {

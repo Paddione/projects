@@ -206,11 +206,23 @@ export async function emitFromServer(page: Page, event: string, data: unknown) {
     await page.evaluate(({ event, data }) => {
         const socket = (window as any).__arenaSocket;
         if (socket) {
-            // Trigger internal listeners
+            // Trigger internal listeners registered via socket.on()
+            // socket.io-client stores them in _callbacks with '$' prefix
             const listeners = socket._callbacks?.[`$${event}`] || [];
             listeners.forEach((fn: Function) => fn(data));
         }
     }, { event, data });
+}
+
+/**
+ * Ensure the E2E test page uses the 2D renderer (Game.tsx) which exposes
+ * window.__arenaSocket for emitFromServer to work. Must be called before
+ * navigating to the game page.
+ */
+export async function force2DRenderer(page: Page) {
+    await page.addInitScript(() => {
+        localStorage.setItem('arena_use3d', 'false');
+    });
 }
 
 /**
@@ -233,11 +245,13 @@ export async function mockMatchResults(
         levelAfter?: number;
     }>
 ) {
+    // Derive winnerId from the player with placement 1
+    const winner = results.find(r => r.placement === 1);
     await page.route(`**/api/matches/${matchId}/results`, (route) => {
         route.fulfill({
             status: 200,
             contentType: 'application/json',
-            body: JSON.stringify({ results }),
+            body: JSON.stringify({ winnerId: winner?.playerId, results }),
         });
     });
 }

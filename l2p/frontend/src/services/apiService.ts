@@ -424,7 +424,7 @@ class ApiService {
             perk_id: 1,
             is_unlocked: true,
             is_active: true,
-            configuration: { theme_name: 'default' },
+            configuration: { theme_name: 'ocean' },
             unlocked_at: now,
             updated_at: now,
             perk: {
@@ -435,7 +435,8 @@ class ApiService {
               level_required: 1,
               title: 'Campus Classic Theme',
               description: 'Adds a light academic theme to your dashboard.',
-              is_active: true
+              is_active: true,
+              config_schema: { theme_name: { type: 'enum', options: ['ocean', 'forest', 'sunset'], default: 'ocean' } }
             }
           },
           {
@@ -455,7 +456,8 @@ class ApiService {
               level_required: 2,
               title: 'Scholar Avatar',
               description: 'Unlocks a scholarly avatar pose.',
-              is_active: true
+              is_active: true,
+              config_schema: { selected_avatar: { type: 'enum', options: ['scientist', 'explorer', 'artist'], default: 'scientist' } }
             }
           },
           {
@@ -475,7 +477,8 @@ class ApiService {
               level_required: 1,
               title: 'Starter Badge',
               description: 'Celebrate your first session.',
-              is_active: true
+              is_active: true,
+              config_schema: { badge_style: { type: 'enum', options: ['bronze', 'silver', 'gold'], default: 'bronze' } }
             }
           },
           {
@@ -490,12 +493,13 @@ class ApiService {
             perk: {
               id: 4,
               name: 'focus_mode',
-              category: 'utility',
-              type: 'utility',
+              category: 'helper',
+              type: 'helper',
               level_required: 5,
               title: 'Focus Mode',
               description: 'Reduces distractions during quizzes.',
-              is_active: false
+              is_active: false,
+              config_schema: null
             }
           },
         ]
@@ -506,10 +510,11 @@ class ApiService {
           loadout: {
             user_id: userId,
             active_avatar: 'student',
-            active_theme: 'default',
+            active_theme: 'ocean',
             active_badge: 'starter_badge',
             perks_config: {},
-            active_perks: perks.filter(perk => perk.is_active)
+            active_perks: perks.filter(perk => perk.is_active),
+            active_cosmetic_perks: {}
           }
         }
         return { success: true, data: response as any } as ApiResponse<T>
