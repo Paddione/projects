@@ -11,7 +11,7 @@ spec:
       match: Host(`meet.korczewski.de`) && PathPrefix(`/colibri-ws`)
       services:
         - name: jvb-http
-          port: 8080
+          port: 9090
     - kind: Rule
       match: Host(`meet.korczewski.de`)
       middlewares:

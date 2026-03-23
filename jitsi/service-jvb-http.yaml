@@ -7,7 +7,11 @@ spec:
   selector:
     app: jvb
   ports:
-    - name: http
+    - name: private
       port: 8080
       targetPort: 8080
+      protocol: TCP
+    - name: public
+      port: 9090
+      targetPort: 9090
       protocol: TCP
