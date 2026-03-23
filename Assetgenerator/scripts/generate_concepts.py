@@ -35,7 +35,11 @@ DEFAULT_STEPS = 30
 DEFAULT_CFG = 7.5
 NEGATIVE_PROMPT = (
     "blurry, low quality, watermark, text, signature, deformed, ugly, "
-    "realistic photo, photorealistic, noisy, grainy"
+    "realistic photo, photorealistic, noisy, grainy, "
+    "multiple views, multiple angles, character sheet, turnaround sheet, "
+    "reference sheet, front and back, 3-view, orthographic views, "
+    "side view, back view, collage, comparison, split image, "
+    "model sheet, animation sheet, sprite sheet, multiple poses"
 )
 
 # Style suffix removed — asset prompts already contain full style direction
@@ -287,26 +291,9 @@ def generate_character_concepts(char: dict, meta: dict, backend: str, comfyui_ur
     else:
         print(f"  [SKIP] characters/{char_id} — already exists")
 
-    # Per-animation reference sheets (optional, helps Blender rigging)
-    for anim_name in char.get("animations", {}):
-        anim_path = out_dir / f"{char_id}_{anim_name}.png"
-        if anim_path.exists() and not FORCE_OVERWRITE:
-            print(f"  [SKIP] characters/{char_id}_{anim_name} — already exists")
-            continue
-
-        anim_prompt = (
-            f"{char['prompt']}, {anim_name.replace('_', ' ')} pose, "
-            f"animation reference sheet, multiple angles"
-        )
-        print(f"  [GEN] characters/{char_id}_{anim_name} (768x768)")
-        if backend == "comfyui":
-            ok = comfyui_generate(comfyui_url, anim_prompt, anim_path, 768, 768)
-        else:
-            ok = diffusers_generate(anim_prompt, anim_path, 768, 768)
-        if not ok:
-            print(f"  [WARN] Failed to generate {char_id}_{anim_name}, continuing...")
-        else:
-            remove_background(anim_path)
+    # NOTE: Per-animation reference sheet generation removed.
+    # It was injecting animation reference sheet, multiple angles into prompts,
+    # causing ComfyUI to generate multi-view character sheets instead of single front views.
 
     return True
 
