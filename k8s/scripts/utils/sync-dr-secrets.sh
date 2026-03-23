@@ -25,7 +25,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
 
 # Control plane nodes
-ALL_NODES=("k3s-1" "k3s-2" "k3s-3")
+ALL_NODES=("k3s-1" "k3s-2" "k3s-3" "10.10.0.4")
 NODES=("${@:-${ALL_NODES[@]}}")
 REMOTE_USER="patrick"
 REMOTE_PROJECT_DIR="/home/patrick/projects"
