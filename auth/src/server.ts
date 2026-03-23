@@ -302,7 +302,8 @@ async function syncAppCatalog() {
         ('shop', 'GoldCoins Shop', 'Digital currency shop', 'https://shop.korczewski.de'),
         ('arena', 'Arena', 'Battle royale game', 'https://arena.korczewski.de'),
         ('fritzbox', 'FritzBox', 'Router management', 'https://fritz.korczewski.de'),
-        ('proxmox', 'Proxmox', 'Cluster management', 'https://proxmox.korczewski.de')
+        ('proxmox', 'Proxmox', 'Cluster management', 'https://proxmox.korczewski.de'),
+        ('jitsi', 'Jitsi Meet', 'Video conferencing (720p, 4 participants)', 'https://auth.korczewski.de/jitsi')
       ON CONFLICT (key) DO UPDATE SET
         name = EXCLUDED.name,
         description = EXCLUDED.description,
