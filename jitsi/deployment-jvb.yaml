@@ -28,7 +28,7 @@ spec:
             - sh
             - -c
             - |
-              IP=$(nslookup meet.korczewski.de 1.1.1.1 2>/dev/null | grep -A1 'Name:' | grep 'Address' | awk '{print $2}')
+              IP=$(nslookup meet.korczewski.de 1.1.1.1 2>/dev/null | grep -oE '([0-9]+\.){3}[0-9]+' | tail -1)
               if [ -z "$IP" ]; then
                 echo "ERROR: Could not resolve meet.korczewski.de"
                 exit 1
