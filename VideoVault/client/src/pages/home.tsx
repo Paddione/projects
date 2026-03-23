@@ -18,8 +18,6 @@ const EditTagsModal = lazy(() =>
 const PresetManagerModal = lazy(() =>
   import('@/components/preset-manager-modal').then((m) => ({ default: m.PresetManagerModal })),
 );
-import { PlaylistExportModal } from '@/components/playlist-export-modal';
-import { PlaylistExportService } from '@/services/playlist-export';
 import { DirectoryPickerModal } from '@/components/directory-picker-modal';
 import { SettingsModal } from '@/components/settings-modal';
 import { DirectoryDatabase } from '@/services/directory-database';
@@ -79,7 +77,6 @@ export default function Home() {
   const [isSplitOpen, setIsSplitOpen] = useState(false);
   const [splitTarget, setSplitTarget] = useState<Video | null>(null);
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
-  const [isPlaylistExportOpen, setIsPlaylistExportOpen] = useState(false);
   const [conflictDialog, setConflictDialog] = useState<ConflictDialogState | null>(null);
   const filtersActiveCount =
     state.selectedCategories.length +
@@ -199,109 +196,6 @@ export default function Home() {
     }
   };
 
-  const handleImportData = () => {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = '.json';
-    input.onchange = async (e) => {
-      const file = (e.target as HTMLInputElement).files?.[0];
-      if (file) {
-        try {
-          const text = await file.text();
-          const result = await actions.importData(text);
-          toast({
-            title: 'Data Imported',
-            description: `Imported ${result.videos} videos, ${result.presets} presets, ${result.roots} roots, ${result.watchStates} watch states.`,
-          });
-        } catch (error) {
-          showError(error instanceof Error ? error : new Error('Failed to import data'), {
-            context: { action: 'importLibrary', component: 'home' },
-            showDetails: true,
-          });
-          toast({
-            title: 'Import Failed',
-            description: 'Failed to import data. Please check the file format.',
-            variant: 'destructive',
-          });
-        }
-      }
-    };
-    input.click();
-  };
-
-  const handleExportData = async () => {
-    const defaultName = `videovault-library-${new Date().toISOString().split('T')[0]}.json`;
-
-    const startExport = async (fileHandle?: FileSystemFileHandle) => {
-      const result = await actions.exportData({ fileHandle, fileName: defaultName });
-
-      if (result.mode === 'blob' && result.blob) {
-        const url = URL.createObjectURL(result.blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = result.fileName;
-        a.click();
-        URL.revokeObjectURL(url);
-      }
-
-      toast({
-        title: 'Data Exported',
-        description:
-          result.mode === 'streamed'
-            ? 'Library metadata streamed to the chosen file.'
-            : 'Library metadata downloaded as JSON.',
-      });
-    };
-
-    try {
-      if ('showSaveFilePicker' in window) {
-        try {
-          const handle = await (window as any).showSaveFilePicker?.({
-            suggestedName: defaultName,
-            types: [{ description: 'JSON', accept: { 'application/json': ['.json'] } }],
-          });
-          if (!handle) return;
-          await startExport(handle);
-          return;
-        } catch (err: any) {
-          if (err?.name === 'AbortError') return;
-          // Fall through to blob download on picker failure
-        }
-      }
-
-      await startExport();
-    } catch (error) {
-      showError(error instanceof Error ? error : new Error('Failed to export data'), {
-        context: { action: 'exportLibrary', component: 'home' },
-        showDetails: true,
-      });
-      toast({
-        title: 'Export Failed',
-        description: 'Failed to export data.',
-        variant: 'destructive',
-      });
-    }
-  };
-
-  const handleExportPlaylist = () => {
-    setIsPlaylistExportOpen(true);
-  };
-
-  const handleCreateBackup = () => {
-    try {
-      actions.createBackup(`Manual backup - ${new Date().toLocaleDateString()}`);
-      toast({
-        title: 'Backup Created',
-        description: 'Your data has been backed up successfully.',
-      });
-    } catch (error) {
-      toast({
-        title: 'Backup Failed',
-        description: 'Failed to create backup.',
-        variant: 'destructive',
-      });
-    }
-  };
 
   const handleSubmitSplit = async (form: SplitVideoFormValues): Promise<SplitVideoResult> => {
     const target = splitTarget || state.currentVideo;
@@ -342,6 +236,10 @@ export default function Home() {
 
   const handleFocusMode = (video: Video) => {
     setLocation(`/focus/${video.id}`);
+  };
+
+  const handleCategorize = (video: Video) => {
+    setLocation(`/categorize/${video.id}`);
   };
 
   const handleFileDrop = async (files: FileList) => {
@@ -440,12 +338,6 @@ export default function Home() {
     setIsPresetManagerOpen(true);
   };
 
-  const openBatchRename = () => {
-    // For now, batch rename operates on the currently filtered videos
-    setBatchSelection(state.filteredVideos.map((v) => v.id));
-    setIsBatchRenameOpen(true);
-  };
-
   const promptCreateDirectory = async () => {
     const input = prompt('New directory (relative to scanned root), e.g. "sub/folder"');
     if (input && input.trim()) {
@@ -468,13 +360,11 @@ export default function Home() {
     }
   };
 
-  const handleSettingsChange = (settings: any) => {
+  const handleSettingsChange = () => {
     toast({
       title: 'Settings Updated',
       description: 'Your preferences have been saved successfully.',
     });
-    // Here you could apply settings to the app state
-    // For now, they're just saved to localStorage
   };
 
   return (
@@ -483,12 +373,6 @@ export default function Home() {
         isScanning={state.isScanning}
         scanProgress={state.scanProgress}
         onScanDirectory={() => void handleScanDirectory()}
-        onImportData={handleImportData}
-        onExportData={() => void handleExportData()}
-        onExportPlaylist={handleExportPlaylist}
-        onBatchRename={openBatchRename}
-        onManagePresets={() => setIsPresetManagerOpen(true)}
-        onCreateBackup={handleCreateBackup}
         onCreateDirectory={() => void promptCreateDirectory()}
         onDeleteDirectory={() => void promptDeleteDirectory()}
         onCancelScan={actions.cancelScan}
@@ -558,6 +442,7 @@ export default function Home() {
           onVideoRename={handleVideoRename}
           onVideoSplit={handleVideoSplit}
           onFocusMode={handleFocusMode}
+          onCategorize={handleCategorize}
           onPin={(video) => actions.pinVideo(video.id)}
           onSelectDirectory={() => void handleScanDirectory()}
           onFileDrop={(files) => void handleFileDrop(files)}
@@ -843,18 +728,6 @@ export default function Home() {
         />
       </Suspense>
 
-      <PlaylistExportModal
-        isOpen={isPlaylistExportOpen}
-        onClose={() => setIsPlaylistExportOpen(false)}
-        onExport={(options, filename) => {
-          PlaylistExportService.exportPlaylist(state.filteredVideos, options, filename);
-          toast({
-            title: 'Playlist Exported',
-            description: `Exported ${state.filteredVideos.length} videos to ${filename}.${options.format}`,
-          });
-        }}
-        count={state.filteredVideos.length}
-      />
 
       <DirectoryPickerModal
         isOpen={isDirPickerOpen}

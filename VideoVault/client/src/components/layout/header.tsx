@@ -7,11 +7,6 @@ import {
   Moon,
   Sun,
   FolderOpen,
-  Download,
-  Upload,
-  Edit,
-  ClipboardList,
-  Shield,
   FolderPlus,
   FolderMinus,
   XCircle,
@@ -21,8 +16,9 @@ import {
   SlidersHorizontal,
   Tags,
   MoreHorizontal,
-  BarChart3,
   HardDrive,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link } from 'wouter';
@@ -40,12 +36,6 @@ interface HeaderProps {
   isScanning: boolean;
   scanProgress: { current: number; total: number };
   onScanDirectory: () => void;
-  onImportData: () => void;
-  onExportData: () => void;
-  onExportPlaylist?: () => void;
-  onBatchRename: () => void;
-  onManagePresets: () => void;
-  onCreateBackup: () => void;
   onCreateDirectory?: () => void;
   onDeleteDirectory?: () => void;
   onCancelScan?: () => void;
@@ -60,12 +50,6 @@ export function Header({
   isScanning,
   scanProgress,
   onScanDirectory,
-  onImportData,
-  onExportData,
-  onExportPlaylist,
-  onBatchRename,
-  onManagePresets,
-  onCreateBackup,
   onCreateDirectory,
   onDeleteDirectory,
   onCancelScan,
@@ -78,9 +62,9 @@ export function Header({
   const { t } = useTranslation();
   const { theme, setTheme } = useTheme();
   const [isAdmin, setIsAdmin] = useState(AuthService.cachedIsAdmin);
+  const [isExpanded, setIsExpanded] = useState(true);
 
   useEffect(() => {
-    // Try to detect current auth state once when header mounts
     void AuthService.refresh();
     const unsubscribe = AuthService.subscribe(setIsAdmin);
     return () => {
@@ -122,7 +106,6 @@ export function Header({
             </Button>
           )}
 
-          {/* Settings Button */}
           {onOpenSettings && (
             <Button
               variant="ghost"
@@ -137,7 +120,6 @@ export function Header({
             </Button>
           )}
 
-          {/* Admin Login/Logout */}
           <Button
             variant="ghost"
             size="sm"
@@ -158,7 +140,6 @@ export function Header({
             {t('header.adminLogin')}
           </Button>
 
-          {/* Theme Toggle */}
           <Button
             variant="ghost"
             size="sm"
@@ -171,266 +152,162 @@ export function Header({
           >
             {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
           </Button>
+
+          {/* Retract/Expand toggle */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setIsExpanded((prev) => !prev)}
+            className="p-2 min-h-[40px]"
+            title={isExpanded ? 'Collapse toolbar' : 'Expand toolbar'}
+            aria-label={isExpanded ? 'Collapse toolbar' : 'Expand toolbar'}
+            aria-pressed={isExpanded}
+          >
+            {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+          </Button>
         </div>
       </div>
 
-      {/* Action Buttons Row */}
-      <div className="mt-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between p-4 bg-cv-glass-2 rounded-lg border border-cv-border-2">
-        {/* Desktop View */}
-        <div className="hidden lg:flex flex-wrap items-center gap-3">
-          <Button
-            onClick={onScanDirectory}
-            disabled={isScanning}
-            data-testid="button-scan-directory"
-            variant="default"
-            size="sm"
-            className="min-h-[42px] cv-btn-primary shadow-glow-cyan"
-          >
+      {/* Retractable Action Bar */}
+      <div
+        className={`overflow-hidden transition-all duration-300 ease-in-out ${
+          isExpanded ? 'max-h-40 opacity-100 mt-6' : 'max-h-0 opacity-0 mt-0'
+        }`}
+      >
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between p-4 bg-cv-glass-2 rounded-lg border border-cv-border-2">
+          {/* Desktop View */}
+          <div className="hidden lg:flex flex-wrap items-center gap-3">
+            <Button
+              onClick={onScanDirectory}
+              disabled={isScanning}
+              data-testid="button-scan-directory"
+              variant="default"
+              size="sm"
+              className="min-h-[42px] cv-btn-primary shadow-glow-cyan"
+            >
+              <FolderOpen className="mr-2 h-4 w-4" />
+              {t('header.scanDirectory')}
+            </Button>
+          </div>
 
-            <FolderOpen className="mr-2 h-4 w-4" />
-            {t('header.scanDirectory')}
-          </Button>
+          <div className="hidden lg:flex flex-wrap items-center gap-2 justify-end">
+            <Link href="/duplicates">
+              <Button variant="outline" size="sm" data-testid="button-duplicates" className="min-h-[40px]">
+                <Copy className="mr-2 h-4 w-4" />
+                {t('header.duplicates')}
+              </Button>
+            </Link>
 
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={onImportData}
-            data-testid="button-import-data"
-            className="min-h-[42px] cv-btn-secondary"
-          >
+            <Link href="/tags">
+              <Button variant="outline" size="sm" data-testid="button-tags" className="min-h-[40px]">
+                <Tags className="mr-2 h-4 w-4" />
+                {t('header.tags')}
+              </Button>
+            </Link>
 
-            <Download className="mr-2 h-4 w-4" />
-            {t('common.import')}
-          </Button>
+            <Link href="/browse">
+              <Button variant="outline" size="sm" data-testid="button-browse" className="min-h-[40px]">
+                <HardDrive className="mr-2 h-4 w-4" />
+                {t('header.browse')}
+              </Button>
+            </Link>
 
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
+            {onCreateDirectory && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onCreateDirectory}
+                data-testid="button-create-directory"
+                className="min-h-[40px]"
+              >
+                <FolderPlus className="mr-2 h-4 w-4" />
+                {t('header.newFolder')}
+              </Button>
+            )}
+
+            {onDeleteDirectory && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onDeleteDirectory}
+                data-testid="button-delete-directory"
+                className="min-h-[40px]"
+              >
+                <FolderMinus className="mr-2 h-4 w-4" />
+                {t('header.deleteFolder')}
+              </Button>
+            )}
+
+            {onToggleFilters && (
               <Button
                 variant="secondary"
                 size="sm"
-                className="min-h-[42px] cv-btn-secondary"
-                data-testid="button-export-menu"
+                onClick={onToggleFilters}
+                className="min-h-[40px]"
+                aria-pressed={!!isFiltersOpen}
+                data-testid="button-open-filters-desktop"
               >
-                <Upload className="mr-2 h-4 w-4" />
-                {t('common.export')}
+                <SlidersHorizontal className="mr-2 h-4 w-4" />
+                {t('header.filters')}
+                {activeFilterCount > 0 && (
+                  <Badge variant="outline" className="ml-2">
+                    {activeFilterCount}
+                  </Badge>
+                )}
               </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent>
-              <DropdownMenuItem onClick={onExportData} data-testid="button-export-data">
-                {t('header.exportLibrary')} (JSON)
-              </DropdownMenuItem>
-              {onExportPlaylist && (
-                <DropdownMenuItem onClick={onExportPlaylist} data-testid="button-export-playlist">
-                  {t('header.exportPlaylist')} (M3U/JSON)
+            )}
+          </div>
+
+          {/* Mobile View */}
+          <div className="flex lg:hidden items-center gap-2 w-full">
+            <Button
+              onClick={onScanDirectory}
+              disabled={isScanning}
+              data-testid="button-scan-directory-mobile"
+              variant="outline"
+              size="sm"
+              className="flex-1 min-h-[40px]"
+            >
+              <FolderOpen className="mr-2 h-4 w-4" />
+              {t('common.scan')}
+            </Button>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="min-h-[40px] px-3" aria-label="More actions">
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuItem asChild>
+                  <Link href="/duplicates" className="w-full cursor-pointer flex items-center">
+                    <Copy className="mr-2 h-4 w-4" /> {t('header.duplicates')}
+                  </Link>
                 </DropdownMenuItem>
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-
-        <div className="hidden lg:flex flex-wrap items-center gap-2 justify-end">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={onBatchRename}
-            data-testid="button-batch-rename"
-            className="min-h-[40px]"
-          >
-
-            <Edit className="mr-2 h-4 w-4" />
-            {t('header.batchRename')}
-          </Button>
-
-          <Link href="/duplicates">
-            <Button variant="outline" size="sm" data-testid="button-duplicates" className="min-h-[40px]">
-              <Copy className="mr-2 h-4 w-4" />
-              {t('header.duplicates')}
-            </Button>
-          </Link>
-
-          <Link href="/tags">
-            <Button
-              variant="outline"
-              size="sm"
-              data-testid="button-tags"
-              className="min-h-[40px]"
-            >
-              <Tags className="mr-2 h-4 w-4" />
-              {t('header.tags')}
-            </Button>
-          </Link>
-
-          <Link href="/analytics">
-            <Button
-              variant="outline"
-              size="sm"
-              data-testid="button-analytics"
-              className="min-h-[40px]"
-            >
-              <BarChart3 className="mr-2 h-4 w-4" />
-              {t('header.analytics')}
-            </Button>
-          </Link>
-
-          <Link href="/browse">
-            <Button
-              variant="outline"
-              size="sm"
-              data-testid="button-browse"
-              className="min-h-[40px]"
-            >
-              <HardDrive className="mr-2 h-4 w-4" />
-              {t('header.browse')}
-            </Button>
-          </Link>
-
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={onManagePresets}
-            data-testid="button-manage-presets"
-            className="min-h-[40px]"
-          >
-
-            <ClipboardList className="mr-2 h-4 w-4" />
-            {t('header.presets')}
-          </Button>
-
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={onCreateBackup}
-            data-testid="button-create-backup"
-            className="min-h-[40px]"
-          >
-
-            <Shield className="mr-2 h-4 w-4" />
-            {t('header.backup')}
-          </Button>
-
-          {onCreateDirectory && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onCreateDirectory}
-              data-testid="button-create-directory"
-              className="min-h-[40px]"
-            >
-
-              <FolderPlus className="mr-2 h-4 w-4" />
-              {t('header.newFolder')}
-            </Button>
-          )}
-
-          {onDeleteDirectory && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onDeleteDirectory}
-              data-testid="button-delete-directory"
-              className="min-h-[40px]"
-            >
-
-              <FolderMinus className="mr-2 h-4 w-4" />
-              {t('header.deleteFolder')}
-            </Button>
-          )}
-
-          {onToggleFilters && (
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={onToggleFilters}
-              className="min-h-[40px]"
-              aria-pressed={!!isFiltersOpen}
-              data-testid="button-open-filters-desktop"
-            >
-              <SlidersHorizontal className="mr-2 h-4 w-4" />
-              {t('header.filters')}
-              {activeFilterCount > 0 && (
-                <Badge variant="outline" className="ml-2">
-                  {activeFilterCount}
-                </Badge>
-              )}
-            </Button>
-          )}
-        </div>
-
-        {/* Mobile View */}
-        <div className="flex lg:hidden items-center gap-2 w-full">
-          <Button
-            onClick={onScanDirectory}
-            disabled={isScanning}
-            data-testid="button-scan-directory-mobile"
-            variant="outline"
-            size="sm"
-            className="flex-1 min-h-[40px]"
-          >
-            <FolderOpen className="mr-2 h-4 w-4" />
-            {t('common.scan')}
-          </Button>
-
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="min-h-[40px] px-3" aria-label="More actions">
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuItem onClick={onImportData}>
-                <Download className="mr-2 h-4 w-4" /> {t('header.importData')}
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={onExportData}>
-                <Upload className="mr-2 h-4 w-4" /> {t('header.exportLibrary')}
-              </DropdownMenuItem>
-              {onExportPlaylist && (
-                <DropdownMenuItem onClick={onExportPlaylist}>
-                  <Upload className="mr-2 h-4 w-4" /> {t('header.exportPlaylist')}
+                <DropdownMenuItem asChild>
+                  <Link href="/tags" className="w-full cursor-pointer flex items-center">
+                    <Tags className="mr-2 h-4 w-4" /> {t('header.tags')}
+                  </Link>
                 </DropdownMenuItem>
-              )}
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={onBatchRename}>
-                <Edit className="mr-2 h-4 w-4" /> {t('header.batchRename')}
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link href="/duplicates" className="w-full cursor-pointer flex items-center">
-                  <Copy className="mr-2 h-4 w-4" /> {t('header.duplicates')}
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link href="/tags" className="w-full cursor-pointer flex items-center">
-                  <Tags className="mr-2 h-4 w-4" /> {t('header.tags')}
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link href="/analytics" className="w-full cursor-pointer flex items-center">
-                  <BarChart3 className="mr-2 h-4 w-4" /> {t('header.analytics')}
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link href="/browse" className="w-full cursor-pointer flex items-center">
-                  <HardDrive className="mr-2 h-4 w-4" /> {t('header.browseHdd')}
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={onManagePresets}>
-                <ClipboardList className="mr-2 h-4 w-4" /> {t('header.presets')}
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={onCreateBackup}>
-                <Shield className="mr-2 h-4 w-4" /> {t('header.backup')}
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              {onCreateDirectory && (
-                <DropdownMenuItem onClick={onCreateDirectory}>
-                  <FolderPlus className="mr-2 h-4 w-4" /> {t('header.newFolder')}
+                <DropdownMenuItem asChild>
+                  <Link href="/browse" className="w-full cursor-pointer flex items-center">
+                    <HardDrive className="mr-2 h-4 w-4" /> {t('header.browseHdd')}
+                  </Link>
                 </DropdownMenuItem>
-              )}
-              {onDeleteDirectory && (
-                <DropdownMenuItem onClick={onDeleteDirectory} className="text-destructive">
-                  <FolderMinus className="mr-2 h-4 w-4" /> {t('header.deleteFolder')}
-                </DropdownMenuItem>
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
+                <DropdownMenuSeparator />
+                {onCreateDirectory && (
+                  <DropdownMenuItem onClick={onCreateDirectory}>
+                    <FolderPlus className="mr-2 h-4 w-4" /> {t('header.newFolder')}
+                  </DropdownMenuItem>
+                )}
+                {onDeleteDirectory && (
+                  <DropdownMenuItem onClick={onDeleteDirectory} className="text-destructive">
+                    <FolderMinus className="mr-2 h-4 w-4" /> {t('header.deleteFolder')}
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
       </div>
 

@@ -51,6 +51,9 @@ import scanStateRoutes from './routes/scan-state';
 import jobsRoutes from './routes/jobs';
 import processingRoutes from './routes/processing';
 import browseRoutes from './routes/browse';
+import { users } from '@shared/schema';
+import { eq } from 'drizzle-orm';
+import { db } from './db';
 
 // ... (existing imports)
 
@@ -94,7 +97,18 @@ async function fetchAuthUser(req: Request): Promise<AuthServiceUser | null> {
   }
 }
 
-// Central auth admin middleware
+// Check if a username has the is_admin flag in VideoVault's local users table
+async function checkLocalAdmin(username: string): Promise<boolean> {
+  if (!db) return false;
+  try {
+    const rows = await db.select({ isAdmin: users.isAdmin }).from(users).where(eq(users.username, username));
+    return rows.length > 0 && rows[0].isAdmin === true;
+  } catch {
+    return false;
+  }
+}
+
+// Central auth admin middleware — checks external auth service role OR local is_admin flag
 async function requireAdmin(req: Request, res: Response, next: NextFunction) {
   try {
     const user = await fetchAuthUser(req);
@@ -102,7 +116,9 @@ async function requireAdmin(req: Request, res: Response, next: NextFunction) {
       res.status(401).json({ message: 'Unauthorized' });
       return;
     }
-    if (user.role !== 'ADMIN') {
+    const isExternalAdmin = user.role === 'ADMIN';
+    const isLocalAdmin = await checkLocalAdmin(user.username);
+    if (!isExternalAdmin && !isLocalAdmin) {
       res.status(403).json({ message: 'Forbidden' });
       return;
     }
@@ -132,7 +148,13 @@ export function registerRoutes(app: Express): Server {
   // Public auth status endpoint (no auth required)
   app.get('/api/auth/status', asyncHandler(async (req: Request, res: Response) => {
     const user = await fetchAuthUser(req);
-    res.json({ isAdmin: user?.role === 'ADMIN' });
+    if (!user) {
+      res.json({ isAdmin: false });
+      return;
+    }
+    const isExternalAdmin = user.role === 'ADMIN';
+    const isLocalAdmin = await checkLocalAdmin(user.username);
+    res.json({ isAdmin: isExternalAdmin || isLocalAdmin });
   }));
 
   // Auth routes (session-based)
