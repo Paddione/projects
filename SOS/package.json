@@ -12,16 +12,21 @@
     "test:unit": "vitest run test/unit",
     "test:coverage": "vitest run --coverage",
     "test:e2e": "npx playwright test",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src/"
   },
   "dependencies": {
     "express": "^4.21.0"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@playwright/test": "^1.49.0",
     "@types/express": "^5.0.0",
     "@types/node": "^20.11.0",
+    "@typescript-eslint/eslint-plugin": "^8.57.1",
+    "@typescript-eslint/parser": "^8.57.1",
     "@vitest/coverage-v8": "^2.1.9",
+    "eslint": "^9.39.4",
     "tsx": "^4.19.0",
     "typescript": "^5.3.3",
     "vitest": "^2.1.0"

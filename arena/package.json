@@ -17,15 +17,21 @@
     "test:unit": "npm --prefix frontend run test && npm --prefix backend run test:unit",
     "test:e2e": "npx playwright test",
     "test:e2e:ui": "npx playwright test --ui",
-    "test:all": "npm run test:unit && npm run test:e2e"
+    "test:all": "npm run test:unit && npm run test:e2e",
+    "lint": "npm --prefix backend run lint && npm --prefix frontend run lint"
   },
   "workspaces": [
     "frontend",
     "backend"
   ],
   "devDependencies": {
+    "@eslint/js": "^9.19.0",
     "@playwright/test": "^1.58.2",
     "@types/supertest": "^7.2.0",
+    "@typescript-eslint/eslint-plugin": "^8.57.1",
+    "@typescript-eslint/parser": "^8.57.1",
+    "eslint": "^9.39.4",
+    "eslint-plugin-react-hooks": "^7.0.1",
     "free-tex-packer-core": "^0.3.5",
     "socket.io-client": "^4.8.3",
     "supertest": "^7.2.2"

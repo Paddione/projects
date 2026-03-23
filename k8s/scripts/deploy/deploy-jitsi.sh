@@ -56,7 +56,7 @@ fi
 
 # Apply manifests
 log_info "Applying Jitsi manifests..."
-kubectl apply -k "$PROJECT_ROOT/jitsi/"
+kubectl apply -k "$K8S_DIR/services/jitsi/"
 
 # Restart deployments
 if [ "$MANIFESTS_ONLY" = false ]; then

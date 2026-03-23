@@ -27,7 +27,7 @@ jobs:
       sos: ${{ steps.filter.outputs.sos }}
       assetgenerator: ${{ steps.filter.outputs.assetgenerator }}
       k8s: ${{ steps.filter.outputs.k8s }}
-      any-service: ${{ steps.filter.outputs.arena == 'true' || steps.filter.outputs.l2p == 'true' || steps.filter.outputs.auth == 'true' || steps.filter.outputs.shop == 'true' || steps.filter.outputs.videovault == 'true' || steps.filter.outputs.sos == 'true' }}
+      any-service: ${{ steps.filter.outputs.arena == 'true' || steps.filter.outputs.l2p == 'true' || steps.filter.outputs.auth == 'true' || steps.filter.outputs.shop == 'true' || steps.filter.outputs.videovault == 'true' || steps.filter.outputs.sos == 'true' || steps.filter.outputs.assetgenerator == 'true' }}
     steps:
       - uses: actions/checkout@v4
       - uses: dorny/paths-filter@v3
@@ -262,6 +262,15 @@ jobs:
           - service: sos
             dockerfile: SOS/Dockerfile
             changed: ${{ needs.changes.outputs.sos }}
+          - service: arena-backend
+            dockerfile: arena/backend/Dockerfile
+            changed: ${{ needs.changes.outputs.arena }}
+          - service: arena-frontend
+            dockerfile: arena/frontend/Dockerfile
+            changed: ${{ needs.changes.outputs.arena }}
+          - service: assetgenerator
+            dockerfile: Assetgenerator/Dockerfile
+            changed: ${{ needs.changes.outputs.assetgenerator }}
     steps:
       - uses: actions/checkout@v4
         if: matrix.changed == 'true'

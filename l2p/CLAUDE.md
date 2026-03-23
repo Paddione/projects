@@ -341,9 +341,9 @@ Perks use a draft system where players pick perks from random pools at level-up:
 ## Important Files
 
 - `package.json` — workspace root, all npm scripts
-- `jest.config.js` — multi-project Jest config
 - `docker-compose.yml` / `docker-compose.test.yml`
 - `scripts/rebuild.sh`, `scripts/test-runner.sh`, `scripts/deploy.sh`
 - `backend/src/cli/database.ts` — DB CLI tool
+- `backend/vitest.config.ts` — Backend test config
+- `frontend/vitest.config.ts` — Frontend test config
 - `frontend/e2e/playwright.config.ts` — E2E config
-- `backend/src/cli/database.ts` — DB CLI tool
