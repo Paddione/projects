@@ -41,9 +41,10 @@ log_step "Deploying Jitsi Meet Service"
 # Preflight: check that Secret exists
 if ! kubectl get secret jitsi-secrets -n "$NAMESPACE" &>/dev/null; then
     echo -e "${YELLOW}[ERROR]${NC} Secret 'jitsi-secrets' not found in $NAMESPACE."
-    echo "Create it first:"
-    echo "  kubectl apply -f jitsi/secrets.yaml"
-    echo "Or see Task 9 in the implementation plan."
+    echo "Create it with these keys:"
+    echo "  JICOFO_AUTH_PASSWORD, JICOFO_COMPONENT_SECRET, JVB_AUTH_PASSWORD"
+    echo "  JWT_APP_SECRET (shared with auth service JITSI_JWT_SECRET)"
+    echo "  TURN_CREDENTIAL, TURN_CREDENTIALS (both needed - Prosody uses plural form)"
     exit 1
 fi
 
