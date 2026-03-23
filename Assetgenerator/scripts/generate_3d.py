@@ -74,8 +74,181 @@ def triposr_available() -> bool:
             return False
 
 
+def _has_meaningful_alpha(image: 'Image.Image', threshold: float = 0.15) -> bool:
+    """
+    Return True if the image is RGBA and at least `threshold` fraction of pixels
+    are substantially transparent (alpha < 128).  Used to decide whether rembg
+    should run — concepts that already had background removed in Phase 1 don't
+    need (and are harmed by) a second rembg pass.
+    """
+    if image.mode != 'RGBA':
+        return False
+    alpha = image.split()[3]
+    transparent = sum(1 for p in alpha.getdata() if p < 128)
+    ratio = transparent / (image.size[0] * image.size[1])
+    return ratio >= threshold
+
+
+def _remove_background(image: 'Image.Image') -> 'Image.Image':
+    """
+    Remove background from concept art using rembg (u2net model).
+
+    IMPORTANT: Skips rembg if the image already has meaningful alpha transparency
+    (≥15% of pixels transparent).  Running rembg on an already-transparent image
+    corrupts the alpha channel because PIL's .convert('RGB') composites onto
+    BLACK — rembg then sees dark subject areas as background and produces noisy,
+    incomplete masks that TripoSR reconstructs as floating particle geometry.
+
+    Only runs rembg on RGB images (or RGBA with negligible transparency) where
+    the background is a solid/gradient colour that needs removal.
+    """
+    from PIL import Image
+    import io
+
+    # Already has clean alpha — skip rembg to avoid corruption
+    if _has_meaningful_alpha(image):
+        print("  [REMBG] Image already has alpha transparency — skipping (no background to remove)")
+        return image.convert('RGBA')
+
+    try:
+        import rembg
+        # For RGB or near-opaque RGBA: composite onto WHITE first so rembg gets
+        # a clean background to segment against (not black, which causes noise)
+        rgb = Image.new('RGB', image.size, (255, 255, 255))
+        if image.mode == 'RGBA':
+            rgb.paste(image, mask=image.split()[3])
+        else:
+            rgb = image.convert('RGB')
+
+        buf = io.BytesIO()
+        rgb.save(buf, format='PNG')
+        result_bytes = rembg.remove(buf.getvalue())
+        result = Image.open(io.BytesIO(result_bytes)).convert('RGBA')
+        print("  [REMBG] Background removed successfully")
+        return result
+    except ImportError:
+        print("  [WARN] rembg not installed — background removal skipped (install: pip install rembg)")
+        return image.convert('RGBA')
+    except Exception as e:
+        print(f"  [WARN] rembg failed ({e}) — continuing without background removal")
+        return image.convert('RGBA')
+
+
+def _prepare_for_triposr(image: 'Image.Image', target: int = 512, foreground_ratio: float = 0.85) -> 'Image.Image':
+    """
+    Crop to subject bounding box, centre and scale to fill `foreground_ratio`
+    of a square white canvas at `target` px.  Input must be RGBA.
+    TripoSR performs best when the subject fills ~85% of the frame with a
+    clean white background — no gradients, shadows, or background remnants.
+    """
+    from PIL import Image
+
+    # Hard-threshold alpha: ignore faint fringe/anti-alias pixels.
+    # Threshold 128 (not 30) — lower values let rembg noise and anti-alias
+    # fringe through, which TripoSR reconstructs as floating particle geometry.
+    alpha = image.split()[3]
+    alpha_thresh = alpha.point(lambda p: 255 if p > 128 else 0)
+    bbox = alpha_thresh.getbbox()
+    if bbox:
+        # Add a small margin (2% of longest side) to avoid clipping at edges
+        w, h = image.size
+        margin = int(max(w, h) * 0.02)
+        x0 = max(0, bbox[0] - margin)
+        y0 = max(0, bbox[1] - margin)
+        x1 = min(w, bbox[2] + margin)
+        y1 = min(h, bbox[3] + margin)
+        image = image.crop((x0, y0, x1, y1))
+
+    cw, ch = image.size
+    scale = foreground_ratio * target / max(cw, ch)
+    new_w, new_h = int(cw * scale), int(ch * scale)
+    image = image.resize((new_w, new_h), Image.LANCZOS)
+
+    # Composite onto pure white — no gradient, no shadow
+    canvas = Image.new('RGBA', (target, target), (255, 255, 255, 255))
+    paste_x = (target - new_w) // 2
+    paste_y = (target - new_h) // 2
+    canvas.paste(image, (paste_x, paste_y), mask=image.split()[3])
+    return canvas.convert('RGB')
+
+
+def _keep_central_component(mesh) -> object:
+    """
+    Remove floating geometry from a TripoSR mesh by keeping the connected
+    component whose centroid is closest to the origin.
+
+    TripoSR places the reconstructed subject at (0,0,0).  Shell/dome artifacts
+    and particle clouds orbit further out.  Vertex-count selection is unreliable
+    because the shell surface often has MORE vertices than the compact character
+    body — centroid distance is a much better discriminator.
+
+    Uses trimesh's split() to find connected components, then picks the one
+    nearest the origin.  Falls back silently if trimesh is unavailable.
+    """
+    try:
+        import trimesh
+        import numpy as np
+
+        # Convert to trimesh if it isn't already
+        if not isinstance(mesh, trimesh.Trimesh):
+            try:
+                vertices = np.array(mesh.vertices)
+                faces = np.array(mesh.faces)
+                colors = None
+                if hasattr(mesh, 'visual') and hasattr(mesh.visual, 'vertex_colors'):
+                    colors = np.array(mesh.visual.vertex_colors)
+                elif hasattr(mesh, 'vertex_color'):
+                    colors = np.array(mesh.vertex_color)
+                tm = trimesh.Trimesh(vertices=vertices, faces=faces, process=False)
+                if colors is not None and len(colors) == len(vertices):
+                    tm.visual = trimesh.visual.ColorVisuals(mesh=tm, vertex_colors=colors)
+                mesh = tm
+            except Exception as e:
+                print(f"  [WARN] Mesh conversion failed: {e} — skipping island removal")
+                return mesh
+
+        components = mesh.split(only_watertight=False)
+        if not components:
+            return mesh
+
+        # Pick the component whose centroid is closest to the origin —
+        # TripoSR centres the subject at (0,0,0); shells orbit further out
+        best = min(components, key=lambda m: np.linalg.norm(m.centroid))
+
+        removed = len(components) - 1
+        orig_verts = len(mesh.vertices)
+        kept_verts = len(best.vertices)
+        pct_kept = 100 * kept_verts / orig_verts if orig_verts else 0
+
+        if removed > 0:
+            best_dist = np.linalg.norm(best.centroid)
+            print(f"  [CLEANUP] Removed {removed} floating component(s): "
+                  f"{orig_verts} → {kept_verts} vertices ({pct_kept:.0f}% kept), "
+                  f"centroid dist={best_dist:.3f}")
+        else:
+            print(f"  [CLEANUP] Mesh is single component ({orig_verts} vertices)")
+
+        return best
+
+    except ImportError:
+        print("  [WARN] trimesh not installed — skipping floating geometry removal "
+              "(install: pip install trimesh)")
+        return mesh
+    except Exception as e:
+        print(f"  [WARN] Island removal failed: {e} — using original mesh")
+        return mesh
+
+
 def triposr_generate(image_path: Path, output_path: Path) -> bool:
-    """Convert a concept image to 3D model using TripoSR."""
+    """Convert a concept image to 3D model using TripoSR.
+
+    Pipeline:
+      1. rembg  — remove background (handles RGB *and* RGBA concept art)
+      2. crop   — tight crop to subject bounding box + small margin
+      3. resize — scale subject to fill 85% of a 512×512 white canvas
+      4. TripoSR — reconstruct 3D mesh from the clean masked image
+      5. export — save as GLB with vertex colours
+    """
     global _triposr_model
     try:
         import torch
@@ -98,35 +271,29 @@ def triposr_generate(image_path: Path, output_path: Path) -> bool:
             _triposr_model.to("cuda")
 
         image = Image.open(image_path)
-        # TripoSR expects RGB — crop to subject bounding box then composite on white.
-        # Using the full image with a white background causes TripoSR to reconstruct
-        # the background as flat geometry (grey wall artifact).
-        if image.mode == 'RGBA':
-            alpha = image.split()[3]
-            # Threshold alpha to ignore faint fringe pixels from rembg
-            alpha_thresh = alpha.point(lambda p: 255 if p > 128 else 0)
-            bbox = alpha_thresh.getbbox()
-            if bbox:
-                # Crop tightly to subject
-                image = image.crop(bbox)
-            # Resize subject to fill 85% of a square frame (TripoSR sweet spot)
-            cw, ch = image.size
-            target = 512
-            foreground_ratio = 0.85
-            scale = foreground_ratio * target / max(cw, ch)
-            new_w, new_h = int(cw * scale), int(ch * scale)
-            image = image.resize((new_w, new_h), Image.LANCZOS)
-            bg = Image.new('RGBA', (target, target), (255, 255, 255, 255))
-            bg.paste(image, ((target - new_w) // 2, (target - new_h) // 2), mask=image.split()[3])
-            image = bg.convert('RGB')
 
-        # Run TripoSR inference (~15s on 12GB GPU)
+        # Step 1: remove background — always run rembg regardless of input mode.
+        # ComfyUI concept art is RGB with a white/gradient background; without this
+        # TripoSR reconstructs the background as a curved wall/dome shell artifact.
+        image_rgba = _remove_background(image)
+
+        # Step 2 & 3: crop tight + centre on white canvas
+        image_rgb = _prepare_for_triposr(image_rgba)
+
+        # Step 4: TripoSR inference (~15s on 12GB GPU)
         with torch.no_grad():
-            scene_codes = _triposr_model([image], device="cuda")
+            scene_codes = _triposr_model([image_rgb], device="cuda")
 
-        # Export as GLB
+        # Step 5: export as GLB
         meshes = _triposr_model.extract_mesh(scene_codes, has_vertex_color=True, resolution=256)
-        meshes[0].export(str(output_path))
+        mesh = meshes[0]
+
+        # Step 6: remove floating geometry islands (TripoSR often reconstructs
+        # a closed shell or spurious exterior surface around the character —
+        # keep only the largest connected component by vertex count).
+        mesh = _keep_central_component(mesh)
+
+        mesh.export(str(output_path))
         return True
 
     except Exception as e:
