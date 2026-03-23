@@ -22,6 +22,7 @@ import accessRequestsRoutes from './routes/access-requests.js';
 import forwardAuthRoutes from './routes/forward-auth.js';
 import healthRoutes from './routes/health.js';
 import internalRoutes from './routes/internal.js';
+import jitsiRoutes from './routes/jitsi.js';
 import { client } from './config/database.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -188,6 +189,10 @@ app.get('/api', (_req, res) => {
         providers: 'GET /api/oauth/providers',
         unlinkProvider: 'DELETE /api/oauth/providers/:provider',
       },
+      jitsi: {
+        authorize: 'GET /api/jitsi/authorize?redirect_uri={url}',
+        invite: 'POST /api/jitsi/invite',
+      },
       apps: {
         list: 'GET /api/apps',
       },
@@ -228,6 +233,9 @@ app.use('/api/auth', authLimiter, csrfProtection, authRoutes);
 // OAuth routes (no CSRF — Google callback is a browser redirect,
 // L2P token endpoint is server-to-server)
 app.use('/api/oauth', authLimiter, oauthRoutes);
+
+// Jitsi JWT auth (GET /authorize is redirect-based, POST /invite has CSRF via route-level middleware)
+app.use('/api/jitsi', authLimiter, jitsiRoutes);
 
 // Apps routes (CSRF on state-changing requests)
 app.use('/api/apps', authLimiter, csrfProtection, appsRoutes);

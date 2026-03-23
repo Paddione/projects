@@ -10,6 +10,7 @@ export class TokenService {
   private readonly JWT_REFRESH_SECRET: string;
   private readonly ACCESS_TOKEN_EXPIRY: string;
   private readonly REFRESH_TOKEN_EXPIRY: string;
+  private readonly JITSI_JWT_SECRET: string;
 
   constructor() {
     const isTest = process.env.NODE_ENV === 'test';
@@ -17,6 +18,7 @@ export class TokenService {
     this.JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || (isTest ? 'test-refresh-secret' : '');
     this.ACCESS_TOKEN_EXPIRY = process.env.ACCESS_TOKEN_EXPIRY || '15m';
     this.REFRESH_TOKEN_EXPIRY = process.env.REFRESH_TOKEN_EXPIRY || '7d';
+    this.JITSI_JWT_SECRET = process.env.JITSI_JWT_SECRET || (isTest ? 'test-jitsi-secret' : '');
 
     if (!this.JWT_SECRET || !this.JWT_REFRESH_SECRET) {
       throw new Error('JWT secrets must be configured');
@@ -152,5 +154,73 @@ export class TokenService {
     } catch {
       return null;
     }
+  }
+
+  /**
+   * Generate a Jitsi Meet JWT for an authenticated user.
+   * Format matches Prosody's token_verification module expectations.
+   */
+  generateJitsiToken(user: User, room: string = '*'): string {
+    if (!this.JITSI_JWT_SECRET) {
+      throw new Error('JITSI_JWT_SECRET not configured');
+    }
+
+    return jwt.sign(
+      {
+        room,
+        sub: 'meet.korczewski.de',
+        context: {
+          user: {
+            name: user.name || user.username,
+            email: user.email,
+            avatar: user.avatar_url || '',
+            id: String(user.id),
+          },
+          features: {
+            recording: false,
+            livestreaming: false,
+          },
+        },
+      },
+      this.JITSI_JWT_SECRET,
+      {
+        issuer: 'jitsi-meet',
+        audience: 'jitsi-meet',
+        expiresIn: '24h',
+      } as jwt.SignOptions
+    );
+  }
+
+  /**
+   * Generate a guest invite JWT for a specific Jitsi room.
+   * Room-locked, short-lived, no moderator privileges.
+   */
+  generateGuestInvite(room: string, expiresIn: string = '2h'): string {
+    if (!this.JITSI_JWT_SECRET) {
+      throw new Error('JITSI_JWT_SECRET not configured');
+    }
+
+    return jwt.sign(
+      {
+        room,
+        sub: 'meet.korczewski.de',
+        context: {
+          user: {
+            name: 'Guest',
+            guest: true,
+          },
+          features: {
+            recording: false,
+            livestreaming: false,
+          },
+        },
+      },
+      this.JITSI_JWT_SECRET,
+      {
+        issuer: 'jitsi-meet',
+        audience: 'jitsi-meet',
+        expiresIn,
+      } as jwt.SignOptions
+    );
   }
 }
