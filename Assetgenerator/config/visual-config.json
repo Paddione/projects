@@ -4,7 +4,7 @@
   "categories": {
     "characters": {
       "directions": 8,
-      "defaultPoses": ["stand", "gun", "machine", "reload", "hold", "silencer"],
+      "defaultPoses": ["stand", "walk", "gun", "machine", "reload", "hold", "silencer"],
       "size": 64,
       "conceptResolution": 1024,
       "has3D": true
