@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: jitsi-web-config
+  namespace: korczewski-jitsi
+data:
+  custom-config.js: |
+    config.resolution = 720;
+    config.constraints = {
+        video: {
+            height: { ideal: 720, max: 720, min: 360 }
+        }
+    };
+    config.maxFullResolutionParticipants = 4;
+    config.channelLastN = 4;
+    config.startVideoMuted = 0;
+    config.disableSimulcast = false;

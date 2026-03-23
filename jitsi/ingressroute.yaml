@@ -1,0 +1,24 @@
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: jitsi-meet
+  namespace: korczewski-jitsi
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - kind: Rule
+      match: Host(`meet.korczewski.de`) && PathPrefix(`/colibri-ws`)
+      services:
+        - name: jvb-http
+          port: 8080
+    - kind: Rule
+      match: Host(`meet.korczewski.de`)
+      middlewares:
+        - name: default-chain
+          namespace: korczewski-infra
+      services:
+        - name: jitsi-web
+          port: 80
+  tls:
+    secretName: korczewski-tls
