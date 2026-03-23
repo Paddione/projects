@@ -136,6 +136,70 @@ def _prepare_for_triposr(image: 'Image.Image', target: int = 512, foreground_rat
     return canvas.convert('RGB')
 
 
+def _keep_largest_component(mesh) -> object:
+    """
+    Remove floating geometry from a TripoSR mesh by keeping only the largest
+    connected component (by vertex count).
+
+    TripoSR frequently generates a large closed-shell surface that wraps around
+    the character — visible as a wall/dome texture artifact in side/back views.
+    This is a separate disconnected mesh island from the character body.
+
+    Uses trimesh's connected_components to split the mesh and discard all but
+    the biggest piece. Falls back silently if trimesh is unavailable.
+    """
+    try:
+        import trimesh
+        import numpy as np
+
+        # Convert to trimesh if it isn't already
+        if not isinstance(mesh, trimesh.Trimesh):
+            # TripoSR may return a different mesh type — try common interfaces
+            try:
+                vertices = np.array(mesh.vertices)
+                faces = np.array(mesh.faces)
+                colors = None
+                if hasattr(mesh, 'visual') and hasattr(mesh.visual, 'vertex_colors'):
+                    colors = np.array(mesh.visual.vertex_colors)
+                elif hasattr(mesh, 'vertex_color'):
+                    colors = np.array(mesh.vertex_color)
+                tm = trimesh.Trimesh(vertices=vertices, faces=faces, process=False)
+                if colors is not None and len(colors) == len(vertices):
+                    tm.visual = trimesh.visual.ColorVisuals(mesh=tm, vertex_colors=colors)
+                mesh = tm
+            except Exception as e:
+                print(f"  [WARN] Mesh conversion failed: {e} — skipping island removal")
+                return mesh
+
+        components = mesh.split(only_watertight=False)
+        if not components:
+            return mesh
+
+        # Pick the component with the most vertices (= the character body)
+        largest = max(components, key=lambda m: len(m.vertices))
+
+        removed = len(components) - 1
+        orig_verts = len(mesh.vertices)
+        kept_verts = len(largest.vertices)
+        pct_kept = 100 * kept_verts / orig_verts if orig_verts else 0
+
+        if removed > 0:
+            print(f"  [CLEANUP] Removed {removed} floating component(s): "
+                  f"{orig_verts} → {kept_verts} vertices ({pct_kept:.0f}% kept)")
+        else:
+            print(f"  [CLEANUP] Mesh is single component ({orig_verts} vertices)")
+
+        return largest
+
+    except ImportError:
+        print("  [WARN] trimesh not installed — skipping floating geometry removal "
+              "(install: pip install trimesh)")
+        return mesh
+    except Exception as e:
+        print(f"  [WARN] Island removal failed: {e} — using original mesh")
+        return mesh
+
+
 def triposr_generate(image_path: Path, output_path: Path) -> bool:
     """Convert a concept image to 3D model using TripoSR.
 
@@ -183,7 +247,14 @@ def triposr_generate(image_path: Path, output_path: Path) -> bool:
 
         # Step 5: export as GLB
         meshes = _triposr_model.extract_mesh(scene_codes, has_vertex_color=True, resolution=256)
-        meshes[0].export(str(output_path))
+        mesh = meshes[0]
+
+        # Step 6: remove floating geometry islands (TripoSR often reconstructs
+        # a closed shell or spurious exterior surface around the character —
+        # keep only the largest connected component by vertex count).
+        mesh = _keep_largest_component(mesh)
+
+        mesh.export(str(output_path))
         return True
 
     except Exception as e:
