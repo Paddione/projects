@@ -31,15 +31,20 @@ FORCE_OVERWRITE = False
 # SDXL generation params
 DEFAULT_WIDTH = 1024
 DEFAULT_HEIGHT = 1024
-DEFAULT_STEPS = 30
-DEFAULT_CFG = 7.5
+DEFAULT_STEPS = 40
+DEFAULT_CFG = 9.0
 NEGATIVE_PROMPT = (
     "blurry, low quality, watermark, text, signature, deformed, ugly, "
     "realistic photo, photorealistic, noisy, grainy, "
     "multiple views, multiple angles, character sheet, turnaround sheet, "
     "reference sheet, front and back, 3-view, orthographic views, "
     "side view, back view, collage, comparison, split image, "
-    "model sheet, animation sheet, sprite sheet, multiple poses"
+    "model sheet, animation sheet, sprite sheet, multiple poses, "
+    "white shoes, white sneakers, white clothing, white outfit, "
+    "bright white, overexposed, washed out, pale colors, "
+    "sitting, crouching, kneeling, bent knees, action pose, "
+    "cropped figure, partial body, cut off, headshot, portrait, "
+    "two characters, duplicate, mirror, split panel, diptych"
 )
 
 # Style suffix removed — asset prompts already contain full style direction
@@ -104,8 +109,8 @@ def comfyui_generate(base_url: str, prompt: str, output_path: Path, width: int, 
                 "seed": int(time.time() * 1000) % (2**32),
                 "steps": DEFAULT_STEPS,
                 "cfg": DEFAULT_CFG,
-                "sampler_name": "euler_ancestral",
-                "scheduler": "normal",
+                "sampler_name": "dpmpp_2m",
+                "scheduler": "karras",
                 "denoise": 1.0,
                 "model": ["4", 0],
                 "positive": ["6", 0],
