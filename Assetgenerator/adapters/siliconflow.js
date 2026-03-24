@@ -1,5 +1,6 @@
-import { join } from 'node:path';
+import { join, dirname, resolve } from 'node:path';
 import { writeFileSync, mkdirSync, existsSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import https from 'node:https';
 
 /**
@@ -107,6 +108,29 @@ export async function generate({ id, asset, config, libraryRoot }) {
   const buffer = await downloadImage(imageUrl);
   writeFileSync(outputPath, buffer);
   console.log(`  [SiliconFlow] Saved ${outputPath} (${(buffer.length / 1024).toFixed(0)} KB)`);
+
+  // Remove white background via rembg on the worker before TripoSR uses the image.
+  try {
+    const { enqueueJob } = await import('../worker-manager.js');
+    const PROJECT_ROOT = process.env.ASSETGENERATOR_ROOT || resolve(dirname(fileURLToPath(import.meta.url)), '..');
+    const workerPython = join(PROJECT_ROOT, '.venv', 'bin', 'python3');
+    const rembgScript = join(PROJECT_ROOT, 'scripts', 'rembg_concept.py');
+
+    const rembgResult = await enqueueJob({
+      cmd: workerPython,
+      args: [rembgScript, '--input', outputPath, '--output', outputPath],
+      cwd: PROJECT_ROOT,
+      env: {},
+    });
+
+    if (rembgResult.code === 0) {
+      console.log(`  [SiliconFlow] rembg background removed from ${outputPath}`);
+    } else {
+      console.warn(`  [SiliconFlow] rembg failed (exit ${rembgResult.code}), using original`);
+    }
+  } catch (err) {
+    console.warn(`  [SiliconFlow] rembg step skipped: ${err.message}`);
+  }
 
   return {
     status: 'done',

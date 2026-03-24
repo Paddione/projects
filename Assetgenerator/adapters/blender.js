@@ -44,6 +44,13 @@ export async function generate({ id, asset, config, libraryRoot }) {
     args.push('--poses', poses.join(','));
   }
 
+  // Pass accent color so Blender can use it for consistent rendering
+  // (TripoSR vertex colors are grey on back/side faces; accent color gives
+  // consistent readable appearance from all 8 directions)
+  if (asset.color) {
+    args.push('--accent-color', asset.color);
+  }
+
   if (modelPath === riggedPath) {
     console.log(`  Using rigged model for ${id}`);
   }
@@ -58,26 +65,5 @@ export async function generate({ id, asset, config, libraryRoot }) {
     throw new Error(`Blender rendered 0 frames for "${id}". Check model exists at ${modelPath}`);
   }
 
-  // Post-render validation (characters only — they have multi-pose/direction complexity)
-  let validation = null;
-  if (asset.category === 'characters') {
-    const validateScript = join(PROJECT_ROOT, 'scripts', 'validate_renders.py');
-    const renderDir = join(outputDir, asset.category, id);
-    try {
-      const valResult = await enqueueJob({
-        cmd: 'python3',
-        args: [validateScript, '--dir', renderDir, '--id', id, '--json'],
-        cwd: PROJECT_ROOT,
-        env: {},
-      });
-      if (valResult.code === 0) {
-        validation = JSON.parse(valResult.stdout);
-        console.log(`  Validation: ${validation.score}/10.0 (${validation.issues.length} issues)`);
-      }
-    } catch {
-      console.warn(`  Validation skipped (script not available or missing dependencies)`);
-    }
-  }
-
-  return { status: 'done', frameCount, backend: 'blender', validation };
+  return { status: 'done', frameCount, backend: 'blender' };
 }

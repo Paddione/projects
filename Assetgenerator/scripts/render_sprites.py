@@ -250,37 +250,68 @@ def get_model_bounds(objects):
     return min_co, max_co
 
 
-def setup_vertex_color_material(objects):
-    """Create a material that displays vertex colors from TripoSR models."""
-    mat = bpy.data.materials.new(name="VertexColorMat")
+def hex_to_rgb(hex_color):
+    """Convert hex color like #00f2ff to (r, g, b) floats 0-1."""
+    hex_color = hex_color.lstrip('#')
+    if len(hex_color) == 6:
+        r = int(hex_color[0:2], 16) / 255.0
+        g = int(hex_color[2:4], 16) / 255.0
+        b = int(hex_color[4:6], 16) / 255.0
+        return (r, g, b)
+    return (0.2, 0.5, 0.8)  # fallback blue
+
+
+def setup_asset_material(objects, accent_color=None):
+    """Create a stylized flat material for game character sprites.
+
+    TripoSR vertex colors are unreliable — only the front-facing vertices
+    have good colors from the concept image; back/side vertices are grey
+    hallucinations. Using those vertex colors directly makes side/back
+    sprite frames look grey.
+
+    Instead we use a flat principled BSDF with the character's accent color
+    as the base. This gives consistent, readable color from all 8 directions.
+    The low-poly stylized look this produces is actually MORE appropriate for
+    a game sprite than TripoSR's noisy vertex colors.
+    """
+    mat = bpy.data.materials.new(name="AssetMat")
     mat.use_nodes = True
     nodes = mat.node_tree.nodes
     links = mat.node_tree.links
     nodes.clear()
 
-    # Color Attribute node → reads vertex colors
-    attr_node = nodes.new('ShaderNodeVertexColor')
-    attr_node.layer_name = ""  # Uses the active color attribute
-
     bsdf = nodes.new('ShaderNodeBsdfPrincipled')
-    bsdf.inputs['Roughness'].default_value = 0.8
-    bsdf.inputs['Specular IOR Level'].default_value = 0.2
+    bsdf.inputs['Roughness'].default_value = 0.7
+    try:
+        bsdf.inputs['Specular IOR Level'].default_value = 0.1
+    except KeyError:
+        pass  # older Blender versions
 
     output = nodes.new('ShaderNodeOutputMaterial')
-
-    links.new(attr_node.outputs['Color'], bsdf.inputs['Base Color'])
     links.new(bsdf.outputs['BSDF'], output.inputs['Surface'])
+
+    # Set base color from accent color, or use vertex colors as fallback
+    if accent_color:
+        rgb = hex_to_rgb(accent_color) if isinstance(accent_color, str) else accent_color
+        bsdf.inputs['Base Color'].default_value = (*rgb, 1.0)
+        print(f"    Applied accent color material: {accent_color}")
+    else:
+        # Fallback: try vertex colors, else use dark blue-grey
+        attr_node = nodes.new('ShaderNodeVertexColor')
+        attr_node.layer_name = ""
+        links.new(attr_node.outputs['Color'], bsdf.inputs['Base Color'])
+        print(f"    Applied vertex color material (no accent color provided)")
 
     for obj in objects:
         if obj.type != 'MESH':
             continue
-        # Check if the mesh has vertex colors
-        mesh = obj.data
-        has_vertex_colors = len(mesh.color_attributes) > 0 or len(mesh.vertex_colors) > 0
-        if has_vertex_colors:
-            obj.data.materials.clear()
-            obj.data.materials.append(mat)
-            print(f"    Applied vertex color material to {obj.name}")
+        obj.data.materials.clear()
+        obj.data.materials.append(mat)
+
+
+# Keep old name as alias for backward compatibility
+def setup_vertex_color_material(objects):
+    setup_asset_material(objects, accent_color=None)
 
 
 def normalize_model(pivot, objects):
@@ -315,7 +346,9 @@ def normalize_model(pivot, objects):
     max_dim = max(size.x, size.y, size.z)
     scale_factor = 1.0
     if max_dim > 0:
-        target_size = 1.8  # Leave some margin within the 2.5 ortho frame
+        target_size = 1.2  # Conservative size to prevent camera clipping from side views
+        # Note: TripoSR models can have deep Z axis after Y-up correction,
+        # so we need enough margin for the ortho camera (ortho_scale=2.5)
         scale_factor = target_size / max_dim
         pivot.scale = (scale_factor, scale_factor, scale_factor)
 
@@ -368,7 +401,7 @@ def link_model_to_template(model_path: Path, position=(0, 0, 0)):
     outer_pivot.name = "ModelPivot"
     inner_pivot.parent = outer_pivot
 
-    # Apply vertex color material (TripoSR uses vertex colors, not textures)
+    # Apply vertex color material (accent color passed from render_character)
     setup_vertex_color_material(mesh_objects)
 
     # Normalize: center, scale, orient to fit camera frame (applied to inner pivot)
@@ -537,6 +570,16 @@ def render_character(char: dict, model_path: Path, template_path=None, force=Fal
     if not pivot:
         return
 
+    # Override material with accent color AFTER linking
+    # (TripoSR vertex colors are grey on back/side faces - using accent color
+    # gives consistent readable appearance from all 8 directions)
+    accent = char.get('color', None) if isinstance(char, dict) else getattr(char, 'color', None)
+    if accent:
+        import bpy as _bpy
+        mesh_objs = [o for o in _bpy.data.objects if o.type == 'MESH']
+        setup_asset_material(mesh_objs, accent_color=accent)
+        print(f"  Applied accent color: {accent}")
+
     # Parent lights to pivot so lighting is uniform across all 8 directions
     parent_lights_to_pivot(pivot)
 
@@ -658,6 +701,8 @@ def main():
     parser.add_argument("--output", help="Output directory (overrides default)")
     parser.add_argument("--poses", help="Comma-separated pose list (default: stand)")
     parser.add_argument("--force", action="store_true", help="Re-render even if files exist")
+    parser.add_argument("--accent-color", dest="accent_color", default=None,
+                        help="Accent hex color for consistent material (e.g. #00f2ff)")
     args = parser.parse_args(argv)
 
     global OUTPUT_BASE
@@ -676,7 +721,8 @@ def main():
             sys.exit(1)
 
         default_poses = pose_list or ["stand", "walk", "gun", "machine", "reload", "hold", "silencer"]
-        asset_stub = {"id": args.id, "poses": default_poses, "directions": list(DIRECTIONS.keys())}
+        asset_stub = {"id": args.id, "poses": default_poses, "directions": list(DIRECTIONS.keys()),
+                      "color": args.accent_color}
 
         if args.category == "characters":
             render_character(asset_stub, model_path, template_path=args.template, force=args.force)

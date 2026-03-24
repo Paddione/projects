@@ -3,6 +3,7 @@ Description=Assetgenerator GPU Worker
 After=network-online.target
 
 [Service]
+EnvironmentFile=/home/patrick/projects/Assetgenerator/.env
 Type=simple
 WorkingDirectory=/home/patrick/projects/Assetgenerator/worker
 ExecStart=/usr/bin/node index.js

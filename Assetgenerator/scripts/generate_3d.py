@@ -250,6 +250,111 @@ def _keep_central_component(mesh) -> object:
         return mesh
 
 
+def _strip_background_shell(mesh) -> object:
+    """
+    Remove the background shell that TripoSR generates around the character.
+
+    TripoSR creates a watertight mesh. When the input image has a white
+    background (even after rembg, fringe pixels remain near-white), TripoSR
+    reconstructs those pixels as a large curved shell surrounding the subject.
+
+    Two-pass approach:
+    1. Vertex color filter: remove faces where ALL 3 vertices are near-white
+       (R>0.75 AND G>0.75 AND B>0.75) — these belong to the background shell.
+    2. Centroid filter: if vertex colors aren't available or shell survives,
+       keep only the connected component whose centroid is closest to origin.
+
+    Falls back silently if trimesh is unavailable.
+    """
+    try:
+        import trimesh
+        import numpy as np
+
+        # Convert to trimesh
+        if not isinstance(mesh, trimesh.Trimesh):
+            try:
+                vertices = np.array(mesh.vertices)
+                faces = np.array(mesh.faces)
+                colors = None
+                if hasattr(mesh, 'visual') and hasattr(mesh.visual, 'vertex_colors'):
+                    colors = np.array(mesh.visual.vertex_colors)
+                elif hasattr(mesh, 'vertex_color'):
+                    colors = np.array(mesh.vertex_color)
+                tm = trimesh.Trimesh(vertices=vertices, faces=faces, process=False)
+                if colors is not None and len(colors) == len(vertices):
+                    tm.visual = trimesh.visual.ColorVisuals(mesh=tm, vertex_colors=colors)
+                mesh = tm
+            except Exception as e:
+                print(f"  [STRIP] Conversion failed: {e}")
+                return mesh
+
+        orig_v = len(mesh.vertices)
+        orig_f = len(mesh.faces)
+
+        # ── Pass 1: vertex color filter ────────────────────────────────────
+        try:
+            if (hasattr(mesh.visual, 'vertex_colors') and
+                    mesh.visual.vertex_colors is not None):
+
+                vc = np.array(mesh.visual.vertex_colors, dtype=np.float32) / 255.0
+                rgb = vc[:, :3]
+
+                # Shell threshold: all channels > 0.75 = near-white background pixel
+                SHELL_THRESH = 0.75
+                is_shell = np.all(rgb > SHELL_THRESH, axis=1)
+
+                # A face belongs to the shell if ALL 3 of its vertices are shell-colored
+                faces = mesh.faces
+                shell_face = (is_shell[faces[:, 0]] &
+                              is_shell[faces[:, 1]] &
+                              is_shell[faces[:, 2]])
+
+                n_shell = int(shell_face.sum())
+                n_keep = int((~shell_face).sum())
+
+                if n_shell > 0 and n_keep > 50:
+                    keep_faces = mesh.faces[~shell_face]
+                    cleaned = trimesh.Trimesh(
+                        vertices=mesh.vertices,
+                        faces=keep_faces,
+                        vertex_colors=vc,
+                        process=True
+                    )
+                    pct = 100 * len(cleaned.vertices) / orig_v if orig_v else 0
+                    print(f"  [STRIP] Color filter: removed {n_shell} shell faces, "
+                          f"{len(cleaned.vertices)} verts remain ({pct:.0f}%)")
+                    mesh = cleaned
+                else:
+                    print(f"  [STRIP] Color filter: {n_shell} shell faces found "
+                          f"(threshold too strict or no vertex colors)")
+        except Exception as e:
+            print(f"  [STRIP] Color filter error: {e}")
+
+        # ── Pass 2: centroid-based component selection ─────────────────────
+        try:
+            components = mesh.split(only_watertight=False)
+            if len(components) > 1:
+                best = min(components, key=lambda m: np.linalg.norm(m.centroid))
+                removed = len(components) - 1
+                print(f"  [STRIP] Component filter: kept 1/{len(components)} "
+                      f"(centroid dist={np.linalg.norm(best.centroid):.3f}), "
+                      f"removed {removed} component(s)")
+                mesh = best
+        except Exception as e:
+            print(f"  [STRIP] Component filter error: {e}")
+
+        print(f"  [STRIP] Final: {orig_v}v/{orig_f}f → "
+              f"{len(mesh.vertices)}v/{len(mesh.faces)}f")
+        return mesh
+
+    except ImportError:
+        print("  [STRIP] trimesh not installed, skipping cleanup")
+        return mesh
+    except Exception as e:
+        print(f"  [STRIP] Failed: {e}")
+        return mesh
+
+
 def triposr_generate(image_path: Path, output_path: Path) -> bool:
     """Convert a concept image to 3D model using TripoSR.
 
@@ -299,10 +404,11 @@ def triposr_generate(image_path: Path, output_path: Path) -> bool:
         meshes = _triposr_model.extract_mesh(scene_codes, has_vertex_color=True, resolution=256)
         mesh = meshes[0]
 
-        # Step 6: remove floating geometry islands (TripoSR often reconstructs
-        # a closed shell or spurious exterior surface around the character —
-        # keep only the largest connected component by vertex count).
-        mesh = _keep_central_component(mesh)
+        # Step 6: remove shell geometry
+        # Strategy A: remove faces where ALL 3 vertices have near-white vertex colors
+        # (the background shell inherits the white canvas color, the character does not)
+        # Strategy B: centroid-based component selection as fallback
+        mesh = _strip_background_shell(mesh)
 
         mesh.export(str(output_path))
         return True

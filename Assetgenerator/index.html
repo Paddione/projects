@@ -2675,9 +2675,10 @@ function renderVisualLibraryView() {
     </label>
     <label>Concept Backend
       <select id="new-vis-backend">
-        <option value="">ComfyUI (GPU worker)</option>
-        <option value="diffusers">Diffusers (GPU worker)</option>
-        <option value="gemini-imagen">Gemini Imagen (cloud)</option>
+        <option value="siliconflow">SiliconFlow / Flux (cloud API)</option>
+        <option value="gemini-imagen">Gemini Imagen (cloud API)</option>
+        <option value="diffusers">Juggernaut XL (local GPU)</option>
+        <option value="">ComfyUI (local GPU)</option>
       </select>
     </label>
     <label>Prompt<textarea id="new-vis-prompt" rows="2" placeholder="Describe the asset..."></textarea></label>
@@ -2789,9 +2790,10 @@ function createVisualCard(id, asset) {
   cbSelect.id = `vcb-${id}`;
   cbSelect.style.width = '200px';
   const conceptBackends = [
-    { value: '', label: 'ComfyUI (default, GPU worker)' },
-    { value: 'diffusers', label: 'Diffusers (GPU worker)' },
+    { value: 'siliconflow', label: 'SiliconFlow / Flux (cloud API)' },
     { value: 'gemini-imagen', label: 'Gemini Imagen (cloud API)' },
+    { value: 'diffusers', label: 'Juggernaut XL (local GPU)' },
+    { value: '', label: 'ComfyUI (local GPU, default)' },
   ];
   for (const opt of conceptBackends) {
     const option = document.createElement('option');
