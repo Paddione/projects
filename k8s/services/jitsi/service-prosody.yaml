@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: prosody
+  namespace: korczewski-jitsi
+spec:
+  selector:
+    app: prosody
+  ports:
+    - name: xmpp-client
+      port: 5222
+      targetPort: 5222
+    - name: xmpp-server
+      port: 5269
+      targetPort: 5269
+    - name: bosh
+      port: 5280
+      targetPort: 5280
+    - name: component
+      port: 5347
+      targetPort: 5347

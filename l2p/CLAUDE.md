@@ -6,6 +6,13 @@ Guidance for Claude Code when working in the l2p project.
 
 Learn2Play (L2P) is a multiplayer quiz platform: React 18 + Vite frontend, Express + Socket.io backend, PostgreSQL via Drizzle ORM. Workspace monorepo with `frontend/` and `backend/` packages.
 
+**Documentation references:**
+- [README.md](README.md) -- Quick start, architecture overview
+- [docs/services/l2p.md](../docs/services/l2p.md) -- Deep dive: dual-auth, perk system, Socket.io events
+- [docs/guides/testing.md](../docs/guides/testing.md) -- Shared testing patterns and CI
+- [docs/guides/deployment.md](../docs/guides/deployment.md) -- Deployment to k3s
+- [docs/architecture/database.md](../docs/architecture/database.md) -- Shared PostgreSQL setup
+
 ## Commands
 
 ### Development
@@ -62,15 +69,15 @@ npm run coverage:badge           # Generate badge
 ```bash
 # Backend unit test
 cd backend
-NODE_OPTIONS=--experimental-vm-modules npx jest src/services/AuthService.test.ts
+npx vitest run src/services/__tests__/AuthService.test.ts
 
 # Frontend unit test
 cd frontend
-NODE_ENV=test npx jest src/components/Login.test.tsx
+npx vitest run src/components/__tests__/Login.test.tsx
 
 # Backend integration test
 cd backend
-NODE_OPTIONS=--experimental-vm-modules npx jest src/__tests__/integration/auth.test.ts
+npx vitest run src/__tests__/integration/auth.test.ts
 
 # Single E2E spec
 cd frontend/e2e
@@ -152,7 +159,7 @@ l2p/
 └── package.json                 # Workspace root
 ```
 
-Shared utilities: `../shared-infrastructure/shared/l2p/` (error-handling, test-config, test-utils).
+> **Note**: Former shared utilities in `../shared-infrastructure/shared/l2p/` have been consolidated. That directory no longer exists.
 
 ## Architecture
 
@@ -185,6 +192,7 @@ Shared utilities: `../shared-infrastructure/shared/l2p/` (error-handling, test-c
 | OAuthService | OAuth integration with centralized auth service |
 | GameProfileService | OAuth user game profile CRUD |
 | CleanupService | Periodic cleanup of inactive lobbies |
+| CategoryService | Question category management |
 
 ### Frontend Patterns
 
@@ -280,14 +288,11 @@ Perks use a draft system where players pick perks from random pools at level-up:
 
 ### Testing (non-negotiable)
 
-1. **ESM flag required**: ALL Jest tests need `NODE_OPTIONS=--experimental-vm-modules`. Without it, module resolution fails.
+1. **Vitest (not Jest)**: Both frontend and backend use vitest. Run via `npx vitest run`. No ESM flag needed.
 2. **Test DB isolation**: Integration tests use port 5433. Never test against production (port 5432). Test data prefixed with `test_`.
 3. **Socket.io in integration tests**: Use real `socket.io-client` connections, not mocks. Tests must close connections in cleanup.
-4. **Jest cleanup flags**: Integration tests require `--forceExit --detectOpenHandles` (configured in package.json).
-5. **Memory**: Full backend suite can exhaust heap. Run batches or use `NODE_OPTIONS="--max-old-space-size=8192"`.
-6. **resetMocks: true**: Both frontend and backend configs reset mocks between tests. In `jest.mock()` factories, use plain functions (not `jest.fn(() => value)`) — `resetMocks` clears `jest.fn()` implementations before tests run.
-7. **Fake timers with setInterval**: Never use `jest.runAllTimersAsync()` on code with `setInterval` — it loops forever. Use `jest.advanceTimersByTime(ms)` + `await Promise.resolve()` instead.
-8. **Falsy zero in options**: `options.value || defaultValue` treats `0` as falsy. Watch for this pattern when writing tests with numeric config values.
+4. **Fake timers with setInterval**: Never use `vi.runAllTimersAsync()` on code with `setInterval` — it loops forever. Use `vi.advanceTimersByTime(ms)` + `await Promise.resolve()` instead.
+5. **Falsy zero in options**: `options.value || defaultValue` treats `0` as falsy. Watch for this pattern when writing tests with numeric config values.
 
 ### Code Organization
 
@@ -307,21 +312,21 @@ Perks use a draft system where players pick perks from random pools at level-up:
 
 ## Test Suite Stats
 
-- **Frontend**: 53 suites, 906 tests (Jest + jsdom)
-- **Backend**: 30 suites, 967 tests (Jest + node, ESM)
+- **Frontend**: 51 suites, 861 tests (vitest + jsdom)
+- **Backend**: 33 suites, 1029 tests (vitest + node)
 - **E2E**: Playwright (chromium + integration projects)
 
 ## Test Debugging
 
-**Failed unit test**: Check ESM flag (backend), check mock setup (`resetMocks: true` clears implementations), run single file to isolate.
+**Failed unit test**: Check mock setup (`resetMocks: true` clears implementations), run single file to isolate.
 
-**Failed integration test**: Check test DB on port 5433 is running. Verify ESM flag. Look for unclosed socket connections. Review teardown.
+**Failed integration test**: Check test DB on port 5433 is running. Look for unclosed socket connections. Review teardown.
 
 **Failed E2E test**: Run headed (`npm run test:e2e:headed`) or UI mode (`npm run test:e2e:ui`). Verify test stack via `npm run test:setup:status`. Check ports 3000/3001 (local) or 3007/3006 (Docker).
 
 **OOM crash**: Run frontend and backend separately (`test:unit:frontend` then `test:unit:backend`), or increase heap with `--max-old-space-size=8192`.
 
-**Post-test process crash**: GameService timer callbacks may fire during Jest teardown. This is not a test failure — all tests pass. Run GameService in a separate batch if it blocks other suites.
+**Post-test process crash**: GameService timer callbacks may fire during vitest teardown. This is not a test failure — all tests pass. Run GameService in a separate batch if it blocks other suites.
 
 ## Test Ports Reference
 
@@ -336,9 +341,9 @@ Perks use a draft system where players pick perks from random pools at level-up:
 ## Important Files
 
 - `package.json` — workspace root, all npm scripts
-- `jest.config.js` — multi-project Jest config
 - `docker-compose.yml` / `docker-compose.test.yml`
 - `scripts/rebuild.sh`, `scripts/test-runner.sh`, `scripts/deploy.sh`
 - `backend/src/cli/database.ts` — DB CLI tool
+- `backend/vitest.config.ts` — Backend test config
+- `frontend/vitest.config.ts` — Frontend test config
 - `frontend/e2e/playwright.config.ts` — E2E config
-- `../shared-infrastructure/shared/l2p/test-config/test-config.yml`

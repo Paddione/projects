@@ -3,11 +3,13 @@
 
 ## Project
 - [ ] l2p
+- [ ] arena
 - [ ] VideoVault
-- [ ] payment
-- [ ] vllm
+- [ ] shop
 - [ ] auth
-- [ ] shared-infrastructure
+- [ ] SOS
+- [ ] Assetgenerator
+- [ ] k8s / infrastructure
 
 ## Motivation
 <!-- Why is this feature needed? What problem does it solve? -->

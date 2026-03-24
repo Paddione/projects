@@ -1,8 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { eq, and, inArray } from 'drizzle-orm';
 import { scanState, type InsertDBScanState } from '@shared/schema';
-import { logger } from '../lib/logger';
-import { asyncHandler } from '../lib/asyncHandler';
+import { asyncHandler } from '../middleware/async-error-handler';
 
 const router = Router();
 

@@ -4,8 +4,8 @@ import path from 'path';
 export default defineConfig({
   resolve: {
     alias: [
-      { find: /^@shared\/(.*)/, replacement: path.resolve(__dirname, '../../shared-infrastructure/shared/l2p/$1') },
-      { find: /^@test-config\/(.*)/, replacement: path.resolve(__dirname, '../../shared-infrastructure/shared/l2p/test-config/$1') },
+      { find: /^@shared\/(.*)/, replacement: path.resolve(__dirname, '../packages/$1') },
+      { find: /^@test-config\/(.*)/, replacement: path.resolve(__dirname, '../packages/test-config/$1') },
       { find: /^@\/(.*)/, replacement: path.resolve(__dirname, 'src/$1') },
       { find: /^\.\.\/\.\.\/server(\.js)?$/, replacement: path.resolve(__dirname, 'src/server.ts') },
       { find: /^\.\.\/server(\.js)?$/, replacement: path.resolve(__dirname, 'src/server.ts') },

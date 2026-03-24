@@ -1,0 +1,1433 @@
+{
+  "npcs": {
+    "oma_irmtrout": {
+      "id": "oma_irmtrout",
+      "name": "Oma Irmtrout",
+      "spriteId": "oma_irmtrout",
+      "iconColor": "#4488ff",
+      "interactionRange": 2.5,
+      "dialogueId": "dialogue_oma_irmtrout",
+      "questId": "quest_first_morning",
+      "englishTopic": "Food vocabulary"
+    },
+    "enzo": {
+      "id": "enzo",
+      "name": "Enzo",
+      "spriteId": "enzo",
+      "iconColor": "#4488ff",
+      "interactionRange": 2.5,
+      "dialogueId": "dialogue_enzo",
+      "questId": "quest_shopping_list",
+      "englishTopic": "Food names and shopping"
+    },
+    "rosa": {
+      "id": "rosa",
+      "name": "Rosa",
+      "spriteId": "rosa",
+      "iconColor": "#ff8844",
+      "interactionRange": 2.5,
+      "dialogueId": "dialogue_rosa",
+      "questId": "quest_two_scoops",
+      "englishTopic": "Flavor vocabulary"
+    },
+    "mehmet": {
+      "id": "mehmet",
+      "name": "Mehmet",
+      "spriteId": "mehmet",
+      "iconColor": "#dd3333",
+      "interactionRange": 2.5,
+      "dialogueId": "dialogue_mehmet",
+      "questId": "quest_kebab_order",
+      "englishTopic": "Numbers and polite requests"
+    },
+    "klaus": {
+      "id": "klaus",
+      "name": "Klaus",
+      "spriteId": "klaus",
+      "iconColor": "#4488ff",
+      "interactionRange": 2.5,
+      "dialogueId": "dialogue_klaus",
+      "questId": "quest_official_form",
+      "englishTopic": "Formal writing and grammar"
+    },
+    "borla": {
+      "id": "borla",
+      "name": "Borla",
+      "spriteId": "borla",
+      "iconColor": "#4488ff",
+      "interactionRange": 2.5,
+      "dialogueId": "dialogue_borla",
+      "questId": "quest_shopping_dialogue",
+      "englishTopic": "Shopping phrases"
+    },
+    "finn": {
+      "id": "finn",
+      "name": "Finn",
+      "spriteId": "finn",
+      "iconColor": "#888888",
+      "interactionRange": 2.5,
+      "dialogueId": "dialogue_finn",
+      "questId": "quest_community_bulletin",
+      "englishTopic": "Reading comprehension"
+    },
+    "frau_mering": {
+      "id": "frau_mering",
+      "name": "Frau Mering",
+      "spriteId": "frau_mering",
+      "iconColor": "#ee66aa",
+      "interactionRange": 2.5,
+      "dialogueId": "dialogue_frau_mering",
+      "questId": "quest_place_to_rest",
+      "englishTopic": "Accommodation and booking"
+    },
+    "max": {
+      "id": "max",
+      "name": "Max",
+      "spriteId": "max",
+      "iconColor": "#44bb44",
+      "interactionRange": 2.5,
+      "dialogueId": "dialogue_max",
+      "questId": "quest_lets_play",
+      "englishTopic": "Introductions and informal conversation"
+    },
+    "nicole": {
+      "id": "nicole",
+      "name": "Nicole",
+      "spriteId": "nicole",
+      "iconColor": "#888888",
+      "interactionRange": 2.5,
+      "dialogueId": "dialogue_nicole",
+      "questId": "quest_finding_voice",
+      "englishTopic": "Pronunciation patterns"
+    },
+    "lea": {
+      "id": "lea",
+      "name": "Lea",
+      "spriteId": "lea",
+      "iconColor": "#888888",
+      "interactionRange": 2.5,
+      "dialogueId": "dialogue_lea",
+      "questId": "quest_perfect_cut",
+      "englishTopic": "Descriptive adjectives"
+    },
+    "werner": {
+      "id": "werner",
+      "name": "Werner",
+      "spriteId": "werner",
+      "iconColor": "#888888",
+      "interactionRange": 2.5,
+      "dialogueId": "dialogue_werner",
+      "questId": "quest_morning_news",
+      "englishTopic": "Reading comprehension"
+    }
+  },
+  "dialogues": {
+    "dialogue_oma_irmtrout": {
+      "id": "dialogue_oma_irmtrout",
+      "startNode": "check_quest",
+      "nodes": {
+        "check_quest": {
+          "type": "condition",
+          "id": "check_quest",
+          "requiresQuestComplete": "quest_first_morning",
+          "onTrue": "quest_done_greeting",
+          "onFalse": "check_quest_active"
+        },
+        "check_quest_active": {
+          "type": "condition",
+          "id": "check_quest_active",
+          "requiresQuestActive": "quest_first_morning",
+          "onTrue": "quest_active_check_items",
+          "onFalse": "intro"
+        },
+        "intro": {
+          "type": "text",
+          "id": "intro",
+          "speaker": "Oma Irmtrout",
+          "text": "Good morning! Oh, you are awake! I am Oma Irmtrout.",
+          "next": "intro_2"
+        },
+        "intro_2": {
+          "type": "text",
+          "id": "intro_2",
+          "speaker": "Oma Irmtrout",
+          "text": "Welcome to my house. You are in Voegelsen now. A small village, but very nice!",
+          "next": "breakfast_problem"
+        },
+        "breakfast_problem": {
+          "type": "text",
+          "id": "breakfast_problem",
+          "speaker": "Oma Irmtrout",
+          "text": "I want to make breakfast, but I have a problem...",
+          "next": "ask_help"
+        },
+        "ask_help": {
+          "type": "choice",
+          "id": "ask_help",
+          "speaker": "Oma Irmtrout",
+          "text": "I need bread, eggs, and milk. Can you help me?",
+          "choices": [
+            { "id": "accept", "text": "Yes, I can help!", "next": "accept_quest" },
+            { "id": "ask_where", "text": "Where do I go?", "next": "explain_where" },
+            { "id": "decline", "text": "Maybe later.", "next": "decline_response" }
+          ]
+        },
+        "explain_where": {
+          "type": "text",
+          "id": "explain_where",
+          "speaker": "Oma Irmtrout",
+          "text": "Go to Tante Enso. It is the small shop on the main street. Enzo works there. He is very friendly!",
+          "next": "ask_help_again"
+        },
+        "ask_help_again": {
+          "type": "choice",
+          "id": "ask_help_again",
+          "speaker": "Oma Irmtrout",
+          "text": "So, will you get the bread, eggs, and milk for me?",
+          "choices": [
+            { "id": "accept2", "text": "Yes, I will go now!", "next": "accept_quest" },
+            { "id": "decline2", "text": "Maybe later.", "next": "decline_response" }
+          ]
+        },
+        "decline_response": {
+          "type": "text",
+          "id": "decline_response",
+          "speaker": "Oma Irmtrout",
+          "text": "Okay. Come back when you are ready. I will be here!",
+          "next": null
+        },
+        "accept_quest": {
+          "type": "text",
+          "id": "accept_quest",
+          "speaker": "Oma Irmtrout",
+          "text": "Wonderful! You are so kind. Remember: bread, eggs, and milk.",
+          "next": "food_quiz_intro"
+        },
+        "food_quiz_intro": {
+          "type": "text",
+          "id": "food_quiz_intro",
+          "speaker": "Oma Irmtrout",
+          "text": "But first, let me check... do you know these words in English?",
+          "next": "food_quiz"
+        },
+        "food_quiz": {
+          "type": "quiz",
+          "id": "food_quiz",
+          "speaker": "Oma Irmtrout",
+          "text": "Let's practice some food words!",
+          "questionSetId": "vogelsen_food_a1",
+          "questionCount": 3,
+          "passThreshold": 2,
+          "onPass": "quiz_pass",
+          "onFail": "quiz_fail"
+        },
+        "quiz_pass": {
+          "type": "text",
+          "id": "quiz_pass",
+          "speaker": "Oma Irmtrout",
+          "text": "Very good! You know the words. Now go to Tante Enso and get our breakfast!",
+          "next": "start_quest_reward"
+        },
+        "quiz_fail": {
+          "type": "text",
+          "id": "quiz_fail",
+          "speaker": "Oma Irmtrout",
+          "text": "Hmm, that is okay. Practice makes perfect! Try to remember: bread, eggs, and milk. Now go to Tante Enso!",
+          "next": "start_quest_reward"
+        },
+        "start_quest_reward": {
+          "type": "reward",
+          "id": "start_quest_reward",
+          "speaker": "Oma Irmtrout",
+          "text": "Good luck!",
+          "startsQuest": "quest_first_morning",
+          "next": null
+        },
+        "quest_active_check_items": {
+          "type": "condition",
+          "id": "quest_active_check_items",
+          "requiresQuestComplete": "quest_shopping_list",
+          "onTrue": "has_items",
+          "onFalse": "remind_player"
+        },
+        "remind_player": {
+          "type": "text",
+          "id": "remind_player",
+          "speaker": "Oma Irmtrout",
+          "text": "Did you find the things? Go to Tante Enso on the main street. I need bread, eggs, and milk!",
+          "next": null
+        },
+        "has_items": {
+          "type": "text",
+          "id": "has_items",
+          "speaker": "Oma Irmtrout",
+          "text": "Oh, you have everything! Bread, eggs, and milk. Perfect!",
+          "next": "complete_quest"
+        },
+        "complete_quest": {
+          "type": "reward",
+          "id": "complete_quest",
+          "speaker": "Oma Irmtrout",
+          "text": "Thank you so much! Breakfast is ready soon. You are a good helper!",
+          "respect": 25,
+          "vocabCards": [
+            { "word_en": "bread", "word_de": "Brot", "definition_en": "a food made from flour and water", "example_en": "I eat bread for breakfast." },
+            { "word_en": "eggs", "word_de": "Eier", "definition_en": "oval objects laid by birds, eaten as food", "example_en": "She bought six eggs." },
+            { "word_en": "milk", "word_de": "Milch", "definition_en": "a white liquid from cows", "example_en": "Do you want milk in your coffee?" }
+          ],
+          "completesQuest": "quest_first_morning",
+          "next": null
+        },
+        "quest_done_greeting": {
+          "type": "text",
+          "id": "quest_done_greeting",
+          "speaker": "Oma Irmtrout",
+          "text": "Breakfast is ready! Come, sit down. You are always welcome here.",
+          "next": "quest_done_hint"
+        },
+        "quest_done_hint": {
+          "type": "text",
+          "id": "quest_done_hint",
+          "speaker": "Oma Irmtrout",
+          "text": "Maybe you should visit more people in the village. Everyone is very friendly!",
+          "next": null
+        }
+      }
+    },
+    "dialogue_enzo": {
+      "id": "dialogue_enzo",
+      "startNode": "check_quest_complete",
+      "nodes": {
+        "check_quest_complete": {
+          "type": "condition",
+          "id": "check_quest_complete",
+          "requiresQuestComplete": "quest_shopping_list",
+          "onTrue": "already_done",
+          "onFalse": "check_quest_active"
+        },
+        "check_quest_active": {
+          "type": "condition",
+          "id": "check_quest_active",
+          "requiresQuestActive": "quest_shopping_list",
+          "onTrue": "quest_active_reminder",
+          "onFalse": "check_oma_quest"
+        },
+        "check_oma_quest": {
+          "type": "condition",
+          "id": "check_oma_quest",
+          "requiresQuestActive": "quest_first_morning",
+          "onTrue": "oma_quest_greeting",
+          "onFalse": "intro"
+        },
+        "intro": {
+          "type": "text",
+          "id": "intro",
+          "speaker": "Enzo",
+          "text": "Hello! Welcome to Tante Enso. I am Enzo. We have food, drinks, and many things here!",
+          "next": "intro_choice"
+        },
+        "intro_choice": {
+          "type": "choice",
+          "id": "intro_choice",
+          "speaker": "Enzo",
+          "text": "Can I help you find something?",
+          "choices": [
+            { "id": "browse", "text": "I am just looking.", "next": "just_looking" },
+            { "id": "ask_items", "text": "What do you sell?", "next": "what_we_sell" }
+          ]
+        },
+        "just_looking": {
+          "type": "text",
+          "id": "just_looking",
+          "speaker": "Enzo",
+          "text": "No problem! Take your time. Come back if you need help.",
+          "next": null
+        },
+        "what_we_sell": {
+          "type": "text",
+          "id": "what_we_sell",
+          "speaker": "Enzo",
+          "text": "We have bread, milk, eggs, cheese, butter, juice... everything you need!",
+          "next": null
+        },
+        "oma_quest_greeting": {
+          "type": "text",
+          "id": "oma_quest_greeting",
+          "speaker": "Enzo",
+          "text": "Ah, you come from Oma Irmtrout? She is so nice! She needs bread, eggs, and milk, yes?",
+          "next": "oma_quest_choice"
+        },
+        "oma_quest_choice": {
+          "type": "choice",
+          "id": "oma_quest_choice",
+          "speaker": "Enzo",
+          "text": "I can get everything for you. But first, can you tell me the English words?",
+          "choices": [
+            { "id": "ready", "text": "Yes, let me try!", "next": "shopping_quiz_intro" },
+            { "id": "not_sure", "text": "I am not sure...", "next": "encourage" }
+          ]
+        },
+        "encourage": {
+          "type": "text",
+          "id": "encourage",
+          "speaker": "Enzo",
+          "text": "Don't worry! It is easy. Just try your best!",
+          "next": "shopping_quiz_intro"
+        },
+        "shopping_quiz_intro": {
+          "type": "text",
+          "id": "shopping_quiz_intro",
+          "speaker": "Enzo",
+          "text": "Okay, let's see if you know your food words!",
+          "next": "shopping_quiz"
+        },
+        "shopping_quiz": {
+          "type": "quiz",
+          "id": "shopping_quiz",
+          "speaker": "Enzo",
+          "text": "Name these food items in English!",
+          "questionSetId": "vogelsen_food_a1",
+          "questionCount": 5,
+          "passThreshold": 3,
+          "onPass": "quiz_pass",
+          "onFail": "quiz_fail"
+        },
+        "quiz_pass": {
+          "type": "text",
+          "id": "quiz_pass",
+          "speaker": "Enzo",
+          "text": "Excellent! You know the words very well. Here are your items: bread, eggs, and milk!",
+          "next": "give_items"
+        },
+        "quiz_fail": {
+          "type": "text",
+          "id": "quiz_fail",
+          "speaker": "Enzo",
+          "text": "Good try! You need more practice, but here are the items anyway. Bread, eggs, and milk!",
+          "next": "give_items"
+        },
+        "give_items": {
+          "type": "text",
+          "id": "give_items",
+          "speaker": "Enzo",
+          "text": "Take them to Oma Irmtrout. She will be happy! And come back any time.",
+          "next": "give_items_reward"
+        },
+        "give_items_reward": {
+          "type": "reward",
+          "id": "give_items_reward",
+          "speaker": "Enzo",
+          "text": "Here you go! Tell Oma I say hello!",
+          "respect": 50,
+          "vocabCards": [
+            { "word_en": "shop", "word_de": "Laden", "definition_en": "a place where you buy things", "example_en": "I go to the shop every day." },
+            { "word_en": "cheese", "word_de": "Kaese", "definition_en": "a food made from milk", "example_en": "Do you like cheese on your bread?" },
+            { "word_en": "butter", "word_de": "Butter", "definition_en": "a soft yellow food made from cream", "example_en": "Put some butter on the bread." },
+            { "word_en": "juice", "word_de": "Saft", "definition_en": "a drink made from fruit", "example_en": "I drink orange juice in the morning." }
+          ],
+          "completesQuest": "quest_shopping_list",
+          "startsQuest": null,
+          "next": null
+        },
+        "quest_active_reminder": {
+          "type": "text",
+          "id": "quest_active_reminder",
+          "speaker": "Enzo",
+          "text": "Still shopping? Take your time! Remember: bread, eggs, and milk for Oma Irmtrout.",
+          "next": null
+        },
+        "already_done": {
+          "type": "text",
+          "id": "already_done",
+          "speaker": "Enzo",
+          "text": "Hello again! Tante Enso is always open. Do you need anything else?",
+          "next": "already_done_choice"
+        },
+        "already_done_choice": {
+          "type": "choice",
+          "id": "already_done_choice",
+          "speaker": "Enzo",
+          "text": "We have fresh food every day!",
+          "choices": [
+            { "id": "chat", "text": "No thanks, just saying hello!", "next": "friendly_bye" },
+            { "id": "browse", "text": "I will look around.", "next": "friendly_bye" }
+          ]
+        },
+        "friendly_bye": {
+          "type": "text",
+          "id": "friendly_bye",
+          "speaker": "Enzo",
+          "text": "Okay! Have a nice day!",
+          "next": null
+        }
+      }
+    },
+    "dialogue_rosa": {
+      "id": "dialogue_rosa",
+      "startNode": "check_quest",
+      "nodes": {
+        "check_quest": {
+          "type": "condition",
+          "id": "check_quest",
+          "requiresQuestComplete": "quest_two_scoops",
+          "onTrue": "quest_done",
+          "onFalse": "check_active"
+        },
+        "check_active": {
+          "type": "condition",
+          "id": "check_active",
+          "requiresQuestActive": "quest_two_scoops",
+          "onTrue": "reminder",
+          "onFalse": "intro"
+        },
+        "intro": {
+          "type": "text",
+          "id": "intro",
+          "speaker": "Rosa",
+          "text": "Ciao! Welcome to Eiscafe La Rosa! I am Rosa. Would you like some ice cream?",
+          "next": "offer_quest"
+        },
+        "offer_quest": {
+          "type": "choice",
+          "id": "offer_quest",
+          "speaker": "Rosa",
+          "text": "But you must order in English! Can you do that?",
+          "choices": [
+            { "id": "accept", "text": "Yes, I want to try!", "next": "start_quiz" },
+            { "id": "decline", "text": "Maybe later.", "next": "maybe_later" }
+          ]
+        },
+        "start_quiz": {
+          "type": "quiz",
+          "id": "start_quiz",
+          "speaker": "Rosa",
+          "text": "Tell me the English words for these ice cream flavors!",
+          "questionSetId": "vogelsen_icecream_a1",
+          "questionCount": 4,
+          "passThreshold": 3,
+          "onPass": "quiz_pass",
+          "onFail": "quiz_fail"
+        },
+        "quiz_pass": {
+          "type": "text",
+          "id": "quiz_pass",
+          "speaker": "Rosa",
+          "text": "Perfetto! You know your flavors! Here are two scoops for you!",
+          "next": "reward"
+        },
+        "quiz_fail": {
+          "type": "text",
+          "id": "quiz_fail",
+          "speaker": "Rosa",
+          "text": "Not bad! Here is one scoop for trying. Come back and practice more!",
+          "next": "reward"
+        },
+        "reward": {
+          "type": "reward",
+          "id": "reward",
+          "speaker": "Rosa",
+          "text": "Enjoy your ice cream!",
+          "respect": 50,
+          "vocabCards": [
+            { "word_en": "chocolate", "word_de": "Schokolade", "definition_en": "a sweet brown food or flavor", "example_en": "I love chocolate ice cream." },
+            { "word_en": "strawberry", "word_de": "Erdbeere", "definition_en": "a small red fruit", "example_en": "Strawberry is my favorite flavor." },
+            { "word_en": "vanilla", "word_de": "Vanille", "definition_en": "a sweet flavor from a tropical plant", "example_en": "Can I have vanilla, please?" }
+          ],
+          "completesQuest": "quest_two_scoops",
+          "next": null
+        },
+        "maybe_later": {
+          "type": "text",
+          "id": "maybe_later",
+          "speaker": "Rosa",
+          "text": "No problem! The ice cream is always here. Come back!",
+          "next": null
+        },
+        "reminder": {
+          "type": "text",
+          "id": "reminder",
+          "speaker": "Rosa",
+          "text": "Ready to order? Tell me the flavors in English!",
+          "next": "start_quiz"
+        },
+        "quest_done": {
+          "type": "text",
+          "id": "quest_done",
+          "speaker": "Rosa",
+          "text": "Hello again! The best ice cream in Voegelsen, no? Come back any time!",
+          "next": null
+        }
+      }
+    },
+    "dialogue_mehmet": {
+      "id": "dialogue_mehmet",
+      "startNode": "check_quest",
+      "nodes": {
+        "check_quest": {
+          "type": "condition",
+          "id": "check_quest",
+          "requiresQuestComplete": "quest_kebab_order",
+          "onTrue": "quest_done",
+          "onFalse": "check_active"
+        },
+        "check_active": {
+          "type": "condition",
+          "id": "check_active",
+          "requiresQuestActive": "quest_kebab_order",
+          "onTrue": "reminder",
+          "onFalse": "intro"
+        },
+        "intro": {
+          "type": "text",
+          "id": "intro",
+          "speaker": "Mehmet",
+          "text": "Hey! Welcome to Columbus Doener! Best kebab in the village!",
+          "next": "offer_quest"
+        },
+        "offer_quest": {
+          "type": "choice",
+          "id": "offer_quest",
+          "speaker": "Mehmet",
+          "text": "Are you hungry? You can order, but try in English! Deal?",
+          "choices": [
+            { "id": "accept", "text": "Deal! I am hungry!", "next": "start_quiz" },
+            { "id": "decline", "text": "Not now, thanks.", "next": "maybe_later" }
+          ]
+        },
+        "start_quiz": {
+          "type": "quiz",
+          "id": "start_quiz",
+          "speaker": "Mehmet",
+          "text": "Okay! Let's see if you can order food in English!",
+          "questionSetId": "vogelsen_ordering_a1",
+          "questionCount": 5,
+          "passThreshold": 3,
+          "onPass": "quiz_pass",
+          "onFail": "quiz_fail"
+        },
+        "quiz_pass": {
+          "type": "text",
+          "id": "quiz_pass",
+          "speaker": "Mehmet",
+          "text": "Great job! You ordered perfectly! Here is your doener, and something extra...",
+          "next": "reward"
+        },
+        "quiz_fail": {
+          "type": "text",
+          "id": "quiz_fail",
+          "speaker": "Mehmet",
+          "text": "Not perfect, but I understand you! Here is your doener. Practice more!",
+          "next": "reward"
+        },
+        "reward": {
+          "type": "reward",
+          "id": "reward",
+          "speaker": "Mehmet",
+          "text": "Enjoy! The Doener Buff will make you stronger for a while!",
+          "respect": 75,
+          "vocabCards": [
+            { "word_en": "please", "word_de": "bitte", "definition_en": "a polite word when asking for something", "example_en": "One kebab, please." },
+            { "word_en": "thank you", "word_de": "danke", "definition_en": "a polite word after receiving something", "example_en": "Thank you for the food!" },
+            { "word_en": "hungry", "word_de": "hungrig", "definition_en": "wanting to eat", "example_en": "I am very hungry." }
+          ],
+          "completesQuest": "quest_kebab_order",
+          "next": null
+        },
+        "maybe_later": {
+          "type": "text",
+          "id": "maybe_later",
+          "speaker": "Mehmet",
+          "text": "No problem, friend! Come back when you are hungry!",
+          "next": null
+        },
+        "reminder": {
+          "type": "text",
+          "id": "reminder",
+          "speaker": "Mehmet",
+          "text": "Ready to order? Remember, in English!",
+          "next": "start_quiz"
+        },
+        "quest_done": {
+          "type": "text",
+          "id": "quest_done",
+          "speaker": "Mehmet",
+          "text": "Hey, my friend! How was the doener? The best, yes? Come back any time!",
+          "next": null
+        }
+      }
+    },
+    "dialogue_klaus": {
+      "id": "dialogue_klaus",
+      "startNode": "check_quest",
+      "nodes": {
+        "check_quest": {
+          "type": "condition",
+          "id": "check_quest",
+          "requiresQuestComplete": "quest_official_form",
+          "onTrue": "quest_done",
+          "onFalse": "check_active"
+        },
+        "check_active": {
+          "type": "condition",
+          "id": "check_active",
+          "requiresQuestActive": "quest_official_form",
+          "onTrue": "reminder",
+          "onFalse": "intro"
+        },
+        "intro": {
+          "type": "text",
+          "id": "intro",
+          "speaker": "Klaus",
+          "text": "Good day. I am Klaus, from the Star Administration office. How can I help you?",
+          "next": "offer_quest"
+        },
+        "offer_quest": {
+          "type": "choice",
+          "id": "offer_quest",
+          "speaker": "Klaus",
+          "text": "We have an English travel form. Would you like to fill it out? You need it to travel.",
+          "choices": [
+            { "id": "accept", "text": "Yes, I need a travel permit.", "next": "start_quiz" },
+            { "id": "decline", "text": "Not right now.", "next": "maybe_later" }
+          ]
+        },
+        "start_quiz": {
+          "type": "quiz",
+          "id": "start_quiz",
+          "speaker": "Klaus",
+          "text": "Please answer these questions carefully. Use correct English.",
+          "questionSetId": "vogelsen_formal_a1",
+          "questionCount": 5,
+          "passThreshold": 4,
+          "onPass": "quiz_pass",
+          "onFail": "quiz_fail"
+        },
+        "quiz_pass": {
+          "type": "text",
+          "id": "quiz_pass",
+          "speaker": "Klaus",
+          "text": "Very good. Your form is correct. Here is your Travel Permit.",
+          "next": "reward"
+        },
+        "quiz_fail": {
+          "type": "text",
+          "id": "quiz_fail",
+          "speaker": "Klaus",
+          "text": "I am sorry, there are mistakes. Please study more and come back.",
+          "next": null
+        },
+        "reward": {
+          "type": "reward",
+          "id": "reward",
+          "speaker": "Klaus",
+          "text": "Your permit is ready. You may now travel beyond Voegelsen. Good luck.",
+          "respect": 100,
+          "vocabCards": [
+            { "word_en": "name", "word_de": "Name", "definition_en": "what people call you", "example_en": "My name is Patrick." },
+            { "word_en": "address", "word_de": "Adresse", "definition_en": "the place where you live", "example_en": "What is your address?" },
+            { "word_en": "date of birth", "word_de": "Geburtsdatum", "definition_en": "the day you were born", "example_en": "My date of birth is January first." },
+            { "word_en": "signature", "word_de": "Unterschrift", "definition_en": "your name written by hand", "example_en": "Please write your signature here." }
+          ],
+          "completesQuest": "quest_official_form",
+          "next": null
+        },
+        "maybe_later": {
+          "type": "text",
+          "id": "maybe_later",
+          "speaker": "Klaus",
+          "text": "Very well. The office is open when you need it.",
+          "next": null
+        },
+        "reminder": {
+          "type": "text",
+          "id": "reminder",
+          "speaker": "Klaus",
+          "text": "Are you ready to fill out the form now? It must be in English.",
+          "next": "start_quiz"
+        },
+        "quest_done": {
+          "type": "text",
+          "id": "quest_done",
+          "speaker": "Klaus",
+          "text": "Good day. Your papers are all in order. Safe travels.",
+          "next": null
+        }
+      }
+    },
+    "dialogue_borla": {
+      "id": "dialogue_borla",
+      "startNode": "check_quest",
+      "nodes": {
+        "check_quest": {
+          "type": "condition",
+          "id": "check_quest",
+          "requiresQuestComplete": "quest_shopping_dialogue",
+          "onTrue": "quest_done",
+          "onFalse": "check_active"
+        },
+        "check_active": {
+          "type": "condition",
+          "id": "check_active",
+          "requiresQuestActive": "quest_shopping_dialogue",
+          "onTrue": "reminder",
+          "onFalse": "intro"
+        },
+        "intro": {
+          "type": "text",
+          "id": "intro",
+          "speaker": "Borla",
+          "text": "Hello! Welcome to LaBorla. We have clothes, shoes, and more. Can I help you?",
+          "next": "offer_quest"
+        },
+        "offer_quest": {
+          "type": "choice",
+          "id": "offer_quest",
+          "speaker": "Borla",
+          "text": "Would you like to practice shopping in English?",
+          "choices": [
+            { "id": "accept", "text": "Yes, let's practice!", "next": "start_quiz" },
+            { "id": "decline", "text": "Not today.", "next": "maybe_later" }
+          ]
+        },
+        "start_quiz": {
+          "type": "quiz",
+          "id": "start_quiz",
+          "speaker": "Borla",
+          "text": "How do you say these shopping phrases in English?",
+          "questionSetId": "vogelsen_shopping_a1",
+          "questionCount": 4,
+          "passThreshold": 3,
+          "onPass": "quiz_pass",
+          "onFail": "quiz_fail"
+        },
+        "quiz_pass": {
+          "type": "text",
+          "id": "quiz_pass",
+          "speaker": "Borla",
+          "text": "Wonderful! You are a great shopper!",
+          "next": "reward"
+        },
+        "quiz_fail": {
+          "type": "text",
+          "id": "quiz_fail",
+          "speaker": "Borla",
+          "text": "Good try! Come back and practice more.",
+          "next": "reward"
+        },
+        "reward": {
+          "type": "reward",
+          "id": "reward",
+          "speaker": "Borla",
+          "text": "Thank you for visiting LaBorla!",
+          "respect": 50,
+          "vocabCards": [
+            { "word_en": "how much", "word_de": "wie viel", "definition_en": "asking about the price", "example_en": "How much is this shirt?" },
+            { "word_en": "size", "word_de": "Groesse", "definition_en": "how big or small something is", "example_en": "What size do you need?" }
+          ],
+          "completesQuest": "quest_shopping_dialogue",
+          "next": null
+        },
+        "maybe_later": {
+          "type": "text",
+          "id": "maybe_later",
+          "speaker": "Borla",
+          "text": "No problem! Come back when you want to shop!",
+          "next": null
+        },
+        "reminder": {
+          "type": "text",
+          "id": "reminder",
+          "speaker": "Borla",
+          "text": "Ready to finish our shopping practice?",
+          "next": "start_quiz"
+        },
+        "quest_done": {
+          "type": "text",
+          "id": "quest_done",
+          "speaker": "Borla",
+          "text": "Hello again! Nice to see you. LaBorla is always open!",
+          "next": null
+        }
+      }
+    },
+    "dialogue_finn": {
+      "id": "dialogue_finn",
+      "startNode": "check_quest",
+      "nodes": {
+        "check_quest": {
+          "type": "condition",
+          "id": "check_quest",
+          "requiresQuestComplete": "quest_community_bulletin",
+          "onTrue": "quest_done",
+          "onFalse": "check_active"
+        },
+        "check_active": {
+          "type": "condition",
+          "id": "check_active",
+          "requiresQuestActive": "quest_community_bulletin",
+          "onTrue": "reminder",
+          "onFalse": "intro"
+        },
+        "intro": {
+          "type": "text",
+          "id": "intro",
+          "speaker": "Finn",
+          "text": "Hey there! I am Finn, from the Jugendfeuerwehr. Have you seen the noticeboard?",
+          "next": "offer_quest"
+        },
+        "offer_quest": {
+          "type": "choice",
+          "id": "offer_quest",
+          "speaker": "Finn",
+          "text": "There is an English notice on the board. Can you read it for me?",
+          "choices": [
+            { "id": "accept", "text": "Sure, let me read it!", "next": "start_quiz" },
+            { "id": "decline", "text": "Not right now.", "next": "maybe_later" }
+          ]
+        },
+        "start_quiz": {
+          "type": "quiz",
+          "id": "start_quiz",
+          "speaker": "Finn",
+          "text": "Read the notice and answer these questions.",
+          "questionSetId": "vogelsen_reading_a1",
+          "questionCount": 4,
+          "passThreshold": 3,
+          "onPass": "quiz_pass",
+          "onFail": "quiz_fail"
+        },
+        "quiz_pass": {
+          "type": "text",
+          "id": "quiz_pass",
+          "speaker": "Finn",
+          "text": "You understood everything! Great reading skills!",
+          "next": "reward"
+        },
+        "quiz_fail": {
+          "type": "text",
+          "id": "quiz_fail",
+          "speaker": "Finn",
+          "text": "Some parts were hard, right? Keep practicing your reading!",
+          "next": "reward"
+        },
+        "reward": {
+          "type": "reward",
+          "id": "reward",
+          "speaker": "Finn",
+          "text": "Thanks for helping! The community appreciates it!",
+          "respect": 60,
+          "vocabCards": [
+            { "word_en": "meeting", "word_de": "Treffen", "definition_en": "when people come together", "example_en": "The meeting is at six o'clock." },
+            { "word_en": "volunteer", "word_de": "Freiwilliger", "definition_en": "someone who helps without pay", "example_en": "We need a volunteer for Saturday." }
+          ],
+          "completesQuest": "quest_community_bulletin",
+          "next": null
+        },
+        "maybe_later": {
+          "type": "text",
+          "id": "maybe_later",
+          "speaker": "Finn",
+          "text": "No worries! The notice is not going anywhere.",
+          "next": null
+        },
+        "reminder": {
+          "type": "text",
+          "id": "reminder",
+          "speaker": "Finn",
+          "text": "Did you finish reading the English notice? Come try!",
+          "next": "start_quiz"
+        },
+        "quest_done": {
+          "type": "text",
+          "id": "quest_done",
+          "speaker": "Finn",
+          "text": "Hey! Thanks again for reading that notice. You are really helpful!",
+          "next": null
+        }
+      }
+    },
+    "dialogue_frau_mering": {
+      "id": "dialogue_frau_mering",
+      "startNode": "check_quest",
+      "nodes": {
+        "check_quest": {
+          "type": "condition",
+          "id": "check_quest",
+          "requiresQuestComplete": "quest_place_to_rest",
+          "onTrue": "quest_done",
+          "onFalse": "check_active"
+        },
+        "check_active": {
+          "type": "condition",
+          "id": "check_active",
+          "requiresQuestActive": "quest_place_to_rest",
+          "onTrue": "reminder",
+          "onFalse": "intro"
+        },
+        "intro": {
+          "type": "text",
+          "id": "intro",
+          "speaker": "Frau Mering",
+          "text": "Good day! I am Frau Mering. This is my holiday home, FEWO Mering. Very cozy!",
+          "next": "offer_quest"
+        },
+        "offer_quest": {
+          "type": "choice",
+          "id": "offer_quest",
+          "speaker": "Frau Mering",
+          "text": "Would you like to book a room? You must ask in English!",
+          "choices": [
+            { "id": "accept", "text": "Yes, I need a place to rest.", "next": "start_quiz" },
+            { "id": "decline", "text": "Not today, thank you.", "next": "maybe_later" }
+          ]
+        },
+        "start_quiz": {
+          "type": "quiz",
+          "id": "start_quiz",
+          "speaker": "Frau Mering",
+          "text": "Let me ask you some booking questions. Answer in English!",
+          "questionSetId": "vogelsen_booking_a1",
+          "questionCount": 4,
+          "passThreshold": 3,
+          "onPass": "quiz_pass",
+          "onFail": "quiz_fail"
+        },
+        "quiz_pass": {
+          "type": "text",
+          "id": "quiz_pass",
+          "speaker": "Frau Mering",
+          "text": "Perfect! Your room is ready. You can rest here any time now!",
+          "next": "reward"
+        },
+        "quiz_fail": {
+          "type": "text",
+          "id": "quiz_fail",
+          "speaker": "Frau Mering",
+          "text": "Hmm, there were some problems. But I understand you! The room is yours.",
+          "next": "reward"
+        },
+        "reward": {
+          "type": "reward",
+          "id": "reward",
+          "speaker": "Frau Mering",
+          "text": "Welcome! FEWO Mering is now your save point. Come here to rest!",
+          "respect": 75,
+          "vocabCards": [
+            { "word_en": "room", "word_de": "Zimmer", "definition_en": "a part of a building with walls", "example_en": "I would like a room for one night." },
+            { "word_en": "key", "word_de": "Schluessel", "definition_en": "a small metal object to open a door", "example_en": "Here is your room key." },
+            { "word_en": "book", "word_de": "buchen", "definition_en": "to reserve something", "example_en": "I want to book a room, please." }
+          ],
+          "completesQuest": "quest_place_to_rest",
+          "next": null
+        },
+        "maybe_later": {
+          "type": "text",
+          "id": "maybe_later",
+          "speaker": "Frau Mering",
+          "text": "Of course! Come back when you need a place to rest.",
+          "next": null
+        },
+        "reminder": {
+          "type": "text",
+          "id": "reminder",
+          "speaker": "Frau Mering",
+          "text": "Ready to finish your booking? Let me ask you the questions!",
+          "next": "start_quiz"
+        },
+        "quest_done": {
+          "type": "text",
+          "id": "quest_done",
+          "speaker": "Frau Mering",
+          "text": "Welcome back! Your room is always ready for you. Please, rest!",
+          "next": null
+        }
+      }
+    },
+    "dialogue_max": {
+      "id": "dialogue_max",
+      "startNode": "check_quest",
+      "nodes": {
+        "check_quest": {
+          "type": "condition",
+          "id": "check_quest",
+          "requiresQuestComplete": "quest_lets_play",
+          "onTrue": "quest_done",
+          "onFalse": "check_active"
+        },
+        "check_active": {
+          "type": "condition",
+          "id": "check_active",
+          "requiresQuestActive": "quest_lets_play",
+          "onTrue": "reminder",
+          "onFalse": "intro"
+        },
+        "intro": {
+          "type": "text",
+          "id": "intro",
+          "speaker": "Max",
+          "text": "Hi! I am Max! Do you want to play? The playground is so much fun!",
+          "next": "offer_quest"
+        },
+        "offer_quest": {
+          "type": "choice",
+          "id": "offer_quest",
+          "speaker": "Max",
+          "text": "But first, can you introduce yourself? In English!",
+          "choices": [
+            { "id": "accept", "text": "Sure! My name is...", "next": "start_quiz" },
+            { "id": "decline", "text": "Maybe later!", "next": "maybe_later" }
+          ]
+        },
+        "start_quiz": {
+          "type": "quiz",
+          "id": "start_quiz",
+          "speaker": "Max",
+          "text": "Let's practice saying hello and making friends!",
+          "questionSetId": "vogelsen_introductions_a1",
+          "questionCount": 3,
+          "passThreshold": 2,
+          "onPass": "quiz_pass",
+          "onFail": "quiz_fail"
+        },
+        "quiz_pass": {
+          "type": "text",
+          "id": "quiz_pass",
+          "speaker": "Max",
+          "text": "Yay! Now we are friends! That was great!",
+          "next": "reward"
+        },
+        "quiz_fail": {
+          "type": "text",
+          "id": "quiz_fail",
+          "speaker": "Max",
+          "text": "That is okay! We are friends anyway! Practice more, okay?",
+          "next": "reward"
+        },
+        "reward": {
+          "type": "reward",
+          "id": "reward",
+          "speaker": "Max",
+          "text": "Let's play again sometime!",
+          "respect": 40,
+          "vocabCards": [
+            { "word_en": "hello", "word_de": "hallo", "definition_en": "a greeting when you meet someone", "example_en": "Hello! How are you?" },
+            { "word_en": "friend", "word_de": "Freund", "definition_en": "a person you like and trust", "example_en": "This is my friend Max." }
+          ],
+          "completesQuest": "quest_lets_play",
+          "next": null
+        },
+        "maybe_later": {
+          "type": "text",
+          "id": "maybe_later",
+          "speaker": "Max",
+          "text": "Okay! I will be here! Come back and play!",
+          "next": null
+        },
+        "reminder": {
+          "type": "text",
+          "id": "reminder",
+          "speaker": "Max",
+          "text": "Hey! Ready to practice introductions?",
+          "next": "start_quiz"
+        },
+        "quest_done": {
+          "type": "text",
+          "id": "quest_done",
+          "speaker": "Max",
+          "text": "Hey, friend! Want to play on the swings?",
+          "next": null
+        }
+      }
+    },
+    "dialogue_nicole": {
+      "id": "dialogue_nicole",
+      "startNode": "check_quest",
+      "nodes": {
+        "check_quest": {
+          "type": "condition",
+          "id": "check_quest",
+          "requiresQuestComplete": "quest_finding_voice",
+          "onTrue": "quest_done",
+          "onFalse": "check_active"
+        },
+        "check_active": {
+          "type": "condition",
+          "id": "check_active",
+          "requiresQuestActive": "quest_finding_voice",
+          "onTrue": "reminder",
+          "onFalse": "intro"
+        },
+        "intro": {
+          "type": "text",
+          "id": "intro",
+          "speaker": "Nicole",
+          "text": "Hello. I am Nicole, a speech therapist. I help people speak clearly.",
+          "next": "offer_quest"
+        },
+        "offer_quest": {
+          "type": "choice",
+          "id": "offer_quest",
+          "speaker": "Nicole",
+          "text": "English pronunciation can be hard. Would you like to practice some sounds?",
+          "choices": [
+            { "id": "accept", "text": "Yes, I want to practice!", "next": "start_quiz" },
+            { "id": "decline", "text": "Not today.", "next": "maybe_later" }
+          ]
+        },
+        "start_quiz": {
+          "type": "quiz",
+          "id": "start_quiz",
+          "speaker": "Nicole",
+          "text": "Listen carefully. Which word has the correct 'th' sound?",
+          "questionSetId": "vogelsen_pronunciation_a1",
+          "questionCount": 5,
+          "passThreshold": 3,
+          "onPass": "quiz_pass",
+          "onFail": "quiz_fail"
+        },
+        "quiz_pass": {
+          "type": "text",
+          "id": "quiz_pass",
+          "speaker": "Nicole",
+          "text": "Excellent! You have a very clear voice. Keep practicing!",
+          "next": "reward"
+        },
+        "quiz_fail": {
+          "type": "text",
+          "id": "quiz_fail",
+          "speaker": "Nicole",
+          "text": "Pronunciation takes time. You did well! The Clear Voice buff will help you remember.",
+          "next": "reward"
+        },
+        "reward": {
+          "type": "reward",
+          "id": "reward",
+          "speaker": "Nicole",
+          "text": "Here is the Clear Voice buff. Your words will be clearer now!",
+          "respect": 100,
+          "vocabCards": [
+            { "word_en": "think", "word_de": "denken", "definition_en": "to use your mind", "example_en": "I think this is correct." },
+            { "word_en": "weather", "word_de": "Wetter", "definition_en": "the state of the sky and air", "example_en": "The weather is nice today." },
+            { "word_en": "with", "word_de": "mit", "definition_en": "together or alongside", "example_en": "Come with me to the park." }
+          ],
+          "completesQuest": "quest_finding_voice",
+          "next": null
+        },
+        "maybe_later": {
+          "type": "text",
+          "id": "maybe_later",
+          "speaker": "Nicole",
+          "text": "No problem. Good pronunciation is important. Come back when you are ready.",
+          "next": null
+        },
+        "reminder": {
+          "type": "text",
+          "id": "reminder",
+          "speaker": "Nicole",
+          "text": "Ready to continue our pronunciation practice?",
+          "next": "start_quiz"
+        },
+        "quest_done": {
+          "type": "text",
+          "id": "quest_done",
+          "speaker": "Nicole",
+          "text": "Your pronunciation is getting better every day! Keep up the good work.",
+          "next": null
+        }
+      }
+    },
+    "dialogue_lea": {
+      "id": "dialogue_lea",
+      "startNode": "check_quest",
+      "nodes": {
+        "check_quest": {
+          "type": "condition",
+          "id": "check_quest",
+          "requiresQuestComplete": "quest_perfect_cut",
+          "onTrue": "quest_done",
+          "onFalse": "check_active"
+        },
+        "check_active": {
+          "type": "condition",
+          "id": "check_active",
+          "requiresQuestActive": "quest_perfect_cut",
+          "onTrue": "reminder",
+          "onFalse": "intro"
+        },
+        "intro": {
+          "type": "text",
+          "id": "intro",
+          "speaker": "Lea",
+          "text": "Hi there! Welcome to the hair salon! I am Lea. Want a new look?",
+          "next": "offer_quest"
+        },
+        "offer_quest": {
+          "type": "choice",
+          "id": "offer_quest",
+          "speaker": "Lea",
+          "text": "You need to describe the haircut you want. In English! Can you do it?",
+          "choices": [
+            { "id": "accept", "text": "Yes, I know what I want!", "next": "start_quiz" },
+            { "id": "decline", "text": "Maybe another day.", "next": "maybe_later" }
+          ]
+        },
+        "start_quiz": {
+          "type": "quiz",
+          "id": "start_quiz",
+          "speaker": "Lea",
+          "text": "Describe the haircut! Use adjectives!",
+          "questionSetId": "vogelsen_adjectives_a1",
+          "questionCount": 4,
+          "passThreshold": 3,
+          "onPass": "quiz_pass",
+          "onFail": "quiz_fail"
+        },
+        "quiz_pass": {
+          "type": "text",
+          "id": "quiz_pass",
+          "speaker": "Lea",
+          "text": "Great description! I know exactly what you want. Here you go!",
+          "next": "reward"
+        },
+        "quiz_fail": {
+          "type": "text",
+          "id": "quiz_fail",
+          "speaker": "Lea",
+          "text": "Hmm, I think I understand. Let me try! Not bad for your first time!",
+          "next": "reward"
+        },
+        "reward": {
+          "type": "reward",
+          "id": "reward",
+          "speaker": "Lea",
+          "text": "Looking good! Enjoy your new haircut!",
+          "respect": 50,
+          "vocabCards": [
+            { "word_en": "short", "word_de": "kurz", "definition_en": "not long", "example_en": "I want short hair, please." },
+            { "word_en": "long", "word_de": "lang", "definition_en": "not short, having great length", "example_en": "She has long brown hair." },
+            { "word_en": "curly", "word_de": "lockig", "definition_en": "having curls or waves", "example_en": "My hair is very curly." }
+          ],
+          "completesQuest": "quest_perfect_cut",
+          "next": null
+        },
+        "maybe_later": {
+          "type": "text",
+          "id": "maybe_later",
+          "speaker": "Lea",
+          "text": "Sure! Come back when you want a fresh look!",
+          "next": null
+        },
+        "reminder": {
+          "type": "text",
+          "id": "reminder",
+          "speaker": "Lea",
+          "text": "Ready for your haircut? Tell me what you want in English!",
+          "next": "start_quiz"
+        },
+        "quest_done": {
+          "type": "text",
+          "id": "quest_done",
+          "speaker": "Lea",
+          "text": "Hey! Looking great! Come back any time for a new style!",
+          "next": null
+        }
+      }
+    },
+    "dialogue_werner": {
+      "id": "dialogue_werner",
+      "startNode": "check_quest",
+      "nodes": {
+        "check_quest": {
+          "type": "condition",
+          "id": "check_quest",
+          "requiresQuestComplete": "quest_morning_news",
+          "onTrue": "quest_done",
+          "onFalse": "check_active"
+        },
+        "check_active": {
+          "type": "condition",
+          "id": "check_active",
+          "requiresQuestActive": "quest_morning_news",
+          "onTrue": "reminder",
+          "onFalse": "intro"
+        },
+        "intro": {
+          "type": "text",
+          "id": "intro",
+          "speaker": "Werner",
+          "text": "Morning! I am Werner. This is my kiosk. Newspapers, snacks, and coffee!",
+          "next": "offer_quest"
+        },
+        "offer_quest": {
+          "type": "choice",
+          "id": "offer_quest",
+          "speaker": "Werner",
+          "text": "There is an English newspaper today. Can you read the headline for me?",
+          "choices": [
+            { "id": "accept", "text": "Let me see it!", "next": "start_quiz" },
+            { "id": "decline", "text": "Not now, thanks.", "next": "maybe_later" }
+          ]
+        },
+        "start_quiz": {
+          "type": "quiz",
+          "id": "start_quiz",
+          "speaker": "Werner",
+          "text": "Read this headline and answer the questions.",
+          "questionSetId": "vogelsen_news_a1",
+          "questionCount": 3,
+          "passThreshold": 2,
+          "onPass": "quiz_pass",
+          "onFail": "quiz_fail"
+        },
+        "quiz_pass": {
+          "type": "text",
+          "id": "quiz_pass",
+          "speaker": "Werner",
+          "text": "You got it! Good reading! Here, have a free coffee.",
+          "next": "reward"
+        },
+        "quiz_fail": {
+          "type": "text",
+          "id": "quiz_fail",
+          "speaker": "Werner",
+          "text": "Not bad! Reading gets easier with practice. Have a coffee anyway!",
+          "next": "reward"
+        },
+        "reward": {
+          "type": "reward",
+          "id": "reward",
+          "speaker": "Werner",
+          "text": "Come back tomorrow for the next headline!",
+          "respect": 40,
+          "vocabCards": [
+            { "word_en": "newspaper", "word_de": "Zeitung", "definition_en": "printed paper with news stories", "example_en": "I read the newspaper every morning." },
+            { "word_en": "headline", "word_de": "Schlagzeile", "definition_en": "the title of a news story", "example_en": "Did you read today's headline?" }
+          ],
+          "completesQuest": "quest_morning_news",
+          "next": null
+        },
+        "maybe_later": {
+          "type": "text",
+          "id": "maybe_later",
+          "speaker": "Werner",
+          "text": "Sure! The paper is here all day. Come back!",
+          "next": null
+        },
+        "reminder": {
+          "type": "text",
+          "id": "reminder",
+          "speaker": "Werner",
+          "text": "Ready to try the headline? Come on, give it a read!",
+          "next": "start_quiz"
+        },
+        "quest_done": {
+          "type": "text",
+          "id": "quest_done",
+          "speaker": "Werner",
+          "text": "Hey! Want another newspaper? Come back tomorrow!",
+          "next": null
+        }
+      }
+    }
+  }
+}

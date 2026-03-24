@@ -1,5 +1,4 @@
 import { Request, Response, NextFunction, RequestHandler } from 'express';
-import { logger } from '../lib/logger';
 
 /**
  * Wrapper for async Route Handler
@@ -31,32 +30,3 @@ export class ValidationError extends AppError {
     }
 }
 
-export class NotFoundError extends AppError {
-    constructor(resource: string) {
-        super(404, `${resource} not found`);
-    }
-}
-
-export class UnauthorizedError extends AppError {
-    constructor(message = 'Unauthorized') {
-        super(401, message);
-    }
-}
-
-export class ForbiddenError extends AppError {
-    constructor(message = 'Forbidden') {
-        super(403, message);
-    }
-}
-
-export class ConflictError extends AppError {
-    constructor(message: string) {
-        super(409, message);
-    }
-}
-
-export class BadRequestError extends AppError {
-    constructor(message: string) {
-        super(400, message);
-    }
-}

@@ -27,7 +27,7 @@ jobs:
       sos: ${{ steps.filter.outputs.sos }}
       assetgenerator: ${{ steps.filter.outputs.assetgenerator }}
       k8s: ${{ steps.filter.outputs.k8s }}
-      any-service: ${{ steps.filter.outputs.arena == 'true' || steps.filter.outputs.l2p == 'true' || steps.filter.outputs.auth == 'true' || steps.filter.outputs.shop == 'true' || steps.filter.outputs.videovault == 'true' || steps.filter.outputs.sos == 'true' }}
+      any-service: ${{ steps.filter.outputs.arena == 'true' || steps.filter.outputs.l2p == 'true' || steps.filter.outputs.auth == 'true' || steps.filter.outputs.shop == 'true' || steps.filter.outputs.videovault == 'true' || steps.filter.outputs.sos == 'true' || steps.filter.outputs.assetgenerator == 'true' }}
     steps:
       - uses: actions/checkout@v4
       - uses: dorny/paths-filter@v3
@@ -38,15 +38,12 @@ jobs:
               - 'arena/**'
             l2p:
               - 'l2p/**'
-              - 'shared-infrastructure/shared/design-system/**'
-              - 'shared-infrastructure/shared/l2p/**'
             auth:
               - 'auth/**'
             shop:
               - 'shop/**'
             videovault:
               - 'VideoVault/**'
-              - 'shared-infrastructure/shared/videovault/**'
             sos:
               - 'SOS/**'
             assetgenerator:
@@ -106,8 +103,8 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
-      - name: Unit tests (DB-independent)
-        run: npx vitest run src/test/middleware.test.ts src/test/token-service.test.ts
+      - name: Unit tests
+        run: npm test
 
   # ---------------------------------------------------------------------------
   # Shop: Unit Tests
@@ -184,8 +181,8 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
-      - name: Unit + integration tests
-        run: npm run test
+      - name: Unit tests
+        run: npm test
 
   # ---------------------------------------------------------------------------
   # Assetgenerator: Unit Tests
@@ -265,6 +262,15 @@ jobs:
           - service: sos
             dockerfile: SOS/Dockerfile
             changed: ${{ needs.changes.outputs.sos }}
+          - service: arena-backend
+            dockerfile: arena/backend/Dockerfile
+            changed: ${{ needs.changes.outputs.arena }}
+          - service: arena-frontend
+            dockerfile: arena/frontend/Dockerfile
+            changed: ${{ needs.changes.outputs.arena }}
+          - service: assetgenerator
+            dockerfile: Assetgenerator/Dockerfile
+            changed: ${{ needs.changes.outputs.assetgenerator }}
     steps:
       - uses: actions/checkout@v4
         if: matrix.changed == 'true'

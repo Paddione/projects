@@ -14,7 +14,8 @@
         "test:unit": "vitest run --config vitest.config.ts",
         "test:watch": "vitest",
         "test:coverage": "vitest run --coverage",
-        "test:all": "vitest run --config vitest.config.ts"
+        "test:all": "vitest run --config vitest.config.ts",
+        "lint": "eslint src/"
     },
     "dependencies": {
         "cors": "^2.8.5",
@@ -31,8 +32,8 @@
         "@types/express": "^5.0.0",
         "@types/node": "^22.13.5",
         "@types/pg": "^8.11.11",
-        "@types/uuid": "^10.0.0",
         "@types/supertest": "*",
+        "@types/uuid": "^10.0.0",
         "@vitest/coverage-v8": "^4.0.18",
         "socket.io-client": "*",
         "supertest": "*",

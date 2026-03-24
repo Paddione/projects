@@ -1,0 +1,192 @@
+{
+  "events": [
+    {
+      "id": "christmas_markets",
+      "name": "Christmas Markets",
+      "startMonth": 12,
+      "startDay": 1,
+      "endMonth": 12,
+      "endDay": 25,
+      "countries": {
+        "germany": "full",
+        "england": "partial",
+        "scotland": "partial"
+      },
+      "effects": {
+        "tileSkinOverride": "christmas",
+        "specialQuests": ["quest_gift_wrapping", "quest_gluehwein"],
+        "vocabTopic": "Christmas vocabulary",
+        "enemySkinOverride": "elf",
+        "specialNPCs": ["santa_npc"],
+        "ambientMusic": "christmas_carols"
+      }
+    },
+    {
+      "id": "halloween",
+      "name": "Halloween",
+      "startMonth": 10,
+      "startDay": 31,
+      "endMonth": 10,
+      "endDay": 31,
+      "countries": {
+        "usa": "full",
+        "ireland": "full",
+        "scotland": "partial",
+        "england": "partial"
+      },
+      "effects": {
+        "tileSkinOverride": "halloween",
+        "specialQuests": ["quest_trick_or_treat"],
+        "vocabTopic": "Spooky vocabulary",
+        "enemySkinOverride": "ghost",
+        "specialNPCs": ["pumpkin_king"],
+        "ambientMusic": "halloween_ambience"
+      }
+    },
+    {
+      "id": "st_patricks_day",
+      "name": "St. Patrick's Day",
+      "startMonth": 3,
+      "startDay": 17,
+      "endMonth": 3,
+      "endDay": 17,
+      "countries": {
+        "ireland": "full",
+        "usa": "partial",
+        "australia": "partial"
+      },
+      "effects": {
+        "tileSkinOverride": "green",
+        "specialQuests": ["quest_parade", "quest_guinness"],
+        "vocabTopic": "Irish idioms",
+        "specialNPCs": ["leprechaun_npc"],
+        "ambientMusic": "irish_folk"
+      }
+    },
+    {
+      "id": "australia_day",
+      "name": "Australia Day",
+      "startMonth": 1,
+      "startDay": 26,
+      "endMonth": 1,
+      "endDay": 26,
+      "countries": {
+        "australia": "full"
+      },
+      "effects": {
+        "tileSkinOverride": "aussie",
+        "specialQuests": ["quest_bbq", "quest_cricket"],
+        "vocabTopic": "Australian slang",
+        "ambientMusic": "aussie_rock"
+      }
+    },
+    {
+      "id": "fourth_of_july",
+      "name": "4th of July",
+      "startMonth": 7,
+      "startDay": 4,
+      "endMonth": 7,
+      "endDay": 4,
+      "countries": {
+        "usa": "full"
+      },
+      "effects": {
+        "tileSkinOverride": "patriotic",
+        "specialQuests": ["quest_fireworks", "quest_baseball"],
+        "vocabTopic": "Patriotic vocabulary",
+        "ambientMusic": "fireworks_ambience"
+      }
+    },
+    {
+      "id": "matariki",
+      "name": "Matariki",
+      "startMonth": 6,
+      "startDay": 20,
+      "endMonth": 6,
+      "endDay": 20,
+      "countries": {
+        "new_zealand": "full"
+      },
+      "effects": {
+        "tileSkinOverride": "stargazing",
+        "specialQuests": ["quest_star_gazing"],
+        "vocabTopic": "Maori words",
+        "specialNPCs": ["star_elder_npc"],
+        "ambientMusic": "matariki_chant"
+      }
+    },
+    {
+      "id": "naidoc_week",
+      "name": "NAIDOC Week",
+      "startMonth": 7,
+      "startDay": 7,
+      "endMonth": 7,
+      "endDay": 14,
+      "countries": {
+        "australia": "full"
+      },
+      "effects": {
+        "tileSkinOverride": "aboriginal_art",
+        "specialQuests": ["quest_indigenous_art"],
+        "vocabTopic": "Indigenous loanwords",
+        "specialNPCs": ["elder_npc"],
+        "ambientMusic": "didgeridoo_ambience"
+      }
+    },
+    {
+      "id": "carnival",
+      "name": "Carnival",
+      "startMonth": 2,
+      "startDay": 15,
+      "endMonth": 3,
+      "endDay": 1,
+      "countries": {
+        "jamaica": "full",
+        "nigeria": "full"
+      },
+      "effects": {
+        "tileSkinOverride": "carnival",
+        "specialQuests": ["quest_dance_off", "quest_carnival_costume"],
+        "vocabTopic": "Music and dance vocabulary",
+        "specialNPCs": ["carnival_dancer_npc"],
+        "ambientMusic": "carnival_soca"
+      }
+    },
+    {
+      "id": "hogmanay",
+      "name": "Hogmanay",
+      "startMonth": 12,
+      "startDay": 31,
+      "endMonth": 12,
+      "endDay": 31,
+      "countries": {
+        "scotland": "full"
+      },
+      "effects": {
+        "tileSkinOverride": "hogmanay",
+        "specialQuests": ["quest_auld_lang_syne"],
+        "vocabTopic": "Scots language New Year",
+        "specialNPCs": ["first_footer_npc"],
+        "ambientMusic": "auld_lang_syne"
+      }
+    },
+    {
+      "id": "thanksgiving",
+      "name": "Thanksgiving",
+      "startMonth": 11,
+      "startDay": 27,
+      "endMonth": 11,
+      "endDay": 27,
+      "countries": {
+        "usa": "full"
+      },
+      "effects": {
+        "tileSkinOverride": "autumn",
+        "specialQuests": ["quest_feast", "quest_gratitude"],
+        "vocabTopic": "Gratitude vocabulary",
+        "specialNPCs": ["pilgrim_npc"],
+        "ambientMusic": "thanksgiving_hymn"
+      }
+    }
+  ]
+}

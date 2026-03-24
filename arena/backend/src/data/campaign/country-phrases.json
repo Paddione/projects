@@ -1,0 +1,18 @@
+{
+  "phrases": {
+    "germany": { "phrase": "Wanderlust", "syllables": ["WAN", "DER", "LUST"] },
+    "singapore": { "phrase": "Lah!", "syllables": ["L", "AH"] },
+    "philippines": { "phrase": "It's more fun!", "syllables": ["IT'S", "MORE", "FUN"] },
+    "new_zealand": { "phrase": "She'll be right", "syllables": ["SHE'LL", "BE", "RIGHT"] },
+    "ireland": { "phrase": "Top o' the morning", "syllables": ["TOP", "O'", "THE", "MOR", "NING"] },
+    "south_africa": { "phrase": "Lekker, bru", "syllables": ["LEK", "KER", "BRU"] },
+    "nigeria": { "phrase": "How far?", "syllables": ["HOW", "FAR"] },
+    "jamaica": { "phrase": "Irie, mon", "syllables": ["I", "RIE", "MON"] },
+    "canada": { "phrase": "Sorry, eh?", "syllables": ["SOR", "RY", "EH"] },
+    "scotland": { "phrase": "Braw moonlicht nicht", "syllables": ["BRAW", "MOON", "LICHT", "NICHT"] },
+    "wales": { "phrase": "Bore da!", "syllables": ["BO", "RE", "DA"] },
+    "england": { "phrase": "Bob's your uncle", "syllables": ["BOB'S", "YOUR", "UN", "CLE"] },
+    "australia": { "phrase": "No worries, mate", "syllables": ["NO", "WOR", "RIES", "MATE"] },
+    "usa": { "phrase": "The American Dream", "syllables": ["THE", "A", "MER", "I", "CAN", "DREAM"] }
+  }
+}

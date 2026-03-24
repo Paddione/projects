@@ -4,7 +4,7 @@ import { vi } from 'vitest';
  * Creates a mock for a module with proper ESM compatibility
  */
 export function createMock<T extends object>(
-  modulePath: string,
+  _modulePath: string,
   mockImplementation?: Partial<T>
 ): T {
   const mock = {} as T; // Vitest doesn't have createMockFromModule — use empty object

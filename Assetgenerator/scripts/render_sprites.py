@@ -38,7 +38,7 @@ OUTPUT_BASE = Path(__file__).parent.parent / "assets" / "renders"
 # Render settings
 CAMERA_ANGLE_DEG = 60  # Top-down angle (90 = pure top-down, 0 = side view)
 CAMERA_DISTANCE = 3.0
-RENDER_RESOLUTION = 128  # Render at 2x, then downscale to 64px for characters
+RENDER_RESOLUTION = 256  # Render at 4x target (256→64px), matches visual-config.json
 BG_TRANSPARENT = True
 
 # Direction angles (8 directions, clockwise from North)
@@ -65,60 +65,72 @@ POSE_PRESETS = {
     "stand": {
         # Rest pose — no overrides, arms relaxed at sides
     },
-    "gun": {
-        # Pistol stance: right arm extended forward, left relaxed
-        "upper_arm.R": (-55, 0, -15),
-        "forearm.R":   (-30, 0, 0),
-        "hand.R":      (-10, 0, 0),
-        "upper_arm.L": (-10, 0, 10),
+    "walk": {
+        # Walking mid-stride: left leg forward, right back, opposite arm swing
+        "upper_leg.L": (-25, 0, 0),
+        "lower_leg.L": (15, 0, 0),
+        "upper_leg.R": (20, 0, 0),
+        "lower_leg.R": (-10, 0, 0),
+        "upper_arm.R": (-25, 0, -5),
+        "forearm.R":   (-15, 0, 0),
+        "upper_arm.L": (15, 0, 5),
         "spine":       (-5, 0, 0),
+    },
+    "gun": {
+        # Pistol stance: right arm fully extended, left clearly at side
+        # Exaggerated for 64px readability (need 20°+ delta from other poses)
+        "upper_arm.R": (-75, 0, -25),
+        "forearm.R":   (-15, 0, 0),
+        "hand.R":      (-10, 0, 0),
+        "upper_arm.L": (-5, 0, 15),
+        "spine":       (-10, 0, 0),
     },
     "machine": {
-        # Machine gun: both arms forward gripping weapon, slight lean
-        "upper_arm.R": (-50, 0, -20),
-        "forearm.R":   (-40, 0, 0),
+        # Machine gun: both arms far forward, wide grip, heavy lean
+        "upper_arm.R": (-65, 0, -35),
+        "forearm.R":   (-45, 0, 0),
         "hand.R":      (-15, 0, 0),
-        "upper_arm.L": (-50, 0, 20),
-        "forearm.L":   (-40, 0, 0),
+        "upper_arm.L": (-65, 0, 35),
+        "forearm.L":   (-45, 0, 0),
         "hand.L":      (-15, 0, 0),
-        "spine":       (-8, 0, 0),
-        "chest":       (-5, 0, 0),
+        "spine":       (-15, 0, 0),
+        "chest":       (-8, 0, 0),
     },
     "reload": {
-        # Reloading: right arm bent at chest, left hand reaching to magazine
-        "upper_arm.R": (-40, 0, -10),
-        "forearm.R":   (-70, 0, 0),
-        "hand.R":      (-20, 0, 0),
-        "upper_arm.L": (-35, 0, 15),
-        "forearm.L":   (-80, 0, 0),
-        "hand.L":      (-10, 0, 0),
-        "spine":       (-10, 0, 0),
-        "neck":        (-10, 0, 0),
+        # Reloading: arms pulled tight to chest, head down — clearly distinct
+        "upper_arm.R": (-30, 0, -5),
+        "forearm.R":   (-95, 0, 0),
+        "hand.R":      (-25, 0, 0),
+        "upper_arm.L": (-25, 0, 10),
+        "forearm.L":   (-100, 0, 0),
+        "hand.L":      (-15, 0, 0),
+        "spine":       (-18, 0, 0),
+        "neck":        (-20, 0, 0),
     },
     "hold": {
-        # Two-handed weapon hold: arms at mid-level, gripping at waist
-        "upper_arm.R": (-35, 0, -15),
-        "forearm.R":   (-45, 0, 0),
+        # Two-handed weapon at hip: arms lower and wider than gun/machine
+        "upper_arm.R": (-20, 0, -25),
+        "forearm.R":   (-40, 0, 0),
         "hand.R":      (-10, 0, 0),
-        "upper_arm.L": (-35, 0, 15),
-        "forearm.L":   (-45, 0, 0),
+        "upper_arm.L": (-20, 0, 25),
+        "forearm.L":   (-40, 0, 0),
         "hand.L":      (-10, 0, 0),
-        "spine":       (-5, 0, 0),
+        "spine":       (-3, 0, 0),
     },
     "silencer": {
-        # Stealth stance: weapon raised and forward, slight crouch
-        "upper_arm.R": (-60, 0, -10),
-        "forearm.R":   (-25, 0, 0),
+        # Stealth: deep crouch, weapon high and forward — max visual difference
+        "upper_arm.R": (-80, 0, -15),
+        "forearm.R":   (-20, 0, 0),
         "hand.R":      (-5, 0, 0),
-        "upper_arm.L": (-30, 0, 15),
-        "forearm.L":   (-50, 0, 0),
+        "upper_arm.L": (-40, 0, 20),
+        "forearm.L":   (-55, 0, 0),
         "hand.L":      (-10, 0, 0),
-        "spine":       (-12, 0, 0),
-        "chest":       (-5, 0, 0),
-        "upper_leg.L": (-8, 0, 0),
-        "upper_leg.R": (-8, 0, 0),
-        "lower_leg.L": (12, 0, 0),
-        "lower_leg.R": (12, 0, 0),
+        "spine":       (-20, 0, 0),
+        "chest":       (-8, 0, 0),
+        "upper_leg.L": (-18, 0, 0),
+        "upper_leg.R": (-18, 0, 0),
+        "lower_leg.L": (25, 0, 0),
+        "lower_leg.R": (25, 0, 0),
     },
 }
 
@@ -382,6 +394,115 @@ def clear_model():
 
 
 
+def parent_lights_to_pivot(pivot):
+    """Parent all scene lights to the outer pivot so lighting rotates with the model.
+
+    Without this, lights are fixed in the template while only the model rotates.
+    This causes N/NE directions to receive grazing-angle lighting (back-lit), producing
+    artifacts, lost detail, and inconsistent silhouettes across directions.
+    """
+    parented = 0
+    for obj in bpy.data.objects:
+        if obj.type == 'LIGHT':
+            obj.parent = pivot
+            parented += 1
+    if parented:
+        print(f"  Parented {parented} lights to model pivot (uniform directional lighting)")
+
+
+def configure_alpha_rendering(scene):
+    """Set render settings for clean transparent edges.
+
+    Ensures film transparency is enabled, uses overscan to avoid edge clipping,
+    and sets color management for accurate alpha compositing.
+    """
+    scene.render.film_transparent = True
+    scene.render.resolution_x = RENDER_RESOLUTION
+    scene.render.resolution_y = RENDER_RESOLUTION
+    scene.render.image_settings.file_format = 'PNG'
+    scene.render.image_settings.color_mode = 'RGBA'
+    scene.render.image_settings.color_depth = '16'
+
+    # EEVEE overscan: renders slightly beyond frame edges to avoid alpha cutoff
+    if hasattr(scene, 'eevee'):
+        scene.eevee.use_overscan = True
+        scene.eevee.overscan_size = 10  # 10% margin beyond frame
+
+    print(f"  Alpha rendering: {RENDER_RESOLUTION}px, 16-bit RGBA, overscan enabled")
+
+
+def attach_weapon_prop(armature, pose_name):
+    """Attach a simple weapon shape to the right hand bone for weapon poses.
+
+    At 64px, bone rotations alone can't convey 'holding a weapon' — the weapon
+    geometry itself needs to be visible. Creates a scaled cube/cylinder parented
+    to hand.R that varies by pose for visual distinction.
+    """
+    if pose_name in ("stand", "walk"):
+        return  # No weapon in idle/walk poses
+
+    hand_bone = armature.pose.bones.get("hand.R")
+    if not hand_bone:
+        return
+
+    # Weapon dimensions per pose (length, width, height)
+    # At 64px: 1 BU ≈ 22px. Width must be ≥0.10 (2px+), length delta ≥0.15 between poses.
+    # Each pose has a deliberately different length×width profile for silhouette contrast:
+    #   gun:     short + chunky  (pistol block)
+    #   machine: medium + wide   (thick automatic)
+    #   reload:  compact + squat (hands together, weapon minimized)
+    #   hold:    medium + thick  (relaxed carry)
+    #   silencer: long + narrow  (extended barrel — most distinct outline)
+    weapon_shapes = {
+        "gun":      (0.40, 0.12, 0.12),   # Short chunky pistol — 9px long, 3px wide
+        "machine":  (0.65, 0.14, 0.12),   # Wide automatic — 14px long, 3px wide
+        "reload":   (0.30, 0.10, 0.10),   # Compact body — 7px, tucked into chest
+        "hold":     (0.55, 0.12, 0.14),   # Medium + slightly taller — 12px, casual
+        "silencer": (0.80, 0.08, 0.08),   # Very long + thin — 18px, distinctive line
+    }
+
+    dims = weapon_shapes.get(pose_name)
+    if not dims:
+        return
+
+    # Shared gunmetal material for all weapon props
+    mat = bpy.data.materials.new(name=f"WeaponMat_{pose_name}")
+    mat.use_nodes = True
+    bsdf = mat.node_tree.nodes.get('Principled BSDF')
+    if bsdf:
+        bsdf.inputs['Base Color'].default_value = (0.15, 0.15, 0.17, 1.0)
+        bsdf.inputs['Roughness'].default_value = 0.4
+        bsdf.inputs['Metallic'].default_value = 0.9
+
+    # Main weapon body
+    bpy.ops.mesh.primitive_cube_add(size=1)
+    weapon = bpy.context.object
+    weapon.name = f"WeaponProp_{pose_name}"
+    weapon.scale = dims
+    weapon.data.materials.append(mat)
+    weapon.parent = armature
+    weapon.parent_type = 'BONE'
+    weapon.parent_bone = "hand.R"
+    weapon.location = (dims[0] * 0.5, 0, 0)
+
+    # Silencer gets a suppressor tip — wider cylinder at the barrel end
+    # This is the worst-scoring pose; the extra geometry creates a unique outline
+    if pose_name == "silencer":
+        bpy.ops.mesh.primitive_cylinder_add(radius=0.5, depth=1)
+        suppressor = bpy.context.object
+        suppressor.name = "WeaponProp_silencer_tip"
+        suppressor.scale = (0.07, 0.07, 0.15)
+        suppressor.rotation_euler = (0, math.radians(90), 0)
+        suppressor.data.materials.append(mat)
+        suppressor.parent = armature
+        suppressor.parent_type = 'BONE'
+        suppressor.parent_bone = "hand.R"
+        suppressor.location = (dims[0] + 0.05, 0, 0)  # At barrel tip
+
+    bpy.context.view_layer.update()
+    print(f"    Attached weapon prop: {pose_name} ({dims[0]:.2f}×{dims[1]:.2f}m)")
+
+
 def render_frame(output_path: Path):
     """Render a single frame to the given path."""
     bpy.context.scene.render.filepath = str(output_path)
@@ -408,20 +529,42 @@ def render_character(char: dict, model_path: Path, template_path=None, force=Fal
         tpath = get_template_path("characters")
     scene = load_blender_template(tpath)
 
+    # Configure clean alpha rendering (transparent bg, overscan, 16-bit)
+    configure_alpha_rendering(scene)
+
     # Link model to template
     pivot, armature = link_model_to_template(model_path)
     if not pivot:
         return
+
+    # Parent lights to pivot so lighting is uniform across all 8 directions
+    parent_lights_to_pivot(pivot)
 
     if armature:
         print(f"  Posing enabled: {len(armature.pose.bones)} bones")
     else:
         print(f"  Static model (no armature) — all poses will look identical")
 
+    # Find inner pivot for walk lean (outer pivot controls direction rotation)
+    inner_pivot = None
+    for obj in bpy.data.objects:
+        if obj.name == "ModelInnerPivot":
+            inner_pivot = obj
+            break
+
     for pose_name in poses:
         # Apply pose bones if rigged
         if armature:
             apply_pose(armature, pose_name)
+            # Attach weapon geometry so weapons are visible at 64px
+            attach_weapon_prop(armature, pose_name)
+
+        # Walk pose: apply forward lean + slight bob on inner pivot
+        # This works even when auto-rigging fails to deform the mesh
+        if pose_name == "walk" and inner_pivot:
+            inner_pivot.rotation_euler.x += math.radians(-8)   # Forward lean
+            inner_pivot.location.z += 0.04                      # Slight vertical bob
+            bpy.context.view_layer.update()
 
         for direction in directions:
             angle = DIRECTIONS.get(direction, 0)
@@ -438,6 +581,17 @@ def render_character(char: dict, model_path: Path, template_path=None, force=Fal
             if force or not out_path.exists():
                 render_frame(out_path)
                 print(f"    {filename}")
+
+        # Reset walk lean on inner pivot
+        if pose_name == "walk" and inner_pivot:
+            inner_pivot.rotation_euler.x -= math.radians(-8)
+            inner_pivot.location.z -= 0.04
+            bpy.context.view_layer.update()
+
+        # Remove weapon prop before next pose (avoid stacking)
+        for obj in list(bpy.data.objects):
+            if obj.name.startswith("WeaponProp_"):
+                bpy.data.objects.remove(obj, do_unlink=True)
 
     clear_model()
 
@@ -521,7 +675,7 @@ def main():
             print(f"  [ERROR] Model not found: {model_path}")
             sys.exit(1)
 
-        default_poses = pose_list or ["stand", "gun", "machine", "reload", "hold", "silencer"]
+        default_poses = pose_list or ["stand", "walk", "gun", "machine", "reload", "hold", "silencer"]
         asset_stub = {"id": args.id, "poses": default_poses, "directions": list(DIRECTIONS.keys())}
 
         if args.category == "characters":

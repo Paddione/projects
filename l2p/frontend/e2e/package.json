@@ -9,7 +9,6 @@
     "test:debug": "playwright test --debug",
     "test:error-handling": "playwright test tests/error-handling",
     "test:headed": "playwright test --headed",
-    "test:integration": "playwright test tests/integration",
     "test:performance": "playwright test tests/performance",
     "test:report": "playwright show-report",
     "test:smoke": "playwright test tests/smoke",

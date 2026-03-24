@@ -5,14 +5,15 @@
     "type": "module",
     "scripts": {
         "dev": "vite",
-        "prebuild": "test -d ../../shared-infrastructure/shared/3d/dist || npm --prefix ../../shared-infrastructure/shared/3d run build",
+        "prebuild": "test -d packages/shared-3d/dist || npm --prefix packages/shared-3d run build",
         "build": "tsc && vite build",
         "preview": "vite preview",
         "typecheck": "tsc --noEmit",
         "test": "vitest run",
         "test:watch": "vitest",
         "test:ui": "vitest --ui",
-        "test:coverage": "vitest run --coverage"
+        "test:coverage": "vitest run --coverage",
+        "lint": "eslint src/"
     },
     "dependencies": {
         "@pixi/utils": "^7.4.2",
@@ -22,7 +23,7 @@
         "react": "^18.3.1",
         "react-dom": "^18.3.1",
         "react-router-dom": "^7.1.3",
-        "shared-3d": "file:../../shared-infrastructure/shared/3d",
+        "shared-3d": "file:packages/shared-3d",
         "socket.io-client": "^4.8.1",
         "three": "^0.170.0",
         "zustand": "^5.0.3"

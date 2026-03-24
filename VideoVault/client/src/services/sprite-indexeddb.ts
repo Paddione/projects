@@ -66,18 +66,4 @@ export async function setSpriteMeta(id: string, meta: SpriteMeta): Promise<void>
   }
 }
 
-export async function clearSpriteMeta(id?: string): Promise<void> {
-  try {
-    const db = await openDb();
-    await new Promise<void>((resolve, reject) => {
-      const tx = db.transaction(STORE, 'readwrite');
-      const store = tx.objectStore(STORE);
-      const req = id ? store.delete(id) : store.clear();
-      req.onsuccess = () => resolve();
-      req.onerror = () => reject(req.error || new Error('IndexedDB delete error'));
-    });
-  } catch {
-    // ignore
-  }
-}
 

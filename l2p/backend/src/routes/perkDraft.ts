@@ -24,7 +24,7 @@ router.get('/active', authenticate, async (req: Request, res: Response): Promise
 /**
  * GET /api/perks/draft/all — all gameplay perks (regardless of level)
  */
-router.get('/all', authenticate, async (req: Request, res: Response): Promise<void> => {
+router.get('/all', authenticate, async (_req: Request, res: Response): Promise<void> => {
   try {
     const allPerks = await perkQueryService.getAllGameplayPerks();
     res.json({ success: true, data: allPerks });

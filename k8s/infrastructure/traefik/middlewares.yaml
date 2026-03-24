@@ -194,7 +194,7 @@ metadata:
     tier: infrastructure
 spec:
   forwardAuth:
-    address: "http://auth.korczewski-services.svc.cluster.local:5500/api/auth/verify?requireAdmin=true"
+    address: "http://auth.korczewski-services.svc.cluster.local:5500/api/auth/forward-auth?requireAdmin=true"
     trustForwardHeader: true
     authResponseHeaders:
       - "X-Auth-User"
@@ -238,7 +238,7 @@ metadata:
     tier: infrastructure
 spec:
   forwardAuth:
-    address: "http://auth.korczewski-services.svc.cluster.local:5500/api/auth/verify"
+    address: "http://auth.korczewski-services.svc.cluster.local:5500/api/auth/forward-auth"
     trustForwardHeader: true
     authResponseHeaders:
       - "X-Auth-User"
@@ -282,7 +282,7 @@ metadata:
     tier: infrastructure
 spec:
   forwardAuth:
-    address: "http://auth.korczewski-services.svc.cluster.local:5500/api/auth/verify?app=shop"
+    address: "http://auth.korczewski-services.svc.cluster.local:5500/api/auth/forward-auth?app=shop"
     trustForwardHeader: true
     authResponseHeaders:
       - "X-Auth-User"
@@ -326,7 +326,7 @@ metadata:
     tier: infrastructure
 spec:
   forwardAuth:
-    address: "http://auth.korczewski-services.svc.cluster.local:5500/api/auth/verify?app=videovault"
+    address: "http://auth.korczewski-services.svc.cluster.local:5500/api/auth/forward-auth?app=videovault"
     trustForwardHeader: true
     authResponseHeaders:
       - "X-Auth-User"

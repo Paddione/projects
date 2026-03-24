@@ -105,7 +105,7 @@ spec:
               command: ["/bin/sh", "-c"]
               args:
                 - |
-                  set -eu
+                  set -u
 
                   GRACE_DAYS=7
                   NAMESPACES="korczewski-infra korczewski-services"
@@ -168,7 +168,7 @@ spec:
                     if find "$dir" -maxdepth 0 -mtime +${GRACE_DAYS} | grep -q .; then
                       size=$(du -sh "$dir" 2>/dev/null | cut -f1)
                       echo "  REMOVING: $dirname ($size)"
-                      rm -rf "$dir"
+                      rm -rf "$dir" 2>/dev/null || echo "  WARN: partial removal of $dirname (CIFS errors)"
                       count=$((count + 1))
                     else
                       echo "  GRACE: $dirname (modified within ${GRACE_DAYS}d)"

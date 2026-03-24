@@ -91,7 +91,7 @@ router.get('/leaderboard/:questionSetId',
  * Get all leaderboards for all question sets
  */
 router.get('/leaderboards',
-  async (req: Request, res: Response) => {
+  async (_req: Request, res: Response) => {
     try {
       const leaderboards = await hallOfFameService.getAllLeaderboards();
       setShortCache(res, 30);
@@ -210,7 +210,7 @@ router.get('/recent',
  * Get Hall of Fame statistics
  */
 router.get('/statistics',
-  async (req: Request, res: Response) => {
+  async (_req: Request, res: Response) => {
     try {
       const statistics = await hallOfFameService.getStatistics();
       setShortCache(res, 60);

@@ -30,6 +30,32 @@ else
     echo "WARN: ${ENV_FILE} not found, skipping SMB password"
 fi
 
+# Sync root .env (for generate-secrets.sh on new nodes)
+if [ -f "${ENV_FILE}" ]; then
+    scp "${ENV_FILE}" "${PXE_HOST}:${PXE_SECRETS}/dot-env"
+    echo "Root .env synced"
+else
+    echo "WARN: ${ENV_FILE} not found, skipping root .env"
+fi
+
+# Sync Docker registry credentials
+DOCKER_CONFIG="${HOME}/.docker/config.json"
+if [ -f "${DOCKER_CONFIG}" ]; then
+    scp "${DOCKER_CONFIG}" "${PXE_HOST}:${PXE_SECRETS}/docker-config.json"
+    echo "Docker config synced"
+else
+    echo "WARN: ${DOCKER_CONFIG} not found, skipping Docker config"
+fi
+
+# Sync kubeconfig
+KUBECONFIG_FILE="${HOME}/.kube/config"
+if [ -f "${KUBECONFIG_FILE}" ]; then
+    scp "${KUBECONFIG_FILE}" "${PXE_HOST}:${PXE_SECRETS}/kubeconfig.yaml"
+    echo "Kubeconfig synced"
+else
+    echo "WARN: ${KUBECONFIG_FILE} not found, skipping kubeconfig"
+fi
+
 echo "=== Syncing deploy key ==="
 
 DEPLOY_KEY="/home/patrick/.ssh/github_deploy_key"

@@ -3,6 +3,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Hub from './pages/Hub';
 import Admin from './pages/Admin';
+import Jitsi from './pages/Jitsi';
 import AccessDenied from './pages/AccessDenied';
 import HelpGuide from './components/HelpGuide';
 
@@ -17,6 +18,7 @@ function App() {
         <Route path="/register" element={<Register />} />
         <Route path="/hub" element={<Hub />} />
         <Route path="/apps" element={<Navigate to="/hub" replace />} />
+        <Route path="/jitsi" element={<Jitsi />} />
         <Route path="/admin" element={<Admin />} />
         <Route path="/access-denied" element={<AccessDenied />} />
         <Route path="/" element={<Navigate to="/login" replace />} />

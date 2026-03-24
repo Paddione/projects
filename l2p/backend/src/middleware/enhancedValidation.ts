@@ -40,7 +40,7 @@ export class EnhancedValidationMiddleware {
   /**
    * Comprehensive input validation and sanitization
    */
-  static validateAndSanitize = (req: Request, res: Response, next: NextFunction): void => {
+  static validateAndSanitize = (req: Request, _res: Response, next: NextFunction): void => {
     try {
       // Validate and sanitize request body
       if (req.body) {
@@ -290,7 +290,7 @@ export class EnhancedValidationMiddleware {
   /**
    * File upload validation
    */
-  static validateFileUpload = (req: Request, res: Response, next: NextFunction): void => {
+  static validateFileUpload = (req: Request, _res: Response, next: NextFunction): void => {
     if (req.files || req.file) {
       const files = req.files ? (Array.isArray(req.files) ? req.files : Object.values(req.files).flat()) : [req.file];
       

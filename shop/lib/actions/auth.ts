@@ -107,14 +107,6 @@ export const getCurrentUser = cache(async (): Promise<AuthUser | null> => {
 });
 
 /**
- * Check if the current user is an admin
- */
-export async function isAdmin(): Promise<boolean> {
-    const user = await getCurrentUser();
-    return user?.role === 'ADMIN';
-}
-
-/**
  * Require authentication - redirects if user is not authenticated
  */
 export async function requireAuth(): Promise<AuthUser> {

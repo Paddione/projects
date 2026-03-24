@@ -343,7 +343,6 @@ export class SocketService {
 
       // Try to join the lobby, but handle case where player is already in lobby
       let lobby;
-      let isAlreadyInLobby = false;
       try {
         lobby = await this.lobbyService.joinLobby({
           lobbyCode,
@@ -358,7 +357,6 @@ export class SocketService {
       } catch (error) {
         if (error instanceof Error && error.message === 'Player already in lobby') {
           // Player is already in lobby (likely joined via API), just get the current lobby state
-          isAlreadyInLobby = true;
           lobby = await this.lobbyService.getLobbyByCode(lobbyCode);
           if (!lobby) {
             socket.emit('join-error', {

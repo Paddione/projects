@@ -30,7 +30,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # Create necessary directories with proper permissions
-RUN mkdir -p /app/node_modules /app/logs /app/coverage /app/test-results /shared-infrastructure/shared/l2p
+RUN mkdir -p /app/node_modules /app/logs /app/coverage /app/test-results /app/packages
 
 # Set proper ownership for app directory
 RUN chown -R nodejs:nodejs /app
@@ -84,14 +84,14 @@ FROM base AS prod-dependencies
 WORKDIR /app
 
 # Copy and build shared modules first (needed for local file dependencies)
-COPY --chown=nodejs:nodejs shared-infrastructure/shared/l2p /shared-infrastructure/shared/l2p
+COPY --chown=nodejs:nodejs l2p/packages /app/packages
 
 # Build error-handling module
-WORKDIR /shared-infrastructure/shared/l2p/error-handling
+WORKDIR /app/packages/error-handling
 RUN npm install --legacy-peer-deps && npm run build
 
 # Build test-config module
-WORKDIR /shared-infrastructure/shared/l2p/test-config
+WORKDIR /app/packages/test-config
 RUN npm install --legacy-peer-deps && npm run build || true
 
 # Install backend production dependencies with proper context
@@ -107,13 +107,13 @@ FROM base AS build
 WORKDIR /app
 
 # Copy shared directory first and build shared modules
-COPY --chown=nodejs:nodejs shared-infrastructure/shared/l2p /shared-infrastructure/shared/l2p
+COPY --chown=nodejs:nodejs l2p/packages /app/packages
 
 # Build shared modules
-WORKDIR /shared-infrastructure/shared/l2p/error-handling
+WORKDIR /app/packages/error-handling
 RUN npm install --legacy-peer-deps && npm run build
 
-WORKDIR /shared-infrastructure/shared/l2p/test-config
+WORKDIR /app/packages/test-config
 RUN npm install --legacy-peer-deps && npm run build || true
 
 # Copy backend source and install all dependencies for build
@@ -149,7 +149,7 @@ COPY --from=build --chown=nodejs:nodejs /app/backend/migrations ./migrations
 COPY --from=build --chown=nodejs:nodejs /app/backend/public ./public
 
 # Copy shared modules for runtime resolution by relative imports
-COPY --from=build --chown=nodejs:nodejs /shared-infrastructure/shared/l2p /shared-infrastructure/shared/l2p
+COPY --from=build --chown=nodejs:nodejs /app/packages /app/packages
 
 # Workaround: some builds may emit admin route to dist/backend/src/routes instead of dist/routes
 # Ensure the expected path exists to avoid ERR_MODULE_NOT_FOUND

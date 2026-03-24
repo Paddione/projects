@@ -44,7 +44,15 @@ detect_registry
 # Build and push image
 if [ "$MANIFESTS_ONLY" = false ]; then
     log_info "Building shop..."
-    docker build -t "$REGISTRY/shop:latest" -f "$PROJECT_ROOT/shop/Dockerfile" "$PROJECT_ROOT"
+    # Fetch Stripe keys from k8s secret (needed at Next.js build time for page data collection)
+    STRIPE_SK=$(kubectl get secret shop-credentials -n "$NAMESPACE" -o jsonpath='{.data.STRIPE_SECRET_KEY}' | base64 -d)
+    STRIPE_PK=$(kubectl get secret shop-credentials -n "$NAMESPACE" -o jsonpath='{.data.STRIPE_PUBLISHABLE_KEY}' | base64 -d)
+    STRIPE_WH=$(kubectl get secret shop-credentials -n "$NAMESPACE" -o jsonpath='{.data.STRIPE_WEBHOOK_SECRET}' | base64 -d)
+    docker build \
+        --build-arg STRIPE_SECRET_KEY="$STRIPE_SK" \
+        --build-arg STRIPE_PUBLISHABLE_KEY="$STRIPE_PK" \
+        --build-arg STRIPE_WEBHOOK_SECRET="$STRIPE_WH" \
+        -t "$REGISTRY/shop:latest" -f "$PROJECT_ROOT/shop/Dockerfile" "$PROJECT_ROOT"
 
     log_info "Pushing shop..."
     docker push "$REGISTRY/shop:latest"

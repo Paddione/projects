@@ -49,7 +49,7 @@
         "./client/src/*"
       ],
       "@shared/*": [
-        "./shared-infrastructure/shared/videovault/*"
+        "./shared/videovault/*"
       ]
     }
   }

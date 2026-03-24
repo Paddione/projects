@@ -21,7 +21,7 @@ function setShortCache(res: express.Response, seconds: number = 30) {
 }
 
 // Get question statistics
-router.get('/stats', asyncHandler(async (req: express.Request, res: express.Response) => {
+router.get('/stats', asyncHandler(async (_req: express.Request, res: express.Response) => {
   const stats = await questionService.getQuestionSetStats();
   setShortCache(res, 60);
   res.json({
@@ -31,7 +31,7 @@ router.get('/stats', asyncHandler(async (req: express.Request, res: express.Resp
 }));
 
 // Get available categories
-router.get('/categories', asyncHandler(async (req: express.Request, res: express.Response) => {
+router.get('/categories', asyncHandler(async (_req: express.Request, res: express.Response) => {
   const categories = await questionService.getAvailableCategories();
   setShortCache(res, 300);
   res.json({
@@ -58,7 +58,7 @@ router.get('/sets', asyncHandler(async (req: express.Request, res: express.Respo
     typeof q['dir'] !== 'undefined';
 
   if (wantsStandardPagination || page || pageSize || sortBy || sortDir || category || q['publicOnly']) {
-    const publicOnly = q['publicOnly'] === 'true';
+    // publicOnly flag parsed from query but handled by standardized query below
 
     // Prefer standardized query if provided; otherwise map legacy page/pageSize/sortBy/sortDir
     let limit: number;

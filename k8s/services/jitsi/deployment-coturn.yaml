@@ -1,0 +1,93 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: coturn
+  namespace: korczewski-jitsi
+  labels:
+    app: coturn
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: coturn
+  template:
+    metadata:
+      labels:
+        app: coturn
+    spec:
+      nodeSelector:
+        kubernetes.io/hostname: k3s-1
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      initContainers:
+        - name: resolve-and-template
+          image: busybox:1.36
+          command:
+            - sh
+            - -c
+            - |
+              IP=$(nslookup meet.korczewski.de 1.1.1.1 2>/dev/null | grep -oE '([0-9]+\.){3}[0-9]+' | tail -1)
+              if [ -z "$IP" ]; then
+                echo "ERROR: Could not resolve meet.korczewski.de"
+                exit 1
+              fi
+              echo "Resolved public IP: $IP"
+              sed "s|__PUBLIC_IP__|$IP|g; s|__TURN_SECRET__|$TURN_CREDENTIAL|g" \
+                /template/turnserver.conf.template > /config/turnserver.conf
+              echo "Generated turnserver.conf with external-ip=$IP"
+          env:
+            - name: TURN_CREDENTIAL
+              valueFrom:
+                secretKeyRef:
+                  name: jitsi-secrets
+                  key: TURN_CREDENTIAL
+          volumeMounts:
+            - name: template
+              mountPath: /template
+            - name: config
+              mountPath: /config
+      containers:
+        - name: coturn
+          image: coturn/coturn:latest
+          imagePullPolicy: Always
+          args:
+            - -c
+            - /config/turnserver.conf
+          ports:
+            - containerPort: 3478
+              hostPort: 3478
+              protocol: UDP
+            - containerPort: 3478
+              hostPort: 3478
+              protocol: TCP
+            - containerPort: 5349
+              hostPort: 5349
+              protocol: TCP
+          resources:
+            requests:
+              cpu: 100m
+              memory: 64Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
+          volumeMounts:
+            - name: config
+              mountPath: /config
+            - name: tls
+              mountPath: /etc/coturn/tls
+      volumes:
+        - name: template
+          configMap:
+            name: coturn-config
+        - name: config
+          emptyDir: {}
+        - name: tls
+          secret:
+            secretName: korczewski-tls
+            items:
+              - key: tls.crt
+                path: tls.crt
+              - key: tls.key
+                path: tls.key

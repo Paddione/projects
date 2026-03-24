@@ -288,7 +288,7 @@ export class AuthMiddleware {
   /**
    * Optional authentication middleware - doesn't fail if no token
    */
-  optionalAuthenticate = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  optionalAuthenticate = async (req: Request, _res: Response, next: NextFunction): Promise<void> => {
     try {
       // 1. Check for Traefik ForwardAuth headers first
       const headerUser = this.extractUserFromHeaders(req);
@@ -349,7 +349,7 @@ export class AuthMiddleware {
   /**
    * Middleware to check if user has specific role (for future use)
    */
-  requireRole = (role: string) => {
+  requireRole = (_role: string) => {
     return (req: Request, res: Response, next: NextFunction): void => {
       if (!req.user) {
         res.status(401).json({

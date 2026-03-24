@@ -3,10 +3,13 @@
 
 ## Project
 - [ ] l2p
+- [ ] arena
 - [ ] VideoVault
-- [ ] payment
-- [ ] vllm
+- [ ] shop
 - [ ] auth
+- [ ] SOS
+- [ ] Assetgenerator
+- [ ] k8s / infrastructure
 
 ## Root Cause
 <!-- What caused the bug? -->

@@ -154,6 +154,9 @@ deploy_services() {
 
     log_step "Step 10: Deploying Arena"
     "$SCRIPT_DIR/deploy-arena.sh" "${SERVICE_FLAGS[@]}"
+
+    log_step "Step 11: Deploying Jitsi Meet"
+    "$SCRIPT_DIR/deploy-jitsi.sh" "${SERVICE_FLAGS[@]}"
 }
 
 # Record deployment SHAs for all services
@@ -164,7 +167,7 @@ record_deploy_shas() {
     fi
 
     log_step "Recording Deployment SHAs"
-    for service in auth l2p shop videovault sos arena; do
+    for service in auth l2p shop videovault sos arena jitsi; do
         "$TRACKER" set "$service"
     done
 }

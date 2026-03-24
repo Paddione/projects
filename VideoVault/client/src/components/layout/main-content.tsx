@@ -40,6 +40,7 @@ interface MainContentProps {
   onVideoRename: (video: Video) => void;
   onVideoSplit?: (video: Video) => void;
   onFocusMode?: (video: Video) => void;
+  onCategorize?: (video: Video) => void;
   onPin?: (video: Video) => void;
   onSelectDirectory: () => void;
   onFileDrop: (files: FileList) => void;
@@ -71,6 +72,7 @@ export function MainContent({
   onVideoRename,
   onVideoSplit,
   onFocusMode,
+  onCategorize,
   onPin,
   onSelectDirectory,
   onFileDrop,
@@ -631,6 +633,7 @@ export function MainContent({
               onVideoRename={onVideoRename}
               onVideoSplit={onVideoSplit}
               onFocusMode={onFocusMode}
+              onCategorize={onCategorize}
               onPin={onPin}
               onMove={onRequestMove}
               onDelete={onDeleteFile}
@@ -665,6 +668,7 @@ export function MainContent({
                         onRename={onVideoRename}
                         onSplit={onVideoSplit}
                         onFocusMode={onFocusMode}
+                        onCategorize={onCategorize}
                         onPin={onPin}
                         onMove={onRequestMove ? (v) => onRequestMove(v) : undefined}
                         onDelete={
@@ -712,6 +716,7 @@ export function MainContent({
                   onRename={onVideoRename}
                   onSplit={onVideoSplit}
                   onFocusMode={onFocusMode}
+                  onCategorize={onCategorize}
                   onMove={onRequestMove ? (v) => onRequestMove(v) : undefined}
                   onDelete={
                     onDeleteFile

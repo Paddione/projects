@@ -985,7 +985,7 @@ router.post('/force-password-change', authenticate, async (req: Request, res: Re
  * Simple endpoint for proxy forward authentication.
  * Returns 200 if authenticated, 401 otherwise.
  */
-router.get('/forward-auth', authenticate, (req: Request, res: Response): void => {
+router.get('/forward-auth', authenticate, (_req: Request, res: Response): void => {
   // If the authenticate middleware succeeded, we just return 200
   res.status(200).send('Authenticated');
 });
@@ -1001,7 +1001,7 @@ router.get('/forward-auth', authenticate, (req: Request, res: Response): void =>
  */
 router.post('/oauth/exchange', async (req: Request, res: Response): Promise<void> => {
   try {
-    const { code, state } = req.body;
+    const { code, state: _state } = req.body;
 
     if (!code) {
       res.status(400).json({
@@ -1185,7 +1185,7 @@ router.post('/oauth/logout', async (req: Request, res: Response): Promise<void> 
  * GET /api/auth/oauth/config
  * Get OAuth configuration for frontend
  */
-router.get('/oauth/config', (req: Request, res: Response): void => {
+router.get('/oauth/config', (_req: Request, res: Response): void => {
   const config = oauthService.getConfig();
   res.status(200).json(config);
 });

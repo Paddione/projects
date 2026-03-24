@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Video } from '@/types/video';
 import { getCategoryColorClasses } from '@/lib/category-colors';
-import { Play, Clock, FileVideo, Tags, Edit, FolderPlus, Trash2, Scissors, Pin } from 'lucide-react';
+import { Play, Clock, FileVideo, Tags, Edit, FolderPlus, Trash2, Scissors, Pin, LayoutGrid } from 'lucide-react';
 import { CategoryPicker } from '@/components/video/category-picker';
 import { ThumbnailGenerator } from '@/services/thumbnail-generator';
 import { VideoThumbnailService } from '@/services/video-thumbnail';
@@ -24,6 +24,7 @@ interface VideoCardProps {
   onMove?: (video: Video) => void;
   onDelete?: (video: Video) => void;
   onFocusMode?: (video: Video) => void;
+  onCategorize?: (video: Video) => void;
   onPin?: (video: Video) => void;
   onRemoveCategory?: (videoId: string, categoryType: string, categoryValue: string) => void;
   onUpdateCategories?: (videoId: string, categories: Partial<{ categories: any; customCategories: any }>) => void;
@@ -44,6 +45,7 @@ export function VideoCard({
   onMove,
   onDelete,
   onFocusMode,
+  onCategorize,
   onPin,
   onRemoveCategory,
   onUpdateCategories,
@@ -472,6 +474,12 @@ export function VideoCard({
           onFocusMode(video);
         }
         break;
+      case 'c':
+        if (onCategorize) {
+          e.preventDefault();
+          onCategorize(video);
+        }
+        break;
     }
   };
 
@@ -728,6 +736,22 @@ export function VideoCard({
             >
               <Tags className="h-4 w-4 sm:h-3 sm:w-3 text-accentEmerald" />
             </Button>
+            {onCategorize && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onCategorize(video);
+                }}
+                className="h-10 w-10 sm:h-8 sm:w-8 focus:outline-none focus:ring-2 focus:ring-primary"
+                data-testid={`button-categorize-${video.id}`}
+                aria-label={`Categorize ${video.displayName}`}
+                title="Categorize (C)"
+              >
+                <LayoutGrid className="h-4 w-4 sm:h-3 sm:w-3 text-accentEmerald" />
+              </Button>
+            )}
             {onPin && (
               <Button
                 variant="ghost"

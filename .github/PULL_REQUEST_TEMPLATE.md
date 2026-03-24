@@ -4,12 +4,14 @@
 ## Project
 <!-- Which project(s) are affected? Check all that apply -->
 - [ ] l2p
+- [ ] arena
 - [ ] VideoVault
-- [ ] payment
+- [ ] shop
 - [ ] auth
-- [ ] dashboard
-- [ ] shared-infrastructure
-- [ ] k8s
+- [ ] SOS
+- [ ] Assetgenerator
+- [ ] k8s / infrastructure
+- [ ] docs
 
 ## Type of Change
 - [ ] New feature

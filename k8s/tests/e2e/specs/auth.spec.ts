@@ -1,5 +1,4 @@
 import { test, expect } from '@playwright/test';
-import { TEST_USER } from '../lib/auth-helpers.js';
 
 /**
  * Authentication & ForwardAuth Tests

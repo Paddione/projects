@@ -2,6 +2,8 @@
 
 A multiplayer quiz platform with real-time gameplay, built with React, Express, Socket.io, and PostgreSQL.
 
+> **See also:** [Deep dive](../docs/services/l2p.md) | [Architecture](../docs/architecture/overview.md) | [Deployment](../docs/guides/deployment.md) | [Testing](../docs/guides/testing.md) | [Environment Variables](../docs/guides/environment-variables.md) | [Root README](../README.md)
+
 ## Features
 
 - Real-time multiplayer quiz games via Socket.io
@@ -106,7 +108,7 @@ GEMINI_API_KEY=<your-key>     # https://aistudio.google.com/app/apikey
 - Use alphanumeric-only database passwords to avoid Docker/Postgres escaping issues.
 - Generate DB passwords: `openssl rand -base64 32 | tr -dc 'A-Za-z0-9' | head -c 32`
 - JWT secrets must be at least 32 characters and unique per environment.
-- Database credentials must match `shared-infrastructure/.env`.
+- Database credentials must match root `.env` and `DB/init/00-create-databases.sh`.
 
 ## Development Commands
 
@@ -222,7 +224,7 @@ npm run coverage:badge           # Generate badge
 
 ### Connection
 
-L2P connects to the centralized PostgreSQL instance managed by `shared-infrastructure/`. Connection can be configured via `DATABASE_URL` or individual `DB_*` variables.
+L2P connects to the centralized PostgreSQL instance (see `DB/` for init scripts). Connection can be configured via `DATABASE_URL` or individual `DB_*` variables.
 
 ### Migrations
 
@@ -319,7 +321,7 @@ l2p/
 └── package.json           # Workspace root with all npm scripts
 ```
 
-Shared tooling lives at `../shared-infrastructure/shared/l2p/` (error handling, test config, test utilities).
+> **Note**: Former shared utilities in `../shared-infrastructure/shared/l2p/` have been consolidated. That directory no longer exists.
 
 ## Contributing
 

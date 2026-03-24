@@ -2,6 +2,8 @@
 
 A client-first video management application with advanced filtering, bulk operations, and professional-grade organization features. Built with privacy-first local storage and modern web APIs.
 
+> **See also:** [Deep dive](../docs/services/videovault.md) | [Architecture](../docs/architecture/overview.md) | [Deployment](../docs/guides/deployment.md) | [Testing](../docs/guides/testing.md) | [Environment Variables](../docs/guides/environment-variables.md) | [Root README](../README.md)
+
 ## Features
 
 - **Directory Scanning** with progress tracking, cancellation, and drag-and-drop import
@@ -328,9 +330,7 @@ The browser is the primary data store:
 
 ### Shared Types and Errors
 
-Error codes and payload types live in `shared-infrastructure/shared/videovault/errors.ts`. API schemas (Zod) are in `shared-infrastructure/shared/videovault/api.ts`. Import from `@shared/errors` rather than redefining locally.
-
-`VideoVault/shared-infrastructure` is a symlink to `../shared-infrastructure`. Docker mounts it into `/app/shared-infrastructure` for builds.
+Error codes and payload types use `@shared/errors` imports. Shared modules live in `shared/videovault/`.
 
 ### Tailwind CSS
 

@@ -11,7 +11,7 @@ const geminiService = new GeminiService();
 const questionService = new QuestionService();
 
 // Get all question sets
-router.get('/question-sets', async (req: Request, res: Response) => {
+router.get('/question-sets', async (_req: Request, res: Response) => {
   try {
     const sets = await questionService.getAllQuestionSets(false);
     return res.json({
@@ -576,7 +576,7 @@ router.post('/question-sets/generate-from-text', authMiddleware.authenticate, as
 });
 
 // Test Gemini API connection
-router.get('/ai/test-gemini', authMiddleware.authenticate, async (req: Request, res: Response) => {
+router.get('/ai/test-gemini', authMiddleware.authenticate, async (_req: Request, res: Response) => {
   try {
     const result = await geminiService.testConnection();
     return res.json(result);

@@ -86,7 +86,7 @@ export function setupApp(app: Application) {
 
   // Logging middleware for development
   if (process.env['NODE_ENV'] === 'development') {
-    app.use((req: Request, res: Response, next: NextFunction) => {
+    app.use((req: Request, _res: Response, next: NextFunction) => {
       console.log(`${req.method} ${req.path}`);
       next();
     });
@@ -106,7 +106,7 @@ export function setupApp(app: Application) {
   app.use('/api/admin', adminRoutes);
 
   // Health check endpoint
-  app.get('/healthz', (req: Request, res: Response) => {
+  app.get('/healthz', (_req: Request, res: Response) => {
     res.status(200).json({ status: 'ok' });
   });
 

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Dialog,
@@ -16,6 +16,7 @@ import {
   Volume2,
   VolumeX,
   Maximize,
+  Minimize,
   SkipBack,
   SkipForward,
   RefreshCcw,
@@ -25,20 +26,46 @@ import {
   Scissors,
   X,
   Focus,
+  Loader2,
+  AlertTriangle,
+  Gauge,
 } from 'lucide-react';
 import { useMemo } from 'react';
-import { VideoUrlRegistry } from '@/services/video-url-registry';
 import { VideoThumbnailService } from '@/services/video-thumbnail';
 import { VideoTagsEditor } from './video-tags-editor';
 import { VideoSplitter, SplitVideoFormValues } from './video-splitter';
 import { Category, VideoCategories, CustomCategories } from '@/types/video';
 import { SplitVideoResult } from '@/services/video-splitter';
 import { getVideoSrc, getThumbnailSrc } from '@/lib/video-urls';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 declare global {
   interface HTMLVideoElement {
     fastSeek?: (time: number) => void;
   }
+}
+
+const SPEED_OPTIONS = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2];
+const PREVIEW_CACHE_MAX = 200;
+
+// Persist volume and speed across sessions
+const STORAGE_KEY_VOLUME = 'vv.player.volume';
+const STORAGE_KEY_SPEED = 'vv.player.speed';
+
+function loadPersistedNumber(key: string, fallback: number): number {
+  try {
+    const raw = localStorage.getItem(key);
+    if (raw !== null) {
+      const n = parseFloat(raw);
+      if (Number.isFinite(n)) return n;
+    }
+  } catch {}
+  return fallback;
 }
 
 interface VideoPlayerModalProps {
@@ -77,17 +104,27 @@ export function VideoPlayerModal({
 }: VideoPlayerModalProps) {
   const { t } = useTranslation();
   const videoRef = useRef<HTMLVideoElement>(null);
+  const playerContainerRef = useRef<HTMLDivElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [sidePanel, setSidePanel] = useState<'none' | 'tags' | 'split'>('none');
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
-  const [volume, setVolume] = useState(1);
+  const [volume, setVolume] = useState(() => loadPersistedNumber(STORAGE_KEY_VOLUME, 1));
   const [isMuted, setIsMuted] = useState(false);
   const [buffered, setBuffered] = useState(0);
-  const [isScrubbing, setIsScrubbing] = useState(false);
-  const [scrubTime, setScrubTime] = useState(0);
   const [isPip, setIsPip] = useState(false);
   const [pipSupported, setPipSupported] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isBuffering, setIsBuffering] = useState(false);
+  const [playbackRate, setPlaybackRate] = useState(() => loadPersistedNumber(STORAGE_KEY_SPEED, 1));
+  const [videoError, setVideoError] = useState<string | null>(null);
+
+  // Use refs for scrubbing state to avoid event listener churn
+  const isScrubbingRef = useRef(false);
+  const scrubTimeRef = useRef(0);
+  const [scrubTimeDisplay, setScrubTimeDisplay] = useState(0);
+  const [isScrubbing, setIsScrubbing] = useState(false);
+
   // Hover preview state
   const [hoverTime, setHoverTime] = useState<number | null>(null);
   const [hoverX, setHoverX] = useState(0);
@@ -109,9 +146,9 @@ export function VideoPlayerModal({
   const touchActiveRef = useRef(false);
   const [gestureMessage, setGestureMessage] = useState<string | null>(null);
   const gestureMessageTimeout = useRef<number | null>(null);
-  // Guard: after seeking, suppress timeupdate briefly to prevent stale position overwrite
   const seekCommittedRef = useRef(false);
 
+  // --- Video event listeners (stable — no scrub state in deps) ---
   useEffect(() => {
     const videoElement = videoRef.current;
     if (!videoElement) return;
@@ -120,9 +157,10 @@ export function VideoPlayerModal({
       !!document.pictureInPictureEnabled &&
         typeof videoElement.requestPictureInPicture === 'function',
     );
+    setVideoError(null);
 
     const handleTimeUpdate = () => {
-      if (!isScrubbing && !seekCommittedRef.current) {
+      if (!isScrubbingRef.current && !seekCommittedRef.current) {
         setCurrentTime(videoElement.currentTime);
       }
       updateBuffered();
@@ -137,19 +175,36 @@ export function VideoPlayerModal({
       setDuration(Number.isFinite(videoElement.duration) ? videoElement.duration : 0);
     const handlePlay = () => {
       setIsPlaying(true);
+      setIsBuffering(false);
       if (navigator.mediaSession) {
-        try {
-          navigator.mediaSession.playbackState = 'playing';
-        } catch {}
+        try { navigator.mediaSession.playbackState = 'playing'; } catch {}
       }
     };
     const handlePause = () => {
       setIsPlaying(false);
       if (navigator.mediaSession) {
-        try {
-          navigator.mediaSession.playbackState = 'paused';
-        } catch {}
+        try { navigator.mediaSession.playbackState = 'paused'; } catch {}
       }
+    };
+    const handleWaiting = () => setIsBuffering(true);
+    const handleCanPlay = () => setIsBuffering(false);
+    const handlePlaying = () => setIsBuffering(false);
+    const handleEnded = () => {
+      setIsPlaying(false);
+      // Auto-advance to next video
+      onNext?.();
+    };
+    const handleError = () => {
+      const err = videoElement.error;
+      const messages: Record<number, string> = {
+        1: 'Playback aborted',
+        2: 'Network error — check file accessibility',
+        3: 'Decoding error — file may be corrupt',
+        4: 'Source not supported',
+      };
+      setVideoError(messages[err?.code ?? 0] || 'Unknown playback error');
+      setIsPlaying(false);
+      setIsBuffering(false);
     };
     const handleProgress = () => updateBuffered();
     const handleEnterPip = () => setIsPip(true);
@@ -158,25 +213,17 @@ export function VideoPlayerModal({
     const updateBuffered = () => {
       try {
         const ranges = videoElement.buffered;
-        if (ranges.length === 0) {
-          setBuffered(0);
-          return;
-        }
+        if (ranges.length === 0) { setBuffered(0); return; }
         let end = 0;
-        const t = isScrubbing ? scrubTime : videoElement.currentTime;
+        const t = isScrubbingRef.current ? scrubTimeRef.current : videoElement.currentTime;
         for (let i = 0; i < ranges.length; i++) {
           const startI = ranges.start(i);
           const endI = ranges.end(i);
-          if (t >= startI && t <= endI) {
-            end = endI;
-            break;
-          }
+          if (t >= startI && t <= endI) { end = endI; break; }
           if (endI > end) end = endI;
         }
         setBuffered(end);
-      } catch {
-        setBuffered(0);
-      }
+      } catch { setBuffered(0); }
     };
 
     videoElement.addEventListener('timeupdate', handleTimeUpdate);
@@ -184,6 +231,11 @@ export function VideoPlayerModal({
     videoElement.addEventListener('loadedmetadata', handleLoadedMetadata);
     videoElement.addEventListener('play', handlePlay);
     videoElement.addEventListener('pause', handlePause);
+    videoElement.addEventListener('waiting', handleWaiting);
+    videoElement.addEventListener('canplay', handleCanPlay);
+    videoElement.addEventListener('playing', handlePlaying);
+    videoElement.addEventListener('ended', handleEnded);
+    videoElement.addEventListener('error', handleError);
     videoElement.addEventListener('progress', handleProgress);
     videoElement.addEventListener('seeked', handleSeeked);
     videoElement.addEventListener('enterpictureinpicture', handleEnterPip);
@@ -195,19 +247,52 @@ export function VideoPlayerModal({
       videoElement.removeEventListener('loadedmetadata', handleLoadedMetadata);
       videoElement.removeEventListener('play', handlePlay);
       videoElement.removeEventListener('pause', handlePause);
+      videoElement.removeEventListener('waiting', handleWaiting);
+      videoElement.removeEventListener('canplay', handleCanPlay);
+      videoElement.removeEventListener('playing', handlePlaying);
+      videoElement.removeEventListener('ended', handleEnded);
+      videoElement.removeEventListener('error', handleError);
       videoElement.removeEventListener('progress', handleProgress);
       videoElement.removeEventListener('seeked', handleSeeked);
       videoElement.removeEventListener('enterpictureinpicture', handleEnterPip);
       videoElement.removeEventListener('leavepictureinpicture', handleLeavePip);
     };
-  }, [isScrubbing, scrubTime]);
+  // Stable deps — no isScrubbing/scrubTime (use refs instead)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [video?.id, onNext]);
 
+  // Sync volume to video element + persist
   useEffect(() => {
     if (videoRef.current) {
       videoRef.current.volume = isMuted ? 0 : volume;
     }
+    try { localStorage.setItem(STORAGE_KEY_VOLUME, String(volume)); } catch {}
   }, [volume, isMuted]);
 
+  // Sync playback rate + persist
+  useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.playbackRate = playbackRate;
+    }
+    try { localStorage.setItem(STORAGE_KEY_SPEED, String(playbackRate)); } catch {}
+  }, [playbackRate]);
+
+  // Apply playback rate when video element mounts (new video)
+  useEffect(() => {
+    if (videoRef.current && playbackRate !== 1) {
+      videoRef.current.playbackRate = playbackRate;
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [video?.id]);
+
+  // Fullscreen change listener
+  useEffect(() => {
+    const handler = () => setIsFullscreen(!!document.fullscreenElement);
+    document.addEventListener('fullscreenchange', handler);
+    return () => document.removeEventListener('fullscreenchange', handler);
+  }, []);
+
+  // MediaSession
   useEffect(() => {
     if (!video || !isOpen) return;
     if (!('mediaSession' in navigator)) return;
@@ -221,50 +306,28 @@ export function VideoPlayerModal({
         artwork: thumbSrc ? [{ src: thumbSrc, sizes: '320x180', type: 'image/jpeg' }] : [],
       });
 
-      navigator.mediaSession?.setActionHandler('play', () => {
-        void videoRef.current?.play();
-      });
-      navigator.mediaSession?.setActionHandler('pause', () => {
-        videoRef.current?.pause();
-      });
-      navigator.mediaSession?.setActionHandler('seekbackward', (details: any) => {
-        const offset = details?.seekOffset ?? 10;
-        skip(-offset);
-      });
-      navigator.mediaSession?.setActionHandler('seekforward', (details: any) => {
-        const offset = details?.seekOffset ?? 10;
-        skip(offset);
-      });
+      navigator.mediaSession?.setActionHandler('play', () => { void videoRef.current?.play(); });
+      navigator.mediaSession?.setActionHandler('pause', () => { videoRef.current?.pause(); });
+      navigator.mediaSession?.setActionHandler('seekbackward', (details: any) => { skip(-(details?.seekOffset ?? 10)); });
+      navigator.mediaSession?.setActionHandler('seekforward', (details: any) => { skip(details?.seekOffset ?? 10); });
       navigator.mediaSession?.setActionHandler('seekto', (details: any) => {
         const time = details?.seekTime;
         if (typeof time === 'number' && videoRef.current) {
           if (details?.fastSeek && videoRef.current.fastSeek) {
-            try {
-              videoRef.current.fastSeek(time);
-              return;
-            } catch {}
+            try { videoRef.current.fastSeek(time); return; } catch {}
           }
           videoRef.current.currentTime = Math.max(0, Math.min(duration || 0, time));
         }
       });
-      navigator.mediaSession?.setActionHandler('previoustrack', () => {
-        onPrev?.();
-      });
-      navigator.mediaSession?.setActionHandler('nexttrack', () => {
-        onNext?.();
-      });
+      navigator.mediaSession?.setActionHandler('previoustrack', () => { onPrev?.(); });
+      navigator.mediaSession?.setActionHandler('nexttrack', () => { onNext?.(); });
     } catch {}
 
     return () => {
       try {
         if (navigator.mediaSession) {
-          navigator.mediaSession.setActionHandler('play', null);
-          navigator.mediaSession.setActionHandler('pause', null);
-          navigator.mediaSession.setActionHandler('seekbackward', null);
-          navigator.mediaSession.setActionHandler('seekforward', null);
-          navigator.mediaSession.setActionHandler('seekto', null);
-          navigator.mediaSession.setActionHandler('previoustrack', null);
-          navigator.mediaSession.setActionHandler('nexttrack', null);
+          const handlers = ['play', 'pause', 'seekbackward', 'seekforward', 'seekto', 'previoustrack', 'nexttrack'] as const;
+          for (const h of handlers) navigator.mediaSession.setActionHandler(h, null);
         }
       } catch {}
     };
@@ -272,11 +335,8 @@ export function VideoPlayerModal({
 
   const togglePlayPause = () => {
     if (videoRef.current) {
-      if (isPlaying) {
-        videoRef.current.pause();
-      } else {
-        void videoRef.current.play();
-      }
+      if (isPlaying) videoRef.current.pause();
+      else void videoRef.current.play();
     }
   };
 
@@ -284,11 +344,8 @@ export function VideoPlayerModal({
     const videoEl = videoRef.current;
     if (!videoEl || !pipSupported) return;
     try {
-      if (document.pictureInPictureElement) {
-        await document.exitPictureInPicture?.();
-      } else {
-        await videoEl.requestPictureInPicture?.();
-      }
+      if (document.pictureInPictureElement) await document.exitPictureInPicture?.();
+      else await videoEl.requestPictureInPicture?.();
     } catch {}
   };
 
@@ -298,12 +355,15 @@ export function VideoPlayerModal({
       videoRef.current.currentTime = value[0];
       setCurrentTime(value[0]);
     }
+    isScrubbingRef.current = false;
     setIsScrubbing(false);
   };
 
   const handleSeekChange = (value: number[]) => {
+    isScrubbingRef.current = true;
+    scrubTimeRef.current = value[0];
+    setScrubTimeDisplay(value[0]);
     setIsScrubbing(true);
-    setScrubTime(value[0]);
   };
 
   const handleVolumeChange = (value: number[]) => {
@@ -311,41 +371,32 @@ export function VideoPlayerModal({
     setIsMuted(false);
   };
 
-  const toggleMute = () => {
-    setIsMuted(!isMuted);
-  };
+  const toggleMute = () => setIsMuted(!isMuted);
 
-  const toggleFullscreen = () => {
-    if (videoRef.current) {
-      if (document.fullscreenElement) {
-        void document.exitFullscreen();
-      } else {
-        void videoRef.current.requestFullscreen();
-      }
+  // Fullscreen on container div — keeps custom controls visible
+  const toggleFullscreen = useCallback(() => {
+    const container = playerContainerRef.current;
+    if (!container) return;
+    if (document.fullscreenElement) {
+      void document.exitFullscreen();
+    } else {
+      void container.requestFullscreen();
     }
-  };
+  }, []);
 
   const skip = (seconds: number) => {
     if (videoRef.current) {
       const elementDuration =
         typeof videoRef.current.duration === 'number' && Number.isFinite(videoRef.current.duration)
-          ? videoRef.current.duration
-          : undefined;
+          ? videoRef.current.duration : undefined;
       const clampDuration =
-        typeof elementDuration === 'number' && elementDuration > 0
-          ? elementDuration
-          : duration || 0;
-      videoRef.current.currentTime = Math.max(
-        0,
-        Math.min(clampDuration, videoRef.current.currentTime + seconds),
-      );
+        typeof elementDuration === 'number' && elementDuration > 0 ? elementDuration : duration || 0;
+      videoRef.current.currentTime = Math.max(0, Math.min(clampDuration, videoRef.current.currentTime + seconds));
     }
   };
 
   const showGestureMessage = (message: string) => {
-    if (gestureMessageTimeout.current) {
-      window.clearTimeout(gestureMessageTimeout.current);
-    }
+    if (gestureMessageTimeout.current) window.clearTimeout(gestureMessageTimeout.current);
     setGestureMessage(message);
     gestureMessageTimeout.current = window.setTimeout(() => setGestureMessage(null), 900);
   };
@@ -365,7 +416,6 @@ export function VideoPlayerModal({
     const deltaTime = now - gestureStateRef.current.startTime;
     const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
 
-    // Swipe seeking
     if (Math.abs(deltaX) > 90 && deltaTime < 500) {
       const direction = deltaX > 0 ? 1 : -1;
       skip(direction * 15);
@@ -378,7 +428,6 @@ export function VideoPlayerModal({
         window.clearTimeout(gestureStateRef.current.timeoutId);
         gestureStateRef.current.timeoutId = null;
       }
-
       if (isDouble) {
         const direction = tapX < rect.width / 2 ? -10 : 10;
         skip(direction);
@@ -394,13 +443,10 @@ export function VideoPlayerModal({
         }, 220);
       }
     }
-
-    window.setTimeout(() => {
-      touchActiveRef.current = false;
-    }, 0);
+    window.setTimeout(() => { touchActiveRef.current = false; }, 0);
   };
 
-  // Debounced frame capture for hover preview
+  // LRU-capped hover preview cache
   const requestHoverPreview = (tSeconds: number) => {
     if (!sourceUrl) return;
     const whole = Math.max(0, Math.floor(tSeconds));
@@ -414,13 +460,16 @@ export function VideoPlayerModal({
       void (async () => {
         try {
           const dataUrl = await VideoThumbnailService.captureFrameAtTime(sourceUrl, whole, 160);
+          // LRU eviction: if cache exceeds max, delete oldest entry
+          if (cache.size >= PREVIEW_CACHE_MAX) {
+            const firstKey = cache.keys().next().value;
+            if (firstKey !== undefined) cache.delete(firstKey);
+          }
           cache.set(whole, dataUrl);
           if (hoverTime !== null && Math.floor(hoverTime) === whole) {
             setHoverPreviewUrl(dataUrl);
           }
-        } catch {
-          // ignore
-        }
+        } catch {}
       })();
     }, 150);
   };
@@ -432,6 +481,12 @@ export function VideoPlayerModal({
       if (gestureMessageTimeout.current) window.clearTimeout(gestureMessageTimeout.current);
     };
   }, []);
+
+  // Clear preview cache when switching videos
+  useEffect(() => {
+    previewCacheRef.current.clear();
+    setVideoError(null);
+  }, [video?.id]);
 
   const formatTime = (time: number): string => {
     if (!Number.isFinite(time)) return '0:00';
@@ -448,15 +503,13 @@ export function VideoPlayerModal({
 
   if (!video) return null;
 
-  const effectiveTime = isScrubbing ? scrubTime : currentTime;
+  const effectiveTime = isScrubbing ? scrubTimeDisplay : currentTime;
   const elementDuration =
     typeof videoRef.current?.duration === 'number' && Number.isFinite(videoRef.current?.duration)
-      ? videoRef.current?.duration
-      : undefined;
+      ? videoRef.current?.duration : undefined;
   const effectiveDuration =
     typeof elementDuration === 'number' && elementDuration > 0 ? elementDuration : duration;
-  const sliderDisabled =
-    !hasSource || !Number.isFinite(effectiveDuration) || effectiveDuration <= 0;
+  const sliderDisabled = !hasSource || !Number.isFinite(effectiveDuration) || effectiveDuration <= 0;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -465,13 +518,12 @@ export function VideoPlayerModal({
       >
         <DialogHeader className="p-4 border-b">
           <DialogTitle data-testid="text-video-title">{video.displayName}</DialogTitle>
-          <DialogDescription className="sr-only">
-            {t('player.playerDescription')}
-          </DialogDescription>
+          <DialogDescription className="sr-only">{t('player.playerDescription')}</DialogDescription>
         </DialogHeader>
 
         <div className="flex flex-col md:flex-row h-[80vh] md:h-[calc(90vh-5rem)] overflow-hidden">
-          <div className="flex-1 flex flex-col min-w-0 bg-black relative">
+          {/* Player container — fullscreen target */}
+          <div ref={playerContainerRef} className="flex-1 flex flex-col min-w-0 bg-black relative">
             <div
               className="relative bg-black touch-pan-y flex-1"
               tabIndex={0}
@@ -479,43 +531,26 @@ export function VideoPlayerModal({
               onPointerDown={handleGesturePointerDown}
               onPointerUp={handleGesturePointerUp}
               onKeyDown={(e) => {
-                if (e.key === ' ') {
+                if (e.key === ' ') { e.preventDefault(); togglePlayPause(); }
+                else if (e.key === 'ArrowLeft') { e.preventDefault(); skip(e.shiftKey ? -30 : -5); }
+                else if (e.key === 'ArrowRight') { e.preventDefault(); skip(e.shiftKey ? 30 : 5); }
+                else if (e.key === 'ArrowUp') { e.preventDefault(); setVolume((v) => Math.min(1, v + 0.1)); setIsMuted(false); }
+                else if (e.key === 'ArrowDown') { e.preventDefault(); const nv = Math.max(0, volume - 0.1); setVolume(nv); if (nv === 0) setIsMuted(true); }
+                else if (e.key.toLowerCase() === 'm') { e.preventDefault(); toggleMute(); }
+                else if (e.key.toLowerCase() === 'f') { e.preventDefault(); toggleFullscreen(); }
+                else if (e.key.toLowerCase() === 'j') { e.preventDefault(); onPrev?.(); }
+                else if (e.key.toLowerCase() === 'k') { e.preventDefault(); onNext?.(); }
+                else if (e.key === '>' || e.key === '.') {
                   e.preventDefault();
-                  togglePlayPause();
-                } else if (e.key === 'ArrowLeft') {
+                  const idx = SPEED_OPTIONS.indexOf(playbackRate);
+                  if (idx < SPEED_OPTIONS.length - 1) setPlaybackRate(SPEED_OPTIONS[idx + 1]);
+                }
+                else if (e.key === '<' || e.key === ',') {
                   e.preventDefault();
-                  skip(e.shiftKey ? -30 : -5);
-                } else if (e.key === 'ArrowRight') {
-                  e.preventDefault();
-                  skip(e.shiftKey ? 30 : 5);
-                } else if (e.key === 'ArrowUp') {
-                  e.preventDefault();
-                  // Increase volume by 10%
-                  const newVolume = Math.min(1, volume + 0.1);
-                  setVolume(newVolume);
-                  setIsMuted(false);
-                } else if (e.key === 'ArrowDown') {
-                  e.preventDefault();
-                  // Decrease volume by 10%
-                  const newVolume = Math.max(0, volume - 0.1);
-                  setVolume(newVolume);
-                  if (newVolume === 0) setIsMuted(true);
-                } else if (e.key.toLowerCase() === 'm') {
-                  e.preventDefault();
-                  toggleMute();
-                } else if (e.key.toLowerCase() === 'f') {
-                  e.preventDefault();
-                  toggleFullscreen();
-                } else if (e.key.toLowerCase() === 'j') {
-                  // Prev
-                  e.preventDefault();
-                  onPrev?.();
-                } else if (e.key.toLowerCase() === 'k') {
-                  // Next
-                  e.preventDefault();
-                  onNext?.();
-                } else if (['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'].includes(e.key)) {
-                  // Seek to percentage (0-9 = 0%-90%)
+                  const idx = SPEED_OPTIONS.indexOf(playbackRate);
+                  if (idx > 0) setPlaybackRate(SPEED_OPTIONS[idx - 1]);
+                }
+                else if (['0','1','2','3','4','5','6','7','8','9'].includes(e.key)) {
                   e.preventDefault();
                   const percent = parseInt(e.key) / 10;
                   if (videoRef.current && effectiveDuration > 0) {
@@ -526,7 +561,7 @@ export function VideoPlayerModal({
                 }
               }}
             >
-              {hasSource ? (
+              {hasSource && !videoError ? (
                 <video
                   key={video.id}
                   ref={videoRef}
@@ -536,39 +571,46 @@ export function VideoPlayerModal({
                   data-testid="video-player"
                   preload="metadata"
                   playsInline
-                  onClick={(event) => {
-                    if (touchActiveRef.current) return;
-                    togglePlayPause();
-                  }}
+                  onClick={() => { if (!touchActiveRef.current) togglePlayPause(); }}
                   onDoubleClick={toggleFullscreen}
                 />
+              ) : videoError ? (
+                <div className="w-full h-full bg-black flex flex-col items-center justify-center text-white space-y-3 p-4">
+                  <AlertTriangle className="h-10 w-10 text-amber-400" />
+                  <span className="font-medium">Playback Error</span>
+                  <span className="text-xs opacity-80 text-center max-w-sm">{videoError}</span>
+                  <span className="text-xs opacity-50">{video.path}</span>
+                  <Button variant="secondary" size="sm" onClick={() => { setVideoError(null); }}>
+                    <RefreshCcw className="h-4 w-4 mr-2" />Retry
+                  </Button>
+                </div>
               ) : (
                 <div className="w-full h-full bg-black flex flex-col items-center justify-center text-white space-y-3 p-4">
                   <span>{t('player.videoUnavailable')}</span>
                   <span className="text-xs opacity-80">{t('player.path', { path: video.path })}</span>
                   {onRescan && (
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      onClick={onRescan}
-                      data-testid="button-rescan-root"
-                    >
+                    <Button variant="secondary" size="sm" onClick={onRescan} data-testid="button-rescan-root">
                       <RefreshCcw className="h-4 w-4 mr-2" /> {t('player.rescanRoot')}
                     </Button>
                   )}
                 </div>
               )}
 
+              {/* Buffering spinner */}
+              {isBuffering && hasSource && !videoError && (
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  <Loader2 className="h-12 w-12 text-white/70 animate-spin" />
+                </div>
+              )}
+
               {gestureMessage && (
-                <div
-                  className="pointer-events-none absolute top-3 left-1/2 -translate-x-1/2 bg-black/70 text-white text-xs px-3 py-1 rounded-full"
-                  aria-live="polite"
-                >
+                <div className="pointer-events-none absolute top-3 left-1/2 -translate-x-1/2 bg-black/70 text-white text-xs px-3 py-1 rounded-full" aria-live="polite">
                   {gestureMessage}
                 </div>
               )}
             </div>
 
+            {/* Control bar — stays visible in fullscreen because fullscreen is on the container */}
             <div className="bg-gradient-to-t from-black to-transparent p-4 z-10 w-full">
               <div className="space-y-2">
                 <div
@@ -585,33 +627,22 @@ export function VideoPlayerModal({
                     setHoverTime(t);
                     requestHoverPreview(t);
                   }}
-                  onMouseLeave={() => {
-                    setHoverTime(null);
-                    setHoverPreviewUrl(null);
-                  }}
+                  onMouseLeave={() => { setHoverTime(null); setHoverPreviewUrl(null); }}
                   ref={previewContainerRef}
                 >
                   {hoverTime !== null && !sliderDisabled && (
                     <div
                       className="absolute -top-28 flex flex-col items-center"
-                      style={{
-                        left: `${Math.max(0, Math.min((previewContainerRef.current?.clientWidth || 0) - 160, hoverX - 80))}px`,
-                      }}
+                      style={{ left: `${Math.max(0, Math.min((previewContainerRef.current?.clientWidth || 0) - 160, hoverX - 80))}px` }}
                       data-testid="thumbnail-preview"
                     >
                       <div className="pointer-events-none rounded border border-white/20 shadow-lg overflow-hidden bg-black">
                         {hoverPreviewUrl ? (
-                          <img
-                            src={hoverPreviewUrl}
-                            alt="preview"
-                            className="w-40 h-24 object-cover"
-                          />
+                          <img src={hoverPreviewUrl} alt="preview" className="w-40 h-24 object-cover" />
                         ) : (
                           <div className="w-40 h-24 bg-white/10" />
                         )}
-                        <div className="w-40 text-center text-xs text-white py-1 bg-black/70">
-                          {formatTime(hoverTime)}
-                        </div>
+                        <div className="w-40 text-center text-xs text-white py-1 bg-black/70">{formatTime(hoverTime)}</div>
                       </div>
                     </div>
                   )}
@@ -632,48 +663,16 @@ export function VideoPlayerModal({
 
                 <div className="flex items-center justify-between text-white">
                   <div className="flex items-center space-x-2">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={onPrev}
-                      className="text-white hover:bg-white hover:bg-opacity-20"
-                      data-testid="button-skip-back"
-                      disabled={!onPrev}
-                    >
+                    <Button variant="ghost" size="sm" onClick={onPrev} className="text-white hover:bg-white hover:bg-opacity-20" data-testid="button-skip-back" disabled={!onPrev}>
                       <SkipBack className="h-4 w-4" />
                     </Button>
-
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={togglePlayPause}
-                      className="text-white hover:bg-white hover:bg-opacity-20"
-                      data-testid="button-play-pause"
-                      disabled={!hasSource}
-                    >
+                    <Button variant="ghost" size="sm" onClick={togglePlayPause} className="text-white hover:bg-white hover:bg-opacity-20" data-testid="button-play-pause" disabled={!hasSource}>
                       {isPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}
                     </Button>
-
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={onNext}
-                      className="text-white hover:bg-white hover:bg-opacity-20"
-                      data-testid="button-skip-forward"
-                      disabled={!onNext}
-                    >
+                    <Button variant="ghost" size="sm" onClick={onNext} className="text-white hover:bg-white hover:bg-opacity-20" data-testid="button-skip-forward" disabled={!onNext}>
                       <SkipForward className="h-4 w-4" />
                     </Button>
-
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => skip(600)}
-                      className="text-white hover:bg-white hover:bg-opacity-20 hidden sm:inline-flex"
-                      data-testid="button-forward-10m"
-                      disabled={!hasSource}
-                      aria-label={t('player.forward10min')}
-                    >
+                    <Button variant="ghost" size="sm" onClick={() => skip(600)} className="text-white hover:bg-white hover:bg-opacity-20 hidden sm:inline-flex" data-testid="button-forward-10m" disabled={!hasSource} aria-label={t('player.forward10min')}>
                       {t('player.forward10m')}
                     </Button>
                   </div>
@@ -683,26 +682,30 @@ export function VideoPlayerModal({
                       {formatTime(effectiveTime)} / {formatTime(effectiveDuration)}
                     </span>
 
-                    <div className="flex items-center space-x-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={toggleMute}
-                        className="text-white hover:bg-white hover:bg-opacity-20"
-                        data-testid="button-mute"
-                        disabled={!hasSource}
-                      >
-                        {isMuted ? (
-                          <VolumeX className="h-4 w-4" />
-                        ) : (
-                          <Volume2 className="h-4 w-4" />
-                        )}
-                      </Button>
+                    {/* Playback speed */}
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="sm" className="text-white hover:bg-white hover:bg-opacity-20 hidden sm:inline-flex text-xs px-2 gap-1" disabled={!hasSource} title="Playback speed (< >)">
+                          <Gauge className="h-3.5 w-3.5" />
+                          {playbackRate !== 1 ? `${playbackRate}x` : '1x'}
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-28">
+                        {SPEED_OPTIONS.map((s) => (
+                          <DropdownMenuItem key={s} onClick={() => setPlaybackRate(s)} className={s === playbackRate ? 'bg-accent' : ''}>
+                            {s}x
+                          </DropdownMenuItem>
+                        ))}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
 
+                    <div className="flex items-center space-x-2">
+                      <Button variant="ghost" size="sm" onClick={toggleMute} className="text-white hover:bg-white hover:bg-opacity-20" data-testid="button-mute" disabled={!hasSource}>
+                        {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+                      </Button>
                       <Slider
                         value={[isMuted ? 0 : volume]}
-                        max={1}
-                        step={0.05}
+                        max={1} step={0.05}
                         onValueChange={handleVolumeChange}
                         className="w-20 hidden sm:flex"
                         data-testid="slider-volume"
@@ -711,82 +714,32 @@ export function VideoPlayerModal({
                       />
                     </div>
 
-                    <Button
-                      variant={sidePanel === 'tags' ? 'secondary' : 'ghost'}
-                      size="sm"
-                      onClick={() => setSidePanel(sidePanel === 'tags' ? 'none' : 'tags')}
-                      className={`text-white hover:bg-white hover:bg-opacity-20 ${sidePanel === 'tags' ? 'bg-white/20' : ''}`}
-                      data-testid="button-edit-tags-inline"
-                      disabled={!onUpdateVideo}
-                      aria-label={t('player.editTags')}
-                    >
+                    <Button variant={sidePanel === 'tags' ? 'secondary' : 'ghost'} size="sm" onClick={() => setSidePanel(sidePanel === 'tags' ? 'none' : 'tags')} className={`text-white hover:bg-white hover:bg-opacity-20 ${sidePanel === 'tags' ? 'bg-white/20' : ''}`} data-testid="button-edit-tags-inline" disabled={!onUpdateVideo} aria-label={t('player.editTags')}>
                       <Tags className="h-4 w-4" />
                     </Button>
 
                     {onFocusMode && video && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          onFocusMode(video);
-                          onClose();
-                        }}
-                        className="text-white hover:bg-white hover:bg-opacity-20 hidden sm:inline-flex"
-                        data-testid="button-focus-mode"
-                        aria-label={t('player.openFocusMode')}
-                        title={t('player.openFocusMode')}
-                      >
+                      <Button variant="ghost" size="sm" onClick={() => { onFocusMode(video); onClose(); }} className="text-white hover:bg-white hover:bg-opacity-20 hidden sm:inline-flex" data-testid="button-focus-mode" aria-label={t('player.openFocusMode')} title={t('player.openFocusMode')}>
                         <Focus className="h-4 w-4" />
                       </Button>
                     )}
 
                     {onSplitVideo && (
-                      <Button
-                        variant={sidePanel === 'split' ? 'secondary' : 'ghost'}
-                        size="sm"
-                        onClick={() => setSidePanel(sidePanel === 'split' ? 'none' : 'split')}
-                        className={`text-white hover:bg-white hover:bg-opacity-20 hidden sm:inline-flex ${sidePanel === 'split' ? 'bg-white/20' : ''}`}
-                        data-testid="button-split-inline"
-                        aria-label={t('player.splitVideo')}
-                      >
+                      <Button variant={sidePanel === 'split' ? 'secondary' : 'ghost'} size="sm" onClick={() => setSidePanel(sidePanel === 'split' ? 'none' : 'split')} className={`text-white hover:bg-white hover:bg-opacity-20 hidden sm:inline-flex ${sidePanel === 'split' ? 'bg-white/20' : ''}`} data-testid="button-split-inline" aria-label={t('player.splitVideo')}>
                         <Scissors className="h-4 w-4" />
                       </Button>
                     )}
 
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={onToggleShuffle}
-                      className="text-white hover:bg-white hover:bg-opacity-20 hidden sm:inline-flex"
-                      data-testid="button-shuffle"
-                      aria-pressed={!!shuffleEnabled}
-                      aria-label={t('player.shuffle')}
-                    >
+                    <Button variant="ghost" size="sm" onClick={onToggleShuffle} className="text-white hover:bg-white hover:bg-opacity-20 hidden sm:inline-flex" data-testid="button-shuffle" aria-pressed={!!shuffleEnabled} aria-label={t('player.shuffle')}>
                       <Shuffle className={`h-4 w-4 ${shuffleEnabled ? 'text-emerald-400' : ''}`} />
                     </Button>
 
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => void togglePip()}
-                      className="text-white hover:bg-white hover:bg-opacity-20 hidden sm:inline-flex"
-                      data-testid="button-pip"
-                      disabled={!hasSource || !pipSupported}
-                      aria-pressed={isPip}
-                      aria-label={t('player.pictureInPicture')}
-                    >
+                    <Button variant="ghost" size="sm" onClick={() => void togglePip()} className="text-white hover:bg-white hover:bg-opacity-20 hidden sm:inline-flex" data-testid="button-pip" disabled={!hasSource || !pipSupported} aria-pressed={isPip} aria-label={t('player.pictureInPicture')}>
                       <PictureInPicture className="h-4 w-4" />
                     </Button>
 
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={toggleFullscreen}
-                      className="text-white hover:bg-white hover:bg-opacity-20"
-                      data-testid="button-fullscreen"
-                      disabled={!hasSource}
-                    >
-                      <Maximize className="h-4 w-4" />
+                    <Button variant="ghost" size="sm" onClick={toggleFullscreen} className="text-white hover:bg-white hover:bg-opacity-20" data-testid="button-fullscreen" disabled={!hasSource}>
+                      {isFullscreen ? <Minimize className="h-4 w-4" /> : <Maximize className="h-4 w-4" />}
                     </Button>
                   </div>
                 </div>
@@ -795,28 +748,17 @@ export function VideoPlayerModal({
           </div>
 
           {/* Side Panel */}
-          <div
-            className={`
-              border-l bg-background transition-all duration-300 ease-in-out overflow-hidden flex flex-col
-              ${sidePanel !== 'none' ? 'w-full md:w-96' : 'w-0'}
-            `}
-          >
+          <div className={`border-l bg-background transition-all duration-300 ease-in-out overflow-hidden flex flex-col ${sidePanel !== 'none' ? 'w-full md:w-96' : 'w-0'}`}>
             <div className="h-full overflow-y-auto p-4 min-w-[20rem]">
               {sidePanel === 'tags' && onUpdateVideo && (
                 <>
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="font-semibold text-lg">{t('player.editTags')}</h3>
                     <Button variant="ghost" size="icon" onClick={() => setSidePanel('none')}>
-                      <X className="h-4 w-4" />
-                      <span className="sr-only">{t('player.closePanel')}</span>
+                      <X className="h-4 w-4" /><span className="sr-only">{t('player.closePanel')}</span>
                     </Button>
                   </div>
-                  <VideoTagsEditor
-                    video={video}
-                    availableCategories={availableCategories}
-                    onSave={onUpdateVideo}
-                    onRemoveCategory={onRemoveCategory || (() => {})}
-                  />
+                  <VideoTagsEditor video={video} availableCategories={availableCategories} onSave={onUpdateVideo} onRemoveCategory={onRemoveCategory || (() => {})} />
                 </>
               )}
               {sidePanel === 'split' && onSplitVideo && (
@@ -824,17 +766,10 @@ export function VideoPlayerModal({
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="font-semibold text-lg">{t('player.splitVideo')}</h3>
                     <Button variant="ghost" size="icon" onClick={() => setSidePanel('none')}>
-                      <X className="h-4 w-4" />
-                      <span className="sr-only">{t('player.closePanel')}</span>
+                      <X className="h-4 w-4" /><span className="sr-only">{t('player.closePanel')}</span>
                     </Button>
                   </div>
-                  <VideoSplitter
-                    video={video}
-                    availableCategories={availableCategories}
-                    onSubmit={onSplitVideo}
-                    onCancel={() => setSidePanel('none')}
-                    currentTime={currentTime}
-                  />
+                  <VideoSplitter video={video} availableCategories={availableCategories} onSubmit={onSplitVideo} onCancel={() => setSidePanel('none')} currentTime={currentTime} />
                 </>
               )}
             </div>

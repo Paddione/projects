@@ -48,7 +48,6 @@ import {
     getRequestUrlFromHeaders,
     getAuthLoginUrlFromHeaders,
     getCurrentUser,
-    isAdmin,
     requireAuth,
     requireAdmin,
 } from '@/lib/actions/auth'
@@ -400,50 +399,6 @@ describe('Auth Actions', () => {
                 'Unique constraint violation'
             )
             consoleSpy.mockRestore()
-        })
-    })
-
-    // ─────────────────────────────────────────────────────
-    // isAdmin
-    // ─────────────────────────────────────────────────────
-    describe('isAdmin', () => {
-        it('returns true when user has ADMIN role', async () => {
-            setHeaders({
-                'x-user-email': 'admin@example.com',
-                'x-user-role': 'ADMIN',
-            })
-
-            vi.mocked(db.user.upsert).mockResolvedValue({
-                id: 'a-uuid',
-                email: 'admin@example.com',
-                name: null,
-                role: 'ADMIN',
-            } as any)
-            vi.mocked(db.wallet.upsert).mockResolvedValue({} as any)
-
-            expect(await isAdmin()).toBe(true)
-        })
-
-        it('returns false when user has USER role', async () => {
-            setHeaders({
-                'x-user-email': 'user@example.com',
-                'x-user-role': 'USER',
-            })
-
-            vi.mocked(db.user.upsert).mockResolvedValue({
-                id: 'u-uuid',
-                email: 'user@example.com',
-                name: null,
-                role: 'USER',
-            } as any)
-            vi.mocked(db.wallet.upsert).mockResolvedValue({} as any)
-
-            expect(await isAdmin()).toBe(false)
-        })
-
-        it('returns false when no user is authenticated', async () => {
-            setHeaders({})
-            expect(await isAdmin()).toBe(false)
         })
     })
 

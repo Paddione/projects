@@ -1,4 +1,4 @@
-import { Video, VideoCategories, CustomCategories } from '../types/video';
+import { Video, VideoCategories } from '../types/video';
 import { CategoryExtractor } from './category-extractor';
 import { VideoThumbnailService } from './video-thumbnail';
 import { VideoUrlRegistry } from './video-url-registry';
@@ -53,17 +53,12 @@ class ThumbnailRequestQueue {
 
 const thumbnailRequestQueue = new ThumbnailRequestQueue();
 
-export class FileScanner {
-  private static readonly SUPPORTED_EXTENSIONS = [
-    '.mp4',
-    '.avi',
-    '.mov',
-    '.mkv',
-    '.wmv',
-    '.webm',
-    '.m4v',
-  ];
+// O(1) extension lookup instead of array .includes()
+const SUPPORTED_EXTENSIONS_SET = new Set([
+  '.mp4', '.avi', '.mov', '.mkv', '.wmv', '.webm', '.m4v',
+]);
 
+export class FileScanner {
   static async scanDirectory(
     directoryHandle: FileSystemDirectoryHandle,
     progressCallback?: (current: number, total: number) => void,
@@ -152,6 +147,10 @@ export class FileScanner {
     return videos;
   }
 
+  /**
+   * Optimized directory traversal: parallelizes subdirectory iteration
+   * instead of awaiting each subdirectory sequentially.
+   */
   static async getAllVideoFilesAndDirs(
     directoryHandle: FileSystemDirectoryHandle,
     basePath: string = '',
@@ -170,6 +169,9 @@ export class FileScanner {
     }> = [];
     const directories = new Set<string>();
 
+    // Collect entries from current directory first
+    const subdirs: Array<{ handle: FileSystemDirectoryHandle; relPath: string }> = [];
+
     const anyDir: any = directoryHandle as any;
     if (anyDir && typeof anyDir.entries === 'function') {
       for await (const [name, handle] of anyDir.entries() as AsyncIterable<
@@ -177,7 +179,7 @@ export class FileScanner {
       >) {
         if (handle.kind === 'file') {
           const extension = this.getFileExtension(name);
-          if (this.SUPPORTED_EXTENSIONS.includes(extension)) {
+          if (SUPPORTED_EXTENSIONS_SET.has(extension)) {
             files.push({
               fileHandle: handle as FileSystemFileHandle,
               relativePath: `${basePath}${name}`,
@@ -187,12 +189,41 @@ export class FileScanner {
         } else if (handle.kind === 'directory') {
           const dirRelPath = `${basePath}${name}/`;
           directories.add(dirRelPath);
-          const sub = await this.getAllVideoFilesAndDirs(
-            handle as FileSystemDirectoryHandle,
-            dirRelPath,
-          );
+          subdirs.push({ handle: handle as FileSystemDirectoryHandle, relPath: dirRelPath });
+        }
+      }
+    }
+
+    // Process subdirectories in parallel (up to 8 concurrent)
+    if (subdirs.length > 0) {
+      const MAX_DIR_CONCURRENCY = 8;
+      let dirIndex = 0;
+      const dirInFlight = new Set<Promise<void>>();
+
+      const launchDir = () => {
+        if (dirIndex >= subdirs.length) return;
+        const { handle, relPath } = subdirs[dirIndex++];
+
+        const p = (async () => {
+          const sub = await this.getAllVideoFilesAndDirs(handle, relPath);
           sub.directories.forEach((d) => directories.add(d));
           files.push(...sub.files);
+        })();
+
+        dirInFlight.add(p);
+        void p.finally(() => dirInFlight.delete(p));
+      };
+
+      // Seed the pool
+      for (let i = 0; i < Math.min(MAX_DIR_CONCURRENCY, subdirs.length); i++) {
+        launchDir();
+      }
+
+      while (dirIndex < subdirs.length || dirInFlight.size > 0) {
+        if (dirInFlight.size === 0) break;
+        await Promise.race(dirInFlight);
+        while (dirInFlight.size < MAX_DIR_CONCURRENCY && dirIndex < subdirs.length) {
+          launchDir();
         }
       }
     }
@@ -227,22 +258,32 @@ export class FileScanner {
       thumbnailRequestQueue.enqueue(rootKey, relativePath);
     }
 
+    // Defer client-side thumbnail generation: use a lightweight placeholder first,
+    // then generate the real thumbnail asynchronously after scan completes.
+    // This avoids blocking the scan with canvas operations per file.
     if (!thumbnail) {
-      thumbnail = await VideoThumbnailService.generateThumbnail(file);
+      thumbnail = this.generatePlaceholderThumbnail(file.name);
+      // Fire and forget: generate real thumbnail in background
+      VideoThumbnailService.generateThumbnail(file).then((realThumb) => {
+        // Will be picked up by ThumbnailGenerator's progressive strategy on next render
+        (file as any).__vvThumb = realThumb;
+      }).catch(() => {});
     }
-    const metadata = await VideoThumbnailService.extractVideoMetadata(file);
+
+    // Extract metadata — parallelize with ID generation
+    const [metadata, id] = await Promise.all([
+      VideoThumbnailService.extractVideoMetadata(file),
+      generateVideoId(
+        rootKey?.replace(/_\d+(_[a-z0-9]+)?$/, '') || file.name,
+        relativePath || file.name,
+      ),
+    ]);
 
     // Add quality category based on detected resolution
     const quality = VideoThumbnailService.determineQuality(metadata.width, metadata.height);
     if (quality && !categories.quality.includes(quality.toLowerCase())) {
       categories.quality.push(quality.toLowerCase());
     }
-
-    // Deterministic ID matching server-side generation: sha256(rootKey + ':' + relativePath)
-    // Falls back to sha256(filename + ':' + filename) when rootKey/path unavailable
-    const idRootKey = rootKey?.replace(/_\d+(_[a-z0-9]+)?$/, '') || file.name;
-    const idPath = relativePath || file.name;
-    const id = await generateVideoId(idRootKey, idPath);
 
     const video: Video = {
       id,
@@ -261,34 +302,9 @@ export class FileScanner {
     // Create and store blob URL for playback
     VideoUrlRegistry.register(video.id, file);
 
-    // Check for external sprite sheet
+    // Defer sprite loading — don't block the scan for non-critical preview data
     if (parentDirHandle) {
-      try {
-        const spriteDataUrl = await VideoThumbnailService.tryReadExternalSprite(
-          parentDirHandle,
-          file.name,
-        );
-        if (spriteDataUrl) {
-          const img = new Image();
-          img.src = spriteDataUrl;
-          await new Promise<void>((resolve) => {
-            img.onload = () => resolve();
-            img.onerror = () => resolve();
-          });
-
-          if (img.naturalWidth > 0) {
-            const cols = Math.max(1, Math.floor(img.naturalWidth / 64));
-            const frameWidth = 64;
-            const frameHeight = img.naturalHeight;
-
-            SpriteCache.set(video.id, { cols, frameWidth, frameHeight }, spriteDataUrl, 2);
-            setSpriteMeta(video.id, { cols, frameWidth, frameHeight }).catch(() => {});
-            console.log(`[Scanner] Loaded external sprite for ${file.name}`);
-          }
-        }
-      } catch (e) {
-        console.warn('Failed to load external sprite:', e);
-      }
+      void this.loadExternalSpriteAsync(video.id, parentDirHandle, file.name);
     }
 
     // Keep a handle reference for potential filesystem operations in this session
@@ -303,6 +319,58 @@ export class FileScanner {
     }
 
     return video;
+  }
+
+  /**
+   * Load external sprite sheet asynchronously — non-blocking.
+   * Separated from generateVideoMetadata to avoid scan delays.
+   */
+  private static async loadExternalSpriteAsync(
+    videoId: string,
+    parentDirHandle: FileSystemDirectoryHandle,
+    fileName: string,
+  ): Promise<void> {
+    try {
+      const spriteDataUrl = await VideoThumbnailService.tryReadExternalSprite(
+        parentDirHandle,
+        fileName,
+      );
+      if (spriteDataUrl) {
+        const img = new Image();
+        img.src = spriteDataUrl;
+        await new Promise<void>((resolve) => {
+          img.onload = () => resolve();
+          img.onerror = () => resolve();
+        });
+
+        if (img.naturalWidth > 0) {
+          const cols = Math.max(1, Math.floor(img.naturalWidth / 64));
+          const frameWidth = 64;
+          const frameHeight = img.naturalHeight;
+
+          SpriteCache.set(videoId, { cols, frameWidth, frameHeight }, spriteDataUrl, 2);
+          setSpriteMeta(videoId, { cols, frameWidth, frameHeight }).catch(() => {});
+        }
+      }
+    } catch (_e) {
+      // Non-critical — silently ignore sprite loading failures
+    }
+  }
+
+  /**
+   * Generate a lightweight SVG placeholder thumbnail.
+   * Much faster than canvas-based video frame capture.
+   */
+  private static generatePlaceholderThumbnail(filename: string) {
+    // XML-escape and truncate the label, then URI-encode the SVG to handle non-Latin chars
+    const label = filename.length > 20 ? filename.slice(0, 17) + '...' : filename;
+    const escaped = label.replace(/[<>&"']/g, '');
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="320" height="180" viewBox="0 0 320 180"><rect width="320" height="180" fill="#1a1a2e"/><text x="160" y="95" text-anchor="middle" fill="#888" font-size="12" font-family="monospace">${escaped}</text></svg>`;
+    return {
+      dataUrl: `data:image/svg+xml,${encodeURIComponent(svg)}`,
+      generated: false,
+      timestamp: new Date().toISOString(),
+    };
   }
 
   static extractCategoriesFromFilename(filename: string): VideoCategories {
@@ -338,7 +406,7 @@ export class FileScanner {
     const videos: Video[] = [];
     const videoFiles = Array.from(files).filter((file) => {
       const extension = this.getFileExtension(file.name);
-      return this.SUPPORTED_EXTENSIONS.includes(extension);
+      return SUPPORTED_EXTENSIONS_SET.has(extension);
     });
 
     let current = 0;

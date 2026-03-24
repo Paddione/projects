@@ -1,3 +1,4 @@
+scripts/.ipv64_ip_cache
 openclaw
 # Dependencies
 node_modules/
@@ -33,7 +34,7 @@ browser_control_registry.json
 **/.env.production
 *.env
 
-# Keep example files
+# Keep example files and Vite production env (public URLs only, no secrets)
 !.env.example
 !**/.env.example
 
@@ -217,6 +218,9 @@ nginx/logs/
 # Build artifacts that can be regenerated
 build/
 dist/
+# Exception: shared-3d pre-built dist needed by Docker builds
+!arena/frontend/packages/shared-3d/dist/
+!l2p/frontend/packages/shared-3d/dist/
 out/
 .next/
 .nuxt/
@@ -258,7 +262,7 @@ debug-*.jpeg
 **/.playwright-mcp/
 **/test_output.txt
 .worktrees
-shared-infrastructure/SMB-Share
+
 
 blender-assets/
 l2p/data/question-sets/

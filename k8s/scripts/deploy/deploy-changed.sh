@@ -173,13 +173,7 @@ detect_uncommitted_changes() {
         fi
     done
 
-    # Check shared-infrastructure changes (affects l2p)
-    if echo "$changed_files" | grep -q "^shared-infrastructure/"; then
-        if [[ ! " ${changed_services[*]} " =~ " l2p " ]]; then
-            changed_services+=("l2p")
-            log_service "Detected changes in: l2p (shared-infrastructure)" >&2
-        fi
-    fi
+    # shared-infrastructure/ has been consolidated — no cross-service detection needed
 
     printf '%s\n' "${changed_services[@]}"
 }

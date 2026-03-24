@@ -1,0 +1,597 @@
+{
+  "meta": {
+    "id": "vogelsen",
+    "name": "Vögelsen",
+    "width": 60,
+    "height": 48,
+    "tileSize": 32,
+    "isInterior": false
+  },
+  "tiles": [
+    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+    [1,0,0,0,3,3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3,3,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,0,0,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,0,1],
+    [1,0,0,0,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,0,1],
+    [1,0,0,0,3,3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3,3,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,0,0,3,3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3,3,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,0,0,3,3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3,3,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,0,0,3,3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3,3,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,0,0,3,3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3,3,0,0,0,0,4,4,4,0,0,0,0,1],
+    [1,0,0,0,3,3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3,3,0,0,0,0,4,5,4,0,0,0,0,1],
+    [1,0,0,0,3,3,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3,3,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,0,0,3,3,0,0,4,4,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3,3,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,0,0,3,3,0,0,4,4,4,0,0,0,0,0,0,0,4,4,4,0,0,0,0,0,4,4,4,0,0,0,0,0,4,4,4,0,0,0,0,0,0,0,0,0,3,3,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,0,0,3,3,0,0,5,4,4,0,0,0,0,0,0,0,4,5,4,0,0,0,0,0,4,5,4,0,0,0,0,0,4,5,4,0,0,0,0,0,0,0,0,0,3,3,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,0,0,3,3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3,3,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,0,0,3,3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3,3,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,0,0,3,3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,4,4,4,0,0,0,0,0,3,3,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,0,0,3,3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,4,4,4,0,0,0,0,0,3,3,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,0,0,3,3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3,3,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,0,0,3,3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3,3,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,0,0,3,3,0,0,0,0,0,0,0,0,0,0,4,4,5,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3,3,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,0,0,3,3,0,0,0,0,0,0,0,0,0,0,4,4,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3,3,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,3,3,3,7,7,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,0,1],
+    [1,3,3,3,7,7,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,0,1],
+    [1,0,0,0,3,3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,4,4,4,0,0,0,3,3,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,0,0,3,3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,4,5,4,0,0,0,3,3,0,0,0,7,7,0,0,0,0,0,0,1],
+    [1,0,0,0,3,3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3,3,0,0,4,4,4,4,0,0,0,0,0,1],
+    [1,0,0,0,3,3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3,3,0,0,4,4,4,4,0,0,0,0,0,1],
+    [1,0,0,0,3,3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3,3,0,0,4,4,4,4,0,0,0,0,0,1],
+    [1,0,0,0,3,3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3,3,0,0,4,4,4,4,0,0,0,0,0,1],
+    [1,0,0,0,3,3,0,0,4,4,5,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3,3,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,0,0,3,3,0,0,4,4,4,0,0,0,0,0,0,0,0,0,0,0,4,4,4,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3,3,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,0,0,3,3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,4,4,5,4,0,4,4,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3,3,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,0,0,3,3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,4,4,4,4,0,4,4,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3,3,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,0,1],
+    [1,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,0,1],
+    [1,0,0,0,3,3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3,3,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,0,0,3,3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,4,5,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3,3,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,0,0,3,3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,4,4,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3,3,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,0,0,3,3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3,3,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,0,0,3,3,0,0,0,0,4,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3,3,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,0,0,3,3,0,0,0,0,4,5,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3,3,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,0,1],
+    [1,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,0,1],
+    [1,0,0,0,3,3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3,3,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,0,0,3,3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3,3,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,0,0,3,3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3,3,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+  ],
+  "coverObjects": [
+    {
+      "id": "cover_1",
+      "type": "building",
+      "x": 8,
+      "y": 11,
+      "width": 3,
+      "height": 3,
+      "hp": -1,
+      "blocksProjectiles": true,
+      "blocksLineOfSight": true,
+      "blocksMovement": true,
+      "slowsMovement": false
+    },
+    {
+      "id": "cover_2",
+      "type": "building",
+      "x": 18,
+      "y": 12,
+      "width": 3,
+      "height": 2,
+      "hp": -1,
+      "blocksProjectiles": true,
+      "blocksLineOfSight": true,
+      "blocksMovement": true,
+      "slowsMovement": false
+    },
+    {
+      "id": "cover_3",
+      "type": "building",
+      "x": 26,
+      "y": 12,
+      "width": 3,
+      "height": 2,
+      "hp": -1,
+      "blocksProjectiles": true,
+      "blocksLineOfSight": true,
+      "blocksMovement": true,
+      "slowsMovement": false
+    },
+    {
+      "id": "cover_4",
+      "type": "building",
+      "x": 34,
+      "y": 12,
+      "width": 3,
+      "height": 2,
+      "hp": -1,
+      "blocksProjectiles": true,
+      "blocksLineOfSight": true,
+      "blocksMovement": true,
+      "slowsMovement": false
+    },
+    {
+      "id": "cover_5",
+      "type": "building",
+      "x": 16,
+      "y": 20,
+      "width": 3,
+      "height": 2,
+      "hp": -1,
+      "blocksProjectiles": true,
+      "blocksLineOfSight": true,
+      "blocksMovement": true,
+      "slowsMovement": false
+    },
+    {
+      "id": "cover_6",
+      "type": "building",
+      "x": 40,
+      "y": 24,
+      "width": 3,
+      "height": 2,
+      "hp": -1,
+      "blocksProjectiles": true,
+      "blocksLineOfSight": true,
+      "blocksMovement": true,
+      "slowsMovement": false
+    },
+    {
+      "id": "cover_7",
+      "type": "building",
+      "x": 50,
+      "y": 24,
+      "width": 4,
+      "height": 4,
+      "hp": -1,
+      "blocksProjectiles": false,
+      "blocksLineOfSight": false,
+      "blocksMovement": false,
+      "slowsMovement": false
+    },
+    {
+      "id": "cover_8",
+      "type": "building",
+      "x": 8,
+      "y": 30,
+      "width": 3,
+      "height": 2,
+      "hp": -1,
+      "blocksProjectiles": true,
+      "blocksLineOfSight": true,
+      "blocksMovement": true,
+      "slowsMovement": false
+    },
+    {
+      "id": "cover_9",
+      "type": "building",
+      "x": 22,
+      "y": 30,
+      "width": 4,
+      "height": 3,
+      "hp": -1,
+      "blocksProjectiles": true,
+      "blocksLineOfSight": true,
+      "blocksMovement": true,
+      "slowsMovement": false
+    },
+    {
+      "id": "cover_10",
+      "type": "building",
+      "x": 26,
+      "y": 37,
+      "width": 3,
+      "height": 2,
+      "hp": -1,
+      "blocksProjectiles": true,
+      "blocksLineOfSight": true,
+      "blocksMovement": true,
+      "slowsMovement": false
+    },
+    {
+      "id": "cover_11",
+      "type": "building",
+      "x": 52,
+      "y": 8,
+      "width": 3,
+      "height": 2,
+      "hp": -1,
+      "blocksProjectiles": true,
+      "blocksLineOfSight": true,
+      "blocksMovement": true,
+      "slowsMovement": false
+    },
+    {
+      "id": "cover_12",
+      "type": "building",
+      "x": 10,
+      "y": 40,
+      "width": 2,
+      "height": 2,
+      "hp": -1,
+      "blocksProjectiles": true,
+      "blocksLineOfSight": true,
+      "blocksMovement": true,
+      "slowsMovement": false
+    },
+    {
+      "id": "cover_13",
+      "type": "building",
+      "x": 38,
+      "y": 16,
+      "width": 3,
+      "height": 2,
+      "hp": -1,
+      "blocksProjectiles": true,
+      "blocksLineOfSight": true,
+      "blocksMovement": true,
+      "slowsMovement": false
+    },
+    {
+      "id": "cover_14",
+      "type": "hedge",
+      "x": 12,
+      "y": 5,
+      "width": 1,
+      "height": 1,
+      "hp": -1,
+      "blocksProjectiles": false,
+      "blocksLineOfSight": false,
+      "blocksMovement": true,
+      "slowsMovement": false
+    },
+    {
+      "id": "cover_15",
+      "type": "hedge",
+      "x": 20,
+      "y": 7,
+      "width": 1,
+      "height": 1,
+      "hp": -1,
+      "blocksProjectiles": false,
+      "blocksLineOfSight": false,
+      "blocksMovement": true,
+      "slowsMovement": false
+    },
+    {
+      "id": "cover_16",
+      "type": "hedge",
+      "x": 30,
+      "y": 5,
+      "width": 1,
+      "height": 1,
+      "hp": -1,
+      "blocksProjectiles": false,
+      "blocksLineOfSight": false,
+      "blocksMovement": true,
+      "slowsMovement": false
+    },
+    {
+      "id": "cover_17",
+      "type": "hedge",
+      "x": 42,
+      "y": 6,
+      "width": 1,
+      "height": 1,
+      "hp": -1,
+      "blocksProjectiles": false,
+      "blocksLineOfSight": false,
+      "blocksMovement": true,
+      "slowsMovement": false
+    },
+    {
+      "id": "cover_18",
+      "type": "hedge",
+      "x": 10,
+      "y": 16,
+      "width": 1,
+      "height": 1,
+      "hp": -1,
+      "blocksProjectiles": false,
+      "blocksLineOfSight": false,
+      "blocksMovement": true,
+      "slowsMovement": false
+    },
+    {
+      "id": "cover_19",
+      "type": "hedge",
+      "x": 14,
+      "y": 26,
+      "width": 1,
+      "height": 1,
+      "hp": -1,
+      "blocksProjectiles": false,
+      "blocksLineOfSight": false,
+      "blocksMovement": true,
+      "slowsMovement": false
+    },
+    {
+      "id": "cover_20",
+      "type": "hedge",
+      "x": 35,
+      "y": 28,
+      "width": 1,
+      "height": 1,
+      "hp": -1,
+      "blocksProjectiles": false,
+      "blocksLineOfSight": false,
+      "blocksMovement": true,
+      "slowsMovement": false
+    },
+    {
+      "id": "cover_21",
+      "type": "hedge",
+      "x": 15,
+      "y": 37,
+      "width": 1,
+      "height": 1,
+      "hp": -1,
+      "blocksProjectiles": false,
+      "blocksLineOfSight": false,
+      "blocksMovement": true,
+      "slowsMovement": false
+    },
+    {
+      "id": "cover_22",
+      "type": "hedge",
+      "x": 40,
+      "y": 38,
+      "width": 1,
+      "height": 1,
+      "hp": -1,
+      "blocksProjectiles": false,
+      "blocksLineOfSight": false,
+      "blocksMovement": true,
+      "slowsMovement": false
+    },
+    {
+      "id": "cover_23",
+      "type": "bench",
+      "x": 52,
+      "y": 26,
+      "width": 1,
+      "height": 1,
+      "hp": -1,
+      "blocksProjectiles": false,
+      "blocksLineOfSight": false,
+      "blocksMovement": false,
+      "slowsMovement": true
+    },
+    {
+      "id": "cover_24",
+      "type": "bench",
+      "x": 54,
+      "y": 26,
+      "width": 1,
+      "height": 1,
+      "hp": -1,
+      "blocksProjectiles": false,
+      "blocksLineOfSight": false,
+      "blocksMovement": false,
+      "slowsMovement": true
+    }
+  ],
+  "doors": [
+    {
+      "tileX": 8,
+      "tileY": 13,
+      "targetMapId": "patricks-house-ground",
+      "targetTileX": 3,
+      "targetTileY": 6,
+      "targetFacing": "N"
+    },
+    {
+      "tileX": 19,
+      "tileY": 13,
+      "targetMapId": "eiscafe-la-rosa",
+      "targetTileX": 3,
+      "targetTileY": 5,
+      "targetFacing": "N"
+    },
+    {
+      "tileX": 27,
+      "tileY": 13,
+      "targetMapId": "star-administration",
+      "targetTileX": 3,
+      "targetTileY": 5,
+      "targetFacing": "N"
+    },
+    {
+      "tileX": 35,
+      "tileY": 13,
+      "targetMapId": "laborla",
+      "targetTileX": 3,
+      "targetTileY": 5,
+      "targetFacing": "N"
+    },
+    {
+      "tileX": 18,
+      "tileY": 20,
+      "targetMapId": "columbus-doener",
+      "targetTileX": 5,
+      "targetTileY": 3,
+      "targetFacing": "W"
+    },
+    {
+      "tileX": 41,
+      "tileY": 25,
+      "targetMapId": "fewo-mering",
+      "targetTileX": 3,
+      "targetTileY": 5,
+      "targetFacing": "N"
+    },
+    {
+      "tileX": 10,
+      "tileY": 30,
+      "targetMapId": "nicole-thiele",
+      "targetTileX": 5,
+      "targetTileY": 3,
+      "targetFacing": "W"
+    },
+    {
+      "tileX": 24,
+      "tileY": 32,
+      "targetMapId": "tante-enso",
+      "targetTileX": 4,
+      "targetTileY": 7,
+      "targetFacing": "N"
+    },
+    {
+      "tileX": 27,
+      "tileY": 37,
+      "targetMapId": "friseur",
+      "targetTileX": 3,
+      "targetTileY": 5,
+      "targetFacing": "N"
+    },
+    {
+      "tileX": 53,
+      "tileY": 9,
+      "targetMapId": "jugendfeuerwehr",
+      "targetTileX": 3,
+      "targetTileY": 5,
+      "targetFacing": "N"
+    },
+    {
+      "tileX": 11,
+      "tileY": 41,
+      "targetMapId": "kiosk-werner",
+      "targetTileX": 2,
+      "targetTileY": 4,
+      "targetFacing": "N"
+    }
+  ],
+  "spawnPoint": {
+    "x": 8,
+    "y": 13
+  },
+  "npcs": [
+    {
+      "npcId": "oma_irmtrout",
+      "tileX": 9,
+      "tileY": 14,
+      "facing": "S"
+    },
+    {
+      "npcId": "rosa",
+      "tileX": 19,
+      "tileY": 12,
+      "facing": "S"
+    },
+    {
+      "npcId": "mehmet",
+      "tileX": 17,
+      "tileY": 20,
+      "facing": "E"
+    },
+    {
+      "npcId": "klaus",
+      "tileX": 27,
+      "tileY": 12,
+      "facing": "S"
+    },
+    {
+      "npcId": "borla",
+      "tileX": 35,
+      "tileY": 12,
+      "facing": "S"
+    },
+    {
+      "npcId": "finn",
+      "tileX": 53,
+      "tileY": 8,
+      "facing": "S"
+    },
+    {
+      "npcId": "frau_mering",
+      "tileX": 41,
+      "tileY": 24,
+      "facing": "S"
+    },
+    {
+      "npcId": "max",
+      "tileX": 51,
+      "tileY": 25,
+      "facing": "W"
+    },
+    {
+      "npcId": "enzo",
+      "tileX": 23,
+      "tileY": 31,
+      "facing": "S"
+    },
+    {
+      "npcId": "nicole",
+      "tileX": 9,
+      "tileY": 30,
+      "facing": "E"
+    },
+    {
+      "npcId": "lea",
+      "tileX": 27,
+      "tileY": 39,
+      "facing": "N"
+    },
+    {
+      "npcId": "werner",
+      "tileX": 11,
+      "tileY": 40,
+      "facing": "S"
+    }
+  ],
+  "enemyZones": [
+    {
+      "id": "ez_south_goblins",
+      "minX": 15,
+      "minY": 40,
+      "maxX": 45,
+      "maxY": 46,
+      "enemyType": "grammar_goblin",
+      "maxEnemies": 3,
+      "spawnIntervalS": 30,
+      "timeRestriction": null
+    },
+    {
+      "id": "ez_laborla_alley_vampires",
+      "minX": 38,
+      "minY": 10,
+      "maxX": 42,
+      "maxY": 16,
+      "enemyType": "vocab_vampire",
+      "maxEnemies": 2,
+      "spawnIntervalS": 45,
+      "timeRestriction": "night"
+    },
+    {
+      "id": "ez_deichfeld_se_goblins",
+      "minX": 35,
+      "minY": 32,
+      "maxX": 50,
+      "maxY": 38,
+      "enemyType": "grammar_goblin",
+      "maxEnemies": 3,
+      "spawnIntervalS": 30,
+      "timeRestriction": null
+    }
+  ],
+  "itemSpawnPoints": [
+    { "x": 15, "y": 5 },
+    { "x": 25, "y": 7 },
+    { "x": 38, "y": 5 },
+    { "x": 55, "y": 5 },
+    { "x": 12, "y": 15 },
+    { "x": 30, "y": 15 },
+    { "x": 10, "y": 22 },
+    { "x": 30, "y": 22 },
+    { "x": 50, "y": 22 },
+    { "x": 15, "y": 28 },
+    { "x": 35, "y": 30 },
+    { "x": 50, "y": 30 },
+    { "x": 12, "y": 36 },
+    { "x": 30, "y": 36 },
+    { "x": 50, "y": 36 },
+    { "x": 20, "y": 44 },
+    { "x": 40, "y": 44 },
+    { "x": 55, "y": 44 }
+  ]
+}

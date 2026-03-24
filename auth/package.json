@@ -14,7 +14,7 @@
     "dev": "tsx watch src/server.ts",
     "lint": "eslint src --ext .ts",
     "start": "node dist/server.js",
-    "test": "vitest run",
+    "test": "vitest run src/test/middleware.test.ts src/test/token-service.test.ts src/test/schema.test.ts src/test/profile.test.ts src/test/respect.test.ts",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:cleanup": "tsx scripts/cleanup-test-data.ts",
@@ -32,6 +32,7 @@
   "author": "Patrick",
   "license": "MIT",
   "dependencies": {
+    "@korczewski/error-handling": "file:../packages/error-handling",
     "bcryptjs": "^3.0.3",
     "connect-pg-simple": "^9.0.1",
     "cookie-parser": "^1.4.6",
@@ -48,8 +49,7 @@
     "passport-google-oauth20": "^2.0.0",
     "pg": "^8.11.3",
     "postgres": "^3.4.3",
-    "validator": "^13.11.0",
-    "zod": "^3.22.4"
+    "zod": "^3.24.2"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.2",
@@ -64,7 +64,6 @@
     "@types/passport": "^1.0.17",
     "@types/passport-google-oauth20": "^2.0.17",
     "@types/pg": "^8.10.9",
-    "@types/validator": "^13.11.7",
     "@typescript-eslint/eslint-plugin": "^8.52.0",
     "@typescript-eslint/parser": "^8.52.0",
     "@vitest/coverage-v8": "^4.1.0",

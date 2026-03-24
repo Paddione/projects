@@ -130,7 +130,7 @@ export class SecurityAuditMiddleware {
   /**
    * Input validation audit middleware
    */
-  static auditInputValidation = (req: Request, res: Response, next: NextFunction): void => {
+  static auditInputValidation = (req: Request, _res: Response, next: NextFunction): void => {
     const requestData = JSON.stringify({ body: req.body, query: req.query, params: req.params });
     
     // Check for suspicious patterns

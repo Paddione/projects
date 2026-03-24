@@ -1,0 +1,87 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jvb
+  namespace: korczewski-jitsi
+  labels:
+    app: jvb
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: jvb
+  template:
+    metadata:
+      labels:
+        app: jvb
+    spec:
+      nodeSelector:
+        kubernetes.io/hostname: k3s-1
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      initContainers:
+        - name: resolve-public-ip
+          image: busybox:1.36
+          command:
+            - sh
+            - -c
+            - |
+              IP=$(nslookup meet.korczewski.de 1.1.1.1 2>/dev/null | grep -oE '([0-9]+\.){3}[0-9]+' | tail -1)
+              if [ -z "$IP" ]; then
+                echo "ERROR: Could not resolve meet.korczewski.de"
+                exit 1
+              fi
+              echo "$IP" > /shared/public-ip
+              echo "Resolved public IP: $IP"
+          volumeMounts:
+            - name: shared-ip
+              mountPath: /shared
+      containers:
+        - name: jvb
+          image: jitsi/jvb:stable-9364
+          imagePullPolicy: Always
+          command:
+            - sh
+            - -c
+            - |
+              export JVB_ADVERTISE_IPS=$(cat /shared/public-ip)
+              echo "JVB advertising IP: $JVB_ADVERTISE_IPS"
+              exec /init
+          envFrom:
+            - configMapRef:
+                name: jitsi-config
+            - secretRef:
+                name: jitsi-secrets
+          ports:
+            - containerPort: 10000
+              hostPort: 10000
+              protocol: UDP
+            - containerPort: 8080
+              protocol: TCP
+          readinessProbe:
+            httpGet:
+              path: /about/health
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /about/health
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 30
+          volumeMounts:
+            - name: shared-ip
+              mountPath: /shared
+          resources:
+            requests:
+              cpu: 500m
+              memory: 384Mi
+            limits:
+              cpu: "2"
+              memory: 768Mi
+      volumes:
+        - name: shared-ip
+          emptyDir: {}

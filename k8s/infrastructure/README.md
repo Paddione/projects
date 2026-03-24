@@ -7,8 +7,16 @@ Core infrastructure components for the Korczewski Kubernetes cluster.
 | Component | Namespace | Purpose |
 |-----------|-----------|---------|
 | PostgreSQL | `korczewski-infra` | Centralized database server |
+| PgBouncer | `korczewski-infra` | PostgreSQL connection pooler |
 | Traefik | `korczewski-infra` | Ingress controller with TLS |
+| kube-vip | `kube-system` | API VIP (10.10.0.20) and Service LB (10.10.0.40-55) |
 | SMB-CSI | `kube-system` | SMB/CIFS storage class (VideoVault PVCs) |
+| Registry | `korczewski-infra` | Private Docker registry (registry.korczewski.de) |
+| Vault | `korczewski-infra` | HashiCorp Vault for secret management |
+| External Secrets | `korczewski-infra` | Syncs Vault secrets to K8s Secrets |
+| External Routes | `korczewski-infra` | IngressRoutes for external services |
+| Cert Renewal | `korczewski-infra` | TLS certificate renewal automation |
+| Reloader | `korczewski-infra` | Restarts pods on ConfigMap/Secret changes |
 
 ## PostgreSQL (`postgres/`)
 

@@ -1,5 +1,4 @@
 import { FullConfig } from '@playwright/test';
-import { TestEnvironment } from '../../../shared-infrastructure/shared/l2p/test-config/dist/TestEnvironment.js';
 
 /**
  * Global teardown for Playwright tests
@@ -8,10 +7,13 @@ import { TestEnvironment } from '../../../shared-infrastructure/shared/l2p/test-
 async function globalTeardown(config: FullConfig) {
   console.log('🧹 Starting global test teardown...');
 
+  const isTestEnv = process.env.TEST_ENVIRONMENT === 'docker' || process.env['NODE_ENV'] === 'test';
+
   try {
-    // Stop test environment if not in CI
-    if (!process.env.CI) {
+    // Stop Docker test environment if running (only in Docker/CI mode)
+    if (!process.env.CI && isTestEnv) {
       try {
+        const { TestEnvironment } = await import('../../packages/test-config/dist/TestEnvironment.js');
         const testEnv = new TestEnvironment();
         await testEnv.stop();
         console.log('✅ Test environment stopped successfully');

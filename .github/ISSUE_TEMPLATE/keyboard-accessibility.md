@@ -9,7 +9,7 @@ assignees: ''
 ## Issue Description
 
 **Component/Page**: [e.g., Video Player Modal, Login Form]
-**Application**: [L2P / VideoVault / Payment / Auth]
+**Application**: [L2P / Arena / VideoVault / Shop / Auth / SOS / Assetgenerator]
 **Severity**: [High / Medium / Low]
 
 Brief description of the keyboard accessibility issue.

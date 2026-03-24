@@ -1,10 +1,13 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import path from 'path';
 
 export default defineConfig({
     plugins: [react()],
     resolve: {
-        // Allow Vite to resolve dependencies from shared-infrastructure packages
+        alias: {
+            'shared-3d': path.resolve(__dirname, 'packages/shared-3d/dist'),
+        },
         dedupe: ['three'],
     },
     server: {

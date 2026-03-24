@@ -14,12 +14,17 @@ RUN npm install --legacy-peer-deps
 FROM base AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
-# Copy shared design system
-COPY shared-infrastructure/shared/design-system ../shared-infrastructure/shared/design-system
 COPY shop/. .
 
-# Adjust schema in container if needed, but better to edit file
-# Generating client
+# Build-time env vars needed by Next.js page data collection
+ARG STRIPE_SECRET_KEY
+ARG STRIPE_PUBLISHABLE_KEY
+ARG STRIPE_WEBHOOK_SECRET
+ENV STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
+ENV STRIPE_PUBLISHABLE_KEY=${STRIPE_PUBLISHABLE_KEY}
+ENV STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET}
+
+# Generating Prisma client
 RUN npx prisma generate
 RUN npm run build
 

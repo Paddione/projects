@@ -14,6 +14,7 @@ Application services deployed to the `korczewski-services` namespace.
 | Shop | 3000 | shop.korczewski.de | PostgreSQL, Auth |
 | VideoVault | 5000 | videovault.korczewski.de, video.korczewski.de | PostgreSQL, SMB |
 | SOS | 3005 | sos.korczewski.de | None |
+| Assetgenerator | 5200 | assetgen.korczewski.de | GPU worker, NAS |
 
 ## Auth (`auth/`)
 
@@ -94,6 +95,16 @@ Mental health companion app (Taschentherapeut). Static HTML, no database.
 - `/*` - Static HTML SPA (15 screens, German)
 
 **Manifests:** `deployment.yaml`, `service.yaml`, `ingressroute.yaml`, `kustomization.yaml`
+
+## Assetgenerator (`assetgenerator/`)
+
+AI asset generation service with GPU worker for visual and audio pipelines.
+
+**Endpoints:**
+- `/api/health` - Health check
+- `/api/*` - REST API (library, projects, generation)
+
+**Manifests:** `deployment.yaml`, `service.yaml`, `ingressroute.yaml`, `gpu-waker-deployment.yaml`, `gpu-waker-scaledobject.yaml`, `pv-audio.yaml`, `pv-visual.yaml`, `pvc.yaml`, `kustomization.yaml`
 
 ## Common Patterns
 

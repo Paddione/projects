@@ -2,6 +2,7 @@ import { Server as SocketIOServer, Socket } from 'socket.io';
 import { Server as HTTPServer } from 'http';
 import { LobbyService } from './LobbyService.js';
 import { GameService } from './GameService.js';
+import { CampaignService } from './campaign/CampaignService.js';
 import type {
     ClientToServerEvents,
     ServerToClientEvents,
@@ -32,8 +33,11 @@ export class SocketService {
     private io: SocketIOServer;
     private lobbyService: LobbyService;
     private gameService: GameService;
+    private campaignService: CampaignService;
     private connectedPlayers: Map<string, ConnectedPlayer> = new Map(); // socketId -> player info
     private playerToSocket: Map<string, string> = new Map(); // playerId -> socketId
+    // Campaign session tracking: authUserId -> sessionId
+    private campaignSessions: Map<number, string> = new Map();
     private inputCounts: Map<string, { count: number; windowStart: number }> = new Map(); // socketId -> input rate tracker
     private privateMatchEscrows: Map<string, { token: string; expectedPlayerIds: string[]; escrowedXp: number }> = new Map(); // lobbyCode -> escrow info
     private readonly INPUT_LIMIT = 40; // max inputs per second
@@ -52,6 +56,8 @@ export class SocketService {
 
         this.lobbyService = new LobbyService();
         this.gameService = new GameService(config.game.tickRate);
+        this.campaignService = new CampaignService();
+        this.setupCampaignCallbacks();
 
         // Socket auth middleware — validate session cookie against auth service
         this.io.use(async (socket, next) => {
@@ -121,6 +127,9 @@ export class SocketService {
             console.log(`Socket connected: ${socket.id}`);
 
             socket.emit('connected', { message: 'Connected to Arena server' });
+
+            // -- Campaign Events --
+            this.setupCampaignSocketEvents(socket);
 
             // -- Lobby Events --
 
@@ -624,5 +633,139 @@ export class SocketService {
 
     getIO(): SocketIOServer {
         return this.io;
+    }
+
+    // ============================================================================
+    // CAMPAIGN
+    // ============================================================================
+
+    private setupCampaignCallbacks(): void {
+        // Wire CampaignService orchestrator callbacks → Socket.io events
+        this.campaignService.setCallbacks({
+            onDialogue: (sessionId, data) => {
+                this.io.to(`campaign:${sessionId}`).emit('campaign-npc-dialogue' as any, data);
+            },
+            onQuestUpdate: (sessionId, data) => {
+                this.io.to(`campaign:${sessionId}`).emit('campaign-quest-update' as any, data);
+            },
+            onQuestComplete: (sessionId, data) => {
+                this.io.to(`campaign:${sessionId}`).emit('campaign-quest-complete' as any, data);
+            },
+            onMapChange: (sessionId, data) => {
+                this.io.to(`campaign:${sessionId}`).emit('campaign-map-change' as any, data);
+            },
+            onCheckpointSaved: (sessionId) => {
+                this.io.to(`campaign:${sessionId}`).emit('campaign-checkpoint-saved' as any);
+            },
+            onVocabCollected: (sessionId, data) => {
+                this.io.to(`campaign:${sessionId}`).emit('campaign-vocab-collected' as any, data);
+            },
+            onQuizStart: (sessionId, data) => {
+                this.io.to(`campaign:${sessionId}`).emit('campaign-quiz-start' as any, data);
+            },
+            onQuizResult: (sessionId, data) => {
+                this.io.to(`campaign:${sessionId}`).emit('campaign-quiz-result' as any, data);
+            },
+            onEnemyKilled: (sessionId, data) => {
+                this.io.to(`campaign:${sessionId}`).emit('campaign-enemy-killed' as any, data);
+            },
+            onSessionStarted: (sessionId, data) => {
+                this.io.to(`campaign:${sessionId}`).emit('campaign-session-started' as any, data);
+            },
+            onError: (sessionId, data) => {
+                this.io.to(`campaign:${sessionId}`).emit('campaign-error' as any, data);
+            },
+        });
+    }
+
+    private setupCampaignSocketEvents(socket: Socket): void {
+        const user = socket.data?.user as AuthUser | undefined;
+        if (!user) return;
+
+        socket.on('campaign-start' as any, async (data: { characterId: string }) => {
+            try {
+                const state = await this.campaignService.startSession(
+                    user.userId,
+                    user.username,
+                    data.characterId
+                );
+                const sessionId = state.sessionId;
+                this.campaignSessions.set(user.userId, sessionId);
+                socket.join(`campaign:${sessionId}`);
+                socket.emit('campaign-session-started' as any, { sessionId, state });
+            } catch (error) {
+                socket.emit('campaign-error' as any, { message: (error as Error).message });
+            }
+        });
+
+        socket.on('campaign-continue' as any, async () => {
+            try {
+                const state = await this.campaignService.startSession(
+                    user.userId,
+                    user.username
+                );
+                const sessionId = state.sessionId;
+                this.campaignSessions.set(user.userId, sessionId);
+                socket.join(`campaign:${sessionId}`);
+                socket.emit('campaign-session-started' as any, { sessionId, state });
+            } catch (error) {
+                socket.emit('campaign-error' as any, { message: (error as Error).message });
+            }
+        });
+
+        socket.on('campaign-input' as any, (data: { sessionId: string; input: any }) => {
+            this.campaignService.getGameLoop().processInput(
+                data.sessionId,
+                String(user.userId),
+                data.input
+            );
+        });
+
+        socket.on('campaign-interact' as any, async (data: { sessionId: string; npcId: string }) => {
+            try {
+                await this.campaignService.handleInteraction(
+                    data.sessionId,
+                    data.npcId,
+                    user.userId
+                );
+            } catch (error) {
+                socket.emit('campaign-error' as any, { message: (error as Error).message });
+            }
+        });
+
+        socket.on('campaign-dialogue-choice' as any, async (data: { sessionId: string; npcId: string; choiceId: string }) => {
+            try {
+                await this.campaignService.handleDialogueChoice(
+                    data.sessionId,
+                    data.npcId,
+                    data.choiceId,
+                    user.userId
+                );
+            } catch (error) {
+                socket.emit('campaign-error' as any, { message: (error as Error).message });
+            }
+        });
+
+        socket.on('campaign-quiz-answer' as any, async (data: { sessionId: string; questionId: string; answer: string; timeMs: number }) => {
+            try {
+                await this.campaignService.handleQuizAnswer(
+                    data.sessionId,
+                    user.userId,
+                    data.questionId,
+                    data.answer,
+                    data.timeMs
+                );
+            } catch (error) {
+                socket.emit('campaign-error' as any, { message: (error as Error).message });
+            }
+        });
+
+        socket.on('campaign-map-loaded' as any, async (data: { sessionId: string; mapId: string }) => {
+            try {
+                await this.campaignService.handleMapTransition(data.sessionId, data.mapId);
+            } catch (error) {
+                socket.emit('campaign-error' as any, { message: (error as Error).message });
+            }
+        });
     }
 }

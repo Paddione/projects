@@ -12,7 +12,7 @@ export class ErrorHandler {
   /**
    * Global error handling middleware
    */
-  static handle = (err: ApiError, req: Request, res: Response, next: NextFunction): void => {
+  static handle = (err: ApiError, req: Request, res: Response, _next: NextFunction): void => {
     // Use centralized error handler
 
     // Explicit API error logging for tests

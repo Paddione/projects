@@ -200,26 +200,97 @@ def diffusers_available() -> bool:
         return False
 
 
+# A-pose control image: standing figure with arms at ~45 degrees
+# Pre-generated OpenPose skeleton for A-pose — used as ControlNet conditioning
+# This is a minimal 18-keypoint skeleton encoded as a 512x768 black image with colored joints
+APOSE_SKELETON_PATH = Path(__file__).parent.parent / "assets" / "apose_skeleton.png"
+
+def _get_apose_skeleton(width: int, height: int):
+    """Generate or load an A-pose OpenPose skeleton image for ControlNet conditioning."""
+    from PIL import Image, ImageDraw
+    import math
+
+    # Create a black canvas
+    img = Image.new("RGB", (width, height), (0, 0, 0))
+    draw = ImageDraw.Draw(img)
+
+    # Scale keypoints to target resolution (designed for 512x768)
+    sx, sy = width / 512, height / 768
+
+    def pt(x, y):
+        return (int(x * sx), int(y * sy))
+
+    # OpenPose BODY_25 keypoints for A-pose — standing, arms at ~45 degrees
+    # Coordinates tuned for full-body visible from head to feet
+    joints = {
+        "nose":       pt(256, 60),
+        "neck":       pt(256, 120),
+        "r_shoulder": pt(310, 140),
+        "r_elbow":    pt(350, 220),
+        "r_wrist":    pt(385, 290),
+        "l_shoulder": pt(202, 140),
+        "l_elbow":    pt(162, 220),
+        "l_wrist":    pt(127, 290),
+        "r_hip":      pt(290, 340),
+        "r_knee":     pt(295, 490),
+        "r_ankle":    pt(295, 650),
+        "l_hip":      pt(222, 340),
+        "l_knee":     pt(217, 490),
+        "l_ankle":    pt(217, 650),
+        "r_eye":      pt(270, 50),
+        "l_eye":      pt(242, 50),
+        "r_ear":      pt(280, 60),
+        "l_ear":      pt(232, 60),
+    }
+
+    # Draw limb connections (lines between joints)
+    limbs = [
+        ("nose", "neck"), ("neck", "r_shoulder"), ("r_shoulder", "r_elbow"),
+        ("r_elbow", "r_wrist"), ("neck", "l_shoulder"), ("l_shoulder", "l_elbow"),
+        ("l_elbow", "l_wrist"), ("neck", "r_hip"), ("r_hip", "r_knee"),
+        ("r_knee", "r_ankle"), ("neck", "l_hip"), ("l_hip", "l_knee"),
+        ("l_knee", "l_ankle"), ("nose", "r_eye"), ("nose", "l_eye"),
+        ("r_eye", "r_ear"), ("l_eye", "l_ear"),
+    ]
+    for a, b in limbs:
+        if a in joints and b in joints:
+            draw.line([joints[a], joints[b]], fill=(255, 255, 255), width=max(2, int(4 * sx)))
+
+    # Draw joint dots
+    r = max(3, int(5 * sx))
+    for name, (x, y) in joints.items():
+        draw.ellipse([x-r, y-r, x+r, y+r], fill=(0, 255, 0))
+
+    return img
+
+
+_diffusers_pipe = None
+
 def diffusers_generate(prompt: str, output_path: Path, width: int, height: int) -> bool:
-    """Generate an image using local SDXL via diffusers."""
+    """Generate using Juggernaut XL v9 — no ControlNet (avoids network hang).
+    The A-pose is enforced via strong prompt terms instead.
+    """
     global _diffusers_pipe
     try:
-        import torch
+        import torch, os
+        os.environ["TRANSFORMERS_OFFLINE"] = "1"
+        os.environ["HF_HUB_OFFLINE"] = "1"
         from diffusers import StableDiffusionXLPipeline
 
         if _diffusers_pipe is None:
-            print("  Loading SDXL pipeline (first run)...")
+            print("  Loading Juggernaut XL v9...")
             _diffusers_pipe = StableDiffusionXLPipeline.from_pretrained(
-                "stabilityai/stable-diffusion-xl-base-1.0",
+                "RunDiffusion/Juggernaut-XL-v9",
                 torch_dtype=torch.float16,
                 variant="fp16",
                 use_safetensors=True,
-            ).to("cuda")
-            # Enable memory optimizations
+                local_files_only=True,
+            )
             _diffusers_pipe.enable_model_cpu_offload()
+            print("  Juggernaut XL v9 loaded.")
 
         image = _diffusers_pipe(
-            prompt=prompt + STYLE_SUFFIX,
+            prompt=prompt,
             negative_prompt=NEGATIVE_PROMPT,
             width=width,
             height=height,
@@ -231,6 +302,7 @@ def diffusers_generate(prompt: str, output_path: Path, width: int, height: int) 
         return True
     except Exception as e:
         print(f"  [ERROR] Diffusers generation failed: {e}")
+        import traceback; traceback.print_exc()
         return False
 
 

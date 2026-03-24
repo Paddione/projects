@@ -379,7 +379,7 @@ router.patch('/users/:id', authMiddleware.authenticate, requireAdmin, async (req
  * POST /api/admin/lobbies/clear
  * Clear all lobbies and related sessions
  */
-router.post('/lobbies/clear', authMiddleware.authenticate, requireAdmin, async (req: Request, res: Response) => {
+router.post('/lobbies/clear', authMiddleware.authenticate, requireAdmin, async (_req: Request, res: Response) => {
   try {
     // Delete dependent rows first if any
     let deletedSessions = 0;
@@ -491,11 +491,12 @@ router.post('/users', authMiddleware.authenticate, requireAdmin, async (req: Req
  * POST /api/admin/service/rebuild
  * Rebuild the L2P service containers
  */
-router.post('/service/rebuild', authMiddleware.authenticate, requireAdmin, async (req: Request, res: Response) => {
+router.post('/service/rebuild', authMiddleware.authenticate, requireAdmin, async (_req: Request, res: Response) => {
   try {
     const { exec } = await import('child_process');
     const { promisify } = await import('util');
-    const execAsync = promisify(exec);
+    // promisify available if needed; currently using raw exec callback below
+    void promisify;
 
     // Trigger rebuild script in the background
     // The script will run docker-compose build and restart containers

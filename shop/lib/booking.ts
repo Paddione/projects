@@ -39,21 +39,3 @@ export async function checkAvailability(serviceId: string, startTime: Date, endT
     return { available: true }
 }
 
-export async function createBooking(userId: string, serviceId: string, startTime: Date) {
-    const endTime = addHours(startTime, 1) // Assume 1 hour default for now
-
-    const availability = await checkAvailability(serviceId, startTime, endTime)
-    if (!availability.available) {
-        throw new Error(availability.reason)
-    }
-
-    return await db.booking.create({
-        data: {
-            userId,
-            serviceId,
-            startTime,
-            endTime,
-            status: 'CONFIRMED'
-        }
-    })
-}

@@ -1,0 +1,120 @@
+{
+  "penpals": {
+    "singapore": { "npcId": "mei_lin", "name": "Mei Lin", "personality": "Enthusiastic student, loves food", "greeting": "Hi there! I'm Mei Lin from Singapore. ", "signoff": "Talk soon! — Mei Lin" },
+    "philippines": { "npcId": "carlo", "name": "Carlo", "personality": "Football fan, very friendly", "greeting": "Hey! Carlo here from Manila! ", "signoff": "Your friend, Carlo" },
+    "new_zealand": { "npcId": "aroha", "name": "Aroha", "personality": "Outdoorsy, uses Māori phrases", "greeting": "Kia ora! It's Aroha from New Zealand. ", "signoff": "Aroha nui (lots of love) — Aroha" },
+    "ireland": { "npcId": "seamus_penpal", "name": "Seamus", "personality": "Storyteller, slightly dramatic", "greeting": "Ah, how are ye! Seamus here from Dublin. ", "signoff": "Sláinte! — Seamus" },
+    "south_africa": { "npcId": "thabo", "name": "Thabo", "personality": "Upbeat, proud of his culture", "greeting": "Howzit! I'm Thabo from Cape Town. ", "signoff": "Sharp sharp! — Thabo" },
+    "nigeria": { "npcId": "amara", "name": "Amara", "personality": "Warm, uses Nigerian expressions", "greeting": "How far! I'm Amara from Lagos. ", "signoff": "Take care o! — Amara" },
+    "jamaica": { "npcId": "kezia", "name": "Kezia", "personality": "Chilled, reggae references", "greeting": "Wah gwaan! Kezia here from Kingston. ", "signoff": "Irie vibes — Kezia" },
+    "canada": { "npcId": "sarah_ca", "name": "Sarah", "personality": "Polite, outdoors enthusiast", "greeting": "Hey there, eh! I'm Sarah from Toronto. ", "signoff": "Take care, eh! — Sarah" },
+    "scotland": { "npcId": "hamish", "name": "Hamish", "personality": "Dry humor, loves complaining about weather", "greeting": "Aye, hullo there. Hamish here frae Edinburgh. ", "signoff": "Cheers, Hamish" },
+    "england": { "npcId": "evelyn", "name": "Evelyn", "personality": "Polite, very proper, secretly sarcastic", "greeting": "Good day! I'm Evelyn from London. ", "signoff": "Warm regards, Evelyn" },
+    "australia": { "npcId": "bazza", "name": "Bazza", "personality": "Ultra-casual, no worries every sentence", "greeting": "G'day mate! Bazza here from Sydney. ", "signoff": "No worries, mate — Bazza" },
+    "usa": { "npcId": "tyler", "name": "Tyler", "personality": "Enthusiastic, lots of exclamation marks", "greeting": "Hey!! Tyler here from New York City! ", "signoff": "Stay awesome! — Tyler" }
+  },
+  "letterTemplates": {
+    "singapore": [
+      {
+        "subject": "Food in Singapore!",
+        "body": "Have you ever tried laksa? It's a spicy noodle soup and it's my absolute favourite! Singapore is famous for its hawker centres — they are like big outdoor food courts where you can eat amazing food for just a few dollars. My favourite hawker centre is in Chinatown. What kind of food do you like? Do you have anything like hawker centres where you live?",
+        "vocab": ["laksa", "hawker centre", "noodle", "spicy", "favourite"]
+      },
+      {
+        "subject": "My school day",
+        "body": "Today was such a long day at school! We had English class first thing in the morning, then Mathematics (my least favourite subject, haha), and after lunch we had Science. I love Science because we get to do experiments. After school, I went to the library to study. Singapore is very competitive when it comes to education, so we study a lot! What is your school day like?",
+        "vocab": ["mathematics", "experiments", "competitive", "education", "library"]
+      },
+      {
+        "subject": "Gardens by the Bay",
+        "body": "Last weekend my family visited Gardens by the Bay. Have you heard of it? It has these enormous structures called 'Supertrees' — they are like giant metal trees covered in plants! At night they light up with beautiful colours. There is also a cloud forest with a huge indoor waterfall. Singapore is small but we have so many amazing places to visit. What is a famous landmark near your home?",
+        "vocab": ["enormous", "structures", "landmark", "waterfall", "indoor"]
+      }
+    ],
+    "ireland": [
+      {
+        "subject": "A rainy day in Dublin",
+        "body": "Well, wouldn't you know it, it's raining again! In Ireland, we say 'there's no such thing as bad weather, only the wrong clothes.' I went to the pub yesterday with my friends and we listened to some traditional music — fiddle, tin whistle, and bodhrán. The atmosphere was brilliant! Do ye have traditional music where you come from? I'd love to hear about it.",
+        "vocab": ["traditional", "atmosphere", "brilliant", "fiddle", "bodhrán"]
+      },
+      {
+        "subject": "The Legend of the Giant's Causeway",
+        "body": "Did I ever tell you about the Giant's Causeway? It's in Northern Ireland — thousands of hexagonal stone columns right by the sea. Legend has it that an Irish giant named Finn McCool built it as a bridge to Scotland to fight a Scottish giant! Of course, the scientists say it was formed by volcanic activity. But honestly, the legend is much more craic. 'Craic' means fun, by the way — it's one of our favourite words!",
+        "vocab": ["hexagonal", "legend", "volcanic", "causeway", "craic"]
+      },
+      {
+        "subject": "Learning Irish (Gaeilge)",
+        "body": "Here's something you might not know — we have our own language in Ireland called Irish, or Gaeilge! We learn it in school from a very young age. Most people speak English day-to-day, but there are areas called the Gaeltacht where Irish is the main language. I can say 'Dia duit' (hello) and 'Go raibh maith agat' (thank you). Are there any other languages spoken in your country besides English?",
+        "vocab": ["Gaeilge", "Gaeltacht", "bilingual", "language", "pronounced"]
+      }
+    ],
+    "australia": [
+      {
+        "subject": "G'day from the beach!",
+        "body": "I just got back from Bondi Beach — it was absolutely ripper! The waves were massive today, so I went surfing with my mates. We saw a pod of dolphins swimming just past the break! No worries though, no sharks today. After surfing we had a barbie on the beach — that's a barbecue. We cooked snags (sausages) and had some cold drinks. What do you like to do on weekends?",
+        "vocab": ["ripper", "surfing", "dolphins", "barbecue", "massive"]
+      },
+      {
+        "subject": "The Outback is HUGE",
+        "body": "My uncle lives in the Outback — that's what we call the vast interior of Australia. His nearest neighbour is 200 kilometres away! He runs a cattle station (that's a ranch) and uses a helicopter to round up the cows because the property is so enormous. The Outback sky at night is unbelievable — you can see the Milky Way stretching right across. Have you ever seen a truly dark sky full of stars?",
+        "vocab": ["outback", "vast", "interior", "cattle station", "enormous"]
+      },
+      {
+        "subject": "Dangerous animals? No worries!",
+        "body": "Everyone always asks me about dangerous animals in Australia. Yeah look, we've got some — snakes, spiders, crocs, jellyfish, sharks — but honestly, you just learn to be careful. I always check my shoes before putting them on (spiders love hiding in them!). The most dangerous thing I've actually encountered is a magpie during swooping season. Those birds are mental! They dive-bomb you when you're cycling. What animals do you have to watch out for?",
+        "vocab": ["dangerous", "encountered", "swooping", "venomous", "species"]
+      }
+    ],
+    "england": [
+      {
+        "subject": "Tea and Manners",
+        "body": "I must confess, the stereotype about the English and tea is entirely accurate. I have at least four cups a day — with milk, naturally. No sugar, thank you very much. My grandmother insists that the milk must go in after the tea, never before. Apparently this is a matter of great importance. I also had crumpets for breakfast, which are rather delightful little bread things with holes that soak up butter. Do you have a favourite hot drink?",
+        "vocab": ["stereotype", "accurate", "naturally", "insists", "delightful"]
+      },
+      {
+        "subject": "A Visit to the British Museum",
+        "body": "I visited the British Museum last Saturday. It's quite extraordinary — you could spend weeks there and not see everything. I particularly enjoyed the Egyptian section with its mummies and hieroglyphics. The Rosetta Stone is there too, which helped scholars decode ancient Egyptian writing. The best part? Entry is completely free! London has many free museums, which I think is rather wonderful. What museums have you visited?",
+        "vocab": ["extraordinary", "hieroglyphics", "scholars", "decode", "ancient"]
+      },
+      {
+        "subject": "The Underground",
+        "body": "The London Underground — or 'the Tube' as we call it — is the world's oldest underground railway. It opened in 1863! There are some peculiar traditions: you must stand on the right side of the escalator so people can walk on the left. If you stand on the left, you will receive very stern looks from fellow commuters. Also, we absolutely never make eye contact or speak to strangers on the Tube. It's simply not done. Is public transport popular where you live?",
+        "vocab": ["underground", "peculiar", "escalator", "commuters", "traditions"]
+      }
+    ],
+    "usa": [
+      {
+        "subject": "NYC is CRAZY!",
+        "body": "Dude, New York City is wild!! I went to Times Square last night and it was SO bright — like, there are billboards everywhere, people from every country in the world walking around, street performers, food carts selling hot dogs and pretzels. The energy is insane! I also took the subway to Brooklyn and had the BEST pizza of my life. New York pizza > everything. Fight me! What's the biggest city you've been to?",
+        "vocab": ["billboards", "performers", "energy", "subway", "insane"]
+      },
+      {
+        "subject": "Road Trip!!",
+        "body": "My family just did an epic road trip across America! We drove from New York all the way to California — it took us two weeks! We stopped at the Grand Canyon (absolutely mind-blowing), drove through the desert in Nevada, visited Nashville for country music, and ended up at the Pacific Ocean in Santa Monica. America is SO big — you can drive for hours and the landscape completely changes. Have you ever been on a long road trip?",
+        "vocab": ["epic", "landscape", "mind-blowing", "desert", "absolutely"]
+      },
+      {
+        "subject": "Thanksgiving!",
+        "body": "Thanksgiving is coming up and I'm SO excited!! It's my favourite holiday because my whole family gets together and we eat an enormous turkey dinner with mashed potatoes, cranberry sauce, stuffing, and pumpkin pie for dessert. After dinner, we watch football (American football, not soccer!) and play board games. My grandma makes the best pecan pie in the entire universe! What's your favourite holiday and what do you eat?",
+        "vocab": ["Thanksgiving", "enormous", "cranberry", "stuffing", "universe"]
+      }
+    ],
+    "default": [
+      {
+        "subject": "Hello from far away!",
+        "body": "I'm so excited to be writing to you! I hope we can become great friends through our letters. Tell me about yourself — what do you like to do? What is your favourite subject at school? I love learning about different countries and cultures. Writing letters is one of my favourite things because you get to really think about what you want to say.",
+        "vocab": ["excited", "cultures", "favourite", "countries", "learning"]
+      },
+      {
+        "subject": "My hobbies",
+        "body": "Let me tell you about my hobbies! I love reading books, especially adventure stories. I also enjoy playing sports — my favourite is football (or soccer, depending on where you live!). On rainy days, I like to draw and paint. Sometimes I cook with my parents too — last week we made pasta from scratch. What are your hobbies? I'd love to hear about them!",
+        "vocab": ["hobbies", "adventure", "especially", "scratch", "depending"]
+      },
+      {
+        "subject": "A question for you",
+        "body": "I've been thinking about something interesting. If you could visit any country in the world, where would you go and why? I would love to visit Japan because I'm fascinated by the culture and the food looks amazing. I've also heard that the cherry blossom season is absolutely beautiful. I think travelling is one of the best ways to learn — you discover new things about the world and about yourself!",
+        "vocab": ["fascinated", "culture", "absolutely", "discover", "travelling"]
+      }
+    ]
+  }
+}

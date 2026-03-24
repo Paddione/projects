@@ -3,18 +3,6 @@ import { readFileSync, readdirSync } from 'fs';
 import { join } from 'path';
 import crypto from 'crypto';
 
-// Handle __dirname in ES modules with fallback for test environments
-let currentDirname: string = '';
-
-// For test environments or when import.meta is not available, use cwd
-if (process.env['NODE_ENV'] === 'test') {
-  currentDirname = process.cwd();
-} else {
-  // In production/development, we need a different approach
-  // This is a workaround for ES modules - we'll use a relative path from project root
-  currentDirname = join(process.cwd(), 'src', 'services');
-}
-
 export interface Migration {
   version: string;
   description: string;
@@ -62,13 +50,6 @@ export class MigrationService {
     await this.db.query(
       'INSERT INTO schema_migrations (version, description, checksum) VALUES ($1, $2, $3)',
       [migration.version, migration.description, migration.checksum]
-    );
-  }
-
-  private async removeMigrationRecord(version: string): Promise<void> {
-    await this.db.query(
-      'DELETE FROM schema_migrations WHERE version = $1',
-      [version]
     );
   }
 

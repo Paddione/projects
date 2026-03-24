@@ -2,6 +2,8 @@
 
 Unified authentication service for the monorepo. Provides JWT-based auth, session handling, Google OAuth, password reset, and email verification.
 
+> **See also:** [Deep dive](../docs/services/auth.md) | [Architecture](../docs/architecture/overview.md) | [Deployment](../docs/guides/deployment.md) | [Testing](../docs/guides/testing.md) | [Environment Variables](../docs/guides/environment-variables.md) | [Root README](../README.md)
+
 ## Quick Start
 
 ```bash
@@ -22,7 +24,7 @@ File structure:
 
 Required variables:
 - `DATABASE_URL` - points to `shared-postgres:5432/auth_db`
-- `AUTH_DB_USER`, `AUTH_DB_PASSWORD` - match `shared-infrastructure/.env`
+- `AUTH_DB_USER`, `AUTH_DB_PASSWORD` - match root `.env` and `DB/init/00-create-databases.sh`
 - `JWT_SECRET`, `JWT_REFRESH_SECRET` - 32-char hex, unique per env
 - `SESSION_SECRET` - 32-char hex, unique per env
 - SMTP settings (dev placeholders OK, prod real creds)
@@ -60,7 +62,7 @@ K8s manifests: `k8s/services/auth/`. Full deployment guide: `k8s/README.md`.
 
 Production URL: https://auth.korczewski.de
 
-Production uses the centralized Postgres instance from `shared-infrastructure`. Use different secrets for dev and prod.
+Production uses the centralized PostgreSQL instance (see `DB/` for init scripts). Use different secrets for dev and prod.
 
 ## Keyboard Shortcuts
 

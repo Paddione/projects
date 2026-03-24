@@ -1,0 +1,17 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - namespace.yaml
+  - configmap-jitsi.yaml
+  - configmap-coturn.yaml
+  - configmap-web.yaml
+  - service-prosody.yaml
+  - service-jvb-http.yaml
+  - service-web.yaml
+  - service-coturn.yaml
+  - ingressroute.yaml
+  - deployment-prosody.yaml
+  - deployment-jicofo.yaml
+  - deployment-jvb.yaml
+  - deployment-web.yaml
+  - deployment-coturn.yaml

@@ -6,6 +6,13 @@ Guidance for Claude Code when working in the Arena project.
 
 Arena is a top-down battle royale multiplayer game: React 18 + PixiJS + Vite frontend, Express + Socket.io backend, PostgreSQL via Drizzle ORM. Workspace monorepo with `frontend/` and `backend/` packages.
 
+**Documentation references:**
+- This file -- Quick start, commands, architecture
+- [docs/services/arena.md](../docs/services/arena.md) -- Deep dive: game mechanics, asset pipeline, Socket.io events
+- [docs/services/assetgenerator.md](../docs/services/assetgenerator.md) -- AI asset generation pipeline
+- [docs/guides/deployment.md](../docs/guides/deployment.md) -- Deployment to k3s
+- [docs/architecture/database.md](../docs/architecture/database.md) -- Shared PostgreSQL setup
+
 ## Commands
 
 ```bash
