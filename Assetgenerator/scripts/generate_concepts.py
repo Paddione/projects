@@ -31,11 +31,20 @@ FORCE_OVERWRITE = False
 # SDXL generation params
 DEFAULT_WIDTH = 1024
 DEFAULT_HEIGHT = 1024
-DEFAULT_STEPS = 30
-DEFAULT_CFG = 7.5
+DEFAULT_STEPS = 40
+DEFAULT_CFG = 9.0
 NEGATIVE_PROMPT = (
     "blurry, low quality, watermark, text, signature, deformed, ugly, "
-    "realistic photo, photorealistic, noisy, grainy"
+    "realistic photo, photorealistic, noisy, grainy, "
+    "multiple views, multiple angles, character sheet, turnaround sheet, "
+    "reference sheet, front and back, 3-view, orthographic views, "
+    "side view, back view, collage, comparison, split image, "
+    "model sheet, animation sheet, sprite sheet, multiple poses, "
+    "white shoes, white sneakers, white clothing, white outfit, "
+    "bright white, overexposed, washed out, pale colors, "
+    "sitting, crouching, kneeling, bent knees, action pose, "
+    "cropped figure, partial body, cut off, headshot, portrait, "
+    "two characters, duplicate, mirror, split panel, diptych"
 )
 
 # Style suffix removed — asset prompts already contain full style direction
@@ -100,8 +109,8 @@ def comfyui_generate(base_url: str, prompt: str, output_path: Path, width: int, 
                 "seed": int(time.time() * 1000) % (2**32),
                 "steps": DEFAULT_STEPS,
                 "cfg": DEFAULT_CFG,
-                "sampler_name": "euler_ancestral",
-                "scheduler": "normal",
+                "sampler_name": "dpmpp_2m",
+                "scheduler": "karras",
                 "denoise": 1.0,
                 "model": ["4", 0],
                 "positive": ["6", 0],
@@ -191,26 +200,97 @@ def diffusers_available() -> bool:
         return False
 
 
+# A-pose control image: standing figure with arms at ~45 degrees
+# Pre-generated OpenPose skeleton for A-pose — used as ControlNet conditioning
+# This is a minimal 18-keypoint skeleton encoded as a 512x768 black image with colored joints
+APOSE_SKELETON_PATH = Path(__file__).parent.parent / "assets" / "apose_skeleton.png"
+
+def _get_apose_skeleton(width: int, height: int):
+    """Generate or load an A-pose OpenPose skeleton image for ControlNet conditioning."""
+    from PIL import Image, ImageDraw
+    import math
+
+    # Create a black canvas
+    img = Image.new("RGB", (width, height), (0, 0, 0))
+    draw = ImageDraw.Draw(img)
+
+    # Scale keypoints to target resolution (designed for 512x768)
+    sx, sy = width / 512, height / 768
+
+    def pt(x, y):
+        return (int(x * sx), int(y * sy))
+
+    # OpenPose BODY_25 keypoints for A-pose — standing, arms at ~45 degrees
+    # Coordinates tuned for full-body visible from head to feet
+    joints = {
+        "nose":       pt(256, 60),
+        "neck":       pt(256, 120),
+        "r_shoulder": pt(310, 140),
+        "r_elbow":    pt(350, 220),
+        "r_wrist":    pt(385, 290),
+        "l_shoulder": pt(202, 140),
+        "l_elbow":    pt(162, 220),
+        "l_wrist":    pt(127, 290),
+        "r_hip":      pt(290, 340),
+        "r_knee":     pt(295, 490),
+        "r_ankle":    pt(295, 650),
+        "l_hip":      pt(222, 340),
+        "l_knee":     pt(217, 490),
+        "l_ankle":    pt(217, 650),
+        "r_eye":      pt(270, 50),
+        "l_eye":      pt(242, 50),
+        "r_ear":      pt(280, 60),
+        "l_ear":      pt(232, 60),
+    }
+
+    # Draw limb connections (lines between joints)
+    limbs = [
+        ("nose", "neck"), ("neck", "r_shoulder"), ("r_shoulder", "r_elbow"),
+        ("r_elbow", "r_wrist"), ("neck", "l_shoulder"), ("l_shoulder", "l_elbow"),
+        ("l_elbow", "l_wrist"), ("neck", "r_hip"), ("r_hip", "r_knee"),
+        ("r_knee", "r_ankle"), ("neck", "l_hip"), ("l_hip", "l_knee"),
+        ("l_knee", "l_ankle"), ("nose", "r_eye"), ("nose", "l_eye"),
+        ("r_eye", "r_ear"), ("l_eye", "l_ear"),
+    ]
+    for a, b in limbs:
+        if a in joints and b in joints:
+            draw.line([joints[a], joints[b]], fill=(255, 255, 255), width=max(2, int(4 * sx)))
+
+    # Draw joint dots
+    r = max(3, int(5 * sx))
+    for name, (x, y) in joints.items():
+        draw.ellipse([x-r, y-r, x+r, y+r], fill=(0, 255, 0))
+
+    return img
+
+
+_diffusers_pipe = None
+
 def diffusers_generate(prompt: str, output_path: Path, width: int, height: int) -> bool:
-    """Generate an image using local SDXL via diffusers."""
+    """Generate using Juggernaut XL v9 — no ControlNet (avoids network hang).
+    The A-pose is enforced via strong prompt terms instead.
+    """
     global _diffusers_pipe
     try:
-        import torch
+        import torch, os
+        os.environ["TRANSFORMERS_OFFLINE"] = "1"
+        os.environ["HF_HUB_OFFLINE"] = "1"
         from diffusers import StableDiffusionXLPipeline
 
         if _diffusers_pipe is None:
-            print("  Loading SDXL pipeline (first run)...")
+            print("  Loading Juggernaut XL v9...")
             _diffusers_pipe = StableDiffusionXLPipeline.from_pretrained(
-                "stabilityai/stable-diffusion-xl-base-1.0",
+                "RunDiffusion/Juggernaut-XL-v9",
                 torch_dtype=torch.float16,
                 variant="fp16",
                 use_safetensors=True,
-            ).to("cuda")
-            # Enable memory optimizations
+                local_files_only=True,
+            )
             _diffusers_pipe.enable_model_cpu_offload()
+            print("  Juggernaut XL v9 loaded.")
 
         image = _diffusers_pipe(
-            prompt=prompt + STYLE_SUFFIX,
+            prompt=prompt,
             negative_prompt=NEGATIVE_PROMPT,
             width=width,
             height=height,
@@ -222,6 +302,7 @@ def diffusers_generate(prompt: str, output_path: Path, width: int, height: int) 
         return True
     except Exception as e:
         print(f"  [ERROR] Diffusers generation failed: {e}")
+        import traceback; traceback.print_exc()
         return False
 
 
@@ -287,26 +368,9 @@ def generate_character_concepts(char: dict, meta: dict, backend: str, comfyui_ur
     else:
         print(f"  [SKIP] characters/{char_id} — already exists")
 
-    # Per-animation reference sheets (optional, helps Blender rigging)
-    for anim_name in char.get("animations", {}):
-        anim_path = out_dir / f"{char_id}_{anim_name}.png"
-        if anim_path.exists() and not FORCE_OVERWRITE:
-            print(f"  [SKIP] characters/{char_id}_{anim_name} — already exists")
-            continue
-
-        anim_prompt = (
-            f"{char['prompt']}, {anim_name.replace('_', ' ')} pose, "
-            f"animation reference sheet, multiple angles"
-        )
-        print(f"  [GEN] characters/{char_id}_{anim_name} (768x768)")
-        if backend == "comfyui":
-            ok = comfyui_generate(comfyui_url, anim_prompt, anim_path, 768, 768)
-        else:
-            ok = diffusers_generate(anim_prompt, anim_path, 768, 768)
-        if not ok:
-            print(f"  [WARN] Failed to generate {char_id}_{anim_name}, continuing...")
-        else:
-            remove_background(anim_path)
+    # NOTE: Per-animation reference sheet generation removed.
+    # It was injecting animation reference sheet, multiple angles into prompts,
+    # causing ComfyUI to generate multi-view character sheets instead of single front views.
 
     return True
 

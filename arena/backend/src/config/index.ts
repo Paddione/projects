@@ -23,4 +23,7 @@ export const config = {
         defaultItemSpawnInterval: 60,
         defaultShrinkInterval: 30,
     },
+    l2p: {
+        serviceUrl: process.env.L2P_SERVICE_URL || 'http://localhost:3001',
+    },
 };

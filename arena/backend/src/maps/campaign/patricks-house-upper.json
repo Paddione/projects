@@ -1,0 +1,44 @@
+{
+  "meta": {
+    "id": "patricks-house-upper",
+    "name": "Patrick's House — Upper Floor",
+    "width": 14,
+    "height": 10,
+    "tileSize": 32,
+    "isInterior": true,
+    "parentMapId": "vogelsen"
+  },
+  "tiles": [
+    [1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,2,2,5,2,2,1,1,1,1,1,1,1,1],
+    [1,2,2,2,2,2,1,1,1,1,1,1,1,1],
+    [1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+  ],
+  "coverObjects": [
+    {"id": "bed", "type": "bench", "x": 320, "y": 64, "width": 64, "height": 96, "hp": -1, "blocksProjectiles": false, "blocksLineOfSight": false, "blocksMovement": true, "slowsMovement": false},
+    {"id": "desk", "type": "bench", "x": 64, "y": 64, "width": 64, "height": 32, "hp": -1, "blocksProjectiles": false, "blocksLineOfSight": false, "blocksMovement": true, "slowsMovement": false},
+    {"id": "bookshelf", "type": "building", "x": 32, "y": 128, "width": 32, "height": 96, "hp": -1, "blocksProjectiles": true, "blocksLineOfSight": true, "blocksMovement": true, "slowsMovement": false}
+  ],
+  "doors": [
+    {
+      "tileX": 3,
+      "tileY": 7,
+      "targetMapId": "patricks-house-ground",
+      "targetTileX": 3,
+      "targetTileY": 8,
+      "targetFacing": "S"
+    }
+  ],
+  "spawnPoint": { "x": 3, "y": 7 },
+  "npcs": [],
+  "enemyZones": [],
+  "itemSpawnPoints": [
+    { "x": 11, "y": 3 }
+  ]
+}

@@ -49,6 +49,12 @@ export const api = {
     // Matches
     getMatches: (limit = 20) => fetchJSON(`/api/matches?limit=${limit}`),
     getMatchResults: (matchId: number) => fetchJSON(`/api/matches/${matchId}/results`),
+
+    // Campaign
+    campaign: {
+        getProgress: () => fetchJSON('/api/campaign/progress'),
+        getVocab: () => fetchJSON('/api/campaign/vocab'),
+    },
 };
 
 // ============================================================================

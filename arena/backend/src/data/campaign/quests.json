@@ -1,0 +1,232 @@
+{
+  "quests": {
+    "quest_first_morning": {
+      "id": "quest_first_morning",
+      "title": "The First Morning",
+      "description": "Oma Irmtrout needs bread, eggs, and milk. Visit Tante Enso to find them.",
+      "giverNpcId": "oma_irmtrout",
+      "prerequisites": [],
+      "objectives": [
+        { "id": "obj_talk_oma", "text": "Talk to Oma Irmtrout", "type": "talk", "target": "oma_irmtrout", "requiredCount": 1 },
+        { "id": "obj_get_items", "text": "Get bread, eggs, and milk from Tante Enso", "type": "fetch", "target": "enzo", "requiredCount": 1 },
+        { "id": "obj_return_oma", "text": "Return to Oma Irmtrout", "type": "talk", "target": "oma_irmtrout", "requiredCount": 1 }
+      ],
+      "respectReward": 25,
+      "vocabRewards": [
+        { "word_en": "bread", "word_de": "Brot", "definition_en": "a food made from flour and water", "example_en": "I eat bread for breakfast." },
+        { "word_en": "eggs", "word_de": "Eier", "definition_en": "oval objects laid by birds, eaten as food", "example_en": "She bought six eggs." },
+        { "word_en": "milk", "word_de": "Milch", "definition_en": "a white liquid from cows", "example_en": "Do you want milk in your coffee?" }
+      ],
+      "unlocksQuests": ["quest_shopping_list", "quest_kebab_order"],
+      "englishTopic": "Food vocabulary"
+    },
+    "quest_shopping_list": {
+      "id": "quest_shopping_list",
+      "title": "The Shopping List",
+      "description": "Enzo at Tante Enso wants to test your food vocabulary. Name the items to get your groceries!",
+      "giverNpcId": "enzo",
+      "prerequisites": ["quest_first_morning"],
+      "objectives": [
+        { "id": "obj_talk_enzo", "text": "Talk to Enzo at Tante Enso", "type": "talk", "target": "enzo", "requiredCount": 1 },
+        { "id": "obj_quiz_food", "text": "Pass the food vocabulary quiz", "type": "quiz", "target": "vogelsen_food_a1", "requiredCount": 1 },
+        { "id": "obj_collect_items", "text": "Collect the grocery items", "type": "fetch", "target": "enzo", "requiredCount": 1 }
+      ],
+      "respectReward": 50,
+      "vocabRewards": [
+        { "word_en": "shop", "word_de": "Laden", "definition_en": "a place where you buy things", "example_en": "I go to the shop every day." },
+        { "word_en": "cheese", "word_de": "Kaese", "definition_en": "a food made from milk", "example_en": "Do you like cheese on your bread?" },
+        { "word_en": "butter", "word_de": "Butter", "definition_en": "a soft yellow food made from cream", "example_en": "Put some butter on the bread." },
+        { "word_en": "juice", "word_de": "Saft", "definition_en": "a drink made from fruit", "example_en": "I drink orange juice in the morning." }
+      ],
+      "unlocksQuests": [],
+      "englishTopic": "Food names and shopping"
+    },
+    "quest_kebab_order": {
+      "id": "quest_kebab_order",
+      "title": "The Kebab Order",
+      "description": "Mehmet at Columbus Doener challenges you to order a full meal in English. Numbers and polite words required!",
+      "giverNpcId": "mehmet",
+      "prerequisites": [],
+      "objectives": [
+        { "id": "obj_talk_mehmet", "text": "Talk to Mehmet at Columbus Doener", "type": "talk", "target": "mehmet", "requiredCount": 1 },
+        { "id": "obj_quiz_ordering", "text": "Order food in English", "type": "quiz", "target": "vogelsen_ordering_a1", "requiredCount": 1 }
+      ],
+      "respectReward": 75,
+      "vocabRewards": [
+        { "word_en": "please", "word_de": "bitte", "definition_en": "a polite word when asking for something", "example_en": "One kebab, please." },
+        { "word_en": "thank you", "word_de": "danke", "definition_en": "a polite word after receiving something", "example_en": "Thank you for the food!" },
+        { "word_en": "hungry", "word_de": "hungrig", "definition_en": "wanting to eat", "example_en": "I am very hungry." }
+      ],
+      "unlocksQuests": [],
+      "englishTopic": "Numbers and polite requests"
+    },
+    "quest_two_scoops": {
+      "id": "quest_two_scoops",
+      "title": "Two Scoops of English",
+      "description": "Rosa at Eiscafe La Rosa will give you ice cream, but only if you can name the flavors in English!",
+      "giverNpcId": "rosa",
+      "prerequisites": [],
+      "objectives": [
+        { "id": "obj_talk_rosa", "text": "Talk to Rosa at Eiscafe La Rosa", "type": "talk", "target": "rosa", "requiredCount": 1 },
+        { "id": "obj_quiz_flavors", "text": "Name ice cream flavors in English", "type": "quiz", "target": "vogelsen_icecream_a1", "requiredCount": 1 }
+      ],
+      "respectReward": 50,
+      "vocabRewards": [
+        { "word_en": "chocolate", "word_de": "Schokolade", "definition_en": "a sweet brown food or flavor", "example_en": "I love chocolate ice cream." },
+        { "word_en": "strawberry", "word_de": "Erdbeere", "definition_en": "a small red fruit", "example_en": "Strawberry is my favorite flavor." },
+        { "word_en": "vanilla", "word_de": "Vanille", "definition_en": "a sweet flavor from a tropical plant", "example_en": "Can I have vanilla, please?" }
+      ],
+      "unlocksQuests": [],
+      "englishTopic": "Flavor vocabulary"
+    },
+    "quest_official_form": {
+      "id": "quest_official_form",
+      "title": "The Official Form",
+      "description": "Klaus at the Star Administration has an English travel form. Fill it out correctly to get your Travel Permit!",
+      "giverNpcId": "klaus",
+      "prerequisites": ["_any_2_quests"],
+      "objectives": [
+        { "id": "obj_talk_klaus", "text": "Talk to Klaus at Star Administration", "type": "talk", "target": "klaus", "requiredCount": 1 },
+        { "id": "obj_quiz_formal", "text": "Fill out the English travel form", "type": "quiz", "target": "vogelsen_formal_a1", "requiredCount": 1 }
+      ],
+      "respectReward": 100,
+      "vocabRewards": [
+        { "word_en": "name", "word_de": "Name", "definition_en": "what people call you", "example_en": "My name is Patrick." },
+        { "word_en": "address", "word_de": "Adresse", "definition_en": "the place where you live", "example_en": "What is your address?" },
+        { "word_en": "date of birth", "word_de": "Geburtsdatum", "definition_en": "the day you were born", "example_en": "My date of birth is January first." },
+        { "word_en": "signature", "word_de": "Unterschrift", "definition_en": "your name written by hand", "example_en": "Please write your signature here." }
+      ],
+      "unlocksQuests": [],
+      "englishTopic": "Formal writing and grammar"
+    },
+    "quest_shopping_dialogue": {
+      "id": "quest_shopping_dialogue",
+      "title": "What Do You Need?",
+      "description": "Borla at LaBorla wants to practice shopping phrases with you. Ask about prices and sizes in English!",
+      "giverNpcId": "borla",
+      "prerequisites": [],
+      "objectives": [
+        { "id": "obj_talk_borla", "text": "Talk to Borla at LaBorla", "type": "talk", "target": "borla", "requiredCount": 1 },
+        { "id": "obj_quiz_shopping", "text": "Practice shopping phrases", "type": "quiz", "target": "vogelsen_shopping_a1", "requiredCount": 1 }
+      ],
+      "respectReward": 50,
+      "vocabRewards": [
+        { "word_en": "how much", "word_de": "wie viel", "definition_en": "asking about the price", "example_en": "How much is this shirt?" },
+        { "word_en": "size", "word_de": "Groesse", "definition_en": "how big or small something is", "example_en": "What size do you need?" }
+      ],
+      "unlocksQuests": [],
+      "englishTopic": "Shopping phrases"
+    },
+    "quest_community_bulletin": {
+      "id": "quest_community_bulletin",
+      "title": "Community Bulletin",
+      "description": "Finn at the Jugendfeuerwehr found an English notice on the board. Help him understand it!",
+      "giverNpcId": "finn",
+      "prerequisites": [],
+      "objectives": [
+        { "id": "obj_talk_finn", "text": "Talk to Finn at the Jugendfeuerwehr", "type": "talk", "target": "finn", "requiredCount": 1 },
+        { "id": "obj_quiz_reading", "text": "Read the English noticeboard", "type": "quiz", "target": "vogelsen_reading_a1", "requiredCount": 1 }
+      ],
+      "respectReward": 60,
+      "vocabRewards": [
+        { "word_en": "meeting", "word_de": "Treffen", "definition_en": "when people come together", "example_en": "The meeting is at six o'clock." },
+        { "word_en": "volunteer", "word_de": "Freiwilliger", "definition_en": "someone who helps without pay", "example_en": "We need a volunteer for Saturday." }
+      ],
+      "unlocksQuests": [],
+      "englishTopic": "Reading comprehension"
+    },
+    "quest_place_to_rest": {
+      "id": "quest_place_to_rest",
+      "title": "A Place to Rest",
+      "description": "Frau Mering runs FEWO Mering, a holiday home. Book a room in English and unlock it as a save point!",
+      "giverNpcId": "frau_mering",
+      "prerequisites": [],
+      "objectives": [
+        { "id": "obj_talk_mering", "text": "Talk to Frau Mering at FEWO Mering", "type": "talk", "target": "frau_mering", "requiredCount": 1 },
+        { "id": "obj_quiz_booking", "text": "Book a room in English", "type": "quiz", "target": "vogelsen_booking_a1", "requiredCount": 1 }
+      ],
+      "respectReward": 75,
+      "vocabRewards": [
+        { "word_en": "room", "word_de": "Zimmer", "definition_en": "a part of a building with walls", "example_en": "I would like a room for one night." },
+        { "word_en": "key", "word_de": "Schluessel", "definition_en": "a small metal object to open a door", "example_en": "Here is your room key." },
+        { "word_en": "book", "word_de": "buchen", "definition_en": "to reserve something", "example_en": "I want to book a room, please." }
+      ],
+      "unlocksQuests": [],
+      "englishTopic": "Accommodation and booking"
+    },
+    "quest_lets_play": {
+      "id": "quest_lets_play",
+      "title": "Let's Play!",
+      "description": "Max at the Spielplatz wants to be your friend! Introduce yourself in English and practice playground phrases.",
+      "giverNpcId": "max",
+      "prerequisites": [],
+      "objectives": [
+        { "id": "obj_talk_max", "text": "Talk to Max at the Spielplatz", "type": "talk", "target": "max", "requiredCount": 1 },
+        { "id": "obj_quiz_intro", "text": "Practice introductions", "type": "quiz", "target": "vogelsen_introductions_a1", "requiredCount": 1 }
+      ],
+      "respectReward": 40,
+      "vocabRewards": [
+        { "word_en": "hello", "word_de": "hallo", "definition_en": "a greeting when you meet someone", "example_en": "Hello! How are you?" },
+        { "word_en": "friend", "word_de": "Freund", "definition_en": "a person you like and trust", "example_en": "This is my friend Max." }
+      ],
+      "unlocksQuests": [],
+      "englishTopic": "Introductions and informal conversation"
+    },
+    "quest_finding_voice": {
+      "id": "quest_finding_voice",
+      "title": "Finding Your Voice",
+      "description": "Nicole the speech therapist will help you with English pronunciation. Master the tricky sounds: th, v, and w!",
+      "giverNpcId": "nicole",
+      "prerequisites": [],
+      "objectives": [
+        { "id": "obj_talk_nicole", "text": "Talk to Nicole at the Sprachtherapie", "type": "talk", "target": "nicole", "requiredCount": 1 },
+        { "id": "obj_quiz_pronunciation", "text": "Practice pronunciation patterns", "type": "quiz", "target": "vogelsen_pronunciation_a1", "requiredCount": 1 }
+      ],
+      "respectReward": 100,
+      "vocabRewards": [
+        { "word_en": "think", "word_de": "denken", "definition_en": "to use your mind", "example_en": "I think this is correct." },
+        { "word_en": "weather", "word_de": "Wetter", "definition_en": "the state of the sky and air", "example_en": "The weather is nice today." },
+        { "word_en": "with", "word_de": "mit", "definition_en": "together or alongside", "example_en": "Come with me to the park." }
+      ],
+      "unlocksQuests": [],
+      "englishTopic": "Pronunciation patterns"
+    },
+    "quest_perfect_cut": {
+      "id": "quest_perfect_cut",
+      "title": "The Perfect Cut",
+      "description": "Lea the hairdresser needs you to describe your ideal haircut in English. Use adjectives to get the perfect look!",
+      "giverNpcId": "lea",
+      "prerequisites": [],
+      "objectives": [
+        { "id": "obj_talk_lea", "text": "Talk to Lea at the Friseur", "type": "talk", "target": "lea", "requiredCount": 1 },
+        { "id": "obj_quiz_adjectives", "text": "Describe a haircut using adjectives", "type": "quiz", "target": "vogelsen_adjectives_a1", "requiredCount": 1 }
+      ],
+      "respectReward": 50,
+      "vocabRewards": [
+        { "word_en": "short", "word_de": "kurz", "definition_en": "not long", "example_en": "I want short hair, please." },
+        { "word_en": "long", "word_de": "lang", "definition_en": "not short, having great length", "example_en": "She has long brown hair." },
+        { "word_en": "curly", "word_de": "lockig", "definition_en": "having curls or waves", "example_en": "My hair is very curly." }
+      ],
+      "unlocksQuests": [],
+      "englishTopic": "Descriptive adjectives"
+    },
+    "quest_morning_news": {
+      "id": "quest_morning_news",
+      "title": "Morning News",
+      "description": "Werner at the kiosk has an English newspaper. Read the headline and show him you understand!",
+      "giverNpcId": "werner",
+      "prerequisites": [],
+      "objectives": [
+        { "id": "obj_talk_werner", "text": "Talk to Werner at the Kiosk", "type": "talk", "target": "werner", "requiredCount": 1 },
+        { "id": "obj_quiz_news", "text": "Read the English headline", "type": "quiz", "target": "vogelsen_news_a1", "requiredCount": 1 }
+      ],
+      "respectReward": 40,
+      "vocabRewards": [
+        { "word_en": "newspaper", "word_de": "Zeitung", "definition_en": "printed paper with news stories", "example_en": "I read the newspaper every morning." },
+        { "word_en": "headline", "word_de": "Schlagzeile", "definition_en": "the title of a news story", "example_en": "Did you read today's headline?" }
+      ],
+      "unlocksQuests": [],
+      "englishTopic": "Reading comprehension"
+    }
+  }
+}

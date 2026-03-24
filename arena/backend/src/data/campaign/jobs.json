@@ -1,0 +1,64 @@
+{
+  "jobs": {
+    "germany_newspaper_delivery": {
+      "id": "germany_newspaper_delivery",
+      "title": "Newspaper Delivery",
+      "description": "Deliver newspapers for Werner around Vögelsen",
+      "country": "germany",
+      "giverNpcId": "werner",
+      "dollarReward": 25,
+      "respectReward": 15,
+      "englishTopic": "Addresses, directions",
+      "repeatable": true,
+      "cooldownMinutes": 30
+    },
+    "singapore_hawker_assistant": {
+      "id": "singapore_hawker_assistant",
+      "title": "Hawker Stall Assistant",
+      "description": "Help serve food at a hawker stall in Singapore",
+      "country": "singapore",
+      "giverNpcId": "hawker_boss",
+      "dollarReward": 30,
+      "respectReward": 20,
+      "englishTopic": "Food orders, numbers",
+      "repeatable": true,
+      "cooldownMinutes": 30
+    },
+    "ireland_pub_quiz_host": {
+      "id": "ireland_pub_quiz_host",
+      "title": "Pub Quiz Host",
+      "description": "Host the weekly pub quiz at Seamus's pub",
+      "country": "ireland",
+      "giverNpcId": "seamus",
+      "dollarReward": 35,
+      "respectReward": 25,
+      "englishTopic": "Questions, formal announcing",
+      "repeatable": true,
+      "cooldownMinutes": 45
+    },
+    "australia_tourist_guide": {
+      "id": "australia_tourist_guide",
+      "title": "Tourist Guide at Uluru",
+      "description": "Guide tourists around Uluru and explain its significance",
+      "country": "australia",
+      "giverNpcId": "bazza_guide",
+      "dollarReward": 40,
+      "respectReward": 30,
+      "englishTopic": "Descriptive language, explanations",
+      "repeatable": true,
+      "cooldownMinutes": 45
+    },
+    "usa_gas_station": {
+      "id": "usa_gas_station",
+      "title": "Gas Station Attendant",
+      "description": "Work a shift at a roadside gas station on Route 66",
+      "country": "usa",
+      "giverNpcId": "tyler_attendant",
+      "dollarReward": 30,
+      "respectReward": 20,
+      "englishTopic": "American colloquialisms, numbers",
+      "repeatable": true,
+      "cooldownMinutes": 30
+    }
+  }
+}

@@ -112,18 +112,29 @@ def _remove_background(image: 'Image.Image') -> 'Image.Image':
 
     try:
         import rembg
-        # For RGB or near-opaque RGBA: composite onto WHITE first so rembg gets
-        # a clean background to segment against (not black, which causes noise)
-        rgb = Image.new('RGB', image.size, (255, 255, 255))
+        # Composite onto a MID-GREY canvas (#808080) before rembg.
+        # White canvas causes rembg to miss light-colored character areas
+        # (white hoodie, white shoes blend into white background → incomplete mask).
+        # Black canvas causes issues with dark areas.
+        # Mid-grey gives maximum contrast separation for both light and dark subjects.
+        grey_bg = Image.new('RGB', image.size, (128, 128, 128))
         if image.mode == 'RGBA':
-            rgb.paste(image, mask=image.split()[3])
+            grey_bg.paste(image, mask=image.split()[3])
         else:
-            rgb = image.convert('RGB')
+            grey_bg.paste(image.convert('RGB'))
 
         buf = io.BytesIO()
-        rgb.save(buf, format='PNG')
+        grey_bg.save(buf, format='PNG')
         result_bytes = rembg.remove(buf.getvalue())
         result = Image.open(io.BytesIO(result_bytes)).convert('RGBA')
+
+        # Tighten the alpha mask: zero out any pixel where alpha < 200
+        # to prevent semi-transparent fringe from being reconstructed as geometry
+        import numpy as np
+        arr = np.array(result)
+        arr[arr[:, :, 3] < 200, 3] = 0
+        result = Image.fromarray(arr)
+
         print("  [REMBG] Background removed successfully")
         return result
     except ImportError:

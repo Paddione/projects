@@ -1,0 +1,232 @@
+{
+  "zones": [
+    {
+      "id": "radio_de_pub",
+      "country": "germany",
+      "zoneType": "pub",
+      "clips": [
+        {
+          "id": "clip_de_pub_1",
+          "title": "Village Gossip",
+          "duration": 45,
+          "script": "Did you hear about the new ice cream shop? Rosa says her pistachio flavor is the best in the whole district. I had three scoops yesterday!",
+          "catchQuestion": { "question": "How many scoops did the speaker have?", "answers": ["1", "2", "3", "4"], "correct": 2 },
+          "respectReward": 15
+        },
+        {
+          "id": "clip_de_pub_2",
+          "title": "Football Talk",
+          "duration": 30,
+          "script": "The local team won three to one last Saturday. The goalkeeper made some amazing saves in the second half.",
+          "catchQuestion": { "question": "What was the final score?", "answers": ["2-1", "3-0", "3-1", "4-2"], "correct": 2 },
+          "respectReward": 15
+        }
+      ]
+    },
+    {
+      "id": "radio_de_park",
+      "country": "germany",
+      "zoneType": "park",
+      "clips": [
+        {
+          "id": "clip_de_park_1",
+          "title": "Nature Walk",
+          "duration": 60,
+          "script": "The Lüneburger Heide is one of Germany's most beautiful nature reserves. In August and September, the heather blooms in shades of purple and pink, covering the hills like a carpet.",
+          "catchQuestion": { "question": "When does the heather bloom?", "answers": ["March-April", "June-July", "August-September", "November"], "correct": 2 },
+          "respectReward": 15
+        }
+      ]
+    },
+    {
+      "id": "radio_sg_hawker",
+      "country": "singapore",
+      "zoneType": "market",
+      "clips": [
+        {
+          "id": "clip_sg_hawker_1",
+          "title": "Hawker Uncle",
+          "duration": 40,
+          "script": "Eh, you want chicken rice or char kway teow? The chicken rice here is very shiok, lah. Uncle has been cooking since five in the morning. Best one in Chinatown, I tell you.",
+          "catchQuestion": { "question": "What time did the uncle start cooking?", "answers": ["4 AM", "5 AM", "6 AM", "7 AM"], "correct": 1 },
+          "respectReward": 15
+        },
+        {
+          "id": "clip_sg_hawker_2",
+          "title": "MRT Announcement",
+          "duration": 25,
+          "script": "Please mind the platform gap. The next train to Jurong East will arrive in approximately three minutes. Please stand behind the yellow line for your safety.",
+          "catchQuestion": { "question": "Where is the next train going?", "answers": ["Changi", "Orchard", "Jurong East", "Marina Bay"], "correct": 2 },
+          "respectReward": 15
+        }
+      ]
+    },
+    {
+      "id": "radio_sg_garden",
+      "country": "singapore",
+      "zoneType": "park",
+      "clips": [
+        {
+          "id": "clip_sg_garden_1",
+          "title": "Gardens by the Bay Guide",
+          "duration": 50,
+          "script": "Welcome to the Supertree Grove. These tree-like structures are between twenty-five and fifty metres tall. They collect rainwater and generate solar energy. The light and sound show starts every evening at seven forty-five.",
+          "catchQuestion": { "question": "When does the light show start?", "answers": ["7:00 PM", "7:30 PM", "7:45 PM", "8:00 PM"], "correct": 2 },
+          "respectReward": 15
+        }
+      ]
+    },
+    {
+      "id": "radio_ie_pub",
+      "country": "ireland",
+      "zoneType": "pub",
+      "clips": [
+        {
+          "id": "clip_ie_pub_1",
+          "title": "Two Lads at the Bar",
+          "duration": 50,
+          "script": "Ah sure, the rain's been lashing down all week. But sure look, that's Ireland for ya. At least we've got the craic here tonight. Did you see the match? Absolute madness it was.",
+          "catchQuestion": { "question": "What has the weather been like?", "answers": ["Sunny", "Snowy", "Rainy", "Windy"], "correct": 2 },
+          "respectReward": 15
+        },
+        {
+          "id": "clip_ie_pub_2",
+          "title": "Pub Quiz Host",
+          "duration": 35,
+          "script": "Right so, question number seven. In what year did Ireland join the European Union? You have thirty seconds. No phones! I can see you Paddy, put it away!",
+          "catchQuestion": { "question": "What question number are they on?", "answers": ["5", "6", "7", "8"], "correct": 2 },
+          "respectReward": 15
+        }
+      ]
+    },
+    {
+      "id": "radio_ie_market",
+      "country": "ireland",
+      "zoneType": "market",
+      "clips": [
+        {
+          "id": "clip_ie_market_1",
+          "title": "Farmer's Market Seller",
+          "duration": 40,
+          "script": "Fresh brown soda bread, baked this morning! Two euro a loaf or three for five. We've got local honey as well, straight from the hives in County Clare. Lovely on the bread, so it is.",
+          "catchQuestion": { "question": "How much for three loaves?", "answers": ["€3", "€4", "€5", "€6"], "correct": 2 },
+          "respectReward": 15
+        }
+      ]
+    },
+    {
+      "id": "radio_au_cafe",
+      "country": "australia",
+      "zoneType": "cafe",
+      "clips": [
+        {
+          "id": "clip_au_cafe_1",
+          "title": "Tim Tam Debate",
+          "duration": 40,
+          "script": "No worries mate, but you're dead wrong about Tim Tams. The double coat is clearly the best. You do the Tim Tam slam with your cuppa and it's absolutely brilliant, I reckon.",
+          "catchQuestion": { "question": "What does the speaker recommend doing with Tim Tams?", "answers": ["Freezing them", "Tim Tam slam", "Dipping in chocolate", "Sharing them"], "correct": 1 },
+          "respectReward": 15
+        },
+        {
+          "id": "clip_au_cafe_2",
+          "title": "Barista Chat",
+          "duration": 35,
+          "script": "Yeah nah, I'll grab a flat white with oat milk, thanks. Actually, make it a double shot. Been up since sparrow's fart for the dawn surf. Waves were unreal though, totally worth it.",
+          "catchQuestion": { "question": "Why was the speaker up early?", "answers": ["Work", "Exercise", "Dawn surf", "Flight"], "correct": 2 },
+          "respectReward": 15
+        }
+      ]
+    },
+    {
+      "id": "radio_au_beach",
+      "country": "australia",
+      "zoneType": "park",
+      "clips": [
+        {
+          "id": "clip_au_beach_1",
+          "title": "Lifeguard Announcement",
+          "duration": 30,
+          "script": "Attention swimmers. We have a rip current running south of the flags. Please swim only between the red and yellow flags. If you get caught in a rip, don't panic. Float and raise your arm.",
+          "catchQuestion": { "question": "What should you do if caught in a rip?", "answers": ["Swim hard", "Float and raise arm", "Dive under", "Scream"], "correct": 1 },
+          "respectReward": 15
+        }
+      ]
+    },
+    {
+      "id": "radio_en_library",
+      "country": "england",
+      "zoneType": "library",
+      "clips": [
+        {
+          "id": "clip_en_lib_1",
+          "title": "History Lecture",
+          "duration": 60,
+          "script": "The Tower of London was built in ten sixty-six by William the Conqueror. For nearly a thousand years, it has served as a royal palace, a prison, and a treasury. Today, the Crown Jewels are kept there, guarded by the famous Beefeaters.",
+          "catchQuestion": { "question": "Who built the Tower of London?", "answers": ["Henry VIII", "Queen Victoria", "William the Conqueror", "King Arthur"], "correct": 2 },
+          "respectReward": 15
+        },
+        {
+          "id": "clip_en_lib_2",
+          "title": "Shakespeare Reading",
+          "duration": 45,
+          "script": "To be or not to be, that is the question. Shakespeare wrote this in sixteen hundred and one for the play Hamlet. The Globe Theatre, where many of his plays were first performed, has been rebuilt on the south bank of the Thames.",
+          "catchQuestion": { "question": "When was Hamlet written?", "answers": ["1590", "1595", "1601", "1610"], "correct": 2 },
+          "respectReward": 15
+        }
+      ]
+    },
+    {
+      "id": "radio_en_station",
+      "country": "england",
+      "zoneType": "train_station",
+      "clips": [
+        {
+          "id": "clip_en_station_1",
+          "title": "Platform Announcement",
+          "duration": 30,
+          "script": "The fourteen twenty-two service to Manchester Piccadilly is now boarding at platform nine. Calling at Milton Keynes, Birmingham New Street, and Stoke-on-Trent. First class is in coaches A and B at the front of the train.",
+          "catchQuestion": { "question": "Which platform is the Manchester train at?", "answers": ["7", "8", "9", "10"], "correct": 2 },
+          "respectReward": 15
+        }
+      ]
+    },
+    {
+      "id": "radio_us_station",
+      "country": "usa",
+      "zoneType": "train_station",
+      "clips": [
+        {
+          "id": "clip_us_station_1",
+          "title": "Grand Central Announcement",
+          "duration": 30,
+          "script": "Attention passengers. The two thirty-five express to Boston will now depart from platform seven instead of platform twelve. We apologize for any inconvenience. Please check the departure boards for updated information.",
+          "catchQuestion": { "question": "Which platform is the Boston train leaving from?", "answers": ["5", "7", "12", "3"], "correct": 1 },
+          "respectReward": 15
+        },
+        {
+          "id": "clip_us_station_2",
+          "title": "Subway Busker",
+          "duration": 45,
+          "script": "Hey folks, how y'all doing tonight? I've been playing guitar in this station for fifteen years. If you like the music, any spare change is appreciated. Next up, I'm gonna play an old Johnny Cash number. Folsom Prison Blues, here we go.",
+          "catchQuestion": { "question": "How long has the busker been playing here?", "answers": ["5 years", "10 years", "15 years", "20 years"], "correct": 2 },
+          "respectReward": 15
+        }
+      ]
+    },
+    {
+      "id": "radio_us_diner",
+      "country": "usa",
+      "zoneType": "cafe",
+      "clips": [
+        {
+          "id": "clip_us_diner_1",
+          "title": "Diner Conversation",
+          "duration": 40,
+          "script": "I'll have the stack of pancakes with extra maple syrup and a side of bacon. Oh, and a large coffee, black. My buddy here will have the eggs Benedict. We've been coming to this diner every Sunday for twenty years. Best breakfast in town.",
+          "catchQuestion": { "question": "How do they take their coffee?", "answers": ["With cream", "With sugar", "Black", "Iced"], "correct": 2 },
+          "respectReward": 15
+        }
+      ]
+    }
+  ]
+}

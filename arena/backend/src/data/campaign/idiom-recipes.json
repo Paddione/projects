@@ -1,0 +1,121 @@
+{
+  "recipes": {
+    "break_a_leg": {
+      "id": "break_a_leg",
+      "idiom": "Break a leg",
+      "meaning": "Good luck!",
+      "fragments": ["BREAK", "A", "LEG"],
+      "result": {
+        "name": "Lucky Break",
+        "description": "+25% quest XP for 1 hour",
+        "type": "consumable",
+        "effect": "quest_xp_boost",
+        "effectValue": 0.25,
+        "durationMinutes": 60
+      }
+    },
+    "hit_the_nail": {
+      "id": "hit_the_nail",
+      "idiom": "Hit the nail on the head",
+      "meaning": "To be exactly right",
+      "fragments": ["HIT", "NAIL", "HEAD"],
+      "result": {
+        "name": "Perfect Aim",
+        "description": "+50% L2P quiz accuracy for 30 min",
+        "type": "consumable",
+        "effect": "quiz_accuracy_boost",
+        "effectValue": 0.50,
+        "durationMinutes": 30
+      }
+    },
+    "bite_the_bullet": {
+      "id": "bite_the_bullet",
+      "idiom": "Bite the bullet",
+      "meaning": "To endure something difficult",
+      "fragments": ["BITE", "BULLET"],
+      "result": {
+        "name": "Iron Will",
+        "description": "Immune to boss quiz penalty once",
+        "type": "consumable",
+        "effect": "boss_quiz_shield",
+        "effectValue": 1,
+        "durationMinutes": null
+      }
+    },
+    "cat_out_of_bag": {
+      "id": "cat_out_of_bag",
+      "idiom": "Let the cat out of the bag",
+      "meaning": "To reveal a secret",
+      "fragments": ["CAT", "BAG"],
+      "result": {
+        "name": "Secret Revealer",
+        "description": "Reveals hidden syllable collectible on map",
+        "type": "consumable",
+        "effect": "reveal_syllable",
+        "effectValue": 1,
+        "durationMinutes": null
+      }
+    },
+    "two_birds_one_stone": {
+      "id": "two_birds_one_stone",
+      "idiom": "Kill two birds with one stone",
+      "meaning": "To accomplish two things at once",
+      "fragments": ["BIRDS", "STONE"],
+      "result": {
+        "name": "Efficiency Expert",
+        "description": "Complete 2 quest objectives simultaneously",
+        "type": "consumable",
+        "effect": "double_objective",
+        "effectValue": 2,
+        "durationMinutes": null
+      }
+    },
+    "cost_arm_and_leg": {
+      "id": "cost_arm_and_leg",
+      "idiom": "Cost an arm and a leg",
+      "meaning": "Very expensive",
+      "fragments": ["ARM", "LEG"],
+      "result": {
+        "name": "Bargain Hunter",
+        "description": "Permanent -10% shop prices",
+        "type": "persistent",
+        "effect": "shop_discount",
+        "effectValue": 0.10,
+        "durationMinutes": null
+      }
+    },
+    "world_is_oyster": {
+      "id": "world_is_oyster",
+      "idiom": "The world is your oyster",
+      "meaning": "You can do anything you want",
+      "fragments": ["WORLD", "OYSTER"],
+      "result": {
+        "name": "Golden Touch",
+        "description": "Permanent +5% Dollar earn rate",
+        "type": "persistent",
+        "effect": "dollar_earn_boost",
+        "effectValue": 0.05,
+        "durationMinutes": null
+      }
+    },
+    "once_blue_moon": {
+      "id": "once_blue_moon",
+      "idiom": "Once in a blue moon",
+      "meaning": "Very rarely",
+      "fragments": ["BLUE", "MOON"],
+      "result": {
+        "name": "Moonlight Pass",
+        "description": "Unlock a night-only hidden NPC zone",
+        "type": "persistent",
+        "effect": "unlock_night_zone",
+        "effectValue": 1,
+        "durationMinutes": null
+      }
+    }
+  },
+  "fragmentDropPools": {
+    "idiom_imp": ["BREAK", "A", "LEG", "HIT", "NAIL", "HEAD", "BITE", "BULLET", "CAT", "BAG", "BIRDS", "STONE"],
+    "library": ["ARM", "LEG", "WORLD", "OYSTER", "BLUE", "MOON"],
+    "boss_drop": ["HEAD", "BULLET", "STONE", "MOON"]
+  }
+}

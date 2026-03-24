@@ -86,6 +86,8 @@ spec:
               value: "https://videovault.korczewski.de,https://video.korczewski.de"
             - name: TRUST_PROXY
               value: "true"
+            - name: AUTH_SERVICE_URL
+              value: "http://auth.korczewski-services.svc.cluster.local:5500"
             # Map VIDEO_-prefixed secret keys to unprefixed names the app expects
             - name: SESSION_SECRET
               valueFrom:

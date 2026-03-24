@@ -23,6 +23,7 @@ COPY VideoVault/postcss.config.js ./
 
 RUN npm install -g npm@11 && npm install --legacy-peer-deps
 
+COPY VideoVault/.env.production ./
 COPY VideoVault/client/ ./client/
 COPY VideoVault/server/ ./server/
 COPY VideoVault/scripts/ ./scripts/

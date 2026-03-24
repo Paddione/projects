@@ -34,7 +34,7 @@ browser_control_registry.json
 **/.env.production
 *.env
 
-# Keep example files
+# Keep example files and Vite production env (public URLs only, no secrets)
 !.env.example
 !**/.env.example
 

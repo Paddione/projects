@@ -1,0 +1,262 @@
+{
+  "newspapers": {
+    "germany": {
+      "countryId": "germany",
+      "title": "Vögelsen Village Voice",
+      "edition": 1,
+      "articles": [
+        {
+          "id": "article_de_1",
+          "headline": "New Ice Cream Shop Opens on Veilchenweg",
+          "body": "Rosa's Eiscafé La Rosa has opened its doors on Veilchenweg, bringing a taste of Italy to Vögelsen. The shop offers twelve different flavors including chocolate, strawberry, and vanilla. Locals say the pistachio is their favorite. Rosa, the owner, moved from Naples last year and has already become a popular figure in the village. 'I want everyone to feel welcome,' she said. The shop is open from ten in the morning until eight in the evening, every day except Monday.",
+          "wordCount": 73,
+          "highlightedVocab": ["flavors", "pistachio", "popular", "figure", "welcome"],
+          "quiz": [
+            { "question": "How many flavors does the shop offer?", "answers": ["8", "10", "12", "15"], "correct": 2 },
+            { "question": "What day is the shop closed?", "answers": ["Sunday", "Monday", "Saturday", "Tuesday"], "correct": 1 },
+            { "question": "Where did Rosa move from?", "answers": ["Rome", "Naples", "Milan", "Venice"], "correct": 1 }
+          ]
+        },
+        {
+          "id": "article_de_2",
+          "headline": "Fire Department Seeks Young Volunteers",
+          "body": "The Vögelsen Jugendfeuerwehr is looking for new members between the ages of ten and seventeen. Jugendwart Finn says the group meets every Wednesday afternoon at the community hall. Members learn first aid, fire safety, and teamwork skills. 'It is not just about fighting fires,' Finn explained. 'We teach young people how to help their community.' Last month, the team won second place at the regional youth fire brigade competition in Lüneburg.",
+          "wordCount": 71,
+          "highlightedVocab": ["volunteers", "members", "teamwork", "community", "competition"],
+          "quiz": [
+            { "question": "What ages can join?", "answers": ["5-12", "8-15", "10-17", "12-18"], "correct": 2 },
+            { "question": "What day do they meet?", "answers": ["Monday", "Tuesday", "Wednesday", "Friday"], "correct": 2 },
+            { "question": "What place did they win?", "answers": ["First", "Second", "Third", "Fourth"], "correct": 1 }
+          ]
+        },
+        {
+          "id": "article_de_3",
+          "headline": "Weather Forecast: Warm Week Ahead",
+          "body": "After a cold start to the month, Vögelsen residents can look forward to warmer temperatures this week. Monday will see highs of fifteen degrees with sunshine. By Wednesday, temperatures could reach eighteen degrees, making it perfect for a walk along the Ilmenau river. However, forecasters warn that Thursday may bring some rain showers in the afternoon. The weekend looks dry and pleasant, ideal for visiting the Spielplatz or enjoying a Döner at Columbus.",
+          "wordCount": 72,
+          "highlightedVocab": ["forecast", "temperatures", "sunshine", "showers", "pleasant"],
+          "quiz": [
+            { "question": "What temperature is expected on Wednesday?", "answers": ["12°", "15°", "18°", "20°"], "correct": 2 },
+            { "question": "What might happen on Thursday?", "answers": ["Snow", "Rain showers", "Heatwave", "Fog"], "correct": 1 },
+            { "question": "How is the weekend described?", "answers": ["Cold and wet", "Hot and humid", "Dry and pleasant", "Windy"], "correct": 2 }
+          ]
+        }
+      ]
+    },
+    "singapore": {
+      "countryId": "singapore",
+      "title": "The Straits Express",
+      "edition": 1,
+      "articles": [
+        {
+          "id": "article_sg_1",
+          "headline": "Marina Bay Sands Light Show Attracts Record Crowd",
+          "body": "More than fifty thousand visitors gathered at Marina Bay last Saturday to watch the famous light and water show. The fifteen-minute show featured lasers, fountains, and music from around the world. Tourism board officials said it was the biggest audience this year. 'Singapore knows how to put on a show, lah!' said one excited spectator. The next performance is scheduled for this coming Friday at eight o'clock in the evening.",
+          "wordCount": 69,
+          "highlightedVocab": ["gathered", "featured", "audience", "spectator", "scheduled"],
+          "quiz": [
+            { "question": "How many visitors came?", "answers": ["10,000", "25,000", "50,000", "100,000"], "correct": 2 },
+            { "question": "How long was the show?", "answers": ["5 minutes", "10 minutes", "15 minutes", "30 minutes"], "correct": 2 },
+            { "question": "When is the next show?", "answers": ["Saturday", "Sunday", "Friday", "Monday"], "correct": 2 }
+          ]
+        },
+        {
+          "id": "article_sg_2",
+          "headline": "Hawker Centre Named Best Street Food in Asia",
+          "body": "A Chinatown hawker centre has been named the best street food destination in Asia by a popular travel magazine. The centre offers more than forty stalls selling dishes from Chinese, Malay, Indian, and Western cuisines. Prices start from just two dollars for a plate of chicken rice. The award has brought even more tourists to the area. Local vendors are proud but also worried about rising rent prices in the neighbourhood.",
+          "wordCount": 70,
+          "highlightedVocab": ["destination", "cuisines", "vendors", "tourists", "neighbourhood"],
+          "quiz": [
+            { "question": "How many stalls are there?", "answers": ["20", "30", "40+", "50+"], "correct": 2 },
+            { "question": "What is the cheapest dish price?", "answers": ["$1", "$2", "$5", "$10"], "correct": 1 },
+            { "question": "What are vendors worried about?", "answers": ["Crime", "Rising rent", "Bad weather", "Competition"], "correct": 1 }
+          ]
+        },
+        {
+          "id": "article_sg_3",
+          "headline": "New MRT Line Opens Next Month",
+          "body": "The new Cross Island MRT line will open to passengers next month, connecting the east and west of Singapore in just forty-five minutes. The line has twelve new stations and is expected to serve over three hundred thousand commuters daily. Transport Minister said the line would reduce bus travel times by up to thirty percent. Free rides will be offered during the first weekend to encourage people to try the new route.",
+          "wordCount": 68,
+          "highlightedVocab": ["passengers", "connecting", "commuters", "reduce", "encourage"],
+          "quiz": [
+            { "question": "How long is the east-west journey?", "answers": ["20 min", "30 min", "45 min", "60 min"], "correct": 2 },
+            { "question": "How many new stations?", "answers": ["8", "10", "12", "15"], "correct": 2 },
+            { "question": "What is offered the first weekend?", "answers": ["Discounts", "Free rides", "Souvenirs", "Food"], "correct": 1 }
+          ]
+        }
+      ]
+    },
+    "ireland": {
+      "countryId": "ireland",
+      "title": "The Emerald Herald",
+      "edition": 1,
+      "articles": [
+        {
+          "id": "article_ie_1",
+          "headline": "Traditional Music Festival Returns to Galway",
+          "body": "The Galway Trad Festival is back for its twentieth year, bringing over two hundred musicians to the city centre. The five-day event features live performances in pubs, concert halls, and on the streets. Visitors can enjoy fiddle, tin whistle, and bodhrán workshops during the day. 'It is the best craic in Ireland,' said organiser Siobhán Murphy. Tickets for evening concerts cost fifteen euro, but all daytime events are free.",
+          "wordCount": 70,
+          "highlightedVocab": ["traditional", "musicians", "performances", "workshops", "organiser"],
+          "quiz": [
+            { "question": "How many years has the festival been running?", "answers": ["10", "15", "20", "25"], "correct": 2 },
+            { "question": "How many musicians are coming?", "answers": ["100", "150", "200+", "500"], "correct": 2 },
+            { "question": "How much do evening tickets cost?", "answers": ["€10", "€15", "€20", "Free"], "correct": 1 }
+          ]
+        },
+        {
+          "id": "article_ie_2",
+          "headline": "Giant's Causeway Visitor Numbers Hit Record High",
+          "body": "Nearly one million people visited the Giant's Causeway in Northern Ireland last year, making it the most popular tourist attraction on the island. The site, which has over forty thousand basalt columns formed by ancient volcanic activity, was named a UNESCO World Heritage Site in nineteen eighty-six. Park rangers have asked visitors to stay on the marked paths to protect the natural landscape. A new visitor centre café opened last month.",
+          "wordCount": 72,
+          "highlightedVocab": ["attraction", "volcanic", "heritage", "rangers", "landscape"],
+          "quiz": [
+            { "question": "How many visitors came last year?", "answers": ["500,000", "750,000", "1 million", "2 million"], "correct": 2 },
+            { "question": "What formed the columns?", "answers": ["Glaciers", "Earthquakes", "Volcanic activity", "Human builders"], "correct": 2 },
+            { "question": "What did park rangers ask visitors to do?", "answers": ["Buy tickets", "Stay on paths", "Not take photos", "Wear helmets"], "correct": 1 }
+          ]
+        },
+        {
+          "id": "article_ie_3",
+          "headline": "Dublin Bus Introduces Night Service",
+          "body": "Dublin Bus has launched a new overnight service on three of its busiest routes. The Nitelink buses will run every thirty minutes from midnight until four in the morning on Fridays and Saturdays. A single journey costs three euro fifty. The new service aims to reduce the number of taxis needed at weekends and give late-night workers a safer way to get home. Over five thousand passengers used the service in its first week.",
+          "wordCount": 74,
+          "highlightedVocab": ["launched", "overnight", "journey", "reduce", "passengers"],
+          "quiz": [
+            { "question": "How often do the Nitelink buses run?", "answers": ["Every 15 min", "Every 30 min", "Every hour", "Every 2 hours"], "correct": 1 },
+            { "question": "How much does a single journey cost?", "answers": ["€2.00", "€2.50", "€3.50", "€5.00"], "correct": 2 },
+            { "question": "How many passengers used it in the first week?", "answers": ["1,000", "3,000", "5,000", "10,000"], "correct": 2 }
+          ]
+        }
+      ]
+    },
+    "australia": {
+      "countryId": "australia",
+      "title": "The Outback Observer",
+      "edition": 1,
+      "articles": [
+        {
+          "id": "article_au_1",
+          "headline": "Surf Lifesavers Rescue Twelve Swimmers in One Day",
+          "body": "Bondi Beach surf lifesavers had their busiest day of the summer last Sunday, rescuing twelve swimmers caught in dangerous rip currents. Head lifeguard Jake Thompson said the conditions were treacherous despite sunny weather. 'People see blue skies and think the water is safe, but rips can pull you out to sea in seconds,' he warned. The volunteer patrol urges all beachgoers to swim between the red and yellow flags at all times.",
+          "wordCount": 71,
+          "highlightedVocab": ["rescue", "currents", "treacherous", "conditions", "patrol"],
+          "quiz": [
+            { "question": "How many swimmers were rescued?", "answers": ["5", "8", "12", "20"], "correct": 2 },
+            { "question": "What caused the danger?", "answers": ["Sharks", "Rip currents", "Jellyfish", "Storm"], "correct": 1 },
+            { "question": "Where should swimmers stay?", "answers": ["Near the rocks", "Between the flags", "In shallow water", "Near the pier"], "correct": 1 }
+          ]
+        },
+        {
+          "id": "article_au_2",
+          "headline": "Koala Hospital Releases Fifty Animals Back into the Wild",
+          "body": "The Port Macquarie Koala Hospital has released fifty rehabilitated koalas back into their natural habitat after months of care. Many of the animals were injured in last summer's bushfires or hit by cars near suburban areas. Veterinarian Dr Sarah Chen said each koala was fitted with a tracking device to monitor its health. The hospital relies entirely on donations and volunteer work. It costs about two hundred dollars a month to care for one koala.",
+          "wordCount": 73,
+          "highlightedVocab": ["rehabilitated", "habitat", "veterinarian", "donations", "volunteer"],
+          "quiz": [
+            { "question": "How many koalas were released?", "answers": ["25", "30", "50", "100"], "correct": 2 },
+            { "question": "What were the koalas fitted with?", "answers": ["Collars", "Tracking devices", "Bandages", "Tags"], "correct": 1 },
+            { "question": "How much does one koala cost per month?", "answers": ["$50", "$100", "$200", "$500"], "correct": 2 }
+          ]
+        },
+        {
+          "id": "article_au_3",
+          "headline": "Melbourne Coffee Culture Wins International Award",
+          "body": "Melbourne has been named the world's best coffee city by the International Barista Association for the third year in a row. The city has over three thousand independent cafés, more per person than any other city in the world. Flat whites, long blacks, and cold brews are the most popular orders. Local roaster Tony Nguyen said Melbourne's coffee culture is about community. 'People don't just come for the coffee, they come for the conversation,' he explained.",
+          "wordCount": 76,
+          "highlightedVocab": ["international", "independent", "popular", "culture", "community"],
+          "quiz": [
+            { "question": "How many years in a row has Melbourne won?", "answers": ["First", "Second", "Third", "Fourth"], "correct": 2 },
+            { "question": "How many independent cafés are there?", "answers": ["1,000", "2,000", "3,000+", "5,000"], "correct": 2 },
+            { "question": "What does Tony say people come for?", "answers": ["The food", "The weather", "The conversation", "The prices"], "correct": 2 }
+          ]
+        }
+      ]
+    },
+    "england": {
+      "countryId": "england",
+      "title": "The Daily Chronicle",
+      "edition": 1,
+      "articles": [
+        {
+          "id": "article_en_1",
+          "headline": "Tower of London Welcomes New Raven Chick",
+          "body": "A new raven chick has hatched at the Tower of London, bringing the total number of ravens to eight. According to legend, if the ravens ever leave the Tower, the kingdom will fall. The chick, named Edgar, was born to parents Jubilee and Harris. Ravenmaster Chris Skaife said Edgar is healthy and already trying to fly. Visitors can see the ravens in the Tower grounds daily from nine in the morning. The Tower charges twenty-nine pounds for adult entry.",
+          "wordCount": 78,
+          "highlightedVocab": ["legend", "kingdom", "hatched", "healthy", "grounds"],
+          "quiz": [
+            { "question": "How many ravens are there now?", "answers": ["5", "6", "8", "10"], "correct": 2 },
+            { "question": "What is the new chick called?", "answers": ["Arthur", "Edgar", "William", "Henry"], "correct": 1 },
+            { "question": "How much is adult entry?", "answers": ["£15", "£22", "£29", "£35"], "correct": 2 }
+          ]
+        },
+        {
+          "id": "article_en_2",
+          "headline": "Oxford Street to Become Car-Free Zone",
+          "body": "London's famous Oxford Street will become a car-free zone from next spring, the mayor announced yesterday. Only buses, cyclists, and pedestrians will be allowed on the one-and-a-half-mile road. The change is expected to reduce air pollution by forty percent and make shopping more pleasant. Some taxi drivers have complained about the loss of a key route through central London. Over five hundred thousand people walk along Oxford Street every day, making it one of the busiest shopping streets in Europe.",
+          "wordCount": 80,
+          "highlightedVocab": ["pedestrians", "pollution", "announced", "complained", "busiest"],
+          "quiz": [
+            { "question": "Who will still be allowed on Oxford Street?", "answers": ["Cars and taxis", "Buses and cyclists", "Only pedestrians", "All vehicles"], "correct": 1 },
+            { "question": "By how much will air pollution be reduced?", "answers": ["20%", "30%", "40%", "50%"], "correct": 2 },
+            { "question": "How many people walk Oxford Street daily?", "answers": ["100,000", "250,000", "500,000", "1,000,000"], "correct": 2 }
+          ]
+        },
+        {
+          "id": "article_en_3",
+          "headline": "Lake District Named Best National Park in the UK",
+          "body": "The Lake District has been voted the UK's favourite national park for the fifth consecutive year in a travel magazine survey. The park, which covers nearly nine hundred square miles in Cumbria, attracts over eighteen million visitors annually. Popular activities include hiking, sailing, and visiting the home of Beatrix Potter in Near Sawrey. Rangers are encouraging visitors to take public transport, as car parks often fill up by ten in the morning during summer weekends.",
+          "wordCount": 74,
+          "highlightedVocab": ["consecutive", "annually", "encouraging", "popular", "transport"],
+          "quiz": [
+            { "question": "How many consecutive years has it won?", "answers": ["Two", "Three", "Five", "Ten"], "correct": 2 },
+            { "question": "How many visitors come annually?", "answers": ["5 million", "10 million", "18 million", "25 million"], "correct": 2 },
+            { "question": "Whose home can visitors see?", "answers": ["Shakespeare", "Beatrix Potter", "Wordsworth", "Dickens"], "correct": 1 }
+          ]
+        }
+      ]
+    },
+    "usa": {
+      "countryId": "usa",
+      "title": "The Freedom Gazette",
+      "edition": 1,
+      "articles": [
+        {
+          "id": "article_us_1",
+          "headline": "New York City Subway Breaks Ridership Record",
+          "body": "The New York City subway carried over six million passengers in a single day last Tuesday, breaking the previous record set in twenty-nineteen. The Metropolitan Transportation Authority said the increase was driven by a Taylor Swift concert at Madison Square Garden and a Yankees playoff game. Commuters reported crowded platforms but no major delays. The subway runs twenty-four hours a day, seven days a week, making it one of the few systems in the world that never closes.",
+          "wordCount": 77,
+          "highlightedVocab": ["ridership", "increase", "commuters", "platforms", "previous"],
+          "quiz": [
+            { "question": "How many passengers rode in one day?", "answers": ["3 million", "4 million", "6 million", "10 million"], "correct": 2 },
+            { "question": "What drove the increase?", "answers": ["Holiday", "Concert and game", "Weather", "Free rides"], "correct": 1 },
+            { "question": "How many hours does the subway run?", "answers": ["16", "18", "20", "24"], "correct": 3 }
+          ]
+        },
+        {
+          "id": "article_us_2",
+          "headline": "Grand Canyon Trail Reopens After Rockslide",
+          "body": "The popular Bright Angel Trail at the Grand Canyon has reopened after a rockslide closed it for three weeks. Park rangers cleared over two hundred tons of debris from the path. Hikers are advised to carry at least one gallon of water per person and start their hike before seven in the morning to avoid the afternoon heat. The trail descends four thousand feet to the Colorado River and takes most hikers two days to complete with an overnight stay at Phantom Ranch.",
+          "wordCount": 79,
+          "highlightedVocab": ["rockslide", "debris", "advised", "descends", "overnight"],
+          "quiz": [
+            { "question": "How long was the trail closed?", "answers": ["1 week", "2 weeks", "3 weeks", "1 month"], "correct": 2 },
+            { "question": "How much water should hikers carry?", "answers": ["Half gallon", "One gallon", "Two gallons", "One litre"], "correct": 1 },
+            { "question": "How deep does the trail descend?", "answers": ["1,000 ft", "2,000 ft", "4,000 ft", "6,000 ft"], "correct": 2 }
+          ]
+        },
+        {
+          "id": "article_us_3",
+          "headline": "Food Truck Festival Serves Thirty Thousand Meals",
+          "body": "Austin's annual food truck festival served over thirty thousand meals during the three-day event last weekend. More than one hundred and fifty food trucks lined Zilker Park, offering everything from Texas barbecue to Korean tacos to vegan ice cream. The most popular item was the brisket sandwich, with some trucks selling out by noon. Organiser Maria Rodriguez said next year's festival will expand to four days. Live music played on two stages throughout the event.",
+          "wordCount": 75,
+          "highlightedVocab": ["annual", "offering", "expand", "popular", "throughout"],
+          "quiz": [
+            { "question": "How many meals were served?", "answers": ["10,000", "20,000", "30,000", "50,000"], "correct": 2 },
+            { "question": "How many food trucks were there?", "answers": ["50", "100", "150+", "200"], "correct": 2 },
+            { "question": "What was the most popular item?", "answers": ["Tacos", "Brisket sandwich", "Ice cream", "Hot dogs"], "correct": 1 }
+          ]
+        }
+      ]
+    }
+  }
+}

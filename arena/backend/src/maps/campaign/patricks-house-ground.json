@@ -1,0 +1,64 @@
+{
+  "meta": {
+    "id": "patricks-house-ground",
+    "name": "Patrick's House — Ground Floor",
+    "width": 14,
+    "height": 14,
+    "tileSize": 32,
+    "isInterior": true,
+    "parentMapId": "vogelsen"
+  },
+  "tiles": [
+    [1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+    [1,0,0,0,0,0,1,0,0,0,0,0,0,1],
+    [1,0,0,0,0,0,1,0,0,0,0,0,0,1],
+    [1,0,0,0,0,0,1,0,0,0,0,0,0,1],
+    [1,0,0,0,0,0,1,0,0,0,0,0,0,1],
+    [1,0,0,0,0,0,1,0,0,0,0,0,0,1],
+    [1,0,0,0,0,0,1,0,0,0,0,0,0,1],
+    [1,1,1,5,1,1,1,0,0,0,0,0,0,1],
+    [1,2,2,2,2,1,1,0,0,0,0,0,0,1],
+    [1,2,2,2,2,1,1,0,0,0,0,0,0,1],
+    [1,2,2,2,2,1,1,0,0,0,0,0,0,1],
+    [1,2,2,2,2,1,1,1,1,1,1,1,1,1],
+    [1,2,2,5,2,1,1,1,1,1,1,1,1,1],
+    [1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+  ],
+  "coverObjects": [
+    {"id": "couch", "type": "bench", "x": 64, "y": 96, "width": 96, "height": 32, "hp": -1, "blocksProjectiles": false, "blocksLineOfSight": false, "blocksMovement": true, "slowsMovement": false},
+    {"id": "table_living", "type": "bench", "x": 64, "y": 160, "width": 64, "height": 32, "hp": -1, "blocksProjectiles": false, "blocksLineOfSight": false, "blocksMovement": true, "slowsMovement": false},
+    {"id": "tv", "type": "bench", "x": 32, "y": 32, "width": 32, "height": 32, "hp": -1, "blocksProjectiles": false, "blocksLineOfSight": false, "blocksMovement": true, "slowsMovement": false},
+    {"id": "kitchen_counter", "type": "building", "x": 256, "y": 32, "width": 128, "height": 32, "hp": -1, "blocksProjectiles": true, "blocksLineOfSight": false, "blocksMovement": true, "slowsMovement": false},
+    {"id": "fridge", "type": "building", "x": 384, "y": 32, "width": 32, "height": 64, "hp": -1, "blocksProjectiles": true, "blocksLineOfSight": true, "blocksMovement": true, "slowsMovement": false},
+    {"id": "dining_table", "type": "bench", "x": 288, "y": 192, "width": 64, "height": 64, "hp": -1, "blocksProjectiles": false, "blocksLineOfSight": false, "blocksMovement": true, "slowsMovement": false}
+  ],
+  "doors": [
+    {
+      "tileX": 3,
+      "tileY": 12,
+      "targetMapId": "vogelsen",
+      "targetTileX": 8,
+      "targetTileY": 14,
+      "targetFacing": "S"
+    },
+    {
+      "tileX": 3,
+      "tileY": 7,
+      "targetMapId": "patricks-house-upper",
+      "targetTileX": 3,
+      "targetTileY": 7,
+      "targetFacing": "N"
+    }
+  ],
+  "spawnPoint": { "x": 3, "y": 11 },
+  "npcs": [
+    {
+      "npcId": "oma_irmtrout",
+      "tileX": 10,
+      "tileY": 5,
+      "facing": "S"
+    }
+  ],
+  "enemyZones": [],
+  "itemSpawnPoints": []
+}

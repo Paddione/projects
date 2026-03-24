@@ -9,6 +9,8 @@ import MatchResults from './components/MatchResults';
 import Leaderboard from './components/Leaderboard';
 import LoadoutScreen from './components/LoadoutScreen';
 import PrivateMatch from './components/PrivateMatch';
+import CampaignHome from './components/campaign/CampaignHome';
+import CampaignPlay from './components/campaign/CampaignPlay';
 import { HelpButton, HelpScreen } from './components/HelpScreen';
 import { useGameStore } from './stores/gameStore';
 
@@ -31,6 +33,8 @@ export default function App() {
                     <Route path="/leaderboard" element={<Leaderboard />} />
                     <Route path="/loadout" element={<LoadoutScreen />} />
                     <Route path="/match/:token" element={<PrivateMatch />} />
+                    <Route path="/campaign" element={<CampaignHome />} />
+                    <Route path="/campaign/play/:sessionId" element={<CampaignPlay />} />
                 </Routes>
                 <HelpButton onClick={() => setHelpOpen(true)} />
                 <HelpScreen isOpen={helpOpen} onClose={() => setHelpOpen(false)} />

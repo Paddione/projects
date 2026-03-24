@@ -121,6 +121,14 @@ export default function Home() {
 
                 <button
                     className="btn btn-ghost"
+                    onClick={() => navigate('/campaign')}
+                    style={{ width: '100%', borderColor: '#00f2ff', color: '#00f2ff' }}
+                >
+                    World Campaign
+                </button>
+
+                <button
+                    className="btn btn-ghost"
                     onClick={() => navigate('/leaderboard')}
                     style={{ width: '100%' }}
                 >
