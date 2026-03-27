@@ -14,9 +14,6 @@ import { GameRenderer3D } from './GameRenderer3D';
 
 export const MODEL_BASE_URL = '/assets/3d/characters/';
 
-const ANIM_WALK = 'walk';
-const ANIM_IDLE = 'idle';
-
 // Shared geometry — sized for zoomed-out view (frustumSize 22)
 const ARMOR_GEO = new TorusGeometry(0.35, 0.06, 8, 32);
 const ARMOR_MAT = new MeshLambertMaterial({ color: 0x38bdf8, emissive: 0x1a6a8a });
@@ -39,12 +36,15 @@ export interface PlayerRendererCallbacks {
 
 interface TrackedPlayer {
     container: Object3D;     // root container for position/rotation
+    modelWrapper: Group | null; // model transform wrapper
+    modelBaseY: number;      // ground-level Y for model wrapper
     instance: CharacterInstance | null;
     capsule: Mesh;           // always-visible colored capsule
     marker: Mesh;            // ground circle
     armorRing: Mesh;
     currentAnim: string;
     charId: string;
+    walkPhase: number;       // procedural walk cycle phase
 }
 
 export class PlayerRenderer {
@@ -136,7 +136,7 @@ export class PlayerRenderer {
                 this.playerGroup.add(container);
                 this.playerGroup.add(marker);
 
-                tracked = { container, instance: null, capsule, marker, armorRing, currentAnim: '', charId };
+                tracked = { container, modelWrapper: null, modelBaseY: 0, instance: null, capsule, marker, armorRing, currentAnim: '', charId, walkPhase: 0 };
                 this.players.set(player.id, tracked);
 
                 // Try to load 3D model (non-blocking — capsule shows immediately)
@@ -144,20 +144,21 @@ export class PlayerRenderer {
                 this.characterManager.getCharacter(player.id, modelUrl)
                     .then((inst) => {
                         tracked!.instance = inst;
-                        // Wrap in group: model is Z-up, rotate to Y-up
-                        const modelWrapper = new Group();
-                        modelWrapper.rotation.x = -Math.PI / 2;
-                        modelWrapper.scale.setScalar(1.5);
-                        modelWrapper.add(inst.mesh);
+                        // Wrap in group: model is Z-up, rotate to Y-up then face +Z (forward)
+                        const mw = new Group();
+                        mw.rotation.x = -Math.PI / 2;
+                        mw.rotation.z = Math.PI; // face forward (model faces -Z after X rotation)
+                        mw.scale.setScalar(1.5);
+                        mw.add(inst.mesh);
 
                         // Compute bounding box after rotation to find model floor
-                        modelWrapper.updateMatrixWorld(true);
-                        const bbox = new Box3().setFromObject(modelWrapper);
-                        const bottomY = bbox.min.y;
-                        // Shift model up so feet sit on Y=0
-                        modelWrapper.position.y = -bottomY;
+                        mw.updateMatrixWorld(true);
+                        const bbox = new Box3().setFromObject(mw);
+                        mw.position.y = -bbox.min.y;
 
-                        container.add(modelWrapper);
+                        container.add(mw);
+                        tracked!.modelWrapper = mw;
+                        tracked!.modelBaseY = mw.position.y;
                         capsule.visible = false;
                     })
                     .catch(() => {
@@ -170,18 +171,33 @@ export class PlayerRenderer {
             tracked.container.position.set(wx, 0, wz);
             tracked.marker.position.set(wx, 0.02, wz);
 
-            // Rotation
+            // Rotation — model faces +Z in container space, rotation.y = 0 means facing +Z
             tracked.container.rotation.y = -player.rotation;
 
-            // Animation (if model loaded)
-            if (tracked.instance) {
-                const isMoving = player.lastMoveDirection &&
-                    (player.lastMoveDirection.dx !== 0 || player.lastMoveDirection.dy !== 0);
-                const targetAnim = isMoving ? ANIM_WALK : ANIM_IDLE;
-                if (tracked.currentAnim !== targetAnim) {
-                    tracked.instance.playAnimation(targetAnim, { loop: true });
-                    tracked.currentAnim = targetAnim;
+            // Procedural walk animation (bob + lean)
+            const isMoving = player.lastMoveDirection &&
+                (player.lastMoveDirection.dx !== 0 || player.lastMoveDirection.dy !== 0);
+
+            if (isMoving) {
+                tracked.walkPhase += delta * 10; // walk cycle speed
+                const bob = Math.sin(tracked.walkPhase) * 0.06;
+                const lean = Math.sin(tracked.walkPhase * 0.5) * 0.08;
+                if (tracked.modelWrapper) {
+                    tracked.modelWrapper.position.y = tracked.modelBaseY + bob;
+                    tracked.modelWrapper.rotation.y = lean;
+                } else {
+                    tracked.capsule.position.y = 0.55 + bob;
                 }
+            } else {
+                tracked.walkPhase = 0;
+                if (tracked.modelWrapper) {
+                    tracked.modelWrapper.position.y = tracked.modelBaseY;
+                    tracked.modelWrapper.rotation.y = 0;
+                }
+            }
+
+            // Skeleton animation (if model has clips)
+            if (tracked.instance) {
                 tracked.instance.update(delta);
             }
 
