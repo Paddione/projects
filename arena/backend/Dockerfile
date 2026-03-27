@@ -22,6 +22,7 @@ COPY arena/backend/tsconfig.json ./
 COPY arena/backend/migrations ./migrations
 
 RUN npm run build
+RUN cp -r src/data dist/data
 
 # Production dependencies
 FROM base AS prod-deps
