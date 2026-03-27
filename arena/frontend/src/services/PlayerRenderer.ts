@@ -144,10 +144,10 @@ export class PlayerRenderer {
                 this.characterManager.getCharacter(player.id, modelUrl)
                     .then((inst) => {
                         tracked!.instance = inst;
-                        // Wrap in group: model is Z-up, rotate to Y-up then face +Z (forward)
+                        // Wrap in group: model is Z-up (Blender), rotate to Y-up (Three.js)
+                        // After rotation.x = -PI/2, the model faces +Z (forward)
                         const mw = new Group();
                         mw.rotation.x = -Math.PI / 2;
-                        mw.rotation.z = Math.PI; // face forward (model faces -Z after X rotation)
                         mw.scale.setScalar(1.5);
                         mw.add(inst.mesh);
 
@@ -179,12 +179,13 @@ export class PlayerRenderer {
                 (player.lastMoveDirection.dx !== 0 || player.lastMoveDirection.dy !== 0);
 
             if (isMoving) {
-                tracked.walkPhase += delta * 10; // walk cycle speed
-                const bob = Math.sin(tracked.walkPhase) * 0.06;
-                const lean = Math.sin(tracked.walkPhase * 0.5) * 0.08;
+                tracked.walkPhase += delta * 12; // walk cycle speed
+                const bob = Math.abs(Math.sin(tracked.walkPhase)) * 0.12;
+                const sway = Math.sin(tracked.walkPhase) * 0.05;
                 if (tracked.modelWrapper) {
                     tracked.modelWrapper.position.y = tracked.modelBaseY + bob;
-                    tracked.modelWrapper.rotation.y = lean;
+                    tracked.modelWrapper.rotation.y = sway;          // side-to-side sway
+                    tracked.modelWrapper.rotation.x = -Math.PI / 2 - 0.15; // lean forward
                 } else {
                     tracked.capsule.position.y = 0.55 + bob;
                 }
@@ -193,6 +194,7 @@ export class PlayerRenderer {
                 if (tracked.modelWrapper) {
                     tracked.modelWrapper.position.y = tracked.modelBaseY;
                     tracked.modelWrapper.rotation.y = 0;
+                    tracked.modelWrapper.rotation.x = -Math.PI / 2;  // upright
                 }
             }
 
