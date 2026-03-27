@@ -244,6 +244,7 @@ async function packCategory(category: string, manifest: Manifest, rendersDir: st
 
   } catch (err) {
     console.error(`  [ERROR] Packing ${category} failed:`, err);
+    process.exitCode = 1;
   }
 }
 
@@ -271,4 +272,7 @@ async function main() {
   console.log('\n[DONE] Sprite sheets saved to', spritesOutputDir);
 }
 
-main().catch(console.error);
+main().catch(err => {
+  console.error(err);
+  process.exitCode = 1;
+});
