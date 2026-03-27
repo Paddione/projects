@@ -22,8 +22,8 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
                 clearAuth();
                 const authUrl = api.getAuthServiceUrl();
                 if (authUrl) {
-                    const callbackURL = encodeURIComponent(window.location.href);
-                    window.location.href = `${authUrl}/login?callbackURL=${callbackURL}`;
+                    const redirectUri = encodeURIComponent(window.location.href);
+                    window.location.href = `${authUrl}/login?redirect_uri=${redirectUri}`;
                 }
             }
         }
