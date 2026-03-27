@@ -255,7 +255,7 @@ export function useGameInput({
         // 3D mode: use pre-computed world-space aim from raycasting
         aimAngle = worldAimAngleRef.current;
       } else {
-        // 2D mode: screen-space aim (player always at screen center)
+        // Fallback: screen-space aim (player always at screen center)
         const mouse = mouseRef.current;
         const state = gameStateRef.current;
         if (state) {

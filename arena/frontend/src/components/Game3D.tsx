@@ -1,10 +1,7 @@
 /**
  * Game3D — Three.js isometric renderer for Arena.
  *
- * Full-featured parallel to Game.tsx: same input handling, HUD, sound, and
- * socket events via shared hooks. The `use3DRenderer` flag in gameStore
- * selects this component over Game.tsx.
- *
+ * Handles input, HUD, sound, and socket events via shared hooks.
  * Split into Game3D (loading gate) and Game3DInner (actual gameplay) so that
  * hooks and the renderer only activate after assets are preloaded.
  */
