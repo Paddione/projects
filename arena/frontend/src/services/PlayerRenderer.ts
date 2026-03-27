@@ -174,33 +174,27 @@ export class PlayerRenderer {
             // Rotation — model faces +Z in container space, rotation.y = 0 means facing +Z
             tracked.container.rotation.y = -player.rotation;
 
-            // Procedural walk animation (bob + lean)
+            // Animation
             const isMoving = player.lastMoveDirection &&
                 (player.lastMoveDirection.dx !== 0 || player.lastMoveDirection.dy !== 0);
+            const targetAnim = isMoving ? 'walk' : 'idle';
 
-            if (isMoving) {
-                tracked.walkPhase += delta * 12; // walk cycle speed
-                const bob = Math.abs(Math.sin(tracked.walkPhase)) * 0.12;
-                const sway = Math.sin(tracked.walkPhase) * 0.05;
-                if (tracked.modelWrapper) {
-                    tracked.modelWrapper.position.y = tracked.modelBaseY + bob;
-                    tracked.modelWrapper.rotation.y = sway;          // side-to-side sway
-                    tracked.modelWrapper.rotation.x = -Math.PI / 2 - 0.15; // lean forward
-                } else {
-                    tracked.capsule.position.y = 0.55 + bob;
-                }
-            } else {
-                tracked.walkPhase = 0;
-                if (tracked.modelWrapper) {
-                    tracked.modelWrapper.position.y = tracked.modelBaseY;
-                    tracked.modelWrapper.rotation.y = 0;
-                    tracked.modelWrapper.rotation.x = -Math.PI / 2;  // upright
-                }
-            }
-
-            // Skeleton animation (if model has clips)
             if (tracked.instance) {
+                // Skeleton animation (rigged models with walk/idle clips)
+                if (tracked.currentAnim !== targetAnim) {
+                    tracked.instance.playAnimation(targetAnim, { loop: true });
+                    tracked.currentAnim = targetAnim;
+                }
                 tracked.instance.update(delta);
+            } else {
+                // Procedural fallback (static models without skeleton)
+                if (isMoving) {
+                    tracked.walkPhase += delta * 12;
+                    tracked.capsule.position.y = 0.55 + Math.abs(Math.sin(tracked.walkPhase)) * 0.12;
+                } else {
+                    tracked.walkPhase = 0;
+                    tracked.capsule.position.y = 0.55;
+                }
             }
 
             // Armor ring visibility
