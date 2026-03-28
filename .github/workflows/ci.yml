@@ -27,6 +27,7 @@ jobs:
       sos: ${{ steps.filter.outputs.sos }}
       assetgenerator: ${{ steps.filter.outputs.assetgenerator }}
       k8s: ${{ steps.filter.outputs.k8s }}
+      homeoffice-mvp: ${{ steps.filter.outputs.homeoffice-mvp }}
       any-service: ${{ steps.filter.outputs.arena == 'true' || steps.filter.outputs.l2p == 'true' || steps.filter.outputs.auth == 'true' || steps.filter.outputs.shop == 'true' || steps.filter.outputs.videovault == 'true' || steps.filter.outputs.sos == 'true' || steps.filter.outputs.assetgenerator == 'true' }}
     steps:
       - uses: actions/checkout@v4
@@ -50,6 +51,8 @@ jobs:
               - 'Assetgenerator/**'
             k8s:
               - 'k8s/**'
+            homeoffice-mvp:
+              - 'homeoffice-mvp/**'
 
   # ---------------------------------------------------------------------------
   # L2P: Typecheck + Unit Tests
@@ -326,6 +329,38 @@ jobs:
         run: kustomize build k8s/overlays/development
 
   # ---------------------------------------------------------------------------
+  # Homeoffice MVP: Compose syntax, shellcheck, Trivy config scan
+  # ---------------------------------------------------------------------------
+  homeoffice-mvp:
+    needs: changes
+    if: needs.changes.outputs.homeoffice-mvp == 'true'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: homeoffice-mvp
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate docker-compose syntax
+        run: docker compose config --quiet
+
+      - name: Install shellcheck
+        run: sudo apt-get install -y shellcheck
+
+      - name: Lint shell scripts
+        run: |
+          find . -name "*.sh" -type f | xargs shellcheck --severity=warning
+
+      - name: Trivy scan — homeoffice-mvp images
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: "config"
+          scan-ref: "homeoffice-mvp"
+          severity: "CRITICAL,HIGH"
+          exit-code: "0"
+          format: "table"
+
+  # ---------------------------------------------------------------------------
   # Commitlint (Conventional Commits enforcement)
   # ---------------------------------------------------------------------------
   commitlint:
@@ -422,7 +457,7 @@ jobs:
   # ---------------------------------------------------------------------------
   ci-status:
     if: always()
-    needs: [l2p, auth, shop, videovault, sos, assetgenerator, arena, docker-validate, k8s-validate, commitlint, secrets-scan, semgrep, trivy]
+    needs: [l2p, auth, shop, videovault, sos, assetgenerator, arena, docker-validate, k8s-validate, homeoffice-mvp, commitlint, secrets-scan, semgrep, trivy]
     runs-on: ubuntu-latest
     steps:
       - name: Check pipeline status
@@ -436,6 +471,7 @@ jobs:
           ARENA_RESULT: ${{ needs.arena.result }}
           DOCKER_RESULT: ${{ needs.docker-validate.result }}
           K8S_RESULT: ${{ needs.k8s-validate.result }}
+          HOMEOFFICE_RESULT: ${{ needs.homeoffice-mvp.result }}
           COMMITLINT_RESULT: ${{ needs.commitlint.result }}
           SECRETS_RESULT: ${{ needs.secrets-scan.result }}
           SEMGREP_RESULT: ${{ needs.semgrep.result }}
@@ -451,13 +487,14 @@ jobs:
           echo "  arena:             $ARENA_RESULT"
           echo "  docker-validate:   $DOCKER_RESULT"
           echo "  k8s-validate:      $K8S_RESULT"
+          echo "  homeoffice-mvp:    $HOMEOFFICE_RESULT"
           echo "  commitlint:        $COMMITLINT_RESULT"
           echo "  secrets-scan:      $SECRETS_RESULT"
           echo "  semgrep:           $SEMGREP_RESULT"
           echo "  trivy:             $TRIVY_RESULT"
 
           # Fail if any required job failed (skipped is OK — means no changes for that service)
-          for result in "$L2P_RESULT" "$AUTH_RESULT" "$SHOP_RESULT" "$VV_RESULT" "$SOS_RESULT" "$ASSETGEN_RESULT" "$ARENA_RESULT" "$DOCKER_RESULT" "$K8S_RESULT" "$COMMITLINT_RESULT" "$SECRETS_RESULT" "$SEMGREP_RESULT" "$TRIVY_RESULT"; do
+          for result in "$L2P_RESULT" "$AUTH_RESULT" "$SHOP_RESULT" "$VV_RESULT" "$SOS_RESULT" "$ASSETGEN_RESULT" "$ARENA_RESULT" "$DOCKER_RESULT" "$K8S_RESULT" "$HOMEOFFICE_RESULT" "$COMMITLINT_RESULT" "$SECRETS_RESULT" "$SEMGREP_RESULT" "$TRIVY_RESULT"; do
             if [[ "$result" == "failure" ]]; then
               echo "::error::One or more CI jobs failed"
               exit 1
