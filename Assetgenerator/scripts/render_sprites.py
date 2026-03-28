@@ -494,11 +494,14 @@ def configure_camera_framing(scene, target_z=0.5, ortho_scale=2.0):
     print(f"  Camera: 60° isometric, target Z={target_z}, ortho_scale={ortho_scale}")
 
 
-def configure_alpha_rendering(scene):
+def configure_alpha_rendering(scene, use_cycles=False):
     """Set render settings for clean transparent edges.
 
     Ensures film transparency is enabled, uses overscan to avoid edge clipping,
     and sets color management for accurate alpha compositing.
+
+    If use_cycles=True, switches to Cycles CPU renderer (needed for PBR
+    textured models when EEVEE GPU is unavailable in background mode).
     """
     scene.render.film_transparent = True
     scene.render.resolution_x = RENDER_RESOLUTION
@@ -507,12 +510,19 @@ def configure_alpha_rendering(scene):
     scene.render.image_settings.color_mode = 'RGBA'
     scene.render.image_settings.color_depth = '16'
 
-    # EEVEE overscan: renders slightly beyond frame edges to avoid alpha cutoff
-    if hasattr(scene, 'eevee'):
-        scene.eevee.use_overscan = True
-        scene.eevee.overscan_size = 10  # 10% margin beyond frame
+    if use_cycles:
+        scene.render.engine = 'CYCLES'
+        scene.cycles.device = 'CPU'
+        scene.cycles.samples = 64  # Low sample count for speed (sprites are small)
+        scene.cycles.use_denoising = True
+        print(f"  Render engine: Cycles CPU (64 samples, for PBR textures)")
+    else:
+        # EEVEE overscan: renders slightly beyond frame edges to avoid alpha cutoff
+        if hasattr(scene, 'eevee'):
+            scene.eevee.use_overscan = True
+            scene.eevee.overscan_size = 10  # 10% margin beyond frame
 
-    print(f"  Alpha rendering: {RENDER_RESOLUTION}px, 16-bit RGBA, overscan enabled")
+    print(f"  Alpha rendering: {RENDER_RESOLUTION}px, 16-bit RGBA")
 
 
 def attach_weapon_prop(armature, pose_name, weapon_model_path=None):
@@ -636,28 +646,28 @@ def render_character(char: dict, model_path: Path, template_path=None, force=Fal
         tpath = get_template_path("characters")
     scene = load_blender_template(tpath)
 
-    # Configure clean alpha rendering (transparent bg, overscan, 16-bit)
-    configure_alpha_rendering(scene)
-    # Frame camera on model center (characters are taller, need more room for arms)
-    configure_camera_framing(scene, target_z=0.6, ortho_scale=2.5)
-
-    # Link model to template
+    # Link model to template first (need to detect material type for engine choice)
     pivot, armature = link_model_to_template(model_path)
     if not pivot:
         return
 
-    # Material strategy: preserve existing materials (Sketchfab models have proper
-    # PBR textures or colored materials). Only override for material-less models.
+    # Detect if model has PBR textures (needs Cycles) or simple materials (EEVEE ok)
     import bpy as _bpy
     mesh_objs = [o for o in _bpy.data.objects if o.type == 'MESH']
-    has_any_materials = any(
-        mat for obj in mesh_objs if obj.type == 'MESH'
-        for mat in obj.data.materials if mat
+    has_textures = any(
+        mat and mat.use_nodes and any(n.type == 'TEX_IMAGE' and n.image for n in mat.node_tree.nodes)
+        for obj in mesh_objs for mat in (obj.data.materials or []) if mat
     )
+    has_any_materials = any(mat for obj in mesh_objs for mat in (obj.data.materials or []) if mat)
     accent = char.get('color', None) if isinstance(char, dict) else getattr(char, 'color', None)
 
+    # Configure rendering (Cycles for textured models, EEVEE for simple ones)
+    configure_alpha_rendering(scene, use_cycles=has_textures)
+    configure_camera_framing(scene, target_z=0.6, ortho_scale=2.5)
+
+    # Material handling
     if has_any_materials:
-        print(f"  Keeping existing materials (model has {sum(len(o.data.materials) for o in mesh_objs)} material slots)")
+        print(f"  Keeping existing materials ({sum(len(o.data.materials) for o in mesh_objs)} slots, textures={has_textures})")
     elif accent:
         setup_asset_material(mesh_objs, accent_color=accent)
         print(f"  Applied accent color: {accent} (no existing materials)")
@@ -735,15 +745,21 @@ def render_static(asset: dict, category: str, model_path: Path, template_path=No
         tpath = get_template_path(category)
     scene = load_blender_template(tpath)
 
-    # Configure clean alpha rendering (transparent bg, 256px, 16-bit)
-    configure_alpha_rendering(scene)
-    # Frame camera on model center (cover/items are shorter, tighter framing)
-    configure_camera_framing(scene, target_z=0.5, ortho_scale=2.0)
-
-    # Link model to template
+    # Link model first (need to detect material type for engine choice)
     pivot, _armature = link_model_to_template(model_path)
     if not pivot:
         return
+
+    # Detect PBR textures to choose render engine
+    has_textures = any(
+        mat and mat.use_nodes and any(n.type == 'TEX_IMAGE' and n.image for n in mat.node_tree.nodes)
+        for obj in bpy.data.objects if obj.type == 'MESH'
+        for mat in (obj.data.materials or []) if mat
+    )
+
+    # Configure rendering (Cycles for textured models, EEVEE for simple ones)
+    configure_alpha_rendering(scene, use_cycles=has_textures)
+    configure_camera_framing(scene, target_z=0.5, ortho_scale=2.0)
 
     # Parent lights to pivot for uniform lighting
     parent_lights_to_pivot(pivot)
