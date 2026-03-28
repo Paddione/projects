@@ -19,10 +19,6 @@
 #   mkdir -p ${STORAGE}/mattermost ${STORAGE}/nextcloud ${STORAGE}/traefik/letsencrypt
 #   touch ${STORAGE}/traefik/letsencrypt/acme.json
 #   chmod 600 ${STORAGE}/traefik/letsencrypt/acme.json
-# ═══════════════════════════════════════════════════════════════════
-
-version: "3.8"
-
 # ── Volumes (interne DB-Daten) ──────────────────────────────────────
 volumes:
   keycloak-db-data:
@@ -55,7 +51,7 @@ services:
         echo "DuckDNS Updater gestartet. Aktualisiere: ${DUCKDNS_SUBDOMAINS}"
         while true; do
           RESULT=$(curl -s "https://www.duckdns.org/update?domains=${DUCKDNS_SUBDOMAINS}&token=${DUCKDNS_TOKEN}&verbose=true")
-          echo "[$(date -u '+%Y-%m-%d %H:%M:%S UTC')] ${RESULT}"
+          echo "[$(date -u '+%Y-%m-%d %H:%M:%S UTC')] $${RESULT}"
           sleep 300
         done
     environment:
@@ -300,6 +296,48 @@ services:
       - "traefik.http.routers.nextcloud.entrypoints=websecure"
       - "traefik.http.routers.nextcloud.tls.certresolver=letsencrypt"
       - "traefik.http.services.nextcloud.loadbalancer.server.port=80"
+    restart: unless-stopped
+    networks:
+      - homeoffice
+
+  # ── Backup (rclone) ─────────────────────────────────────────────
+  # Tägliches Backup um 02:00 UTC zu Filen.io und/oder SMB.
+  # Beide Targets sind optional — wird übersprungen wenn nicht konfiguriert.
+  # Backup-Inhalte: Mattermost-Uploads, Nextcloud-Daten, SSL-Zertifikate.
+  #
+  # Filen.io einrichten: https://app.filen.io → Account erstellen
+  #   FILEN_EMAIL + FILEN_PASSWORD in .env setzen → fertig.
+  #
+  # SMB einrichten: SMB_HOST, SMB_SHARE, SMB_USER, SMB_PASS in .env setzen.
+  backup:
+    image: rclone/rclone:latest
+    container_name: homeoffice-backup
+    entrypoint:
+      - sh
+      - -c
+      - |
+        echo "[backup] Container gestartet. Nächstes Backup: 02:00 UTC täglich."
+        # Cron via busybox crond
+        echo "0 2 * * * /backup/backup-entrypoint.sh >> /var/log/backup.log 2>&1" \
+          > /var/spool/cron/crontabs/root
+        crond -f -l 8
+    environment:
+      STORAGE_PATH: /data
+      # Filen.io (optional)
+      FILEN_EMAIL: ${FILEN_EMAIL:-}
+      FILEN_PASSWORD: ${FILEN_PASSWORD:-}
+      FILEN_REMOTE_PATH: ${FILEN_REMOTE_PATH:-homeoffice-mvp}
+      # SMB (optional)
+      SMB_HOST: ${SMB_HOST:-}
+      SMB_SHARE: ${SMB_SHARE:-}
+      SMB_USER: ${SMB_USER:-}
+      SMB_PASS: ${SMB_PASS:-}
+      SMB_PORT: ${SMB_PORT:-445}
+      SMB_DOMAIN: ${SMB_DOMAIN:-WORKGROUP}
+      SMB_REMOTE_PATH: ${SMB_REMOTE_PATH:-homeoffice-mvp}
+    volumes:
+      - ./backup/backup-entrypoint.sh:/backup/backup-entrypoint.sh:ro
+      - ${STORAGE_PATH:-./data}:/data:ro
     restart: unless-stopped
     networks:
       - homeoffice

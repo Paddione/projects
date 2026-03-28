@@ -322,6 +322,22 @@ if [[ -f "$ENV_FILE" ]]; then
     fi
   done
 
+  # Backup-Targets prüfen (optional — nur Hinweis)
+  BACKUP_CONFIGURED=false
+  if [[ -n "${FILEN_EMAIL:-}" && -n "${FILEN_PASSWORD:-}" ]]; then
+    ok "Backup: Filen.io konfiguriert (${FILEN_EMAIL})"
+    BACKUP_CONFIGURED=true
+  fi
+  if [[ -n "${SMB_HOST:-}" && -n "${SMB_SHARE:-}" ]]; then
+    ok "Backup: SMB konfiguriert (//${SMB_HOST}/${SMB_SHARE})"
+    BACKUP_CONFIGURED=true
+  fi
+  if ! $BACKUP_CONFIGURED; then
+    warn "Backup: kein Target konfiguriert — optional, jederzeit nachrüstbar"
+    info "Filen.io: FILEN_EMAIL + FILEN_PASSWORD in .env setzen"
+    info "SMB/NAS:  SMB_HOST + SMB_SHARE + SMB_USER + SMB_PASS in .env setzen"
+  fi
+
   # Passwort-Länge prüfen (min 16 Zeichen)
   for var in KEYCLOAK_DB_PASSWORD KEYCLOAK_ADMIN_PASSWORD MATTERMOST_DB_PASSWORD \
              NEXTCLOUD_DB_PASSWORD NEXTCLOUD_ADMIN_PASSWORD LLDAP_DB_PASSWORD \
