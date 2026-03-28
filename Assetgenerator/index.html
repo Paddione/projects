@@ -3336,6 +3336,7 @@ setInterval(pollWorkerStatus, 5000);
 <script type="module">
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
 window.ModelViewer = {
@@ -3474,7 +3475,10 @@ window.ModelViewer = {
     this._gridHelper = grid;
 
     // Load GLB model (cache-bust with timestamp to always fetch latest)
+    const dracoLoader = new DRACOLoader();
+    dracoLoader.setDecoderPath('https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/libs/draco/');
     const loader = new GLTFLoader();
+    loader.setDRACOLoader(dracoLoader);
     loader.load(
       `/api/visual-library/${assetId}/model?t=${Date.now()}`,
       (gltf) => {
