@@ -2922,6 +2922,15 @@ function createVisualCard(id, asset) {
         viewBtn.textContent = '\u25B6 View 3D';
         viewBtn.addEventListener('click', () => window.ModelViewer.open(id, asset.name || id));
         phaseDiv.appendChild(viewBtn);
+
+        // "Use as Concept" button — renders front view and saves as concept
+        const snapBtn = document.createElement('button');
+        snapBtn.className = 'btn-view3d';
+        snapBtn.textContent = '\uD83D\uDCF7 Use as Concept';
+        snapBtn.title = 'Render front view of 3D model and save as concept art';
+        snapBtn.addEventListener('click', () => captureModelAsConcept(id, asset));
+        phaseDiv.appendChild(snapBtn);
+
         // Show source info if sourced from Sketchfab
         if (asset.sketchfabUid) {
           const srcBadge = document.createElement('span');
@@ -3063,6 +3072,106 @@ function createVisualCard(id, asset) {
 
   card.appendChild(actions);
   return card;
+}
+
+// ============ Capture Model Front View as Concept ============
+async function captureModelAsConcept(assetId, asset) {
+  const statusEl = event?.target;
+  if (statusEl) { statusEl.disabled = true; statusEl.textContent = 'Rendering...'; }
+
+  try {
+    // Dynamic imports from the importmap
+    const THREE = await import('three');
+    const { GLTFLoader } = await import('three/addons/loaders/GLTFLoader.js');
+    const { DRACOLoader } = await import('three/addons/loaders/DRACOLoader.js');
+
+    // Create offscreen renderer (1024x1024 for high-quality concept)
+    const size = 1024;
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
+    renderer.setSize(size, size);
+    renderer.setClearColor(0x000000, 0); // transparent background
+
+    const scene = new THREE.Scene();
+
+    // Lighting — match the Blender template's 3-point setup
+    scene.add(new THREE.AmbientLight(0xffffff, 0.5));
+    const key = new THREE.DirectionalLight(0xffffff, 1.2);
+    key.position.set(3, 5, 4);
+    scene.add(key);
+    const fill = new THREE.DirectionalLight(0x8888ff, 0.4);
+    fill.position.set(-3, 3, -2);
+    scene.add(fill);
+    const rim = new THREE.DirectionalLight(0xffffff, 0.6);
+    rim.position.set(0, 2, -5);
+    scene.add(rim);
+
+    // Camera — front view (slightly elevated for character readability)
+    const camera = new THREE.PerspectiveCamera(40, 1, 0.01, 100);
+
+    // Load model
+    const dracoLoader = new THREE.DRACOLoader ? new (await import('three/addons/loaders/DRACOLoader.js')).DRACOLoader() : null;
+    if (dracoLoader) dracoLoader.setDecoderPath('https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/libs/draco/');
+    const loader = new GLTFLoader();
+    if (dracoLoader) loader.setDRACOLoader(dracoLoader);
+
+    const gltf = await new Promise((resolve, reject) => {
+      loader.load('/api/visual-library/' + assetId + '/model?t=' + Date.now(), resolve, undefined, reject);
+    });
+
+    const model = gltf.scene;
+    scene.add(model);
+
+    // Auto-orient: detect Z-up and fix
+    const rawBox = new THREE.Box3().setFromObject(model);
+    const rawSize = rawBox.getSize(new THREE.Vector3());
+    if (rawSize.z > rawSize.y && rawSize.z > rawSize.x) {
+      model.rotation.x = -Math.PI / 2;
+    }
+
+    // Compute bounds after orientation fix
+    model.updateMatrixWorld(true);
+    const box = new THREE.Box3().setFromObject(model);
+    const center = box.getCenter(new THREE.Vector3());
+    const boxSize = box.getSize(new THREE.Vector3());
+    const maxDim = Math.max(boxSize.x, boxSize.y, boxSize.z);
+
+    // Position camera: front view, slightly above center
+    const dist = maxDim * 2.2;
+    camera.position.set(center.x, center.y + maxDim * 0.15, center.z + dist);
+    camera.lookAt(center);
+
+    // Render
+    renderer.render(scene, camera);
+
+    // Capture as PNG blob
+    const canvas = renderer.domElement;
+    const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+
+    // Upload to server
+    const resp = await fetch('/api/visual-library/' + assetId + '/concept-from-snapshot', {
+      method: 'POST',
+      headers: { 'Content-Type': 'image/png' },
+      body: blob,
+    });
+    const result = await resp.json();
+
+    // Cleanup
+    renderer.dispose();
+    if (dracoLoader) dracoLoader.dispose();
+
+    if (result.status === 'ok') {
+      if (statusEl) { statusEl.textContent = 'Saved!'; statusEl.style.color = '#22c55e'; }
+      setTimeout(() => loadVisualLibrary(), 800);
+    } else {
+      throw new Error(result.error || 'Upload failed');
+    }
+  } catch (err) {
+    console.error('Capture failed:', err);
+    if (statusEl) { statusEl.textContent = 'Error'; statusEl.style.color = '#ef4444'; }
+    setTimeout(() => {
+      if (statusEl) { statusEl.disabled = false; statusEl.textContent = '\uD83D\uDCF7 Use as Concept'; statusEl.style.color = ''; }
+    }, 2000);
+  }
 }
 
 // ============ Sketchfab Search Modal ============

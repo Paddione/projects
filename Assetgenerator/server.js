@@ -1014,6 +1014,37 @@ app.get('/api/visual-library/:id/atlas', (req, res) => {
   res.sendFile(filePath);
 });
 
+// Upload a concept image from a client-rendered 3D model front view
+app.post('/api/visual-library/:id/concept-from-snapshot', async (req, res) => {
+  const library = loadVisualLibrary();
+  const asset = library.assets[req.params.id];
+  if (!asset) return res.status(404).json({ error: 'Asset not found' });
+
+  // Expect raw PNG body (Content-Type: image/png)
+  const chunks = [];
+  for await (const chunk of req) chunks.push(chunk);
+  const pngBuffer = Buffer.concat(chunks);
+  if (pngBuffer.length < 100) return res.status(400).json({ error: 'Empty or invalid image data' });
+
+  const vConfig = loadVisualConfig();
+  const conceptDir = join(vConfig.libraryRoot, 'concepts', asset.category);
+  if (!existsSync(conceptDir)) mkdirSync(conceptDir, { recursive: true });
+  const conceptPath = join(conceptDir, `${asset.id}.png`);
+  writeFileSync(conceptPath, pngBuffer);
+
+  asset.pipeline.concept = {
+    status: 'done',
+    generatedAt: new Date().toISOString(),
+    backend: 'model-snapshot',
+    path: `concepts/${asset.category}/${asset.id}.png`,
+    promptHash: promptHash(asset.prompt),
+  };
+  saveVisualLibrary(library);
+
+  console.log(`  [concept] Saved snapshot for ${asset.id} (${(pngBuffer.length / 1024).toFixed(1)} KB)`);
+  res.json({ status: 'ok', size: pngBuffer.length });
+});
+
 app.post('/api/visual-library', (req, res) => {
   const { id, name, category, tags, prompt, poses, directions, size, color, conceptBackend, modelBackend } = req.body;
   if (!id || !name || !category) return res.status(400).json({ error: 'id, name, category required' });
