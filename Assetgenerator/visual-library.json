@@ -419,20 +419,23 @@
         "concept": {
           "status": "done",
           "path": "concepts/items/health_pack.png",
-          "generatedAt": "2026-03-15T04:40:18.800Z"
+          "generatedAt": "2026-03-15T04:40:18.800Z",
+          "promptHash": "47c56660cd594178"
         },
         "model": {
           "status": "done",
+          "generatedAt": "2026-03-28T03:39:03.808Z",
+          "backend": "sketchfab",
           "path": "models/items/health_pack.glb",
-          "generatedAt": "2026-03-15T04:40:18.860Z"
+          "sourceUid": "f84d239f92364681b9ee901d517b90b8"
         },
         "render": {
-          "status": "done",
+          "status": "pending",
           "frameCount": 1,
           "generatedAt": "2026-03-15T04:40:18.873Z"
         },
         "pack": {
-          "status": "done",
+          "status": "pending",
           "generatedAt": "2026-03-15T04:40:18.894Z"
         }
       },
@@ -442,7 +445,9 @@
           "syncedAt": "2026-03-15T04:40:18.894Z"
         }
       },
-      "conceptBackend": "comfyui"
+      "conceptBackend": "comfyui",
+      "sketchfabUid": "f84d239f92364681b9ee901d517b90b8",
+      "modelBackend": "sketchfab"
     },
     "armor_plate": {
       "id": "armor_plate",
@@ -506,22 +511,24 @@
           "status": "done",
           "generatedAt": "2026-03-15T21:52:11.321Z",
           "backend": "gemini-imagen",
-          "path": "concepts/items/machine_gun.png"
+          "path": "concepts/items/machine_gun.png",
+          "promptHash": "83064beee4acd94b"
         },
         "model": {
           "status": "done",
-          "generatedAt": "2026-03-15T21:52:14.762Z",
-          "backend": "triposr",
-          "path": "models/items/machine_gun.glb"
+          "generatedAt": "2026-03-28T03:39:03.808Z",
+          "backend": "sketchfab",
+          "path": "models/items/machine_gun.glb",
+          "sourceUid": "fbdf159836224d67b193ca527d4f4333"
         },
         "render": {
-          "status": "done",
+          "status": "pending",
           "generatedAt": "2026-03-15T21:52:15.773Z",
           "backend": "blender",
           "frameCount": 1
         },
         "pack": {
-          "status": "done",
+          "status": "pending",
           "generatedAt": "2026-03-15T21:52:18.458Z",
           "backend": "packer"
         }
@@ -532,7 +539,9 @@
           "syncedAt": "2026-03-16T05:32:13.897Z"
         }
       },
-      "conceptBackend": "comfyui"
+      "conceptBackend": "comfyui",
+      "sketchfabUid": "fbdf159836224d67b193ca527d4f4333",
+      "modelBackend": "sketchfab"
     },
     "floor_01": {
       "id": "floor_01",
@@ -820,22 +829,24 @@
           "status": "done",
           "generatedAt": "2026-03-15T21:52:30.189Z",
           "backend": "gemini-imagen",
-          "path": "concepts/cover/building.png"
+          "path": "concepts/cover/building.png",
+          "promptHash": "4f33ea0c4116a943"
         },
         "model": {
           "status": "done",
-          "generatedAt": "2026-03-15T21:52:56.615Z",
-          "backend": "triposr",
-          "path": "models/cover/building.glb"
+          "generatedAt": "2026-03-28T03:39:03.808Z",
+          "backend": "sketchfab",
+          "path": "models/cover/building.glb",
+          "sourceUid": "3b3d6a173d3649c58fe13d58b3dcba52"
         },
         "render": {
-          "status": "done",
+          "status": "pending",
           "generatedAt": "2026-03-15T21:53:08.283Z",
           "backend": "blender",
           "frameCount": 1
         },
         "pack": {
-          "status": "done",
+          "status": "pending",
           "generatedAt": "2026-03-15T21:53:10.855Z",
           "backend": "packer"
         }
@@ -846,7 +857,9 @@
           "syncedAt": "2026-03-16T05:32:13.945Z"
         }
       },
-      "conceptBackend": "comfyui"
+      "conceptBackend": "comfyui",
+      "sketchfabUid": "3b3d6a173d3649c58fe13d58b3dcba52",
+      "modelBackend": "sketchfab"
     },
     "bench": {
       "id": "bench",
@@ -867,22 +880,24 @@
           "status": "done",
           "generatedAt": "2026-03-15T21:53:18.911Z",
           "backend": "gemini-imagen",
-          "path": "concepts/cover/bench.png"
+          "path": "concepts/cover/bench.png",
+          "promptHash": "4585882bb26befaf"
         },
         "model": {
           "status": "done",
-          "generatedAt": "2026-03-15T21:53:46.971Z",
-          "backend": "triposr",
-          "path": "models/cover/bench.glb"
+          "generatedAt": "2026-03-28T03:39:03.808Z",
+          "backend": "sketchfab",
+          "path": "models/cover/bench.glb",
+          "sourceUid": "4408281074eb4c30afafd96c7c421193"
         },
         "render": {
-          "status": "done",
+          "status": "pending",
           "generatedAt": "2026-03-15T21:53:47.836Z",
           "backend": "blender",
           "frameCount": 1
         },
         "pack": {
-          "status": "done",
+          "status": "pending",
           "generatedAt": "2026-03-15T21:53:50.265Z",
           "backend": "packer"
         }
@@ -893,7 +908,9 @@
           "syncedAt": "2026-03-16T05:32:13.971Z"
         }
       },
-      "conceptBackend": "comfyui"
+      "conceptBackend": "comfyui",
+      "sketchfabUid": "4408281074eb4c30afafd96c7c421193",
+      "modelBackend": "sketchfab"
     },
     "fountain": {
       "id": "fountain",
@@ -914,22 +931,24 @@
           "status": "done",
           "generatedAt": "2026-03-15T21:53:58.298Z",
           "backend": "gemini-imagen",
-          "path": "concepts/cover/fountain.png"
+          "path": "concepts/cover/fountain.png",
+          "promptHash": "ce58082ad0b75252"
         },
         "model": {
           "status": "done",
-          "generatedAt": "2026-03-15T21:54:01.619Z",
-          "backend": "triposr",
-          "path": "models/cover/fountain.glb"
+          "generatedAt": "2026-03-28T03:39:03.808Z",
+          "backend": "sketchfab",
+          "path": "models/cover/fountain.glb",
+          "sourceUid": "959f5011bcdd4a8c8700d6830824d1e1"
         },
         "render": {
-          "status": "done",
+          "status": "pending",
           "generatedAt": "2026-03-15T21:54:02.506Z",
           "backend": "blender",
           "frameCount": 1
         },
         "pack": {
-          "status": "done",
+          "status": "pending",
           "generatedAt": "2026-03-15T21:54:04.968Z",
           "backend": "packer"
         }
@@ -940,7 +959,9 @@
           "syncedAt": "2026-03-16T05:32:13.998Z"
         }
       },
-      "conceptBackend": "comfyui"
+      "conceptBackend": "comfyui",
+      "sketchfabUid": "959f5011bcdd4a8c8700d6830824d1e1",
+      "modelBackend": "sketchfab"
     },
     "hedge": {
       "id": "hedge",
@@ -961,22 +982,24 @@
           "status": "done",
           "generatedAt": "2026-03-15T21:54:18.673Z",
           "backend": "gemini-imagen",
-          "path": "concepts/cover/hedge.png"
+          "path": "concepts/cover/hedge.png",
+          "promptHash": "ef7048fee9c651ea"
         },
         "model": {
           "status": "done",
-          "generatedAt": "2026-03-15T21:54:46.796Z",
-          "backend": "triposr",
-          "path": "models/cover/hedge.glb"
+          "generatedAt": "2026-03-28T03:39:03.808Z",
+          "backend": "sketchfab",
+          "path": "models/cover/hedge.glb",
+          "sourceUid": "d4ec3f99c6274465ab32f87ac05458e7"
         },
         "render": {
-          "status": "done",
+          "status": "pending",
           "generatedAt": "2026-03-15T21:54:47.699Z",
           "backend": "blender",
           "frameCount": 1
         },
         "pack": {
-          "status": "done",
+          "status": "pending",
           "generatedAt": "2026-03-15T21:54:50.218Z",
           "backend": "packer"
         }
@@ -987,7 +1010,9 @@
           "syncedAt": "2026-03-16T05:32:14.023Z"
         }
       },
-      "conceptBackend": "comfyui"
+      "conceptBackend": "comfyui",
+      "sketchfabUid": "d4ec3f99c6274465ab32f87ac05458e7",
+      "modelBackend": "sketchfab"
     },
     "pond": {
       "id": "pond",
@@ -1008,22 +1033,24 @@
           "status": "done",
           "generatedAt": "2026-03-15T21:55:06.719Z",
           "backend": "gemini-imagen",
-          "path": "concepts/cover/pond.png"
+          "path": "concepts/cover/pond.png",
+          "promptHash": "c79f08924aab055a"
         },
         "model": {
           "status": "done",
-          "generatedAt": "2026-03-15T21:55:55.806Z",
-          "backend": "triposr",
-          "path": "models/cover/pond.glb"
+          "generatedAt": "2026-03-28T03:39:03.808Z",
+          "backend": "sketchfab",
+          "path": "models/cover/pond.glb",
+          "sourceUid": "f3471d6d2e4447fc8b5cf837c963c1de"
         },
         "render": {
-          "status": "done",
+          "status": "pending",
           "generatedAt": "2026-03-15T21:55:56.680Z",
           "backend": "blender",
           "frameCount": 1
         },
         "pack": {
-          "status": "done",
+          "status": "pending",
           "generatedAt": "2026-03-15T21:55:59.206Z",
           "backend": "packer"
         }
@@ -1034,7 +1061,9 @@
           "syncedAt": "2026-03-16T05:32:14.049Z"
         }
       },
-      "conceptBackend": "comfyui"
+      "conceptBackend": "comfyui",
+      "sketchfabUid": "f3471d6d2e4447fc8b5cf837c963c1de",
+      "modelBackend": "sketchfab"
     },
     "heart_full": {
       "id": "heart_full",
