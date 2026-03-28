@@ -1,7 +1,0 @@
-# Secrets — niemals committen!
-.env
-.env.secrets
-*.env.local
-
-# Datenpfade
-data/
