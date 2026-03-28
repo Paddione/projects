@@ -281,7 +281,7 @@
       ],
       "directions": 1,
       "size": 32,
-      "color": "#ffffff",
+      "color": "#f39c12",
       "pipeline": {
         "concept": {
           "status": "done",
@@ -324,7 +324,7 @@
       ],
       "directions": 1,
       "size": 48,
-      "color": "#ffffff",
+      "color": "#e67e22",
       "pipeline": {
         "concept": {
           "status": "done",
@@ -368,7 +368,7 @@
       ],
       "directions": 1,
       "size": 32,
-      "color": "#ffffff",
+      "color": "#f1c40f",
       "pipeline": {
         "concept": {
           "status": "done",
@@ -414,7 +414,7 @@
       ],
       "directions": 1,
       "size": 32,
-      "color": "#ffffff",
+      "color": "#e74c3c",
       "pipeline": {
         "concept": {
           "status": "done",
@@ -462,7 +462,7 @@
       ],
       "directions": 1,
       "size": 32,
-      "color": "#ffffff",
+      "color": "#3498db",
       "pipeline": {
         "concept": {
           "status": "done",
@@ -505,7 +505,7 @@
       ],
       "directions": 1,
       "size": 64,
-      "color": "#ffffff",
+      "color": "#7f8c8d",
       "pipeline": {
         "concept": {
           "status": "done",
@@ -823,7 +823,7 @@
       ],
       "directions": 1,
       "size": 32,
-      "color": "#ffffff",
+      "color": "#9b7cb8",
       "pipeline": {
         "concept": {
           "status": "done",
@@ -874,7 +874,7 @@
       ],
       "directions": 1,
       "size": 32,
-      "color": "#ffffff",
+      "color": "#c4a265",
       "pipeline": {
         "concept": {
           "status": "done",
@@ -925,7 +925,7 @@
       ],
       "directions": 1,
       "size": 32,
-      "color": "#ffffff",
+      "color": "#7ec8d6",
       "pipeline": {
         "concept": {
           "status": "done",
@@ -976,7 +976,7 @@
       ],
       "directions": 1,
       "size": 32,
-      "color": "#ffffff",
+      "color": "#5cb85c",
       "pipeline": {
         "concept": {
           "status": "done",
@@ -1027,7 +1027,7 @@
       ],
       "directions": 1,
       "size": 32,
-      "color": "#ffffff",
+      "color": "#4aa3c2",
       "pipeline": {
         "concept": {
           "status": "done",

@@ -510,17 +510,11 @@ def configure_alpha_rendering(scene, use_cycles=False):
     scene.render.image_settings.color_mode = 'RGBA'
     scene.render.image_settings.color_depth = '16'
 
-    if use_cycles:
-        scene.render.engine = 'CYCLES'
-        scene.cycles.device = 'CPU'
-        scene.cycles.samples = 128  # Higher samples since no denoiser
-        scene.cycles.use_denoising = False  # OIDN not available in all Blender builds
-        print(f"  Render engine: Cycles CPU (64 samples, for PBR textures)")
-    else:
-        # EEVEE overscan: renders slightly beyond frame edges to avoid alpha cutoff
-        if hasattr(scene, 'eevee'):
-            scene.eevee.use_overscan = True
-            scene.eevee.overscan_size = 10  # 10% margin beyond frame
+    # Always use EEVEE (Cycles fails in WSL Blender 4.0 — no OIDN, no texture support)
+    scene.render.engine = 'BLENDER_EEVEE'
+    if hasattr(scene, 'eevee'):
+        scene.eevee.use_overscan = True
+        scene.eevee.overscan_size = 10  # 10% margin beyond frame
 
     print(f"  Alpha rendering: {RENDER_RESOLUTION}px, 16-bit RGBA")
 
@@ -661,13 +655,16 @@ def render_character(char: dict, model_path: Path, template_path=None, force=Fal
     has_any_materials = any(mat for obj in mesh_objs for mat in (obj.data.materials or []) if mat)
     accent = char.get('color', None) if isinstance(char, dict) else getattr(char, 'color', None)
 
-    # Configure rendering (Cycles for textured models, EEVEE for simple ones)
-    configure_alpha_rendering(scene, use_cycles=has_textures)
+    configure_alpha_rendering(scene)
     configure_camera_framing(scene, target_z=0.6, ortho_scale=2.5)
 
-    # Material handling
-    if has_any_materials:
-        print(f"  Keeping existing materials ({sum(len(o.data.materials) for o in mesh_objs)} slots, textures={has_textures})")
+    # Material handling: replace textures with accent color if present (EEVEE can't
+    # render embedded textures in background mode). Keep vertex colors and simple materials.
+    if has_textures and accent:
+        setup_asset_material(mesh_objs, accent_color=accent)
+        print(f"  Replaced textures with accent color {accent}")
+    elif has_any_materials:
+        print(f"  Keeping existing materials ({sum(len(o.data.materials) for o in mesh_objs)} slots)")
     elif accent:
         setup_asset_material(mesh_objs, accent_color=accent)
         print(f"  Applied accent color: {accent} (no existing materials)")
@@ -750,15 +747,20 @@ def render_static(asset: dict, category: str, model_path: Path, template_path=No
     if not pivot:
         return
 
-    # Detect PBR textures to choose render engine
+    # Detect PBR textures — if present, replace with accent color since
+    # EEVEE in WSL Blender can't render embedded textures in background mode
     has_textures = any(
         mat and mat.use_nodes and any(n.type == 'TEX_IMAGE' and n.image for n in mat.node_tree.nodes)
         for obj in bpy.data.objects if obj.type == 'MESH'
         for mat in (obj.data.materials or []) if mat
     )
+    if has_textures:
+        accent = asset.get('color', '#888888')
+        mesh_objs = [o for o in bpy.data.objects if o.type == 'MESH']
+        setup_asset_material(mesh_objs, accent_color=accent)
+        print(f"  Replaced textures with accent color {accent} (EEVEE can't render textures in background)")
 
-    # Configure rendering (Cycles for textured models, EEVEE for simple ones)
-    configure_alpha_rendering(scene, use_cycles=has_textures)
+    configure_alpha_rendering(scene)
     configure_camera_framing(scene, target_z=0.5, ortho_scale=2.0)
 
     # Parent lights to pivot for uniform lighting
