@@ -470,6 +470,30 @@ def parent_lights_to_pivot(pivot):
         print(f"  Parented {parented} lights to model pivot (uniform directional lighting)")
 
 
+def configure_camera_framing(scene, target_z=0.5, ortho_scale=2.0):
+    """Position the orthographic camera to frame a normalized model.
+
+    The model is centered at origin with bottom at Z=0 and height ~1.2 units.
+    Camera is positioned for a 60 degree isometric view looking at (0, 0, target_z).
+    """
+    cam = scene.camera
+    if not cam:
+        return
+
+    angle_rad = math.radians(CAMERA_ANGLE_DEG)
+    distance = CAMERA_DISTANCE
+
+    cam.location.x = 0
+    cam.location.y = -distance * math.cos(angle_rad)
+    cam.location.z = target_z + distance * math.sin(angle_rad)
+    cam.rotation_euler = (angle_rad, 0, 0)
+
+    cam.data.type = 'ORTHO'
+    cam.data.ortho_scale = ortho_scale
+    bpy.context.view_layer.update()
+    print(f"  Camera: 60° isometric, target Z={target_z}, ortho_scale={ortho_scale}")
+
+
 def configure_alpha_rendering(scene):
     """Set render settings for clean transparent edges.
 
@@ -614,6 +638,8 @@ def render_character(char: dict, model_path: Path, template_path=None, force=Fal
 
     # Configure clean alpha rendering (transparent bg, overscan, 16-bit)
     configure_alpha_rendering(scene)
+    # Frame camera on model center (characters are taller, need more room for arms)
+    configure_camera_framing(scene, target_z=0.6, ortho_scale=2.5)
 
     # Link model to template
     pivot, armature = link_model_to_template(model_path)
@@ -711,6 +737,8 @@ def render_static(asset: dict, category: str, model_path: Path, template_path=No
 
     # Configure clean alpha rendering (transparent bg, 256px, 16-bit)
     configure_alpha_rendering(scene)
+    # Frame camera on model center (cover/items are shorter, tighter framing)
+    configure_camera_framing(scene, target_z=0.5, ortho_scale=2.0)
 
     # Link model to template
     pivot, _armature = link_model_to_template(model_path)
