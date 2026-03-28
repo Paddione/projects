@@ -156,10 +156,14 @@ services:
       - homeoffice
 
   # ── Keycloak (SSO) ──────────────────────────────────────────────
+  # Realm "homeoffice" wird beim ersten Start automatisch importiert.
+  # Enthält: Mattermost + Nextcloud Clients mit vorgesetzten OIDC Secrets,
+  #          LLDAP User Federation, Protocol Mappers.
+  # → Kein manuelles Setup in der Admin-Console nötig.
   keycloak:
     image: quay.io/keycloak/keycloak:24.0
     container_name: homeoffice-keycloak
-    command: start
+    entrypoint: ["/opt/keycloak/realm-template/import-entrypoint.sh"]
     environment:
       KC_DB: postgres
       KC_DB_URL: jdbc:postgresql://keycloak-db:5432/keycloak
@@ -170,10 +174,22 @@ services:
       KC_PROXY_HEADERS: xforwarded
       KEYCLOAK_ADMIN: admin
       KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:?Keycloak Admin Passwort fehlt}
+      # OIDC Secrets — werden in realm-homeoffice.json eingesetzt
+      MATTERMOST_OIDC_SECRET: ${MATTERMOST_OIDC_SECRET:?Mattermost OIDC Secret fehlt}
+      NEXTCLOUD_OIDC_SECRET: ${NEXTCLOUD_OIDC_SECRET:?Nextcloud OIDC Secret fehlt}
+      MM_DOMAIN: ${MM_DOMAIN}
+      NC_DOMAIN: ${NC_DOMAIN}
+      LLDAP_BASE_DOMAIN: ${LLDAP_BASE_DOMAIN}
+      LLDAP_BASE_TLD: ${LLDAP_BASE_TLD}
+      LLDAP_LDAP_USER_PASS: ${LLDAP_LDAP_USER_PASS}
       TZ: Europe/Berlin
+    volumes:
+      - ./keycloak:/opt/keycloak/realm-template:ro
     depends_on:
       keycloak-db:
         condition: service_healthy
+      lldap:
+        condition: service_started
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.keycloak.rule=Host(`${KC_DOMAIN}`)"

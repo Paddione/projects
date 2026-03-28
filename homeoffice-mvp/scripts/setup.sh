@@ -235,7 +235,7 @@ REQUIRED_VARS=(
   JVB_ADVERTISE_IPS JITSI_XMPP_SUFFIX
   ACME_EMAIL
   KEYCLOAK_DB_PASSWORD KEYCLOAK_ADMIN_PASSWORD
-  MATTERMOST_DB_PASSWORD MATTERMOST_OIDC_SECRET
+  MATTERMOST_DB_PASSWORD MATTERMOST_OIDC_SECRET NEXTCLOUD_OIDC_SECRET
   NEXTCLOUD_DB_PASSWORD NEXTCLOUD_ADMIN_PASSWORD
   LLDAP_JWT_SECRET LLDAP_LDAP_USER_PASS LLDAP_DB_PASSWORD
   LLDAP_BASE_DOMAIN LLDAP_BASE_TLD
@@ -312,11 +312,15 @@ if [[ -f "$ENV_FILE" ]]; then
     fi
   done
 
-  # MATTERMOST_OIDC_SECRET Sonderfall — darf noch Placeholder sein (Keycloak zuerst)
-  if [[ "${MATTERMOST_OIDC_SECRET:-}" == *"NACH_KEYCLOAK"* ]]; then
-    warn "MATTERMOST_OIDC_SECRET noch nicht gesetzt"
-    info "Nach Keycloak-Start: Admin Console → Realm homeoffice → Clients → mattermost → Credentials"
-  fi
+  # OIDC Secrets — müssen VOR dem Start gesetzt sein (Keycloak importiert sie automatisch)
+  for oidc_var in MATTERMOST_OIDC_SECRET NEXTCLOUD_OIDC_SECRET; do
+    val="${!oidc_var:-}"
+    if [[ -z "$val" || "$val" == *"CHANGE_ME"* ]]; then
+      fail "${oidc_var} nicht gesetzt — generieren mit: openssl rand -base64 32"
+    else
+      ok "${oidc_var} gesetzt (${#val} Zeichen)"
+    fi
+  done
 
   # Passwort-Länge prüfen (min 16 Zeichen)
   for var in KEYCLOAK_DB_PASSWORD KEYCLOAK_ADMIN_PASSWORD MATTERMOST_DB_PASSWORD \
