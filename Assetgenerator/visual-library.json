@@ -27,7 +27,8 @@
           "status": "done",
           "generatedAt": "2026-03-16T00:41:59.522Z",
           "path": "concepts/characters/student.png",
-          "backend": "gemini-imagen"
+          "backend": "gemini-imagen",
+          "promptHash": "b0a2292c3d76e047"
         },
         "model": {
           "status": "done",
@@ -127,7 +128,8 @@
           "status": "done",
           "generatedAt": "2026-03-18T19:19:51.742Z",
           "backend": "gemini-imagen",
-          "path": "concepts/characters/professor.png"
+          "path": "concepts/characters/professor.png",
+          "promptHash": "74c668d53c293eaa"
         },
         "model": {
           "status": "done",
@@ -182,7 +184,8 @@
           "status": "done",
           "generatedAt": "2026-03-15T22:51:27.603Z",
           "backend": "gemini-imagen",
-          "path": "concepts/characters/dean.png"
+          "path": "concepts/characters/dean.png",
+          "promptHash": "bc1c762dad114810"
         },
         "model": {
           "status": "done",
@@ -239,7 +242,8 @@
           "status": "done",
           "generatedAt": "2026-03-18T19:21:37.281Z",
           "backend": "gemini-imagen",
-          "path": "concepts/characters/librarian.png"
+          "path": "concepts/characters/librarian.png",
+          "promptHash": "e8feef4d7c41894e"
         },
         "model": {
           "status": "done",
@@ -1324,7 +1328,8 @@
           "status": "done",
           "generatedAt": "2026-03-16T09:56:48.801Z",
           "path": "concepts/characters/student_f.png",
-          "backend": "gemini-imagen"
+          "backend": "gemini-imagen",
+          "promptHash": "74c9ed06a1408f94"
         },
         "model": {
           "status": "done",
@@ -1418,7 +1423,8 @@
           "status": "done",
           "generatedAt": "2026-03-16T09:46:41.256Z",
           "path": "concepts/characters/professor_f.png",
-          "backend": "gemini-imagen"
+          "backend": "gemini-imagen",
+          "promptHash": "5182a25d0db89539"
         },
         "model": {
           "status": "done",
@@ -1469,7 +1475,8 @@
           "status": "done",
           "generatedAt": "2026-03-16T09:48:25.190Z",
           "path": "concepts/characters/dean_f.png",
-          "backend": "gemini-imagen"
+          "backend": "gemini-imagen",
+          "promptHash": "0ead15e805a22db2"
         },
         "model": {
           "status": "done",
@@ -1520,7 +1527,8 @@
           "status": "done",
           "generatedAt": "2026-03-16T09:47:00.888Z",
           "path": "concepts/characters/librarian_f.png",
-          "backend": "gemini-imagen"
+          "backend": "gemini-imagen",
+          "promptHash": "4e76709d06bbfe43"
         },
         "model": {
           "status": "done",
@@ -1567,7 +1575,8 @@
           "status": "done",
           "generatedAt": "2026-03-16T11:11:16.164Z",
           "path": "concepts/characters/student_neon.png",
-          "backend": "gemini-imagen"
+          "backend": "gemini-imagen",
+          "promptHash": "319c6aa095f7ba3d"
         },
         "model": {
           "status": "done",
@@ -1611,7 +1620,8 @@
           "status": "done",
           "generatedAt": "2026-03-16T11:11:21.673Z",
           "path": "concepts/characters/student_formal.png",
-          "backend": "gemini-imagen"
+          "backend": "gemini-imagen",
+          "promptHash": "ad3a74385e215b6f"
         },
         "model": {
           "status": "done",
@@ -1654,7 +1664,8 @@
           "status": "done",
           "generatedAt": "2026-03-16T11:11:28.486Z",
           "path": "concepts/characters/student_f_neon.png",
-          "backend": "gemini-imagen"
+          "backend": "gemini-imagen",
+          "promptHash": "6107ca94215d013e"
         },
         "model": {
           "status": "done",
@@ -1697,7 +1708,8 @@
           "status": "done",
           "generatedAt": "2026-03-16T11:11:36.113Z",
           "path": "concepts/characters/student_f_formal.png",
-          "backend": "gemini-imagen"
+          "backend": "gemini-imagen",
+          "promptHash": "ab188526035d5bae"
         },
         "model": {
           "status": "done",
@@ -1740,7 +1752,8 @@
           "status": "done",
           "generatedAt": "2026-03-16T11:11:42.808Z",
           "path": "concepts/characters/researcher_neon.png",
-          "backend": "gemini-imagen"
+          "backend": "gemini-imagen",
+          "promptHash": "d04b66cf5b7d10b3"
         },
         "model": {
           "status": "done",
@@ -1783,7 +1796,8 @@
           "status": "done",
           "generatedAt": "2026-03-16T11:11:48.518Z",
           "path": "concepts/characters/researcher_formal.png",
-          "backend": "gemini-imagen"
+          "backend": "gemini-imagen",
+          "promptHash": "59fb25f9060cbfad"
         },
         "model": {
           "status": "done",
@@ -1826,7 +1840,8 @@
           "status": "done",
           "generatedAt": "2026-03-16T11:11:53.560Z",
           "path": "concepts/characters/researcher_f_neon.png",
-          "backend": "gemini-imagen"
+          "backend": "gemini-imagen",
+          "promptHash": "6cf89ebabe5325e1"
         },
         "model": {
           "status": "done",
@@ -1869,7 +1884,8 @@
           "status": "done",
           "generatedAt": "2026-03-16T11:11:58.820Z",
           "path": "concepts/characters/researcher_f_formal.png",
-          "backend": "gemini-imagen"
+          "backend": "gemini-imagen",
+          "promptHash": "bf66b70df0e9af7f"
         },
         "model": {
           "status": "done",
@@ -1912,7 +1928,8 @@
           "status": "done",
           "generatedAt": "2026-03-16T11:12:06.896Z",
           "path": "concepts/characters/professor_neon.png",
-          "backend": "gemini-imagen"
+          "backend": "gemini-imagen",
+          "promptHash": "acadd3f3735ee4d0"
         },
         "model": {
           "status": "done",
@@ -1955,7 +1972,8 @@
           "status": "done",
           "generatedAt": "2026-03-16T11:12:13.545Z",
           "path": "concepts/characters/professor_formal.png",
-          "backend": "gemini-imagen"
+          "backend": "gemini-imagen",
+          "promptHash": "a67d7b92fc45442c"
         },
         "model": {
           "status": "done",
@@ -1998,7 +2016,8 @@
           "status": "done",
           "generatedAt": "2026-03-16T11:12:18.600Z",
           "path": "concepts/characters/professor_f_neon.png",
-          "backend": "gemini-imagen"
+          "backend": "gemini-imagen",
+          "promptHash": "8a4ae7cb2b6ff7d0"
         },
         "model": {
           "status": "done",
@@ -2041,7 +2060,8 @@
           "status": "done",
           "generatedAt": "2026-03-16T11:12:23.409Z",
           "path": "concepts/characters/professor_f_formal.png",
-          "backend": "gemini-imagen"
+          "backend": "gemini-imagen",
+          "promptHash": "910f80f74df9c71b"
         },
         "model": {
           "status": "done",
@@ -2083,7 +2103,8 @@
           "status": "done",
           "generatedAt": "2026-03-16T11:12:37.266Z",
           "path": "concepts/characters/dean_neon.png",
-          "backend": "gemini-imagen"
+          "backend": "gemini-imagen",
+          "promptHash": "2757984ece3dc32b"
         },
         "model": {
           "status": "done",
@@ -2126,7 +2147,8 @@
           "status": "done",
           "generatedAt": "2026-03-16T11:12:47.721Z",
           "path": "concepts/characters/dean_formal.png",
-          "backend": "gemini-imagen"
+          "backend": "gemini-imagen",
+          "promptHash": "cf96a8a01cf1669c"
         },
         "model": {
           "status": "done",
@@ -2169,7 +2191,8 @@
           "status": "done",
           "generatedAt": "2026-03-16T11:12:54.464Z",
           "path": "concepts/characters/dean_f_neon.png",
-          "backend": "gemini-imagen"
+          "backend": "gemini-imagen",
+          "promptHash": "1f1c9ea8414de715"
         },
         "model": {
           "status": "done",
@@ -2212,7 +2235,8 @@
           "status": "done",
           "generatedAt": "2026-03-16T11:13:00.076Z",
           "path": "concepts/characters/dean_f_formal.png",
-          "backend": "gemini-imagen"
+          "backend": "gemini-imagen",
+          "promptHash": "64130fd7cca54844"
         },
         "model": {
           "status": "done",
@@ -2255,7 +2279,8 @@
           "status": "done",
           "generatedAt": "2026-03-16T11:13:07.480Z",
           "path": "concepts/characters/librarian_neon.png",
-          "backend": "gemini-imagen"
+          "backend": "gemini-imagen",
+          "promptHash": "35b6ca9214542c97"
         },
         "model": {
           "status": "done",
@@ -2298,7 +2323,8 @@
           "status": "done",
           "generatedAt": "2026-03-16T11:13:11.722Z",
           "path": "concepts/characters/librarian_formal.png",
-          "backend": "gemini-imagen"
+          "backend": "gemini-imagen",
+          "promptHash": "6aae5a54f2daf918"
         },
         "model": {
           "status": "done",
@@ -2341,7 +2367,8 @@
           "status": "done",
           "generatedAt": "2026-03-16T11:13:17.710Z",
           "path": "concepts/characters/librarian_f_neon.png",
-          "backend": "gemini-imagen"
+          "backend": "gemini-imagen",
+          "promptHash": "274298fc0bfba70a"
         },
         "model": {
           "status": "done",
@@ -2384,7 +2411,8 @@
           "status": "done",
           "generatedAt": "2026-03-16T11:13:22.315Z",
           "path": "concepts/characters/librarian_f_formal.png",
-          "backend": "gemini-imagen"
+          "backend": "gemini-imagen",
+          "promptHash": "35e0dd18047fe89f"
         },
         "model": {
           "status": "done",

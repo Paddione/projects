@@ -2971,8 +2971,10 @@ function createVisualCard(id, asset) {
 
     // Determine if this phase can run (previous phase must be done)
     const prevPhase = phases[phases.indexOf(phase) - 1];
+    const isExternallySourced = asset.sketchfabUid || asset.modelBackend === 'sketchfab';
     const prevDone = !prevPhase || asset.pipeline?.[prevPhase]?.status === 'done'
-      || (prevPhase === 'model' && !asset.pipeline?.model); // skip model check for non-3D
+      || (prevPhase === 'model' && !asset.pipeline?.model) // skip model check for non-3D
+      || (prevPhase === 'concept' && phase === 'model' && isExternallySourced); // Sketchfab doesn't need concept
     const canRun = prevDone && status !== 'generating';
 
     if (status === 'done') {

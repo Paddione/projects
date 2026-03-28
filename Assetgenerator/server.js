@@ -1112,7 +1112,10 @@ app.post('/api/visual-library/batch/generate', async (req, res) => {
       let startIdx = fromPhase ? phases.indexOf(fromPhase) : 0;
       const catConfig = vConfig.categories[asset.category] || {};
       // Force concept regeneration if prompt changed since last concept was generated
-      const batchConceptStale = asset.pipeline.concept?.status === 'done'
+      // Skip stale detection for externally sourced assets (Sketchfab thumbnails / placeholders)
+      const batchIsExternal = asset.sketchfabUid || asset.pipeline.concept?.backend === 'sketchfab-thumbnail';
+      const batchConceptStale = !batchIsExternal
+        && asset.pipeline.concept?.status === 'done'
         && asset.pipeline.concept.promptHash !== promptHash(asset.prompt);
       if (batchConceptStale && startIdx > 0) startIdx = 0;
       const phasesToRun = phases.slice(startIdx >= 0 ? startIdx : 0)
@@ -1342,7 +1345,10 @@ app.post('/api/visual-library/:id/generate/:phase', async (req, res) => {
     const catConfig = vConfig.categories[asset.category] || {};
 
     // Detect stale concept: prompt changed since last concept generation
-    const conceptStale = asset.pipeline.concept?.status === 'done'
+    // Skip stale detection for externally sourced assets (Sketchfab thumbnails / placeholders)
+    const isExternallySourced = asset.sketchfabUid || asset.pipeline.concept?.backend === 'sketchfab-thumbnail';
+    const conceptStale = !isExternallySourced
+      && asset.pipeline.concept?.status === 'done'
       && asset.pipeline.concept.promptHash !== promptHash(asset.prompt);
 
     let phasesToRun;
@@ -1522,7 +1528,7 @@ app.get('/api/sketchfab/preview/:uid', async (req, res) => {
   }
 });
 
-app.post('/api/visual-library/:id/source/sketchfab', (req, res) => {
+app.post('/api/visual-library/:id/source/sketchfab', async (req, res) => {
   const { uid } = req.body;
   if (!uid) return res.status(400).json({ error: 'uid required' });
 
@@ -1534,6 +1540,42 @@ app.post('/api/visual-library/:id/source/sketchfab', (req, res) => {
   asset.modelBackend = 'sketchfab';
   // Invalidate model phase so next generate picks up the Sketchfab source
   if (asset.pipeline.model) asset.pipeline.model.status = 'pending';
+
+  // If concept is not done, create a placeholder so pipeline gate doesn't block model phase.
+  // Use the Sketchfab thumbnail as concept art and lock the promptHash so it's never stale.
+  if (asset.pipeline.concept?.status !== 'done') {
+    const vConfig = loadVisualConfig();
+    const conceptDir = join(vConfig.libraryRoot, 'concepts', asset.category);
+    if (!existsSync(conceptDir)) mkdirSync(conceptDir, { recursive: true });
+    const conceptPath = join(conceptDir, `${asset.id}.png`);
+
+    // Try to download Sketchfab thumbnail as placeholder concept
+    try {
+      const apiKey = process.env.SKETCHFAB_API_KEY;
+      const headers = apiKey ? { Authorization: `Token ${apiKey}` } : {};
+      const modelResp = await fetch(`https://api.sketchfab.com/v3/models/${uid}`, { headers });
+      if (modelResp.ok) {
+        const modelData = await modelResp.json();
+        const thumbUrl = modelData.thumbnails?.images?.[0]?.url;
+        if (thumbUrl) {
+          const imgResp = await fetch(thumbUrl);
+          if (imgResp.ok) {
+            const buffer = Buffer.from(await imgResp.arrayBuffer());
+            writeFileSync(conceptPath, buffer);
+          }
+        }
+      }
+    } catch (_) { /* thumbnail download is best-effort */ }
+
+    asset.pipeline.concept = {
+      status: 'done',
+      generatedAt: new Date().toISOString(),
+      backend: 'sketchfab-thumbnail',
+      path: `concepts/${asset.category}/${asset.id}.png`,
+      promptHash: promptHash(asset.prompt),
+    };
+  }
+
   saveVisualLibrary(library);
   res.json(asset);
 });
