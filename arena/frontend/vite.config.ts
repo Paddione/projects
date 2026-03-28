@@ -26,20 +26,21 @@ export default defineConfig({
                 target: 'http://localhost:3003',
                 ws: true,
             },
-            '/assets/3d': {
-                target: 'http://localhost:5200',
-                rewrite: (path) => {
-                    const match = path.match(/\/assets\/3d\/\w+\/(\w+)\.glb/);
-                    return match ? `/api/visual-library/${match[1]}/model` : path;
-                },
-            },
-            '/assets/concepts': {
-                target: 'http://localhost:5200',
-                rewrite: (path) => {
-                    const match = path.match(/\/assets\/concepts\/\w+\/(\w+)\.png/);
-                    return match ? `/api/visual-library/${match[1]}/concept` : path;
-                },
-            },
+            // 3D assets and concepts served from public/ (proxy only if assetgen is running)
+            // '/assets/3d': {
+            //     target: 'http://localhost:5200',
+            //     rewrite: (path) => {
+            //         const match = path.match(/\/assets\/3d\/\w+\/(\w+)\.glb/);
+            //         return match ? `/api/visual-library/${match[1]}/model` : path;
+            //     },
+            // },
+            // '/assets/concepts': {
+            //     target: 'http://localhost:5200',
+            //     rewrite: (path) => {
+            //         const match = path.match(/\/assets\/concepts\/\w+\/(\w+)\.png/);
+            //         return match ? `/api/visual-library/${match[1]}/concept` : path;
+            //     },
+            // },
         },
     },
     build: {
