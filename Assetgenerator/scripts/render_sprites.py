@@ -152,8 +152,17 @@ def apply_pose(armature, pose_name):
 
     Switches the armature to POSE mode, resets all bones to rest,
     then applies the rotation deltas from POSE_PRESETS.
+    Supports multiple bone naming conventions (simple_rig.py and MCP/Rigify).
     """
     preset = POSE_PRESETS.get(pose_name, {})
+
+    # Bone name aliases: maps preset names → alternative names found in different rigs
+    BONE_ALIASES = {
+        "upper_leg.L": "thigh.L",
+        "upper_leg.R": "thigh.R",
+        "lower_leg.L": "shin.L",
+        "lower_leg.R": "shin.R",
+    }
 
     # Ensure we're working with the armature
     bpy.context.view_layer.objects.active = armature
@@ -168,6 +177,9 @@ def apply_pose(armature, pose_name):
     # Apply preset rotations
     for bone_name, (rx, ry, rz) in preset.items():
         pb = armature.pose.bones.get(bone_name)
+        # Try alias if primary name not found
+        if not pb and bone_name in BONE_ALIASES:
+            pb = armature.pose.bones.get(BONE_ALIASES[bone_name])
         if pb:
             pb.rotation_mode = 'XYZ'
             pb.rotation_euler = (math.radians(rx), math.radians(ry), math.radians(rz))
@@ -593,15 +605,20 @@ def render_character(char: dict, model_path: Path, template_path=None, force=Fal
     if not pivot:
         return
 
-    # Override material with accent color AFTER linking
-    # (TripoSR vertex colors are grey on back/side faces - using accent color
-    # gives consistent readable appearance from all 8 directions)
+    # Material strategy: use vertex colors if the model has them (Sketchfab),
+    # otherwise override with flat accent color (TripoSR/generated models).
+    import bpy as _bpy
+    mesh_objs = [o for o in _bpy.data.objects if o.type == 'MESH']
+    has_vertex_colors = any(m.data.color_attributes for m in mesh_objs if m.type == 'MESH')
     accent = char.get('color', None) if isinstance(char, dict) else getattr(char, 'color', None)
-    if accent:
-        import bpy as _bpy
-        mesh_objs = [o for o in _bpy.data.objects if o.type == 'MESH']
+
+    if has_vertex_colors:
+        # Sketchfab/MCP models: use vertex colors with proper lighting material
+        setup_asset_material(mesh_objs, accent_color=None)
+        print(f"  Using vertex colors (Sketchfab-sourced model)")
+    elif accent:
         setup_asset_material(mesh_objs, accent_color=accent)
-        print(f"  Applied accent color: {accent}")
+        print(f"  Applied accent color: {accent} (no vertex colors)")
 
     # Parent lights to pivot so lighting is uniform across all 8 directions
     parent_lights_to_pivot(pivot)
