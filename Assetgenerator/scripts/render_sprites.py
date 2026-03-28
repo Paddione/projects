@@ -513,8 +513,8 @@ def configure_alpha_rendering(scene, use_cycles=False):
     if use_cycles:
         scene.render.engine = 'CYCLES'
         scene.cycles.device = 'CPU'
-        scene.cycles.samples = 64  # Low sample count for speed (sprites are small)
-        scene.cycles.use_denoising = True
+        scene.cycles.samples = 128  # Higher samples since no denoiser
+        scene.cycles.use_denoising = False  # OIDN not available in all Blender builds
         print(f"  Render engine: Cycles CPU (64 samples, for PBR textures)")
     else:
         # EEVEE overscan: renders slightly beyond frame edges to avoid alpha cutoff
