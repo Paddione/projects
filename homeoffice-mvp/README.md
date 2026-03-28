@@ -63,32 +63,84 @@ Folgende Dienste legen ihre Daten dort ab:
 
 Ohne `STORAGE_PATH` wird `./data/` neben der `docker-compose.yml` verwendet.
 
-### Nach dem Start: LLDAP einrichten
+### Nach dem Start: User-Import & LDAP einrichten
 
-1. `https://ldap.${DOMAIN}` aufrufen
-2. Login: `admin` / Wert aus `LLDAP_LDAP_USER_PASS`
-3. Gruppe anlegen: `homeoffice_users`
-4. Demo-User anlegen und der Gruppe zuweisen
+#### Option A — User aus CSV / LDIF importieren (Bulk-Import)
 
-### Keycloak → LLDAP User Federation einrichten
+```bash
+# Voraussetzungen
+apt install curl jq
 
-1. Keycloak Admin öffnen → Realm `homeoffice` → **User Federation → Add provider → LDAP**
-2. Konfiguration:
+# Beispiel-CSV ansehen
+cat scripts/users-example.csv
+
+# CSV importieren (LLDAP läuft lokal auf Port 17170)
+chmod +x scripts/import-users.sh
+./scripts/import-users.sh --csv meine-user.csv \
+  --url http://localhost:17170 \
+  --pass <LLDAP_LDAP_USER_PASS>
+
+# LDIF importieren (z.B. Export aus bestehendem LDAP/AD)
+./scripts/import-users.sh --ldif export.ldif \
+  --url http://localhost:17170 \
+  --pass <LLDAP_LDAP_USER_PASS>
+
+# Vorschau ohne Änderungen
+./scripts/import-users.sh --csv meine-user.csv --dry-run
+```
+
+**CSV-Format:**
+```
+username,email,display_name,groups,first_name,last_name
+anna.schmidt,anna@example.com,Anna Schmidt,"homeoffice_users;admins",Anna,Schmidt
+```
+
+- `groups`: semikolon-getrennt, werden automatisch angelegt
+- Alle User bekommen ein Einmal-Passwort (`ChangeMe123!`) und müssen es beim ersten Login ändern
+
+#### Option B — Bestehendes LDAP / Active Directory anbinden
+
+Falls schon ein LDAP-Server (z.B. AD, OpenLDAP, 389ds) vorhanden ist, kann Keycloak direkt dort federieren — LLDAP wird dann als Zwischenschicht übersprungen:
+
+1. Keycloak Admin → Realm `homeoffice` → **User Federation → Add provider → LDAP**
+2. Konfiguration für **Active Directory:**
 
 | Feld | Wert |
 |---|---|
+| Vendor | Active Directory |
+| Connection URL | `ldap://dein-ad-server:389` (oder ldaps://…:636) |
+| Bind DN | `cn=serviceaccount,dc=firma,dc=de` |
+| Bind Credential | Service-Account-Passwort |
+| Users DN | `cn=Users,dc=firma,dc=de` |
+| Username LDAP attribute | `sAMAccountName` |
+| UUID LDAP attribute | `objectGUID` |
+| User Object Classes | `person,organizationalPerson,user` |
+
+3. Konfiguration für **OpenLDAP / LLDAP:**
+
+| Feld | Wert |
+|---|---|
+| Vendor | Other |
 | Connection URL | `ldap://lldap:3890` |
-| Bind DN | `uid=admin,ou=people,dc=…` (deine Base DN) |
+| Bind DN | `uid=admin,ou=people,dc=example,dc=com` |
 | Bind Credential | `LLDAP_LDAP_USER_PASS` |
-| Users DN | `ou=people,dc=…` |
+| Users DN | `ou=people,dc=example,dc=com` |
 | Username LDAP attribute | `uid` |
-| RDN LDAP attribute | `uid` |
 | UUID LDAP attribute | `entryUUID` |
 | User Object Classes | `inetOrgPerson` |
 
-3. **Test connection → Test authentication → Save**
-4. **Sync all users** — alle LLDAP-User erscheinen jetzt in Keycloak
-5. Mattermost + Nextcloud erben die User automatisch über OIDC (kein weiterer Schritt)
+4. **Test connection → Test authentication → Save → Sync all users**
+5. Mattermost + Nextcloud erhalten die User automatisch über OIDC — kein weiterer Schritt
+
+#### Option C — LDAP-Gruppen als Keycloak-Rollen mappen
+
+Damit AD/LDAP-Gruppen direkt als Rollen in Mattermost/Nextcloud landen:
+
+1. Keycloak → User Federation → LLDAP/AD → **Mappers → Add mapper**
+2. Typ: `group-ldap-mapper`
+3. LDAP Groups DN: `ou=groups,dc=…`
+4. Group Name LDAP Attribute: `cn`
+5. Save → **Sync LDAP Groups**
 
 ---
 
