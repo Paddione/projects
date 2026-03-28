@@ -51,6 +51,14 @@ export async function generate({ id, asset, config, libraryRoot }) {
     args.push('--accent-color', asset.color);
   }
 
+  // Pass weapon model path for real weapon geometry (from Sketchfab etc.)
+  if (asset.weaponModel) {
+    const weaponPath = join(libraryRoot, asset.weaponModel);
+    if (existsSync(weaponPath)) {
+      args.push('--weapon-model', weaponPath);
+    }
+  }
+
   if (modelPath === riggedPath) {
     console.log(`  Using rigged model for ${id}`);
   }

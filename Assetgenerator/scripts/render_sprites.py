@@ -464,12 +464,14 @@ def configure_alpha_rendering(scene):
     print(f"  Alpha rendering: {RENDER_RESOLUTION}px, 16-bit RGBA, overscan enabled")
 
 
-def attach_weapon_prop(armature, pose_name):
-    """Attach a simple weapon shape to the right hand bone for weapon poses.
+def attach_weapon_prop(armature, pose_name, weapon_model_path=None):
+    """Attach a weapon shape to the right hand bone for weapon poses.
+
+    If weapon_model_path is provided, imports a real GLB weapon model.
+    Otherwise falls back to procedural cube/cylinder geometry.
 
     At 64px, bone rotations alone can't convey 'holding a weapon' — the weapon
-    geometry itself needs to be visible. Creates a scaled cube/cylinder parented
-    to hand.R that varies by pose for visual distinction.
+    geometry itself needs to be visible.
     """
     if pose_name in ("stand", "walk"):
         return  # No weapon in idle/walk poses
@@ -478,20 +480,42 @@ def attach_weapon_prop(armature, pose_name):
     if not hand_bone:
         return
 
+    # Clean up any previous weapon props from this pose
+    for obj in list(bpy.data.objects):
+        if obj.name.startswith(f"WeaponProp_{pose_name}"):
+            bpy.data.objects.remove(obj, do_unlink=True)
+
+    # --- Real weapon model (from Sketchfab or other source) ---
+    if weapon_model_path and os.path.exists(weapon_model_path):
+        bpy.ops.import_scene.gltf(filepath=weapon_model_path)
+        imported = [o for o in bpy.context.selected_objects if o.type == 'MESH']
+        if imported:
+            weapon = imported[0]
+            weapon.name = f"WeaponProp_{pose_name}"
+            # Normalize scale to fit hand (largest dim = 0.3 BU)
+            max_dim = max(weapon.dimensions)
+            if max_dim > 0:
+                scale_factor = 0.3 / max_dim
+                weapon.scale *= scale_factor
+            weapon.parent = armature
+            weapon.parent_type = 'BONE'
+            weapon.parent_bone = "hand.R"
+            weapon.location = (0.15, 0, 0)
+            # Parent any other imported objects to main weapon
+            for obj in imported[1:]:
+                obj.parent = weapon
+            bpy.context.view_layer.update()
+            print(f"    Attached weapon model: {pose_name} ({weapon_model_path})")
+            return
+
+    # --- Fallback: procedural geometry ---
     # Weapon dimensions per pose (length, width, height)
-    # At 64px: 1 BU ≈ 22px. Width must be ≥0.10 (2px+), length delta ≥0.15 between poses.
-    # Each pose has a deliberately different length×width profile for silhouette contrast:
-    #   gun:     short + chunky  (pistol block)
-    #   machine: medium + wide   (thick automatic)
-    #   reload:  compact + squat (hands together, weapon minimized)
-    #   hold:    medium + thick  (relaxed carry)
-    #   silencer: long + narrow  (extended barrel — most distinct outline)
     weapon_shapes = {
-        "gun":      (0.40, 0.12, 0.12),   # Short chunky pistol — 9px long, 3px wide
-        "machine":  (0.65, 0.14, 0.12),   # Wide automatic — 14px long, 3px wide
-        "reload":   (0.30, 0.10, 0.10),   # Compact body — 7px, tucked into chest
-        "hold":     (0.55, 0.12, 0.14),   # Medium + slightly taller — 12px, casual
-        "silencer": (0.80, 0.08, 0.08),   # Very long + thin — 18px, distinctive line
+        "gun":      (0.20, 0.06, 0.06),   # Pistol
+        "machine":  (0.30, 0.07, 0.06),   # Automatic
+        "reload":   (0.15, 0.05, 0.05),   # Compact
+        "hold":     (0.25, 0.06, 0.07),   # Held at hip
+        "silencer": (0.35, 0.04, 0.04),   # Long thin barrel
     }
 
     dims = weapon_shapes.get(pose_name)
@@ -519,7 +543,6 @@ def attach_weapon_prop(armature, pose_name):
     weapon.location = (dims[0] * 0.5, 0, 0)
 
     # Silencer gets a suppressor tip — wider cylinder at the barrel end
-    # This is the worst-scoring pose; the extra geometry creates a unique outline
     if pose_name == "silencer":
         bpy.ops.mesh.primitive_cylinder_add(radius=0.5, depth=1)
         suppressor = bpy.context.object
@@ -542,7 +565,7 @@ def render_frame(output_path: Path):
     bpy.ops.render.render(write_still=True)
 
 
-def render_character(char: dict, model_path: Path, template_path=None, force=False):
+def render_character(char: dict, model_path: Path, template_path=None, force=False, weapon_model=None):
     """Render all poses for a character across all directions using template.
 
     If the model has an armature (rigged), bone rotations from POSE_PRESETS
@@ -600,7 +623,7 @@ def render_character(char: dict, model_path: Path, template_path=None, force=Fal
         if armature:
             apply_pose(armature, pose_name)
             # Attach weapon geometry so weapons are visible at 64px
-            attach_weapon_prop(armature, pose_name)
+            attach_weapon_prop(armature, pose_name, weapon_model_path=weapon_model)
 
         # Walk pose: apply forward lean + slight bob on inner pivot
         # This works even when auto-rigging fails to deform the mesh
@@ -703,6 +726,8 @@ def main():
     parser.add_argument("--force", action="store_true", help="Re-render even if files exist")
     parser.add_argument("--accent-color", dest="accent_color", default=None,
                         help="Accent hex color for consistent material (e.g. #00f2ff)")
+    parser.add_argument("--weapon-model", dest="weapon_model", default=None,
+                        help="GLB path for weapon prop (replaces procedural geometry)")
     args = parser.parse_args(argv)
 
     global OUTPUT_BASE
@@ -725,7 +750,7 @@ def main():
                       "color": args.accent_color}
 
         if args.category == "characters":
-            render_character(asset_stub, model_path, template_path=args.template, force=args.force)
+            render_character(asset_stub, model_path, template_path=args.template, force=args.force, weapon_model=args.weapon_model)
             out_dir = OUTPUT_BASE / "characters" / args.id
         else:
             render_static(asset_stub, args.category, model_path, template_path=args.template, force=args.force)
@@ -756,7 +781,7 @@ def main():
             else:
                 model_path = MODELS_DIR / "characters" / f"{char['id']}.glb"
             if model_path.exists():
-                render_character(char, model_path, template_path=args.template, force=args.force)
+                render_character(char, model_path, template_path=args.template, force=args.force, weapon_model=args.weapon_model)
             else:
                 print(f"  [SKIP] No model for character {char['id']}")
 

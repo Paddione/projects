@@ -57,5 +57,5 @@
   },
   "tags": ["arena"],
   "conceptBackendPriority": ["comfyui", "gemini-imagen", "siliconflow", "diffusers"],
-  "modelBackendPriority": ["meshy", "triposr"]
+  "modelBackendPriority": ["hunyuan3d-local", "triposr", "meshy", "hyper3d", "hunyuan3d"]
 }

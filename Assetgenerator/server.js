@@ -887,6 +887,52 @@ async function generateConceptWithFallback({ id, asset, vConfig, onFallback }) {
   throw lastError || new Error('All concept backends exhausted (rate-limited)');
 }
 
+let _rateLimitedModelBackends = new Set();
+
+/**
+ * Try generating a 3D model using the priority chain of backends.
+ * Mirrors generateConceptWithFallback — rate-limit aware fallback chain.
+ * Returns { result, adapterName } on success.
+ */
+async function generateModelWithFallback({ id, asset, vConfig, onFallback }) {
+  const configPriority = vConfig.modelBackendPriority || ['meshy', 'triposr'];
+  let backends;
+  if (asset.modelBackend) {
+    backends = [asset.modelBackend, ...configPriority.filter(b => b !== asset.modelBackend)];
+  } else {
+    backends = [...configPriority];
+  }
+
+  const available = backends.filter(b => !_rateLimitedModelBackends.has(b));
+  if (available.length === 0) {
+    _rateLimitedModelBackends.clear();
+    available.push(...backends);
+  }
+
+  let lastError;
+  for (const backendName of available) {
+    const adapterPath = join(__dirname, 'adapters', `${backendName}.js`);
+    if (!existsSync(adapterPath)) continue;
+
+    try {
+      const adapter = await import(adapterPath);
+      const result = await adapter.generate({ id, asset, config: vConfig, libraryRoot: vConfig.libraryRoot });
+      return { result, adapterName: backendName };
+    } catch (err) {
+      if (err.name === 'RateLimitError') {
+        _rateLimitedModelBackends.add(backendName);
+        console.log(`  [Model Fallback] ${backendName} rate-limited, trying next backend...`);
+        if (onFallback) onFallback(backendName, err.message);
+        lastError = err;
+        continue;
+      }
+      throw err;
+    }
+  }
+
+  throw lastError || new Error('All model backends exhausted (rate-limited)');
+}
+
 app.get('/api/visual-library', (req, res) => {
   res.json(loadVisualLibrary());
 });
@@ -1090,8 +1136,19 @@ app.post('/api/visual-library/batch/generate', async (req, res) => {
             });
             result = fallbackResult.result;
             adapterName = fallbackResult.adapterName;
+          } else if (p === 'model') {
+            // Use fallback chain for model generation (Meshy → Hyper3D → Hunyuan3D → TripoSR)
+            _rateLimitedModelBackends.clear();
+            const fallbackResult = await generateModelWithFallback({
+              id, asset, vConfig,
+              onFallback: (backend, reason) => {
+                res.write(`event: fallback\ndata: ${JSON.stringify({ asset: id, phase: p, from: backend, reason })}\n\n`);
+              },
+            });
+            result = fallbackResult.result;
+            adapterName = fallbackResult.adapterName;
           } else {
-            const defaultAdapterMap = { model: 'triposr', render: 'blender', pack: 'packer', rig: 'mixamo', animate: 'mixamo' };
+            const defaultAdapterMap = { render: 'blender', pack: 'packer', rig: 'mixamo', animate: 'mixamo' };
             adapterName = defaultAdapterMap[p];
             const adapterPath = join(__dirname, 'adapters', `${adapterName}.js`);
             if (!existsSync(adapterPath)) throw new Error(`Adapter ${adapterName} not found`);
@@ -1317,8 +1374,18 @@ app.post('/api/visual-library/:id/generate/:phase', async (req, res) => {
           });
           result = fallbackResult.result;
           adapterName = fallbackResult.adapterName;
+        } else if (p === 'model') {
+          _rateLimitedModelBackends.clear();
+          const fallbackResult = await generateModelWithFallback({
+            id: asset.id, asset, vConfig,
+            onFallback: (backend, reason) => {
+              res.write(`event: fallback\ndata: ${JSON.stringify({ asset: asset.id, phase: p, from: backend, reason })}\n\n`);
+            },
+          });
+          result = fallbackResult.result;
+          adapterName = fallbackResult.adapterName;
         } else {
-          const defaultAdapterMap = { model: 'triposr', render: 'blender', pack: 'packer', rig: 'mixamo', animate: 'mixamo' };
+          const defaultAdapterMap = { render: 'blender', pack: 'packer', rig: 'mixamo', animate: 'mixamo' };
           adapterName = defaultAdapterMap[p];
           const adapterPath = join(__dirname, 'adapters', `${adapterName}.js`);
           if (!existsSync(adapterPath)) throw new Error(`Adapter not found: ${adapterPath}`);
@@ -1412,6 +1479,101 @@ app.post('/api/projects/:name/sync-visual', (req, res) => {
 
   saveVisualLibrary(library);
   res.json({ synced, count: synced.length, exportPath: exportDir });
+});
+
+// =============================================================================
+// Sketchfab & PolyHaven API proxies
+// =============================================================================
+
+app.get('/api/sketchfab/search', async (req, res) => {
+  try {
+    const adapter = await import(join(__dirname, 'adapters', 'sketchfab.js'));
+    const results = await adapter.search({
+      query: req.query.q || '',
+      count: parseInt(req.query.count) || 20,
+    });
+    res.json(results);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/sketchfab/preview/:uid', async (req, res) => {
+  try {
+    const key = process.env.SKETCHFAB_API_KEY;
+    if (!key) return res.status(400).json({ error: 'SKETCHFAB_API_KEY not set' });
+
+    const apiRes = await fetch(`https://api.sketchfab.com/v3/models/${req.params.uid}`, {
+      headers: { Authorization: `Token ${key}` },
+    });
+    if (!apiRes.ok) return res.status(apiRes.status).json({ error: 'Sketchfab API error' });
+    const model = await apiRes.json();
+    res.json({
+      uid: model.uid,
+      name: model.name,
+      thumbnail: model.thumbnails?.images?.[0]?.url,
+      vertexCount: model.vertexCount,
+      faceCount: model.faceCount,
+      isAnimated: model.isAnimated,
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/visual-library/:id/source/sketchfab', (req, res) => {
+  const { uid } = req.body;
+  if (!uid) return res.status(400).json({ error: 'uid required' });
+
+  const library = loadVisualLibrary();
+  const asset = library.assets[req.params.id];
+  if (!asset) return res.status(404).json({ error: 'Asset not found' });
+
+  asset.sketchfabUid = uid;
+  asset.modelBackend = 'sketchfab';
+  // Invalidate model phase so next generate picks up the Sketchfab source
+  if (asset.pipeline.model) asset.pipeline.model.status = 'pending';
+  saveVisualLibrary(library);
+  res.json(asset);
+});
+
+app.get('/api/polyhaven/search', async (req, res) => {
+  try {
+    const adapter = await import(join(__dirname, 'adapters', 'polyhaven.js'));
+    const results = await adapter.search({
+      type: req.query.type || 'textures',
+      categories: req.query.categories,
+    });
+    res.json(results);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/visual-library/:id/texture/:textureId', async (req, res) => {
+  const library = loadVisualLibrary();
+  const asset = library.assets[req.params.id];
+  if (!asset) return res.status(404).json({ error: 'Asset not found' });
+
+  try {
+    const adapter = await import(join(__dirname, 'adapters', 'polyhaven.js'));
+    const vConfig = loadVisualConfig();
+    const texturePath = join(vConfig.libraryRoot, 'textures', asset.category, `${req.params.id}_${req.params.textureId}.jpg`);
+
+    await adapter.download({
+      assetId: req.params.textureId,
+      type: 'textures',
+      resolution: req.body.resolution || '1k',
+      outputPath: texturePath,
+    });
+
+    if (!asset.textures) asset.textures = {};
+    asset.textures[req.params.textureId] = texturePath;
+    saveVisualLibrary(library);
+    res.json({ asset: asset.id, texture: req.params.textureId, path: texturePath });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // =============================================================================

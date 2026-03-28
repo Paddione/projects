@@ -108,6 +108,9 @@ When asked to generate visual assets, collect these details:
 | `directions` | No | Override directions (1 or 8) | `8` for characters |
 | `size` | No | Sprite size in px | `64` for characters, `32` for items |
 | `conceptBackend` | No | Override concept backend | `comfyui`, `gemini-imagen`, `siliconflow` |
+| `modelBackend` | No | Override model backend | `meshy`, `hyper3d`, `hunyuan3d`, `triposr`, `sketchfab` |
+| `sketchfabUid` | No | Sketchfab model UID (for sourcing) | `abc123def456` |
+| `weaponModel` | No | Path to weapon GLB (replaces procedural geometry) | `models/weapons/rifle.glb` |
 
 **Visual pipeline phases:** `concept` → `model` → `render` → `pack` (or `full` for all)
 
@@ -151,7 +154,74 @@ Fallback chain for concept generation: `comfyui` → `gemini-imagen` → `silico
 
 ### Model Backend Priority
 
-Fallback chain for 3D model generation: `meshy` (cloud) → `triposr` (GPU)
+Fallback chain for 3D model generation (local-first, free by default):
+
+`hunyuan3d-local` (local GPU, free) → `triposr` (local GPU, free) → `meshy` (cloud, paid) → `hyper3d` (cloud, subscription) → `hunyuan3d` (fal.ai, paid)
+
+Per-asset override via `modelBackend` field (same pattern as `conceptBackend`).
+
+### Hunyuan3D Local Setup (GPU Worker)
+
+Self-hosted Hunyuan3D v2.1 on the GPU worker machine (10.10.0.3). Shape-only generation (no textures — needs >21GB VRAM).
+
+```bash
+# One-time setup on GPU worker
+ssh patrick@10.10.0.3 -p 2222
+bash ~/projects/Assetgenerator/scripts/setup-hunyuan3d.sh
+
+# Start/stop the server
+systemctl --user start hunyuan3d
+systemctl --user stop hunyuan3d
+
+# Check health
+curl http://10.10.0.3:8081/health
+```
+
+- **Server URL**: `http://10.10.0.3:8081` (override with `HUNYUAN3D_LOCAL_URL` env var)
+- **VRAM**: ~10GB shape-only (fits RTX 5070 Ti 16GB)
+- **Speed**: ~15-30s per model
+- **Requires**: PyTorch nightly with cu128 (for RTX 5070 Ti / Blackwell sm_120)
+
+### Asset Sourcing (Sketchfab / PolyHaven)
+
+For pre-made models (weapons, cover, items), use Sketchfab sourcing instead of AI generation:
+
+```bash
+# Search Sketchfab
+curl https://assetgen.korczewski.de/api/sketchfab/search?q=rifle&count=10
+
+# Set Sketchfab source on asset (skips concept+model phases, downloads model on next generate)
+curl -X POST https://assetgen.korczewski.de/api/visual-library/ak47/source/sketchfab \
+  -H 'Content-Type: application/json' -d '{"uid":"sketchfab-model-uid"}'
+
+# Search PolyHaven textures/HDRIs
+curl https://assetgen.korczewski.de/api/polyhaven/search?type=textures&categories=metal
+
+# Apply PolyHaven texture to asset
+curl -X POST https://assetgen.korczewski.de/api/visual-library/ak47/texture/rusty_metal \
+  -H 'Content-Type: application/json' -d '{"resolution":"1k"}'
+```
+
+### Blender MCP Interactive Workflow
+
+During Claude Code sessions, Blender MCP tools provide interactive asset creation:
+1. `search_sketchfab_models` → find real models
+2. `get_sketchfab_model_preview` → visual confirm
+3. `download_sketchfab_model` → import into Blender
+4. `get_viewport_screenshot` → QA check
+5. `execute_blender_code` → export GLB to visual library
+6. `generate_hyper3d_model_via_text` → generate 3D directly in scene
+
+### Environment Variables (New)
+
+| Variable | Required For | Description |
+|----------|-------------|-------------|
+| `HUNYUAN3D_LOCAL_URL` | hunyuan3d-local adapter | Override local server URL (default: `http://10.10.0.3:8081`) |
+| `HYPER3D_API_KEY` | hyper3d adapter | Hyper3D Rodin API key (paid subscription) |
+| `HUNYUAN3D_API_KEY` or `FAL_KEY` | hunyuan3d adapter | fal.ai API key for Hunyuan3D cloud ($0.16/gen) |
+| `SKETCHFAB_API_KEY` | sketchfab adapter | Sketchfab v3 API token (free account) |
+
+**Default pipeline is fully free**: `hunyuan3d-local` + `triposr` need no API keys (just GPU worker running).
 
 ## Commands
 
