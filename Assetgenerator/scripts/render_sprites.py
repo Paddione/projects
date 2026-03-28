@@ -413,8 +413,23 @@ def link_model_to_template(model_path: Path, position=(0, 0, 0)):
     outer_pivot.name = "ModelPivot"
     inner_pivot.parent = outer_pivot
 
-    # Apply vertex color material (accent color passed from render_character)
-    setup_vertex_color_material(mesh_objects)
+    # Material strategy: preserve existing PBR textures (Sketchfab models),
+    # only apply vertex color fallback for untextured models (TripoSR etc.)
+    has_textures = any(
+        mat and mat.use_nodes and any(n.type == 'TEX_IMAGE' and n.image for n in mat.node_tree.nodes)
+        for obj in mesh_objects if obj.type == 'MESH'
+        for mat in obj.data.materials if mat
+    )
+    has_vertex_colors = any(obj.data.color_attributes for obj in mesh_objects if obj.type == 'MESH')
+
+    if has_textures:
+        print(f"  Keeping existing PBR materials (model has textures)")
+    elif has_vertex_colors:
+        print(f"  Using vertex color material (model has vertex colors)")
+        setup_vertex_color_material(mesh_objects)
+    else:
+        print(f"  Applying default material (no textures or vertex colors)")
+        setup_vertex_color_material(mesh_objects)
 
     # Normalize: center, scale, orient to fit camera frame (applied to inner pivot)
     normalize_model(inner_pivot, mesh_objects)
@@ -605,20 +620,25 @@ def render_character(char: dict, model_path: Path, template_path=None, force=Fal
     if not pivot:
         return
 
-    # Material strategy: use vertex colors if the model has them (Sketchfab),
-    # otherwise override with flat accent color (TripoSR/generated models).
+    # Material strategy: preserve textures > use vertex colors > flat accent color
     import bpy as _bpy
     mesh_objs = [o for o in _bpy.data.objects if o.type == 'MESH']
+    has_textures = any(
+        mat and mat.use_nodes and any(n.type == 'TEX_IMAGE' and n.image for n in mat.node_tree.nodes)
+        for obj in mesh_objs if obj.type == 'MESH'
+        for mat in obj.data.materials if mat
+    )
     has_vertex_colors = any(m.data.color_attributes for m in mesh_objs if m.type == 'MESH')
     accent = char.get('color', None) if isinstance(char, dict) else getattr(char, 'color', None)
 
-    if has_vertex_colors:
-        # Sketchfab/MCP models: use vertex colors with proper lighting material
-        setup_asset_material(mesh_objs, accent_color=None)
+    if has_textures:
+        print(f"  Keeping PBR textures (textured model)")
+    elif has_vertex_colors:
+        # Sketchfab/MCP models with vertex colors: use them as-is
         print(f"  Using vertex colors (Sketchfab-sourced model)")
     elif accent:
         setup_asset_material(mesh_objs, accent_color=accent)
-        print(f"  Applied accent color: {accent} (no vertex colors)")
+        print(f"  Applied accent color: {accent} (no textures or vertex colors)")
 
     # Parent lights to pivot so lighting is uniform across all 8 directions
     parent_lights_to_pivot(pivot)
