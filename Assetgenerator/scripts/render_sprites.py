@@ -713,10 +713,16 @@ def render_static(asset: dict, category: str, model_path: Path, template_path=No
         tpath = get_template_path(category)
     scene = load_blender_template(tpath)
 
+    # Configure clean alpha rendering (transparent bg, 256px, 16-bit)
+    configure_alpha_rendering(scene)
+
     # Link model to template
     pivot, _armature = link_model_to_template(model_path)
     if not pivot:
         return
+
+    # Parent lights to pivot for uniform lighting
+    parent_lights_to_pivot(pivot)
 
     for frame_idx in range(num_frames):
         out_dir = ensure_output_dir(category, asset_id)
