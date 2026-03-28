@@ -1,6 +1,4 @@
-# Homeoffice MVP — Deployment Guide
-
-> **Zwei Varianten:** Docker Compose (einfacher Einstieg) oder k3s (Kubernetes, Produktion)
+# Homeoffice MVP — Docker Compose Deployment Guide
 
 ---
 
@@ -252,7 +250,7 @@ ldapsearch -x -H ldap://alter-server -b "dc=firma,dc=de" > export.ldif
 
 ---
 
-## 🐳 Docker Compose Deployment (Empfohlen für den Einstieg)
+## 🐳 Docker Compose Deployment
 
 ### Voraussetzungen
 - Docker + Docker Compose v2
@@ -390,80 +388,4 @@ Damit AD/LDAP-Gruppen direkt als Rollen in Mattermost/Nextcloud landen:
 4. Group Name LDAP Attribute: `cn`
 5. Save → **Sync LDAP Groups**
 
----
 
-# Homeoffice MVP — k3s Deployment
-
-## Stack
-
-| Dienst       | URL                        | Zweck                        |
-|--------------|----------------------------|------------------------------|
-| Keycloak     | auth.YOURDOMAIN.de         | SSO / OAuth2 / OIDC          |
-| Mattermost   | chat.YOURDOMAIN.de         | Chat, Notifications, Plugins |
-| Jitsi Meet   | meet.YOURDOMAIN.de         | Video-Konferenzen            |
-| Nextcloud    | files.YOURDOMAIN.de        | Dateien, WebDAV              |
-| LLDAP        | ldap.YOURDOMAIN.de         | Benutzerverwaltung (LDAP)    |
-
-## Voraussetzungen
-
-- k3s-Cluster mit `nginx`-Ingress-Controller
-- `cert-manager` mit `letsencrypt-prod` ClusterIssuer
-- DNS-Einträge für alle 4 Subdomains → Cluster-IP
-
-## Deployment
-
-```bash
-# 1. Namespace
-kubectl apply -f base/namespace.yaml
-
-# 2. Alle Komponenten deployen (LLDAP zuerst — Keycloak braucht es)
-kubectl apply -f deploy/04-lldap.yaml
-kubectl apply -f keycloak/
-kubectl apply -f nextcloud/
-kubectl apply -f mattermost/
-kubectl apply -f jitsi/
-```
-
-## Konfiguration vor dem Deploy
-
-Ersetze in allen YAML-Dateien:
-- `YOURDOMAIN.de` → deine echte Domain
-- Alle `CHANGE_ME_*` Werte → sichere Passwörter (z.B. `openssl rand -base64 32`)
-
-## Nach dem Deploy: Keycloak Realm einrichten
-
-1. Login: https://auth.YOURDOMAIN.de → Admin Console
-2. Realm erstellen: `homeoffice`
-3. Client für Mattermost erstellen:
-   - Client ID: `mattermost`
-   - Client Protocol: `openid-connect`
-   - Access Type: `confidential`
-   - Valid Redirect URIs: `https://chat.YOURDOMAIN.de/*`
-   - Kopiere den Secret → in `mattermost.yaml` als `CHANGE_ME_OIDC_SECRET`
-4. Client für Nextcloud erstellen (analog, mit Social Login App)
-
-## Mattermost Plugins aktivieren
-
-Nach dem ersten Start im Admin Panel:
-- **Jitsi Plugin**: Marketplace → Jitsi → Konfigurieren → Server URL: `https://meet.YOURDOMAIN.de`
-- **Nextcloud Plugin**: Marketplace → Nextcloud Files → Server URL: `https://files.YOURDOMAIN.de`
-
-## Jitsi Hinweis
-
-JVB benötigt `hostNetwork: true` für UDP-Mediendaten (Port 10000).
-`JVB_ADVERTISE_IPS` muss auf die öffentliche IP des Nodes gesetzt werden.
-
-## Architektur
-
-```
-Browser
-  │
-  ├─ chat.YOURDOMAIN.de  → Mattermost (Chat + Jitsi-Button + Nextcloud-Links)
-  ├─ meet.YOURDOMAIN.de  → Jitsi Meet (Video, eingebettet in Mattermost)
-  ├─ files.YOURDOMAIN.de → Nextcloud (Dateien, via Mattermost-Plugin)
-  ├─ auth.YOURDOMAIN.de  → Keycloak (SSO für alle drei)
-  └─ ldap.YOURDOMAIN.de  → LLDAP Web UI (Benutzerverwaltung)
-
-Datenfluss User Federation:
-  LLDAP (user store) ──LDAP──▶ Keycloak (sync) ──OIDC──▶ Mattermost / Nextcloud
-```
