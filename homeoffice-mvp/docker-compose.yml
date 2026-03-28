@@ -1,0 +1,400 @@
+# ═══════════════════════════════════════════════════════════════════
+# Homeoffice MVP — Docker Compose Deployment
+# ═══════════════════════════════════════════════════════════════════
+# Konfiguration: cp .env.example .env  (dann alle Werte ausfüllen)
+#
+# Pflichtfelder:
+#   DOMAIN            → z.B. yourname.duckdns.org
+#   DUCKDNS_TOKEN     → aus duckdns.org Dashboard
+#   DUCKDNS_SUBDOMAINS→ kommagetrennte Subdomains OHNE .duckdns.org
+#   ACME_EMAIL        → E-Mail für Let's Encrypt
+#   STORAGE_PATH      → externer Speicherpfad (leer lassen → ./data)
+#
+# Vor dem ersten Start:
+#   mkdir -p ${STORAGE_PATH:-./data}/traefik/letsencrypt \
+#            ${STORAGE_PATH:-./data}/mattermost \
+#            ${STORAGE_PATH:-./data}/nextcloud
+#   touch ${STORAGE_PATH:-./data}/traefik/letsencrypt/acme.json
+#   chmod 600 ${STORAGE_PATH:-./data}/traefik/letsencrypt/acme.json
+# ═══════════════════════════════════════════════════════════════════
+
+version: "3.8"
+
+# ── Volumes (interne DB-Daten) ──────────────────────────────────────
+volumes:
+  keycloak-db-data:
+  mattermost-db-data:
+  nextcloud-db-data:
+  nextcloud-app:       # Nextcloud PHP/App-Dateien (getrennt von Nutzerdaten)
+  lldap-db-data:
+
+# ── Netzwerk ────────────────────────────────────────────────────────
+networks:
+  homeoffice:
+    driver: bridge
+
+# ═══════════════════════════════════════════════════════════════════
+# DIENSTE
+# ═══════════════════════════════════════════════════════════════════
+services:
+
+  # ── DuckDNS Updater ─────────────────────────────────────────────
+  # Aktualisiert alle Subdomains alle 5 Minuten per DuckDNS HTTP API.
+  # API: https://www.duckdns.org/update?domains=DOMAINS&token=TOKEN
+  # Öffentliche IPv4 wird automatisch erkannt (kein &ip= nötig).
+  # verbose=true → Log zeigt "OK\n<IP>" oder "KO"
+  #
+  # DUCKDNS_SUBDOMAINS: kommagetrennte Subdomains OHNE .duckdns.org
+  #   z.B. "myhome" oder "myhome,myhome2"
+  duckdns:
+    image: curlimages/curl:latest
+    container_name: homeoffice-duckdns
+    entrypoint:
+      - sh
+      - -c
+      - |
+        echo "DuckDNS Updater gestartet. Aktualisiere: ${DUCKDNS_SUBDOMAINS}"
+        while true; do
+          RESULT=$(curl -s "https://www.duckdns.org/update?domains=${DUCKDNS_SUBDOMAINS}&token=${DUCKDNS_TOKEN}&verbose=true")
+          echo "[$(date -u '+%Y-%m-%d %H:%M:%S UTC')] ${RESULT}"
+          sleep 300
+        done
+    environment:
+      DUCKDNS_SUBDOMAINS: ${DUCKDNS_SUBDOMAINS:?DuckDNS Subdomains fehlen}
+      DUCKDNS_TOKEN: ${DUCKDNS_TOKEN:?DuckDNS Token fehlt}
+    restart: unless-stopped
+    networks:
+      - homeoffice
+
+  # ── Traefik (Reverse Proxy + SSL) ───────────────────────────────
+  # WICHTIG: acme.json muss vor dem Start existieren mit chmod 600
+  #   touch ${STORAGE_PATH:-./data}/traefik/letsencrypt/acme.json
+  #   chmod 600 ${STORAGE_PATH:-./data}/traefik/letsencrypt/acme.json
+  traefik:
+    image: traefik:v3.0
+    container_name: homeoffice-traefik
+    command:
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
+      - "--certificatesresolvers.letsencrypt.acme.tlschallenge=true"
+      - "--certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL:?ACME E-Mail fehlt}"
+      - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ${STORAGE_PATH:-./data}/traefik/letsencrypt:/letsencrypt
+    restart: unless-stopped
+    networks:
+      - homeoffice
+
+  # ── LLDAP Datenbank ──────────────────────────────────────────────
+  lldap-db:
+    image: postgres:16-alpine
+    container_name: homeoffice-lldap-db
+    environment:
+      POSTGRES_DB: lldap
+      POSTGRES_USER: lldap
+      POSTGRES_PASSWORD: ${LLDAP_DB_PASSWORD:?LLDAP DB Passwort fehlt}
+    volumes:
+      - lldap-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U lldap"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - homeoffice
+
+  # ── LLDAP (Lightweight LDAP) ────────────────────────────────────
+  # Zentraler User-Store. Keycloak synct User per LDAP-Federation.
+  # Web UI: https://ldap.${DOMAIN}
+  # Login:  admin / ${LLDAP_LDAP_USER_PASS}
+  #
+  # Nach dem Start:
+  #   1. Web UI aufrufen → Gruppe "homeoffice_users" anlegen
+  #   2. User anlegen und der Gruppe zuweisen
+  #   3. Keycloak → User Federation → LDAP einrichten (siehe README)
+  lldap:
+    image: lldap/lldap:stable
+    container_name: homeoffice-lldap
+    environment:
+      LLDAP_JWT_SECRET: ${LLDAP_JWT_SECRET:?LLDAP JWT Secret fehlt}
+      LLDAP_LDAP_USER_PASS: ${LLDAP_LDAP_USER_PASS:?LLDAP Admin Passwort fehlt}
+      LLDAP_DATABASE_URL: "postgresql://lldap:${LLDAP_DB_PASSWORD}@lldap-db:5432/lldap"
+      LLDAP_LDAP_BASE_DN: "dc=${LLDAP_BASE_DOMAIN:-example},dc=${LLDAP_BASE_TLD:-com}"
+      LLDAP_LDAP_USER_DN: admin
+      LLDAP_HTTP_URL: "https://ldap.${DOMAIN}"
+      LLDAP_VERBOSE: "false"
+      TZ: Europe/Berlin
+    depends_on:
+      lldap-db:
+        condition: service_healthy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.lldap.rule=Host(`ldap.${DOMAIN}`)"
+      - "traefik.http.routers.lldap.entrypoints=websecure"
+      - "traefik.http.routers.lldap.tls.certresolver=letsencrypt"
+      - "traefik.http.services.lldap.loadbalancer.server.port=17170"
+    restart: unless-stopped
+    networks:
+      - homeoffice
+
+  # ── Keycloak Datenbank ──────────────────────────────────────────
+  keycloak-db:
+    image: postgres:16-alpine
+    container_name: homeoffice-keycloak-db
+    environment:
+      POSTGRES_DB: keycloak
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: ${KEYCLOAK_DB_PASSWORD:?Keycloak DB Passwort fehlt}
+    volumes:
+      - keycloak-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U keycloak"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - homeoffice
+
+  # ── Keycloak (SSO) ──────────────────────────────────────────────
+  keycloak:
+    image: quay.io/keycloak/keycloak:24.0
+    container_name: homeoffice-keycloak
+    command: start
+    environment:
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://keycloak-db:5432/keycloak
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD}
+      KC_HOSTNAME: auth.${DOMAIN:?Domain fehlt}
+      KC_HTTP_ENABLED: "true"
+      # KC_PROXY_HEADERS ersetzt das veraltete KC_PROXY=edge (ab KC 22)
+      KC_PROXY_HEADERS: xforwarded
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:?Keycloak Admin Passwort fehlt}
+      TZ: Europe/Berlin
+    depends_on:
+      keycloak-db:
+        condition: service_healthy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.keycloak.rule=Host(`auth.${DOMAIN}`)"
+      - "traefik.http.routers.keycloak.entrypoints=websecure"
+      - "traefik.http.routers.keycloak.tls.certresolver=letsencrypt"
+      - "traefik.http.services.keycloak.loadbalancer.server.port=8080"
+    restart: unless-stopped
+    networks:
+      - homeoffice
+
+  # ── Mattermost Datenbank ────────────────────────────────────────
+  mattermost-db:
+    image: postgres:16-alpine
+    container_name: homeoffice-mattermost-db
+    environment:
+      POSTGRES_DB: mattermost
+      POSTGRES_USER: mattermost
+      POSTGRES_PASSWORD: ${MATTERMOST_DB_PASSWORD:?Mattermost DB Passwort fehlt}
+    volumes:
+      - mattermost-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mattermost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - homeoffice
+
+  # ── Mattermost (Chat) ───────────────────────────────────────────
+  # Jitsi-Plugin: Kamera-Symbol im Chat startet direkt einen Meet-Call
+  # SSO-Button "Mit Keycloak anmelden" erscheint auf dem Login-Screen
+  mattermost:
+    image: mattermost/mattermost-team-edition:9.7
+    container_name: homeoffice-mattermost
+    environment:
+      MM_SQLSETTINGS_DRIVERNAME: postgres
+      MM_SQLSETTINGS_DATASOURCE: "postgres://mattermost:${MATTERMOST_DB_PASSWORD}@mattermost-db:5432/mattermost?sslmode=disable"
+      MM_SERVICESETTINGS_SITEURL: "https://chat.${DOMAIN}"
+      MM_PLUGINSETTINGS_ENABLE: "true"
+      MM_PLUGINSETTINGS_ENABLEUPLOADS: "true"
+      MM_PLUGINSETTINGS_PLUGINSTATES: '{"com.mattermost.jitsi":{"Enable":true}}'
+      # SSO-Button (entspricht MM_OPENIDSETTINGS_BUTTONTEXT im k3s-Deploy)
+      MM_OPENIDSETTINGS_ENABLE: "true"
+      MM_OPENIDSETTINGS_BUTTONTEXT: "Mit Keycloak anmelden"
+      MM_OPENIDSETTINGS_BUTTONICONURL: ""
+      MM_OPENIDSETTINGS_DISCOVERYENDPOINT: "https://auth.${DOMAIN}/realms/homeoffice/.well-known/openid-configuration"
+      MM_OPENIDSETTINGS_ID: "mattermost"
+      MM_OPENIDSETTINGS_SECRET: "${MATTERMOST_OIDC_SECRET:?Mattermost OIDC Secret fehlt}"
+      TZ: Europe/Berlin
+    volumes:
+      # Speichermedium: Uploads und Plugins auf externem Speicher
+      - ${STORAGE_PATH:-./data}/mattermost:/mattermost/data
+    depends_on:
+      mattermost-db:
+        condition: service_healthy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.mattermost.rule=Host(`chat.${DOMAIN}`)"
+      - "traefik.http.routers.mattermost.entrypoints=websecure"
+      - "traefik.http.routers.mattermost.tls.certresolver=letsencrypt"
+      - "traefik.http.services.mattermost.loadbalancer.server.port=8065"
+      # Große Uploads + lange WebSocket-Verbindungen erlauben
+      - "traefik.http.middlewares.mattermost-buffering.buffering.maxRequestBodyBytes=52428800"
+      - "traefik.http.routers.mattermost.middlewares=mattermost-buffering"
+    restart: unless-stopped
+    networks:
+      - homeoffice
+
+  # ── Nextcloud Datenbank ─────────────────────────────────────────
+  nextcloud-db:
+    image: postgres:16-alpine
+    container_name: homeoffice-nextcloud-db
+    environment:
+      POSTGRES_DB: nextcloud
+      POSTGRES_USER: nextcloud
+      POSTGRES_PASSWORD: ${NEXTCLOUD_DB_PASSWORD:?Nextcloud DB Passwort fehlt}
+    volumes:
+      - nextcloud-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nextcloud"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - homeoffice
+
+  # ── Nextcloud (Dateien) ─────────────────────────────────────────
+  # nextcloud-app: PHP-App-Dateien (benötigt named volume für korrekte Rechte)
+  # ${STORAGE_PATH}/nextcloud: Nutzerdaten (ideal für NAS/USB)
+  nextcloud:
+    image: nextcloud:28-apache
+    container_name: homeoffice-nextcloud
+    environment:
+      POSTGRES_HOST: nextcloud-db
+      POSTGRES_DB: nextcloud
+      POSTGRES_USER: nextcloud
+      POSTGRES_PASSWORD: ${NEXTCLOUD_DB_PASSWORD}
+      NEXTCLOUD_ADMIN_USER: admin
+      NEXTCLOUD_ADMIN_PASSWORD: ${NEXTCLOUD_ADMIN_PASSWORD:?Nextcloud Admin Passwort fehlt}
+      NEXTCLOUD_TRUSTED_DOMAINS: "files.${DOMAIN}"
+      OVERWRITEPROTOCOL: https
+      OVERWRITECLIURL: "https://files.${DOMAIN}"
+      TZ: Europe/Berlin
+    volumes:
+      - nextcloud-app:/var/www/html
+      # Speichermedium: Nutzerdaten auf externem Speicher
+      - ${STORAGE_PATH:-./data}/nextcloud:/var/www/html/data
+    depends_on:
+      nextcloud-db:
+        condition: service_healthy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.nextcloud.rule=Host(`files.${DOMAIN}`)"
+      - "traefik.http.routers.nextcloud.entrypoints=websecure"
+      - "traefik.http.routers.nextcloud.tls.certresolver=letsencrypt"
+      - "traefik.http.services.nextcloud.loadbalancer.server.port=80"
+    restart: unless-stopped
+    networks:
+      - homeoffice
+
+  # ── Jitsi: Prosody (XMPP) ──────────────────────────────────────
+  prosody:
+    image: jitsi/prosody:stable-9111
+    container_name: homeoffice-prosody
+    expose:
+      - "5222"   # XMPP client
+      - "5347"   # XMPP component
+      - "5280"   # BOSH
+    environment:
+      XMPP_DOMAIN: "meet.${DOMAIN}"
+      XMPP_AUTH_DOMAIN: "auth.meet.${DOMAIN}"
+      XMPP_MUC_DOMAIN: "muc.meet.${DOMAIN}"
+      XMPP_INTERNAL_MUC_DOMAIN: "internal-muc.meet.${DOMAIN}"
+      JICOFO_AUTH_PASSWORD: ${JICOFO_AUTH_PASSWORD:?Jicofo Auth Passwort fehlt}
+      JVB_AUTH_PASSWORD: ${JVB_AUTH_PASSWORD:?JVB Auth Passwort fehlt}
+      ENABLE_AUTH: 1
+      ENABLE_GUESTS: 1
+      TZ: Europe/Berlin
+    restart: unless-stopped
+    networks:
+      - homeoffice
+
+  # ── Jitsi: Jicofo (Conference Focus) ───────────────────────────
+  jicofo:
+    image: jitsi/jicofo:stable-9111
+    container_name: homeoffice-jicofo
+    environment:
+      XMPP_SERVER: prosody
+      XMPP_DOMAIN: "meet.${DOMAIN}"
+      XMPP_AUTH_DOMAIN: "auth.meet.${DOMAIN}"
+      XMPP_INTERNAL_MUC_DOMAIN: "internal-muc.meet.${DOMAIN}"
+      JICOFO_AUTH_PASSWORD: ${JICOFO_AUTH_PASSWORD}
+      TZ: Europe/Berlin
+    depends_on:
+      - prosody
+    restart: unless-stopped
+    networks:
+      - homeoffice
+
+  # ── Jitsi: JVB (Videobridge) ────────────────────────────────────
+  # WICHTIG: Port 10000/UDP muss in der Firewall/Router offen sein.
+  # JVB_ADVERTISE_IPS: öffentliche IP/Domain des Hosts — DuckDNS hält diese aktuell.
+  #
+  # HINWEIS: kein network_mode: host — in Docker Compose nicht nötig.
+  # Port-Mapping reicht aus; JVB kommuniziert intern mit prosody per DNS.
+  jvb:
+    image: jitsi/jvb:stable-9111
+    container_name: homeoffice-jvb
+    ports:
+      - "10000:10000/udp"   # Jitsi Mediendaten — muss in Firewall offen sein
+    environment:
+      XMPP_SERVER: prosody
+      XMPP_DOMAIN: "meet.${DOMAIN}"
+      XMPP_AUTH_DOMAIN: "auth.meet.${DOMAIN}"
+      XMPP_INTERNAL_MUC_DOMAIN: "internal-muc.meet.${DOMAIN}"
+      JVB_AUTH_PASSWORD: ${JVB_AUTH_PASSWORD}
+      # JVB_ADVERTISE_IPS: die öffentliche IP, die Clients für Mediendaten nutzen.
+      # DuckDNS-Domain funktioniert direkt, da DuckDNS sie immer aktuell hält.
+      JVB_ADVERTISE_IPS: ${JVB_ADVERTISE_IPS:?JVB Advertise IP fehlt}
+      JVB_PORT: "10000"
+      TZ: Europe/Berlin
+    depends_on:
+      - prosody
+    restart: unless-stopped
+    networks:
+      - homeoffice
+
+  # ── Jitsi: Web Frontend ──────────────────────────────────────────
+  jitsi-web:
+    image: jitsi/web:stable-9111
+    container_name: homeoffice-jitsi-web
+    environment:
+      PUBLIC_URL: "https://meet.${DOMAIN}"
+      XMPP_DOMAIN: "meet.${DOMAIN}"
+      XMPP_AUTH_DOMAIN: "auth.meet.${DOMAIN}"
+      XMPP_BOSH_URL_BASE: "http://prosody:5280"
+      XMPP_MUC_DOMAIN: "muc.meet.${DOMAIN}"
+      TZ: Europe/Berlin
+    depends_on:
+      - prosody
+      - jicofo
+      - jvb
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.jitsi.rule=Host(`meet.${DOMAIN}`)"
+      - "traefik.http.routers.jitsi.entrypoints=websecure"
+      - "traefik.http.routers.jitsi.tls.certresolver=letsencrypt"
+      - "traefik.http.services.jitsi.loadbalancer.server.port=80"
+    restart: unless-stopped
+    networks:
+      - homeoffice
