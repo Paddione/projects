@@ -4,6 +4,97 @@
 
 ---
 
+## 🚚 Migration von bestehenden Systemen
+
+Bevor oder nach dem Deployment können vorhandene Daten aus Slack, Teams und anderen Systemen importiert werden.
+
+### Migration Assistant (interaktives Menü)
+
+```bash
+# Voraussetzungen (einmalig)
+sudo apt install curl jq python3 unzip   # Linux / WSL
+brew install curl jq python3 unzip       # macOS
+
+# Starten
+chmod +x scripts/migrate.sh
+./scripts/migrate.sh
+
+# Nur Vorschau — keine Änderungen
+./scripts/migrate.sh --dry-run
+```
+
+Beim ersten Start:
+1. **Server-URLs + Zugangsdaten eingeben** (Mattermost, Nextcloud, LLDAP)
+2. **Automatischer Scan** — sucht auf dem lokalen Rechner nach:
+   - Slack-Export-ZIPs und lokalem Slack-Cache
+   - Teams GDPR-Export und lokalem Teams-Cache
+   - Bestehenden Mattermost/Nextcloud-Clients
+3. **Quelle auswählen oder Pfad manuell eingeben**
+4. **Import starten**
+
+Läuft auf: Linux, macOS, Windows (WSL)
+
+---
+
+### Slack → Mattermost
+
+**Schritt 1: Export erstellen** (braucht Workspace Admin-Rechte)
+> Slack → Settings & Permissions → Import/Export Data → Export → All Messages
+
+**Schritt 2: Importieren**
+```bash
+./scripts/migrate.sh
+# → [1] Slack importieren → ZIP-Datei auswählen
+```
+
+Was wird importiert:
+- ✅ Alle öffentlichen und privaten Kanäle
+- ✅ Kanal-Nachrichten mit Zeitstempeln
+- ✅ User-Konten (werden in Mattermost angelegt)
+- ✅ @mentions und ~channel-Links umgewandelt
+- ⚠️ Dateien/Anhänge: nur als Referenz, kein Binary-Upload
+
+---
+
+### Microsoft Teams → Mattermost + Nextcloud
+
+**Schritt 1: GDPR-Export anfordern** (kein Admin nötig)
+> myaccount.microsoft.com → Datenschutz → Daten herunterladen
+> Auswählen: Teams Chat, Dateien, Kalender, Kontakte → ZIP herunterladen
+
+**Schritt 2: Importieren**
+```bash
+./scripts/migrate.sh
+# → [2] Teams importieren → ZIP-Datei auswählen
+```
+
+Was wird importiert:
+
+| Quelle | Ziel | Format |
+|---|---|---|
+| Teams Chats / Kanäle | Mattermost | Nachrichten mit Zeitstempeln |
+| Dateien & Anhänge | Nextcloud `/Teams-Import/` | WebDAV Upload |
+| Kalender | Nextcloud Calendar | iCal `.ics` |
+| Kontakte | Nextcloud Contacts | vCard `.vcf` |
+
+---
+
+### Benutzer → LLDAP
+
+```bash
+# CSV-Import
+./scripts/migrate.sh → [3] Benutzer importieren
+
+# Oder direkt:
+./scripts/import-users.sh --csv meine-user.csv --url http://localhost:17170
+
+# Aus bestehendem LDAP exportieren und importieren:
+ldapsearch -x -H ldap://alter-server -b "dc=firma,dc=de" > export.ldif
+./scripts/import-users.sh --ldif export.ldif
+```
+
+---
+
 ## 🐳 Docker Compose Deployment (Empfohlen für den Einstieg)
 
 ### Voraussetzungen
