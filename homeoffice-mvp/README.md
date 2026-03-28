@@ -280,18 +280,31 @@ docker compose logs -f duckdns   # DuckDNS-Updates beobachten
 ```
 
 ### DuckDNS einrichten
+
+Da DuckDNS keine Sub-Subdomains unterstützt (`chat.myhome.duckdns.org` geht nicht), bekommt jeder Dienst eine eigene Subdomain:
+
 1. Account auf https://www.duckdns.org/ anlegen
-2. Subdomain wählen (z.B. `myhome` → `myhome.duckdns.org`)
+2. Diese **5 Subdomains** anlegen (Namen frei wählbar, empfohlenes Schema):
+   - `bachelorprojekt-chat`
+   - `bachelorprojekt-auth`
+   - `bachelorprojekt-files`
+   - `bachelorprojekt-meet`
+   - `bachelorprojekt-ldap`
 3. Token von der Startseite kopieren
 4. In `.env` eintragen:
    ```
-   DOMAIN=myhome.duckdns.org
+   MM_DOMAIN=bachelorprojekt-chat.duckdns.org
+   KC_DOMAIN=bachelorprojekt-auth.duckdns.org
+   NC_DOMAIN=bachelorprojekt-files.duckdns.org
+   JITSI_DOMAIN=bachelorprojekt-meet.duckdns.org
+   LLDAP_DOMAIN=bachelorprojekt-ldap.duckdns.org
    DUCKDNS_TOKEN=dein-token
-   DUCKDNS_SUBDOMAINS=myhome
-   JVB_ADVERTISE_IPS=myhome.duckdns.org
+   DUCKDNS_SUBDOMAINS=bachelorprojekt-chat,bachelorprojekt-auth,bachelorprojekt-files,bachelorprojekt-meet,bachelorprojekt-ldap
+   JVB_ADVERTISE_IPS=bachelorprojekt-meet.duckdns.org
+   JITSI_XMPP_SUFFIX=bachelorprojekt-meet.duckdns.org
    ```
 
-Der DuckDNS-Container aktualisiert automatisch alle 5 Minuten die IP — auch der Jitsi JVB (Videobridge) bleibt so immer erreichbar.
+Der DuckDNS-Container aktualisiert automatisch alle 5 Minuten alle 5 IPs gleichzeitig.
 
 ### Externen Speicher einbinden (Optional)
 
@@ -368,9 +381,9 @@ Falls schon ein LDAP-Server (z.B. AD, OpenLDAP, 389ds) vorhanden ist, kann Keycl
 |---|---|
 | Vendor | Other |
 | Connection URL | `ldap://lldap:3890` |
-| Bind DN | `uid=admin,ou=people,dc=example,dc=com` |
+| Bind DN | `uid=admin,ou=people,dc=${LLDAP_BASE_DOMAIN},dc=${LLDAP_BASE_TLD}` |
 | Bind Credential | `LLDAP_LDAP_USER_PASS` |
-| Users DN | `ou=people,dc=example,dc=com` |
+| Users DN | `ou=people,dc=${LLDAP_BASE_DOMAIN},dc=${LLDAP_BASE_TLD}` |
 | Username LDAP attribute | `uid` |
 | UUID LDAP attribute | `entryUUID` |
 | User Object Classes | `inetOrgPerson` |
