@@ -877,6 +877,17 @@
       color: #e0d8ff;
     }
 
+    .source-badge {
+      display: inline-block;
+      margin-left: 0.5rem;
+      padding: 2px 8px;
+      background: #1e40af44;
+      border: 1px solid #3b82f688;
+      color: #93c5fd;
+      border-radius: 4px;
+      font-size: 0.7rem;
+    }
+
     /* Audio slot row */
     .slot-row {
       display: flex;
@@ -2805,6 +2816,32 @@ function createVisualCard(id, asset) {
   cbLabel.appendChild(cbSelect);
   cbRow.appendChild(cbLabel);
 
+  // Model backend selector
+  const mbLabel = document.createElement('label');
+  mbLabel.textContent = 'Model Backend';
+  const mbSelect = document.createElement('select');
+  mbSelect.id = `vmb-${id}`;
+  mbSelect.style.width = '200px';
+  const modelBackends = [
+    { value: '', label: 'Auto (fallback chain)' },
+    { value: 'sketchfab', label: 'Sketchfab (sourced)' },
+    { value: 'hunyuan3d-local', label: 'Hunyuan3D (local GPU)' },
+    { value: 'triposr', label: 'TripoSR (local GPU)' },
+    { value: 'hyper3d', label: 'Hyper3D Rodin (cloud)' },
+    { value: 'hunyuan3d', label: 'Hunyuan3D (fal.ai cloud)' },
+    { value: 'meshy', label: 'Meshy (cloud)' },
+    { value: 'polyhaven', label: 'PolyHaven (free)' },
+  ];
+  for (const opt of modelBackends) {
+    const option = document.createElement('option');
+    option.value = opt.value;
+    option.textContent = opt.label;
+    if ((asset.modelBackend || '') === opt.value) option.selected = true;
+    mbSelect.appendChild(option);
+  }
+  mbLabel.appendChild(mbSelect);
+  cbRow.appendChild(mbLabel);
+
   const posesLabel = document.createElement('label');
   posesLabel.textContent = 'Poses';
   const posesInput = document.createElement('input');
@@ -2826,6 +2863,7 @@ function createVisualCard(id, asset) {
         prompt: document.getElementById(`vprompt-${id}`).value,
         poses: document.getElementById(`vposes-${id}`).value.split(',').map(s => s.trim()).filter(Boolean),
         conceptBackend: document.getElementById(`vcb-${id}`).value || null,
+        modelBackend: document.getElementById(`vmb-${id}`).value || null,
       }),
     });
     card.classList.add('save-flash');
@@ -2884,6 +2922,14 @@ function createVisualCard(id, asset) {
         viewBtn.textContent = '\u25B6 View 3D';
         viewBtn.addEventListener('click', () => window.ModelViewer.open(id, asset.name || id));
         phaseDiv.appendChild(viewBtn);
+        // Show source info if sourced from Sketchfab
+        if (asset.sketchfabUid) {
+          const srcBadge = document.createElement('span');
+          srcBadge.className = 'source-badge';
+          srcBadge.textContent = '\uD83C\uDFA8 Sketchfab: ' + asset.sketchfabUid.slice(0, 8) + '...';
+          srcBadge.title = 'Sourced from Sketchfab UID: ' + asset.sketchfabUid;
+          phaseDiv.appendChild(srcBadge);
+        }
       }
 
       if (phase === 'render' && phaseData?.frameCount > 0) {
@@ -2946,6 +2992,15 @@ function createVisualCard(id, asset) {
       phaseActions.appendChild(genBtn);
     }
 
+    // Sketchfab search button for model phase
+    if (phase === 'model') {
+      const sfBtn = document.createElement('button');
+      sfBtn.textContent = '\uD83D\uDD0D Sketchfab';
+      sfBtn.title = 'Search Sketchfab for a 3D model';
+      sfBtn.addEventListener('click', () => openSketchfabSearch(id, asset.name || id));
+      phaseActions.appendChild(sfBtn);
+    }
+
     phaseDiv.appendChild(phaseActions);
     pipelineSection.appendChild(phaseDiv);
   }
@@ -3006,6 +3061,119 @@ function createVisualCard(id, asset) {
 
   card.appendChild(actions);
   return card;
+}
+
+// ============ Sketchfab Search Modal ============
+function openSketchfabSearch(assetId, assetName) {
+  document.getElementById('sf-modal')?.remove();
+
+  const modal = document.createElement('div');
+  modal.id = 'sf-modal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:1000;display:flex;align-items:center;justify-content:center';
+  modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
+
+  const panel = document.createElement('div');
+  panel.style.cssText = 'background:#1e293b;border-radius:12px;padding:1.5rem;width:700px;max-height:80vh;overflow-y:auto;color:#e2e8f0';
+
+  const title = document.createElement('h3');
+  title.style.cssText = 'margin:0 0 1rem;color:#38bdf8';
+  title.textContent = 'Search Sketchfab for: ' + assetName;
+  panel.appendChild(title);
+
+  const form = document.createElement('div');
+  form.style.cssText = 'display:flex;gap:0.5rem;margin-bottom:1rem';
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.value = assetName + ' low poly game character';
+  input.placeholder = 'Search Sketchfab...';
+  input.style.cssText = 'flex:1;padding:0.5rem;border-radius:6px;border:1px solid #475569;background:#0f172a;color:#e2e8f0';
+  const searchBtn = document.createElement('button');
+  searchBtn.textContent = 'Search';
+  searchBtn.style.cssText = 'padding:0.5rem 1rem;border-radius:6px;background:#38bdf8;color:#0f172a;border:none;cursor:pointer;font-weight:bold';
+  form.appendChild(input);
+  form.appendChild(searchBtn);
+  panel.appendChild(form);
+
+  const results = document.createElement('div');
+  results.id = 'sf-results';
+  results.textContent = 'Enter a search query and click Search';
+  results.style.cssText = 'display:grid;gap:0.75rem';
+  panel.appendChild(results);
+
+  async function doSearch() {
+    results.textContent = 'Searching...';
+    try {
+      const resp = await fetch('/api/sketchfab/search?q=' + encodeURIComponent(input.value) + '&count=12');
+      const data = await resp.json();
+      const models = Array.isArray(data) ? data : (data.results || []);
+      while (results.firstChild) results.removeChild(results.firstChild);
+      if (!models.length) { results.textContent = 'No results found'; return; }
+      for (const model of models) {
+        const card = document.createElement('div');
+        card.style.cssText = 'display:flex;gap:0.75rem;padding:0.75rem;background:#0f172a;border-radius:8px;border:1px solid #334155;cursor:pointer;transition:border-color 0.2s';
+        card.addEventListener('mouseenter', function() { this.style.borderColor = '#38bdf8'; });
+        card.addEventListener('mouseleave', function() { this.style.borderColor = '#334155'; });
+
+        const thumb = document.createElement('img');
+        thumb.src = model.thumbnail || '';
+        thumb.alt = model.name;
+        thumb.style.cssText = 'width:100px;height:100px;object-fit:cover;border-radius:6px;background:#1e293b';
+        card.appendChild(thumb);
+
+        const info = document.createElement('div');
+        info.style.cssText = 'flex:1;min-width:0';
+        const nameEl = document.createElement('div');
+        nameEl.style.cssText = 'font-weight:bold;color:#f1f5f9;margin-bottom:0.25rem';
+        nameEl.textContent = model.name;
+        info.appendChild(nameEl);
+        const meta = document.createElement('div');
+        meta.style.cssText = 'font-size:0.85rem;color:#94a3b8';
+        meta.textContent = (model.faceCount ? model.faceCount.toLocaleString() : '?') + ' faces | ' + (model.author || 'Unknown') + ' | ' + (model.license || 'Unknown license');
+        info.appendChild(meta);
+        if (model.isAnimated) {
+          const animBadge = document.createElement('span');
+          animBadge.style.cssText = 'display:inline-block;margin-top:0.25rem;padding:2px 6px;background:#22c55e;color:#0f172a;border-radius:4px;font-size:0.75rem;font-weight:bold';
+          animBadge.textContent = 'Animated';
+          info.appendChild(animBadge);
+        }
+        card.appendChild(info);
+
+        const useBtn = document.createElement('button');
+        useBtn.textContent = 'Use';
+        useBtn.style.cssText = 'padding:0.5rem 1rem;border-radius:6px;background:#22c55e;color:#0f172a;border:none;cursor:pointer;font-weight:bold;align-self:center;white-space:nowrap';
+        useBtn.addEventListener('click', async function(e) {
+          e.stopPropagation();
+          this.disabled = true;
+          this.textContent = 'Setting...';
+          try {
+            await fetch('/api/visual-library/' + assetId + '/source/sketchfab', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ uid: model.uid }),
+            });
+            this.textContent = 'Set!';
+            this.style.background = '#38bdf8';
+            setTimeout(function() { modal.remove(); loadVisualLibrary(); }, 800);
+          } catch (err) {
+            this.textContent = 'Error';
+            this.style.background = '#ef4444';
+          }
+        });
+        card.appendChild(useBtn);
+        results.appendChild(card);
+      }
+    } catch (err) {
+      results.textContent = 'Search failed: ' + err.message;
+    }
+  }
+
+  searchBtn.addEventListener('click', doSearch);
+  input.addEventListener('keydown', function(e) { if (e.key === 'Enter') doSearch(); });
+
+  modal.appendChild(panel);
+  document.body.appendChild(modal);
+  input.focus();
+  input.select();
 }
 
 async function startVisualGeneration(assetId, phase) {

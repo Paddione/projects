@@ -31,9 +31,11 @@
         },
         "model": {
           "status": "done",
-          "generatedAt": "2026-03-16T00:50:57.091Z",
-          "backend": "triposr",
-          "path": "models/characters/student.glb"
+          "generatedAt": "2026-03-28T02:43:11.668Z",
+          "backend": "sketchfab",
+          "path": "models/characters/student.glb",
+          "source": "Stylized Low-Poly Girl by VoidOwl (CC Attribution)",
+          "sourceUid": "fcc1db9486594c4d98ff4a262004d692"
         },
         "render": {
           "status": "done",
@@ -47,7 +49,9 @@
           "backend": "packer"
         }
       },
-      "assignedTo": {}
+      "assignedTo": {},
+      "sketchfabUid": "fcc1db9486594c4d98ff4a262004d692",
+      "modelBackend": "sketchfab"
     },
     "researcher": {
       "id": "researcher",
@@ -74,7 +78,12 @@
           "status": "pending"
         },
         "model": {
-          "status": "pending"
+          "status": "done",
+          "generatedAt": "2026-03-28T02:43:11.668Z",
+          "backend": "sketchfab",
+          "path": "models/characters/researcher.glb",
+          "source": "Stylized Low-Poly Girl by VoidOwl (CC Attribution)",
+          "sourceUid": "fcc1db9486594c4d98ff4a262004d692"
         },
         "render": {
           "status": "pending"
@@ -89,7 +98,9 @@
           "syncedAt": "2026-03-16T05:32:13.795Z"
         }
       },
-      "conceptBackend": "comfyui"
+      "conceptBackend": "comfyui",
+      "sketchfabUid": "fcc1db9486594c4d98ff4a262004d692",
+      "modelBackend": "sketchfab"
     },
     "professor": {
       "id": "professor",
@@ -120,8 +131,11 @@
         },
         "model": {
           "status": "done",
+          "generatedAt": "2026-03-28T02:43:11.668Z",
+          "backend": "sketchfab",
           "path": "models/characters/professor.glb",
-          "generatedAt": "2026-03-21T15:00:00Z"
+          "source": "Stylized Low-Poly Girl by VoidOwl (CC Attribution)",
+          "sourceUid": "fcc1db9486594c4d98ff4a262004d692"
         },
         "render": {
           "status": "done",
@@ -139,7 +153,9 @@
           "syncedAt": "2026-03-16T05:32:13.820Z"
         }
       },
-      "conceptBackend": "comfyui"
+      "conceptBackend": "comfyui",
+      "sketchfabUid": "fcc1db9486594c4d98ff4a262004d692",
+      "modelBackend": "sketchfab"
     },
     "dean": {
       "id": "dean",
@@ -170,9 +186,11 @@
         },
         "model": {
           "status": "done",
-          "generatedAt": "2026-03-16T01:35:41.592050+00:00",
-          "backend": "triposr",
-          "path": "models/characters/dean.glb"
+          "generatedAt": "2026-03-28T02:43:11.668Z",
+          "backend": "sketchfab",
+          "path": "models/characters/dean.glb",
+          "source": "Stylized Low-Poly Girl by VoidOwl (CC Attribution)",
+          "sourceUid": "fcc1db9486594c4d98ff4a262004d692"
         },
         "render": {
           "status": "done",
@@ -192,7 +210,9 @@
           "syncedAt": "2026-03-16T05:32:13.844Z"
         }
       },
-      "conceptBackend": "comfyui"
+      "conceptBackend": "comfyui",
+      "sketchfabUid": "fcc1db9486594c4d98ff4a262004d692",
+      "modelBackend": "sketchfab"
     },
     "librarian": {
       "id": "librarian",
@@ -223,8 +243,11 @@
         },
         "model": {
           "status": "done",
+          "generatedAt": "2026-03-28T02:43:11.668Z",
+          "backend": "sketchfab",
           "path": "models/characters/librarian.glb",
-          "generatedAt": "2026-03-21T15:00:00Z"
+          "source": "Stylized Low-Poly Girl by VoidOwl (CC Attribution)",
+          "sourceUid": "fcc1db9486594c4d98ff4a262004d692"
         },
         "render": {
           "status": "done",
@@ -237,7 +260,9 @@
         }
       },
       "assignedTo": {},
-      "conceptBackend": "comfyui"
+      "conceptBackend": "comfyui",
+      "sketchfabUid": "fcc1db9486594c4d98ff4a262004d692",
+      "modelBackend": "sketchfab"
     },
     "projectile": {
       "id": "projectile",
@@ -1303,9 +1328,11 @@
         },
         "model": {
           "status": "done",
-          "generatedAt": "2026-03-16T09:57:16.170Z",
+          "generatedAt": "2026-03-28T02:43:11.668Z",
+          "backend": "sketchfab",
           "path": "models/characters/student_f.glb",
-          "backend": "triposr"
+          "source": "Stylized Low-Poly Girl by VoidOwl (CC Attribution)",
+          "sourceUid": "fcc1db9486594c4d98ff4a262004d692"
         },
         "render": {
           "status": "done",
@@ -1318,7 +1345,9 @@
           "generatedAt": "2026-03-16T10:21:32.386Z",
           "backend": "packer"
         }
-      }
+      },
+      "sketchfabUid": "fcc1db9486594c4d98ff4a262004d692",
+      "modelBackend": "sketchfab"
     },
     "researcher_f": {
       "id": "researcher_f",
@@ -1346,7 +1375,12 @@
           "status": "pending"
         },
         "model": {
-          "status": "pending"
+          "status": "done",
+          "generatedAt": "2026-03-28T02:43:11.668Z",
+          "backend": "sketchfab",
+          "path": "models/characters/researcher_f.glb",
+          "source": "Stylized Low-Poly Girl by VoidOwl (CC Attribution)",
+          "sourceUid": "fcc1db9486594c4d98ff4a262004d692"
         },
         "render": {
           "status": "pending"
@@ -1354,7 +1388,9 @@
         "pack": {
           "status": "pending"
         }
-      }
+      },
+      "sketchfabUid": "fcc1db9486594c4d98ff4a262004d692",
+      "modelBackend": "sketchfab"
     },
     "professor_f": {
       "id": "professor_f",
@@ -1386,9 +1422,11 @@
         },
         "model": {
           "status": "done",
-          "generatedAt": "2026-03-16T09:50:04.449Z",
+          "generatedAt": "2026-03-28T02:43:11.668Z",
+          "backend": "sketchfab",
           "path": "models/characters/professor_f.glb",
-          "backend": "triposr"
+          "source": "Stylized Low-Poly Girl by VoidOwl (CC Attribution)",
+          "sourceUid": "fcc1db9486594c4d98ff4a262004d692"
         },
         "render": {
           "status": "done",
@@ -1401,7 +1439,9 @@
           "generatedAt": "2026-03-16T10:21:35.227Z",
           "backend": "packer"
         }
-      }
+      },
+      "sketchfabUid": "fcc1db9486594c4d98ff4a262004d692",
+      "modelBackend": "sketchfab"
     },
     "dean_f": {
       "id": "dean_f",
@@ -1433,9 +1473,11 @@
         },
         "model": {
           "status": "done",
-          "generatedAt": "2026-03-16T09:50:22.079Z",
+          "generatedAt": "2026-03-28T02:43:11.668Z",
+          "backend": "sketchfab",
           "path": "models/characters/dean_f.glb",
-          "backend": "triposr"
+          "source": "Stylized Low-Poly Girl by VoidOwl (CC Attribution)",
+          "sourceUid": "fcc1db9486594c4d98ff4a262004d692"
         },
         "render": {
           "status": "done",
@@ -1448,7 +1490,9 @@
           "generatedAt": "2026-03-16T10:21:36.678Z",
           "backend": "packer"
         }
-      }
+      },
+      "sketchfabUid": "fcc1db9486594c4d98ff4a262004d692",
+      "modelBackend": "sketchfab"
     },
     "librarian_f": {
       "id": "librarian_f",
@@ -1480,9 +1524,11 @@
         },
         "model": {
           "status": "done",
-          "generatedAt": "2026-03-16T09:50:36.995Z",
+          "generatedAt": "2026-03-28T02:43:11.668Z",
+          "backend": "sketchfab",
           "path": "models/characters/librarian_f.glb",
-          "backend": "triposr"
+          "source": "Stylized Low-Poly Girl by VoidOwl (CC Attribution)",
+          "sourceUid": "fcc1db9486594c4d98ff4a262004d692"
         },
         "render": {
           "status": "done",
@@ -1495,7 +1541,9 @@
           "generatedAt": "2026-03-16T10:21:38.123Z",
           "backend": "packer"
         }
-      }
+      },
+      "sketchfabUid": "fcc1db9486594c4d98ff4a262004d692",
+      "modelBackend": "sketchfab"
     },
     "student_neon": {
       "id": "student_neon",
@@ -1523,9 +1571,10 @@
         },
         "model": {
           "status": "done",
-          "generatedAt": "2026-03-16T11:13:58.224Z",
-          "path": "models/characters/student_neon.glb",
-          "backend": "triposr"
+          "generatedAt": "2026-03-28T02:43:11.668Z",
+          "backend": "sketchfab",
+          "path": "models/characters/student.glb",
+          "source": "Shared from student"
         },
         "render": {
           "status": "done",
@@ -1566,9 +1615,10 @@
         },
         "model": {
           "status": "done",
-          "generatedAt": "2026-03-16T11:14:23.171Z",
-          "path": "models/characters/student_formal.glb",
-          "backend": "triposr"
+          "generatedAt": "2026-03-28T02:43:11.668Z",
+          "backend": "sketchfab",
+          "path": "models/characters/student.glb",
+          "source": "Shared from student"
         },
         "render": {
           "status": "done",
@@ -1608,9 +1658,10 @@
         },
         "model": {
           "status": "done",
-          "generatedAt": "2026-03-16T11:14:47.435Z",
-          "path": "models/characters/student_f_neon.glb",
-          "backend": "triposr"
+          "generatedAt": "2026-03-28T02:43:11.668Z",
+          "backend": "sketchfab",
+          "path": "models/characters/student_f.glb",
+          "source": "Shared from student_f"
         },
         "render": {
           "status": "done",
@@ -1650,9 +1701,10 @@
         },
         "model": {
           "status": "done",
-          "generatedAt": "2026-03-16T11:15:10.697Z",
-          "path": "models/characters/student_f_formal.glb",
-          "backend": "triposr"
+          "generatedAt": "2026-03-28T02:43:11.668Z",
+          "backend": "sketchfab",
+          "path": "models/characters/student_f.glb",
+          "source": "Shared from student_f"
         },
         "render": {
           "status": "done",
@@ -1692,9 +1744,10 @@
         },
         "model": {
           "status": "done",
-          "generatedAt": "2026-03-16T11:15:32.569Z",
-          "path": "models/characters/researcher_neon.glb",
-          "backend": "triposr"
+          "generatedAt": "2026-03-28T02:43:11.668Z",
+          "backend": "sketchfab",
+          "path": "models/characters/researcher.glb",
+          "source": "Shared from researcher"
         },
         "render": {
           "status": "done",
@@ -1734,9 +1787,10 @@
         },
         "model": {
           "status": "done",
-          "generatedAt": "2026-03-16T11:16:01.629Z",
-          "path": "models/characters/researcher_formal.glb",
-          "backend": "triposr"
+          "generatedAt": "2026-03-28T02:43:11.668Z",
+          "backend": "sketchfab",
+          "path": "models/characters/researcher.glb",
+          "source": "Shared from researcher"
         },
         "render": {
           "status": "done",
@@ -1776,9 +1830,10 @@
         },
         "model": {
           "status": "done",
-          "generatedAt": "2026-03-16T11:16:32.891Z",
-          "path": "models/characters/researcher_f_neon.glb",
-          "backend": "triposr"
+          "generatedAt": "2026-03-28T02:43:11.668Z",
+          "backend": "sketchfab",
+          "path": "models/characters/researcher_f.glb",
+          "source": "Shared from researcher_f"
         },
         "render": {
           "status": "done",
@@ -1818,9 +1873,10 @@
         },
         "model": {
           "status": "done",
-          "generatedAt": "2026-03-16T11:17:01.930Z",
-          "path": "models/characters/researcher_f_formal.glb",
-          "backend": "triposr"
+          "generatedAt": "2026-03-28T02:43:11.668Z",
+          "backend": "sketchfab",
+          "path": "models/characters/researcher_f.glb",
+          "source": "Shared from researcher_f"
         },
         "render": {
           "status": "done",
@@ -1860,9 +1916,10 @@
         },
         "model": {
           "status": "done",
-          "generatedAt": "2026-03-16T11:17:27.903Z",
-          "path": "models/characters/professor_neon.glb",
-          "backend": "triposr"
+          "generatedAt": "2026-03-28T02:43:11.668Z",
+          "backend": "sketchfab",
+          "path": "models/characters/professor.glb",
+          "source": "Shared from professor"
         },
         "render": {
           "status": "done",
@@ -1902,9 +1959,10 @@
         },
         "model": {
           "status": "done",
-          "generatedAt": "2026-03-16T11:17:56.234Z",
-          "path": "models/characters/professor_formal.glb",
-          "backend": "triposr"
+          "generatedAt": "2026-03-28T02:43:11.668Z",
+          "backend": "sketchfab",
+          "path": "models/characters/professor.glb",
+          "source": "Shared from professor"
         },
         "render": {
           "status": "done",
@@ -1944,9 +2002,10 @@
         },
         "model": {
           "status": "done",
-          "generatedAt": "2026-03-16T11:18:27.409Z",
-          "path": "models/characters/professor_f_neon.glb",
-          "backend": "triposr"
+          "generatedAt": "2026-03-28T02:43:11.668Z",
+          "backend": "sketchfab",
+          "path": "models/characters/professor_f.glb",
+          "source": "Shared from professor_f"
         },
         "render": {
           "status": "done",
@@ -1986,9 +2045,10 @@
         },
         "model": {
           "status": "done",
-          "generatedAt": "2026-03-16T11:19:00.187Z",
-          "path": "models/characters/professor_f_formal.glb",
-          "backend": "triposr"
+          "generatedAt": "2026-03-28T02:43:11.668Z",
+          "backend": "sketchfab",
+          "path": "models/characters/professor_f.glb",
+          "source": "Shared from professor_f"
         },
         "render": {
           "status": "done",
@@ -2027,9 +2087,10 @@
         },
         "model": {
           "status": "done",
-          "generatedAt": "2026-03-16T11:19:46.572Z",
-          "path": "models/characters/dean_neon.glb",
-          "backend": "triposr"
+          "generatedAt": "2026-03-28T02:43:11.668Z",
+          "backend": "sketchfab",
+          "path": "models/characters/dean.glb",
+          "source": "Shared from dean"
         },
         "render": {
           "status": "done",
@@ -2069,9 +2130,10 @@
         },
         "model": {
           "status": "done",
-          "generatedAt": "2026-03-16T11:20:27.717Z",
-          "path": "models/characters/dean_formal.glb",
-          "backend": "triposr"
+          "generatedAt": "2026-03-28T02:43:11.668Z",
+          "backend": "sketchfab",
+          "path": "models/characters/dean.glb",
+          "source": "Shared from dean"
         },
         "render": {
           "status": "done",
@@ -2111,9 +2173,10 @@
         },
         "model": {
           "status": "done",
-          "generatedAt": "2026-03-16T11:21:12.038Z",
-          "path": "models/characters/dean_f_neon.glb",
-          "backend": "triposr"
+          "generatedAt": "2026-03-28T02:43:11.668Z",
+          "backend": "sketchfab",
+          "path": "models/characters/dean_f.glb",
+          "source": "Shared from dean_f"
         },
         "render": {
           "status": "done",
@@ -2153,9 +2216,10 @@
         },
         "model": {
           "status": "done",
-          "generatedAt": "2026-03-16T11:22:00.117Z",
-          "path": "models/characters/dean_f_formal.glb",
-          "backend": "triposr"
+          "generatedAt": "2026-03-28T02:43:11.668Z",
+          "backend": "sketchfab",
+          "path": "models/characters/dean_f.glb",
+          "source": "Shared from dean_f"
         },
         "render": {
           "status": "done",
@@ -2195,9 +2259,10 @@
         },
         "model": {
           "status": "done",
-          "generatedAt": "2026-03-16T11:22:41.152Z",
-          "path": "models/characters/librarian_neon.glb",
-          "backend": "triposr"
+          "generatedAt": "2026-03-28T02:43:11.668Z",
+          "backend": "sketchfab",
+          "path": "models/characters/librarian.glb",
+          "source": "Shared from librarian"
         },
         "render": {
           "status": "done",
@@ -2237,9 +2302,10 @@
         },
         "model": {
           "status": "done",
-          "generatedAt": "2026-03-16T11:23:16.906Z",
-          "path": "models/characters/librarian_formal.glb",
-          "backend": "triposr"
+          "generatedAt": "2026-03-28T02:43:11.668Z",
+          "backend": "sketchfab",
+          "path": "models/characters/librarian.glb",
+          "source": "Shared from librarian"
         },
         "render": {
           "status": "done",
@@ -2279,9 +2345,10 @@
         },
         "model": {
           "status": "done",
-          "generatedAt": "2026-03-16T11:23:50.676Z",
-          "path": "models/characters/librarian_f_neon.glb",
-          "backend": "triposr"
+          "generatedAt": "2026-03-28T02:43:11.668Z",
+          "backend": "sketchfab",
+          "path": "models/characters/librarian_f.glb",
+          "source": "Shared from librarian_f"
         },
         "render": {
           "status": "done",
@@ -2321,9 +2388,10 @@
         },
         "model": {
           "status": "done",
-          "generatedAt": "2026-03-16T11:24:27.913Z",
-          "path": "models/characters/librarian_f_formal.glb",
-          "backend": "triposr"
+          "generatedAt": "2026-03-28T02:43:11.668Z",
+          "backend": "sketchfab",
+          "path": "models/characters/librarian_f.glb",
+          "source": "Shared from librarian_f"
         },
         "render": {
           "status": "done",
