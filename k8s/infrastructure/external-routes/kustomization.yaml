@@ -3,3 +3,4 @@ kind: Kustomization
 resources:
   - proxmox.yaml
   - fritzbox.yaml
+  - bachelorprojekt.yaml

@@ -1,0 +1,66 @@
+---
+# =============================================================================
+# Bachelor Project External Route (TLS Passthrough)
+# =============================================================================
+# Forwards DuckDNS domains to the bachelor project backend at 10.10.0.4.
+# Uses TLS passthrough so the backend presents its own certificate — Traefik
+# does not terminate TLS for these domains.
+# =============================================================================
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: bachelorprojekt-external
+  namespace: korczewski-infra
+  labels:
+    app.kubernetes.io/part-of: korczewski
+    tier: infrastructure
+spec:
+  type: ClusterIP
+  ports:
+    - port: 443
+      targetPort: 443
+      protocol: TCP
+---
+apiVersion: v1
+kind: Endpoints
+metadata:
+  name: bachelorprojekt-external
+  namespace: korczewski-infra
+subsets:
+  - addresses:
+      - ip: 10.10.0.4
+    ports:
+      - port: 443
+        protocol: TCP
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRouteTCP
+metadata:
+  name: bachelorprojekt
+  namespace: korczewski-infra
+  labels:
+    app.kubernetes.io/part-of: korczewski
+    tier: infrastructure
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: HostSNI(`bachelorprojekt-auth.duckdns.org`)
+      services:
+        - name: bachelorprojekt-external
+          port: 443
+    - match: HostSNI(`bachelorprojekt-chat.duckdns.org`)
+      services:
+        - name: bachelorprojekt-external
+          port: 443
+    - match: HostSNI(`bachelorprojekt-files.duckdns.org`)
+      services:
+        - name: bachelorprojekt-external
+          port: 443
+    - match: HostSNI(`bachelorprojekt-meet.duckdns.org`)
+      services:
+        - name: bachelorprojekt-external
+          port: 443
+  tls:
+    passthrough: true

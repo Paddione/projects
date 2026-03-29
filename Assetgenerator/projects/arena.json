@@ -239,6 +239,16 @@
       "lastGeneratedAt": null,
       "filePath": "music/victory.wav",
       "loop": false
+    },
+    "respectisevt": {
+      "type": "music",
+      "prompt": "",
+      "seed": null,
+      "duration": 4.4,
+      "backend": "default",
+      "flagged": false,
+      "lastGeneratedAt": null,
+      "filePath": "music/respectisevt.wav"
     }
   }
 }
