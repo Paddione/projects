@@ -63,11 +63,7 @@ spec:
                 name: postgres-credentials
             - secretRef:
                 name: pgbouncer-admin
-          env:
-            # Arena uses hardcoded password in its deployment manifest
-            # TODO: migrate arena to secrets pipeline (generate-secrets.sh)
-            - name: ARENA_DB_PASSWORD
-              value: "arena_pass"
+          env: []
           volumeMounts:
             - name: pgbouncer-auth
               mountPath: /etc/pgbouncer-auth
