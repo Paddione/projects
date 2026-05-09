@@ -1,60 +1,58 @@
 # Multi-stage build for auth service
+# Build context: project root
 FROM node:20-bullseye-slim AS base
 
-# Install dependencies
 RUN apt-get update && apt-get install -y \
     ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-WORKDIR /app
+# Mirror monorepo layout so file:../packages/* resolves from /app/auth/
+WORKDIR /app/auth
 
-# Copy package files
+COPY packages/ /app/packages/
 COPY auth/package*.json ./
-
-# Development stage
-FROM base AS development
-RUN npm ci
-COPY auth/. .
-CMD ["npm", "run", "dev"]
 
 # Build stage
 FROM base AS build
+
+# Install auth deps (includes workspace link to error-handling)
 RUN npm ci
+
+# Build @korczewski/error-handling to JS so Node can import it at runtime
+# Use tsc from auth's node_modules (TypeScript is a dev dep of auth)
+RUN cd /app/packages/error-handling && \
+    printf '{"compilerOptions":{"outDir":"dist","module":"ESNext","target":"ES2022","moduleResolution":"node","skipLibCheck":true,"declaration":true,"typeRoots":["/app/auth/node_modules/@types"],"types":["node"]},"include":["src/**/*"]}' > tsconfig.json && \
+    /app/auth/node_modules/.bin/tsc -p tsconfig.json && \
+    npm pkg set main=dist/index.js types=dist/index.d.ts
+
 COPY auth/. .
-# Build backend
 RUN npm run build
-# Build frontend
 RUN cd frontend && npm install && npm run build
 
 # Production stage
 FROM node:20-bullseye-slim AS production
 
-# Install only production dependencies
 RUN apt-get update && apt-get install -y \
     ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-WORKDIR /app
+WORKDIR /app/auth
 
-# Copy package files and install production dependencies
+# Include compiled error-handling so runtime imports resolve
+COPY --from=build /app/packages/ /app/packages/
 COPY auth/package*.json ./
 RUN npm ci --only=production
 
-# Copy built application from build stage
-COPY --from=build /app/dist ./dist
-COPY --from=build /app/migrations ./migrations
+COPY --from=build /app/auth/dist ./dist
+COPY --from=build /app/auth/migrations ./migrations
 
-# Create non-root user
 RUN groupadd -r authuser && useradd -r -g authuser authuser
 RUN chown -R authuser:authuser /app
 USER authuser
 
-# Expose port
 EXPOSE 5500
 
-# Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
     CMD node -e "require('http').get('http://localhost:5500/api/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
 
-# Start application
 CMD ["npm", "start"]
