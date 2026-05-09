@@ -1,0 +1,15 @@
+---
+# Patches PostgreSQL StatefulSet to use local-path StorageClass in k3d.
+# Production uses smb-storage; k3d uses local-path (provided by local-path-provisioner).
+# Apply this BEFORE deploy-postgres.sh when targeting a k3d cluster.
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres
+  namespace: korczewski-infra
+spec:
+  volumeClaimTemplates:
+    - metadata:
+        name: postgres-data
+      spec:
+        storageClassName: local-path

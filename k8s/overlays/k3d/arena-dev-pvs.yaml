@@ -1,0 +1,52 @@
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: visual-library-ro-pv
+  labels:
+    app: arena-frontend
+    type: visual-library-ro
+spec:
+  capacity:
+    storage: 50Gi
+  accessModes:
+    - ReadOnlyMany
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ""
+  csi:
+    driver: smb.csi.k8s.io
+    volumeHandle: visual-library-ro
+    volumeAttributes:
+      source: "//10.10.0.3/storage-desktop/visual-library"
+    nodeStageSecretRef:
+      name: smbcreds
+      namespace: korczewski-infra
+  mountOptions:
+    - dir_mode=0555
+    - file_mode=0444
+    - uid=1001
+    - gid=1001
+    - noperm
+    - mfsymlinks
+    - cache=none
+    - noserverino
+    - ro
+  claimRef:
+    name: visual-library-ro
+    namespace: korczewski-services
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: visual-library-ro
+  namespace: korczewski-services
+  labels:
+    app: arena-frontend
+spec:
+  accessModes:
+    - ReadOnlyMany
+  storageClassName: ""
+  volumeName: visual-library-ro-pv
+  resources:
+    requests:
+      storage: 50Gi

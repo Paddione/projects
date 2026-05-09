@@ -1,0 +1,212 @@
+---
+# =============================================================================
+# VideoVault Static Persistent Volumes for Media Libraries — k3d DEV OVERLAY
+# =============================================================================
+# These PVs redirect SMB sources from the production NAS (10.0.0.11) to the
+# local Windows share (10.10.0.3/storage-desktop) for k3d development clusters.
+# DO NOT apply in production — use k8s/services/videovault/pv-media.yaml there.
+# =============================================================================
+
+# Movies PV - mounts //10.10.0.3/storage-desktop/movies directly
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: videovault-movies-pv
+  labels:
+    app: videovault
+    media-type: movies
+spec:
+  capacity:
+    storage: 2Ti
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: "" # Empty to prevent dynamic provisioning
+  mountOptions:
+    - dir_mode=0755
+    - file_mode=0644
+    - uid=1001
+    - gid=1001
+    - noperm
+    - mfsymlinks
+    - cache=none
+    - noserverino
+  csi:
+    driver: smb.csi.k8s.io
+    volumeHandle: videovault-movies-pv
+    volumeAttributes:
+      source: "//10.10.0.3/storage-desktop/movies"
+    nodeStageSecretRef:
+      name: smbcreds
+      namespace: korczewski-infra
+---
+# Audiobooks PV - mounts //10.10.0.3/storage-desktop/audiobooks directly
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: videovault-audiobooks-pv
+  labels:
+    app: videovault
+    media-type: audiobooks
+spec:
+  capacity:
+    storage: 500Gi
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ""
+  mountOptions:
+    - dir_mode=0755
+    - file_mode=0644
+    - uid=1001
+    - gid=1001
+    - noperm
+    - mfsymlinks
+    - cache=none
+    - noserverino
+  csi:
+    driver: smb.csi.k8s.io
+    volumeHandle: videovault-audiobooks-pv
+    volumeAttributes:
+      source: "//10.10.0.3/storage-desktop/audiobooks"
+    nodeStageSecretRef:
+      name: smbcreds
+      namespace: korczewski-infra
+---
+# Ebooks PV - mounts //10.10.0.3/storage-desktop/ebooks directly
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: videovault-ebooks-pv
+  labels:
+    app: videovault
+    media-type: ebooks
+spec:
+  capacity:
+    storage: 100Gi
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ""
+  mountOptions:
+    - dir_mode=0755
+    - file_mode=0644
+    - uid=1001
+    - gid=1001
+    - noperm
+    - mfsymlinks
+    - cache=none
+    - noserverino
+  csi:
+    driver: smb.csi.k8s.io
+    volumeHandle: videovault-ebooks-pv
+    volumeAttributes:
+      source: "//10.10.0.3/storage-desktop/ebooks"
+    nodeStageSecretRef:
+      name: smbcreds
+      namespace: korczewski-infra
+---
+# HDD-ext PV - mounts //10.10.0.3/storage-desktop (root share, equiv. of prod SDD-Share)
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: videovault-hdd-ext-pv
+  labels:
+    app: videovault
+    media-type: hdd-ext
+spec:
+  capacity:
+    storage: 2Ti
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ""
+  mountOptions:
+    - dir_mode=0755
+    - file_mode=0644
+    - uid=1001
+    - gid=1001
+    - noperm
+    - mfsymlinks
+    - cache=none
+    - noserverino
+  csi:
+    driver: smb.csi.k8s.io
+    volumeHandle: videovault-hdd-ext-pv
+    volumeAttributes:
+      source: "//10.10.0.3/storage-desktop"
+    nodeStageSecretRef:
+      name: smbcreds
+      namespace: korczewski-infra
+---
+# Media PV - mounts share root as general media directory (for Processed/ writes)
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: videovault-media-pv
+  labels:
+    app: videovault
+    media-type: media
+spec:
+  capacity:
+    storage: 2Ti
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: smb-storage
+  claimRef:
+    name: videovault-media
+    namespace: korczewski-services
+  mountOptions:
+    - dir_mode=0755
+    - file_mode=0644
+    - uid=1001
+    - gid=1001
+    - noperm
+    - mfsymlinks
+    - cache=none
+    - noserverino
+  csi:
+    driver: smb.csi.k8s.io
+    volumeHandle: videovault-media-pv
+    volumeAttributes:
+      source: "//10.10.0.3/storage-desktop"
+    nodeStageSecretRef:
+      name: smbcreds
+      namespace: korczewski-infra
+---
+# Thumbnails PV - mounts share Processed/Thumbnails for thumbnail cache
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: videovault-thumbnails-pv
+  labels:
+    app: videovault
+    media-type: thumbnails
+spec:
+  capacity:
+    storage: 50Gi
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: smb-storage
+  claimRef:
+    name: videovault-thumbnails
+    namespace: korczewski-services
+  mountOptions:
+    - dir_mode=0755
+    - file_mode=0644
+    - uid=1001
+    - gid=1001
+    - noperm
+    - mfsymlinks
+    - cache=none
+    - noserverino
+  csi:
+    driver: smb.csi.k8s.io
+    volumeHandle: videovault-thumbnails-pv
+    volumeAttributes:
+      source: "//10.10.0.3/storage-desktop"
+    nodeStageSecretRef:
+      name: smbcreds
+      namespace: korczewski-infra

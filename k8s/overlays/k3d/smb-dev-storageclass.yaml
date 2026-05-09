@@ -1,0 +1,32 @@
+---
+# =============================================================================
+# SMB StorageClass — k3d DEV OVERLAY
+# =============================================================================
+# Overrides the production smb-storage StorageClass to point at the local
+# Windows share (10.10.0.3/storage-desktop) instead of the production NAS
+# (10.0.0.11/storage-pve3b). Used by dynamically-provisioned PVCs such as
+# videovault-media and videovault-thumbnails.
+# DO NOT apply in production — use k8s/infrastructure/smb-csi/storageclass.yaml there.
+# =============================================================================
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: smb-storage
+provisioner: smb.csi.k8s.io
+parameters:
+  source: "//10.10.0.3/storage-desktop"
+  csi.storage.k8s.io/provisioner-secret-name: "smbcreds"
+  csi.storage.k8s.io/provisioner-secret-namespace: "korczewski-infra"
+  csi.storage.k8s.io/node-stage-secret-name: "smbcreds"
+  csi.storage.k8s.io/node-stage-secret-namespace: "korczewski-infra"
+reclaimPolicy: Retain
+volumeBindingMode: Immediate
+mountOptions:
+  - dir_mode=0700
+  - file_mode=0600
+  - uid=999
+  - gid=999
+  - noperm
+  - mfsymlinks
+  - cache=none
+  - noserverino
