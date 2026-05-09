@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { api } from '../services/apiService';
 import { useGameStore } from '../stores/gameStore';
 import { useAuthStore } from '../stores/authStore';
@@ -7,6 +7,7 @@ import KeybindSettings from './KeybindSettings';
 
 export default function Home() {
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
     const setLobby = useGameStore((s) => s.setLobby);
     const user = useAuthStore((s) => s.user);
 
@@ -40,10 +41,10 @@ export default function Home() {
     };
 
     useEffect(() => {
-        const brett = new URLSearchParams(window.location.search).get('brett');
-        if (brett) handleCreate();
+        if (searchParams.get('brett')) handleCreate();
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+        // handleCreate is stable; run once on mount only
+    }, []); // intentionally empty — run once on mount
 
     // Fetch active lobbies on mount and every 10 seconds
     useEffect(() => {

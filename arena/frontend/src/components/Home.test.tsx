@@ -1,4 +1,30 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
+import { render, waitFor, act } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
+import Home from './Home';
+
+// --- Module-level mocks (hoisted by vitest) ---
+
+const mockCreateLobby = vi.fn();
+const mockGetActiveLobbies = vi.fn();
+const mockNavigate = vi.fn();
+
+vi.mock('../services/apiService', () => ({
+    api: {
+        createLobby: (...args: unknown[]) => mockCreateLobby(...args),
+        getActiveLobbies: (...args: unknown[]) => mockGetActiveLobbies(...args),
+    },
+}));
+
+vi.mock('react-router-dom', async () => {
+    const actual = await vi.importActual('react-router-dom');
+    return { ...actual, useNavigate: () => mockNavigate };
+});
+
+// KeybindSettings is irrelevant here — stub it out
+vi.mock('./KeybindSettings', () => ({
+    default: () => null,
+}));
 
 /**
  * Home Component (Lobby Browser) Tests
@@ -61,6 +87,10 @@ describe('Home Component — Lobby Browser', () => {
     beforeEach(() => {
         vi.useFakeTimers();
         vi.clearAllMocks();
+        // default: getActiveLobbies resolves to empty list (avoids state updates)
+        mockGetActiveLobbies.mockResolvedValue([]);
+        mockCreateLobby.mockResolvedValue({ code: 'XYZ999' });
+        mockNavigate.mockReset();
     });
 
     afterEach(() => {
@@ -225,19 +255,32 @@ describe('Home Component — Lobby Browser', () => {
     });
 
     describe('Brett Easter Egg', () => {
-        it('detects ?brett param in URL search string', () => {
-            const brett = new URLSearchParams('?brett=abc-123').get('brett');
-            expect(brett).toBe('abc-123');
+        it('calls createLobby when ?brett param is present', async () => {
+            vi.useRealTimers(); // component uses setTimeout/setInterval internally
+
+            render(
+                <MemoryRouter initialEntries={['/?brett=abc-123']}>
+                    <Home />
+                </MemoryRouter>
+            );
+
+            await waitFor(() => expect(mockCreateLobby).toHaveBeenCalledTimes(1));
         });
 
-        it('returns null when ?brett param is absent', () => {
-            const brett = new URLSearchParams('?room=something').get('brett');
-            expect(brett).toBeNull();
-        });
+        it('does not call createLobby when ?brett param is absent', async () => {
+            vi.useRealTimers();
 
-        it('handles standalone room token', () => {
-            const brett = new URLSearchParams('?brett=standalone').get('brett');
-            expect(brett).toBe('standalone');
+            await act(async () => {
+                render(
+                    <MemoryRouter initialEntries={['/']}>
+                        <Home />
+                    </MemoryRouter>
+                );
+                // allow async effects (getActiveLobbies) to settle
+                await new Promise((r) => setTimeout(r, 50));
+            });
+
+            expect(mockCreateLobby).not.toHaveBeenCalled();
         });
     });
 });
