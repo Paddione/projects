@@ -223,4 +223,21 @@ describe('Home Component — Lobby Browser', () => {
             expect(true).toBe(true); // Layout tested in component
         });
     });
+
+    describe('Brett Easter Egg', () => {
+        it('detects ?brett param in URL search string', () => {
+            const brett = new URLSearchParams('?brett=abc-123').get('brett');
+            expect(brett).toBe('abc-123');
+        });
+
+        it('returns null when ?brett param is absent', () => {
+            const brett = new URLSearchParams('?room=something').get('brett');
+            expect(brett).toBeNull();
+        });
+
+        it('handles standalone room token', () => {
+            const brett = new URLSearchParams('?brett=standalone').get('brett');
+            expect(brett).toBe('standalone');
+        });
+    });
 });

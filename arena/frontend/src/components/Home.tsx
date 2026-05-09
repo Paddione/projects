@@ -39,6 +39,12 @@ export default function Home() {
         navigate(`/lobby/${joinCode.trim().toUpperCase()}`);
     };
 
+    useEffect(() => {
+        const brett = new URLSearchParams(window.location.search).get('brett');
+        if (brett) handleCreate();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
     // Fetch active lobbies on mount and every 10 seconds
     useEffect(() => {
         const fetchLobbies = async () => {
