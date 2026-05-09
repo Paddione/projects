@@ -240,6 +240,7 @@ vllm/pinokio/bin/miniconda/
 
 # Local binaries
 k8s/skaffold
+kubectl
 
 # Kubernetes secrets (contain credentials)
 k8s/secrets/
