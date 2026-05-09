@@ -43,8 +43,8 @@ export default function Home() {
     useEffect(() => {
         if (searchParams.get('brett')) handleCreate();
         // eslint-disable-next-line react-hooks/exhaustive-deps
-        // handleCreate is stable; run once on mount only
-    }, []); // intentionally empty — run once on mount
+        // Intentional mount-once effect: auto-create lobby on initial load only, not on re-renders.
+    }, []);
 
     // Fetch active lobbies on mount and every 10 seconds
     useEffect(() => {
