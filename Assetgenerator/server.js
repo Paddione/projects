@@ -1694,8 +1694,11 @@ httpServer.listen(PORT, async () => {
     }
   }
 
-  try {
-    const openModule = await import('open');
-    openModule.default(`http://localhost:${PORT}`);
-  } catch { /* silent */ }
+  if (!process.env.KUBERNETES_SERVICE_HOST && !process.env.NO_OPEN) {
+    try {
+      const openModule = await import('open');
+      const cp = openModule.default(`http://localhost:${PORT}`);
+      if (cp && cp.on) cp.on('error', () => {});
+    } catch { /* silent */ }
+  }
 });
