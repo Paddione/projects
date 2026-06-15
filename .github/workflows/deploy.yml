@@ -1,0 +1,144 @@
+name: Deploy
+
+on:
+  push:
+    branches: [master]
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+    outputs:
+      arena: ${{ steps.filter.outputs.arena }}
+      l2p: ${{ steps.filter.outputs.l2p }}
+      auth: ${{ steps.filter.outputs.auth }}
+      shop: ${{ steps.filter.outputs.shop }}
+      videovault: ${{ steps.filter.outputs.videovault }}
+      sos: ${{ steps.filter.outputs.sos }}
+      assetgenerator: ${{ steps.filter.outputs.assetgenerator }}
+      k8s: ${{ steps.filter.outputs.k8s }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            arena:
+              - 'arena/**'
+            l2p:
+              - 'l2p/**'
+            auth:
+              - 'auth/**'
+            shop:
+              - 'shop/**'
+            videovault:
+              - 'VideoVault/**'
+            sos:
+              - 'SOS/**'
+            assetgenerator:
+              - 'Assetgenerator/**'
+            k8s:
+              - 'k8s/**'
+
+  deploy:
+    needs: changes
+    if: needs.changes.outputs.arena == 'true' || needs.changes.outputs.l2p == 'true' || needs.changes.outputs.auth == 'true' || needs.changes.outputs.shop == 'true' || needs.changes.outputs.videovault == 'true' || needs.changes.outputs.sos == 'true' || needs.changes.outputs.assetgenerator == 'true' || needs.changes.outputs.k8s == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        service:
+          - name: auth
+            dockerfile: auth/Dockerfile
+            path: auth
+            kustomize: k8s/services/auth
+          - name: l2p-backend
+            dockerfile: l2p/backend/Dockerfile
+            path: l2p
+            kustomize: k8s/services/l2p
+          - name: l2p-frontend
+            dockerfile: l2p/frontend/Dockerfile
+            path: l2p
+            kustomize: k8s/services/l2p
+          - name: shop
+            dockerfile: shop/Dockerfile
+            path: shop
+            kustomize: k8s/services/shop
+          - name: videovault
+            dockerfile: VideoVault/Dockerfile.prod
+            path: VideoVault
+            kustomize: k8s/services/videovault
+          - name: sos
+            dockerfile: SOS/Dockerfile
+            path: SOS
+            kustomize: k8s/services/sos
+          - name: arena-backend
+            dockerfile: arena/backend/Dockerfile
+            path: arena
+            kustomize: k8s/services/arena
+          - name: arena-frontend
+            dockerfile: arena/frontend/Dockerfile
+            path: arena
+            kustomize: k8s/services/arena
+          - name: assetgenerator
+            dockerfile: Assetgenerator/Dockerfile
+            path: Assetgenerator
+            kustomize: k8s/services/assetgenerator
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check if service changed
+        id: changed
+        env:
+          SERVICE: ${{ matrix.service.name }}
+          CHANGED_AUTH: ${{ needs.changes.outputs.auth }}
+          CHANGED_L2P: ${{ needs.changes.outputs.l2p }}
+          CHANGED_SHOP: ${{ needs.changes.outputs.shop }}
+          CHANGED_VV: ${{ needs.changes.outputs.videovault }}
+          CHANGED_SOS: ${{ needs.changes.outputs.sos }}
+          CHANGED_ARENA: ${{ needs.changes.outputs.arena }}
+          CHANGED_ASSETGEN: ${{ needs.changes.outputs.assetgenerator }}
+          CHANGED_K8S: ${{ needs.changes.outputs.k8s }}
+        run: |
+          service_group="${{ matrix.service.path }}"
+          case "$service_group" in
+            auth) echo "changed=$CHANGED_AUTH" >> $GITHUB_OUTPUT ;;
+            l2p) echo "changed=$CHANGED_L2P" >> $GITHUB_OUTPUT ;;
+            shop) echo "changed=$CHANGED_SHOP" >> $GITHUB_OUTPUT ;;
+            VideoVault) echo "changed=$CHANGED_VV" >> $GITHUB_OUTPUT ;;
+            SOS) echo "changed=$CHANGED_SOS" >> $GITHUB_OUTPUT ;;
+            arena) echo "changed=$CHANGED_ARENA" >> $GITHUB_OUTPUT ;;
+            Assetgenerator) echo "changed=$CHANGED_ASSETGEN" >> $GITHUB_OUTPUT ;;
+            *) echo "changed=false" >> $GITHUB_OUTPUT ;;
+          esac
+          if [ "$CHANGED_K8S" = "true" ]; then
+            echo "changed=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Set up Docker Buildx
+        if: steps.changed.outputs.changed == 'true'
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to registry
+        if: steps.changed.outputs.changed == 'true'
+        uses: docker/login-action@v3
+        with:
+          registry: registry.korczewski.de
+          username: ${{ secrets.REGISTRY_USERNAME }}
+          password: ${{ secrets.REGISTRY_PASSWORD }}
+
+      - name: Build and push
+        if: steps.changed.outputs.changed == 'true'
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ${{ matrix.service.dockerfile }}
+          push: true
+          tags: registry.korczewski.de/korczewski/${{ matrix.service.name }}:latest
+          cache-from: type=gha,scope=${{ matrix.service.name }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.service.name }}

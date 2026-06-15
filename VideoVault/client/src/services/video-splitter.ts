@@ -84,21 +84,17 @@ async function ensurePermission(
   }
 }
 
-function getFFmpeg(_onProgress?: (stage: string) => void): Promise<FFmpegInstance> {
-  // Temporary fix for build error: Missing "./dist/umd/ffmpeg-core.js" specifier in "@ffmpeg/core" package
-  return Promise.reject(new Error('FFmpeg loading is temporarily disabled due to build issues.'));
-  /*
+async function getFFmpeg(onProgress?: (stage: string) => void): Promise<FFmpegInstance> {
   if (ffmpegInstance) return ffmpegInstance;
   onProgress?.(FFMPEG_STAGE.LOADING);
   const { FFmpeg } = await import('@ffmpeg/ffmpeg');
+  const { toBlobURL } = await import('@ffmpeg/util');
   const ffmpeg = new FFmpeg();
-  const corePath = new URL('@ffmpeg/core/dist/umd/ffmpeg-core.js', import.meta.url).toString();
-  const wasmPath = new URL('@ffmpeg/core/dist/umd/ffmpeg-core.wasm', import.meta.url).toString();
-  const workerPath = new URL('@ffmpeg/core/dist/umd/ffmpeg-core.worker.js', import.meta.url).toString();
-  await ffmpeg.load({ coreURL: corePath, wasmURL: wasmPath, workerURL: workerPath });
+  const coreURL = await toBlobURL('/ffmpeg/ffmpeg-core.js', 'text/javascript');
+  const wasmURL = await toBlobURL('/ffmpeg/ffmpeg-core.wasm', 'application/wasm');
+  await ffmpeg.load({ coreURL, wasmURL });
   ffmpegInstance = ffmpeg as FFmpegInstance;
   return ffmpegInstance;
-  */
 }
 
 async function writeOutputFile(

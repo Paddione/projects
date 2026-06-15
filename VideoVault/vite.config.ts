@@ -26,6 +26,7 @@ export default defineConfig({
       "@shared": path.resolve(sharedRoot, "videovault"),
       "@assets": path.resolve(import.meta.dirname, "attached_assets"),
       "@design-system": path.resolve(sharedRoot, "design-system"),
+      "@videovault-player": path.resolve(import.meta.dirname, "..", "packages", "videovault-player", "src"),
     },
   },
   root: path.resolve(import.meta.dirname, "client"),
@@ -89,6 +90,6 @@ export default defineConfig({
       'clsx',
       'tailwind-merge'
     ],
-    exclude: ['@replit/vite-plugin-cartographer']
+    exclude: ['@replit/vite-plugin-cartographer', '@ffmpeg/ffmpeg', '@ffmpeg/core']
   }
 });

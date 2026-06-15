@@ -5,6 +5,7 @@
   "type": "module",
   "license": "MIT",
   "scripts": {
+    "lint": "eslint .",
     "check": "tsc",
     "build": "vite build && node scripts/build-server.mjs",
     "dev": "cross-env NODE_ENV=development DOTENV_CONFIG_PATH=env/.env-app.local NODE_OPTIONS=--preserve-symlinks tsx -r dotenv/config server/index.ts",
@@ -36,6 +37,9 @@
     "test:pw:install": "playwright install chromium",
     "docker:pw:all": "docker-compose --profile playwright up --build --exit-code-from playwright playwright",
     "db:push": "drizzle-kit push",
+    "copy:ffmpeg": "node scripts/copy-ffmpeg-core.mjs",
+    "predev": "node scripts/copy-ffmpeg-core.mjs",
+    "prebuild": "node scripts/copy-ffmpeg-core.mjs",
     "pretest": "tsc -p tsconfig.test.json --noEmit",
     "predocker:pw:all": "node scripts/ensure-playwright-match.mjs",
     "prepare": "if [ -d .git ]; then husky; fi || true"

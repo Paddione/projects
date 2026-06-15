@@ -50,6 +50,12 @@
       ],
       "@shared/*": [
         "./shared/videovault/*"
+      ],
+      "@videovault-player": [
+        "../packages/videovault-player/src"
+      ],
+      "@videovault-player/*": [
+        "../packages/videovault-player/src/*"
       ]
     }
   }
