@@ -1,0 +1,41 @@
+name: Post-Merge
+
+on:
+  push:
+    branches: [master]
+
+jobs:
+  deploy-k8s:
+    runs-on: ubuntu-latest
+    if: github.head_ref == '' || startsWith(github.head_ref, 'feature/') || startsWith(github.head_ref, 'fix/') || startsWith(github.head_ref, 'chore/')
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Wait for CI to complete
+        uses: lewagon/wait-on-check-action@v1
+        with:
+          ref: ${{ github.sha }}
+          check-name: 'ci-status'
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          wait-interval: 30
+
+      - name: Configure kubectl
+        uses: azure/setup-kubectl@v4
+
+      - name: Set up Kubeconfig
+        env:
+          KUBECONFIG_B64: ${{ secrets.KUBECONFIG_B64 }}
+        run: |
+          mkdir -p ~/.kube
+          echo "$KUBECONFIG_B64" | base64 -d > ~/.kube/config
+          chmod 600 ~/.kube/config
+
+      - name: Install kustomize
+        uses: imranismail/setup-kustomize@v2
+
+      - name: Apply K8s manifests
+        run: |
+          for dir in k8s/overlays/production/*/; do
+            echo "--- Deploying $dir ---"
+            kustomize build "$dir" | kubectl apply -f -
+          done

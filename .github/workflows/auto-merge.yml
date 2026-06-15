@@ -1,0 +1,23 @@
+name: Auto-Merge
+
+on:
+  pull_request:
+    types: [opened, ready_for_review, synchronize]
+
+permissions:
+  pull-requests: write
+  contents: write
+
+jobs:
+  enable-automerge:
+    if: github.event.pull_request.draft == false && github.base_ref == 'master'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Enable auto-merge (squash)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+        run: |
+          gh pr merge --auto --squash "$PR_URL" 2>/dev/null || true

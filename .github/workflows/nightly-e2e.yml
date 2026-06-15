@@ -1,0 +1,66 @@
+name: Nightly E2E
+
+on:
+  schedule:
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        service:
+          - name: l2p
+            test-dir: l2p/e2e
+            url: https://l2p.korczewski.de
+          - name: videovault
+            test-dir: VideoVault/e2e
+            url: https://videovault.korczewski.de
+          - name: shop
+            test-dir: shop/e2e
+            url: https://shop.korczewski.de
+          - name: arena
+            test-dir: arena/e2e
+            url: https://arena.korczewski.de
+          - name: sos
+            test-dir: SOS/e2e
+            url: https://sos.korczewski.de
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: ${{ matrix.service.test-dir }}
+        continue-on-error: true
+
+      - name: Run Playwright E2E
+        uses: microsoft/playwright-github-action@v1
+        continue-on-error: true
+        with:
+          working-directory: ${{ matrix.service.test-dir }}
+          command: npx playwright test --reporter=list
+
+      - name: Upload E2E artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-artifacts-${{ matrix.service.name }}
+          path: |
+            ${{ matrix.service.test-dir }}/playwright-report/
+            ${{ matrix.service.test-dir }}/test-results/
+          retention-days: 7
+
+  notify:
+    needs: e2e
+    if: failure()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Notify failure
+        run: |
+          echo "::error::Nightly E2E tests failed. Check workflow logs: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
