@@ -95,6 +95,16 @@ export default defineConfig({
         ),
       },
       {
+        find: '@videovault-player',
+        replacement: path.resolve(
+          __dirname,
+          '..',
+          'packages',
+          'videovault-player',
+          'src'
+        ),
+      },
+      {
         find: 'zod',
         replacement: path.resolve(__dirname, 'node_modules', 'zod'),
       },
