@@ -12,3 +12,5 @@ export type {
 } from './types';
 
 export { useVideoPlayer } from './useVideoPlayer';
+export { VideoPlayer } from './VideoPlayer';
+export { defaultCaptureFrame } from './capture-frame';
