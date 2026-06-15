@@ -1,12 +1,12 @@
-import { useEffect, useRef, useCallback, useState } from 'react';
+import { useEffect, useRef, useCallback, useState, forwardRef, useImperativeHandle } from 'react';
 import React from 'react';
 import { useVideoPlayer } from './useVideoPlayer';
-import type { VideoPlayerProps, CaptureFrameFn } from './types';
+import type { VideoPlayerProps, CaptureFrameFn, MediaviewerHandle, VideoSource } from './types';
 import { defaultCaptureFrame } from './capture-frame';
 
 const SPEED_OPTIONS = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2];
 
-export function VideoPlayer({
+export const VideoPlayer = forwardRef<MediaviewerHandle, VideoPlayerProps & { externalVideoRef?: React.RefObject<HTMLVideoElement | null> }>(function VideoPlayer({
   source,
   playlist: playlistProp,
   captureFrame,
@@ -16,8 +16,9 @@ export function VideoPlayer({
   onSelect,
   onEnded,
   onError: onErrorProp,
-}: VideoPlayerProps) {
-  const playlist = source && playlistProp
+  externalVideoRef,
+}, ref) {
+  const playlist: VideoSource[] = source && playlistProp
     ? playlistProp
     : source
     ? [source]
@@ -29,6 +30,7 @@ export function VideoPlayer({
       onSelect,
       onEnded,
       onError: onErrorProp,
+      videoRef: externalVideoRef,
     });
 
   const [isScrubbing, setIsScrubbing] = useState(false);
@@ -63,6 +65,19 @@ export function VideoPlayer({
     document.addEventListener('mousemove', h);
     return () => document.removeEventListener('mousemove', h);
   }, []);
+
+  useImperativeHandle(ref, () => ({
+    playVideo: controls.playVideo,
+    setPlaylist: controls.setPlaylist,
+    play: controls.play,
+    pause: controls.pause,
+    seek: controls.seek,
+    getState: () => ({
+      current,
+      state,
+      currentTime,
+    }),
+  }), [controls, current, state, currentTime]);
 
   if (!source) {
     return null;
@@ -256,4 +271,4 @@ export function VideoPlayer({
       )}
     </div>
   );
-}
+});

@@ -105,6 +105,14 @@ export default defineConfig({
         ),
       },
       {
+        find: 'react',
+        replacement: path.resolve(__dirname, 'node_modules', 'react'),
+      },
+      {
+        find: 'react-dom',
+        replacement: path.resolve(__dirname, 'node_modules', 'react-dom'),
+      },
+      {
         find: 'zod',
         replacement: path.resolve(__dirname, 'node_modules', 'zod'),
       },

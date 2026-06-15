@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import type {
   VideoSource,
   PlayerState,
@@ -23,11 +23,11 @@ function loadPersistedNumber(key: string, fallback: number): number {
 }
 
 export function useVideoPlayer(
-  options: UseVideoPlayerOptions & { playlist: VideoSource[] }
+  options: UseVideoPlayerOptions & { playlist: VideoSource[]; videoRef?: React.RefObject<HTMLVideoElement | null> }
 ): UseVideoPlayerReturn {
-  const { playlist: initialPlaylist, initialVideoId, onSelect, onEnded, onError } = options;
-
-  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const { playlist: initialPlaylist, initialVideoId, onSelect, onEnded, onError, videoRef: externalRef } = options;
+  const internalRef = useRef<HTMLVideoElement | null>(null);
+  const videoRef = externalRef || internalRef;
   const [playlist, setPlaylistState] = useState<VideoSource[]>(initialPlaylist);
   const [currentIndex, setCurrentIndex] = useState(() => {
     if (initialVideoId) {
