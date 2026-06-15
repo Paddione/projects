@@ -10,3 +10,5 @@ export type {
   VideoPlayerProps,
   MediaviewerWidgetProps,
 } from './types';
+
+export { useVideoPlayer } from './useVideoPlayer';
