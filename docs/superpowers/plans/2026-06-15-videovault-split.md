@@ -19,6 +19,53 @@
 
 ---
 
+## Status & Design-Update (Stand 2026-06-15)
+
+> Dieser Block ist der **autoritative IST-Stand**. Wo Code-Blöcke weiter unten abweichen, gilt dieser Abschnitt (die unteren Blöcke sind die ursprüngliche Plan-Absicht und teils überholt).
+
+### Fortschritt
+
+| Task | Stand | Anmerkung |
+|---|---|---|
+| 1 Player-Package scaffolden + Aliase | ✅ erledigt | committet |
+| 2 `useVideoPlayer` extrahieren | ✅ erledigt | committet (TDD) |
+| 3 `defaultCaptureFrame` + `VideoPlayer` | ✅ erledigt | committet; **danach restyled** (s. Task D) |
+| 4 Bibliotheks-Modal → `<VideoPlayer>`-Hülle | ⬜ offen | Kontrakt-IST beachten (s. u.) |
+| 5 FFmpeg-Schneiden reaktivieren | ⬜ offen | unverändert gültig |
+| 6 `mediaviewer-widget` scaffolden | ✅ erledigt | Dual-Build steht |
+| 7 `MediaviewerWidget` + `HelpVideoPicker` | ✅ erledigt | **mit Abweichung** (s. u.) + restyled (Task D) |
+| 8 Root-Scripts + Learnings-Log | ⬜ offen | `dev:widget` fehlt noch |
+| **D Design-System & Player-Chrome** | ✅ **erledigt** | **neu — siehe unten** |
+
+### Kontrakt-IST (weicht von den Plan-Code-Blöcken ab — für Task 4/5 maßgeblich)
+
+- `PlayerState` ist ein **String-Union** `'idle' | 'loading' | 'playing' | 'paused' | 'ended' | 'error'` (NICHT das geplante Objekt). Der beobachtbare Zahlen-State (`currentTime`, `duration`, `volume` …) lebt in `useVideoPlayer`s Rückgabe, nicht in `PlayerState`.
+- `VideoSource` = `{ id, url, title, poster?, duration, tags? }` — Felder heißen **`poster`/`duration`** (nicht `posterUrl`/`durationSec`); `spriteUrl` existiert nicht. `tags?: string[]` wurde ergänzt (read-only Anzeige).
+- `MediaviewerHandle.getState()` liefert `{ current: VideoSource | null; state: PlayerState; currentTime: number }`.
+- `VideoPlayerProps` hat zusätzlich **`onStateChange?(state: PlayerState)`** (treibt die Live-Overlays im Widget).
+- **Bekannte Abweichung (Task 7):** Das Widget teilt **nicht** einen einzigen `useVideoPlayer` mit `VideoPlayer` (das geplante `player`-Prop-Durchreichen wurde nicht umgesetzt). Folge: im Widget-Handle sind `play()/pause()` aktuell No-ops und `seek()` speichert nur lokal die Zeit. **Reconciliation-Schritt offen**, falls der Companion echte imperative Steuerung braucht — sonst als bewusste YAGNI-Vereinfachung dokumentieren.
+
+### Task D: Design-System & Player-Chrome ✅ (erledigt, via frontend-design)
+
+Ästhetik **„Editing-Suite Control Surface"**: präzise, ruhig, filmischer Signal-Amber-Akzent, Mono-Timecodes; token-getrieben, dark-first + Light-Theme, gescoped unter `.mv-root`/`.mv-player` (kein CSS-Bleed). Brief: `docs/superpowers/specs/2026-06-15-mediaviewer-widget-design-brief.md`. Previews: `docs/design-previews/mediaviewer-{dark,light,player-chrome}.png`.
+
+Erstellt/geändert:
+- `packages/videovault-player/src/icons.tsx` *(neu)* — Play/Pause/Prev/Next/Volume/Mute/Fullscreen/PiP (currentColor-SVG).
+- `packages/videovault-player/src/player.css` *(neu)* — Player-Styling, gescoped `.mv-player`, `--mv-*`-Tokens mit Fallbacks (auch standalone nutzbar).
+- `packages/videovault-player/src/VideoPlayer.tsx` — Tailwind-Soup → semantische Klassen + Icons; **Scrubber** (Buffered- + Played-Bar, Frame-Preview-Tooltip); **Fullscreen + PiP ergänzt**; `onStateChange` emittiert.
+- `mediaviewer-widget/src/styles/mediaviewer.css` *(neu)* — Token-System auf `:root` (host-injizierbar) + `[data-theme="light"]`, Panel-Chrome, Picker-Grid, States, Poster-Platzhalter, Spinner.
+- `mediaviewer-widget/src/icons.tsx`, `src/MediaviewerState.tsx` *(neu)* — States `empty/idle/loading/buffering/error` + Retry.
+- `mediaviewer-widget/src/HelpVideoPicker.tsx`, `src/MediaviewerWidget.tsx` — restyled (Grid mit Poster/Dauer/Tags/Active; Header, Stage mit Idle/Loading/Error-Overlays; **kein Auto-Play** — Idle-Prompt bis Auswahl).
+- `mediaviewer-widget/src/lib-entry.ts` — importiert beide CSS-Dateien (Lib-Build bündelt `dist/lib/index.css`), exportiert `MediaviewerState`.
+- `mediaviewer-widget/src/vite-env.d.ts` *(neu)* — `declare module '*.css'`.
+- Dev-Harness (`index.html`, `src/dev/{App,main}.tsx`, `src/dev/dev.css`) — k8s-Host-Frame mit Theme-Toggle, `handle.playVideo()`-Demo, State-Galerie; distinctive Fonts (Bricolage/Hanken/JetBrains-Mono) **nur im Dev-Harness** (Lib bleibt host-neutral/offline via `--mv-host-font`).
+
+Verifiziert: Player 13/13 + Widget 5/5 Tests grün, Typecheck beide Pakete sauber, Lib-Build erzeugt `index.css` (≈14.8 kB) + `index.js`; dark & light im Browser geprüft.
+
+**Themebarkeit (Brief-Kern):** Default-Tokens liegen bewusst auf `:root` (inert), Light-Overrides auf `[data-theme="light"]` — so kann ein **Host die Tokens auf einem Vorfahren injizieren** und das Widget übernimmt sie. (Tokens auf `.mv-root` zu definieren hätte genau das blockiert.)
+
+---
+
 ## File Structure
 
 **Neu — `packages/videovault-player/` (source-only, eigene Test-Toolchain):**
@@ -821,7 +868,7 @@ export function VideoPlayer(props: VideoPlayerProps) {
   );
 }
 ```
-Hinweis: Falls Radix-`Slider`/`Button` im Modal genutzt wurden, im Package durch native Elemente (`<input type="range">`, `<button>`) ersetzen — das Package soll keine `@/components/ui`-Abhängigkeit haben. Styling-Klassen sind Platzhalter; Tailwind-Klassen können später in Sub-Projekt 2 angepasst werden.
+Hinweis: Falls Radix-`Slider`/`Button` im Modal genutzt wurden, im Package durch native Elemente (`<input type="range">`, `<button>`) ersetzen — das Package soll keine `@/components/ui`-Abhängigkeit haben. **Styling ist NICHT länger Platzhalter:** Das Player-Markup ist inzwischen token-getrieben gestylt (semantische `.mv-player__*`-Klassen, Icons, Scrubber, Fullscreen/PiP) — siehe **Task D**. Die `data-testid`-Hooks dienen als stabile Styling-/Test-Schnittstelle.
 
 - [ ] **Step 8: Test laufen → PASS**
 
@@ -1602,5 +1649,6 @@ git commit -m "chore(videovault): add dev:widget root script + migration learnin
 - Bibliothek (`VideoVault`) nutzt den geteilten `VideoPlayer`; gesamte bestehende Unit-Suite grün, Coverage-Schwellen gehalten.
 - FFmpeg-Schneiden reaktiviert, hinter `VideoSplitterBackend`; Splitter erstmals (Guard-)getestet; `as`-Cast in `home.tsx` ersetzt.
 - `mediaviewer-widget` baut App + Library, `MediaviewerWidget` mit Props + imperativem `MediaviewerHandle`, Picker für Hilfsvideos; Tests grün.
+- **Design-System (Task D):** token-getriebenes, host-themebares (dark/light) Styling für Player + Widget; Controls inkl. Scrubber/Fullscreen/PiP; States (empty/idle/loading/buffering/error) + Poster-Platzhalter; Lib-Build bündelt `index.css`. ✅
 - `dev:widget` im Root, Learnings-Log angelegt.
 - **Bewusst NICHT enthalten** (Sub-Projekt 2/3): Containerisierung, k8s-Manifeste, Keycloak-Auth, GPU-Worker-ffmpeg-Backend, Companion-Panel-Einbettung, das Migrations-Skill selbst.
