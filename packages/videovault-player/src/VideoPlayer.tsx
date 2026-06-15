@@ -66,6 +66,16 @@ export const VideoPlayer = forwardRef<MediaviewerHandle, VideoPlayerProps & { ex
     return () => document.removeEventListener('mousemove', h);
   }, []);
 
+  const requestPreview = useCallback((tSec: number) => {
+    const src = source?.url;
+    if (!src) return;
+    const whole = Math.max(0, Math.floor(tSec));
+    setPreviewTime(whole);
+    void captureFn(src, whole).then((url) => {
+      setPreviewUrl(url);
+    }).catch(() => {});
+  }, [source?.url, captureFn]);
+
   useImperativeHandle(ref, () => ({
     playVideo: controls.playVideo,
     setPlaylist: controls.setPlaylist,
@@ -92,15 +102,6 @@ export const VideoPlayer = forwardRef<MediaviewerHandle, VideoPlayerProps & { ex
 
   const effectiveTime = isScrubbing ? scrubTimeDisplay : currentTime;
   const effectiveDuration = duration > 0 ? duration : 0;
-
-  const requestPreview = useCallback((tSec: number) => {
-    if (!source?.url) return;
-    const whole = Math.max(0, Math.floor(tSec));
-    setPreviewTime(whole);
-    void captureFn(source.url, whole).then((url) => {
-      setPreviewUrl(url);
-    }).catch(() => {});
-  }, [source?.url, captureFn]);
 
   return (
     <div className="flex-1 flex flex-col min-w-0 bg-black">

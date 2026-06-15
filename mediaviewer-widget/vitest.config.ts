@@ -5,9 +5,11 @@ import path from 'path';
 export default defineConfig({
   plugins: [react()],
   resolve: {
-    alias: {
-      '@videovault-player': path.resolve(__dirname, '..', 'packages', 'videovault-player', 'src'),
-    },
+    alias: [
+      { find: 'react', replacement: path.resolve(__dirname, 'node_modules', 'react') },
+      { find: 'react-dom', replacement: path.resolve(__dirname, 'node_modules', 'react-dom') },
+      { find: '@videovault-player', replacement: path.resolve(__dirname, '..', 'packages', 'videovault-player', 'src') },
+    ],
   },
   test: {
     environment: 'jsdom',
