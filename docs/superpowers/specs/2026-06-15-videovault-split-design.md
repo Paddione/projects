@@ -123,23 +123,26 @@ interface MediaviewerWidgetProps {
 
 Design-Move: Heute füllt der Host `videos` mit Hilfsvideos; morgen ruft ein Brainstorm-Companion `handle.playVideo("intro-feature-x")` zur passenden Stelle auf. Wir bauen den Companion nicht — wir bauen nur die Steckdose. YAGNI-konform und zukunftssicher.
 
-## useVideoManager-Refactor
+## Player-Extraktion (Korrektur nach Code-Analyse)
 
-Der 1762-Zeilen-Hook wird in drei fokussierte Einheiten zerlegt:
+**Befund:** `useVideoManager` (1762 Z.) enthält **keinen** Playback-State — der gesamte echte Playback-Zustand (`isPlaying`, `currentTime`, `volume`, `playbackRate`, `isFullscreen`, `isPip`, `buffered`, Scrub/Hover, MediaSession) lebt **lokal in `video-player-modal.tsx` (781 Z.)** über `useState`/`useRef`. `useVideoManager` hält nur `currentVideo`/`pinnedVideoId` und ist sonst reine Library/Persistence-Orchestrierung.
 
-| Neu | Verantwortung | Ablageort |
+**Konsequenz (YAGNI):** Der ursprünglich geplante 3-fach-Split von `useVideoManager` entfällt — er ist für den Widget/Library-Split nicht nötig. `useVideoManager` bleibt unverändert in der Bibliothek. Die einzige Extraktion ist der **Player aus dem Modal**:
+
+| Neu (im Player-Package) | Quelle | Verantwortung |
 |---|---|---|
-| `useVideoPlayer` | Playback-State: current source, time, playing, volume, speed, Playlist-Navigation | **Player-Package** (Widget + Bibliothek) |
-| `useVideoLibrary` | Scan, Filter, Bulk, Categorize, Sort, Presets | **Bibliothek** (schlanker Rest von useVideoManager) |
-| `useVideoDatabase` | CRUD/Persistenz (localStorage + API) | **Bibliothek** |
+| `useVideoPlayer` | lokaler State aus `video-player-modal.tsx` | Playback-State-Maschine: source, time, playing, volume, rate (localStorage-persistiert), buffered, scrub, fullscreen/PiP, Playlist-Nav |
+| `VideoPlayer.tsx` | Player-Markup aus `video-player-modal.tsx` | Präsentations-Player (video-Element, Controls, Scrub-Bar, MediaSession) — props-driven |
 
-Das Widget nutzt **nur** `useVideoPlayer` + Props — kein `useVideoManager`. `video-player-modal.tsx` (781 Z.) wird zu `VideoPlayer.tsx` ohne Modal-Hülle und ohne `onSplitVideo`-Prop (Bibliotheks-only).
+`video-player-modal.tsx` wird in der Bibliothek zu einer **dünnen Hülle**: `<Dialog>`-Chrome + `<VideoPlayer>` + die Library-Side-Panels (Tags-Editor, Splitter). Die playback-fremden Props (`onSplitVideo`, `onUpdateVideo`, `onRemoveCategory`, `onFocusMode`, `availableCategories`, `onRescan`) bleiben am Modal, nicht am `VideoPlayer`.
+
+**Scrub-Preview per Dependency-Injection:** `VideoPlayer` erhält eine optionale `captureFrame?(src, timeSec): Promise<string>`-Prop. Das Package liefert eine minimale, reine Canvas-Default-Implementierung (`defaultCaptureFrame`); die Bibliothek injiziert ihre reichere `VideoThumbnailService.captureFrameAtTime`. So bleibt das Player-Package **frei vom Thumbnail-/Server-/FSAA-Stack** — der bleibt vollständig in der Bibliothek.
 
 ## Server & FFmpeg-Fix
 
 - **Server bleibt vollständig bei der Bibliothek.** Widget = serverlos.
 - **FFmpeg-Fix** (`client/src/services/video-splitter.ts`): Aktuell wirft `getFFmpeg()` hart `Error('FFmpeg loading is temporarily disabled due to build issues.')`. Ursache laut Stub-Kommentar: fehlende `"./dist/umd/ffmpeg-core.js"`-Spezifizierung in `@ffmpeg/core` unter Vite. Der echte Loader nutzt bereits `new URL('@ffmpeg/core/dist/umd/ffmpeg-core.js', import.meta.url)`.
-  - **Lösung:** `@ffmpeg/core` aus `optimizeDeps` ausschließen; Core/WASM/Worker per `toBlobURL` + `?url` laden; **COOP/COEP-Header** (`Cross-Origin-Opener-Policy: same-origin`, `Cross-Origin-Embedder-Policy: require-corp`) im Vite-Dev-Server und in der Bibliotheks-Prod-Auslieferung setzen, da FFmpeg.wasm `SharedArrayBuffer` (Cross-Origin-Isolation) benötigt.
+  - **Lösung (korrigiert):** Die installierte Variante ist `@ffmpeg/core@0.12` (**Single-Thread**), die **kein** `SharedArrayBuffer` und damit **kein COOP/COEP** braucht (Helmet setzt COEP in `server/middleware/security.ts` bewusst auf `false` — das bleibt so). Der eigentliche Fehler ist die `new URL('@ffmpeg/core/dist/umd/…', import.meta.url)`-Auflösung, die am `exports`-Feld von `@ffmpeg/core` scheitert. Fix: ein `scripts/copy-ffmpeg-core.mjs` kopiert `ffmpeg-core.js` + `ffmpeg-core.wasm` aus `node_modules/@ffmpeg/core/dist/umd/` nach `client/public/ffmpeg/` (wired als `predev`/`prebuild`, keine neue Dependency), und `getFFmpeg` lädt per `toBlobURL('/ffmpeg/ffmpeg-core.js', 'text/javascript')` + `toBlobURL('/ffmpeg/ffmpeg-core.wasm', 'application/wasm')`. Zusätzlich `@ffmpeg/core` + `@ffmpeg/ffmpeg` in `optimizeDeps.exclude`. Offline-/k8s-tauglich (kein CDN).
   - **Warum in Scope:** „Schneiden" ist ein Kern-Feature der Bibliothek. Eine Bibliothek mit kaputtem Schneiden ist kein sauberer Migrations-Input. Risiko früh in vertrauter CI klären — die COEP-Anforderung schlägt zudem bis ins k8s-Ingress (Sub-Projekt 2) durch und ist dort besser bekannt als überraschend.
   - **Backend-Abstraktion (wegen GPU-Worker):** `video-splitter.ts` wird hinter ein schmales `VideoSplitterBackend`-Interface gelegt (`split(source, cuts) → Segment[]`). Die WASM-Variante ist die erste Implementierung. Hintergrund: Auf dem GPU-Worker des Bachelorprojekts existiert bereits ein natives `ffmpeg`-Binary (serverseitig, hardware-beschleunigt, kein `SharedArrayBuffer`/COEP). In Sub-Projekt 2 kann das Schneide-Backend dadurch auf einen Server-Endpoint umgestellt werden, der das native ffmpeg nutzt, **ohne die Bibliotheks-UI zu berühren**. Das Interface ist die einzige Zusatzinvestition in Sub-Projekt 1; der serverseitige Backend selbst ist Out of Scope.
 
@@ -172,9 +175,9 @@ Scan → useVideoLibrary füllt videos[]
 
 ## Testing Strategy
 
-1. **Characterization-Tests zuerst** auf `useVideoManager` *vor* dem Schnitt — Golden-Master, der das Ist-Verhalten einfriert und beweist, dass der Split nichts ändert.
-2. **TDD an den neuen Grenzen:** `useVideoPlayer` (Playback-State-Maschine), `<MediaviewerWidget>` (Props rendern Picker; `playVideo`/`seek` über Handle; Events feuern; `onError`-Pfad).
-3. **Bibliothek grün halten:** bestehende Vitest- + Playwright-Suite muss nach dem Player-Austausch durchlaufen; Per-File-Coverage-Schwellen (filter-engine 90/95 etc.) bleiben erhalten.
+1. **TDD an den neuen Grenzen zuerst:** `useVideoPlayer` (Playback-State-Maschine) wird per TDD aufgebaut, bevor der Player aus dem Modal gezogen wird — der Player ist heute ungetestet, also ist der neue Hook-Test das Sicherheitsnetz für die Extraktion.
+2. **TDD weiter:** `<VideoPlayer>` (Controls, Scrub, Events), `<MediaviewerWidget>` (Props rendern Picker; `playVideo`/`seek` über Handle; Events feuern; `onError`-Pfad).
+3. **Bibliothek grün halten:** bestehende Vitest- + Playwright-Suite muss nach dem Umbau des Modals zur `VideoPlayer`-Hülle durchlaufen — das ist der Regressions-Guard; Per-File-Coverage-Schwellen (filter-engine 90/95 etc.) bleiben erhalten.
 4. **FFmpeg-Integrationstest:** „Split erzeugt 2 Segmente mit erwarteten Dauern".
 5. Test-Runner unverändert: `npx vitest run`, single-threaded, Stubs aus `vitest.config.ts`.
 
@@ -194,13 +197,14 @@ Ab Sub-Projekt 1 wird ein knappes Learnings-Log geführt (`docs/superpowers/spec
 
 ## Build Sequence (grob — Detailplan folgt via writing-plans)
 
-1. Characterization-Tests auf `useVideoManager`.
-2. `packages/videovault-player` anlegen; pure-Browser-Services + `VideoPlayer` + `useVideoPlayer` dorthin extrahieren (mit ihren Tests).
-3. Bibliothek (`VideoVault/client`) auf das Package umstellen; Suite grün.
-4. FFmpeg-Fix hinter `VideoSplitterBackend`-Interface (WASM-Impl) + Integrationstest.
-5. `mediaviewer-widget`-App: `MediaviewerWidget` (Props + Handle) + `HelpVideoPicker` + Dev-Harness; TDD.
-6. Vite-Dual-Build (App + Library) fürs Widget.
-7. Learnings-Log finalisieren.
+1. `packages/videovault-player` scaffolden (source-only Package wie `error-handling`); Aliase in vite/vitest/tsconfig verdrahten.
+2. `useVideoPlayer` per TDD extrahieren (aus Modal-State).
+3. `VideoPlayer.tsx` + `defaultCaptureFrame` extrahieren; Tests.
+4. Bibliotheks-Modal zur `<VideoPlayer>`-Hülle umbauen (captureFrame injizieren); volle Suite grün.
+5. FFmpeg-Fix hinter `VideoSplitterBackend`-Interface (WASM-Impl, `toBlobURL` + Core-Copy) + Integrationstest; expliziten `SplitVideoFormValues→SplitVideoOptions`-Mapper statt `as`-Cast.
+6. `mediaviewer-widget`-App scaffolden (Vite, Dual-Build App+Library).
+7. `MediaviewerWidget` (Props + `forwardRef`-Handle) + `HelpVideoPicker` per TDD; Dev-Harness.
+8. Root-Scripts (`dev:widget`) + Learnings-Log finalisieren.
 
 ## Out of Scope
 
