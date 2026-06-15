@@ -6,6 +6,8 @@ export interface VideoSource {
   poster?: string;
   title: string;
   duration: number;
+  /** Read-only Anzeige; später vom Companion gefüllt. */
+  tags?: string[];
 }
 
 export type PlayerState = 'idle' | 'loading' | 'playing' | 'paused' | 'ended' | 'error';
@@ -76,6 +78,7 @@ export interface VideoPlayerProps {
   onSelect?: (video: VideoSource) => void;
   onEnded?: (videoId: string) => void;
   onError?: (videoId: string, error: string) => void;
+  onStateChange?: (state: PlayerState) => void;
 }
 
 export interface MediaviewerWidgetProps {
