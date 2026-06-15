@@ -30,12 +30,14 @@
 | 1 Player-Package scaffolden + Aliase | ✅ erledigt | committet |
 | 2 `useVideoPlayer` extrahieren | ✅ erledigt | committet (TDD) |
 | 3 `defaultCaptureFrame` + `VideoPlayer` | ✅ erledigt | committet; **danach restyled** (s. Task D) |
-| 4 Bibliotheks-Modal → `<VideoPlayer>`-Hülle | ⬜ offen | Kontrakt-IST beachten (s. u.) |
-| 5 FFmpeg-Schneiden reaktivieren | ⬜ offen | unverändert gültig |
+| 4 Bibliotheks-Modal → `<VideoPlayer>`-Hülle | ✅ erledigt | Modal umhüllt `VideoPlayer` (`toVideoSource`/`libraryCaptureFrame`/`externalVideoRef`); Client-Suite **520/520 grün** nach Task D |
+| 5 FFmpeg-Schneiden reaktivieren | ✅ erledigt | `getFFmpeg` aktiv, Core kopiert, `VideoSplitterBackend` + `split-form-mapping` + Guard-Test vorhanden |
 | 6 `mediaviewer-widget` scaffolden | ✅ erledigt | Dual-Build steht |
-| 7 `MediaviewerWidget` + `HelpVideoPicker` | ✅ erledigt | **mit Abweichung** (s. u.) + restyled (Task D) |
-| 8 Root-Scripts + Learnings-Log | ⬜ offen | `dev:widget` fehlt noch |
+| 7 `MediaviewerWidget` + `HelpVideoPicker` | ✅ erledigt | restyled (Task D); Handle-Reconciliation erledigt (s. u.) |
+| 8 Root-Scripts + Learnings-Log | ✅ erledigt | `dev:widget` + `dev:all` enthalten Widget; Learnings-Log existiert |
 | **D Design-System & Player-Chrome** | ✅ **erledigt** | **neu — siehe unten** |
+| **R Handle-Reconciliation** | ✅ erledigt | Widget delegiert `play/pause/seek/getState` an inneren `VideoPlayer`-ref |
+| **C `player.css`-Import in Bibliothek** | ✅ erledigt | `VideoVault/client/src/main.tsx` importiert `@videovault-player/player.css` (sonst Player ungestylt nach Task D) |
 
 ### Kontrakt-IST (weicht von den Plan-Code-Blöcken ab — für Task 4/5 maßgeblich)
 
@@ -43,7 +45,7 @@
 - `VideoSource` = `{ id, url, title, poster?, duration, tags? }` — Felder heißen **`poster`/`duration`** (nicht `posterUrl`/`durationSec`); `spriteUrl` existiert nicht. `tags?: string[]` wurde ergänzt (read-only Anzeige).
 - `MediaviewerHandle.getState()` liefert `{ current: VideoSource | null; state: PlayerState; currentTime: number }`.
 - `VideoPlayerProps` hat zusätzlich **`onStateChange?(state: PlayerState)`** (treibt die Live-Overlays im Widget).
-- **Bekannte Abweichung (Task 7):** Das Widget teilt **nicht** einen einzigen `useVideoPlayer` mit `VideoPlayer` (das geplante `player`-Prop-Durchreichen wurde nicht umgesetzt). Folge: im Widget-Handle sind `play()/pause()` aktuell No-ops und `seek()` speichert nur lokal die Zeit. **Reconciliation-Schritt offen**, falls der Companion echte imperative Steuerung braucht — sonst als bewusste YAGNI-Vereinfachung dokumentieren.
+- **Abweichung vom Plan + Reconciliation (Task 7 / R) — ✅ gelöst:** Das Widget teilt **nicht** einen einzigen `useVideoPlayer` mit `VideoPlayer` (das geplante `player`-Prop-Durchreichen wurde bewusst nicht umgesetzt — `VideoPlayer` initialisiert sonst `currentId` auf `playlist[0]` und bricht das No-Auto-Play-Verhalten + Tests). Statt einen Hook zu teilen, hält das Widget einen **ref auf den inneren `VideoPlayer`** (`forwardRef<MediaviewerHandle>`) und **delegiert** `play()/pause()/seek()/getState()` daran. Das Handle steuert damit den echten Player; `getState()` liefert den Live-Zustand (Fallback `idle`, solange nichts gewählt ist). Verankert durch Test „getState reflects the selected video via the inner player (delegation)".
 
 ### Task D: Design-System & Player-Chrome ✅ (erledigt, via frontend-design)
 

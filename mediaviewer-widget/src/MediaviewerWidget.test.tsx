@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import React, { createRef } from 'react';
+import { createRef } from 'react';
 import { MediaviewerWidget } from './MediaviewerWidget';
 import type { MediaviewerHandle, VideoSource } from '@videovault-player';
 
@@ -39,6 +39,16 @@ describe('MediaviewerWidget', () => {
     render(<MediaviewerWidget videos={mockVideos} onSelect={onSelect} />);
     fireEvent.click(screen.getByText('Managing categories'));
     expect(onSelect).toHaveBeenCalledWith('v2');
+  });
+
+  it('getState reflects the selected video via the inner player (delegation)', () => {
+    const ref = createRef<MediaviewerHandle>();
+    render(<MediaviewerWidget ref={ref} videos={mockVideos} onSelect={() => {}} />);
+    // before any selection the handle reports idle
+    expect(ref.current?.getState().current).toBeNull();
+    // selecting mounts the VideoPlayer; getState now delegates to it
+    fireEvent.click(screen.getByText('Managing categories'));
+    expect(ref.current?.getState().current?.id).toBe('v2');
   });
 
   it('passes onEnded callback to VideoPlayer', () => {
