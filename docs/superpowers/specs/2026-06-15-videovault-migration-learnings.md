@@ -48,3 +48,20 @@ Kein Build-Schritt — reiner Alias-Mechanismus:
 5. **`npm install` Konflikte:** Canvas/jsdom Peer-Dep-Konflikt — `--legacy-peer-deps` nötig
 6. **VideoPlayer-Modal Tests:** `button-forward-10m` sowie gesture/hover Tests entfernt (in VideoPlayer verschoben)
 7. **FFmpeg Guard Tests:** `invalid_split` Test nicht isoliert testbar (braucht FileHandle-Mock) — auf `missing_handle` reduziert
+
+## Phase 2c — Server-Side Split (2026-06-15)
+
+### GPU-Annahme der Spec war falsch
+Kein Media-GPU-Worker im Cluster (nur LLM-GPU-Peer `llm-gpu.yaml` auf einem wg-mesh-Peer). Befund beim Planen via Code-Erkundung, nicht erst beim Bauen.
+
+### Stream-Copy ≠ GPU-Kandidat
+`ffmpeg -c copy` ist I/O-gebunden → nvenc/GPU bringt messbar null. In-Container-CPU ist leistungsgleich und spart das gesamte GPU-Infra-Projekt.
+
+### Hybrid-Backend per FileHandleRegistry
+FSAA-Handle vorhanden → WASM, sonst → Server. Sauberes Signal ohne neues Typ-Feld am Video-Objekt.
+
+### Interface aus Sub-Projekt 1 zahlte sich aus
+Backend-Tausch ohne UI-Änderung; nur eine `serverSplitterBackend`-Implementierung + `selectSplitterBackend`-Selektor.
+
+### Kein neues k8s-Manifest nötig
+In-Container-CPU-Entscheidung wiederverwendet die gesamte 2b-Infra (Image, PVC, ffmpeg aus APT). Nur Quellen re-vendored, CI baut dasselbe Image neu.
