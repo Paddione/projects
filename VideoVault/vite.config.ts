@@ -90,6 +90,6 @@ export default defineConfig({
       'clsx',
       'tailwind-merge'
     ],
-    exclude: ['@replit/vite-plugin-cartographer']
+    exclude: ['@replit/vite-plugin-cartographer', '@ffmpeg/ffmpeg', '@ffmpeg/core']
   }
 });

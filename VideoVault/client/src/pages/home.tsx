@@ -26,6 +26,7 @@ import { SplitVideoModal, type SplitVideoFormValues } from '@/components/video/s
 import { SplitPaneEditor } from '@/components/video/split-pane-editor';
 import { ApplyToVisible } from '@/components/bulk/apply-to-visible';
 import type { SplitVideoResult } from '@/services/video-splitter';
+import { splitFormToOptions } from '@/lib/split-form-mapping';
 import {
   Sheet,
   SheetContent,
@@ -200,7 +201,7 @@ export default function Home() {
   const handleSubmitSplit = async (form: SplitVideoFormValues): Promise<SplitVideoResult> => {
     const target = splitTarget || state.currentVideo;
     if (!target) return { success: false, message: 'No video selected', code: 'invalid_split' };
-    const res = (await actions.splitVideo(target.id, form)) as SplitVideoResult;
+    const res = await actions.splitVideo(target.id, splitFormToOptions(form));
     if (res.success) {
       toast({
         title: 'Video split',
