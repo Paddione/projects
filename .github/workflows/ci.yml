@@ -29,6 +29,7 @@ jobs:
       k8s: ${{ steps.filter.outputs.k8s }}
       homeoffice-mvp: ${{ steps.filter.outputs.homeoffice-mvp }}
       any-service: ${{ steps.filter.outputs.arena == 'true' || steps.filter.outputs.l2p == 'true' || steps.filter.outputs.auth == 'true' || steps.filter.outputs.shop == 'true' || steps.filter.outputs.videovault == 'true' || steps.filter.outputs.sos == 'true' || steps.filter.outputs.assetgenerator == 'true' || steps.filter.outputs.k8s == 'true' }}
+      any-service-testable: ${{ steps.filter.outputs.arena == 'true' || steps.filter.outputs.l2p == 'true' || steps.filter.outputs.auth == 'true' || steps.filter.outputs.shop == 'true' || steps.filter.outputs.videovault == 'true' || steps.filter.outputs.sos == 'true' || steps.filter.outputs.assetgenerator == 'true' }}
     steps:
       - uses: actions/checkout@v4
       - uses: dorny/paths-filter@v3
@@ -57,17 +58,16 @@ jobs:
               - 'homeoffice-mvp/**'
 
   # ---------------------------------------------------------------------------
-  # L2P: Typecheck + Unit Tests
+  # Test changed services (smart selection via npm run test:changed)
   # ---------------------------------------------------------------------------
-  l2p:
+  test-changed:
     needs: changes
-    if: needs.changes.outputs.l2p == 'true'
+    if: needs.changes.outputs.any-service-testable == 'true'
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: l2p
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: actions/setup-node@v4
         with:
@@ -76,167 +76,11 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Typecheck
-        run: npm run typecheck
+      - name: Install all service dependencies
+        run: npm run install:all
 
-      - name: Unit tests (frontend)
-        run: npm run test:unit:frontend
-
-      - name: Unit tests (backend)
-        run: npm run test:unit:backend
-
-  # ---------------------------------------------------------------------------
-  # Auth: Typecheck + Unit Tests
-  # ---------------------------------------------------------------------------
-  auth:
-    needs: changes
-    if: needs.changes.outputs.auth == 'true'
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: auth
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Typecheck
-        run: npm run typecheck
-
-      - name: Unit tests
-        run: npm test
-
-  # ---------------------------------------------------------------------------
-  # Shop: Unit Tests
-  # ---------------------------------------------------------------------------
-  shop:
-    needs: changes
-    if: needs.changes.outputs.shop == 'true'
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: shop
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Unit tests
-        run: npx vitest run test/unit/
-
-  # ---------------------------------------------------------------------------
-  # VideoVault: Typecheck + Unit Tests + Build
-  # ---------------------------------------------------------------------------
-  videovault:
-    needs: changes
-    if: needs.changes.outputs.videovault == 'true'
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: VideoVault
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Typecheck
-        run: npm run check
-
-      - name: Unit tests
-        run: npm run test:2:unit
-
-      - name: Build validation
-        run: npm run build
-
-  # ---------------------------------------------------------------------------
-  # SOS: Typecheck + Unit Tests
-  # ---------------------------------------------------------------------------
-  sos:
-    needs: changes
-    if: needs.changes.outputs.sos == 'true'
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: SOS
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Typecheck
-        run: npm run typecheck
-
-      - name: Unit tests
-        run: npm test
-
-  # ---------------------------------------------------------------------------
-  # Assetgenerator: Unit Tests
-  # ---------------------------------------------------------------------------
-  assetgenerator:
-    needs: changes
-    if: needs.changes.outputs.assetgenerator == 'true'
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: Assetgenerator
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Unit tests
-        run: npx vitest run test/worker-manager.test.js test/adapter-routing.test.js
-
-  # ---------------------------------------------------------------------------
-  # Arena: Unit Tests (backend + frontend)
-  # ---------------------------------------------------------------------------
-  arena:
-    needs: changes
-    if: needs.changes.outputs.arena == 'true'
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: arena
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Typecheck
-        run: npm run typecheck
-
-      - name: Unit tests (backend)
-        run: npm --prefix backend run test:unit
+      - name: Run tests for changed services
+        run: npm run test:changed
 
   # ---------------------------------------------------------------------------
   # Docker Build Validation (master only)
@@ -329,45 +173,6 @@ jobs:
 
       - name: Validate development overlay
         run: kustomize build k8s/overlays/development
-
-  # ---------------------------------------------------------------------------
-  # Mediaviewer Widget + Videovault Player (shared packages)
-  # ---------------------------------------------------------------------------
-  mediaviewer:
-    needs: changes
-    if: needs.changes.outputs.videovault == 'true'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-
-      - name: Install Player Package
-        run: npm ci
-        working-directory: packages/videovault-player
-
-      - name: Player Package tests
-        run: npx vitest run
-        working-directory: packages/videovault-player
-
-      - name: Player Package typecheck
-        run: npx tsc --noEmit
-        working-directory: packages/videovault-player
-
-      - name: Install Widget
-        run: npm ci
-        working-directory: mediaviewer-widget
-
-      - name: Widget tests
-        run: npx vitest run
-        working-directory: mediaviewer-widget
-
-      - name: Widget typecheck
-        run: npx tsc --noEmit
-        working-directory: mediaviewer-widget
-
   # ---------------------------------------------------------------------------
   # Homeoffice MVP: Compose syntax, shellcheck, Trivy config scan
   # ---------------------------------------------------------------------------
@@ -530,19 +335,12 @@ jobs:
   # ---------------------------------------------------------------------------
   ci-status:
     if: always()
-    needs: [l2p, auth, shop, videovault, sos, assetgenerator, arena, mediaviewer, docker-validate, k8s-validate, homeoffice-mvp, commitlint, secrets-scan, semgrep, trivy, quality-gates, freshness]
+    needs: [test-changed, docker-validate, k8s-validate, homeoffice-mvp, commitlint, secrets-scan, semgrep, trivy, quality-gates, freshness]
     runs-on: ubuntu-latest
     steps:
       - name: Check pipeline status
         env:
-          L2P_RESULT: ${{ needs.l2p.result }}
-          AUTH_RESULT: ${{ needs.auth.result }}
-          SHOP_RESULT: ${{ needs.shop.result }}
-          VV_RESULT: ${{ needs.videovault.result }}
-          SOS_RESULT: ${{ needs.sos.result }}
-          ASSETGEN_RESULT: ${{ needs.assetgenerator.result }}
-          ARENA_RESULT: ${{ needs.arena.result }}
-          MEDIAVIEWER_RESULT: ${{ needs.mediaviewer.result }}
+          TEST_CHANGED_RESULT: ${{ needs.test-changed.result }}
           DOCKER_RESULT: ${{ needs.docker-validate.result }}
           K8S_RESULT: ${{ needs.k8s-validate.result }}
           HOMEOFFICE_RESULT: ${{ needs.homeoffice-mvp.result }}
@@ -554,13 +352,7 @@ jobs:
           FRESHNESS_RESULT: ${{ needs.freshness.result }}
         run: |
           echo "Pipeline results:"
-          echo "  l2p:               $L2P_RESULT"
-          echo "  auth:              $AUTH_RESULT"
-          echo "  shop:              $SHOP_RESULT"
-          echo "  videovault:        $VV_RESULT"
-          echo "  sos:               $SOS_RESULT"
-          echo "  assetgenerator:    $ASSETGEN_RESULT"
-          echo "  arena:             $ARENA_RESULT"
+          echo "  test-changed:      $TEST_CHANGED_RESULT"
           echo "  docker-validate:   $DOCKER_RESULT"
           echo "  k8s-validate:      $K8S_RESULT"
           echo "  homeoffice-mvp:    $HOMEOFFICE_RESULT"
@@ -570,7 +362,7 @@ jobs:
           echo "  trivy:             $TRIVY_RESULT"
 
           # Fail if any required job failed (skipped is OK — means no changes for that service)
-          for result in "$L2P_RESULT" "$AUTH_RESULT" "$SHOP_RESULT" "$VV_RESULT" "$SOS_RESULT" "$ASSETGEN_RESULT" "$ARENA_RESULT" "$MEDIAVIEWER_RESULT" "$DOCKER_RESULT" "$K8S_RESULT" "$HOMEOFFICE_RESULT" "$COMMITLINT_RESULT" "$SECRETS_RESULT" "$SEMGREP_RESULT" "$TRIVY_RESULT" "$QUALITY_RESULT" "$FRESHNESS_RESULT"; do
+          for result in "$TEST_CHANGED_RESULT" "$DOCKER_RESULT" "$K8S_RESULT" "$HOMEOFFICE_RESULT" "$COMMITLINT_RESULT" "$SECRETS_RESULT" "$SEMGREP_RESULT" "$TRIVY_RESULT" "$QUALITY_RESULT" "$FRESHNESS_RESULT"; do
             if [[ "$result" == "failure" ]]; then
               echo "::error::One or more CI jobs failed"
               exit 1
