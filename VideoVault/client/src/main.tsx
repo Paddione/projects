@@ -2,6 +2,7 @@ import { createRoot } from 'react-dom/client';
 import App from './App';
 import './index.css';
 import './styles/cybervault-videovault.css';
+import '@videovault-player/player.css';
 import './i18n';
 
 async function enableMswIfRequested() {

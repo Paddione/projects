@@ -1,4 +1,4 @@
-import { forwardRef, useImperativeHandle, useState, useCallback, useEffect } from 'react';
+import { forwardRef, useImperativeHandle, useState, useCallback, useEffect, useRef } from 'react';
 import { VideoPlayer } from '@videovault-player';
 import { HelpVideoPicker } from './HelpVideoPicker';
 import { MediaviewerState } from './MediaviewerState';
@@ -15,8 +15,10 @@ export const MediaviewerWidget = forwardRef<MediaviewerHandle, MediaviewerWidget
     // picks a video (via the picker or the imperative ref handle).
     const [current, setCurrent] = useState<VideoSource | null>(null);
     const [playerState, setPlayerState] = useState<PlayerState>('idle');
-    const [currentTime, setCurrentTime] = useState(0);
     const [errorMsg, setErrorMsg] = useState<string | null>(null);
+    // Delegate imperative play/pause/seek/getState to the inner VideoPlayer,
+    // which owns the real playback state. Null while no video is selected.
+    const playerRef = useRef<MediaviewerHandle>(null);
 
     // Drop the selection if the current video leaves the playlist.
     useEffect(() => {
@@ -64,18 +66,15 @@ export const MediaviewerWidget = forwardRef<MediaviewerHandle, MediaviewerWidget
             if (v) setCurrent(v);
           }
         },
-        play: () => {},
-        pause: () => {},
-        seek: (time: number) => {
-          setCurrentTime(time);
-        },
-        getState: () => ({
-          current,
-          state: playerState,
-          currentTime,
-        }),
+        // Delegate live transport to the mounted VideoPlayer; no-op until a
+        // video is selected (playerRef null).
+        play: () => playerRef.current?.play(),
+        pause: () => playerRef.current?.pause(),
+        seek: (time: number) => playerRef.current?.seek(time),
+        getState: () =>
+          playerRef.current?.getState() ?? { current, state: playerState, currentTime: 0 },
       }),
-      [current, playerState, currentTime, handleSelect],
+      [current, playerState, handleSelect],
     );
 
     const isEmpty = videos.length === 0;
@@ -103,6 +102,7 @@ export const MediaviewerWidget = forwardRef<MediaviewerHandle, MediaviewerWidget
           ) : (
             <>
               <VideoPlayer
+                ref={playerRef}
                 source={current}
                 playlist={videos}
                 onEnded={(id) => onEnded?.(id)}
